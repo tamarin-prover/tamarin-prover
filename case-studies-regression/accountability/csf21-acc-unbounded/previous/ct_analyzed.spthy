@@ -12,23 +12,7 @@ equations:
     snd(<x.1, x.2>) = x.2,
     verify(sign(sk, m), m, pk(sk)) = true
 
-
-
 heuristic: p
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 restriction terminate:
   "∃ #t. Terminate( ) @ #t"
@@ -37,34 +21,6 @@ restriction terminate:
   expanded formula:
   "∃ #t. Terminate( ) @ #t"
   */
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 rule (modulo E) Init[color=#ffffff, process="|", issapicrule,
                      role='Process']:
@@ -6085,8 +6041,8 @@ Accountability (RP check)
 Generated from:
 Tamarin version 1.12.0
 Maude version 3.5.1
-Git revision: 49bdfd9a775cb085087843fe17f0245a944c4756 (with uncommited changes), branch: prepare-release
-Compiled at: 2026-03-05 10:17:12.323605 UTC
+Git revision: f1832c9bc70a2a165991a0802520f2e07c023227 (with uncommited changes), branch: prepare-release
+Compiled at: 2026-03-06 22:21:49.602637 UTC
 */
 
 end
@@ -6098,7 +6054,7 @@ summary of summaries:
 analyzed: examples/accountability/csf21-acc-unbounded/previous/ct.spthy
 
   output:          examples/accountability/csf21-acc-unbounded/previous/ct.spthy.tmp
-  processing time: 21.03s
+  processing time: 19.99s
   
   WARNING: 3 wellformedness check failed!
            The analysis results might be wrong!

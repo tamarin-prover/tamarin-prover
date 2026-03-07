@@ -10,15 +10,9 @@ equations:
     sdec(senc(x.1, x.2), x.2) = x.1,
     snd(<x.1, x.2>) = x.2
 
-
-
 heuristic: p
 
-
-
 predicate: SencSucc( c, k )<=>∃ m. senc(m, k) = c
-
-
 
 lemma can_create_key:
   exists-trace "∃ #t h k. NewKey( h, k ) @ #t"
@@ -337,16 +331,6 @@ guarded formula characterizing all counter-examples:
 */
 simplify
 by contradiction /* from formulas */
-
-
-
-
-
-
-
-
-
-
 
 rule (modulo E) Init[color=#ffffff, process="!", issapicrule,
                      role='Process']:
@@ -1028,8 +1012,8 @@ restriction single_session:
 Generated from:
 Tamarin version 1.12.0
 Maude version 3.5.1
-Git revision: 49bdfd9a775cb085087843fe17f0245a944c4756 (with uncommited changes), branch: prepare-release
-Compiled at: 2026-03-05 10:17:12.323605 UTC
+Git revision: f1832c9bc70a2a165991a0802520f2e07c023227 (with uncommited changes), branch: prepare-release
+Compiled at: 2026-03-06 22:21:49.602637 UTC
 */
 
 end
@@ -1041,7 +1025,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/basic/running-example.spthy
 
   output:          examples/sapic/fast/basic/running-example.spthy.tmp
-  processing time: 0.80s
+  processing time: 0.82s
   
   can_create_key (exists-trace): verified (3 steps)
   can_obtain_wrapping (exists-trace): verified (11 steps)

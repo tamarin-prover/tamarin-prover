@@ -14,13 +14,7 @@ equations:
     sencSucc(senc(m, k), k) = true,
     snd(<x.1, x.2>) = x.2
 
-
-
 heuristic: p
-
-
-
-
 
 lemma dec_limits [sources]:
   all-traces
@@ -14205,24 +14199,6 @@ next
   qed
 qed
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 rule (modulo E) Init[color=#ffffff, process="!", issapicrule,
                      role='Process']:
    [ ] --[ Init( ) ]-> [ State_( ) ]
@@ -16115,8 +16091,8 @@ Wellformedness-error in Process
 Generated from:
 Tamarin version 1.12.0
 Maude version 3.5.1
-Git revision: 49bdfd9a775cb085087843fe17f0245a944c4756 (with uncommited changes), branch: prepare-release
-Compiled at: 2026-03-05 10:17:12.323605 UTC
+Git revision: f1832c9bc70a2a165991a0802520f2e07c023227 (with uncommited changes), branch: prepare-release
+Compiled at: 2026-03-06 22:21:49.602637 UTC
 */
 
 end
@@ -16128,7 +16104,7 @@ summary of summaries:
 analyzed: examples/sapic/slow/encWrapDecUnwrap/encwrapdecunwrap.spthy
 
   output:          examples/sapic/slow/encWrapDecUnwrap/encwrapdecunwrap.spthy.tmp
-  processing time: 56.22s
+  processing time: 53.31s
   
   WARNING: 1 wellformedness check failed!
            The analysis results might be wrong!

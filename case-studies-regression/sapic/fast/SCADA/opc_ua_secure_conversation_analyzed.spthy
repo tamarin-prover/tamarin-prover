@@ -13,25 +13,9 @@ equations:
     snd(<x.1, x.2>) = x.2,
     verifyMac(mac(m, sk), m, sk) = true
 
-
-
 heuristic: p
 
 section{* The OPC UA Secure Conversation protocol *}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 restriction A_Counter_Increases:
   "∀ A B seq1 seq2 #i #j.
@@ -9416,24 +9400,6 @@ solve( State_111111111111( ~prog_1, ~prog_11111111, ~prog_1111111111,
   qed
 qed
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 rule (modulo E) MessageIDRule[color=#ffffff, process="!", issapicrule,
                               role='Process']:
    [ Fr( ~mid_ ) ] --> [ MID_Receiver( ~mid_ ), MID_Sender( ~mid_ ) ]
@@ -10170,8 +10136,8 @@ Wellformedness-error in Process
 Generated from:
 Tamarin version 1.12.0
 Maude version 3.5.1
-Git revision: 49bdfd9a775cb085087843fe17f0245a944c4756 (with uncommited changes), branch: prepare-release
-Compiled at: 2026-03-05 10:17:12.323605 UTC
+Git revision: f1832c9bc70a2a165991a0802520f2e07c023227 (with uncommited changes), branch: prepare-release
+Compiled at: 2026-03-06 22:21:49.602637 UTC
 */
 
 end
@@ -10183,7 +10149,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/SCADA/opc_ua_secure_conversation.spthy
 
   output:          examples/sapic/fast/SCADA/opc_ua_secure_conversation.spthy.tmp
-  processing time: 45.83s
+  processing time: 44.84s
   
   WARNING: 1 wellformedness check failed!
            The analysis results might be wrong!

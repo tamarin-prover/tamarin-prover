@@ -12,22 +12,12 @@ equations:
     get_rep(rep(x.1, x.2)) = x.1,
     snd(<x.1, x.2>) = x.2
 
-
-
 heuristic: S
 
 /* looping facts with injective instances: L_CellLocked/2, L_PureState/2
 */
 
-
-
 predicate: Report( x, y )<=>¬(y = 'loc')
-
-
-
-
-
-
 
 lemma can_run_v:
   exists-trace "∃ #i m. Local( m, 'loc' ) @ #i"
@@ -63,24 +53,6 @@ guarded formula characterizing all counter-examples:
 simplify
 by solve( State_1211111111111( StateChannel, lock, state2, i.1, lio, o, r
           ) ▶₀ #i )
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 restriction Restr_ReportRule_1:
   "∀ x #NOW. (Restr_ReportRule_1( x ) @ #NOW) ⇒ (¬(x = 'loc'))"
@@ -896,8 +868,8 @@ Facts occur in the left-hand-side but not in any right-hand-side
 Generated from:
 Tamarin version 1.12.0
 Maude version 3.5.1
-Git revision: 49bdfd9a775cb085087843fe17f0245a944c4756 (with uncommited changes), branch: prepare-release
-Compiled at: 2026-03-05 10:17:12.323605 UTC
+Git revision: f1832c9bc70a2a165991a0802520f2e07c023227 (with uncommited changes), branch: prepare-release
+Compiled at: 2026-03-06 22:21:49.602637 UTC
 */
 
 end
@@ -909,7 +881,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-locations/AC.spthy
 
   output:          examples/sapic/fast/feature-locations/AC.spthy.tmp
-  processing time: 0.67s
+  processing time: 0.71s
   
   WARNING: 2 wellformedness check failed!
            The analysis results might be wrong!

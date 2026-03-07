@@ -31,12 +31,6 @@ prio: {id}
 prio: {id}
   regex"!KU\(~r"
 
-
-
-
-
-
-
 rule (modulo E) Register_Corrupted_Bank_pk:
    [ Fr( ~ltkB ) ]
   --[ OnlyOnce( ) ]->
@@ -1248,30 +1242,14 @@ solve( (#i1 < #i2)  ∥ (#i2 < #i1) )
   qed
 qed
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 /* All wellformedness checks were successful. */
 
 /*
 Generated from:
 Tamarin version 1.12.0
 Maude version 3.5.1
-Git revision: 49bdfd9a775cb085087843fe17f0245a944c4756 (with uncommited changes), branch: prepare-release
-Compiled at: 2026-03-05 10:17:12.323605 UTC
+Git revision: f1832c9bc70a2a165991a0802520f2e07c023227 (with uncommited changes), branch: prepare-release
+Compiled at: 2026-03-06 22:21:49.602637 UTC
 */
 
 end
@@ -1283,7 +1261,7 @@ summary of summaries:
 analyzed: examples/csf18-xor/chaum_offline_anonymity.spthy
 
   output:          examples/csf18-xor/chaum_offline_anonymity.spthy.tmp
-  processing time: 8.70s
+  processing time: 7.79s
   
   coins (all-traces): verified (283 steps)
   exec (exists-trace): verified (7 steps)

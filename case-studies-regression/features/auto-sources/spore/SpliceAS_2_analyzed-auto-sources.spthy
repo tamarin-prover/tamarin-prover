@@ -13,14 +13,6 @@ equations:
     snd(<x.1, x.2>) = x.2,
     verify(sign(x.1, x.2), x.1, pk(x.2)) = true
 
-
-
-
-
-
-
-
-
 rule (modulo E) Register_pk:
    [ Fr( ~ltk ) ]
   --[ Register( $U, ~ltk ), OnlyOnce( $U ) ]->
@@ -604,28 +596,6 @@ solve( StateC2( $C, AS, $S, ~ltkC, ~n1, ~n2, ~t, ~l, pkS ) ▶₁ #i )
   qed
 qed
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 lemma AUTO_typing [sources]:
   all-traces
   "((⊤) ∧
@@ -808,8 +778,8 @@ qed
 Generated from:
 Tamarin version 1.12.0
 Maude version 3.5.1
-Git revision: 49bdfd9a775cb085087843fe17f0245a944c4756 (with uncommited changes), branch: prepare-release
-Compiled at: 2026-03-05 10:17:12.323605 UTC
+Git revision: f1832c9bc70a2a165991a0802520f2e07c023227 (with uncommited changes), branch: prepare-release
+Compiled at: 2026-03-06 22:21:49.602637 UTC
 */
 
 end
@@ -821,7 +791,7 @@ summary of summaries:
 analyzed: examples/features/auto-sources/spore/SpliceAS_2.spthy
 
   output:          examples/features/auto-sources/spore/SpliceAS_2.spthy.tmp
-  processing time: 3.27s
+  processing time: 3.75s
   
   executability (exists-trace): verified (21 steps)
   Secrecy (all-traces): falsified - found trace (16 steps)

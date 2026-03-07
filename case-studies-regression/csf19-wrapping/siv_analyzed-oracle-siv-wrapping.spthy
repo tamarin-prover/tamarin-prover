@@ -21,28 +21,18 @@ prio: {id}
   regex"=" | regex"<" | regex"last\(" | regex"DCtrIs\(d,C"
 prio: {id}
   regex"DCtr"
-
-
 tactic: IV_Uniqueness
 presort: C
 prio: {id}
   regex"=" | regex"<" | regex"last\("
 prio: {id}
   regex"IV\("
-
-
 tactic: Key_IntegrityAndConfidentiality
 presort: C
 prio: {id}
   regex"CreateKey\(ek,"
 
-
-
-
-
 /* looping facts with injective instances: DCtr/2 */
-
-
 
 restriction UniqueInteger:
   "∀ n #i #j. ((IsInteger( n ) @ #i) ∧ (IsInteger( n ) @ #j)) ⇒ (#i = #j)"
@@ -13125,36 +13115,14 @@ next
   qed
 qed
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 /* All wellformedness checks were successful. */
 
 /*
 Generated from:
 Tamarin version 1.12.0
 Maude version 3.5.1
-Git revision: 49bdfd9a775cb085087843fe17f0245a944c4756 (with uncommited changes), branch: prepare-release
-Compiled at: 2026-03-05 10:17:12.323605 UTC
+Git revision: f1832c9bc70a2a165991a0802520f2e07c023227 (with uncommited changes), branch: prepare-release
+Compiled at: 2026-03-06 22:21:49.602637 UTC
 */
 
 end
@@ -13166,7 +13134,7 @@ summary of summaries:
 analyzed: examples/csf19-wrapping/siv.spthy
 
   output:          examples/csf19-wrapping/siv.spthy.tmp
-  processing time: 53.67s
+  processing time: 53.46s
   
   origin (all-traces): verified (2086 steps)
   Counter_Monotonicity (all-traces): verified (888 steps)

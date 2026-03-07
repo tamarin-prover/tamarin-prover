@@ -10,19 +10,9 @@ equations:
     snd(<x.1, x.2>) = x.2,
     verify(sign(x.1, x.2), x.1, pk(x.2)) = true
 
-
-
 heuristic: p
 
 section{* small example for progression function *}
-
-
-
-
-
-
-
-
 
 lemma A_possible:
   exists-trace "∃ #t. A( ) @ #t"
@@ -105,22 +95,6 @@ next
   case case_3
   by contradiction /* from formulas */
 qed
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 rule (modulo E) MessageIDRule[color=#ffffff, process="+", issapicrule,
                               role='Process']:
@@ -205,8 +179,8 @@ restriction progressInit:
 Generated from:
 Tamarin version 1.12.0
 Maude version 3.5.1
-Git revision: 49bdfd9a775cb085087843fe17f0245a944c4756 (with uncommited changes), branch: prepare-release
-Compiled at: 2026-03-05 10:17:12.323605 UTC
+Git revision: f1832c9bc70a2a165991a0802520f2e07c023227 (with uncommited changes), branch: prepare-release
+Compiled at: 2026-03-06 22:21:49.602637 UTC
 */
 
 end
@@ -218,7 +192,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/basic/ndc-nested-4.spthy
 
   output:          examples/sapic/fast/basic/ndc-nested-4.spthy.tmp
-  processing time: 0.04s
+  processing time: 0.03s
   
   A_possible (exists-trace): verified (5 steps)
   B_possible (exists-trace): verified (5 steps)

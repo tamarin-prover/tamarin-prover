@@ -25,11 +25,7 @@ equations:
     snd(<x.1, x.2>) = x.2,
     tem(<k, templ>) = templ
 
-
-
 heuristic: p
-
-
 
 predicate: Can_encrypt( wrap, unwrap, enc, dec, sens, extr, trus, wwt, wt, ut
 )<=>enc = 'on'
@@ -60,20 +56,6 @@ predicate: Permits( t_wrap, t_unwrap, t_enc, t_dec, t_sens, t_extr, t_trus,
   (t_wwt = wwt)) ∧
  (t_wt = wt)) ∧
 (t_ut = ut)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 lemma dec_limits [use_induction, reuse]:
   all-traces
@@ -19967,40 +19949,6 @@ guarded formula characterizing all counter-examples:
 simplify
 by contradiction /* from formulas */
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 rule (modulo E) Init[color=#ffffff,
                      process="insert <'F_template', 'trusted'>,<'on', 'on', 'off', 'off', 'on', 'on', 'on', 'on', 'usage', 'usage'
 >;",
@@ -24201,8 +24149,8 @@ Wellformedness-error in Process
 Generated from:
 Tamarin version 1.12.0
 Maude version 3.5.1
-Git revision: 49bdfd9a775cb085087843fe17f0245a944c4756 (with uncommited changes), branch: prepare-release
-Compiled at: 2026-03-05 10:17:12.323605 UTC
+Git revision: f1832c9bc70a2a165991a0802520f2e07c023227 (with uncommited changes), branch: prepare-release
+Compiled at: 2026-03-06 22:21:49.602637 UTC
 */
 
 end
@@ -24214,7 +24162,7 @@ summary of summaries:
 analyzed: examples/sapic/slow/PKCS11/pkcs11-templates.spthy
 
   output:          examples/sapic/slow/PKCS11/pkcs11-templates.spthy.tmp
-  processing time: 96.08s
+  processing time: 97.37s
   
   WARNING: 1 wellformedness check failed!
            The analysis results might be wrong!

@@ -12,19 +12,9 @@ equations:
     get_rep(rep(x.1, x.2)) = x.1,
     snd(<x.1, x.2>) = x.2
 
-
-
 heuristic: p
 
-
-
 predicate: Report( x, y )<=>¬(y = 'l')
-
-
-
-
-
-
 
 lemma attested_comput:
   exists-trace
@@ -39,24 +29,6 @@ simplify
 by solve( State_1121111111111111( init, lock, signedios, ip, ipo, o,
                                   r_sid, sid, state
           ) ▶₀ #t1 )
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 restriction Restr_ReportRule_1:
   "∀ x #NOW. (Restr_ReportRule_1( x ) @ #NOW) ⇒ (¬(x = 'l'))"
@@ -1156,8 +1128,8 @@ Wellformedness-error in Process
 Generated from:
 Tamarin version 1.12.0
 Maude version 3.5.1
-Git revision: 49bdfd9a775cb085087843fe17f0245a944c4756 (with uncommited changes), branch: prepare-release
-Compiled at: 2026-03-05 10:17:12.323605 UTC
+Git revision: f1832c9bc70a2a165991a0802520f2e07c023227 (with uncommited changes), branch: prepare-release
+Compiled at: 2026-03-06 22:21:49.602637 UTC
 */
 
 end
@@ -1169,7 +1141,7 @@ summary of summaries:
 analyzed: examples/sapic/slow/feature-locations/AC_sid_with_attack.spthy
 
   output:          examples/sapic/slow/feature-locations/AC_sid_with_attack.spthy.tmp
-  processing time: 1.05s
+  processing time: 1.06s
   
   WARNING: 1 wellformedness check failed!
            The analysis results might be wrong!

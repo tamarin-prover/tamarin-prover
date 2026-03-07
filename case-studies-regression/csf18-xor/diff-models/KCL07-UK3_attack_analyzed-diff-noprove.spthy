@@ -14,20 +14,12 @@ prio: {id}
   regex".*TagRun\(.*"
 prio: {id}
   regex".*Tag\(.*"
-
-
 tactic: Observational_equivalence
 presort: C
 prio: {id}
   regex".*TagRun\(.*"
 prio: {id}
   regex".*Tag\(.*"
-
-
-
-
-
-
 
 rule (modulo E) Setup:
    [ Fr( ~k1 ), Fr( ~id1 ), Fr( ~k2 ), Fr( ~id2 ) ]
@@ -435,8 +427,8 @@ qed
 Generated from:
 Tamarin version 1.12.0
 Maude version 3.5.1
-Git revision: 49bdfd9a775cb085087843fe17f0245a944c4756 (with uncommited changes), branch: prepare-release
-Compiled at: 2026-03-05 10:17:12.323605 UTC
+Git revision: f1832c9bc70a2a165991a0802520f2e07c023227 (with uncommited changes), branch: prepare-release
+Compiled at: 2026-03-06 22:21:49.602637 UTC
 */
 
 end
@@ -448,7 +440,7 @@ summary of summaries:
 analyzed: examples/csf18-xor/diff-models/KCL07-UK3_attack.spthy
 
   output:          examples/csf18-xor/diff-models/KCL07-UK3_attack.spthy.tmp
-  processing time: 0.22s
+  processing time: 0.24s
   
   RHS :  recentalive_tag (all-traces): analysis incomplete (1 steps)
   LHS :  recentalive_tag (all-traces): analysis incomplete (1 steps)

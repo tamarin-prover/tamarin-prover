@@ -11,12 +11,6 @@ equations:
     sdec(senc(x.1, x.2), x.2) = x.1,
     snd(<x.1, x.2>) = x.2
 
-
-
-
-
-
-
 rule (modulo E) Create_Key:
    [ Fr( ~sk ) ]
   --[ Secret( $A, $B, ~sk ) ]->
@@ -457,28 +451,14 @@ solve( StateB( $A, $B, ~sk, na, ~kabp ) ▶₀ #i )
   qed
 qed
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 /* All wellformedness checks were successful. */
 
 /*
 Generated from:
 Tamarin version 1.12.0
 Maude version 3.5.1
-Git revision: 49bdfd9a775cb085087843fe17f0245a944c4756 (with uncommited changes), branch: prepare-release
-Compiled at: 2026-03-05 10:17:12.323605 UTC
+Git revision: f1832c9bc70a2a165991a0802520f2e07c023227 (with uncommited changes), branch: prepare-release
+Compiled at: 2026-03-06 22:21:49.602637 UTC
 */
 
 end
@@ -490,7 +470,7 @@ summary of summaries:
 analyzed: examples/features/auto-sources/spore/AS_Concrete_RPC.spthy
 
   output:          examples/features/auto-sources/spore/AS_Concrete_RPC.spthy.tmp
-  processing time: 4.56s
+  processing time: 4.55s
   
   secrecy (all-traces): verified (65 steps)
   injectiveagreement_A (all-traces): falsified - found trace (6 steps)
