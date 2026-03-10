@@ -502,10 +502,10 @@ qed
 
 /*
 Generated from:
-Tamarin version 1.12.0
+Tamarin version 1.13.0
 Maude version 3.5.1
-Git revision: f1832c9bc70a2a165991a0802520f2e07c023227 (with uncommited changes), branch: prepare-release
-Compiled at: 2026-03-06 22:21:49.602637 UTC
+Git revision: c1764c70b96076068b73ec75247187fd3b94186e (with uncommited changes), branch: HEAD
+Compiled at: 2026-03-10 10:04:50.859869809 UTC
 */
 
 end
@@ -517,7 +517,7 @@ summary of summaries:
 analyzed: examples/csf18-xor/CRxor.spthy
 
   output:          examples/csf18-xor/CRxor.spthy.tmp
-  processing time: 0.43s
+  processing time: 0.82s
   
   alive (all-traces): verified (91 steps)
   recentalive_tag (all-traces): falsified - found trace (11 steps)

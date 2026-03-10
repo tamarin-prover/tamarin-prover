@@ -3186,16 +3186,6 @@ rule (modulo E) p_0_111111111121211112[color=#658040, process="0",
      [ ]
   */
 
-rule (modulo E) p_0_11111111112121112[color=#658040, process="0",
-                                      issapicrule, role='server']:
-   [ State_11111111112121112( cu.1, pc.1, pw.1, share.1, skV.1 ) ] --> [ ]
-
-  /*
-  rule (modulo AC) p_0_11111111112121112[color=#658040, process="0",
-                                         issapicrule, role='server']:
-     [ State_11111111112121112( cu, pc, pw, share, skV ) ] --> [ ]
-  */
-
 rule (modulo E) p_0_111111111121212[color=#ffffff, process="0",
                                     issapicrule, role='Process']:
    [ State_111111111121212( cu.1, pc.1, pw.1, skV.1 ) ] --> [ ]
@@ -3233,21 +3223,14 @@ restriction single_session:
   "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
   */
 
-/*
-WARNING: the following wellformedness checks failed!
-
-Facts occur in the left-hand-side but not in any right-hand-side 
-=================================================================
-
-  1. in rule "p_0_11111111112121112":  factName `State_11111111112121112' arity: 5 multiplicity: Linear. Perhaps you want to use the fact in rule "inshare_0_111111111121211":  factName `State_1111111111212111' arity: 5 multiplicity: Linear
-*/
+/* All wellformedness checks were successful. */
 
 /*
 Generated from:
-Tamarin version 1.12.0
+Tamarin version 1.13.0
 Maude version 3.5.1
-Git revision: f1832c9bc70a2a165991a0802520f2e07c023227 (with uncommited changes), branch: prepare-release
-Compiled at: 2026-03-06 22:21:49.602637 UTC
+Git revision: c1764c70b96076068b73ec75247187fd3b94186e (with uncommited changes), branch: HEAD
+Compiled at: 2026-03-10 10:04:50.859869809 UTC
 */
 
 end
@@ -3259,10 +3242,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-locations/OTP.spthy
 
   output:          examples/sapic/fast/feature-locations/OTP.spthy.tmp
-  processing time: 44.52s
-  
-  WARNING: 1 wellformedness check failed!
-           The analysis results might be wrong!
+  processing time: 93.63s
   
   reachV (exists-trace): falsified - no trace found (29 steps)
   secrecy_key (all-traces): verified (8 steps)

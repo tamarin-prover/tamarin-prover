@@ -10125,19 +10125,14 @@ restriction reliable:
     (Send( x, y ) @ #i) ⇒ (∃ #j. (Receive( x, y ) @ #j) ∧ (#i < #j))"
   */
 
-/*
-WARNING: the following wellformedness checks failed!
-
-Wellformedness-error in Process
-  There is an unlock that cannot be matched with a lock.
-*/
+/* All wellformedness checks were successful. */
 
 /*
 Generated from:
-Tamarin version 1.12.0
+Tamarin version 1.13.0
 Maude version 3.5.1
-Git revision: f1832c9bc70a2a165991a0802520f2e07c023227 (with uncommited changes), branch: prepare-release
-Compiled at: 2026-03-06 22:21:49.602637 UTC
+Git revision: c1764c70b96076068b73ec75247187fd3b94186e (with uncommited changes), branch: HEAD
+Compiled at: 2026-03-10 10:04:50.859869809 UTC
 */
 
 end
@@ -10149,10 +10144,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/SCADA/opc_ua_secure_conversation.spthy
 
   output:          examples/sapic/fast/SCADA/opc_ua_secure_conversation.spthy.tmp
-  processing time: 44.84s
-  
-  WARNING: 1 wellformedness check failed!
-           The analysis results might be wrong!
+  processing time: 96.27s
   
   Executable (exists-trace): verified (36 steps)
   all_received_were_sent (all-traces): verified (18 steps)

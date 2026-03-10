@@ -6132,10 +6132,10 @@ qed
 
 /*
 Generated from:
-Tamarin version 1.12.0
+Tamarin version 1.13.0
 Maude version 3.5.1
-Git revision: f1832c9bc70a2a165991a0802520f2e07c023227 (with uncommited changes), branch: prepare-release
-Compiled at: 2026-03-06 22:21:49.602637 UTC
+Git revision: c1764c70b96076068b73ec75247187fd3b94186e (with uncommited changes), branch: HEAD
+Compiled at: 2026-03-10 10:04:50.859869809 UTC
 */
 
 end
@@ -6147,7 +6147,7 @@ summary of summaries:
 analyzed: examples/related_work/TPM_DKRS_CSF11/Envelope.spthy
 
   output:          examples/related_work/TPM_DKRS_CSF11/Envelope.spthy.tmp
-  processing time: 11.31s
+  processing time: 20.61s
   
   types (all-traces): verified (12 steps)
   PCR_Write_charn (all-traces): verified (59 steps)
