@@ -1047,8 +1047,8 @@ qed
 Generated from:
 Tamarin version 1.13.0
 Maude version 3.4
-Git revision: b5db7d24f867eacdfabdf16363e1d558e0846a17 (with uncommited changes), branch: fix/import-dest-pairing
-Compiled at: 2026-03-10 14:48:15.888486 UTC
+Git revision: 1deff12bd69c96308abb2463d4de5f2c7610c191 (with uncommited changes), branch: develop
+Compiled at: 2026-03-09 07:36:56.194364 UTC
 */
 
 end
@@ -1060,7 +1060,7 @@ summary of summaries:
 analyzed: examples/ake/bilinear/Joux.spthy
 
   output:          examples/ake/bilinear/Joux.spthy.tmp
-  processing time: 6.17s
+  processing time: 6.12s
   
   session_key_establish (exists-trace): verified (28 steps)
   Session_Key_Secrecy_PFS (all-traces): verified (22 steps)

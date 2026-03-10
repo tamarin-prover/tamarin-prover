@@ -1492,8 +1492,8 @@ qed
 Generated from:
 Tamarin version 1.13.0
 Maude version 3.4
-Git revision: b5db7d24f867eacdfabdf16363e1d558e0846a17 (with uncommited changes), branch: fix/import-dest-pairing
-Compiled at: 2026-03-10 14:48:15.888486 UTC
+Git revision: 1deff12bd69c96308abb2463d4de5f2c7610c191 (with uncommited changes), branch: develop
+Compiled at: 2026-03-09 07:36:56.194364 UTC
 */
 
 end
@@ -1505,7 +1505,7 @@ summary of summaries:
 analyzed: examples/ccs15/rfid-feldhofer.spthy
 
   output:          examples/ccs15/rfid-feldhofer.spthy.tmp
-  processing time: 0.70s
+  processing time: 0.75s
   
   RHS :  types (all-traces): verified (25 steps)
   LHS :  types (all-traces): verified (25 steps)
