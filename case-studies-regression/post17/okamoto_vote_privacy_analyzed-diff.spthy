@@ -11364,10 +11364,10 @@ qed
 
 /*
 Generated from:
-Tamarin version 1.12.0
-Maude version 3.5.1
-Git revision: f1832c9bc70a2a165991a0802520f2e07c023227 (with uncommited changes), branch: prepare-release
-Compiled at: 2026-03-06 22:21:49.602637 UTC
+Tamarin version 1.13.0
+Maude version 3.4
+Git revision: 1deff12bd69c96308abb2463d4de5f2c7610c191 (with uncommited changes), branch: develop
+Compiled at: 2026-03-09 07:36:56.194364 UTC
 */
 
 end
@@ -11379,7 +11379,7 @@ summary of summaries:
 analyzed: examples/post17/okamoto_vote_privacy.spthy
 
   output:          examples/post17/okamoto_vote_privacy.spthy.tmp
-  processing time: 24.02s
+  processing time: 18.77s
   
   RHS :  exec (exists-trace): verified (12 steps)
   LHS :  exec (exists-trace): verified (12 steps)

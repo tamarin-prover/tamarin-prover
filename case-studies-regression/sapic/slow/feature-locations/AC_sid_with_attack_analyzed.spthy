@@ -1117,19 +1117,14 @@ restriction locking_1:
      (#t1 = #t3))"
   */
 
-/*
-WARNING: the following wellformedness checks failed!
-
-Wellformedness-error in Process
-  There is an unlock that cannot be matched with a lock.
-*/
+/* All wellformedness checks were successful. */
 
 /*
 Generated from:
-Tamarin version 1.12.0
-Maude version 3.5.1
-Git revision: f1832c9bc70a2a165991a0802520f2e07c023227 (with uncommited changes), branch: prepare-release
-Compiled at: 2026-03-06 22:21:49.602637 UTC
+Tamarin version 1.13.0
+Maude version 3.4
+Git revision: 1deff12bd69c96308abb2463d4de5f2c7610c191 (with uncommited changes), branch: develop
+Compiled at: 2026-03-09 07:36:56.194364 UTC
 */
 
 end
@@ -1141,10 +1136,7 @@ summary of summaries:
 analyzed: examples/sapic/slow/feature-locations/AC_sid_with_attack.spthy
 
   output:          examples/sapic/slow/feature-locations/AC_sid_with_attack.spthy.tmp
-  processing time: 1.06s
-  
-  WARNING: 1 wellformedness check failed!
-           The analysis results might be wrong!
+  processing time: 0.89s
   
   attested_comput (exists-trace): falsified - no trace found (2 steps)
 

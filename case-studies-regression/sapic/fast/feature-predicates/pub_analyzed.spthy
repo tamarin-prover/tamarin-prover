@@ -453,9 +453,9 @@ restriction single_session:
 /*
 Generated from:
 Tamarin version 1.13.0
-Maude version 3.5.1
-Git revision: c1764c70b96076068b73ec75247187fd3b94186e (with uncommited changes), branch: HEAD
-Compiled at: 2026-03-10 10:04:50.859869809 UTC
+Maude version 3.4
+Git revision: 1deff12bd69c96308abb2463d4de5f2c7610c191 (with uncommited changes), branch: develop
+Compiled at: 2026-03-09 07:36:56.194364 UTC
 */
 
 end
@@ -467,7 +467,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-predicates/pub.spthy
 
   output:          examples/sapic/fast/feature-predicates/pub.spthy.tmp
-  processing time: 0.05s
+  processing time: 0.03s
   
 
 ==============================================================================

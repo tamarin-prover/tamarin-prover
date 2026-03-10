@@ -2210,16 +2210,6 @@ rule (modulo E) p_0_11111111111111111[color=#ffffff, process="0",
      [ State_11111111111111111( Na, cypher, k, pkB, skA, xNb ) ] --> [ ]
   */
 
-rule (modulo E) p_0_111111111112[color=#ffffff, process="0", issapicrule,
-                                 role='Process']:
-   [ State_111111111112( Na.1, cypher.1, pkB.1, skA.1 ) ] --> [ ]
-
-  /*
-  rule (modulo AC) p_0_111111111112[color=#ffffff, process="0",
-                                    issapicrule, role='Process']:
-     [ State_111111111112( Na, cypher, pkB, skA ) ] --> [ ]
-  */
-
 rule (modulo E) p_0_12[color=#ffffff, process="!", issapicrule,
                        role='Process']:
    [ State_12( ) ] --> [ !Semistate_121( ) ]
@@ -2524,30 +2514,6 @@ rule (modulo E) p_0_1211111111111111[color=#ffffff, process="0",
      [ ]
   */
 
-rule (modulo E) p_0_121111111111112[color=#ffffff, process="0",
-                                    issapicrule, role='Process']:
-   [
-   State_121111111111112( Nb.1, cypher1.1, cypher2.1, pkA.1, skB.1, xNa.1 )
-   ]
-  -->
-   [ ]
-
-  /*
-  rule (modulo AC) p_0_121111111111112[color=#ffffff, process="0",
-                                       issapicrule, role='Process']:
-     [ State_121111111111112( Nb, cypher1, cypher2, pkA, skB, xNa ) ] --> [ ]
-  */
-
-rule (modulo E) p_0_121111112[color=#ffffff, process="0", issapicrule,
-                              role='Process']:
-   [ State_121111112( cypher1.1, skB.1 ) ] --> [ ]
-
-  /*
-  rule (modulo AC) p_0_121111112[color=#ffffff, process="0", issapicrule,
-                                 role='Process']:
-     [ State_121111112( cypher1, skB ) ] --> [ ]
-  */
-
 restriction single_session:
   "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
   // safety formula
@@ -2557,25 +2523,14 @@ restriction single_session:
   "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
   */
 
-/*
-WARNING: the following wellformedness checks failed!
-
-Facts occur in the left-hand-side but not in any right-hand-side 
-=================================================================
-
-  1. in rule "p_0_111111111112":  factName `State_111111111112' arity: 4 multiplicity: Linear. Perhaps you want to use the fact in rule "incypher_0_1111111111":  factName `State_11111111111' arity: 4 multiplicity: Linear
-  
-  2. in rule "p_0_121111111111112":  factName `State_121111111111112' arity: 6 multiplicity: Linear. Perhaps you want to use the fact in rule "incypher_0_1211111111111":  factName `State_12111111111111' arity: 6 multiplicity: Linear
-  
-  3. in rule "p_0_121111112":  factName `State_121111112' arity: 2 multiplicity: Linear. Perhaps you want to use the fact in rule "incypher_0_1211111":  factName `State_12111111' arity: 2 multiplicity: Linear
-*/
+/* All wellformedness checks were successful. */
 
 /*
 Generated from:
-Tamarin version 1.12.0
-Maude version 3.5.1
-Git revision: f1832c9bc70a2a165991a0802520f2e07c023227 (with uncommited changes), branch: prepare-release
-Compiled at: 2026-03-06 22:21:49.602637 UTC
+Tamarin version 1.13.0
+Maude version 3.4
+Git revision: 1deff12bd69c96308abb2463d4de5f2c7610c191 (with uncommited changes), branch: develop
+Compiled at: 2026-03-09 07:36:56.194364 UTC
 */
 
 end
@@ -2587,10 +2542,7 @@ summary of summaries:
 analyzed: examples/sapic/slow/NSL/nsl-no_as-untagged.spthy
 
   output:          examples/sapic/slow/NSL/nsl-no_as-untagged.spthy.tmp
-  processing time: 19.17s
-  
-  WARNING: 1 wellformedness check failed!
-           The analysis results might be wrong!
+  processing time: 16.08s
   
   sanity1 (all-traces): falsified - found trace (8 steps)
   sanity2 (all-traces): falsified - found trace (8 steps)

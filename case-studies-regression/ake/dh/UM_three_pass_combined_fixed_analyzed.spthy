@@ -5610,10 +5610,10 @@ qed
 
 /*
 Generated from:
-Tamarin version 1.12.0
-Maude version 3.5.1
-Git revision: f1832c9bc70a2a165991a0802520f2e07c023227 (with uncommited changes), branch: prepare-release
-Compiled at: 2026-03-06 22:21:49.602637 UTC
+Tamarin version 1.13.0
+Maude version 3.4
+Git revision: 1deff12bd69c96308abb2463d4de5f2c7610c191 (with uncommited changes), branch: develop
+Compiled at: 2026-03-09 07:36:56.194364 UTC
 */
 
 end
@@ -5625,7 +5625,7 @@ summary of summaries:
 analyzed: examples/ake/dh/UM_three_pass_combined_fixed.spthy
 
   output:          examples/ake/dh/UM_three_pass_combined_fixed.spthy.tmp
-  processing time: 13.82s
+  processing time: 29.24s
   
   key_agreement_reachable (exists-trace): verified (14 steps)
   CK_secure_UM3 (all-traces): verified (482 steps)
