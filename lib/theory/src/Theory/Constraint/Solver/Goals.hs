@@ -77,6 +77,7 @@ openGoals sys = do
                not $    solved
                     -- message variables are not solved, except if the node already exists in the system -> facilitates finding contradictions
                     || (isMsgVar m && Nothing == M.lookup i (get sNodes sys))
+                    || (xorNeedsRefinement m && Nothing == M.lookup i (get sNodes sys))
                     || sortOfLNTerm m == LSortPub
                     || sortOfLNTerm m == LSortNat
                     -- handled by 'insertAction'
@@ -118,6 +119,11 @@ openGoals sys = do
     return (goal, (get gsNr status, useful))
   where
     existingDeps = rawLessRel sys
+    -- Delay xor knowledge goals whose top-level shape can still change after
+    -- message-variable instantiation. Otherwise solveAction may commit to an
+    -- incomplete partition of the current summands.
+    xorNeedsRefinement (viewTerm2 -> FXor ts) = any isMsgVar ts
+    xorNeedsRefinement _                      = False
     hasKUGuards  =
         any ((KUFact `elem`) . guardFactTags) $ S.toList $ get sFormulas sys
 
