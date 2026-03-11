@@ -102,11 +102,13 @@ builtins thy0 =do
         st <- getState
         let builtinFuncs = S.toList $ stFunSyms msig
         let userFuncs    = userDefinedFunNames st
+        let macroFuncs    = S.map (BC.unpack . fst) (macroNames (sig st))
         let currFuncs    = S.toList $ stFunSyms (sig st)
+        let allUserSyms   = S.toList (stFunSyms (sig st)) ++ S.toList (macroNames (sig st))
         let conflicts = [ (BC.unpack fname, builtinArity, userArity)
                         | (fname, builtinArity) <- builtinFuncs
-                        , BC.unpack fname `S.member` userFuncs
-                        , Just userArity <- [lookup fname currFuncs]
+                        , BC.unpack fname `S.member` (userFuncs `S.union` macroFuncs)
+                        , Just userArity <- [lookup fname allUserSyms]
                         ]
         unless (null conflicts) $ do
             fail $ "Builtin '" ++ name ++ "' conflicts with existing function(s) (same name, different arity): " ++ 
