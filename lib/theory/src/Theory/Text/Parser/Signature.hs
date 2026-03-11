@@ -95,16 +95,18 @@ builtins thy0 =do
     setName thy name = modify thyItems (++ [TranslationItem (SignatureBuiltin name)]) thy
     setOption' thy (Nothing, name)  = setName thy name
     setOption' thy (Just l, name) = setOption l (setName thy name)
+    -- Check for conflicts between builtin functions and user defined functions, and fail with a helpful error message if any are found.
+    -- Otherwise, add the builtin signature to the state and add the reserved function names to the state.
     extendSig (name, Just msig, opt) = do
         _ <- symbol name
-        currSig <- sig <$> getState
+        st <- getState
         let builtinFuncs = S.toList $ stFunSyms msig
-        let existingFuncs = S.toList $ stFunSyms currSig
-        let conflicts = [ (fname, arity1, arity2)
-                        | (fname, arity1) <- builtinFuncs
-                        , (fname', arity2) <- existingFuncs
-                        , fname == fname'
-                        , arity1 /= arity2
+        let userFuncs    = userDefinedFunNames st
+        let currFuncs    = S.toList $ stFunSyms (sig st)
+        let conflicts = [ (BC.unpack fname, builtinArity, userArity)
+                        | (fname, builtinArity) <- builtinFuncs
+                        , BC.unpack fname `S.member` userFuncs
+                        , Just userArity <- [lookup fname currFuncs]
                         ]
         unless (null conflicts) $ do
             fail $ "Builtin '" ++ name ++ "' conflicts with existing function(s) (same name, different arity): " ++ 
@@ -186,6 +188,7 @@ function = do
                 return ((f,kp'),argTypes,outType)
           _ -> do
                 modifyStateSig $ addFunSym (f,(k,priv,destr))
+                modifyState (\st -> st { userDefinedFunNames = S.insert (BC.unpack f) (userDefinedFunNames st) })
                 return ((f,(k,priv,destr)),argTypes,outType)
 
 
