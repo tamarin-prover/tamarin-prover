@@ -11,16 +11,6 @@ equations:
     fst(<x.1, x.2>) = x.1,
     snd(<x.1, x.2>) = x.2
 
-
-
-
-
-
-
-
-
-
-
 rule (modulo E) Register_key_honest:
    [ Fr( ~ea ) ]
   --[ KeyReg( $A ) ]->
@@ -648,13 +638,29 @@ restriction sid_unique:
     ((UM1_Activate( sid ) @ #i) ∧ (UM1_Activate( sid ) @ #j)) ⇒ (#i = #j)"
   // safety formula
 
+  /*
+  expanded formula:
+  "∀ #i #j sid.
+    ((UM1_Activate( sid ) @ #i) ∧ (UM1_Activate( sid ) @ #j)) ⇒ (#i = #j)"
+  */
+
 restriction keyreg_unique:
   "∀ #i #j A. ((KeyReg( A ) @ #i) ∧ (KeyReg( A ) @ #j)) ⇒ (#i = #j)"
   // safety formula
 
+  /*
+  expanded formula:
+  "∀ #i #j A. ((KeyReg( A ) @ #i) ∧ (KeyReg( A ) @ #j)) ⇒ (#i = #j)"
+  */
+
 restriction actor_ineq_peer:
   "¬(∃ #i A. Agents( A, A ) @ #i)"
   // safety formula
+
+  /*
+  expanded formula:
+  "¬(∃ #i A. Agents( A, A ) @ #i)"
+  */
 
 restriction corrupt_and_reveal_not_too_early:
   "(∀ #i #j s role_ k_.
@@ -662,6 +668,14 @@ restriction corrupt_and_reveal_not_too_early:
      (#i < #j)) ∧
    (∀ #i #j s. ((BeforeExpire( s ) @ #i) ∧ (Expire( s ) @ #j)) ⇒ (#i < #j))"
   // safety formula
+
+  /*
+  expanded formula:
+  "(∀ #i #j s role_ k_.
+     ((BeforeComplete( s ) @ #i) ∧ (Complete( s, role_, k_ ) @ #j)) ⇒
+     (#i < #j)) ∧
+   (∀ #i #j s. ((BeforeExpire( s ) @ #i) ∧ (Expire( s ) @ #j)) ⇒ (#i < #j))"
+  */
 
 lemma key_agreement_reachable:
   exists-trace
@@ -5592,30 +5606,14 @@ next
   qed
 qed
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 /* All wellformedness checks were successful. */
 
 /*
 Generated from:
-Tamarin version 1.11.0
-Maude version 3.5.1
-Git revision: 0cae57e63d6f61be919d6e3efdd8ae9d2f41ceec (with uncommited changes), branch: auto-parse-regression-test-output
-Compiled at: 2026-02-16 20:50:37.030248 UTC
+Tamarin version 1.13.0
+Maude version 3.4
+Git revision: 1deff12bd69c96308abb2463d4de5f2c7610c191 (with uncommited changes), branch: develop
+Compiled at: 2026-03-09 07:36:56.194364 UTC
 */
 
 end
@@ -5627,7 +5625,7 @@ summary of summaries:
 analyzed: examples/ake/dh/UM_three_pass_combined_fixed.spthy
 
   output:          examples/ake/dh/UM_three_pass_combined_fixed.spthy.tmp
-  processing time: 13.61s
+  processing time: 29.24s
   
   key_agreement_reachable (exists-trace): verified (14 steps)
   CK_secure_UM3 (all-traces): verified (482 steps)

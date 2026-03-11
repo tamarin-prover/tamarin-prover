@@ -11,12 +11,6 @@ equations:
     sdec(senc(x.1, x.2), x.2) = x.1,
     snd(<x.1, x.2>) = x.2
 
-
-
-
-
-
-
 rule (modulo E) Init:
    [ Fr( ~kxs ) ] --[ KeyGen( $X ) ]-> [ !LongtermKey( ~kxs, $X ) ]
 
@@ -858,20 +852,6 @@ solve( StateA3( $A, $B, ~kas, ~na, mb, kab, mb2 ) ▶₀ #i )
   qed
 qed
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 lemma AUTO_typing [sources]:
   all-traces
   "(((⊤) ∧
@@ -1665,10 +1645,10 @@ qed
 
 /*
 Generated from:
-Tamarin version 1.11.0
-Maude version 3.5.1
-Git revision: 0cae57e63d6f61be919d6e3efdd8ae9d2f41ceec (with uncommited changes), branch: auto-parse-regression-test-output
-Compiled at: 2026-02-16 20:50:37.030248 UTC
+Tamarin version 1.13.0
+Maude version 3.4
+Git revision: 1deff12bd69c96308abb2463d4de5f2c7610c191 (with uncommited changes), branch: develop
+Compiled at: 2026-03-09 07:36:56.194364 UTC
 */
 
 end
@@ -1680,7 +1660,7 @@ summary of summaries:
 analyzed: examples/features/auto-sources/spore/Nssk_amended.spthy
 
   output:          examples/features/auto-sources/spore/Nssk_amended.spthy.tmp
-  processing time: 3.82s
+  processing time: 3.08s
   
   executability (exists-trace): verified (14 steps)
   Secrecy (all-traces): verified (10 steps)

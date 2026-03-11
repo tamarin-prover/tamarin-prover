@@ -12,12 +12,6 @@ equations:
     snd(<x.1, x.2>) = x.2,
     verify(sign(x.1, x.2), x.1, pk(x.2)) = true
 
-
-
-
-
-
-
 rule (modulo E) PCR_Init:
    [ Fr( ~aik ) ]
   --[ PCR_Init( ), PCR_Write( 'pcr0' ) ]->
@@ -400,10 +394,10 @@ qed
 
 /*
 Generated from:
-Tamarin version 1.11.0
-Maude version 3.5.1
-Git revision: 0cae57e63d6f61be919d6e3efdd8ae9d2f41ceec (with uncommited changes), branch: auto-parse-regression-test-output
-Compiled at: 2026-02-16 20:50:37.030248 UTC
+Tamarin version 1.13.0
+Maude version 3.4
+Git revision: 1deff12bd69c96308abb2463d4de5f2c7610c191 (with uncommited changes), branch: develop
+Compiled at: 2026-03-09 07:36:56.194364 UTC
 */
 
 end
@@ -415,7 +409,7 @@ summary of summaries:
 analyzed: examples/ccs15/Attack_TPM_Envelope.spthy
 
   output:          examples/ccs15/Attack_TPM_Envelope.spthy.tmp
-  processing time: 0.16s
+  processing time: 0.15s
   
   RHS :  types (all-traces): analysis incomplete (1 steps)
   LHS :  types (all-traces): analysis incomplete (1 steps)

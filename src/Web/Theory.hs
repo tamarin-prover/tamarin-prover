@@ -49,6 +49,8 @@ import Data.Maybe
 import Data.Set qualified as S
 import Data.Text qualified as T
 import Data.Time.Format (defaultTimeLocale, formatTime)
+import Extension.Data.Label qualified as L
+
 
 import System.Directory
 import System.FilePath
@@ -65,7 +67,8 @@ import System.Process hiding (system)
 import Logic.Connectives
 import Theory hiding (lPlaintext)
 import Theory.Text.Pretty
-import TheoryObject (theoryMacros, prettyTactic, diffTheoryMacros, DiffLemma (..))
+import ClosedTheory (prettyClosedProtoRule)
+import TheoryObject (theoryMacros, prettyTactic, diffTheoryMacros, diffTheorySideRules, DiffLemma (..))
 
 import Web.Settings
 import Web.Types
@@ -888,19 +891,24 @@ rulesSnippet thy = vcat
         (prettyMacros $ theoryMacros thy)
     , ppWithHeader "Fact Symbols with Injective Instances" $
         (if null injFacts then text "None" else fsepList (text . showInjFact) injFacts)
-    , ppWithHeader "Multiset Rewriting Rules" $
-        (if null (theoryMacros thy) then text empty else text "(Shown with macros application)") <-> (vsep $ map prettyRuleAC msrRules)
-    , ppWithHeader "Restrictions of the Set of Traces" $
-        vsep $ map prettyRestriction $ theoryRestrictions thy
+    , ppWithHeader "Multiset Rewriting Rules" $ vcat (map prettyIntruderRuleAC extraACRules ++ map prettyClosedProtoRule protoRules )
+    , ppWithHeader "Restrictions of the Set of Traces" $ (vsep $ map prettyRestriction $ theoryRestrictions thy)
     ]
   where
-    msrRules   = (getClassifiedRules thy)._crProtocol
+    protoRules = theoryRules thy
+    -- Names of user-defined rules (from theoryRules)
+    protoRuleNames = S.fromList $ map (showRuleCaseName . L.get cprRuleE) protoRules
+    -- All AC rules from ClassifiedRules (including intruder generated rules)
+    allACRules   = (getClassifiedRules thy)._crProtocol
+    -- Only those not already printed (i.e., not in protoRules)
+    extraACRules = filter (\r -> showRuleCaseName r `S.notMember` protoRuleNames) allACRules
     injFacts   = S.toList $ getInjectiveFactInsts thy
     showInjFact (tag, behaviours) = showFactTag tag ++ "(" ++ intercalate "," ("id":positions) ++ ")"
       where positions = [case bb of
                           [b] -> show b
                           _   -> "(" ++ intercalate "," (map show bb) ++ ")"
                         | bb <- behaviours ]
+    prettyIntruderRuleAC r = prettyRuleAC r $--$ nest 2 (multiComment_ ["has exactly the trivial AC variant"]) $--$ text ""
     ppWithHeader header body =
         caseEmptyDoc
             emptyDoc
@@ -953,19 +961,24 @@ rulesDiffSnippetSide s isdiff thy = vcat
                                      else ppWithHeader "Macros" (prettyMacros $ diffTheoryMacros thy)
     , ppWithHeader "Fact Symbols with Injective Instances" $
         (if null injFacts then text "None" else fsepList (text . showInjFact) injFacts)
-    , ppWithHeader "Multiset Rewriting Rules" $
-        (if null (diffTheoryMacros thy) then text empty else text "(Shown with macros application)") <-> (vsep $ map prettyRuleAC msrRules)
-    , ppWithHeader "Restrictions of the Set of Traces" $
-        vsep $ map prettyRestriction $ diffTheorySideRestrictions s thy
+    , ppWithHeader "Multiset Rewriting Rules" $  vcat (map prettyIntruderRuleAC extraACRules ++ map prettyClosedProtoRule protoRules)
+    , ppWithHeader "Restrictions of the Set of Traces" $ (vsep $ map prettyRestriction $ diffTheorySideRestrictions s thy)
     ]
   where
-    msrRules = (getDiffClassifiedRules s isdiff thy)._crProtocol
+    -- Get all protocol rules for this side (user-defined)
+    protoRules = diffTheorySideRules s thy
+    protoRuleNames = S.fromList $ map (showRuleCaseName . L.get cprRuleE) protoRules
+    -- All AC rules from ClassifiedRules (including intruder generated rules)
+    allACRules   = (getDiffClassifiedRules s isdiff thy)._crProtocol
+    -- Only those not already printed (i.e., not in protoRules)
+    extraACRules = filter (\r -> showRuleCaseName r `S.notMember` protoRuleNames) allACRules
     injFacts = S.toList $ getDiffInjectiveFactInsts s isdiff thy
     showInjFact (tag, behaviours) = showFactTag tag ++ "(" ++ intercalate "," ("id":positions) ++ ")"
       where positions = [case bb of
                           [b] -> show b
                           _   -> "(" ++ intercalate "," (map show bb) ++ ")"
                         | bb <- behaviours ]
+    prettyIntruderRuleAC r = prettyRuleAC r $--$ nest 2 (multiComment_ ["has exactly the trivial AC variant"]) $--$ text ""
     ppWithHeader header body =
         caseEmptyDoc
             emptyDoc
@@ -1034,10 +1047,10 @@ htmlThyPath renderUrl renderImgUrl info path lPlaintext = case path of
                However, your changes will be kept on this page until you leave this right panel.
                <br>&zwnj;
               <li>
-               Editing a lemma will NOT modify the file it was loaded from, but clicking on the "append lemmas to file" button adds all modified lemmas as a comment at the end of the file on disk they were loaded from.
+               Editing a lemma will NOT modify the file it was loaded from, but clicking on "Append modified lemmas to file" in the Actions menu adds all modified lemmas as a comment at the end of the file on disk they were loaded from.
                <br>&zwnj;
               <li>
-               Clicking on the "Download" button will download the modified version of the theory (including the modified lemmas), but not modify the file on disk.
+               Clicking on "Download source" in the Actions menu will download the modified version of the theory (including the modified lemmas), but not modify the file on disk.
                <br>&zwnj;
               <li>
                Modifying a reuse lemma will invalidate all subsequent proofs.
@@ -1073,7 +1086,7 @@ htmlThyPath renderUrl renderImgUrl info path lPlaintext = case path of
            Clicking on the button above will delete the lemma from the loaded theory.
            <br>&zwnj;
           <li>
-           Deleting a lemma will NOT modify the file it was loaded from, but clicking on the "Download" button will download the modified version of the theory (so without the deleted lemmas).
+           Deleting a lemma will NOT modify the file it was loaded from, but clicking on "Download source" in the Actions menu will download the modified version of the theory (so without the deleted lemmas).
            <br>&zwnj;
           <li>
            Deleting a reuse lemma will invalidate all subsequent proofs.
@@ -1108,10 +1121,10 @@ htmlThyPath renderUrl renderImgUrl info path lPlaintext = case path of
              Adds the lemma in the current position in the theory, but will throw an error if a lemma with the same name exists, the parsing fails, or the lemma isn't well-formed.
              <br>&zwnj;
             <li>
-             Adding a lemma will NOT modify the loaded source file, but clicking on the "Append lemmas to file" button appends all added lemmas as a comment at the end of the current theory file.
+             Adding a lemma will NOT modify the loaded source file, but clicking on "Append modified lemmas to file" in the Actions menu appends all added lemmas as a comment at the end of the current theory file.
              <br>&zwnj;
             <li>
-             Clicking on the "Download" button will download the modified version of the theory (including the added lemmas).
+             Clicking on "Download source" in the Actions menu will download the modified version of the theory (including the added lemmas).
           <style>
               .wrap-text li {
                   white-space: normal;
@@ -1207,67 +1220,68 @@ helpHtml theoryName info renderUrl = [hamlet|
 
   <h3>Keyboard shortcuts
   <p>
-    <table>
-      <tr>
-        <td>
-          <span class="keys">j/k
-        <td>
-          Jump to the next/previous proof path within the currently
-          \ focused lemma.
-      <tr>
-        <td>
-          <span class="keys">J/K
-        <td>
-          Jump to the next/previous open constraint within the currently
-          \ focused lemma, or to the next/previous lemma if there are no
-          \ more #
-          <tt>sorry
-          \ steps in the proof of the current lemma.
-      <tr>
-        <td>
-          <span class="keys">1-9
-        <td>
-          Apply the proof method with the given number as shown in the
-          \ applicable proof method section in the main view.
-      <tr>
-        <td>
-          <span class="keys">a/A
-        <td>
-          Apply the autoprove method to the focused proof step.
-          \ <span class="keys">a</span>
-          \ stops after finding a solution, and
-          \ <span class="keys">A</span>
-          \ searches for all solutions.
-          \ Needs to have a #
-          <tt>sorry
-          \ selected to work.
-      <tr>
-        <td>
-          <span class="keys">b/B
-        <td>
-          Apply a bounded-depth version of the autoprove method to the
-          \ focused proof step.
-          \ <span class="keys">b</span>
-          \ stops after finding a solution, and
-          \ <span class="keys">B</span>
-          \ searches for all solutions.
-          \ Needs to have a #
-          <tt>sorry
-          \ selected to work.
-      <tr>
-        <td>
-          <span class="keys">s/S
-        <td>
-          Apply the autoprove method to all lemmas.
-          \ <span class="keys">s</span>
-          \ stops after finding a solution, and
-          \ <span class="keys">S</span>
-          \ searches for all solutions.
-      <tr>
-        <td>
-          <span class="keys">?
-        <td>
-          Display this help message.
+    <div id="shortcuts">
+      <table>
+        <tr>
+          <td>
+            <span class="keys">j/k
+          <td>
+            Jump to the next/previous proof path within the currently
+            \ focused lemma.
+        <tr>
+          <td>
+            <span class="keys">J/K
+          <td>
+            Jump to the next/previous open constraint within the currently
+            \ focused lemma, or to the next/previous lemma if there are no
+            \ more #
+            <tt>sorry
+            \ steps in the proof of the current lemma.
+        <tr>
+          <td>
+            <span class="keys">1-9
+          <td>
+            Apply the proof method with the given number as shown in the
+            \ applicable proof method section in the main view.
+        <tr>
+          <td>
+            <span class="keys">a/A
+          <td>
+            Apply the autoprove method to the focused proof step.
+            \ <span class="keys">a</span>
+            \ stops after finding a solution, and
+            \ <span class="keys">A</span>
+            \ searches for all solutions.
+            \ Needs to have a #
+            <tt>sorry
+            \ selected to work.
+        <tr>
+          <td>
+            <span class="keys">b/B
+          <td>
+            Apply a bounded-depth version of the autoprove method to the
+            \ focused proof step.
+            \ <span class="keys">b</span>
+            \ stops after finding a solution, and
+            \ <span class="keys">B</span>
+            \ searches for all solutions.
+            \ Needs to have a #
+            <tt>sorry
+            \ selected to work.
+        <tr>
+          <td>
+            <span class="keys">s/S
+          <td>
+            Apply the autoprove method to all lemmas.
+            \ <span class="keys">s</span>
+            \ stops after finding a solution, and
+            \ <span class="keys">S</span>
+            \ searches for all solutions.
+        <tr>
+          <td>
+            <span class="keys">?
+          <td>
+            Display this help message.
 |] renderUrl
 
 {-

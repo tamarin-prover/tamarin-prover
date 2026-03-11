@@ -129,7 +129,7 @@ progressTransComb anP tComb comb an pos tx =  do
                 invPF <- pfInv anP
                 return (map (addProgressItems domPF invPF pos) rs0
                        ,extendVars domPF pos tx1
-                       ,extendVars domPF pos tx2)
+                       ,fmap (extendVars domPF pos) tx2)
 
 -- | Overall translation is a triple of the other translations.
 progressTrans :: (Show ann, Typeable ann, MonadCatch m2,
@@ -162,7 +162,7 @@ progressRestr anP restrictions  = do
     where
         restriction pos = do  -- produce restriction to go to one of the tos once pos is reached
             toss <- pf anP pos
-            mapM (\tos -> return $ Restriction (name tos) (formula tos))  (toList toss)
+            mapM (\tos -> return $ Restriction (name tos) (formula tos) Nothing)  (toList toss)
             where
                 name tos = "Progress_" ++ prettyPosition pos ++ "_to_" ++ List.intercalate "_or_" (map prettyPosition $ toList tos)
                 formula tos = hinted forAll pvar $ hinted forAll t1var $ antecedent .==>. conclusion tos

@@ -8,12 +8,6 @@ builtins: xor
 functions: fst/1, pair/2, snd/1
 equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
 
-
-
-
-
-
-
 rule (modulo E) testsend:
    [ Fr( ~a ), Fr( ~b ), Fr( ~c ) ]
   --[ OnlyOnce( ), Secret( (~a⊕~b) ) ]->
@@ -65,6 +59,11 @@ restriction unique:
   "∀ #i #j. ((OnlyOnce( ) @ #i) ∧ (OnlyOnce( ) @ #j)) ⇒ (#i = #j)"
   // safety formula
 
+  /*
+  expanded formula:
+  "∀ #i #j. ((OnlyOnce( ) @ #i) ∧ (OnlyOnce( ) @ #j)) ⇒ (#i = #j)"
+  */
+
 lemma secrecybroken:
   all-traces "∀ x #i. (Secret( x ) @ #i) ⇒ (¬(∃ #j. K( x ) @ #j))"
 /*
@@ -104,20 +103,14 @@ solve( splitEqs(0) )
   qed
 qed
 
-
-
-
-
-
-
 /* All wellformedness checks were successful. */
 
 /*
 Generated from:
-Tamarin version 1.11.0
-Maude version 3.5.1
-Git revision: 0cae57e63d6f61be919d6e3efdd8ae9d2f41ceec (with uncommited changes), branch: auto-parse-regression-test-output
-Compiled at: 2026-02-16 20:50:37.030248 UTC
+Tamarin version 1.13.0
+Maude version 3.4
+Git revision: 1deff12bd69c96308abb2463d4de5f2c7610c191 (with uncommited changes), branch: develop
+Compiled at: 2026-03-09 07:36:56.194364 UTC
 */
 
 end
@@ -129,7 +122,7 @@ summary of summaries:
 analyzed: examples/features/xor/basicfunctionality/xor3.spthy
 
   output:          examples/features/xor/basicfunctionality/xor3.spthy.tmp
-  processing time: 0.13s
+  processing time: 0.12s
   
   secrecybroken (all-traces): falsified - found trace (12 steps)
 

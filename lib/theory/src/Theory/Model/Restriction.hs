@@ -25,6 +25,7 @@ module Theory.Model.Restriction (
   , rstrFormula
   , varNow
   , fromRuleRestriction
+  , applyMacroInRestriction
 ) where
 
 import           Control.DeepSeq
@@ -32,12 +33,13 @@ import qualified Control.Monad.State           as State
 import           Control.Monad.Trans.FastFresh (evalFreshT)
 import           Extension.Data.Label          hiding (get)
 import           GHC.Generics                  (Generic)
-import           Prelude                       hiding (id)
+import           Prelude                       
 -- import qualified Extension.Data.Label                as L
 import qualified Data.List                     as L
 import qualified Data.Map                      as M
 import qualified Data.Set                      as S
 import           Term.LTerm
+import           Term.Macro
 -- import           Term.Unification
 import           Term.Substitution
 import           Data.Binary
@@ -60,6 +62,7 @@ data RestrictionAttribute = LHSRestriction
 data ProtoRestriction f = Restriction
     { _rstrName    :: String
     , _rstrFormula :: f
+    , _rstrOriginalFormula :: Maybe f
     }
     deriving (Generic)
 
@@ -144,6 +147,7 @@ fromRuleRestriction rname f =
                 mkRestriction f' = Restriction
                                         (restrPrefix ++ rname)
                                         (foldr (hinted forAll) f'' (frees f''))
+                                        Nothing
                                         where
                                             f'' = Ato (Action timepoint fact) .==>. f'
                                             timepoint = varTerm $ Free varNow
@@ -155,3 +159,7 @@ fromRuleRestriction rname f =
                 getVarTerms subst =   map (apply subst . varTerm) . L.delete varNow . freesList
                 -- produce fact from set of terms
                 mkFact = protoFactAnn Linear (restrPrefix ++ rname) S.empty
+
+applyMacroInRestriction :: [LNMacro] -> Restriction -> Restriction
+applyMacroInRestriction macros (Restriction name f ofm) = 
+    Restriction name (applyMacroInFormula macros f) (Just $ maybe f id ofm)

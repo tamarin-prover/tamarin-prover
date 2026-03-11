@@ -13,18 +13,6 @@ equations:
     snd(<x.1, x.2>) = x.2,
     verify(sign(x.1, x.2), x.1, pk(x.2)) = true
 
-
-
-
-
-
-
-
-
-
-
-
-
 section{* TLS Handshake *}
 
 text{*
@@ -197,6 +185,11 @@ rule (modulo E) C_3:
 restriction Eq_check_succeed:
   "∀ x y #i. (Eq( x, y ) @ #i) ⇒ (x = y)"
   // safety formula
+
+  /*
+  expanded formula:
+  "∀ x y #i. (Eq( x, y ) @ #i) ⇒ (x = y)"
+  */
 
 lemma session_key_secrecy:
   all-traces
@@ -739,40 +732,14 @@ solve( SessionKeys( S, C, keyS, keyC ) @ #k )
   qed
 qed
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 /* All wellformedness checks were successful. */
 
 /*
 Generated from:
-Tamarin version 1.11.0
-Maude version 3.5.1
-Git revision: 0cae57e63d6f61be919d6e3efdd8ae9d2f41ceec (with uncommited changes), branch: auto-parse-regression-test-output
-Compiled at: 2026-02-16 20:50:37.030248 UTC
+Tamarin version 1.13.0
+Maude version 3.4
+Git revision: 1deff12bd69c96308abb2463d4de5f2c7610c191 (with uncommited changes), branch: develop
+Compiled at: 2026-03-09 07:36:56.194364 UTC
 */
 
 end
@@ -784,7 +751,7 @@ summary of summaries:
 analyzed: examples/classic/TLS_Handshake.spthy
 
   output:          examples/classic/TLS_Handshake.spthy.tmp
-  processing time: 1.65s
+  processing time: 1.34s
   
   session_key_secrecy (all-traces): verified (95 steps)
   injective_agree (all-traces): verified (44 steps)

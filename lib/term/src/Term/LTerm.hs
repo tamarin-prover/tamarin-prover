@@ -81,6 +81,8 @@ module Term.LTerm (
   , occurs
   , freesList
   , frees
+  , freeTerm
+  , freeLNTerm
   , someInst
   , rename
   , renameIgnoring
@@ -485,6 +487,15 @@ instance Monad BVar where
 fromFree :: BVar v -> v
 fromFree (Free v)  = v
 fromFree (Bound i) = error $ "fromFree: bound variable '" ++ show i ++ "'"
+
+
+-- Convenience functions for converting vars/terms
+freeLNTerm :: LVar -> BVar LVar
+freeLNTerm = Free
+
+-- | Convert a 'LNVar' to a 'BVar'.
+freeTerm :: LNTerm -> Term (Lit Name (BVar LVar))
+freeTerm =  fmap (fmap freeLNTerm)
 
 -- | Extract a node-id variable from a term that may be a node-id variable.
 bltermNodeId  :: BLTerm -> Maybe LVar

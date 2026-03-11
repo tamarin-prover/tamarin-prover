@@ -108,6 +108,7 @@ module Theory.Text.Parser.Token (
   -- * Parsing State
   , ParserState(..)
   , mkStateSig
+  , mkMacroStateSig
   , modifyStateSig
   , modifyStateFlag
 
@@ -124,8 +125,9 @@ module Theory.Text.Parser.Token (
 
 import           Prelude             hiding (id, (.))
 
--- import           Data.Label
+import           Data.Label
 -- import           Data.Binary
+import qualified Data.ByteString            as B
 import           Data.List (foldl')
 -- import           Control.DeepSeq
 import qualified Data.Set                   as S
@@ -141,6 +143,8 @@ import           System.FilePath
 import           Text.Parsec         hiding ((<|>))
 import qualified Text.Parsec.Token   as T
 
+import Term.Macro                           (macroToFunSym)
+import TheoryObject                         (theoryMacros)
 import           Theory
 import qualified Control.Monad.Catch as Catch
 import Data.Functor.Identity
@@ -170,6 +174,9 @@ instance Monoid ParserState where
 mkStateSig :: MaudeSig -> ParserState
 mkStateSig sign = mempty {sig=sign}
 
+mkMacroStateSig :: OpenTheory -> ParserState
+mkMacroStateSig thy = mkStateSig (addMacrosToSignature (theoryMacros thy) (get sigpMaudeSig $ get thySignature thy))
+
 modifyStateSig ::  Monad m => (MaudeSig -> MaudeSig) -> ParsecT s ParserState m ()
 modifyStateSig modifier = do
    st <- getState
@@ -179,6 +186,15 @@ modifyStateFlag ::  Monad m => (S.Set String -> S.Set String) -> ParsecT s Parse
 modifyStateFlag modifier = do
    st <- getState
    setState (st {flags = modifier $ flags st})
+
+-- | Add macros to the signature so they're recognized as function symbols
+addMacrosToSignature :: [(B.ByteString, [LVar], Term (Lit Name LVar))] -> MaudeSig -> MaudeSig
+addMacrosToSignature macros msig = 
+    foldl (\sig macro -> 
+        let funSym = macroToFunSym macro
+        in case funSym of
+            NoEq noEqSym -> addMacroSym noEqSym sig
+            _            -> sig) msig macros
 
 -- | A parser for a stream of tokens.
 type Parser a = Parsec String ParserState a
@@ -236,6 +252,7 @@ parseString flags0 = parseStringWState $ mempty {sig=pairMaudeSig, flags=S.fromL
 
 parseFile :: [String] -> Parser a -> FilePath -> IO a
 parseFile flags0 = parseFileWState $ mempty {sig=pairMaudeSig, flags=S.fromList flags0}
+
 
 
 -- Token parsers

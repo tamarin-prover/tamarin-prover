@@ -7,8 +7,6 @@ begin
 functions: fst/1, pair/2, snd/1
 equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
 
-
-
 heuristic: o "defaultoracle.oracle" s o "defaultoracle.oracle" p o "defaultoracle.oracle"
 
 rule (modulo E) Rule:
@@ -34,20 +32,14 @@ guarded formula characterizing all satisfying traces:
 simplify
 SOLVED // trace found
 
-
-
-
-
-
-
 /* All wellformedness checks were successful. */
 
 /*
 Generated from:
-Tamarin version 1.11.0
-Maude version 3.5.1
-Git revision: 44c35631edf83439ae51f1158be3dbf847a9e769 (with uncommited changes), branch: HEAD
-Compiled at: 2026-02-19 09:21:12.905860042 UTC
+Tamarin version 1.13.0
+Maude version 3.4
+Git revision: 1deff12bd69c96308abb2463d4de5f2c7610c191 (with uncommited changes), branch: develop
+Compiled at: 2026-03-09 07:36:56.194364 UTC
 */
 
 end

@@ -11,17 +11,9 @@ equations:
     sdec(senc(x.1, x.2), x.2) = x.1,
     snd(<x.1, x.2>) = x.2
 
-
-
-
-
 /* looping facts with injective instances: Server/3, Y_counter/2 */
 
 section{* The Yubikey-Protocol *}
-
-
-
-
 
 rule (modulo E) BuyANewYubikey:
    [ Fr( ~k ), Fr( ~pid ), Fr( ~sid ) ]
@@ -74,6 +66,11 @@ rule (modulo E) Server_ReceiveOTP_NewSession:
 
 restriction smaller:
   "∀ #i a b. (Smaller( a, b ) @ #i) ⇒ (∃ z. (a++z) = b)"
+
+  /*
+  expanded formula:
+  "∀ #i a b. (Smaller( a, b ) @ #i) ⇒ (∃ z. (a++z) = b)"
+  */
 
 lemma transitivity:
   all-traces
@@ -1496,24 +1493,14 @@ solve( (#t1 = #t2)  ∥ (#t2 < #t1) )
   qed
 qed
 
-
-
-
-
-
-
-
-
-
-
 /* All wellformedness checks were successful. */
 
 /*
 Generated from:
-Tamarin version 1.11.0
-Maude version 3.5.1
-Git revision: 44c35631edf83439ae51f1158be3dbf847a9e769 (with uncommited changes), branch: HEAD
-Compiled at: 2026-02-19 09:21:12.905860042 UTC
+Tamarin version 1.13.0
+Maude version 3.4
+Git revision: 1deff12bd69c96308abb2463d4de5f2c7610c191 (with uncommited changes), branch: develop
+Compiled at: 2026-03-09 07:36:56.194364 UTC
 */
 
 end
@@ -1525,7 +1512,7 @@ summary of summaries:
 analyzed: examples/related_work/YubiSecure_KS_STM12/Yubikey_multiset.spthy
 
   output:          examples/related_work/YubiSecure_KS_STM12/Yubikey_multiset.spthy.tmp
-  processing time: 13.60s
+  processing time: 5.56s
   
   transitivity (all-traces): verified (2 steps)
   Login_reachable (exists-trace): verified (8 steps)

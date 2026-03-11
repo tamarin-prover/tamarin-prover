@@ -10,12 +10,6 @@ equations:
     fst(<x.1, x.2>) = x.1,
     snd(<x.1, x.2>) = x.2
 
-
-
-
-
-
-
 rule (modulo E) Register_pk:
    [ Fr( ~ltkA ) ]
   -->
@@ -697,26 +691,14 @@ solve( Secret( A, B, s ) ▶₀ #i )
   qed
 qed
 
-
-
-
-
-
-
-
-
-
-
-
-
 /* All wellformedness checks were successful. */
 
 /*
 Generated from:
-Tamarin version 1.11.0
-Maude version 3.5.1
-Git revision: 44c35631edf83439ae51f1158be3dbf847a9e769 (with uncommited changes), branch: HEAD
-Compiled at: 2026-02-19 09:21:12.905860042 UTC
+Tamarin version 1.13.0
+Maude version 3.4
+Git revision: 1deff12bd69c96308abb2463d4de5f2c7610c191 (with uncommited changes), branch: develop
+Compiled at: 2026-03-09 07:36:56.194364 UTC
 */
 
 end
@@ -728,7 +710,7 @@ summary of summaries:
 analyzed: examples/classic/NSLPK3_untagged.spthy
 
   output:          examples/classic/NSLPK3_untagged.spthy.tmp
-  processing time: 2.58s
+  processing time: 1.02s
   
   types (all-traces): verified (36 steps)
   nonce_secrecy (all-traces): verified (133 steps)

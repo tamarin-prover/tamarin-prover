@@ -566,7 +566,7 @@ maybeSetOracleWorkDir p o = o{ oracleWorkDir = p }
 maybeSetOracleRelPath :: Maybe FilePath -> Oracle -> Oracle
 maybeSetOracleRelPath p o = o{ oracleRelPath = p }
 
-mapOracleRanking :: (Oracle -> Oracle) -> (GoalRanking ProofContext) -> (GoalRanking ProofContext)
+mapOracleRanking :: (Oracle -> Oracle) -> GoalRanking ProofContext -> GoalRanking ProofContext
 mapOracleRanking f (OracleRanking b o) = OracleRanking b (f o)
 mapOracleRanking f (OracleSmartRanking b o) = OracleSmartRanking b (f o)
 mapOracleRanking _ r = r

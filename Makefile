@@ -13,8 +13,8 @@ endif
 # Try to install Tamarin
 default: tamarin
 
-FRONTEND = data/js/intdot-graph.es.js data/js/intdot-staticgraph.es.js data/js/intdot-dynamicgraph.es.js data/css/intdot-style.css
-$(FRONTEND):
+.PHONY: frontend
+frontend:
 	cd frontend && npm install && npm run build
 	cp frontend/dist/intdot-graph.es.js data/js/
 	cp frontend/dist/intdot-staticgraph.es.js data/js/
@@ -23,19 +23,19 @@ $(FRONTEND):
 
 # Default Tamarin installation via stack, multi-threaded
 .PHONY: tamarin
-tamarin: $(FRONTEND)
+tamarin: frontend
 	stack setup
 	stack install
 
 # Single-threaded Tamarin
 .PHONY: single
-single: $(FRONTEND)
+single: frontend
 	stack setup
 	stack install --flag tamarin-prover:-threaded
 
 # Tamarin with profiling options, single-threaded
 .PHONY: profiling
-profiling: $(FRONTEND)
+profiling: frontend
 	stack setup
 	stack install --no-system-ghc --executable-profiling --library-profiling --ghc-options="-fprof-auto -rtsopts" --flag tamarin-prover:-threaded
 
@@ -48,16 +48,12 @@ tamarin-clean:
 .PHONY: clean
 clean:	tamarin-clean
 
-.PHONY: frontend
-frontend:
-	$(MAKE) $(FRONTEND)
-
 # ###########################################################################
 # NOTE the remainder makefile is FOR DEVELOPERS ONLY.
 # It is by no means official in any form and should be IGNORED :-)
 # ###########################################################################
 
-VERSION=1.11.0
+VERSION=1.13.0
 
 ###############################################################################
 ## Case Studies
@@ -155,6 +151,16 @@ case-studies$(SUBDIR)%_analyzed-deforacle.spthy: examples/%.spthy $(TAMARIN)
 	cd examples/regression/trace && $(TAMARIN) defaultoracle.spthy --prove -d=0 +RTS -N3 -RTS -odefaultoracle.spthy.tmp >defaultoracle.spthy.out
 	# We only produce the target after the run, otherwise aborted
 	# runs already 'finish' the case.
+	printf "\n/* Output\n" >>$<.tmp
+	cat $<.out >>$<.tmp
+	echo "*/" >>$<.tmp
+	mv $<.tmp $@
+	\rm -f $<.out
+
+# Special rule for derivation-check files to not bypass derivation checks.
+case-studies$(SUBDIR)features/derivation-checks/%_analyzed-derivcheck.spthy: examples/features/derivation-checks/%.spthy $(TAMARIN)
+	mkdir -p $(dir $@)
+	$(TAMARIN) $< --prove --stop-on-trace=dfs +RTS -N3 -RTS -o$<.tmp >$<.out 2>&1
 	printf "\n/* Output\n" >>$<.tmp
 	cat $<.out >>$<.tmp
 	echo "*/" >>$<.tmp
@@ -392,7 +398,7 @@ ake-bp-case-studies:	$(AKE_BP_CS_TARGETS)
 ## Features
 ###########
 
-FEATURES_CASE_STUDIES=cav13/DH_example.spthy features//multiset/counter.spthy features//multiset/NumberSubtermTests.spthy features//private_function_symbols/NAXOS_eCK_PFS_private.spthy features//private_function_symbols/NAXOS_eCK_private.spthy features//injectivity/injectivity.spthy features//configuration/configuration.spthy features//macros/MacroExample.spthy features//macros/MacroGlobalVarNSPK3.spthy features//macros/MacroWithRestrictionCRxor.spthy
+FEATURES_CASE_STUDIES=cav13/DH_example.spthy features//multiset/counter.spthy features//multiset/NumberSubtermTests.spthy features//private_function_symbols/NAXOS_eCK_PFS_private.spthy features//private_function_symbols/NAXOS_eCK_private.spthy features//injectivity/injectivity.spthy features//configuration/configuration.spthy features//macros/MacroExample.spthy features//macros/MacroGlobalVarNSPK3.spthy features//macros/MacroWithRestrictionCRxor.spthy features/macros/MacroInLemmasAndRestrictions.spthy
 
 FEATURES_CS_TARGETS=$(subst .spthy,_analyzed.spthy,$(addprefix case-studies$(SUBDIR),$(FEATURES_CASE_STUDIES)))
 
@@ -434,12 +440,11 @@ accountability-case-studies:	$(ACCOUNTABILITY_CS_TARGETS)
 ## Regression (old issues)
 ##########################
 
-FAST_REGRESSION_CASE_STUDIES=issue446-1.spthy issue446-2.spthy issue753-4.spthy
+FAST_REGRESSION_CASE_STUDIES=issue446-1.spthy issue446-2.spthy issue753-4.spthy issue777.spthy
 FAST_REGRESSION_TARGETS=$(subst .spthy,_analyzed.spthy,$(addprefix case-studies$(SUBDIR)regression/trace/,$(FAST_REGRESSION_CASE_STUDIES)))
 
 
 REGRESSION_CASE_STUDIES=issue216.spthy issue193.spthy issue310.spthy issue519.spthy issue527.spthy issue515.spthy
-
 REGRESSION_TARGETS=$(subst .spthy,_analyzed.spthy,$(addprefix case-studies$(SUBDIR)regression/trace/,$(REGRESSION_CASE_STUDIES)))
 
 SEQDFS_CASE_STUDIES=seqdfsneeded.spthy
@@ -482,18 +487,12 @@ sapic-case-studies-superslow:	$(SAPIC_CS_TARGETS_SUPER_SLOW) # used to heat in w
 
 ## Derivation checks
 ##########################
-DERIVATION_CHECK_CASE_STUDIES=$(notdir $(wildcard examples/features/derivation-checks/*.spthy))
-DERIVATION_CHECK_CS_TARGETS=$(subst .spthy,_analyzed.spthy,$(addprefix case-studies$(SUBDIR)features/derivation-checks/,$(DERIVATION_CHECK_CASE_STUDIES)))
 
-# Special rule for derivation-check files to not bypass derivation checks.
-case-studies$(SUBDIR)features/derivation-checks/%_analyzed.spthy: examples/features/derivation-checks/%.spthy $(TAMARIN)
-	mkdir -p $(dir $@)
-	$(TAMARIN) $< --prove --stop-on-trace=dfs +RTS -N3 -RTS -o$<.tmp >$<.out 2>&1
-	printf "\n/* Output\n" >>$<.tmp
-	cat $<.out >>$<.tmp
-	echo "*/" >>$<.tmp
-	mv $<.tmp $@
-	\rm -f $<.out
+DERIVATION_CHECK_CASE_STUDIES=$(notdir $(wildcard examples/features/derivation-checks/*.spthy))
+DERIVATION_CHECK_CS_TARGETS=$(subst .spthy,_analyzed-derivcheck.spthy,$(addprefix case-studies$(SUBDIR)features/derivation-checks/,$(DERIVATION_CHECK_CASE_STUDIES)))
+
+derivation-check-case-studies:	$(DERIVATION_CHECK_CS_TARGETS)
+	grep "verified\|falsified\|processing time" $^
 
 ## All case studies
 ###################

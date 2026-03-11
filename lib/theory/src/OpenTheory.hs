@@ -150,7 +150,7 @@ addAutoSourcesLemma hnd lemmaName (ClosedRuleCache _ raw _ _) items =
     runMaude = (`runReader` hnd)
 
     -- searching for the lemma
-    lemma (LemmaItem (Lemma name _ _ _ _ _ _)) | name == lemmaName = True
+    lemma (LemmaItem (Lemma name _ _ _ _ _ _ _)) | name == lemmaName = True
     lemma _ = False
 
     -- build the lemma
@@ -922,8 +922,8 @@ prettyDiffTheory ppSig ppCache ppRule ppDiffPrf ppPrf thy =
     ++ [kwTheoryBegin,
       lineComment_ "Function signature and definition of the equational theory E",
       ppSig $ L.get diffThySignature thy,
-      if thyT == [] then text "" else vcat $ map prettyTactic thyT,
-      if thyH == [] then text "" else text "heuristic: " <> text (prettyGoalRankings thyH),
+      if null thyT then emptyDoc else vcat $ map prettyTactic thyT,
+      if null thyH then emptyDoc else text "heuristic: " <> text (prettyGoalRankings thyH),
       prettyMacros $ diffTheoryMacros thy,
       ppCache $ L.get diffThyCacheLeft thy,
       ppCache $ L.get diffThyCacheRight thy,

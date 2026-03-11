@@ -261,8 +261,8 @@ def testOutputFileParsing(path):
 		flags = "--diff" if is_diff_file else ""
 		command = f"tamarin-prover --parse-only {flags} {path}"
 		
-		if is_sapic_or_accountability_file and not settings.sapic_output_parse_test:
-			logging.warning(f"Skipping output parse test for {path} since it is a SAPIC or accountability file and the flag --sapic-output-parse-test is not set.")
+		if is_sapic_or_accountability_file and settings.no_sapic_output_parse_test:
+			logging.warning(f"Skipping output parse test for {path} since it is a SAPIC or accountability file and the flag --no-sapic-output-parse-test is set.")
 			return True, None
 
 		process = subprocess.run(command, shell=True, capture_output=True, text=True)
@@ -527,7 +527,7 @@ def getArguments():
 
 	## set up argparse ##
 	parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter)
-	parser.add_argument("-s", "--slow", help = "Run all (not only fast) tests", action="store_true")
+	parser.add_argument("-s", "--slow", help = "Run slow tests (instead of fast tests)", action="store_true")
 	parser.add_argument("-noi", "--no-install", help = "Do not call 'stack install' before starting the tests", action="store_true")
 	parser.add_argument("-nom", "--no-make", help = "Do not run regression tests, i.e., do not call 'make case-studies'", action="store_true")
 	parser.add_argument("-j", "--jobs", help = "The amount of Tamarin instances used simultaneously. Each Tamarin instance should have 3 threads and 16GB RAM available", type=int, default=1)
@@ -545,7 +545,7 @@ def getArguments():
 			, type=int, default=3)
 	parser.add_argument("-p", "--parser-test", help = "Run the parser tests.", action="store_true")
 	parser.add_argument("-nopt", "--no-output-parse-test", help="Skip testing if output files can be parsed again", action="store_true")
-	parser.add_argument("-spt", "--sapic-output-parse-test", help="Test if SAPIC output files can be parsed again", action="store_true")
+	parser.add_argument("--no-sapic-output-parse-test", dest="no_sapic_output_parse_test", help="Disable SAPIC/accountability output parse tests", action="store_true")
 	
 
 	## save the settings ##

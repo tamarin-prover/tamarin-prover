@@ -1,4 +1,5 @@
 {-# LANGUAGE QuasiQuotes #-}
+{- HLINT ignore "Eta reduce" -}
 -- Copyright   : (c) 2019 Robert Künnemann
 -- License     : GPL v3 (see LICENSE)
 --
@@ -47,7 +48,7 @@ import Theory.Text.Parser
 
 type TranslationResultNull  = [([TransFact], [TransAction], [TransFact], [SyntacticLNFormula])]
 type TranslationResultAct  = ([([TransFact], [TransAction], [TransFact], [SyntacticLNFormula])], Set LVar)
-type TranslationResultComb  = ([([TransFact], [TransAction], [TransFact], [SyntacticLNFormula])], Set LVar, Set LVar)
+type TranslationResultComb  = ([([TransFact], [TransAction], [TransFact], [SyntacticLNFormula])], Set LVar, Maybe (Set LVar))
 
 type TransFNull t = ProcessAnnotation LVar
                              -> ProcessPosition
@@ -217,22 +218,22 @@ baseTransAction
 --   It outputs
 --      a set of mrs
 --      the set of bound variables for the lhs process
---      the set of bound variables for the rhs process
+--      the set of bound variables for the rhs process Or Nothing, if these is no rhs process
 baseTransComb :: TransFComb TranslationResultComb
 baseTransComb c an p tildex
     | Parallel <- c = (
                [([def_state], [], [def_state1 tildex,def_state2 tildex], [])]
-             , tildex, tildex )
+             , tildex, Just tildex )
     | NDC <- c = (
                []
-             , tildex, tildex )
+             , tildex, Just tildex )
     | Cond f' <- c
       , f <- toLFormula f' =
         let freevars_f = fromList $ freesList  f in
         if freevars_f `isSubsetOf` tildex then
                 ([ ([def_state], [], [def_state1 tildex], [f]),
                     ([def_state], [], [def_state2 tildex], [Not f])]
-                     , tildex, tildex )
+                     , tildex, Just tildex )
         else
                     throw $ WFUnbound (freevars_f `difference` tildex)
     | CondEq t1 t2 <- c =
@@ -241,7 +242,7 @@ baseTransComb c an p tildex
         if vars_f `isSubsetOf` tildex then
                 ([ ([def_state],  [PredicateA fa], [def_state1 tildex], []),
                     ([def_state], [NegPredicateA fa], [def_state2 tildex], [])]
-                     , tildex, tildex )
+                     , tildex, Just tildex )
                 else
                     throw $ WFUnbound (vars_f `difference` tildex)
     | Let t1' t2' _ <- c,  -- match vars are ignored in the translation, as they are bound in the def_state
@@ -263,13 +264,13 @@ baseTransComb c an p tildex
               ([FLet pos t1 tildex], [], [def_state1 tildexl], []),
               ([FLet pos t2 tildex], [] , [def_state2 tildex], [faN])
            ],
-            tildexl, tildex)
+            tildexl, Just tildex)
         else
           ([
               ([def_state], [], [FLet pos t2 tildex], []),
               ([FLet pos t1 tildex], [], [def_state1 tildexl], [])
            ],
-            tildexl, tildex)
+            tildexl, Nothing)
 
     -- Pure cell translation
     | Lookup t' v' <- c,  True <- an.pureState,  (Just (AnVar vs)) <- an.unlock,
@@ -281,7 +282,7 @@ baseTransComb c an p tildex
                                                        ], [def_state1 tx', CellLocked t (varTerm vs) ], [])
 --        , ([def_state], [IsNotSet t], [def_state2 tildex], [])
        ]
-             , tx', tildex )
+             , tx', Just tildex )
 
 
     -- Classical state translation
@@ -291,11 +292,11 @@ baseTransComb c an p tildex
                 (
        [ ([def_state], [IsIn t v], [def_state1 tx' ], []),
          ([def_state], [IsNotSet t], [def_state2 tildex], [])]
-             , tx', tildex )
+             , tx', Just tildex )
 -- Process Calls are currently made by a simple inlining of the process, where the parameters have already been substituded by the value of the caller inside the parser. Variants could be defined to optimize this behaviour.
     | ProcessCall {} <- c =
        ([ ([def_state], [], [def_state1 tildex, def_state2 tildex ], [])], -- TODO remove second state def_state2 but make sure `gen` does not produce rule for it in this case, otherwise we get warnings.
-        tildex,tildex)
+        tildex, Just tildex)
 
     -- | otherwise = throw (NotImplementedError "baseTransComb":: SapicException AnnotatedProcess)
     where

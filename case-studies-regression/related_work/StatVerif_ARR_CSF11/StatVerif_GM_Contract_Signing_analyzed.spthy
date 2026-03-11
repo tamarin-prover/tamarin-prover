@@ -13,10 +13,6 @@ equations:
     fst(<x.1, x.2>) = x.1,
     snd(<x.1, x.2>) = x.2
 
-
-
-
-
 rule (modulo E) Setup_TTP:
    [ Fr( seed ) ] --> [ !TTP( seed ), Out( pk(seed) ) ]
 
@@ -237,9 +233,19 @@ restriction Answered_unique:
   "∀ x #i #j. ((Answered( x ) @ #i) ∧ (Answered( x ) @ #j)) ⇒ (#i = #j)"
   // safety formula
 
+  /*
+  expanded formula:
+  "∀ x #i #j. ((Answered( x ) @ #i) ∧ (Answered( x ) @ #j)) ⇒ (#i = #j)"
+  */
+
 restriction Eq_checks_succeed:
   "∀ x y #i. (Eq( x, y ) @ #i) ⇒ (x = y)"
   // safety formula
+
+  /*
+  expanded formula:
+  "∀ x y #i. (Eq( x, y ) @ #i) ⇒ (x = y)"
+  */
 
 lemma aborted_and_resolved_exclusive:
   all-traces
@@ -380,34 +386,14 @@ solve( !TTP( skT ) ▶₁ #i )
   qed
 qed
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 /* All wellformedness checks were successful. */
 
 /*
 Generated from:
-Tamarin version 1.11.0
-Maude version 3.5.1
-Git revision: 0cae57e63d6f61be919d6e3efdd8ae9d2f41ceec (with uncommited changes), branch: auto-parse-regression-test-output
-Compiled at: 2026-02-16 20:50:37.030248 UTC
+Tamarin version 1.13.0
+Maude version 3.4
+Git revision: 1deff12bd69c96308abb2463d4de5f2c7610c191 (with uncommited changes), branch: develop
+Compiled at: 2026-03-09 07:36:56.194364 UTC
 */
 
 end
@@ -419,7 +405,7 @@ summary of summaries:
 analyzed: examples/related_work/StatVerif_ARR_CSF11/StatVerif_GM_Contract_Signing.spthy
 
   output:          examples/related_work/StatVerif_ARR_CSF11/StatVerif_GM_Contract_Signing.spthy.tmp
-  processing time: 0.17s
+  processing time: 0.16s
   
   aborted_and_resolved_exclusive (all-traces): verified (7 steps)
   aborted_contract_reachable (exists-trace): verified (8 steps)

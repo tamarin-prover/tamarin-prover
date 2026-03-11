@@ -7,13 +7,7 @@ begin
 functions: fst/1, pair/2, snd/1
 equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
 
-
-
 heuristic: p
-
-
-
-
 
 lemma ANotReachable:
   all-traces "¬(∃ #t. A( ) @ #t)"
@@ -24,19 +18,13 @@ guarded formula characterizing all counter-examples:
 simplify
 by solve( State_111( lock, lock.1 ) ▶₀ #t )
 
-
-
-
-
-
-
-rule (modulo E) Init[color=#ffffff, process='lock 'P';', issapicrule,
+rule (modulo E) Init[color=#ffffff, process="lock 'P';", issapicrule,
                      role='Process']:
    [ ] --[ Init( ) ]-> [ State_( ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) lockP_0_[color=#ffffff, process='lock 'P';', issapicrule,
+rule (modulo E) lockP_0_[color=#ffffff, process="lock 'P';", issapicrule,
                          role='Process']:
    [ State_( ), Fr( lock ) ]
   --[ Lock_0( '0', lock, 'P' ), Lock( '0', lock, 'P' ) ]->
@@ -44,13 +32,13 @@ rule (modulo E) lockP_0_[color=#ffffff, process='lock 'P';', issapicrule,
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) P_0_1[color=#ffffff, process='P()', issapicrule,
+rule (modulo E) P_0_1[color=#ffffff, process="P()", issapicrule,
                       role='Process']:
    [ State_1( lock ) ] --> [ State_11( lock ), State_12( lock ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) lockP_0_11[color=#6c8040, process='lock 'P';',
+rule (modulo E) lockP_0_11[color=#6c8040, process="lock 'P';",
                            issapicrule, role='P']:
    [ State_11( lock ), Fr( lock.1 ) ]
   --[ Lock_1( '1', lock.1, 'P' ), Lock( '1', lock.1, 'P' ) ]->
@@ -58,13 +46,13 @@ rule (modulo E) lockP_0_11[color=#6c8040, process='lock 'P';',
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) eventA_0_111[color=#6c8040, process='event A( );',
+rule (modulo E) eventA_0_111[color=#6c8040, process="event A( );",
                              issapicrule, role='P']:
    [ State_111( lock, lock.1 ) ] --[ A( ) ]-> [ State_1111( lock, lock.1 ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) unlockP_0_1111[color=#6c8040, process='unlock 'P';',
+rule (modulo E) unlockP_0_1111[color=#6c8040, process="unlock 'P';",
                                issapicrule, role='P']:
    [ State_1111( lock, lock.1 ) ]
   --[ Unlock_1( '1', lock.1, 'P' ), Unlock( '1', lock.1, 'P' ) ]->
@@ -72,13 +60,13 @@ rule (modulo E) unlockP_0_1111[color=#6c8040, process='unlock 'P';',
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) p_0_11111[color=#6c8040, process='0', issapicrule,
+rule (modulo E) p_0_11111[color=#6c8040, process="0", issapicrule,
                           role='P']:
    [ State_11111( lock, lock.1 ) ] --> [ ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) p_0_12[color=#ffffff, process='0', issapicrule,
+rule (modulo E) p_0_12[color=#ffffff, process="0", issapicrule,
                        role='Process']:
    [ State_12( lock ) ] --> [ ]
 
@@ -87,6 +75,11 @@ rule (modulo E) p_0_12[color=#ffffff, process='0', issapicrule,
 restriction single_session:
   "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
   // safety formula
+
+  /*
+  expanded formula:
+  "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
+  */
 
 restriction locking_1:
   "∀ p pp l x lp #t1 #t3.
@@ -104,25 +97,45 @@ restriction locking_1:
       (#t3 < #t1)) ∨
      (#t1 = #t3))"
 
+  /*
+  expanded formula:
+  "∀ p pp l x lp #t1 #t3.
+    ((Lock_1( p, l, x ) @ #t1) ∧ (Lock( pp, lp, x ) @ #t3)) ⇒
+    ((((#t1 < #t3) ∧
+       (∃ #t2.
+         (((((Unlock_1( p, l, x ) @ #t2) ∧ (#t1 < #t2)) ∧ (#t2 < #t3)) ∧
+           (∀ #t0 pp.1. (Unlock( pp.1, l, x ) @ #t0) ⇒ (#t0 = #t2))) ∧
+          (∀ pp.1 lpp #t0.
+            (Lock( pp.1, lpp, x ) @ #t0) ⇒
+            (((#t0 < #t1) ∨ (#t0 = #t1)) ∨ (#t2 < #t0)))) ∧
+         (∀ pp.1 lpp #t0.
+           (Unlock( pp.1, lpp, x ) @ #t0) ⇒
+           (((#t0 < #t1) ∨ (#t2 < #t0)) ∨ (#t2 = #t0))))) ∨
+      (#t3 < #t1)) ∨
+     (#t1 = #t3))"
+  */
+
 restriction locking_0:
   "∀ p pp l x lp #t1 #t3.
     ((Lock_0( p, l, x ) @ #t1) ∧ (Lock( pp, lp, x ) @ #t3)) ⇒
     ((#t3 < #t1) ∨ (#t1 = #t3))"
   // safety formula
 
-/*
-WARNING: the following wellformedness checks failed!
+  /*
+  expanded formula:
+  "∀ p pp l x lp #t1 #t3.
+    ((Lock_0( p, l, x ) @ #t1) ∧ (Lock( pp, lp, x ) @ #t3)) ⇒
+    ((#t3 < #t1) ∨ (#t1 = #t3))"
+  */
 
-Wellformedness-error in Process
-  There is an unlock that cannot be matched with a lock.
-*/
+/* All wellformedness checks were successful. */
 
 /*
 Generated from:
-Tamarin version 1.11.0
-Maude version 3.5.1
-Git revision: 0cae57e63d6f61be919d6e3efdd8ae9d2f41ceec (with uncommited changes), branch: auto-parse-regression-test-output
-Compiled at: 2026-02-16 20:50:37.030248 UTC
+Tamarin version 1.13.0
+Maude version 3.4
+Git revision: 1deff12bd69c96308abb2463d4de5f2c7610c191 (with uncommited changes), branch: develop
+Compiled at: 2026-03-09 07:36:56.194364 UTC
 */
 
 end
@@ -134,10 +147,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-locking-restriction/locking-restriction.spthy
 
   output:          examples/sapic/fast/feature-locking-restriction/locking-restriction.spthy.tmp
-  processing time: 0.03s
-  
-  WARNING: 1 wellformedness check failed!
-           The analysis results might be wrong!
+  processing time: 0.04s
   
   ANotReachable (all-traces): verified (2 steps)
 

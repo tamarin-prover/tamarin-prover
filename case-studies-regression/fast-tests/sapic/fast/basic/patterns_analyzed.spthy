@@ -7,80 +7,70 @@ begin
 functions: fst/1, pair/2, snd/1
 equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
 
-
-
 heuristic: p
 
-
-
-
-
-
-
-
-
-rule (modulo E) Init[color=#ffffff, process='in(x.1);', issapicrule,
+rule (modulo E) Init[color=#ffffff, process="in(x.1);", issapicrule,
                      role='Process']:
    [ ] --[ Init( ) ]-> [ State_( ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) inx_0_[color=#ffffff, process='in(x.1);', issapicrule,
+rule (modulo E) inx_0_[color=#ffffff, process="in(x.1);", issapicrule,
                        role='Process']:
    [ State_( ), In( x.1 ) ] --> [ State_1( x.1 ) ]
 
   /*
-  rule (modulo AC) inx_0_[color=#ffffff, process='in(x.1);', issapicrule,
+  rule (modulo AC) inx_0_[color=#ffffff, process="in(x.1);", issapicrule,
                           role='Process']:
      [ State_( ), In( x ) ] --> [ State_1( x ) ]
   */
 
-rule (modulo E) inx_0_1[color=#ffffff, process='in(=x.1);', issapicrule,
+rule (modulo E) inx_0_1[color=#ffffff, process="in(=x.1);", issapicrule,
                         role='Process']:
    [ State_1( x.1 ), In( x.1 ) ] --> [ State_11( x.1 ) ]
 
   /*
-  rule (modulo AC) inx_0_1[color=#ffffff, process='in(=x.1);', issapicrule,
+  rule (modulo AC) inx_0_1[color=#ffffff, process="in(=x.1);", issapicrule,
                            role='Process']:
      [ State_1( x ), In( x ) ] --> [ State_11( x ) ]
   */
 
-rule (modulo E) inxx_0_11[color=#ffffff, process='in(<=x.1, =x.1>);',
+rule (modulo E) inxx_0_11[color=#ffffff, process="in(<=x.1, =x.1>);",
                           issapicrule, role='Process']:
    [ State_11( x.1 ), In( <x.1, x.1> ) ] --> [ State_111( x.1 ) ]
 
   /*
-  rule (modulo AC) inxx_0_11[color=#ffffff, process='in(<=x.1, =x.1>);',
+  rule (modulo AC) inxx_0_11[color=#ffffff, process="in(<=x.1, =x.1>);",
                              issapicrule, role='Process']:
      [ State_11( x ), In( <x, x> ) ] --> [ State_111( x ) ]
   */
 
 rule (modulo E) Inz_0_111[color=#ffffff,
-                          process=' [ In( z.1 ) ] --> [ ];', issapicrule, role='Process']:
+                          process=" [ In( z.1 ) ] --> [ ];", issapicrule, role='Process']:
    [ State_111( x.1 ), In( z.1 ) ] --> [ State_1111( x.1, z.1 ) ]
 
   /*
   rule (modulo AC) Inz_0_111[color=#ffffff,
-                             process=' [ In( z.1 ) ] --> [ ];', issapicrule, role='Process']:
+                             process=" [ In( z.1 ) ] --> [ ];", issapicrule, role='Process']:
      [ State_111( x ), In( z ) ] --> [ State_1111( x, z ) ]
   */
 
 rule (modulo E) Inz_0_1111[color=#ffffff,
-                           process=' [ In( z.1 ) ] --> [ ];', issapicrule, role='Process']:
+                           process=" [ In( z.1 ) ] --> [ ];", issapicrule, role='Process']:
    [ State_1111( x.1, z.1 ), In( z.1 ) ] --> [ State_11111( x.1, z.1 ) ]
 
   /*
   rule (modulo AC) Inz_0_1111[color=#ffffff,
-                              process=' [ In( z.1 ) ] --> [ ];', issapicrule, role='Process']:
+                              process=" [ In( z.1 ) ] --> [ ];", issapicrule, role='Process']:
      [ State_1111( x, z ), In( z ) ] --> [ State_11111( x, z ) ]
   */
 
-rule (modulo E) p_0_11111[color=#ffffff, process='0', issapicrule,
+rule (modulo E) p_0_11111[color=#ffffff, process="0", issapicrule,
                           role='Process']:
    [ State_11111( x.1, z.1 ) ] --> [ ]
 
   /*
-  rule (modulo AC) p_0_11111[color=#ffffff, process='0', issapicrule,
+  rule (modulo AC) p_0_11111[color=#ffffff, process="0", issapicrule,
                              role='Process']:
      [ State_11111( x, z ) ] --> [ ]
   */
@@ -89,14 +79,19 @@ restriction single_session:
   "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
   // safety formula
 
+  /*
+  expanded formula:
+  "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
+  */
+
 /* All wellformedness checks were successful. */
 
 /*
 Generated from:
-Tamarin version 1.11.0
-Maude version 3.5.1
-Git revision: 44c35631edf83439ae51f1158be3dbf847a9e769 (with uncommited changes), branch: HEAD
-Compiled at: 2026-02-19 09:21:12.905860042 UTC
+Tamarin version 1.13.0
+Maude version 3.4
+Git revision: 1deff12bd69c96308abb2463d4de5f2c7610c191 (with uncommited changes), branch: develop
+Compiled at: 2026-03-09 07:36:56.194364 UTC
 */
 
 end

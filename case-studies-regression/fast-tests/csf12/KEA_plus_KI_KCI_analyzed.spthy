@@ -8,14 +8,6 @@ builtins: diffie-hellman
 functions: fst/1, h/1, pair/2, snd/1
 equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
 
-
-
-
-
-
-
-
-
 section{* KEA+ *}
 
 rule (modulo E) generate_ltk:
@@ -287,22 +279,14 @@ solve( !Ltk( $R, ~lkR ) ▶₂ #i1 )
   qed
 qed
 
-
-
-
-
-
-
-
-
 /* All wellformedness checks were successful. */
 
 /*
 Generated from:
-Tamarin version 1.11.0
-Maude version 3.5.1
-Git revision: 44c35631edf83439ae51f1158be3dbf847a9e769 (with uncommited changes), branch: HEAD
-Compiled at: 2026-02-19 09:21:12.905860042 UTC
+Tamarin version 1.13.0
+Maude version 3.4
+Git revision: 1deff12bd69c96308abb2463d4de5f2c7610c191 (with uncommited changes), branch: develop
+Compiled at: 2026-03-09 07:36:56.194364 UTC
 */
 
 end
@@ -314,7 +298,7 @@ summary of summaries:
 analyzed: examples/csf12/KEA_plus_KI_KCI.spthy
 
   output:          examples/csf12/KEA_plus_KI_KCI.spthy.tmp
-  processing time: 0.44s
+  processing time: 0.17s
   
   keaplus_initiator_key (all-traces): verified (13 steps)
   keaplus_responder_key (all-traces): verified (13 steps)

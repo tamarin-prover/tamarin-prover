@@ -8,12 +8,6 @@ builtins: multiset, xor
 functions: fst/1, h/1, pair/2, snd/1
 equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
 
-
-
-
-
-
-
 rule (modulo E) setup:
    [ Fr( ~k1 ), Fr( ~k2 ) ]
   --[ OnlyOnce( 'setup' ), Create( ~k1 ), Create( ~k2 ) ]->
@@ -32532,10 +32526,10 @@ Facts occur in the left-hand-side but not in any right-hand-side
 
 /*
 Generated from:
-Tamarin version 1.11.0
-Maude version 3.5.1
-Git revision: 0cae57e63d6f61be919d6e3efdd8ae9d2f41ceec (with uncommited changes), branch: auto-parse-regression-test-output
-Compiled at: 2026-02-16 20:50:37.030248 UTC
+Tamarin version 1.13.0
+Maude version 3.4
+Git revision: 1deff12bd69c96308abb2463d4de5f2c7610c191 (with uncommited changes), branch: develop
+Compiled at: 2026-03-09 07:36:56.194364 UTC
 */
 
 end
@@ -32547,7 +32541,7 @@ summary of summaries:
 analyzed: examples/csf18-xor/diff-models/LAK06-UK1.spthy
 
   output:          examples/csf18-xor/diff-models/LAK06-UK1.spthy.tmp
-  processing time: 23.84s
+  processing time: 18.76s
   
   WARNING: 1 wellformedness check failed!
            The analysis results might be wrong!

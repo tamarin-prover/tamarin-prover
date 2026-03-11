@@ -13,23 +13,7 @@ equations:
     mysnd(mypair(a, b)) = b,
     snd(<x.1, x.2>) = x.2
 
-
-
-
-
 /* looping facts with injective instances: Counter/2 */
-
-
-
-
-
-
-
-
-
-
-
-
 
 rule (modulo E) Create:
    [ Fr( ~s ) ] --[ Start( ~s ) ]-> [ Counter( ~s, %1 ) ]
@@ -190,20 +174,6 @@ guarded formula characterizing all counter-examples:
 simplify
 by contradiction /* from formulas */
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 /*
 WARNING: the following wellformedness checks failed!
 
@@ -216,10 +186,10 @@ Reserved names
 
 /*
 Generated from:
-Tamarin version 1.11.0
-Maude version 3.5.1
-Git revision: 44c35631edf83439ae51f1158be3dbf847a9e769 (with uncommited changes), branch: HEAD
-Compiled at: 2026-02-19 09:21:12.905860042 UTC
+Tamarin version 1.13.0
+Maude version 3.4
+Git revision: 1deff12bd69c96308abb2463d4de5f2c7610c191 (with uncommited changes), branch: develop
+Compiled at: 2026-03-09 07:36:56.194364 UTC
 */
 
 end
@@ -231,7 +201,7 @@ summary of summaries:
 analyzed: examples/features//multiset/NumberSubtermTests.spthy
 
   output:          examples/features//multiset/NumberSubtermTests.spthy.tmp
-  processing time: 0.10s
+  processing time: 0.06s
   
   WARNING: 1 wellformedness check failed!
            The analysis results might be wrong!
