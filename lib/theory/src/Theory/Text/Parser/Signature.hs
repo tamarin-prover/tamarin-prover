@@ -102,17 +102,30 @@ builtins thy0 =do
         st <- getState
         let builtinFuncs = S.toList $ stFunSyms msig
         let userFuncs    = userDefinedFunNames st
-        let macroFuncs    = S.map (BC.unpack . fst) (macroNames (sig st))
+        let macroSyms    = S.toList $ macroNames (sig st)
+        let macroFuncs    = S.fromList $ map (BC.unpack . fst) macroSyms
         let currFuncs    = S.toList $ stFunSyms (sig st)
-        let allUserSyms   = currFuncs ++ S.toList (macroNames (sig st))
-        let conflicts = [ (BC.unpack fname, builtinArity, userArity)
-                        | (fname, builtinArity) <- builtinFuncs
-                        , BC.unpack fname `S.member` (userFuncs `S.union` macroFuncs)
-                        , Just userArity <- [lookup fname allUserSyms]
-                        ]
-        unless (null conflicts) $ do
+
+        let functionConflicts = [ (BC.unpack fname, builtinArity, userArity)
+                                | (fname, builtinArity) <- builtinFuncs
+                                , BC.unpack fname `S.member` userFuncs
+                                , Just userArity <- [lookup fname currFuncs]
+                                , userArity /= builtinArity
+                                ]
+
+        let macroConflicts = [ (BC.unpack fname, builtinArity, macroArity)
+                      | (fname, builtinArity) <- builtinFuncs
+                      , BC.unpack fname `S.member` macroFuncs
+                      , Just macroArity <- [lookup fname macroSyms]
+                      , macroArity /= builtinArity
+                      ]
+
+        unless (null functionConflicts) $ do
             fail $ "Builtin '" ++ name ++ "' conflicts with existing function(s) (same name, different arity): " ++ 
-                  show [fname | (fname, _, _) <- conflicts] ++ ". Please remove these function definitions or use different names."
+                  show [fname | (fname, _, _) <- functionConflicts] ++ ". Please remove these function definitions or use different names."
+
+        unless (null macroConflicts) $ do
+            fail $ "Conflicting name for macro '" ++ show [fname | (fname, _, _) <- macroConflicts] ++ "'"
         
         modifyStateSig (`mappend` msig)
         modifyState (\st -> st { reservedBuiltinNames = 
@@ -170,17 +183,24 @@ function = do
         (argTypes,outType) <- functionType
         atts <- option [] $ list functionAttribute
         st <- getState
-        let allReservedNames = reservedBuiltinNames st
-        when (BC.unpack f `elem` allReservedNames) $ do
-            let conflictingBuiltins = [b | (b, names) <- builtinReservedNames, 
-                                        BC.unpack f `elem` names]
-            fail $ "`" ++ BC.unpack f ++ "` is a reserved function name from " ++ 
-                   "the following builtins: " ++ show conflictingBuiltins
-        when (BC.unpack f `elem` reservedBuiltins) $ fail $ "`" ++ BC.unpack f ++ "` is a reserved function name for builtins."
         sign <- sig <$> getState
         let k = length argTypes
         let priv = if Private `elem` lefts atts then Private else Public
         let destr = if Destructor `elem` rights atts then Destructor else Constructor
+        let requested = (k, priv, destr)
+
+        -- Check specifically for conflicts with builtins to give a precise error message.
+        let allReservedNames = reservedBuiltinNames st
+        when (BC.unpack f `elem` allReservedNames) $ do
+          let conflictingBuiltins = [b | (b, names) <- builtinReservedNames, BC.unpack f `elem` names]
+          case lookup f (S.toList $ stFunSyms sign) of
+            Just builtinSig | builtinSig /= requested ->
+              fail $ "`" ++ BC.unpack f ++ "` conflicts with builtin(s) "
+                  ++ show conflictingBuiltins
+                  ++ " (builtin: " ++ show builtinSig ++ ", requested: " ++ show requested ++ ")"
+            _ -> return ()
+
+        -- Check for any conflict with existing functions.
         case lookup f (S.toList (stFunSyms sign) ++ S.toList(macroNames sign)) of
           Just kp' | kp' /= (k,priv,destr) && BC.unpack f /= "fst" && BC.unpack f /= "snd" ->
             fail $ "conflicting arities/private " ++
