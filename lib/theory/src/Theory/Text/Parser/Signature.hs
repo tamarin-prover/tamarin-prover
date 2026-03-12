@@ -104,7 +104,7 @@ builtins thy0 =do
         let userFuncs    = userDefinedFunNames st
         let macroFuncs    = S.map (BC.unpack . fst) (macroNames (sig st))
         let currFuncs    = S.toList $ stFunSyms (sig st)
-        let allUserSyms   = S.toList (stFunSyms (sig st)) ++ S.toList (macroNames (sig st))
+        let allUserSyms   = currFuncs ++ S.toList (macroNames (sig st))
         let conflicts = [ (BC.unpack fname, builtinArity, userArity)
                         | (fname, builtinArity) <- builtinFuncs
                         , BC.unpack fname `S.member` (userFuncs `S.union` macroFuncs)
