@@ -712,7 +712,7 @@ defaultLayout' w = do
         $maybe msg <- message
           <p.message>#{msg}
         <p.loading>
-          Loading, please wait...
+          Analyzing, please wait...
           \  <a id=cancel href='#'>Cancel</a>
         ^{pageBody page}
         <div#dialog>
