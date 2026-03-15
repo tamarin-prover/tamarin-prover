@@ -222,7 +222,7 @@ rule D_14 [no_derivcheck]:
  	--[ Dfin() ]->
 	[  Out( senc( f(m(~m),~rS2), f(~rS,~rD)) ) ]
 		
- rule S_10:
+ rule S_10 [no_derivcheck]:
 	[ AgSt_S8($S,'S_8',< ~skS, $H, $idS, $idH, ~rS, ~rD >), In(m(~m)), Fr(~rS2) ]
 	--[ ]->
 	[ AgSt_S11($S,'S_11',< ~skS, $H, $idS, $idH, ~rS, ~rD, m(~m), ~rS2 >), Out( senc(<m(~m),~rS2>,f(~rS,~rD)) ) ]

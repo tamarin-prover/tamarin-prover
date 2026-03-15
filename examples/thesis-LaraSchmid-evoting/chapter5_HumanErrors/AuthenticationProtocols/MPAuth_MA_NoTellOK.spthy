@@ -192,7 +192,7 @@ rule D_17 [no_derivcheck]:
  	--[ Dfin(), DfromHx($D,$H,'ok','ok')]->
 	[  Out(senc( f(m(~m),~rS2), f(~rS,~rD)) ) ]
 		
- rule S_13:
+ rule S_13 [no_derivcheck]:
 	[ AgSt_S9($S,'S_9',< ~skS, $idS, $H, $idH, ~rS, ~rD >), In(m(~m)), Fr(~rS2) ]
 	--[ ]->
 	[ AgSt_S14($S,'S_14',< ~skS, $idS, $H, $idH, ~rS, ~rD, m(~m), ~rS2 >), Out( senc(<m(~m),~rS2>,f(~rS,~rD)) ) ]
