@@ -74,7 +74,7 @@ rule I_Expire:
 
 /* UM3_Responder */
 // Session creation:
-rule R_Activate:
+rule R_Activate [no_derivcheck]:
   let pA  = 'g'^~ea                      // we do not model key registration by adversary,
                                          // hence key always of this form
       Y   = 'g'^~ey

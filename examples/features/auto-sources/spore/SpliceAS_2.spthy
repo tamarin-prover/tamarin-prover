@@ -113,7 +113,7 @@ rule C_to_AS:
 // 2.   	AS 	-> 	C 	:   	AS, {AS, C, N1, S, pk(S)}sk(AS)
 // and
 // 5.   	AS 	-> 	S 	:   	AS, {AS, S, N3, C, pk(C)}sk(AS)
-rule AS_send_key:
+rule AS_send_key [no_derivcheck]:
   let AS = 'AS'
       m = <'Key', AS, x, n, y, pk(~ltkY)> in
   [
@@ -128,7 +128,7 @@ rule AS_send_key:
   ]
 
 // 3.   	C 	-> 	S 	:   	C, S, {C, T, L, {N2}pk(S)}sk(C)
-rule C_to_S:
+rule C_to_S [no_derivcheck]:
   let AS = 'AS'
       m = <'Key', AS, $C, ~n1, $S, pkS>
       key = aenc(<'4', ~n2>, pkS)
@@ -153,7 +153,7 @@ rule C_to_S:
   ]
 
 // 4.   	S 	-> 	AS :   	S, C, N3
-rule S_to_AS:
+rule S_to_AS [no_derivcheck]:
   let AS = 'AS'
       key = aenc(<'4', n2>, pk(~ltkS))
       msg = sign(<'3', c, t, l, key>,ltkC)
@@ -171,7 +171,7 @@ rule S_to_AS:
   ]
 
 // 6.   	S 	-> 	C 	:   	S, C, {S, inc(N2)}pk(C)   Send
-rule S_to_C:
+rule S_to_C [no_derivcheck]:
   let m = <'Key', AS, $S, ~n3, c, pk(ltkC)>
   in
   [

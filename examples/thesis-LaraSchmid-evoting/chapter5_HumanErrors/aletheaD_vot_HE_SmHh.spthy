@@ -274,7 +274,7 @@ rule BB:
 	, Out_A($BB, <'zkp', p >)
 	]
 	
-rule A_1:
+rule A_1 [no_derivcheck]:
 	[ AgSt_A0($A,<$S,$BB,pkS>)
 	// implicitly (by pattern matching) do verifyA1 since each ballot signed w/ exactly one valid verification key and since bPrime really corresponds to b without signatures:
 	, In_A($BB, <'bs', sg(bPrimea,sskDa) >)
