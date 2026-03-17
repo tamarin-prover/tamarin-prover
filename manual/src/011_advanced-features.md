@@ -930,14 +930,13 @@ There are four simplification levels:
  - **Level 1**: Basic compression. Hides simple intruder deduction rules,
    including the built-in Fr rule.
 
- - **Level 2 (default)**: Transitive reduction. Applies transitive
-   reduction to the less-than ordering constraints (`sLessAtoms`) but preserves
-   edges that are marked as having `Formula` or `Adversary` reasons. This
-   significantly reduces visual clutter while retaining proof-relevant
+ - **Level 2 (default)**: In addition to the level 1 simplifications, also applies
+   transitive reduction to the less-than ordering constraints (`sLessAtoms`) but
+   preserves edges that are marked as having `Formula` or `Adversary` reasons.
+   This significantly reduces visual clutter while retaining proof-relevant
    orderings.
 
- - **Level 3**: Full transitive reduction with adversary cluster
-   collapsing. In addition to the level 2 simplification, this view collapses
+ - **Level 3**: In addition to the level 2 simplifications, this view collapses
    adversary derivation clusters by hiding internal intruder deduction steps and
    showing only the sink nodes that represent the derived knowledge. Such
    collapsed adversary clusters are visualized as nodes with *double outlines*
