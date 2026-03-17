@@ -441,16 +441,21 @@ We can either inspect the graph in the main window, or we can open the graph in
 another window by clicking the `Open the Graph in New Tab` link or the `Popout`
 button under certain graphs. The links under graphs in the resources tab (Raw
 Resources or Refined Resources) or of the subcases under the main proof steps
-will open the same graph in a new tab. The buttons under the main proof graph
-will open the same graph in a new window with dynamic rendering enabled; i.e.,
-when we navigate through the proof steps (either by clicking at a certain proof
-step or using the `j` or `k` keys), the graph in the new window will change
-accordingly. This is especially useful when working with large proof graphs.
+will open the same graph in a new tab. 
 
-The visualization of constraint systems can be adjusted using the graph 
-simplification dropdown menu on the right-hand side of the menu bar, which offers four levels (0-3) of simplification
-to make complex graphs more readable. For more information on graph simplification,
-see the [Advanced Features section](011_advanced-features.html#graph-simplification-levels).
+#### Viewing graphs in a separate window
+The buttons under the main proof graph will open the same graph in a new window
+with dynamic rendering enabled; i.e., when we navigate through the proof steps
+(either by clicking at a certain proof step or using the `j` or `k` keys), the
+graph in the new window will change accordingly. This is especially useful when
+working with large proof graphs.
+
+#### Selecting a graph view simplification level
+The visualization of constraint systems can be adjusted using the graph
+simplification dropdown menu on the right-hand side of the menu bar, which
+offers four different simplification levels to make complex graphs more
+readable. For more information, see the [Advanced Features
+section](011_advanced-features.html#graph-simplification-levels).
 
 To finish the proof at hand, we can either continue manually by selecting the
 constraint to resolve next, or by calling the `autoprove` command, which

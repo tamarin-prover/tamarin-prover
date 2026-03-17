@@ -917,41 +917,44 @@ the constrain systems.
 
 ### Graph Simplification Levels
 
-When visualizing constraint systems in both the interactive GUI and when generating
-dot output with `--output-dot`, Tamarin applies graph simplification to make large
-constraint graphs more readable. The simplification level controls how aggressively
-the graph is simplified.
+When visualizing constraint systems in both the interactive GUI and when
+generating dot output with `--output-dot`, Tamarin applies graph simplification
+to make large constraint graphs more readable. 
 
 There are four simplification levels:
 
- - **Level 0 (SL0)**: No simplification.
-   Shows the complete constraint graph with all edges and nodes in full detail. This is useful for detailed analysis but can be overwhelming for large constraint systems.
+ - **Level 0**: No simplification. Shows the complete constraint graph
+   with all edges and nodes in full detail. This is useful for detailed analysis
+   but can be overwhelming for large constraint systems.
 
- - **Level 1 (SL1)**: Basic compression.
-   Hides "transfer nodes" — simple intruder deduction rules such as pairing, unpairing, and inverses — and drops ordering constraints that are entailed by the edges in the constraint system. This reduces clutter from trivial deduction steps.
+ - **Level 1**: Basic compression. Hides simple intruder deduction rules,
+   including the built-in Fr rule.
 
- - **Level 2 (SL2)**: Transitive reduction (default). 
-   Applies transitive reduction to the less-than ordering constraints (`sLessAtoms`) but preserves edges that are marked as having `Formula` or `Adversary` reasons. This significantly reduces visual clutter while retaining proof-relevant orderings. Level 2 is the default simplification level.
+ - **Level 2 (default)**: Transitive reduction. Applies transitive
+   reduction to the less-than ordering constraints (`sLessAtoms`) but preserves
+   edges that are marked as having `Formula` or `Adversary` reasons. This
+   significantly reduces visual clutter while retaining proof-relevant
+   orderings.
 
- - **Level 3 (SL3)**: Full transitive reduction with adversary cluster collapsing.
-   Removes all transitively-implied less-than constraints without exceptions. It collapses adversary derivation clusters by hiding internal intruder deduction steps and showing only the sink nodes that represent the derived knowledge. Collapsed adversary clusters are visualized as nodes with *double outlines* to distinguish them from regular nodes. This is the most aggressive simplification and produces the most compact graphs, but may hide some details that could be relevant for understanding the constraint system.
+ - **Level 3**: Full transitive reduction with adversary cluster
+   collapsing. In addition to the level 2 simplification, this view collapses
+   adversary derivation clusters by hiding internal intruder deduction steps and
+   showing only the sink nodes that represent the derived knowledge. Such
+   collapsed adversary clusters are visualized as nodes with *double outlines*
+   to distinguish them from regular nodes. 
 
 #### Setting the Simplification Level in the GUI
 
 In the interactive mode, you can change the simplification level using the
-dropdown menu in the constraint system visualization.
+dropdown menu in the top-right of the page.
 
-#### Setting the Simplification Level for Dot Output
+#### Setting the Simplification Level for dot output on the command-line
 
-When using the `--output-dot` option in batch mode, you can control the
-default simplification level using the `--graph-simplification` flag:
+On the command-line, when using the `--output-dot` option, you can control the
+simplification level using `--graph-simplification`. For example:
 
-    tamarin-prover --prove --output-dot=traces.dot --graph-simplification=3 example.spthy
+    tamarin-prover --prove --output-dot=traces.dot --graph-simplification=3 my.spthy
 
-The flag accepts values from 0 to 3, corresponding to the four simplification
-levels described above. The default is level 2.
-
-The simplification level is encoded in the dot graph labels. For example, a
-graph labeled with `SL3` indicates that simplification level 3 was used during
-generation.
-
+The flag accepts values from 0 to 3. Similar to the GUI mode, the default is
+level 2. The used simplification level is encoded in the output dot graph
+labels, e.g., a graph whose label contains `SL3` indicates simplication level 3.
