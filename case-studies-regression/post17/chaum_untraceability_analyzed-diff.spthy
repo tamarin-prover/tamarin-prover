@@ -13,12 +13,6 @@ equations [convergent]:
     unblind(blind(m, r), r) = m,
     unblind(sign(blind(m, r), k), r) = sign(m, k)
 
-
-
-
-
-
-
 rule (modulo E) Register_Bank_pk:
    [ Fr( ~ltkB ) ]
   --[ OnlyOnce( ) ]->
@@ -8699,10 +8693,10 @@ qed
 
 /*
 Generated from:
-Tamarin version 1.11.0
-Maude version 3.5.1
-Git revision: d1fe8f7c328c32aac0588ab7e5a43be267577706 (with uncommited changes), branch: fix-remove-derivation-checks-regression-tests
-Compiled at: 2026-02-16 12:29:57.582345 UTC
+Tamarin version 1.13.0
+Maude version 3.4
+Git revision: 1deff12bd69c96308abb2463d4de5f2c7610c191 (with uncommited changes), branch: develop
+Compiled at: 2026-03-09 07:36:56.194364 UTC
 */
 
 end
@@ -8714,7 +8708,7 @@ summary of summaries:
 analyzed: examples/post17/chaum_untraceability.spthy
 
   output:          examples/post17/chaum_untraceability.spthy.tmp
-  processing time: 36.02s
+  processing time: 26.83s
   
   RHS :  exec (exists-trace): verified (15 steps)
   LHS :  exec (exists-trace): verified (15 steps)

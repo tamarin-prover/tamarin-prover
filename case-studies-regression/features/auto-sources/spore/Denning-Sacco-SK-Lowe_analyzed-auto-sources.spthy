@@ -10,14 +10,6 @@ equations:
     sdec(senc(x.1, x.2), x.2) = x.1,
     snd(<x.1, x.2>) = x.2
 
-
-
-
-
-
-
-
-
 rule (modulo E) Init:
    [ Fr( ~kxs ) ] --[ KeyGen( $X ) ]-> [ !LongtermKey( ~kxs, $X ) ]
 
@@ -100,6 +92,11 @@ rule (modulo E) B_2:
 restriction singlelongtermkeyperuser:
   "∀ A #i #j. ((KeyGen( A ) @ #i) ∧ (KeyGen( A ) @ #j)) ⇒ (#i = #j)"
   // safety formula
+
+  /*
+  expanded formula:
+  "∀ A #i #j. ((KeyGen( A ) @ #i) ∧ (KeyGen( A ) @ #j)) ⇒ (#i = #j)"
+  */
 
 lemma executability:
   exists-trace
@@ -615,18 +612,6 @@ solve( StateA2( A, B, xkab ) ▶₀ #i )
   qed
 qed
 
-
-
-
-
-
-
-
-
-
-
-
-
 lemma AUTO_typing [sources]:
   all-traces
   "(⊤) ∧
@@ -717,10 +702,10 @@ qed
 
 /*
 Generated from:
-Tamarin version 1.11.0
-Maude version 3.5.1
-Git revision: d1fe8f7c328c32aac0588ab7e5a43be267577706 (with uncommited changes), branch: fix-remove-derivation-checks-regression-tests
-Compiled at: 2026-02-16 12:29:57.582345 UTC
+Tamarin version 1.13.0
+Maude version 3.4
+Git revision: 1deff12bd69c96308abb2463d4de5f2c7610c191 (with uncommited changes), branch: develop
+Compiled at: 2026-03-09 07:36:56.194364 UTC
 */
 
 end
@@ -732,7 +717,7 @@ summary of summaries:
 analyzed: examples/features/auto-sources/spore/Denning-Sacco-SK-Lowe.spthy
 
   output:          examples/features/auto-sources/spore/Denning-Sacco-SK-Lowe.spthy.tmp
-  processing time: 1.31s
+  processing time: 1.07s
   
   executability (exists-trace): verified (9 steps)
   secrecy (all-traces): verified (38 steps)

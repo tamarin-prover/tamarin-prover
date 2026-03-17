@@ -223,8 +223,9 @@ of the loaded theory in two ways:
 2. By splitting protocol rules into their variants w.r.t. the equational theory,
    if these variants exists. This is necessary to be able to place the
    annotations. When exporting such a theory from Tamarin using, e.g., the
-   ``Download`` button in the interactive mode, Tamarin will export the rule(s)
-    together with their (annotated) variants, which can be re-imported as usual.
+   ``Download source`` option in the Actions menu in interactive mode, Tamarin
+   will export the rule(s) together with their (annotated) variants, which can
+   be re-imported as usual.
 
 Limiting Precomputations {#sec:limitingPrecomputations}
 -----------

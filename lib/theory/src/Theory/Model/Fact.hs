@@ -540,7 +540,7 @@ prettyFact ppTerm (Fact tag an ts)
   | otherwise                     = ppFact (showFactTag tag) ts <> ppAnn an
   where
     ppFact n t = nestShort' (n ++ "(") ")" . fsep . punctuate comma $ map ppTerm t
-    ppAnn ann = if S.null ann then text "" else
+    ppAnn ann = if S.null ann then emptyDoc else
         brackets . fsep . punctuate comma $ map (text . showFactAnnotation) $ S.toList ann
 
 -- | Pretty print a 'NFact'.

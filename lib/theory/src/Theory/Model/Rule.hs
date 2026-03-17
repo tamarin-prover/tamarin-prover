@@ -1207,7 +1207,7 @@ prettyRuleAttribute attr = fsep $ punctuate comma $ catMaybes [ -- Maybe types a
 prettyRuleAttributes :: (HasRuleAttributes t, HighlightDocument d) => t -> d
 prettyRuleAttributes ru =
         if ruleAttributes ru == mempty
-        then  text ""
+        then  emptyDoc
         else  hcat [text "[", prettyRuleAttribute (ruleAttributes ru), text "]"]
 
 

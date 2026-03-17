@@ -13,14 +13,6 @@ equations:
     sdec(senc(x.1, x.2), x.2) = x.1,
     snd(<x.1, x.2>) = x.2
 
-
-
-
-
-
-
-
-
 rule (modulo E) test_manual_encryption:
    [ In( myenc(x, k) ), In( k ) ] --[ ManualEncrypted( x ) ]-> [ Out( x ) ]
 
@@ -111,26 +103,6 @@ rule (modulo E) B_receives_from_A:
 
   /* has exactly the trivial AC variant */
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 /*
 WARNING: the following wellformedness checks failed!
 
@@ -157,16 +129,16 @@ Failed to derive Variable(s): ltk
 
 /*
 Generated from:
-Tamarin version 1.11.0
-Maude version 3.5.1
-Git revision: d1fe8f7c328c32aac0588ab7e5a43be267577706 (with uncommited changes), branch: fix-remove-derivation-checks-regression-tests
-Compiled at: 2026-02-16 12:29:57.582345 UTC
+Tamarin version 1.13.0
+Maude version 3.4
+Git revision: 1deff12bd69c96308abb2463d4de5f2c7610c191 (with uncommited changes), branch: develop
+Compiled at: 2026-03-09 07:36:56.194364 UTC
 */
 
 end
 /* Output
 maude tool: 'maude'
- checking version: 3.5.1. OK.
+ checking version: 3.4. OK.
  checking installation: OK.
 [Theory EncryptionDerivationTests] Theory loaded
 [Theory EncryptionDerivationTests] Theory translated
@@ -180,7 +152,7 @@ summary of summaries:
 analyzed: examples/features/derivation-checks/fullEncryptionDerivationTests.spthy
 
   output:          examples/features/derivation-checks/fullEncryptionDerivationTests.spthy.tmp
-  processing time: 0.25s
+  processing time: 0.20s
   
   WARNING: 1 wellformedness check failed!
            The analysis results might be wrong!

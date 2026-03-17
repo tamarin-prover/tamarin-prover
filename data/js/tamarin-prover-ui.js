@@ -110,7 +110,8 @@ var server = {
             window.location.href = redirectUrl;
         } else if(data.alert) {
             // Server requested alert box
-            ui.showDialog(data.alert);
+            var isError = data.alert.includes("error") || data.alert.includes("Error");
+            ui.showDialog(data.alert, isError);
         } else {
             // It must be a html response.
             html(data.title, data.html);
@@ -231,6 +232,26 @@ var ui = {
             }
         });
 
+        // Initialize confirmation dialog box
+        $("div#confirm-dialog").dialog({
+            autoOpen: false,
+            title: 'Confirm Action',
+            width: '30em',
+            modal: true,
+            buttons: {
+                "OK": function() {
+                    $(this).dialog("close");
+                    // Trigger the callback if one was set
+                    if ($(this).data('callback')) {
+                        $(this).data('callback')();
+                    }
+                },
+                "Cancel": function() {
+                    $(this).dialog("close");
+                }
+            }
+        });
+
         // Enable context menu
         // $("#proof a.proof-step").contextMenu(
         //     { menu: "contextMenu" },
@@ -242,8 +263,63 @@ var ui = {
         //            );
         //    });
 
-        // Click handler for save link
-        events.installAbsoluteClickHandler("a.save-link", server.handleJson);
+        // Click handler for AJAX action links (e.g., append lemmas)
+        events.installAbsoluteClickHandler("a.ajax-action", server.handleJson);
+
+        // Submit handler for AJAX forms
+        $("form.ajax-form").submit(function(ev) {
+            ev.preventDefault();
+            var form = $(this);
+            var url = form.attr('action');
+            
+            // Check if this is a reload form requiring confirmation
+            if (form.hasClass('reload-confirm')) {
+                ui.showConfirmDialog(
+                    "Reloading the file will discard any unsaved changes, including:\n" +
+                    "• Partial proofs in progress\n" +
+                    "• Modified lemmas\n" +
+                    "• Other edits made in the UI\n\n" +
+                    "Do you want to continue?",
+                    function() {
+                        // User confirmed, proceed with the reload
+                        $.ajax({
+                            type: 'POST',
+                            url: url,
+                            success: function(data) {
+                                if(data.alert) {
+                                    var isError = data.alert.includes("error") || data.alert.includes("Error");
+                                    ui.showDialog(data.alert, isError);
+                                } else {
+                                    server.handleJson(data);
+                                }
+                            },
+                            error: function() {
+                                ui.showDialog("Failed to submit form");
+                            }
+                        });
+                    }
+                );
+                return false;
+            }
+            
+            // Normal AJAX form submission
+            $.ajax({
+                type: 'POST',
+                url: url,
+                success: function(data) {
+                    if(data.alert) {
+                        // Check if it's an error message by looking for common error indicators
+                        var isError = data.alert.includes("error") || data.alert.includes("Error");
+                        ui.showDialog(data.alert, isError);
+                    } else {
+                        server.handleJson(data);
+                    }
+                },
+                error: function() {
+                    ui.showDialog("Failed to submit form");
+                }
+            });
+        });
 
         // Click handler for edit link(s)
         events.installAbsoluteClickHandler(
@@ -458,10 +534,27 @@ var ui = {
     /**
      * Show dialog
      * @param msg The message.
+     * @param isError Optional flag to indicate if this is an error message requiring special formatting.
      */
-    showDialog: function(msg) {
+    showDialog: function(msg, isError) {
         var dialog = $("div#dialog");
-        dialog.html(msg.replace("\n","<br>"));
+        dialog.removeClass("error-message");
+        if (isError) {
+            dialog.addClass("error-message");
+        }
+        dialog.html(msg.replace(/\n/g, "<br>"));
+        dialog.dialog('open');
+    },
+
+    /**
+     * Show confirmation dialog
+     * @param msg The message.
+     * @param callback Function to call when user confirms.
+     */
+    showConfirmDialog: function(msg, callback) {
+        var dialog = $("div#confirm-dialog");
+        dialog.html(msg.replace(/\n/g, "<br>"));
+        dialog.data('callback', callback);
         dialog.dialog('open');
     },
 

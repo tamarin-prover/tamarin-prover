@@ -272,14 +272,18 @@ describing the adversary, the multiset rewrite rules and restrictions describing
 your protocol, and the raw and refined sources, followed by the
 lemmas you want to prove. We will explain each of these in the following.
 
-On the right hand side, you have a quick summary of the available
-commands and keyboard shortcuts you can use to navigate inside the
-theory. In the top right corner there are some links: `Index` leads
-back to the welcome page, `Download` allows you to download the
-current theory (including partial proofs if they exist), `Actions` and
-the sub-bullet `Show source` shows the theory's source code,
-and `Options` allows you to configure the level of details in the
-graph visualization (see below for examples).
+On the right hand side, you have a quick summary of the available commands and
+keyboard shortcuts you can use to navigate inside the theory. In the top right
+corner there are some links: `Index` leads back to the welcome page. 
+`Reload file` (only for locally loaded files) re-reads the theory file from disk
+and performs all the required precomputations, which is useful when editing the
+`.spthy` file outside of the web interface. The `Actions` menu contains 
+`Show source` which displays the theory's source code in a new tab, 
+`Download source` which downloads the current theory (including partial proofs
+if they exist), and `Append modified lemmas to file` (only for locally loaded
+files) which appends any lemmas you've edited in the GUI to the end of your file
+as comments. The `Options` menu allows you to configure the level of details in
+the graph visualization (see below for examples).
 
 If you click on `Message theory` on the left, you should see the following:
 

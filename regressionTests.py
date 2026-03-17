@@ -527,7 +527,7 @@ def getArguments():
 
 	## set up argparse ##
 	parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter)
-	parser.add_argument("-s", "--slow", help = "Run all (not only fast) tests", action="store_true")
+	parser.add_argument("-s", "--slow", help = "Run slow tests (instead of fast tests)", action="store_true")
 	parser.add_argument("-noi", "--no-install", help = "Do not call 'stack install' before starting the tests", action="store_true")
 	parser.add_argument("-nom", "--no-make", help = "Do not run regression tests, i.e., do not call 'make case-studies'", action="store_true")
 	parser.add_argument("-j", "--jobs", help = "The amount of Tamarin instances used simultaneously. Each Tamarin instance should have 3 threads and 16GB RAM available", type=int, default=1)

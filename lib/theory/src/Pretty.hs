@@ -22,4 +22,4 @@ prettyFormalComment header body = text $ header ++ "{*" ++ body ++ "*}"
 
 
 emptyString :: HighlightDocument d => () -> d
-emptyString _ = text ""
+emptyString _ = emptyDoc
