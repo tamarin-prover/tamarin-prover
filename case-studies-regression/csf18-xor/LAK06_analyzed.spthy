@@ -2701,7 +2701,7 @@ summary of summaries:
 analyzed: examples/csf18-xor/LAK06.spthy
 
   output:          examples/csf18-xor/LAK06.spthy.tmp
-  processing time: 2.35s
+  processing time: 2.36s
   
   executable (exists-trace): verified (9 steps)
   helpingSecrecy (all-traces): verified (2 steps)

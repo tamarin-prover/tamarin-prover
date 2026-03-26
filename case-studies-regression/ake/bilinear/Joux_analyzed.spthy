@@ -1060,7 +1060,7 @@ summary of summaries:
 analyzed: examples/ake/bilinear/Joux.spthy
 
   output:          examples/ake/bilinear/Joux.spthy.tmp
-  processing time: 5.96s
+  processing time: 6.22s
   
   session_key_establish (exists-trace): verified (28 steps)
   Session_Key_Secrecy_PFS (all-traces): verified (22 steps)

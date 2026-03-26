@@ -536,7 +536,7 @@ summary of summaries:
 analyzed: examples/ake/bilinear/TAK1_eCK_like.spthy
 
   output:          examples/ake/bilinear/TAK1_eCK_like.spthy.tmp
-  processing time: 15.83s
+  processing time: 17.10s
   
   session_key_establish (exists-trace): verified (17 steps)
   Session_Key_Secrecy (all-traces): falsified - found trace (21 steps)

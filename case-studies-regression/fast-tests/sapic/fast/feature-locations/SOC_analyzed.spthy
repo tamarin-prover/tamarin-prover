@@ -139,16 +139,14 @@ rule (modulo E) p_1_11[color=#ffffff, process="!", issapicrule,
      [ !Semistate_111( init ) ] --> [ State_111( init ) ]
   */
 
-rule (modulo E) Rinit_0_111[color=#ffffff, process="R(init.1)",
+rule (modulo E) Rinit_0_111[color=#ffffff, process="R(init.1);",
                             issapicrule, role='Process']:
-   [ State_111( init.1 ) ]
-  -->
-   [ State_1111( init.1 ), State_1112( init.1 ) ]
+   [ State_111( init.1 ) ] --> [ State_1111( init.1 ) ]
 
   /*
-  rule (modulo AC) Rinit_0_111[color=#ffffff, process="R(init.1)",
+  rule (modulo AC) Rinit_0_111[color=#ffffff, process="R(init.1);",
                                issapicrule, role='Process']:
-     [ State_111( init ) ] --> [ State_1111( init ), State_1112( init ) ]
+     [ State_111( init ) ] --> [ State_1111( init ) ]
   */
 
 rule (modulo E) inpkV_0_1111[color=#408073, process="in(pkV.1);",
@@ -629,16 +627,6 @@ rule (modulo E) p_0_111111111111112[color=#408073, process="0",
      [ State_111111111111112( lock, init, pkV, shared_k, storeP ) ] --> [ ]
   */
 
-rule (modulo E) p_0_1112[color=#ffffff, process="0", issapicrule,
-                         role='Process']:
-   [ State_1112( init.1 ) ] --> [ ]
-
-  /*
-  rule (modulo AC) p_0_1112[color=#ffffff, process="0", issapicrule,
-                            role='Process']:
-     [ State_1112( init ) ] --> [ ]
-  */
-
 rule (modulo E) p_0_12[color=#ffffff, process="!", issapicrule,
                        role='Process']:
    [ State_12( init.1 ) ] --> [ !Semistate_121( init.1 ) ]
@@ -659,16 +647,14 @@ rule (modulo E) p_1_12[color=#ffffff, process="!", issapicrule,
      [ !Semistate_121( init ) ] --> [ State_121( init ) ]
   */
 
-rule (modulo E) Vinit_0_121[color=#ffffff, process="V(init.1)",
+rule (modulo E) Vinit_0_121[color=#ffffff, process="V(init.1);",
                             issapicrule, role='Process']:
-   [ State_121( init.1 ) ]
-  -->
-   [ State_1211( init.1 ), State_1212( init.1 ) ]
+   [ State_121( init.1 ) ] --> [ State_1211( init.1 ) ]
 
   /*
-  rule (modulo AC) Vinit_0_121[color=#ffffff, process="V(init.1)",
+  rule (modulo AC) Vinit_0_121[color=#ffffff, process="V(init.1);",
                                issapicrule, role='Process']:
-     [ State_121( init ) ] --> [ State_1211( init ), State_1212( init ) ]
+     [ State_121( init ) ] --> [ State_1211( init ) ]
   */
 
 rule (modulo E) newskV_0_1211[color=#804840, process="new skV.1;",
@@ -1502,16 +1488,6 @@ rule (modulo E) p_0_121111112[color=#804840, process="0", issapicrule,
      [ State_121111112( init, skV, cypher, signed ) ] --> [ ]
   */
 
-rule (modulo E) p_0_1212[color=#ffffff, process="0", issapicrule,
-                         role='Process']:
-   [ State_1212( init.1 ) ] --> [ ]
-
-  /*
-  rule (modulo AC) p_0_1212[color=#ffffff, process="0", issapicrule,
-                            role='Process']:
-     [ State_1212( init ) ] --> [ ]
-  */
-
 restriction set_in:
   "∀ x y #t3.
     (IsIn( x, y ) @ #t3) ⇒
@@ -1655,7 +1631,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-locations/SOC.spthy
 
   output:          examples/sapic/fast/feature-locations/SOC.spthy.tmp
-  processing time: 3.07s
+  processing time: 2.96s
   
   secrecy (all-traces): verified (2 steps)
   Reach (exists-trace): falsified - no trace found (4 steps)

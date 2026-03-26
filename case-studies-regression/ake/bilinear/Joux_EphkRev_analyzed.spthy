@@ -1044,7 +1044,7 @@ summary of summaries:
 analyzed: examples/ake/bilinear/Joux_EphkRev.spthy
 
   output:          examples/ake/bilinear/Joux_EphkRev.spthy.tmp
-  processing time: 7.00s
+  processing time: 7.28s
   
   session_key_establish (exists-trace): verified (28 steps)
   Session_Key_Secrecy_PFS (all-traces): falsified - found trace (14 steps)

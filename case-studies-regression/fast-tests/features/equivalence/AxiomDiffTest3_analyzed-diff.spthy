@@ -43,7 +43,7 @@ summary of summaries:
 analyzed: examples/features/equivalence/AxiomDiffTest3.spthy
 
   output:          examples/features/equivalence/AxiomDiffTest3.spthy.tmp
-  processing time: 0.03s
+  processing time: 0.04s
   
   DiffLemma:  Observational_equivalence : falsified - found trace (4 steps)
 

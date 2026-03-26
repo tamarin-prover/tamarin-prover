@@ -9,15 +9,15 @@ equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
 
 heuristic: p
 
-rule (modulo E) Init[color=#ffffff, process="Pr('t')", issapicrule,
+rule (modulo E) Init[color=#ffffff, process="Pr('t');", issapicrule,
                      role='Process']:
    [ ] --[ Init( ) ]-> [ State_( ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) Prt_0_[color=#ffffff, process="Pr('t')", issapicrule,
+rule (modulo E) Prt_0_[color=#ffffff, process="Pr('t');", issapicrule,
                        role='Process']:
-   [ State_( ) ] --> [ State_1( ), State_2( ) ]
+   [ State_( ) ] --> [ State_1( ) ]
 
   /* has exactly the trivial AC variant */
 
@@ -30,12 +30,6 @@ rule (modulo E) outt_0_1[color=#408061, process="out('t');", issapicrule,
 rule (modulo E) p_0_11[color=#408061, process="0", issapicrule,
                        role='Pr']:
    [ State_11( ) ] --> [ ]
-
-  /* has exactly the trivial AC variant */
-
-rule (modulo E) p_0_2[color=#ffffff, process="0", issapicrule,
-                      role='Process']:
-   [ State_2( ) ] --> [ ]
 
   /* has exactly the trivial AC variant */
 

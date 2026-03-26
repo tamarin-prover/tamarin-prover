@@ -325,7 +325,7 @@ summary of summaries:
 analyzed: examples/ake/dh/NAXOS_eCK_PFS.spthy
 
   output:          examples/ake/dh/NAXOS_eCK_PFS.spthy.tmp
-  processing time: 0.86s
+  processing time: 0.83s
   
   eCK_PFS_key_secrecy (all-traces): falsified - found trace (15 steps)
 

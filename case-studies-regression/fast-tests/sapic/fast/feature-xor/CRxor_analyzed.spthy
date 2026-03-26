@@ -474,14 +474,14 @@ rule (modulo E) p_0_11[color=#ffffff, process="|", issapicrule,
      [ State_11( ~k ) ] --> [ State_111( ~k ), State_112( ~k ) ]
   */
 
-rule (modulo E) Initiator_0_111[color=#ffffff, process="Initiator()",
+rule (modulo E) Initiator_0_111[color=#ffffff, process="Initiator();",
                                 issapicrule, role='Process']:
-   [ State_111( ~k.1 ) ] --> [ State_1111( ~k.1 ), State_1112( ~k.1 ) ]
+   [ State_111( ~k.1 ) ] --> [ State_1111( ~k.1 ) ]
 
   /*
-  rule (modulo AC) Initiator_0_111[color=#ffffff, process="Initiator()",
+  rule (modulo AC) Initiator_0_111[color=#ffffff, process="Initiator();",
                                    issapicrule, role='Process']:
-     [ State_111( ~k ) ] --> [ State_1111( ~k ), State_1112( ~k ) ]
+     [ State_111( ~k ) ] --> [ State_1111( ~k ) ]
   */
 
 rule (modulo E) newna_0_1111[color=#80404f, process="new ~na.1;",
@@ -689,24 +689,14 @@ rule (modulo E) p_0_111111112[color=#80404f, process="0", issapicrule,
      [ State_111111112( ~k, ~na, m, nb ) ] --> [ ]
   */
 
-rule (modulo E) p_0_1112[color=#ffffff, process="0", issapicrule,
-                         role='Process']:
-   [ State_1112( ~k.1 ) ] --> [ ]
-
-  /*
-  rule (modulo AC) p_0_1112[color=#ffffff, process="0", issapicrule,
-                            role='Process']:
-     [ State_1112( ~k ) ] --> [ ]
-  */
-
-rule (modulo E) Responder_0_112[color=#ffffff, process="Responder()",
+rule (modulo E) Responder_0_112[color=#ffffff, process="Responder();",
                                 issapicrule, role='Process']:
-   [ State_112( ~k.1 ) ] --> [ State_1121( ~k.1 ), State_1122( ~k.1 ) ]
+   [ State_112( ~k.1 ) ] --> [ State_1121( ~k.1 ) ]
 
   /*
-  rule (modulo AC) Responder_0_112[color=#ffffff, process="Responder()",
+  rule (modulo AC) Responder_0_112[color=#ffffff, process="Responder();",
                                    issapicrule, role='Process']:
-     [ State_112( ~k ) ] --> [ State_1121( ~k ), State_1122( ~k ) ]
+     [ State_112( ~k ) ] --> [ State_1121( ~k ) ]
   */
 
 rule (modulo E) inna_0_1121[color=#805d40, process="in(na.2);",
@@ -874,16 +864,6 @@ rule (modulo E) p_0_1121112111[color=#805d40, process="0", issapicrule,
      [ State_1121112111( ~k, ~nb, na ) ] --> [ ]
   */
 
-rule (modulo E) p_0_1122[color=#ffffff, process="0", issapicrule,
-                         role='Process']:
-   [ State_1122( ~k.1 ) ] --> [ ]
-
-  /*
-  rule (modulo AC) p_0_1122[color=#ffffff, process="0", issapicrule,
-                            role='Process']:
-     [ State_1122( ~k ) ] --> [ ]
-  */
-
 restriction predicate_eq:
   "∀ #i a b. (Pred_Eq( a, b ) @ #i) ⇒ (a = b)"
   // safety formula
@@ -930,7 +910,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-xor/CRxor.spthy
 
   output:          examples/sapic/fast/feature-xor/CRxor.spthy.tmp
-  processing time: 0.91s
+  processing time: 0.89s
   
   alive (all-traces): verified (111 steps)
   recentalive_tag (exists-trace): verified (10 steps)

@@ -189,7 +189,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/basic/ndc-two-replications.spthy
 
   output:          examples/sapic/fast/basic/ndc-two-replications.spthy.tmp
-  processing time: 0.04s
+  processing time: 0.05s
   
   A_possible (exists-trace): verified (4 steps)
   B_possible (exists-trace): verified (4 steps)

@@ -1245,7 +1245,7 @@ summary of summaries:
 analyzed: examples/related_work/YubiSecure_KS_STM12/Yubikey_and_YubiHSM_multiset.spthy
 
   output:          examples/related_work/YubiSecure_KS_STM12/Yubikey_and_YubiHSM_multiset.spthy.tmp
-  processing time: 1.92s
+  processing time: 1.99s
   
   WARNING: 1 wellformedness check failed!
            The analysis results might be wrong!

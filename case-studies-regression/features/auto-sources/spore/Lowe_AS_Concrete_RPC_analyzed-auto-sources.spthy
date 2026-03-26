@@ -5025,7 +5025,7 @@ summary of summaries:
 analyzed: examples/features/auto-sources/spore/Lowe_AS_Concrete_RPC.spthy
 
   output:          examples/features/auto-sources/spore/Lowe_AS_Concrete_RPC.spthy.tmp
-  processing time: 12.27s
+  processing time: 11.68s
   
   secrecy (all-traces): verified (65 steps)
   injectiveagreement_A (all-traces): verified (348 steps)

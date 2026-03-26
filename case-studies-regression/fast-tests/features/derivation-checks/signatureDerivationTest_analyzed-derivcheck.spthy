@@ -204,7 +204,7 @@ summary of summaries:
 analyzed: examples/features/derivation-checks/signatureDerivationTest.spthy
 
   output:          examples/features/derivation-checks/signatureDerivationTest.spthy.tmp
-  processing time: 0.17s
+  processing time: 0.18s
   
   WARNING: 1 wellformedness check failed!
            The analysis results might be wrong!

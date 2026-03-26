@@ -49,9 +49,9 @@ rule (modulo E) p_0_[color=#ffffff, process="|", issapicrule,
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) P_0_1[color=#ffffff, process="P()", issapicrule,
+rule (modulo E) P_0_1[color=#ffffff, process="P();", issapicrule,
                       role='Process']:
-   [ State_1( ) ] --> [ State_11( ), State_12( ) ]
+   [ State_1( ) ] --> [ State_11( ) ]
 
   /* has exactly the trivial AC variant */
 
@@ -109,15 +109,9 @@ rule (modulo E) p_0_1111[color=#6c8040, process="0", issapicrule,
      [ State_1111( a ) ] --> [ ]
   */
 
-rule (modulo E) p_0_12[color=#ffffff, process="0", issapicrule,
-                       role='Process']:
-   [ State_12( ) ] --> [ ]
-
-  /* has exactly the trivial AC variant */
-
-rule (modulo E) Q_0_2[color=#ffffff, process="Q()", issapicrule,
+rule (modulo E) Q_0_2[color=#ffffff, process="Q();", issapicrule,
                       role='Process']:
-   [ State_2( ) ] --> [ State_21( ), State_22( ) ]
+   [ State_2( ) ] --> [ State_21( ) ]
 
   /* has exactly the trivial AC variant */
 
@@ -177,12 +171,6 @@ rule (modulo E) p_0_2111[color=#807140, process="0", issapicrule,
      [ State_2111( x ) ] --> [ ]
   */
 
-rule (modulo E) p_0_22[color=#ffffff, process="0", issapicrule,
-                       role='Process']:
-   [ State_22( ) ] --> [ ]
-
-  /* has exactly the trivial AC variant */
-
 restriction single_session:
   "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
   // safety formula
@@ -231,7 +219,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/basic/channels3.spthy
 
   output:          examples/sapic/fast/basic/channels3.spthy.tmp
-  processing time: 0.08s
+  processing time: 0.07s
   
   not_secret (exists-trace): verified (4 steps)
   internal_comm (exists-trace): verified (3 steps)
