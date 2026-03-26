@@ -101,15 +101,14 @@ builtins thy0 =do
         _ <- symbol name
         st <- getState
         let builtinFuncs = S.toList $ stFunSyms msig
-        let userFuncs    = userDefinedFunNames st
         let macroSyms    = S.toList $ macroNames (sig st)
-        let macroFuncs    = S.fromList $ map (BC.unpack . fst) macroSyms
+        let macroFuncs   = S.fromList $ map (BC.unpack . fst) macroSyms
         let currFuncs    = S.toList $ stFunSyms (sig st)
 
         let functionConflicts = [ (BC.unpack fname, builtinArity, userArity)
                                 | (fname, builtinArity) <- builtinFuncs
-                                , BC.unpack fname `S.member` userFuncs
-                                , Just userArity <- [lookup fname currFuncs]
+                                , (fname', userArity)   <- currFuncs
+                                , fname == fname'
                                 , userArity /= builtinArity
                                 ]
 
@@ -120,12 +119,12 @@ builtins thy0 =do
                       , macroArity /= builtinArity
                       ]
 
-        unless (null functionConflicts) $ do
-            fail $ "Builtin '" ++ name ++ "' conflicts with existing function(s) (same name, different arity): " ++ 
+        unless (null functionConflicts || name == "dest-pairing") $ do
+            fail $ "Builtin '" ++ name ++ "' conflicts with existing function(s) (same name, different arity or function options): " ++ 
                   show [fname | (fname, _, _) <- functionConflicts] ++ ". Please remove these function definitions or use different names."
 
         unless (null macroConflicts) $ do
-            fail $ "Conflicting name for macro '" ++ show [fname | (fname, _, _) <- macroConflicts] ++ "'"
+            fail $ "Builtin '" ++ name ++ "' conflicts with existing macro '" ++ show [fname | (fname, _, _) <- macroConflicts] ++ "'"
         
         modifyStateSig (`mappend` msig)
         modifyState (\st -> st { reservedBuiltinNames = 
@@ -203,14 +202,11 @@ function = do
         -- Check for any conflict with existing functions.
         case lookup f (S.toList (stFunSyms sign) ++ S.toList(macroNames sign)) of
           Just kp' | kp' /= (k,priv,destr) && BC.unpack f /= "fst" && BC.unpack f /= "snd" ->
-            fail $ "conflicting arities/private " ++
+            fail $ "conflicting arities/options " ++
                    show kp' ++ " and " ++ show (k,priv,destr) ++
                    " for `" ++ BC.unpack f
-          Just kp' | BC.unpack f == "fst" || BC.unpack f == "snd" -> do
-                return ((f,kp'),argTypes,outType)
           _ -> do
                 modifyStateSig $ addFunSym (f,(k,priv,destr))
-                modifyState (\st -> st { userDefinedFunNames = S.insert (BC.unpack f) (userDefinedFunNames st) })
                 return ((f,(k,priv,destr)),argTypes,outType)
 
 
