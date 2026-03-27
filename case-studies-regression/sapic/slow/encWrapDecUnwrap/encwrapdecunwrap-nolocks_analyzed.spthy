@@ -1439,7 +1439,7 @@ summary of summaries:
 analyzed: examples/sapic/slow/encWrapDecUnwrap/encwrapdecunwrap-nolocks.spthy
 
   output:          examples/sapic/slow/encWrapDecUnwrap/encwrapdecunwrap-nolocks.spthy.tmp
-  processing time: 162.74s
+  processing time: 172.23s
   
   can_obtain_key (exists-trace): verified (24 steps)
 

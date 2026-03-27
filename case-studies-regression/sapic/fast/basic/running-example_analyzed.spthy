@@ -1025,7 +1025,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/basic/running-example.spthy
 
   output:          examples/sapic/fast/basic/running-example.spthy.tmp
-  processing time: 0.67s
+  processing time: 0.68s
   
   can_create_key (exists-trace): verified (3 steps)
   can_obtain_wrapping (exists-trace): verified (11 steps)

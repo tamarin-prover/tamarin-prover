@@ -51,7 +51,7 @@ summary of summaries:
 analyzed: defaultoracle.spthy
 
   output:          defaultoracle.spthy.tmp
-  processing time: 0.05s
+  processing time: 0.06s
   
   Test1 (exists-trace): verified (2 steps)
   Test2 (exists-trace): verified (2 steps)

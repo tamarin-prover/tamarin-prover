@@ -1676,18 +1676,14 @@ rule (modulo E) p_0_1111[color=#ffffff, process="|", issapicrule,
      [ State_11111( s, sk ), State_11112( s, sk ) ]
   */
 
-rule (modulo E) Device_0_11111[color=#ffffff, process="Device()",
+rule (modulo E) Device_0_11111[color=#ffffff, process="Device();",
                                issapicrule, role='Process']:
-   [ State_11111( s.1, sk.1 ) ]
-  -->
-   [ State_111111( s.1, sk.1 ), State_111112( s.1, sk.1 ) ]
+   [ State_11111( s.1, sk.1 ) ] --> [ State_111111( s.1, sk.1 ) ]
 
   /*
-  rule (modulo AC) Device_0_11111[color=#ffffff, process="Device()",
+  rule (modulo AC) Device_0_11111[color=#ffffff, process="Device();",
                                   issapicrule, role='Process']:
-     [ State_11111( s, sk ) ]
-    -->
-     [ State_111111( s, sk ), State_111112( s, sk ) ]
+     [ State_11111( s, sk ) ] --> [ State_111111( s, sk ) ]
   */
 
 rule (modulo E) p_0_111111[color=#708040, process="|", issapicrule,
@@ -2340,16 +2336,6 @@ rule (modulo E) p_0_1111112121112[color=#708040, process="0",
      [ State_1111112121112( lock, s, sk, x, y ) ] --> [ ]
   */
 
-rule (modulo E) p_0_111112[color=#ffffff, process="0", issapicrule,
-                           role='Process']:
-   [ State_111112( s.1, sk.1 ) ] --> [ ]
-
-  /*
-  rule (modulo AC) p_0_111112[color=#ffffff, process="0", issapicrule,
-                              role='Process']:
-     [ State_111112( s, sk ) ] --> [ ]
-  */
-
 rule (modulo E) p_0_11112[color=#ffffff, process="!", issapicrule,
                           role='Process']:
    [ State_11112( s.1, sk.1 ) ] --> [ !Semistate_111121( s.1, sk.1 ) ]
@@ -2370,18 +2356,14 @@ rule (modulo E) p_1_11112[color=#ffffff, process="!", issapicrule,
      [ !Semistate_111121( s, sk ) ] --> [ State_111121( s, sk ) ]
   */
 
-rule (modulo E) User_0_111121[color=#ffffff, process="User()",
+rule (modulo E) User_0_111121[color=#ffffff, process="User();",
                               issapicrule, role='Process']:
-   [ State_111121( s.1, sk.1 ) ]
-  -->
-   [ State_1111211( s.1, sk.1 ), State_1111212( s.1, sk.1 ) ]
+   [ State_111121( s.1, sk.1 ) ] --> [ State_1111211( s.1, sk.1 ) ]
 
   /*
-  rule (modulo AC) User_0_111121[color=#ffffff, process="User()",
+  rule (modulo AC) User_0_111121[color=#ffffff, process="User();",
                                  issapicrule, role='Process']:
-     [ State_111121( s, sk ) ]
-    -->
-     [ State_1111211( s, sk ), State_1111212( s, sk ) ]
+     [ State_111121( s, sk ) ] --> [ State_1111211( s, sk ) ]
   */
 
 rule (modulo E) newlm_0_1111211[color=#80406c, process="new lm.1;",
@@ -2453,16 +2435,6 @@ rule (modulo E) p_0_11112111111[color=#80406c, process="0", issapicrule,
   rule (modulo AC) p_0_11112111111[color=#80406c, process="0", issapicrule,
                                    role='User']:
      [ State_11112111111( lm, rm, s, sk ) ] --> [ ]
-  */
-
-rule (modulo E) p_0_1111212[color=#ffffff, process="0", issapicrule,
-                            role='Process']:
-   [ State_1111212( s.1, sk.1 ) ] --> [ ]
-
-  /*
-  rule (modulo AC) p_0_1111212[color=#ffffff, process="0", issapicrule,
-                               role='Process']:
-     [ State_1111212( s, sk ) ] --> [ ]
   */
 
 restriction set_in:
@@ -2608,7 +2580,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/statVerifLeftRight/stateverif_left_right.spthy
 
   output:          examples/sapic/fast/statVerifLeftRight/stateverif_left_right.spthy.tmp
-  processing time: 4.87s
+  processing time: 4.86s
   
   source (all-traces): verified (171 steps)
   reachability_left (exists-trace): verified (14 steps)

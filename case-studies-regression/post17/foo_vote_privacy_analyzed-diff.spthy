@@ -21903,7 +21903,7 @@ summary of summaries:
 analyzed: examples/post17/foo_vote_privacy.spthy
 
   output:          examples/post17/foo_vote_privacy.spthy.tmp
-  processing time: 79.14s
+  processing time: 80.32s
   
   RHS :  exec (exists-trace): verified (12 steps)
   LHS :  exec (exists-trace): verified (12 steps)

@@ -341,7 +341,7 @@ summary of summaries:
 analyzed: examples/csf18-xor/NSLPK3xor.spthy
 
   output:          examples/csf18-xor/NSLPK3xor.spthy.tmp
-  processing time: 2.12s
+  processing time: 2.11s
   
   types (all-traces): falsified - found trace (12 steps)
   nonce_secrecy (all-traces): falsified - found trace (11 steps)

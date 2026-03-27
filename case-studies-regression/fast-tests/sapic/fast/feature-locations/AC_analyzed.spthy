@@ -163,24 +163,18 @@ rule (modulo E) p_1_11111[color=#ffffff, process="!", issapicrule,
      [ State_111111( StateChannel, state ) ]
   */
 
-rule (modulo E) r_0_111111[color=#ffffff, process="r()", issapicrule,
+rule (modulo E) r_0_111111[color=#ffffff, process="r();", issapicrule,
                            role='Process']:
    [ State_111111( StateChannel, state.1 ) ]
   -->
-   [
-   State_1111111( StateChannel, state.1 ),
-   State_1111112( StateChannel, state.1 )
-   ]
+   [ State_1111111( StateChannel, state.1 ) ]
 
   /*
-  rule (modulo AC) r_0_111111[color=#ffffff, process="r()", issapicrule,
+  rule (modulo AC) r_0_111111[color=#ffffff, process="r();", issapicrule,
                               role='Process']:
      [ State_111111( StateChannel, state ) ]
     -->
-     [
-     State_1111111( StateChannel, state ),
-     State_1111112( StateChannel, state )
-     ]
+     [ State_1111111( StateChannel, state ) ]
   */
 
 rule (modulo E) lockstate_0_1111111[color=#405280,
@@ -381,16 +375,6 @@ rule (modulo E) p_0_111111112[color=#405280, process="0", issapicrule,
      [ State_111111112( StateChannel, state ) ] --> [ ]
   */
 
-rule (modulo E) p_0_1111112[color=#ffffff, process="0", issapicrule,
-                            role='Process']:
-   [ State_1111112( StateChannel, state.1 ) ] --> [ ]
-
-  /*
-  rule (modulo AC) p_0_1111112[color=#ffffff, process="0", issapicrule,
-                               role='Process']:
-     [ State_1111112( StateChannel, state ) ] --> [ ]
-  */
-
 rule (modulo E) p_0_12[color=#ffffff, process="!", issapicrule,
                        role='Process']:
    [ State_12( ) ] --> [ !Semistate_121( ) ]
@@ -473,24 +457,18 @@ rule (modulo E) p_1_121111[color=#ffffff, process="!", issapicrule,
      [ State_1211111( StateChannel, state2 ) ]
   */
 
-rule (modulo E) v_0_1211111[color=#ffffff, process="v()", issapicrule,
+rule (modulo E) v_0_1211111[color=#ffffff, process="v();", issapicrule,
                             role='Process']:
    [ State_1211111( StateChannel.1, state2.1 ) ]
   -->
-   [
-   State_12111111( StateChannel.1, state2.1 ),
-   State_12111112( StateChannel.1, state2.1 )
-   ]
+   [ State_12111111( StateChannel.1, state2.1 ) ]
 
   /*
-  rule (modulo AC) v_0_1211111[color=#ffffff, process="v()", issapicrule,
+  rule (modulo AC) v_0_1211111[color=#ffffff, process="v();", issapicrule,
                                role='Process']:
      [ State_1211111( StateChannel, state2 ) ]
     -->
-     [
-     State_12111111( StateChannel, state2 ),
-     State_12111112( StateChannel, state2 )
-     ]
+     [ State_12111111( StateChannel, state2 ) ]
   */
 
 rule (modulo E) inior_0_12111111[color=#658040,
@@ -813,16 +791,6 @@ rule (modulo E) p_0_12111111112[color=#658040, process="0", issapicrule,
      [ State_12111111112( StateChannel, state2, i, o, r ) ] --> [ ]
   */
 
-rule (modulo E) p_0_12111112[color=#ffffff, process="0", issapicrule,
-                             role='Process']:
-   [ State_12111112( StateChannel.1, state2.1 ) ] --> [ ]
-
-  /*
-  rule (modulo AC) p_0_12111112[color=#ffffff, process="0", issapicrule,
-                                role='Process']:
-     [ State_12111112( StateChannel, state2 ) ] --> [ ]
-  */
-
 restriction predicate_eq:
   "∀ #i a b. (Pred_Eq( a, b ) @ #i) ⇒ (a = b)"
   // safety formula
@@ -878,7 +846,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-locations/AC.spthy
 
   output:          examples/sapic/fast/feature-locations/AC.spthy.tmp
-  processing time: 0.60s
+  processing time: 0.67s
   
   WARNING: 1 wellformedness check failed!
            The analysis results might be wrong!

@@ -32,9 +32,9 @@ rule (modulo E) lockP_0_[color=#ffffff, process="lock 'P';", issapicrule,
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) P_0_1[color=#ffffff, process="P()", issapicrule,
+rule (modulo E) P_0_1[color=#ffffff, process="P();", issapicrule,
                       role='Process']:
-   [ State_1( lock ) ] --> [ State_11( lock ), State_12( lock ) ]
+   [ State_1( lock ) ] --> [ State_11( lock ) ]
 
   /* has exactly the trivial AC variant */
 
@@ -63,12 +63,6 @@ rule (modulo E) unlockP_0_1111[color=#6c8040, process="unlock 'P';",
 rule (modulo E) p_0_11111[color=#6c8040, process="0", issapicrule,
                           role='P']:
    [ State_11111( lock, lock.1 ) ] --> [ ]
-
-  /* has exactly the trivial AC variant */
-
-rule (modulo E) p_0_12[color=#ffffff, process="0", issapicrule,
-                       role='Process']:
-   [ State_12( lock ) ] --> [ ]
 
   /* has exactly the trivial AC variant */
 

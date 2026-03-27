@@ -65,9 +65,9 @@ rule (modulo E) p_0_1[color=#ffffff, process="|", issapicrule,
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) Init_0_11[color=#ffffff, process="Init()", issapicrule,
+rule (modulo E) Init_0_11[color=#ffffff, process="Init();", issapicrule,
                           role='Process']:
-   [ State_11( ) ] --> [ State_111( ), State_112( ) ]
+   [ State_11( ) ] --> [ State_111( ) ]
 
   /* has exactly the trivial AC variant */
 
@@ -77,9 +77,9 @@ rule (modulo E) p_0_111[color=#408047, process="|", issapicrule,
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) A_0_1111[color=#408047, process="A()", issapicrule,
+rule (modulo E) A_0_1111[color=#408047, process="A();", issapicrule,
                          role='Init']:
-   [ State_1111( ) ] --> [ State_11111( ), State_11112( ) ]
+   [ State_1111( ) ] --> [ State_11111( ) ]
 
   /* has exactly the trivial AC variant */
 
@@ -101,15 +101,9 @@ rule (modulo E) p_0_1111111[color=#804046, process="0", issapicrule,
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) p_0_11112[color=#408047, process="0", issapicrule,
-                          role='Init']:
-   [ State_11112( ) ] --> [ ]
-
-  /* has exactly the trivial AC variant */
-
-rule (modulo E) B_0_1112[color=#408047, process="B()", issapicrule,
+rule (modulo E) B_0_1112[color=#408047, process="B();", issapicrule,
                          role='Init']:
-   [ State_1112( ) ] --> [ State_11121( ), State_11122( ) ]
+   [ State_1112( ) ] --> [ State_11121( ) ]
 
   /* has exactly the trivial AC variant */
 
@@ -125,21 +119,9 @@ rule (modulo E) p_0_111211[color=#628040, process="0", issapicrule,
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) p_0_11122[color=#408047, process="0", issapicrule,
-                          role='Init']:
-   [ State_11122( ) ] --> [ ]
-
-  /* has exactly the trivial AC variant */
-
-rule (modulo E) p_0_112[color=#ffffff, process="0", issapicrule,
-                        role='Process']:
-   [ State_112( ) ] --> [ ]
-
-  /* has exactly the trivial AC variant */
-
-rule (modulo E) Resp_0_12[color=#ffffff, process="Resp()", issapicrule,
+rule (modulo E) Resp_0_12[color=#ffffff, process="Resp();", issapicrule,
                           role='Process']:
-   [ State_12( ) ] --> [ State_121( ), State_122( ) ]
+   [ State_12( ) ] --> [ State_121( ) ]
 
   /* has exactly the trivial AC variant */
 
@@ -149,9 +131,9 @@ rule (modulo E) p_0_121[color=#514080, process="|", issapicrule,
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) C_0_1211[color=#514080, process="C()", issapicrule,
+rule (modulo E) C_0_1211[color=#514080, process="C();", issapicrule,
                          role='Resp']:
-   [ State_1211( ) ] --> [ State_12111( ), State_12112( ) ]
+   [ State_1211( ) ] --> [ State_12111( ) ]
 
   /* has exactly the trivial AC variant */
 
@@ -167,15 +149,9 @@ rule (modulo E) p_0_121111[color=#405780, process="0", issapicrule,
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) p_0_12112[color=#514080, process="0", issapicrule,
-                          role='Resp']:
-   [ State_12112( ) ] --> [ ]
-
-  /* has exactly the trivial AC variant */
-
-rule (modulo E) D_0_1212[color=#514080, process="D()", issapicrule,
+rule (modulo E) D_0_1212[color=#514080, process="D();", issapicrule,
                          role='Resp']:
-   [ State_1212( ) ] --> [ State_12121( ), State_12122( ) ]
+   [ State_1212( ) ] --> [ State_12121( ) ]
 
   /* has exactly the trivial AC variant */
 
@@ -188,18 +164,6 @@ rule (modulo E) eventDD_0_12121[color=#408048, process="event DD( );",
 rule (modulo E) p_0_121211[color=#408048, process="0", issapicrule,
                            role='Resp_D']:
    [ State_121211( ) ] --> [ ]
-
-  /* has exactly the trivial AC variant */
-
-rule (modulo E) p_0_12122[color=#514080, process="0", issapicrule,
-                          role='Resp']:
-   [ State_12122( ) ] --> [ ]
-
-  /* has exactly the trivial AC variant */
-
-rule (modulo E) p_0_122[color=#ffffff, process="0", issapicrule,
-                        role='Process']:
-   [ State_122( ) ] --> [ ]
 
   /* has exactly the trivial AC variant */
 
@@ -231,7 +195,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/regression-tests/issue731-clustering-by-role.spthy
 
   output:          examples/sapic/fast/regression-tests/issue731-clustering-by-role.spthy.tmp
-  processing time: 0.09s
+  processing time: 0.07s
   
   sanity (exists-trace): verified (7 steps)
 

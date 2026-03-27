@@ -74,6 +74,7 @@ data SapicAction v =
                  | Lock (SapicNTerm v)
                  | Unlock (SapicNTerm v)
                  | Event (SapicNFact v)
+                 | ProcessCall String [SapicNTerm v]
                  | MSR { iPrems :: [SapicNFact v]
                        , iActs :: [SapicNFact v]
                        , iConcs :: [SapicNFact v]
@@ -93,7 +94,6 @@ deriving instance (Data v, Generic v, Ord v) => Data (SapicAction v)
 data ProcessCombinator v = Parallel | NDC | Cond (SapicNFormula v)
         | CondEq (SapicNTerm v) (SapicNTerm v) | Lookup (SapicNTerm v) v
         | Let { letLeft :: SapicNTerm v, letRight :: SapicNTerm v, letMatch :: Set v}
-        | ProcessCall String [SapicNTerm v]
             deriving (Foldable)
 
 deriving instance (Show v) => Show (ProcessCombinator v)
@@ -151,6 +151,7 @@ mapTermsAction f ff fv ac
         | (Lock t) <- ac       = Lock (f t)
         | (Unlock t) <- ac     = Unlock (f t)
         | (Event fa) <- ac      = Event (fmap f fa)
+        | ProcessCall s ts <- ac = ProcessCall s (map f ts)
         | (MSR l a r rest mv) <- ac  = MSR (f2mapf l) (f2mapf a) (f2mapf r) (fmap ff rest) (Set.map fv mv)
         | Rep <- ac            = Rep
             where f2mapf = fmap $ fmap f
@@ -167,7 +168,6 @@ mapTermsComb f ff fv c
         | (Lookup t v) <- c = Lookup (f t) (fv v)
         | Parallel <- c = Parallel
         | NDC    <- c   = NDC
-        | ProcessCall s ts <- c = ProcessCall s (map f ts)
 
 -- | fold a process: apply @fNull@, @fAct@, @fComb@ on accumulator and action,
 -- annotation and nothing/action/combinator to obtain new accumulator to apply
@@ -264,6 +264,7 @@ traverseTermsAction ft ff fv ac
                      <*> traverse ff rest
                      <*> traverseSet fv mv
         | Rep <- ac            = pure Rep
+        | ProcessCall s ts <- ac = ProcessCall s <$> traverse ft ts
             where t2f = traverse (traverse ft)
 
 traverseTermsComb :: (Applicative f, Eq v) =>
@@ -279,7 +280,6 @@ traverseTermsComb ft ff fv c
         | (Lookup t v)   <- c = Lookup <$> ft t <*> fv v
         | Parallel       <- c = pure Parallel
         | NDC            <- c = pure NDC
-        | ProcessCall s ts <- c = ProcessCall s <$> traverse ft ts
 
 -- | folding on the process tree, used, e.g., for printing
 pfoldMap :: Monoid a => (Process ann v -> a) -> Process ann v -> a
@@ -466,6 +466,9 @@ prettySapicAction' _ (Lock t )  = "lock " ++ render (prettySapicTerm t)
 prettySapicAction' _ (Unlock t )  = "unlock " ++ render (prettySapicTerm t)
 prettySapicAction' _ (Event a )  = "event " ++ render (prettySapicFact a)
 prettySapicAction' prettyRule' (MSR p a c r mv) = prettyRule' p a c r mv
+prettySapicAction' _ (ProcessCall s ts) = s ++ "("++ p ts ++ ")"
+                                    where p pts = render $
+                                            fsep (punctuate comma (map prettySapicTerm pts))
 
 prettySapicComb :: ProcessCombinator SapicLVar -> String
 prettySapicComb Parallel = "|"
@@ -478,9 +481,6 @@ prettySapicComb (Let t t' vs) = "let "++ p' t ++ "=" ++ p t'
                                           p'= render . prettyPattern' vs
 prettySapicComb (Lookup t v) = "lookup "++ p t ++ " as " ++ show v
                                     where p = render . prettySapicTerm
-prettySapicComb (ProcessCall s ts) = s ++ "("++ p ts ++ ")"
-                                    where p pts = render $
-                                            fsep (punctuate comma (map prettySapicTerm pts))
 
 prettySapic' :: (Document d) => ([SapicNFact SapicLVar]
     -> [SapicNFact SapicLVar]
@@ -491,9 +491,9 @@ prettySapic' :: (Document d) => ([SapicNFact SapicLVar]
     -> Process ann SapicLVar -> d
 prettySapic' ppRR p
     | (ProcessNull _) <- p = text "0"
-    | (ProcessComb c@ProcessCall {} _ _ _) <- p = text $ prettySapicComb c
     | (ProcessComb c _ pl pr) <- p =  r pl <-> text (prettySapicComb c) <-> r pr
     | (ProcessAction Rep _ p') <- p = ppAct Rep <> parens (r p')
+    | (ProcessAction a@ProcessCall {} _ _ ) <- p = ppAct a
     | (ProcessAction a _ (ProcessNull _)) <- p = ppAct a
     | (ProcessAction a _ p'@ProcessComb {}) <- p = ppAct a <> semi $-$ nest 1 (parens (r p'))
     | (ProcessAction a _ p') <- p = ppAct a <> semi $-$ r p'

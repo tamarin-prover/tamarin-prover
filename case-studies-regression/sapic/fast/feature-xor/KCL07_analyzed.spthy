@@ -475,18 +475,14 @@ rule (modulo E) p_0_111[color=#ffffff, process="|", issapicrule,
      [ State_1111( ~id, ~k ), State_1112( ~id, ~k ) ]
   */
 
-rule (modulo E) Reader_0_1111[color=#ffffff, process="Reader()",
+rule (modulo E) Reader_0_1111[color=#ffffff, process="Reader();",
                               issapicrule, role='Process']:
-   [ State_1111( ~id.1, ~k.1 ) ]
-  -->
-   [ State_11111( ~id.1, ~k.1 ), State_11112( ~id.1, ~k.1 ) ]
+   [ State_1111( ~id.1, ~k.1 ) ] --> [ State_11111( ~id.1, ~k.1 ) ]
 
   /*
-  rule (modulo AC) Reader_0_1111[color=#ffffff, process="Reader()",
+  rule (modulo AC) Reader_0_1111[color=#ffffff, process="Reader();",
                                  issapicrule, role='Process']:
-     [ State_1111( ~id, ~k ) ]
-    -->
-     [ State_11111( ~id, ~k ), State_11112( ~id, ~k ) ]
+     [ State_1111( ~id, ~k ) ] --> [ State_11111( ~id, ~k ) ]
   */
 
 rule (modulo E) newr_0_11111[color=#404480, process="new ~r1.1;",
@@ -615,16 +611,6 @@ rule (modulo E) p_0_1111111112[color=#404480, process="0", issapicrule,
      [ State_1111111112( ~id, ~k, ~r1, xoredhash ) ] --> [ ]
   */
 
-rule (modulo E) p_0_11112[color=#ffffff, process="0", issapicrule,
-                          role='Process']:
-   [ State_11112( ~id.1, ~k.1 ) ] --> [ ]
-
-  /*
-  rule (modulo AC) p_0_11112[color=#ffffff, process="0", issapicrule,
-                             role='Process']:
-     [ State_11112( ~id, ~k ) ] --> [ ]
-  */
-
 rule (modulo E) p_0_1112[color=#ffffff, process="!", issapicrule,
                          role='Process']:
    [ State_1112( ~id.1, ~k.1 ) ] --> [ !Semistate_11121( ~id.1, ~k.1 ) ]
@@ -645,18 +631,14 @@ rule (modulo E) p_1_1112[color=#ffffff, process="!", issapicrule,
      [ !Semistate_11121( ~id, ~k ) ] --> [ State_11121( ~id, ~k ) ]
   */
 
-rule (modulo E) Tag_0_11121[color=#ffffff, process="Tag()", issapicrule,
+rule (modulo E) Tag_0_11121[color=#ffffff, process="Tag();", issapicrule,
                             role='Process']:
-   [ State_11121( ~id.1, ~k.1 ) ]
-  -->
-   [ State_111211( ~id.1, ~k.1 ), State_111212( ~id.1, ~k.1 ) ]
+   [ State_11121( ~id.1, ~k.1 ) ] --> [ State_111211( ~id.1, ~k.1 ) ]
 
   /*
-  rule (modulo AC) Tag_0_11121[color=#ffffff, process="Tag()", issapicrule,
-                               role='Process']:
-     [ State_11121( ~id, ~k ) ]
-    -->
-     [ State_111211( ~id, ~k ), State_111212( ~id, ~k ) ]
+  rule (modulo AC) Tag_0_11121[color=#ffffff, process="Tag();",
+                               issapicrule, role='Process']:
+     [ State_11121( ~id, ~k ) ] --> [ State_111211( ~id, ~k ) ]
   */
 
 rule (modulo E) inr_0_111211[color=#40807c, process="in(r1.2);",
@@ -740,16 +722,6 @@ rule (modulo E) p_0_1112111111[color=#40807c, process="0", issapicrule,
      [ State_1112111111( ~id, ~k, ~r2, r1 ) ] --> [ ]
   */
 
-rule (modulo E) p_0_111212[color=#ffffff, process="0", issapicrule,
-                           role='Process']:
-   [ State_111212( ~id.1, ~k.1 ) ] --> [ ]
-
-  /*
-  rule (modulo AC) p_0_111212[color=#ffffff, process="0", issapicrule,
-                              role='Process']:
-     [ State_111212( ~id, ~k ) ] --> [ ]
-  */
-
 restriction predicate_eq:
   "∀ #i a b. (Pred_Eq( a, b ) @ #i) ⇒ (a = b)"
   // safety formula
@@ -796,7 +768,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-xor/KCL07.spthy
 
   output:          examples/sapic/fast/feature-xor/KCL07.spthy.tmp
-  processing time: 1.20s
+  processing time: 1.17s
   
   recentalive_tag (all-traces): verified (110 steps)
   executable (exists-trace): verified (16 steps)
