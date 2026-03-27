@@ -140,7 +140,7 @@ summary of summaries:
 analyzed: examples/loops/Minimal_KeyRenegotiation.spthy
 
   output:          examples/loops/Minimal_KeyRenegotiation.spthy.tmp
-  processing time: 0.05s
+  processing time: 0.04s
   
   Secret_reachable (exists-trace): verified (4 steps)
   secrecy (all-traces): verified (22 steps)

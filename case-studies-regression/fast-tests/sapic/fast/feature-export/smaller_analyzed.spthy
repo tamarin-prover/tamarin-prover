@@ -155,7 +155,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-export/smaller.spthy
 
   output:          examples/sapic/fast/feature-export/smaller.spthy.tmp
-  processing time: 0.03s
+  processing time: 0.04s
   
   Ahappens (exists-trace): verified (3 steps)
 

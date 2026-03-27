@@ -1618,7 +1618,7 @@ summary of summaries:
 analyzed: examples/ake/bilinear/Scott.spthy
 
   output:          examples/ake/bilinear/Scott.spthy.tmp
-  processing time: 6.26s
+  processing time: 6.18s
   
   key_agreement_reachable (exists-trace): verified (10 steps)
   key_secrecy (all-traces): verified (452 steps)

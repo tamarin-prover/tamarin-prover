@@ -3946,7 +3946,7 @@ summary of summaries:
 analyzed: examples/csf18-xor/diff-models/CH07-UK1.spthy
 
   output:          examples/csf18-xor/diff-models/CH07-UK1.spthy.tmp
-  processing time: 3.32s
+  processing time: 3.29s
   
   WARNING: 1 wellformedness check failed!
            The analysis results might be wrong!

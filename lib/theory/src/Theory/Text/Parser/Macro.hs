@@ -42,7 +42,7 @@ macros = do
         sign <- sig <$> getState
         let mc = (op, args, out)
         let k = length args
-        case lookup op (S.toList $ stFunSyms sign) of
+        case lookup op (S.toList (stFunSyms sign) ++ S.toList (macroNames sign)) of
             Just _ -> fail $ "Conflicting name for macro " ++ BC.unpack op
             _ -> do
                 modifyStateSig $ addMacroSym (op,(k,Private,Destructor))

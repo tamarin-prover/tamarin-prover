@@ -95,20 +95,36 @@ builtins thy0 =do
     setName thy name = modify thyItems (++ [TranslationItem (SignatureBuiltin name)]) thy
     setOption' thy (Nothing, name)  = setName thy name
     setOption' thy (Just l, name) = setOption l (setName thy name)
+    -- Check for conflicts between builtin functions and user defined functions, and fail with a helpful error message if any are found.
+    -- Otherwise, add the builtin signature to the state and add the reserved function names to the state.
     extendSig (name, Just msig, opt) = do
         _ <- symbol name
-        currSig <- sig <$> getState
+        st <- getState
         let builtinFuncs = S.toList $ stFunSyms msig
-        let existingFuncs = S.toList $ stFunSyms currSig
-        let conflicts = [ (fname, arity1, arity2)
-                        | (fname, arity1) <- builtinFuncs
-                        , (fname', arity2) <- existingFuncs
-                        , fname == fname'
-                        , arity1 /= arity2
-                        ]
-        unless (null conflicts) $ do
-            fail $ "Builtin '" ++ name ++ "' conflicts with existing function(s) (same name, different arity): " ++ 
-                  show [fname | (fname, _, _) <- conflicts] ++ ". Please remove these function definitions or use different names."
+        let macroSyms    = S.toList $ macroNames (sig st)
+        let macroFuncs   = S.fromList $ map (BC.unpack . fst) macroSyms
+        let currFuncs    = S.toList $ stFunSyms (sig st)
+
+        let functionConflicts = [ (BC.unpack fname, builtinArity, userArity)
+                                | (fname, builtinArity) <- builtinFuncs
+                                , (fname', userArity)   <- currFuncs
+                                , fname == fname'
+                                , userArity /= builtinArity
+                                ]
+
+        let macroConflicts = [ (BC.unpack fname, builtinArity, macroArity)
+                      | (fname, builtinArity) <- builtinFuncs
+                      , BC.unpack fname `S.member` macroFuncs
+                      , Just macroArity <- [lookup fname macroSyms]
+                      , macroArity /= builtinArity
+                      ]
+
+        unless (null functionConflicts || name == "dest-pairing") $ do
+            fail $ "Builtin '" ++ name ++ "' conflicts with existing function(s) (same name, different arity or function options): " ++ 
+                  show [fname | (fname, _, _) <- functionConflicts] ++ ". Please remove these function definitions or use different names."
+
+        unless (null macroConflicts) $ do
+            fail $ "Builtin '" ++ name ++ "' conflicts with existing macro '" ++ show [fname | (fname, _, _) <- macroConflicts] ++ "'"
         
         modifyStateSig (`mappend` msig)
         modifyState (\st -> st { reservedBuiltinNames = 
@@ -166,24 +182,29 @@ function = do
         (argTypes,outType) <- functionType
         atts <- option [] $ list functionAttribute
         st <- getState
-        let allReservedNames = reservedBuiltinNames st
-        when (BC.unpack f `elem` allReservedNames) $ do
-            let conflictingBuiltins = [b | (b, names) <- builtinReservedNames, 
-                                        BC.unpack f `elem` names]
-            fail $ "`" ++ BC.unpack f ++ "` is a reserved function name from " ++ 
-                   "the following builtins: " ++ show conflictingBuiltins
-        when (BC.unpack f `elem` reservedBuiltins) $ fail $ "`" ++ BC.unpack f ++ "` is a reserved function name for builtins."
         sign <- sig <$> getState
         let k = length argTypes
         let priv = if Private `elem` lefts atts then Private else Public
         let destr = if Destructor `elem` rights atts then Destructor else Constructor
+        let requested = (k, priv, destr)
+
+        -- Check specifically for conflicts with builtins to give a precise error message.
+        let allReservedNames = reservedBuiltinNames st
+        when (BC.unpack f `elem` allReservedNames) $ do
+          let conflictingBuiltins = [b | (b, names) <- builtinReservedNames, BC.unpack f `elem` names]
+          case lookup f (S.toList $ stFunSyms sign) of
+            Just builtinSig | builtinSig /= requested ->
+              fail $ "`" ++ BC.unpack f ++ "` conflicts with builtin(s) "
+                  ++ show conflictingBuiltins
+                  ++ " (builtin: " ++ show builtinSig ++ ", requested: " ++ show requested ++ ")"
+            _ -> return ()
+
+        -- Check for any conflict with existing functions.
         case lookup f (S.toList (stFunSyms sign) ++ S.toList(macroNames sign)) of
-          Just kp' | kp' /= (k,priv,destr) && BC.unpack f /= "fst" && BC.unpack f /= "snd" ->
-            fail $ "conflicting arities/private " ++
+          Just kp' | kp' /= (k,priv,destr) && (BC.unpack f /= "fst" || k /= 1 || priv == Private) && (BC.unpack f /= "snd" || k /= 1 || priv == Private) ->
+            fail $ "conflicting arities/options " ++
                    show kp' ++ " and " ++ show (k,priv,destr) ++
-                   " for `" ++ BC.unpack f
-          Just kp' | BC.unpack f == "fst" || BC.unpack f == "snd" -> do
-                return ((f,kp'),argTypes,outType)
+                   " for `" ++ BC.unpack f ++ "`. Please choose a different name for this function."
           _ -> do
                 modifyStateSig $ addFunSym (f,(k,priv,destr))
                 return ((f,(k,priv,destr)),argTypes,outType)

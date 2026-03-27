@@ -817,7 +817,8 @@ rule (modulo E) p_0_11111111[color=#ffffff, process="|", issapicrule,
   */
 
 rule (modulo E) ServerSLpidLpid_0_111111111[color=#ffffff,
-                                            process="Server(SL_pid.1, L_pid.1)", issapicrule, role='Process']:
+                                            process="Server(SL_pid.1, L_pid.1);", issapicrule,
+                                            role='Process']:
    [
    State_111111111( StateChannel, L_pid.1, SL_pid.1, StateChannel.1,
                     YL_pid.1
@@ -827,22 +828,17 @@ rule (modulo E) ServerSLpidLpid_0_111111111[color=#ffffff,
    [
    State_1111111111( StateChannel, L_pid.1, SL_pid.1, StateChannel.1,
                      YL_pid.1
-   ),
-   State_1111111112( StateChannel, L_pid.1, SL_pid.1, StateChannel.1,
-                     YL_pid.1
    )
    ]
 
   /*
   rule (modulo AC) ServerSLpidLpid_0_111111111[color=#ffffff,
-                                               process="Server(SL_pid.1, L_pid.1)", issapicrule,
+                                               process="Server(SL_pid.1, L_pid.1);", issapicrule,
                                                role='Process']:
      [ State_111111111( StateChannel, L_pid, SL_pid, StateChannel.1, YL_pid )
      ]
     -->
-     [
-     State_1111111111( StateChannel, L_pid, SL_pid, StateChannel.1, YL_pid ),
-     State_1111111112( StateChannel, L_pid, SL_pid, StateChannel.1, YL_pid )
+     [ State_1111111111( StateChannel, L_pid, SL_pid, StateChannel.1, YL_pid )
      ]
   */
 
@@ -1371,25 +1367,6 @@ rule (modulo E) p_0_1111111111112[color=#806040, process="0",
      [ ]
   */
 
-rule (modulo E) p_0_1111111112[color=#ffffff, process="0", issapicrule,
-                               role='Process']:
-   [
-   State_1111111112( StateChannel, L_pid.1, SL_pid.1, StateChannel.1,
-                     YL_pid.1
-   )
-   ]
-  -->
-   [ ]
-
-  /*
-  rule (modulo AC) p_0_1111111112[color=#ffffff, process="0", issapicrule,
-                                  role='Process']:
-     [ State_1111111112( StateChannel, L_pid, SL_pid, StateChannel.1, YL_pid )
-     ]
-    -->
-     [ ]
-  */
-
 rule (modulo E) newk_0_111111112[color=#ffffff, process="new k.2;",
                                  issapicrule, role='Process']:
    [
@@ -1639,7 +1616,7 @@ rule (modulo E) p_1_111111112111111[color=#ffffff, process="!",
   */
 
 rule (modulo E) YubikeyLpidYLpidSLpidsecretidk_0_1111111121111111[color=#ffffff,
-                                                                  process="Yubikey(L_pid.1, YL_pid.1, SL_pid.1, secretid.2, k.2)",
+                                                                  process="Yubikey(L_pid.1, YL_pid.1, SL_pid.1, secretid.2, k.2);",
                                                                   issapicrule, role='Process']:
    [
    State_1111111121111111( StateChannel, L_pid.1, SL_pid.1, StateChannel.1,
@@ -1650,15 +1627,12 @@ rule (modulo E) YubikeyLpidYLpidSLpidsecretidk_0_1111111121111111[color=#ffffff,
    [
    State_11111111211111111( StateChannel, L_pid.1, SL_pid.1, StateChannel.1,
                             YL_pid.1, k.2, secretid.2
-   ),
-   State_11111111211111112( StateChannel, L_pid.1, SL_pid.1, StateChannel.1,
-                            YL_pid.1, k.2, secretid.2
    )
    ]
 
   /*
   rule (modulo AC) YubikeyLpidYLpidSLpidsecretidk_0_1111111121111111[color=#ffffff,
-                                                                     process="Yubikey(L_pid.1, YL_pid.1, SL_pid.1, secretid.2, k.2)",
+                                                                     process="Yubikey(L_pid.1, YL_pid.1, SL_pid.1, secretid.2, k.2);",
                                                                      issapicrule, role='Process']:
      [
      State_1111111121111111( StateChannel, L_pid, SL_pid, StateChannel.1,
@@ -1668,9 +1642,6 @@ rule (modulo E) YubikeyLpidYLpidSLpidsecretidk_0_1111111121111111[color=#ffffff,
     -->
      [
      State_11111111211111111( StateChannel, L_pid, SL_pid, StateChannel.1,
-                              YL_pid, k, secretid
-     ),
-     State_11111111211111112( StateChannel, L_pid, SL_pid, StateChannel.1,
                               YL_pid, k, secretid
      )
      ]
@@ -2340,28 +2311,6 @@ rule (modulo E) p_0_111111112111111111212[color=#805140, process="0",
      [ ]
   */
 
-rule (modulo E) p_0_11111111211111112[color=#ffffff, process="0",
-                                      issapicrule, role='Process']:
-   [
-   State_11111111211111112( StateChannel, L_pid.1, SL_pid.1, StateChannel.1,
-                            YL_pid.1, k.2, secretid.2
-   )
-   ]
-  -->
-   [ ]
-
-  /*
-  rule (modulo AC) p_0_11111111211111112[color=#ffffff, process="0",
-                                         issapicrule, role='Process']:
-     [
-     State_11111111211111112( StateChannel, L_pid, SL_pid, StateChannel.1,
-                              YL_pid, k, secretid
-     )
-     ]
-    -->
-     [ ]
-  */
-
 restriction predicate_eq:
   "∀ #i a b. (Pred_Eq( a, b ) @ #i) ⇒ (a = b)"
   // safety formula
@@ -2419,7 +2368,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/Yubikey/Yubikey.spthy
 
   output:          examples/sapic/fast/Yubikey/Yubikey.spthy.tmp
-  processing time: 7.79s
+  processing time: 8.52s
   
   WARNING: 1 wellformedness check failed!
            The analysis results might be wrong!

@@ -305,10 +305,10 @@ actionprocess thy=
                                    )
                                   ++ acc) [] base_subst
                         substP <- applyM (substFromList extend_sup) p
-                        return (ProcessComb
+                        return (ProcessAction
                                 (ProcessCall (BC.unpack i) ts) mempty
                                 (processAddAnnotation substP (mempty {processnames =  [BC.unpack i]}))
-                                (ProcessNull mempty))
+                                )
                         )
 -- | checks if process exists, if not -> error
 checkProcess :: String -> OpenTheory -> Parser (PlainProcess, [SapicLVar])

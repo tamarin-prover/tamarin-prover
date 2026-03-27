@@ -1,0 +1,7 @@
+theory FunctionRedefiningBuiltinsSameArity
+begin
+
+builtins: hashing
+functions: h/1
+
+end

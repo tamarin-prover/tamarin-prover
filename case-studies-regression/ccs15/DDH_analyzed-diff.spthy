@@ -7570,7 +7570,7 @@ summary of summaries:
 analyzed: examples/ccs15/DDH.spthy
 
   output:          examples/ccs15/DDH.spthy.tmp
-  processing time: 2.04s
+  processing time: 2.05s
   
   DiffLemma:  Observational_equivalence : verified (2522 steps)
 

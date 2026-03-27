@@ -42,7 +42,7 @@ summary of summaries:
 analyzed: examples/features/derivation-checks/manualEncryptionDecryption.spthy
 
   output:          examples/features/derivation-checks/manualEncryptionDecryption.spthy.tmp
-  processing time: 0.07s
+  processing time: 0.06s
   
 
 ==============================================================================

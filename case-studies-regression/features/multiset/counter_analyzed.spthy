@@ -278,7 +278,7 @@ summary of summaries:
 analyzed: examples/features//multiset/counter.spthy
 
   output:          examples/features//multiset/counter.spthy.tmp
-  processing time: 0.13s
+  processing time: 0.12s
   
   counters_linear_order (all-traces): verified (31 steps)
   counter_start (all-traces): verified (7 steps)
