@@ -250,7 +250,7 @@ summary of summaries:
 analyzed: examples/features/equivalence/MacroDiffprobEnc.spthy
 
   output:          examples/features/equivalence/MacroDiffprobEnc.spthy.tmp
-  processing time: 0.06s
+  processing time: 0.07s
   
   DiffLemma:  Observational_equivalence : verified (75 steps)
 

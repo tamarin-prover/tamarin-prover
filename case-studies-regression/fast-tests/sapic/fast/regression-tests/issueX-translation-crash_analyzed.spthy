@@ -26,14 +26,14 @@ rule (modulo E) newsk_0_[color=#ffffff, process="new sk.1;", issapicrule,
      [ State_( ), Fr( sk ) ] --> [ State_1( sk ) ]
   */
 
-rule (modulo E) Clientsk_0_1[color=#ffffff, process="Client(sk.1)",
+rule (modulo E) Clientsk_0_1[color=#ffffff, process="Client(sk.1);",
                              issapicrule, role='Process']:
-   [ State_1( sk.1 ) ] --> [ State_11( sk.1 ), State_12( sk.1 ) ]
+   [ State_1( sk.1 ) ] --> [ State_11( sk.1 ) ]
 
   /*
-  rule (modulo AC) Clientsk_0_1[color=#ffffff, process="Client(sk.1)",
+  rule (modulo AC) Clientsk_0_1[color=#ffffff, process="Client(sk.1);",
                                 issapicrule, role='Process']:
-     [ State_1( sk ) ] --> [ State_11( sk ), State_12( sk ) ]
+     [ State_1( sk ) ] --> [ State_11( sk ) ]
   */
 
 rule (modulo E) newa_0_11[color=#518040, process="new a.1;", issapicrule,
@@ -302,16 +302,6 @@ rule (modulo E) p_0_111111[color=#518040, process="0", issapicrule,
   rule (modulo AC) p_0_111111[color=#518040, process="0", issapicrule,
                               role='Client']:
      [ State_111111( a, gB, sk ) ] --> [ ]
-  */
-
-rule (modulo E) p_0_12[color=#ffffff, process="0", issapicrule,
-                       role='Process']:
-   [ State_12( sk.1 ) ] --> [ ]
-
-  /*
-  rule (modulo AC) p_0_12[color=#ffffff, process="0", issapicrule,
-                          role='Process']:
-     [ State_12( sk ) ] --> [ ]
   */
 
 restriction single_session:

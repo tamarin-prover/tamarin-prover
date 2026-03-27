@@ -27,11 +27,11 @@ type ProgressFunction = M.Map ProcessPosition (S.Set (S.Set ProcessPosition))
 
 --- | suffix list p to each element of set *)
 (<.>) :: Ord a => [a] -> S.Set [a]  -> S.Set [a]
-(<.>) pos set = S.map (\pos' -> pos ++ pos' ) set
+(<.>) pos = S.map (pos ++)
 
 --- | suffix list p to each element in a set of set of sets *)
 (<..>) :: Ord a => [a] -> S.Set (S.Set [a]) -> S.Set (S.Set [a])
-(<..>) pos setset  = S.map (\set' -> pos <.> set') setset
+(<..>) pos = S.map (pos <.>)
 
 -- -- | Combinators that are exclusive, i.e., only one child can be visited
 -- isExclusive  (Cond _)     = True
@@ -42,7 +42,7 @@ type ProgressFunction = M.Map ProcessPosition (S.Set (S.Set ProcessPosition))
 -- | Actions that are blocking
 isBlockingAct :: LSapicAction -> Bool
 isBlockingAct Rep        = True
-isBlockingAct (ChIn _ _ _) = True
+isBlockingAct (ChIn {})  = True
 isBlockingAct _          = False
 
 -- | determine whether process is blocking
@@ -61,13 +61,12 @@ next (ProcessComb NDC _ pl pr) = nextOrChild pl [1] `S.union` nextOrChild pr [2]
     where nextOrChild p' pos = if blocking p' then
                                 pos <.> next p'
                                else S.singleton pos
-next ProcessComb{} = S.fromList $ [[1],[2]]
+next ProcessComb{} = S.fromList [[1],[2]]
 
 -- | next position to jump but consider empty position for null process, used in pi
 next0 :: (Num a, Ord a) => LProcess ann -> S.Set [a]
 next0 ProcessNull {} = S.singleton []
 next0 ProcessAction {} = S.singleton [1]
-next0 (ProcessComb ProcessCall{} _ _ _) = S.singleton [1]
 next0 (ProcessComb NDC _ pl pr) = next0OrChild pl [1] `S.union` next0OrChild pr [2]
     where next0OrChild p' pos = if blocking p' then
                                 pos <.> next0 p'

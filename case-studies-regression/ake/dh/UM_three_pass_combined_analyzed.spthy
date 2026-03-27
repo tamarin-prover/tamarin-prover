@@ -865,7 +865,7 @@ summary of summaries:
 analyzed: examples/ake/dh/UM_three_pass_combined.spthy
 
   output:          examples/ake/dh/UM_three_pass_combined.spthy.tmp
-  processing time: 6.92s
+  processing time: 7.04s
   
   key_agreement_reachable (exists-trace): verified (14 steps)
   CK_secure_UM3 (all-traces): falsified - found trace (13 steps)

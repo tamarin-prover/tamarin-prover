@@ -143,18 +143,16 @@ rule (modulo E) p_1_11111[color=#ffffff, process="!", issapicrule,
      [ !Semistate_111111( init, state ) ] --> [ State_111111( init, state ) ]
   */
 
-rule (modulo E) r_0_111111[color=#ffffff, process="r()", issapicrule,
+rule (modulo E) r_0_111111[color=#ffffff, process="r();", issapicrule,
                            role='Process']:
    [ State_111111( init.1, state.1 ) ]
   -->
-   [ State_1111111( init.1, state.1 ), State_1111112( init.1, state.1 ) ]
+   [ State_1111111( init.1, state.1 ) ]
 
   /*
-  rule (modulo AC) r_0_111111[color=#ffffff, process="r()", issapicrule,
+  rule (modulo AC) r_0_111111[color=#ffffff, process="r();", issapicrule,
                               role='Process']:
-     [ State_111111( init, state ) ]
-    -->
-     [ State_1111111( init, state ), State_1111112( init, state ) ]
+     [ State_111111( init, state ) ] --> [ State_1111111( init, state ) ]
   */
 
 rule (modulo E) newsid_0_1111111[color=#405280, process="new sid.1;",
@@ -404,16 +402,6 @@ rule (modulo E) p_0_111111111112[color=#405280, process="0", issapicrule,
      [ State_111111111112( lock, init, sid, state ) ] --> [ ]
   */
 
-rule (modulo E) p_0_1111112[color=#ffffff, process="0", issapicrule,
-                            role='Process']:
-   [ State_1111112( init.1, state.1 ) ] --> [ ]
-
-  /*
-  rule (modulo AC) p_0_1111112[color=#ffffff, process="0", issapicrule,
-                               role='Process']:
-     [ State_1111112( init, state ) ] --> [ ]
-  */
-
 rule (modulo E) p_0_112[color=#ffffff, process="!", issapicrule,
                         role='Process']:
    [ State_112( init.1 ) ] --> [ !Semistate_1121( init.1 ) ]
@@ -486,18 +474,16 @@ rule (modulo E) p_1_112111[color=#ffffff, process="!", issapicrule,
      [ State_1121111( init, state ) ]
   */
 
-rule (modulo E) v_0_1121111[color=#ffffff, process="v()", issapicrule,
+rule (modulo E) v_0_1121111[color=#ffffff, process="v();", issapicrule,
                             role='Process']:
    [ State_1121111( init.1, state.2 ) ]
   -->
-   [ State_11211111( init.1, state.2 ), State_11211112( init.1, state.2 ) ]
+   [ State_11211111( init.1, state.2 ) ]
 
   /*
-  rule (modulo AC) v_0_1121111[color=#ffffff, process="v()", issapicrule,
+  rule (modulo AC) v_0_1121111[color=#ffffff, process="v();", issapicrule,
                                role='Process']:
-     [ State_1121111( init, state ) ]
-    -->
-     [ State_11211111( init, state ), State_11211112( init, state ) ]
+     [ State_1121111( init, state ) ] --> [ State_11211111( init, state ) ]
   */
 
 rule (modulo E) insidrsid_0_11211111[color=#658040,
@@ -983,16 +969,6 @@ rule (modulo E) p_0_1121111112[color=#658040, process="0", issapicrule,
      [ State_1121111112( init, r_sid, sid, state ) ] --> [ ]
   */
 
-rule (modulo E) p_0_11211112[color=#ffffff, process="0", issapicrule,
-                             role='Process']:
-   [ State_11211112( init.1, state.2 ) ] --> [ ]
-
-  /*
-  rule (modulo AC) p_0_11211112[color=#ffffff, process="0", issapicrule,
-                                role='Process']:
-     [ State_11211112( init, state ) ] --> [ ]
-  */
-
 restriction set_in:
   "∀ x y #t3.
     (IsIn( x, y ) @ #t3) ⇒
@@ -1136,7 +1112,7 @@ summary of summaries:
 analyzed: examples/sapic/slow/feature-locations/AC_sid_with_attack.spthy
 
   output:          examples/sapic/slow/feature-locations/AC_sid_with_attack.spthy.tmp
-  processing time: 0.89s
+  processing time: 0.83s
   
   attested_comput (exists-trace): falsified - no trace found (2 steps)
 

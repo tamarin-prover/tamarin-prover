@@ -152,7 +152,7 @@ summary of summaries:
 analyzed: examples/features/derivation-checks/fullEncryptionDerivationTests.spthy
 
   output:          examples/features/derivation-checks/fullEncryptionDerivationTests.spthy.tmp
-  processing time: 0.20s
+  processing time: 0.21s
   
   WARNING: 1 wellformedness check failed!
            The analysis results might be wrong!

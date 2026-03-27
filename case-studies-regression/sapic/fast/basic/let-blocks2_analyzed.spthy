@@ -10,15 +10,15 @@ equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
 
 heuristic: p
 
-rule (modulo E) Init[color=#ffffff, process="P()", issapicrule,
+rule (modulo E) Init[color=#ffffff, process="P();", issapicrule,
                      role='Process']:
    [ ] --[ Init( ) ]-> [ State_( ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) P_0_[color=#ffffff, process="P()", issapicrule,
+rule (modulo E) P_0_[color=#ffffff, process="P();", issapicrule,
                      role='Process']:
-   [ State_( ) ] --> [ State_1( ), State_2( ) ]
+   [ State_( ) ] --> [ State_1( ) ]
 
   /* has exactly the trivial AC variant */
 
@@ -57,12 +57,6 @@ rule (modulo E) p_0_111[color=#6c8040, process="0", issapicrule,
                            role='P']:
      [ State_111( a ) ] --> [ ]
   */
-
-rule (modulo E) p_0_2[color=#ffffff, process="0", issapicrule,
-                      role='Process']:
-   [ State_2( ) ] --> [ ]
-
-  /* has exactly the trivial AC variant */
 
 restriction single_session:
   "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"

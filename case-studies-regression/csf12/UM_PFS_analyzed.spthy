@@ -200,7 +200,7 @@ summary of summaries:
 analyzed: examples/csf12/UM_PFS.spthy
 
   output:          examples/csf12/UM_PFS.spthy.tmp
-  processing time: 0.34s
+  processing time: 0.36s
   
   wPFS_initiator_key (all-traces): falsified - found trace (8 steps)
   wPFS_responder_key (all-traces): falsified - found trace (8 steps)

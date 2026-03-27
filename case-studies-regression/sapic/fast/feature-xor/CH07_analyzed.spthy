@@ -734,18 +734,14 @@ rule (modulo E) p_0_1111[color=#ffffff, process="|", issapicrule,
      [ State_11111( ~id, ~k ), State_11112( ~id, ~k ) ]
   */
 
-rule (modulo E) Reader_0_11111[color=#ffffff, process="Reader()",
+rule (modulo E) Reader_0_11111[color=#ffffff, process="Reader();",
                                issapicrule, role='Process']:
-   [ State_11111( ~id.1, ~k.1 ) ]
-  -->
-   [ State_111111( ~id.1, ~k.1 ), State_111112( ~id.1, ~k.1 ) ]
+   [ State_11111( ~id.1, ~k.1 ) ] --> [ State_111111( ~id.1, ~k.1 ) ]
 
   /*
-  rule (modulo AC) Reader_0_11111[color=#ffffff, process="Reader()",
+  rule (modulo AC) Reader_0_11111[color=#ffffff, process="Reader();",
                                   issapicrule, role='Process']:
-     [ State_11111( ~id, ~k ) ]
-    -->
-     [ State_111111( ~id, ~k ), State_111112( ~id, ~k ) ]
+     [ State_11111( ~id, ~k ) ] --> [ State_111111( ~id, ~k ) ]
   */
 
 rule (modulo E) newr_0_111111[color=#404480, process="new ~r1.1;",
@@ -1176,28 +1172,14 @@ rule (modulo E) p_0_11111111112[color=#404480, process="0", issapicrule,
      [ State_11111111112( ~id, ~k, ~r1, r2, x ) ] --> [ ]
   */
 
-rule (modulo E) p_0_111112[color=#ffffff, process="0", issapicrule,
-                           role='Process']:
-   [ State_111112( ~id.1, ~k.1 ) ] --> [ ]
-
-  /*
-  rule (modulo AC) p_0_111112[color=#ffffff, process="0", issapicrule,
-                              role='Process']:
-     [ State_111112( ~id, ~k ) ] --> [ ]
-  */
-
-rule (modulo E) Tag_0_11112[color=#ffffff, process="Tag()", issapicrule,
+rule (modulo E) Tag_0_11112[color=#ffffff, process="Tag();", issapicrule,
                             role='Process']:
-   [ State_11112( ~id.1, ~k.1 ) ]
-  -->
-   [ State_111121( ~id.1, ~k.1 ), State_111122( ~id.1, ~k.1 ) ]
+   [ State_11112( ~id.1, ~k.1 ) ] --> [ State_111121( ~id.1, ~k.1 ) ]
 
   /*
-  rule (modulo AC) Tag_0_11112[color=#ffffff, process="Tag()", issapicrule,
-                               role='Process']:
-     [ State_11112( ~id, ~k ) ]
-    -->
-     [ State_111121( ~id, ~k ), State_111122( ~id, ~k ) ]
+  rule (modulo AC) Tag_0_11112[color=#ffffff, process="Tag();",
+                               issapicrule, role='Process']:
+     [ State_11112( ~id, ~k ) ] --> [ State_111121( ~id, ~k ) ]
   */
 
 rule (modulo E) inr_0_111121[color=#40807c, process="in(r1.2);",
@@ -1543,16 +1525,6 @@ rule (modulo E) p_0_111121111111111[color=#40807c, process="0",
      [ State_111121111111111( ~id, ~k, ~r2, r1 ) ] --> [ ]
   */
 
-rule (modulo E) p_0_111122[color=#ffffff, process="0", issapicrule,
-                           role='Process']:
-   [ State_111122( ~id.1, ~k.1 ) ] --> [ ]
-
-  /*
-  rule (modulo AC) p_0_111122[color=#ffffff, process="0", issapicrule,
-                              role='Process']:
-     [ State_111122( ~id, ~k ) ] --> [ ]
-  */
-
 restriction predicate_eq:
   "∀ #i a b. (Pred_Eq( a, b ) @ #i) ⇒ (a = b)"
   // safety formula
@@ -1599,7 +1571,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-xor/CH07.spthy
 
   output:          examples/sapic/fast/feature-xor/CH07.spthy.tmp
-  processing time: 2.86s
+  processing time: 2.80s
   
   recentalive_tag_attack (exists-trace): verified (10 steps)
   recentalive_reader (all-traces): verified (24 steps)

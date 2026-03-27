@@ -212,9 +212,9 @@ rule (modulo E) p_1_1[color=#ffffff, process="!", issapicrule,
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) r_0_11[color=#ffffff, process="r()", issapicrule,
+rule (modulo E) r_0_11[color=#ffffff, process="r();", issapicrule,
                        role='Process']:
-   [ State_11( ) ] --> [ State_111( ), State_112( ) ]
+   [ State_11( ) ] --> [ State_111( ) ]
 
   /* has exactly the trivial AC variant */
 
@@ -318,12 +318,6 @@ rule (modulo E) p_0_111111111[color=#405280, process="0", issapicrule,
      [ State_111111111( k, pkV ) ] --> [ ]
   */
 
-rule (modulo E) p_0_112[color=#ffffff, process="0", issapicrule,
-                        role='Process']:
-   [ State_112( ) ] --> [ ]
-
-  /* has exactly the trivial AC variant */
-
 rule (modulo E) p_0_2[color=#ffffff, process="!", issapicrule,
                       role='Process']:
    [ State_2( ) ] --> [ !Semistate_21( ) ]
@@ -336,9 +330,9 @@ rule (modulo E) p_1_2[color=#ffffff, process="!", issapicrule,
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) v_0_21[color=#ffffff, process="v()", issapicrule,
+rule (modulo E) v_0_21[color=#ffffff, process="v();", issapicrule,
                        role='Process']:
-   [ State_21( ) ] --> [ State_211( ), State_212( ) ]
+   [ State_21( ) ] --> [ State_211( ) ]
 
   /* has exactly the trivial AC variant */
 
@@ -532,12 +526,6 @@ rule (modulo E) p_0_211111112[color=#658040, process="0", issapicrule,
      [ State_211111112( cypher, skV, signed ) ] --> [ ]
   */
 
-rule (modulo E) p_0_212[color=#ffffff, process="0", issapicrule,
-                        role='Process']:
-   [ State_212( ) ] --> [ ]
-
-  /* has exactly the trivial AC variant */
-
 restriction predicate_eq:
   "∀ #i a b. (Pred_Eq( a, b ) @ #i) ⇒ (a = b)"
   // safety formula
@@ -584,7 +572,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-locations/AKE.spthy
 
   output:          examples/sapic/fast/feature-locations/AKE.spthy.tmp
-  processing time: 0.25s
+  processing time: 0.23s
   
   can_run_p (exists-trace): verified (3 steps)
   can_run_v (exists-trace): falsified - no trace found (9 steps)
