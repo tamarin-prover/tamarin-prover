@@ -201,10 +201,10 @@ function = do
 
         -- Check for any conflict with existing functions.
         case lookup f (S.toList (stFunSyms sign) ++ S.toList(macroNames sign)) of
-          Just kp' | kp' /= (k,priv,destr) && BC.unpack f /= "fst" && BC.unpack f /= "snd" ->
+          Just kp' | kp' /= (k,priv,destr) && (BC.unpack f /= "fst" || k /= 1 || priv == Private) && (BC.unpack f /= "snd" || k /= 1 || priv == Private) ->
             fail $ "conflicting arities/options " ++
                    show kp' ++ " and " ++ show (k,priv,destr) ++
-                   " for `" ++ BC.unpack f
+                   " for `" ++ BC.unpack f ++ "`. Please choose a different name for this function."
           _ -> do
                 modifyStateSig $ addFunSym (f,(k,priv,destr))
                 return ((f,(k,priv,destr)),argTypes,outType)
