@@ -38,7 +38,7 @@ import TheoryObject (theoryMacros)
 
 loadRules :: OpenTheory -> ModuleType -> ([Doc], Doc, S.Set ProVerifHeader)
 loadRules thy m = case theoryRules thy of
-  [] -> ([text ""], text "", S.empty)
+  [] -> ([], emptyDoc, S.empty)
   rules -> (ruleDocs, ruleComb, headers)
     where
       (ruleDocs, destructors) =

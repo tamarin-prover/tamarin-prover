@@ -10,6 +10,7 @@ const ARROW_HEAD_WIDTH = 7;
 const ARROW_HEAD_HEIGHT = 10;
 const ARROW_HEAD_HALF_WIDTH = ARROW_HEAD_WIDTH / 2;
 const MAX_FONT = 30;
+const ABSTRACT_VIEW_TRIGGER_FONT_PX = 5;
 
 type ZoomLevel = "ZoomIn" | "ZoomOut";
 
@@ -591,8 +592,8 @@ export class DotGraphViz extends HTMLElement {
     // see https://developer.mozilla.org/en-US/docs/Web/SVG/Reference/Attribute/preserveAspectRatio
     const screen_fs = (this.svgg.getCTM()!).a * 8;
 
-    // 12px is a threshold for determining showing detail view or abstract view
-    const zoomLevel = screen_fs >= 12 ? "ZoomIn" : "ZoomOut";
+    // Keep detailed node rendering until nodes are much smaller on screen.
+    const zoomLevel = screen_fs >= ABSTRACT_VIEW_TRIGGER_FONT_PX ? "ZoomIn" : "ZoomOut";
 
     // do nothing when zoom level didn't change
     if (zoomLevel === this.zoomLevel)

@@ -1,0 +1,56 @@
+theory TestPairing
+
+begin
+
+// Function signature and definition of the equational theory E
+
+functions: fst/1[destructor], pair/2, snd/1[destructor]
+equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
+
+heuristic: p
+
+rule (modulo E) Init[color=#ffffff, process="0", issapicrule,
+                     role='Process']:
+   [ ] --[ Init( ) ]-> [ State_( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_0_[color=#ffffff, process="0", issapicrule,
+                     role='Process']:
+   [ State_( ) ] --> [ ]
+
+  /* has exactly the trivial AC variant */
+
+restriction single_session:
+  "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
+  */
+
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.13.0
+Maude version 3.5.1
+Git revision: 4be571f9d2b4fc31ac730003e11f29fcd3c023d5 (with uncommited changes), branch: fix-builtin
+Compiled at: 2026-03-26 09:56:07.964215 UTC
+*/
+
+end
+/* Output
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/regression/trace/issue834.spthy
+
+  output:          examples/regression/trace/issue834.spthy.tmp
+  processing time: 0.02s
+  
+
+==============================================================================
+*/

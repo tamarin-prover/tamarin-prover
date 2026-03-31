@@ -13,8 +13,8 @@ endif
 # Try to install Tamarin
 default: tamarin
 
-FRONTEND = data/js/intdot-graph.es.js data/js/intdot-staticgraph.es.js data/js/intdot-dynamicgraph.es.js data/css/intdot-style.css
-$(FRONTEND):
+.PHONY: frontend
+frontend:
 	cd frontend && npm install && npm run build
 	cp frontend/dist/intdot-graph.es.js data/js/
 	cp frontend/dist/intdot-staticgraph.es.js data/js/
@@ -23,19 +23,19 @@ $(FRONTEND):
 
 # Default Tamarin installation via stack, multi-threaded
 .PHONY: tamarin
-tamarin: $(FRONTEND)
+tamarin: frontend
 	stack setup
 	stack install
 
 # Single-threaded Tamarin
 .PHONY: single
-single: $(FRONTEND)
+single: frontend
 	stack setup
 	stack install --flag tamarin-prover:-threaded
 
 # Tamarin with profiling options, single-threaded
 .PHONY: profiling
-profiling: $(FRONTEND)
+profiling: frontend
 	stack setup
 	stack install --no-system-ghc --executable-profiling --library-profiling --ghc-options="-fprof-auto -rtsopts" --flag tamarin-prover:-threaded
 
@@ -48,16 +48,12 @@ tamarin-clean:
 .PHONY: clean
 clean:	tamarin-clean
 
-.PHONY: frontend
-frontend:
-	$(MAKE) $(FRONTEND)
-
 # ###########################################################################
 # NOTE the remainder makefile is FOR DEVELOPERS ONLY.
 # It is by no means official in any form and should be IGNORED :-)
 # ###########################################################################
 
-VERSION=1.11.0
+VERSION=1.13.0
 
 ###############################################################################
 ## Case Studies
@@ -445,7 +441,7 @@ accountability-case-studies:	$(ACCOUNTABILITY_CS_TARGETS)
 ## Regression (old issues)
 ##########################
 
-FAST_REGRESSION_CASE_STUDIES=issue446-1.spthy issue446-2.spthy issue753-4.spthy issue770.spthy
+FAST_REGRESSION_CASE_STUDIES=issue446-1.spthy issue446-2.spthy issue753-4.spthy issue753-5.spthy issue753-6.spthy issue834.spthy issue777.spthy issue770.spthy
 FAST_REGRESSION_TARGETS=$(subst .spthy,_analyzed.spthy,$(addprefix case-studies$(SUBDIR)regression/trace/,$(FAST_REGRESSION_CASE_STUDIES)))
 
 

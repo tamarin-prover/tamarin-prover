@@ -276,13 +276,8 @@
           "value": "\""
         },
         {
-          "type": "ALIAS",
-          "content": {
-            "type": "SYMBOL",
-            "name": "param"
-          },
-          "named": true,
-          "value": "path"
+          "type": "SYMBOL",
+          "name": "path"
         },
         {
           "type": "STRING",
@@ -6450,6 +6445,10 @@
     "param": {
       "type": "PATTERN",
       "value": "[^\"]*"
+    },
+    "path": {
+      "type": "PATTERN",
+      "value": "[A-Za-z0-9-\\_]*"
     },
     "export_query": {
       "type": "PATTERN",

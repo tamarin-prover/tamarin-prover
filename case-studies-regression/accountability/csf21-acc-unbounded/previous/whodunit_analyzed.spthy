@@ -12,120 +12,89 @@ equations:
     snd(<x.1, x.2>) = x.2,
     verify(sig(m, sk(i)), m, pk(sk(i))) = true
 
-
-
 heuristic: p
-
-
-
-
-
-
-
-
-
-
-
-
 
 restriction unequal_blame:
   "∀ sid #i. (Unequal( sid ) @ #i) ⇒ (∃ x #j. Blame( sid, x ) @ #j)"
 
+  /*
+  expanded formula:
+  "∀ sid #i. (Unequal( sid ) @ #i) ⇒ (∃ x #j. Blame( sid, x ) @ #j)"
+  */
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-rule (modulo E) Init[color=#ffffff, process='!', issapicrule,
+rule (modulo E) Init[color=#ffffff, process="!", issapicrule,
                      role='Process']:
    [ ] --[ Init( ) ]-> [ State_( ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) p_0_[color=#ffffff, process='!', issapicrule,
+rule (modulo E) p_0_[color=#ffffff, process="!", issapicrule,
                      role='Process']:
    [ State_( ) ] --> [ !Semistate_1( ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) p_1_[color=#ffffff, process='!', issapicrule,
+rule (modulo E) p_1_[color=#ffffff, process="!", issapicrule,
                      role='Process']:
    [ !Semistate_1( ) ] --> [ State_1( ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) P_0_1[color=#ffffff, process='P()', issapicrule,
+rule (modulo E) P_0_1[color=#ffffff, process="P();", issapicrule,
                       role='Process']:
-   [ State_1( ) ] --> [ State_11( ), State_12( ) ]
+   [ State_1( ) ] --> [ State_11( ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) newsid_0_11[color=#6c8040, process='new sid.1;',
+rule (modulo E) newsid_0_11[color=#6c8040, process="new sid.1;",
                             issapicrule, role='P']:
    [ State_11( ), Fr( sid.1 ) ] --> [ State_111( sid.1 ) ]
 
   /*
-  rule (modulo AC) newsid_0_11[color=#6c8040, process='new sid.1;',
+  rule (modulo AC) newsid_0_11[color=#6c8040, process="new sid.1;",
                                issapicrule, role='P']:
      [ State_11( ), Fr( sid ) ] --> [ State_111( sid ) ]
   */
 
-rule (modulo E) newcSA_0_111[color=#6c8040, process='new c_SA.1;',
+rule (modulo E) newcSA_0_111[color=#6c8040, process="new c_SA.1;",
                              issapicrule, role='P']:
    [ State_111( sid.1 ), Fr( c_SA.1 ) ] --> [ State_1111( c_SA.1, sid.1 ) ]
 
   /*
-  rule (modulo AC) newcSA_0_111[color=#6c8040, process='new c_SA.1;',
+  rule (modulo AC) newcSA_0_111[color=#6c8040, process="new c_SA.1;",
                                 issapicrule, role='P']:
      [ State_111( sid ), Fr( c_SA ) ] --> [ State_1111( c_SA, sid ) ]
   */
 
-rule (modulo E) newcAJ_0_1111[color=#6c8040, process='new c_AJ.1;',
+rule (modulo E) newcAJ_0_1111[color=#6c8040, process="new c_AJ.1;",
                               issapicrule, role='P']:
    [ State_1111( c_SA.1, sid.1 ), Fr( c_AJ.1 ) ]
   -->
    [ State_11111( c_AJ.1, c_SA.1, sid.1 ) ]
 
   /*
-  rule (modulo AC) newcAJ_0_1111[color=#6c8040, process='new c_AJ.1;',
+  rule (modulo AC) newcAJ_0_1111[color=#6c8040, process="new c_AJ.1;",
                                  issapicrule, role='P']:
      [ State_1111( c_SA, sid ), Fr( c_AJ ) ]
     -->
      [ State_11111( c_AJ, c_SA, sid ) ]
   */
 
-rule (modulo E) newcSJ_0_11111[color=#6c8040, process='new c_SJ.1;',
+rule (modulo E) newcSJ_0_11111[color=#6c8040, process="new c_SJ.1;",
                                issapicrule, role='P']:
    [ State_11111( c_AJ.1, c_SA.1, sid.1 ), Fr( c_SJ.1 ) ]
   -->
    [ State_111111( c_AJ.1, c_SA.1, c_SJ.1, sid.1 ) ]
 
   /*
-  rule (modulo AC) newcSJ_0_11111[color=#6c8040, process='new c_SJ.1;',
+  rule (modulo AC) newcSJ_0_11111[color=#6c8040, process="new c_SJ.1;",
                                   issapicrule, role='P']:
      [ State_11111( c_AJ, c_SA, sid ), Fr( c_SJ ) ]
     -->
      [ State_111111( c_AJ, c_SA, c_SJ, sid ) ]
   */
 
-rule (modulo E) inxy_0_111111[color=#6c8040, process='in(<$x.1, $y.1>);',
+rule (modulo E) inxy_0_111111[color=#6c8040, process="in(<$x.1, $y.1>);",
                               issapicrule, role='P']:
    [ State_111111( c_AJ.1, c_SA.1, c_SJ.1, sid.1 ), In( <$x.1, $y.1> ) ]
   -->
@@ -133,52 +102,52 @@ rule (modulo E) inxy_0_111111[color=#6c8040, process='in(<$x.1, $y.1>);',
 
   /*
   rule (modulo AC) inxy_0_111111[color=#6c8040,
-                                 process='in(<$x.1, $y.1>);', issapicrule, role='P']:
+                                 process="in(<$x.1, $y.1>);", issapicrule, role='P']:
      [ State_111111( c_AJ, c_SA, c_SJ, sid ), In( <$x, $y> ) ]
     -->
      [ State_1111111( $x, $y, c_AJ, c_SA, c_SJ, sid ) ]
   */
 
-rule (modulo E) ifxy_0_1111111[color=#6c8040, process='if $x.1=$y.1',
+rule (modulo E) ifxy_0_1111111[color=#6c8040, process="if $x.1=$y.1",
                                issapicrule, role='P']:
    [ State_1111111( $x.1, $y.1, c_AJ.1, c_SA.1, c_SJ.1, sid.1 ) ]
   --[ Pred_Eq( $x.1, $y.1 ) ]->
    [ State_11111111( $x.1, $y.1, c_AJ.1, c_SA.1, c_SJ.1, sid.1 ) ]
 
   /*
-  rule (modulo AC) ifxy_0_1111111[color=#6c8040, process='if $x.1=$y.1',
+  rule (modulo AC) ifxy_0_1111111[color=#6c8040, process="if $x.1=$y.1",
                                   issapicrule, role='P']:
      [ State_1111111( $x, $y, c_AJ, c_SA, c_SJ, sid ) ]
     --[ Pred_Eq( $x, $y ) ]->
      [ State_11111111( $x, $y, c_AJ, c_SA, c_SJ, sid ) ]
   */
 
-rule (modulo E) ifxy_1_1111111[color=#6c8040, process='if $x.1=$y.1',
+rule (modulo E) ifxy_1_1111111[color=#6c8040, process="if $x.1=$y.1",
                                issapicrule, role='P']:
    [ State_1111111( $x.1, $y.1, c_AJ.1, c_SA.1, c_SJ.1, sid.1 ) ]
   --[ Pred_Not_Eq( $x.1, $y.1 ) ]->
    [ State_11111112( $x.1, $y.1, c_AJ.1, c_SA.1, c_SJ.1, sid.1 ) ]
 
   /*
-  rule (modulo AC) ifxy_1_1111111[color=#6c8040, process='if $x.1=$y.1',
+  rule (modulo AC) ifxy_1_1111111[color=#6c8040, process="if $x.1=$y.1",
                                   issapicrule, role='P']:
      [ State_1111111( $x, $y, c_AJ, c_SA, c_SJ, sid ) ]
     --[ Pred_Not_Eq( $x, $y ) ]->
      [ State_11111112( $x, $y, c_AJ, c_SA, c_SJ, sid ) ]
   */
 
-rule (modulo E) p_0_11111111[color=#6c8040, process='0', issapicrule,
+rule (modulo E) p_0_11111111[color=#6c8040, process="0", issapicrule,
                              role='P']:
    [ State_11111111( $x.1, $y.1, c_AJ.1, c_SA.1, c_SJ.1, sid.1 ) ] --> [ ]
 
   /*
-  rule (modulo AC) p_0_11111111[color=#6c8040, process='0', issapicrule,
+  rule (modulo AC) p_0_11111111[color=#6c8040, process="0", issapicrule,
                                 role='P']:
      [ State_11111111( $x, $y, c_AJ, c_SA, c_SJ, sid ) ] --> [ ]
   */
 
 rule (modulo E) outpkskx_0_11111112[color=#6c8040,
-                                    process='out(pk(sk($x.1)));', issapicrule, role='P']:
+                                    process="out(pk(sk($x.1)));", issapicrule, role='P']:
    [ State_11111112( $x.1, $y.1, c_AJ.1, c_SA.1, c_SJ.1, sid.1 ) ]
   -->
    [
@@ -188,14 +157,14 @@ rule (modulo E) outpkskx_0_11111112[color=#6c8040,
 
   /*
   rule (modulo AC) outpkskx_0_11111112[color=#6c8040,
-                                       process='out(pk(sk($x.1)));', issapicrule, role='P']:
+                                       process="out(pk(sk($x.1)));", issapicrule, role='P']:
      [ State_11111112( $x, $y, c_AJ, c_SA, c_SJ, sid ) ]
     -->
      [ State_111111121( $x, $y, c_AJ, c_SA, c_SJ, sid ), Out( pk(sk($x)) ) ]
   */
 
 rule (modulo E) outpksky_0_111111121[color=#6c8040,
-                                     process='out(pk(sk($y.1)));', issapicrule, role='P']:
+                                     process="out(pk(sk($y.1)));", issapicrule, role='P']:
    [ State_111111121( $x.1, $y.1, c_AJ.1, c_SA.1, c_SJ.1, sid.1 ) ]
   -->
    [
@@ -205,13 +174,13 @@ rule (modulo E) outpksky_0_111111121[color=#6c8040,
 
   /*
   rule (modulo AC) outpksky_0_111111121[color=#6c8040,
-                                        process='out(pk(sk($y.1)));', issapicrule, role='P']:
+                                        process="out(pk(sk($y.1)));", issapicrule, role='P']:
      [ State_111111121( $x, $y, c_AJ, c_SA, c_SJ, sid ) ]
     -->
      [ State_1111111211( $x, $y, c_AJ, c_SA, c_SJ, sid ), Out( pk(sk($y)) ) ]
   */
 
-rule (modulo E) p_0_1111111211[color=#6c8040, process='|', issapicrule,
+rule (modulo E) p_0_1111111211[color=#6c8040, process="|", issapicrule,
                                role='P']:
    [ State_1111111211( $x.1, $y.1, c_AJ.1, c_SA.1, c_SJ.1, sid.1 ) ]
   -->
@@ -221,7 +190,7 @@ rule (modulo E) p_0_1111111211[color=#6c8040, process='|', issapicrule,
    ]
 
   /*
-  rule (modulo AC) p_0_1111111211[color=#6c8040, process='|', issapicrule,
+  rule (modulo AC) p_0_1111111211[color=#6c8040, process="|", issapicrule,
                                   role='P']:
      [ State_1111111211( $x, $y, c_AJ, c_SA, c_SJ, sid ) ]
     -->
@@ -231,7 +200,7 @@ rule (modulo E) p_0_1111111211[color=#6c8040, process='|', issapicrule,
      ]
   */
 
-rule (modulo E) p_0_11111112111[color=#6c8040, process='|', issapicrule,
+rule (modulo E) p_0_11111112111[color=#6c8040, process="|", issapicrule,
                                 role='P']:
    [ State_11111112111( $x.1, $y.1, c_AJ.1, c_SA.1, c_SJ.1, sid.1 ) ]
   -->
@@ -241,7 +210,7 @@ rule (modulo E) p_0_11111112111[color=#6c8040, process='|', issapicrule,
    ]
 
   /*
-  rule (modulo AC) p_0_11111112111[color=#6c8040, process='|', issapicrule,
+  rule (modulo AC) p_0_11111112111[color=#6c8040, process="|", issapicrule,
                                    role='P']:
      [ State_11111112111( $x, $y, c_AJ, c_SA, c_SJ, sid ) ]
     -->
@@ -251,7 +220,7 @@ rule (modulo E) p_0_11111112111[color=#6c8040, process='|', issapicrule,
      ]
   */
 
-rule (modulo E) p_0_111111121111[color=#6c8040, process='|', issapicrule,
+rule (modulo E) p_0_111111121111[color=#6c8040, process="|", issapicrule,
                                  role='P']:
    [ State_111111121111( $x.1, $y.1, c_AJ.1, c_SA.1, c_SJ.1, sid.1 ) ]
   -->
@@ -261,7 +230,7 @@ rule (modulo E) p_0_111111121111[color=#6c8040, process='|', issapicrule,
    ]
 
   /*
-  rule (modulo AC) p_0_111111121111[color=#6c8040, process='|',
+  rule (modulo AC) p_0_111111121111[color=#6c8040, process="|",
                                     issapicrule, role='P']:
      [ State_111111121111( $x, $y, c_AJ, c_SA, c_SJ, sid ) ]
     -->
@@ -271,27 +240,21 @@ rule (modulo E) p_0_111111121111[color=#6c8040, process='|', issapicrule,
      ]
   */
 
-rule (modulo E) S_0_1111111211111[color=#6c8040, process='S()',
+rule (modulo E) S_0_1111111211111[color=#6c8040, process="S();",
                                   issapicrule, role='P']:
    [ State_1111111211111( $x.1, $y.1, c_AJ.1, c_SA.1, c_SJ.1, sid.1 ) ]
   -->
-   [
-   State_11111112111111( $x.1, $y.1, c_AJ.1, c_SA.1, c_SJ.1, sid.1 ),
-   State_11111112111112( $x.1, $y.1, c_AJ.1, c_SA.1, c_SJ.1, sid.1 )
-   ]
+   [ State_11111112111111( $x.1, $y.1, c_AJ.1, c_SA.1, c_SJ.1, sid.1 ) ]
 
   /*
-  rule (modulo AC) S_0_1111111211111[color=#6c8040, process='S()',
+  rule (modulo AC) S_0_1111111211111[color=#6c8040, process="S();",
                                      issapicrule, role='P']:
      [ State_1111111211111( $x, $y, c_AJ, c_SA, c_SJ, sid ) ]
     -->
-     [
-     State_11111112111111( $x, $y, c_AJ, c_SA, c_SJ, sid ),
-     State_11111112111112( $x, $y, c_AJ, c_SA, c_SJ, sid )
-     ]
+     [ State_11111112111111( $x, $y, c_AJ, c_SA, c_SJ, sid ) ]
   */
 
-rule (modulo E) inv_0_11111112111111[color=#40805b, process='in(v.1);',
+rule (modulo E) inv_0_11111112111111[color=#40805b, process="in(v.1);",
                                      issapicrule, role='P_S']:
    [
    State_11111112111111( $x.1, $y.1, c_AJ.1, c_SA.1, c_SJ.1, sid.1 ),
@@ -302,7 +265,7 @@ rule (modulo E) inv_0_11111112111111[color=#40805b, process='in(v.1);',
    ]
 
   /*
-  rule (modulo AC) inv_0_11111112111111[color=#40805b, process='in(v.1);',
+  rule (modulo AC) inv_0_11111112111111[color=#40805b, process="in(v.1);",
                                         issapicrule, role='P_S']:
      [ State_11111112111111( $x, $y, c_AJ, c_SA, c_SJ, sid ), In( v ) ]
     -->
@@ -310,7 +273,7 @@ rule (modulo E) inv_0_11111112111111[color=#40805b, process='in(v.1);',
   */
 
 rule (modulo E) outcSAsidvsigsidvskx_0_111111121111111[color=#40805b,
-                                                       process='out(c_SA.1,<<sid.1, v.1>, sig(<sid.1, v.1>, sk($x.1))>);',
+                                                       process="out(c_SA.1,<<sid.1, v.1>, sig(<sid.1, v.1>, sk($x.1))>);",
                                                        issapicrule, role='P_S']:
    [
    State_111111121111111( $x.1, $y.1, c_AJ.1, c_SA.1, c_SJ.1, sid.1, v.1 ),
@@ -324,7 +287,7 @@ rule (modulo E) outcSAsidvsigsidvskx_0_111111121111111[color=#40805b,
 
   /*
   rule (modulo AC) outcSAsidvsigsidvskx_0_111111121111111[color=#40805b,
-                                                          process='out(c_SA.1,<<sid.1, v.1>, sig(<sid.1, v.1>, sk($x.1))>);',
+                                                          process="out(c_SA.1,<<sid.1, v.1>, sig(<sid.1, v.1>, sk($x.1))>);",
                                                           issapicrule, role='P_S']:
      [ State_111111121111111( $x, $y, c_AJ, c_SA, c_SJ, sid, v ), In( c_SA ) ]
     -->
@@ -335,7 +298,7 @@ rule (modulo E) outcSAsidvsigsidvskx_0_111111121111111[color=#40805b,
   */
 
 rule (modulo E) outcSAsidvsigsidvskx_1_111111121111111[color=#40805b,
-                                                       process='out(c_SA.1,<<sid.1, v.1>, sig(<sid.1, v.1>, sk($x.1))>);',
+                                                       process="out(c_SA.1,<<sid.1, v.1>, sig(<sid.1, v.1>, sk($x.1))>);",
                                                        issapicrule, role='P_S']:
    [ State_111111121111111( $x.1, $y.1, c_AJ.1, c_SA.1, c_SJ.1, sid.1, v.1 )
    ]
@@ -349,7 +312,7 @@ rule (modulo E) outcSAsidvsigsidvskx_1_111111121111111[color=#40805b,
 
   /*
   rule (modulo AC) outcSAsidvsigsidvskx_1_111111121111111[color=#40805b,
-                                                          process='out(c_SA.1,<<sid.1, v.1>, sig(<sid.1, v.1>, sk($x.1))>);',
+                                                          process="out(c_SA.1,<<sid.1, v.1>, sig(<sid.1, v.1>, sk($x.1))>);",
                                                           issapicrule, role='P_S']:
      [ State_111111121111111( $x, $y, c_AJ, c_SA, c_SJ, sid, v ) ]
     -->
@@ -360,7 +323,7 @@ rule (modulo E) outcSAsidvsigsidvskx_1_111111121111111[color=#40805b,
   */
 
 rule (modulo E) outcSAsidvsigsidvskx_2_111111121111111[color=#40805b,
-                                                       process='out(c_SA.1,<<sid.1, v.1>, sig(<sid.1, v.1>, sk($x.1))>);',
+                                                       process="out(c_SA.1,<<sid.1, v.1>, sig(<sid.1, v.1>, sk($x.1))>);",
                                                        issapicrule, role='P_S']:
    [
    Semistate_1111111211111111( $x.1, $y.1, c_AJ.1, c_SA.1, c_SJ.1, sid.1,
@@ -375,7 +338,7 @@ rule (modulo E) outcSAsidvsigsidvskx_2_111111121111111[color=#40805b,
 
   /*
   rule (modulo AC) outcSAsidvsigsidvskx_2_111111121111111[color=#40805b,
-                                                          process='out(c_SA.1,<<sid.1, v.1>, sig(<sid.1, v.1>, sk($x.1))>);',
+                                                          process="out(c_SA.1,<<sid.1, v.1>, sig(<sid.1, v.1>, sk($x.1))>);",
                                                           issapicrule, role='P_S']:
      [
      Semistate_1111111211111111( $x, $y, c_AJ, c_SA, c_SJ, sid, v ),
@@ -386,7 +349,7 @@ rule (modulo E) outcSAsidvsigsidvskx_2_111111121111111[color=#40805b,
   */
 
 rule (modulo E) outcSJsidvsigsidvskx_0_1111111211111111[color=#40805b,
-                                                        process='out(c_SJ.1,<<sid.1, v.1>, sig(<sid.1, v.1>, sk($x.1))>);',
+                                                        process="out(c_SJ.1,<<sid.1, v.1>, sig(<sid.1, v.1>, sk($x.1))>);",
                                                         issapicrule, role='P_S']:
    [
    State_1111111211111111( $x.1, $y.1, c_AJ.1, c_SA.1, c_SJ.1, sid.1, v.1 ),
@@ -400,7 +363,7 @@ rule (modulo E) outcSJsidvsigsidvskx_0_1111111211111111[color=#40805b,
 
   /*
   rule (modulo AC) outcSJsidvsigsidvskx_0_1111111211111111[color=#40805b,
-                                                           process='out(c_SJ.1,<<sid.1, v.1>, sig(<sid.1, v.1>, sk($x.1))>);',
+                                                           process="out(c_SJ.1,<<sid.1, v.1>, sig(<sid.1, v.1>, sk($x.1))>);",
                                                            issapicrule, role='P_S']:
      [ State_1111111211111111( $x, $y, c_AJ, c_SA, c_SJ, sid, v ), In( c_SJ )
      ]
@@ -412,7 +375,7 @@ rule (modulo E) outcSJsidvsigsidvskx_0_1111111211111111[color=#40805b,
   */
 
 rule (modulo E) outcSJsidvsigsidvskx_1_1111111211111111[color=#40805b,
-                                                        process='out(c_SJ.1,<<sid.1, v.1>, sig(<sid.1, v.1>, sk($x.1))>);',
+                                                        process="out(c_SJ.1,<<sid.1, v.1>, sig(<sid.1, v.1>, sk($x.1))>);",
                                                         issapicrule, role='P_S']:
    [
    State_1111111211111111( $x.1, $y.1, c_AJ.1, c_SA.1, c_SJ.1, sid.1, v.1 )
@@ -428,7 +391,7 @@ rule (modulo E) outcSJsidvsigsidvskx_1_1111111211111111[color=#40805b,
   // loop breaker: [0]
   /*
   rule (modulo AC) outcSJsidvsigsidvskx_1_1111111211111111[color=#40805b,
-                                                           process='out(c_SJ.1,<<sid.1, v.1>, sig(<sid.1, v.1>, sk($x.1))>);',
+                                                           process="out(c_SJ.1,<<sid.1, v.1>, sig(<sid.1, v.1>, sk($x.1))>);",
                                                            issapicrule, role='P_S']:
      [ State_1111111211111111( $x, $y, c_AJ, c_SA, c_SJ, sid, v ) ]
     -->
@@ -440,7 +403,7 @@ rule (modulo E) outcSJsidvsigsidvskx_1_1111111211111111[color=#40805b,
   */
 
 rule (modulo E) outcSJsidvsigsidvskx_2_1111111211111111[color=#40805b,
-                                                        process='out(c_SJ.1,<<sid.1, v.1>, sig(<sid.1, v.1>, sk($x.1))>);',
+                                                        process="out(c_SJ.1,<<sid.1, v.1>, sig(<sid.1, v.1>, sk($x.1))>);",
                                                         issapicrule, role='P_S']:
    [
    Semistate_11111112111111111( $x.1, $y.1, c_AJ.1, c_SA.1, c_SJ.1, sid.1,
@@ -455,7 +418,7 @@ rule (modulo E) outcSJsidvsigsidvskx_2_1111111211111111[color=#40805b,
 
   /*
   rule (modulo AC) outcSJsidvsigsidvskx_2_1111111211111111[color=#40805b,
-                                                           process='out(c_SJ.1,<<sid.1, v.1>, sig(<sid.1, v.1>, sk($x.1))>);',
+                                                           process="out(c_SJ.1,<<sid.1, v.1>, sig(<sid.1, v.1>, sk($x.1))>);",
                                                            issapicrule, role='P_S']:
      [
      Semistate_11111112111111111( $x, $y, c_AJ, c_SA, c_SJ, sid, v ),
@@ -465,7 +428,7 @@ rule (modulo E) outcSJsidvsigsidvskx_2_1111111211111111[color=#40805b,
      [ State_11111112111111111( $x, $y, c_AJ, c_SA, c_SJ, sid, v ) ]
   */
 
-rule (modulo E) p_0_11111112111111111[color=#40805b, process='0',
+rule (modulo E) p_0_11111112111111111[color=#40805b, process="0",
                                       issapicrule, role='P_S']:
    [
    State_11111112111111111( $x.1, $y.1, c_AJ.1, c_SA.1, c_SJ.1, sid.1, v.1 )
@@ -474,45 +437,27 @@ rule (modulo E) p_0_11111112111111111[color=#40805b, process='0',
    [ ]
 
   /*
-  rule (modulo AC) p_0_11111112111111111[color=#40805b, process='0',
+  rule (modulo AC) p_0_11111112111111111[color=#40805b, process="0",
                                          issapicrule, role='P_S']:
      [ State_11111112111111111( $x, $y, c_AJ, c_SA, c_SJ, sid, v ) ] --> [ ]
   */
 
-rule (modulo E) p_0_11111112111112[color=#6c8040, process='0',
-                                   issapicrule, role='P']:
-   [ State_11111112111112( $x.1, $y.1, c_AJ.1, c_SA.1, c_SJ.1, sid.1 ) ]
-  -->
-   [ ]
-
-  /*
-  rule (modulo AC) p_0_11111112111112[color=#6c8040, process='0',
-                                      issapicrule, role='P']:
-     [ State_11111112111112( $x, $y, c_AJ, c_SA, c_SJ, sid ) ] --> [ ]
-  */
-
-rule (modulo E) A_0_1111111211112[color=#6c8040, process='A()',
+rule (modulo E) A_0_1111111211112[color=#6c8040, process="A();",
                                   issapicrule, role='P']:
    [ State_1111111211112( $x.1, $y.1, c_AJ.1, c_SA.1, c_SJ.1, sid.1 ) ]
   -->
-   [
-   State_11111112111121( $x.1, $y.1, c_AJ.1, c_SA.1, c_SJ.1, sid.1 ),
-   State_11111112111122( $x.1, $y.1, c_AJ.1, c_SA.1, c_SJ.1, sid.1 )
-   ]
+   [ State_11111112111121( $x.1, $y.1, c_AJ.1, c_SA.1, c_SJ.1, sid.1 ) ]
 
   /*
-  rule (modulo AC) A_0_1111111211112[color=#6c8040, process='A()',
+  rule (modulo AC) A_0_1111111211112[color=#6c8040, process="A();",
                                      issapicrule, role='P']:
      [ State_1111111211112( $x, $y, c_AJ, c_SA, c_SJ, sid ) ]
     -->
-     [
-     State_11111112111121( $x, $y, c_AJ, c_SA, c_SJ, sid ),
-     State_11111112111122( $x, $y, c_AJ, c_SA, c_SJ, sid )
-     ]
+     [ State_11111112111121( $x, $y, c_AJ, c_SA, c_SJ, sid ) ]
   */
 
 rule (modulo E) incSAsidsvsigs_0_11111112111121[color=#804046,
-                                                process='in(c_SA.1,<<sid_s.1, v.2>, sig_s.1>);', issapicrule,
+                                                process="in(c_SA.1,<<sid_s.1, v.2>, sig_s.1>);", issapicrule,
                                                 role='P_A']:
    [
    State_11111112111121( $x.1, $y.1, c_AJ.1, c_SA.1, c_SJ.1, sid.1 ),
@@ -526,7 +471,7 @@ rule (modulo E) incSAsidsvsigs_0_11111112111121[color=#804046,
 
   /*
   rule (modulo AC) incSAsidsvsigs_0_11111112111121[color=#804046,
-                                                   process='in(c_SA.1,<<sid_s.1, v.2>, sig_s.1>);',
+                                                   process="in(c_SA.1,<<sid_s.1, v.2>, sig_s.1>);",
                                                    issapicrule, role='P_A']:
      [
      State_11111112111121( $x, $y, c_AJ, c_SA, c_SJ, sid ),
@@ -540,7 +485,7 @@ rule (modulo E) incSAsidsvsigs_0_11111112111121[color=#804046,
   */
 
 rule (modulo E) incSAsidsvsigs_1_11111112111121[color=#804046,
-                                                process='in(c_SA.1,<<sid_s.1, v.2>, sig_s.1>);', issapicrule,
+                                                process="in(c_SA.1,<<sid_s.1, v.2>, sig_s.1>);", issapicrule,
                                                 role='P_A']:
    [
    Let_111111121111211( <<sid_s.1, v.2>, sig_s.1>, $x.1, $y.1, c_AJ.1,
@@ -557,7 +502,7 @@ rule (modulo E) incSAsidsvsigs_1_11111112111121[color=#804046,
   // loop breaker: [0]
   /*
   rule (modulo AC) incSAsidsvsigs_1_11111112111121[color=#804046,
-                                                   process='in(c_SA.1,<<sid_s.1, v.2>, sig_s.1>);',
+                                                   process="in(c_SA.1,<<sid_s.1, v.2>, sig_s.1>);",
                                                    issapicrule, role='P_A']:
      [
      Let_111111121111211( <<sid_s, v>, sig_s>, $x, $y, c_AJ, c_SA, c_SJ, sid )
@@ -569,7 +514,7 @@ rule (modulo E) incSAsidsvsigs_1_11111112111121[color=#804046,
   */
 
 rule (modulo E) incSAsidsvsigs_2_11111112111121[color=#804046,
-                                                process='in(c_SA.1,<<sid_s.1, v.2>, sig_s.1>);', issapicrule,
+                                                process="in(c_SA.1,<<sid_s.1, v.2>, sig_s.1>);", issapicrule,
                                                 role='P_A']:
    [
    State_11111112111121( $x.1, $y.1, c_AJ.1, c_SA.1, c_SJ.1, sid.1 ),
@@ -580,7 +525,7 @@ rule (modulo E) incSAsidsvsigs_2_11111112111121[color=#804046,
 
   /*
   rule (modulo AC) incSAsidsvsigs_2_11111112111121[color=#804046,
-                                                   process='in(c_SA.1,<<sid_s.1, v.2>, sig_s.1>);',
+                                                   process="in(c_SA.1,<<sid_s.1, v.2>, sig_s.1>);",
                                                    issapicrule, role='P_A']:
      [
      State_11111112111121( $x, $y, c_AJ, c_SA, c_SJ, sid ), In( <c_SA, x.1> )
@@ -590,7 +535,7 @@ rule (modulo E) incSAsidsvsigs_2_11111112111121[color=#804046,
   */
 
 rule (modulo E) incSAsidsvsigs_3_11111112111121[color=#804046,
-                                                process='in(c_SA.1,<<sid_s.1, v.2>, sig_s.1>);', issapicrule,
+                                                process="in(c_SA.1,<<sid_s.1, v.2>, sig_s.1>);", issapicrule,
                                                 role='P_A']:
    [
    Let_111111121111211( <<sid_s.1, v.2>, sig_s.1>, $x.1, $y.1, c_AJ.1,
@@ -607,7 +552,7 @@ rule (modulo E) incSAsidsvsigs_3_11111112111121[color=#804046,
   // loop breaker: [0]
   /*
   rule (modulo AC) incSAsidsvsigs_3_11111112111121[color=#804046,
-                                                   process='in(c_SA.1,<<sid_s.1, v.2>, sig_s.1>);',
+                                                   process="in(c_SA.1,<<sid_s.1, v.2>, sig_s.1>);",
                                                    issapicrule, role='P_A']:
      [
      Let_111111121111211( <<sid_s, v>, sig_s>, $x, $y, c_AJ, c_SA, c_SJ, sid )
@@ -619,7 +564,7 @@ rule (modulo E) incSAsidsvsigs_3_11111112111121[color=#804046,
   */
 
 rule (modulo E) ifverifysigssidvpkskxtrue_0_111111121111211[color=#804046,
-                                                            process='if verify(sig_s.1, <sid.1, v.2>, pk(sk($x.1)))=true',
+                                                            process="if verify(sig_s.1, <sid.1, v.2>, pk(sk($x.1)))=true",
                                                             issapicrule, role='P_A']:
    [
    State_111111121111211( $x.1, $y.1, c_AJ.1, c_SA.1, c_SJ.1, sid.1,
@@ -635,7 +580,7 @@ rule (modulo E) ifverifysigssidvpkskxtrue_0_111111121111211[color=#804046,
 
   /*
   rule (modulo AC) ifverifysigssidvpkskxtrue_0_111111121111211[color=#804046,
-                                                               process='if verify(sig_s.1, <sid.1, v.2>, pk(sk($x.1)))=true',
+                                                               process="if verify(sig_s.1, <sid.1, v.2>, pk(sk($x.1)))=true",
                                                                issapicrule, role='P_A']:
      [ State_111111121111211( $x, $y, c_AJ, c_SA, c_SJ, sid, sid_s, sig_s, v )
      ]
@@ -658,7 +603,7 @@ rule (modulo E) ifverifysigssidvpkskxtrue_0_111111121111211[color=#804046,
   */
 
 rule (modulo E) ifverifysigssidvpkskxtrue_1_111111121111211[color=#804046,
-                                                            process='if verify(sig_s.1, <sid.1, v.2>, pk(sk($x.1)))=true',
+                                                            process="if verify(sig_s.1, <sid.1, v.2>, pk(sk($x.1)))=true",
                                                             issapicrule, role='P_A']:
    [
    State_111111121111211( $x.1, $y.1, c_AJ.1, c_SA.1, c_SJ.1, sid.1,
@@ -674,7 +619,7 @@ rule (modulo E) ifverifysigssidvpkskxtrue_1_111111121111211[color=#804046,
 
   /*
   rule (modulo AC) ifverifysigssidvpkskxtrue_1_111111121111211[color=#804046,
-                                                               process='if verify(sig_s.1, <sid.1, v.2>, pk(sk($x.1)))=true',
+                                                               process="if verify(sig_s.1, <sid.1, v.2>, pk(sk($x.1)))=true",
                                                                issapicrule, role='P_A']:
      [ State_111111121111211( $x, $y, c_AJ, c_SA, c_SJ, sid, sid_s, sig_s, v )
      ]
@@ -697,7 +642,7 @@ rule (modulo E) ifverifysigssidvpkskxtrue_1_111111121111211[color=#804046,
   */
 
 rule (modulo E) outcAJsidvsigssigsidvsky_0_1111111211112111[color=#804046,
-                                                            process='out(c_AJ.1,<<sid.1, v.2>, sig_s.1, sig(<sid.1, v.2>, sk($y.1))>);',
+                                                            process="out(c_AJ.1,<<sid.1, v.2>, sig_s.1, sig(<sid.1, v.2>, sk($y.1))>);",
                                                             issapicrule, role='P_A']:
    [
    State_1111111211112111( $x.1, $y.1, c_AJ.1, c_SA.1, c_SJ.1, sid.1,
@@ -715,7 +660,7 @@ rule (modulo E) outcAJsidvsigssigsidvsky_0_1111111211112111[color=#804046,
 
   /*
   rule (modulo AC) outcAJsidvsigssigsidvsky_0_1111111211112111[color=#804046,
-                                                               process='out(c_AJ.1,<<sid.1, v.2>, sig_s.1, sig(<sid.1, v.2>, sk($y.1))>);',
+                                                               process="out(c_AJ.1,<<sid.1, v.2>, sig_s.1, sig(<sid.1, v.2>, sk($y.1))>);",
                                                                issapicrule, role='P_A']:
      [
      State_1111111211112111( $x, $y, c_AJ, c_SA, c_SJ, sid, sid_s, sig_s, v ),
@@ -729,7 +674,7 @@ rule (modulo E) outcAJsidvsigssigsidvsky_0_1111111211112111[color=#804046,
   */
 
 rule (modulo E) outcAJsidvsigssigsidvsky_1_1111111211112111[color=#804046,
-                                                            process='out(c_AJ.1,<<sid.1, v.2>, sig_s.1, sig(<sid.1, v.2>, sk($y.1))>);',
+                                                            process="out(c_AJ.1,<<sid.1, v.2>, sig_s.1, sig(<sid.1, v.2>, sk($y.1))>);",
                                                             issapicrule, role='P_A']:
    [
    State_1111111211112111( $x.1, $y.1, c_AJ.1, c_SA.1, c_SJ.1, sid.1,
@@ -746,7 +691,7 @@ rule (modulo E) outcAJsidvsigssigsidvsky_1_1111111211112111[color=#804046,
 
   /*
   rule (modulo AC) outcAJsidvsigssigsidvsky_1_1111111211112111[color=#804046,
-                                                               process='out(c_AJ.1,<<sid.1, v.2>, sig_s.1, sig(<sid.1, v.2>, sk($y.1))>);',
+                                                               process="out(c_AJ.1,<<sid.1, v.2>, sig_s.1, sig(<sid.1, v.2>, sk($y.1))>);",
                                                                issapicrule, role='P_A']:
      [
      State_1111111211112111( $x, $y, c_AJ, c_SA, c_SJ, sid, sid_s, sig_s, v )
@@ -761,7 +706,7 @@ rule (modulo E) outcAJsidvsigssigsidvsky_1_1111111211112111[color=#804046,
   */
 
 rule (modulo E) outcAJsidvsigssigsidvsky_2_1111111211112111[color=#804046,
-                                                            process='out(c_AJ.1,<<sid.1, v.2>, sig_s.1, sig(<sid.1, v.2>, sk($y.1))>);',
+                                                            process="out(c_AJ.1,<<sid.1, v.2>, sig_s.1, sig(<sid.1, v.2>, sk($y.1))>);",
                                                             issapicrule, role='P_A']:
    [
    Semistate_11111112111121111( $x.1, $y.1, c_AJ.1, c_SA.1, c_SJ.1, sid.1,
@@ -778,7 +723,7 @@ rule (modulo E) outcAJsidvsigssigsidvsky_2_1111111211112111[color=#804046,
 
   /*
   rule (modulo AC) outcAJsidvsigssigsidvsky_2_1111111211112111[color=#804046,
-                                                               process='out(c_AJ.1,<<sid.1, v.2>, sig_s.1, sig(<sid.1, v.2>, sk($y.1))>);',
+                                                               process="out(c_AJ.1,<<sid.1, v.2>, sig_s.1, sig(<sid.1, v.2>, sk($y.1))>);",
                                                                issapicrule, role='P_A']:
      [
      Semistate_11111112111121111( $x, $y, c_AJ, c_SA, c_SJ, sid, sid_s, sig_s,
@@ -792,7 +737,7 @@ rule (modulo E) outcAJsidvsigssigsidvsky_2_1111111211112111[color=#804046,
      ]
   */
 
-rule (modulo E) p_0_11111112111121111[color=#804046, process='0',
+rule (modulo E) p_0_11111112111121111[color=#804046, process="0",
                                       issapicrule, role='P_A']:
    [
    State_11111112111121111( $x.1, $y.1, c_AJ.1, c_SA.1, c_SJ.1, sid.1,
@@ -803,7 +748,7 @@ rule (modulo E) p_0_11111112111121111[color=#804046, process='0',
    [ ]
 
   /*
-  rule (modulo AC) p_0_11111112111121111[color=#804046, process='0',
+  rule (modulo AC) p_0_11111112111121111[color=#804046, process="0",
                                          issapicrule, role='P_A']:
      [
      State_11111112111121111( $x, $y, c_AJ, c_SA, c_SJ, sid, sid_s, sig_s, v )
@@ -812,7 +757,7 @@ rule (modulo E) p_0_11111112111121111[color=#804046, process='0',
      [ ]
   */
 
-rule (modulo E) p_0_1111111211112112[color=#804046, process='0',
+rule (modulo E) p_0_1111111211112112[color=#804046, process="0",
                                      issapicrule, role='P_A']:
    [
    State_1111111211112112( $x.1, $y.1, c_AJ.1, c_SA.1, c_SJ.1, sid.1,
@@ -823,7 +768,7 @@ rule (modulo E) p_0_1111111211112112[color=#804046, process='0',
    [ ]
 
   /*
-  rule (modulo AC) p_0_1111111211112112[color=#804046, process='0',
+  rule (modulo AC) p_0_1111111211112112[color=#804046, process="0",
                                         issapicrule, role='P_A']:
      [
      State_1111111211112112( $x, $y, c_AJ, c_SA, c_SJ, sid, sid_s, sig_s, v )
@@ -832,40 +777,22 @@ rule (modulo E) p_0_1111111211112112[color=#804046, process='0',
      [ ]
   */
 
-rule (modulo E) p_0_11111112111122[color=#6c8040, process='0',
-                                   issapicrule, role='P']:
-   [ State_11111112111122( $x.1, $y.1, c_AJ.1, c_SA.1, c_SJ.1, sid.1 ) ]
-  -->
-   [ ]
-
-  /*
-  rule (modulo AC) p_0_11111112111122[color=#6c8040, process='0',
-                                      issapicrule, role='P']:
-     [ State_11111112111122( $x, $y, c_AJ, c_SA, c_SJ, sid ) ] --> [ ]
-  */
-
-rule (modulo E) J_0_111111121112[color=#6c8040, process='J()',
+rule (modulo E) J_0_111111121112[color=#6c8040, process="J();",
                                  issapicrule, role='P']:
    [ State_111111121112( $x.1, $y.1, c_AJ.1, c_SA.1, c_SJ.1, sid.1 ) ]
   -->
-   [
-   State_1111111211121( $x.1, $y.1, c_AJ.1, c_SA.1, c_SJ.1, sid.1 ),
-   State_1111111211122( $x.1, $y.1, c_AJ.1, c_SA.1, c_SJ.1, sid.1 )
-   ]
+   [ State_1111111211121( $x.1, $y.1, c_AJ.1, c_SA.1, c_SJ.1, sid.1 ) ]
 
   /*
-  rule (modulo AC) J_0_111111121112[color=#6c8040, process='J()',
+  rule (modulo AC) J_0_111111121112[color=#6c8040, process="J();",
                                     issapicrule, role='P']:
      [ State_111111121112( $x, $y, c_AJ, c_SA, c_SJ, sid ) ]
     -->
-     [
-     State_1111111211121( $x, $y, c_AJ, c_SA, c_SJ, sid ),
-     State_1111111211122( $x, $y, c_AJ, c_SA, c_SJ, sid )
-     ]
+     [ State_1111111211121( $x, $y, c_AJ, c_SA, c_SJ, sid ) ]
   */
 
 rule (modulo E) incSJsidsvssigs_0_1111111211121[color=#406580,
-                                                process='in(c_SJ.1,<<sid_s.2, v_s.1>, sig1_s.1>);',
+                                                process="in(c_SJ.1,<<sid_s.2, v_s.1>, sig1_s.1>);",
                                                 issapicrule, role='P_J']:
    [
    State_1111111211121( $x.1, $y.1, c_AJ.1, c_SA.1, c_SJ.1, sid.1 ),
@@ -879,7 +806,7 @@ rule (modulo E) incSJsidsvssigs_0_1111111211121[color=#406580,
 
   /*
   rule (modulo AC) incSJsidsvssigs_0_1111111211121[color=#406580,
-                                                   process='in(c_SJ.1,<<sid_s.2, v_s.1>, sig1_s.1>);',
+                                                   process="in(c_SJ.1,<<sid_s.2, v_s.1>, sig1_s.1>);",
                                                    issapicrule, role='P_J']:
      [
      State_1111111211121( $x, $y, c_AJ, c_SA, c_SJ, sid ),
@@ -893,7 +820,7 @@ rule (modulo E) incSJsidsvssigs_0_1111111211121[color=#406580,
   */
 
 rule (modulo E) incSJsidsvssigs_1_1111111211121[color=#406580,
-                                                process='in(c_SJ.1,<<sid_s.2, v_s.1>, sig1_s.1>);',
+                                                process="in(c_SJ.1,<<sid_s.2, v_s.1>, sig1_s.1>);",
                                                 issapicrule, role='P_J']:
    [
    Let_11111112111211( <<sid_s.2, v_s.1>, sig1_s.1>, $x.1, $y.1, c_AJ.1,
@@ -909,7 +836,7 @@ rule (modulo E) incSJsidsvssigs_1_1111111211121[color=#406580,
 
   /*
   rule (modulo AC) incSJsidsvssigs_1_1111111211121[color=#406580,
-                                                   process='in(c_SJ.1,<<sid_s.2, v_s.1>, sig1_s.1>);',
+                                                   process="in(c_SJ.1,<<sid_s.2, v_s.1>, sig1_s.1>);",
                                                    issapicrule, role='P_J']:
      [
      Let_11111112111211( <<sid_s, v_s>, sig1_s>, $x, $y, c_AJ, c_SA, c_SJ, sid
@@ -922,7 +849,7 @@ rule (modulo E) incSJsidsvssigs_1_1111111211121[color=#406580,
   */
 
 rule (modulo E) incSJsidsvssigs_2_1111111211121[color=#406580,
-                                                process='in(c_SJ.1,<<sid_s.2, v_s.1>, sig1_s.1>);',
+                                                process="in(c_SJ.1,<<sid_s.2, v_s.1>, sig1_s.1>);",
                                                 issapicrule, role='P_J']:
    [
    State_1111111211121( $x.1, $y.1, c_AJ.1, c_SA.1, c_SJ.1, sid.1 ),
@@ -933,7 +860,7 @@ rule (modulo E) incSJsidsvssigs_2_1111111211121[color=#406580,
 
   /*
   rule (modulo AC) incSJsidsvssigs_2_1111111211121[color=#406580,
-                                                   process='in(c_SJ.1,<<sid_s.2, v_s.1>, sig1_s.1>);',
+                                                   process="in(c_SJ.1,<<sid_s.2, v_s.1>, sig1_s.1>);",
                                                    issapicrule, role='P_J']:
      [ State_1111111211121( $x, $y, c_AJ, c_SA, c_SJ, sid ), In( <c_SJ, x.1> )
      ]
@@ -942,7 +869,7 @@ rule (modulo E) incSJsidsvssigs_2_1111111211121[color=#406580,
   */
 
 rule (modulo E) incSJsidsvssigs_3_1111111211121[color=#406580,
-                                                process='in(c_SJ.1,<<sid_s.2, v_s.1>, sig1_s.1>);',
+                                                process="in(c_SJ.1,<<sid_s.2, v_s.1>, sig1_s.1>);",
                                                 issapicrule, role='P_J']:
    [
    Let_11111112111211( <<sid_s.2, v_s.1>, sig1_s.1>, $x.1, $y.1, c_AJ.1,
@@ -958,7 +885,7 @@ rule (modulo E) incSJsidsvssigs_3_1111111211121[color=#406580,
 
   /*
   rule (modulo AC) incSJsidsvssigs_3_1111111211121[color=#406580,
-                                                   process='in(c_SJ.1,<<sid_s.2, v_s.1>, sig1_s.1>);',
+                                                   process="in(c_SJ.1,<<sid_s.2, v_s.1>, sig1_s.1>);",
                                                    issapicrule, role='P_J']:
      [
      Let_11111112111211( <<sid_s, v_s>, sig1_s>, $x, $y, c_AJ, c_SA, c_SJ, sid
@@ -971,7 +898,7 @@ rule (modulo E) incSJsidsvssigs_3_1111111211121[color=#406580,
   */
 
 rule (modulo E) incAJsidavasigssiga_0_11111112111211[color=#406580,
-                                                     process='in(c_AJ.1,<<sid_a.1, v_a.1>, sig2_s.1, sig_a.1>);',
+                                                     process="in(c_AJ.1,<<sid_a.1, v_a.1>, sig2_s.1, sig_a.1>);",
                                                      issapicrule, role='P_J']:
    [
    State_11111112111211( $x.1, $y.1, c_AJ.1, c_SA.1, c_SJ.1, sid.1,
@@ -989,7 +916,7 @@ rule (modulo E) incAJsidavasigssiga_0_11111112111211[color=#406580,
 
   /*
   rule (modulo AC) incAJsidavasigssiga_0_11111112111211[color=#406580,
-                                                        process='in(c_AJ.1,<<sid_a.1, v_a.1>, sig2_s.1, sig_a.1>);',
+                                                        process="in(c_AJ.1,<<sid_a.1, v_a.1>, sig2_s.1, sig_a.1>);",
                                                         issapicrule, role='P_J']:
      [
      State_11111112111211( $x, $y, c_AJ, c_SA, c_SJ, sid, sig1_s, v_s, sid_s
@@ -1006,7 +933,7 @@ rule (modulo E) incAJsidavasigssiga_0_11111112111211[color=#406580,
   */
 
 rule (modulo E) incAJsidavasigssiga_1_11111112111211[color=#406580,
-                                                     process='in(c_AJ.1,<<sid_a.1, v_a.1>, sig2_s.1, sig_a.1>);',
+                                                     process="in(c_AJ.1,<<sid_a.1, v_a.1>, sig2_s.1, sig_a.1>);",
                                                      issapicrule, role='P_J']:
    [
    Let_111111121112111( <<sid_a.1, v_a.1>, sig2_s.1, sig_a.1>, $x.1, $y.1,
@@ -1022,7 +949,7 @@ rule (modulo E) incAJsidavasigssiga_1_11111112111211[color=#406580,
 
   /*
   rule (modulo AC) incAJsidavasigssiga_1_11111112111211[color=#406580,
-                                                        process='in(c_AJ.1,<<sid_a.1, v_a.1>, sig2_s.1, sig_a.1>);',
+                                                        process="in(c_AJ.1,<<sid_a.1, v_a.1>, sig2_s.1, sig_a.1>);",
                                                         issapicrule, role='P_J']:
      [
      Let_111111121112111( <<sid_a, v_a>, sig2_s, sig_a>, $x, $y, c_AJ, c_SA,
@@ -1038,7 +965,7 @@ rule (modulo E) incAJsidavasigssiga_1_11111112111211[color=#406580,
   */
 
 rule (modulo E) incAJsidavasigssiga_2_11111112111211[color=#406580,
-                                                     process='in(c_AJ.1,<<sid_a.1, v_a.1>, sig2_s.1, sig_a.1>);',
+                                                     process="in(c_AJ.1,<<sid_a.1, v_a.1>, sig2_s.1, sig_a.1>);",
                                                      issapicrule, role='P_J']:
    [
    State_11111112111211( $x.1, $y.1, c_AJ.1, c_SA.1, c_SJ.1, sid.1,
@@ -1055,7 +982,7 @@ rule (modulo E) incAJsidavasigssiga_2_11111112111211[color=#406580,
 
   /*
   rule (modulo AC) incAJsidavasigssiga_2_11111112111211[color=#406580,
-                                                        process='in(c_AJ.1,<<sid_a.1, v_a.1>, sig2_s.1, sig_a.1>);',
+                                                        process="in(c_AJ.1,<<sid_a.1, v_a.1>, sig2_s.1, sig_a.1>);",
                                                         issapicrule, role='P_J']:
      [
      State_11111112111211( $x, $y, c_AJ, c_SA, c_SJ, sid, sig1_s, v_s, sid_s
@@ -1071,7 +998,7 @@ rule (modulo E) incAJsidavasigssiga_2_11111112111211[color=#406580,
   */
 
 rule (modulo E) incAJsidavasigssiga_3_11111112111211[color=#406580,
-                                                     process='in(c_AJ.1,<<sid_a.1, v_a.1>, sig2_s.1, sig_a.1>);',
+                                                     process="in(c_AJ.1,<<sid_a.1, v_a.1>, sig2_s.1, sig_a.1>);",
                                                      issapicrule, role='P_J']:
    [
    Let_111111121112111( <<sid_a.1, v_a.1>, sig2_s.1, sig_a.1>, $x.1, $y.1,
@@ -1087,7 +1014,7 @@ rule (modulo E) incAJsidavasigssiga_3_11111112111211[color=#406580,
 
   /*
   rule (modulo AC) incAJsidavasigssiga_3_11111112111211[color=#406580,
-                                                        process='in(c_AJ.1,<<sid_a.1, v_a.1>, sig2_s.1, sig_a.1>);',
+                                                        process="in(c_AJ.1,<<sid_a.1, v_a.1>, sig2_s.1, sig_a.1>);",
                                                         issapicrule, role='P_J']:
      [
      Let_111111121112111( <<sid_a, v_a>, sig2_s, sig_a>, $x, $y, c_AJ, c_SA,
@@ -1103,7 +1030,7 @@ rule (modulo E) incAJsidavasigssiga_3_11111112111211[color=#406580,
   */
 
 rule (modulo E) ifverifysigssidvspkskxtrue_0_111111121112111[color=#406580,
-                                                             process='if verify(sig1_s.1, <sid.1, v_s.1>, pk(sk($x.1)))=true',
+                                                             process="if verify(sig1_s.1, <sid.1, v_s.1>, pk(sk($x.1)))=true",
                                                              issapicrule, role='P_J']:
    [
    State_111111121112111( $x.1, $y.1, c_AJ.1, c_SA.1, c_SJ.1, sid.1,
@@ -1119,7 +1046,7 @@ rule (modulo E) ifverifysigssidvspkskxtrue_0_111111121112111[color=#406580,
 
   /*
   rule (modulo AC) ifverifysigssidvspkskxtrue_0_111111121112111[color=#406580,
-                                                                process='if verify(sig1_s.1, <sid.1, v_s.1>, pk(sk($x.1)))=true',
+                                                                process="if verify(sig1_s.1, <sid.1, v_s.1>, pk(sk($x.1)))=true",
                                                                 issapicrule, role='P_J']:
      [
      State_111111121112111( $x, $y, c_AJ, c_SA, c_SJ, sid, sid_a, sig1_s,
@@ -1149,7 +1076,7 @@ rule (modulo E) ifverifysigssidvspkskxtrue_0_111111121112111[color=#406580,
   */
 
 rule (modulo E) ifverifysigssidvspkskxtrue_1_111111121112111[color=#406580,
-                                                             process='if verify(sig1_s.1, <sid.1, v_s.1>, pk(sk($x.1)))=true',
+                                                             process="if verify(sig1_s.1, <sid.1, v_s.1>, pk(sk($x.1)))=true",
                                                              issapicrule, role='P_J']:
    [
    State_111111121112111( $x.1, $y.1, c_AJ.1, c_SA.1, c_SJ.1, sid.1,
@@ -1166,7 +1093,7 @@ rule (modulo E) ifverifysigssidvspkskxtrue_1_111111121112111[color=#406580,
 
   /*
   rule (modulo AC) ifverifysigssidvspkskxtrue_1_111111121112111[color=#406580,
-                                                                process='if verify(sig1_s.1, <sid.1, v_s.1>, pk(sk($x.1)))=true',
+                                                                process="if verify(sig1_s.1, <sid.1, v_s.1>, pk(sk($x.1)))=true",
                                                                 issapicrule, role='P_J']:
      [
      State_111111121112111( $x, $y, c_AJ, c_SA, c_SJ, sid, sid_a, sig1_s,
@@ -1196,7 +1123,7 @@ rule (modulo E) ifverifysigssidvspkskxtrue_1_111111121112111[color=#406580,
   */
 
 rule (modulo E) ifverifysigssidvapkskxtrue_0_1111111211121111[color=#406580,
-                                                              process='if verify(sig2_s.1, <sid.1, v_a.1>, pk(sk($x.1)))=true',
+                                                              process="if verify(sig2_s.1, <sid.1, v_a.1>, pk(sk($x.1)))=true",
                                                               issapicrule, role='P_J']:
    [
    State_1111111211121111( $x.1, $y.1, c_AJ.1, c_SA.1, c_SJ.1, sid.1,
@@ -1212,7 +1139,7 @@ rule (modulo E) ifverifysigssidvapkskxtrue_0_1111111211121111[color=#406580,
 
   /*
   rule (modulo AC) ifverifysigssidvapkskxtrue_0_1111111211121111[color=#406580,
-                                                                 process='if verify(sig2_s.1, <sid.1, v_a.1>, pk(sk($x.1)))=true',
+                                                                 process="if verify(sig2_s.1, <sid.1, v_a.1>, pk(sk($x.1)))=true",
                                                                  issapicrule, role='P_J']:
      [
      State_1111111211121111( $x, $y, c_AJ, c_SA, c_SJ, sid, sid_a, sig1_s,
@@ -1242,7 +1169,7 @@ rule (modulo E) ifverifysigssidvapkskxtrue_0_1111111211121111[color=#406580,
   */
 
 rule (modulo E) ifverifysigssidvapkskxtrue_1_1111111211121111[color=#406580,
-                                                              process='if verify(sig2_s.1, <sid.1, v_a.1>, pk(sk($x.1)))=true',
+                                                              process="if verify(sig2_s.1, <sid.1, v_a.1>, pk(sk($x.1)))=true",
                                                               issapicrule, role='P_J']:
    [
    State_1111111211121111( $x.1, $y.1, c_AJ.1, c_SA.1, c_SJ.1, sid.1,
@@ -1259,7 +1186,7 @@ rule (modulo E) ifverifysigssidvapkskxtrue_1_1111111211121111[color=#406580,
 
   /*
   rule (modulo AC) ifverifysigssidvapkskxtrue_1_1111111211121111[color=#406580,
-                                                                 process='if verify(sig2_s.1, <sid.1, v_a.1>, pk(sk($x.1)))=true',
+                                                                 process="if verify(sig2_s.1, <sid.1, v_a.1>, pk(sk($x.1)))=true",
                                                                  issapicrule, role='P_J']:
      [
      State_1111111211121111( $x, $y, c_AJ, c_SA, c_SJ, sid, sid_a, sig1_s,
@@ -1289,7 +1216,7 @@ rule (modulo E) ifverifysigssidvapkskxtrue_1_1111111211121111[color=#406580,
   */
 
 rule (modulo E) ifverifysigasidvapkskytrue_0_11111112111211111[color=#406580,
-                                                               process='if verify(sig_a.1, <sid.1, v_a.1>, pk(sk($y.1)))=true',
+                                                               process="if verify(sig_a.1, <sid.1, v_a.1>, pk(sk($y.1)))=true",
                                                                issapicrule, role='P_J']:
    [
    State_11111112111211111( $x.1, $y.1, c_AJ.1, c_SA.1, c_SJ.1, sid.1,
@@ -1305,7 +1232,7 @@ rule (modulo E) ifverifysigasidvapkskytrue_0_11111112111211111[color=#406580,
 
   /*
   rule (modulo AC) ifverifysigasidvapkskytrue_0_11111112111211111[color=#406580,
-                                                                  process='if verify(sig_a.1, <sid.1, v_a.1>, pk(sk($y.1)))=true',
+                                                                  process="if verify(sig_a.1, <sid.1, v_a.1>, pk(sk($y.1)))=true",
                                                                   issapicrule, role='P_J']:
      [
      State_11111112111211111( $x, $y, c_AJ, c_SA, c_SJ, sid, sid_a, sig1_s,
@@ -1333,7 +1260,7 @@ rule (modulo E) ifverifysigasidvapkskytrue_0_11111112111211111[color=#406580,
   */
 
 rule (modulo E) ifverifysigasidvapkskytrue_1_11111112111211111[color=#406580,
-                                                               process='if verify(sig_a.1, <sid.1, v_a.1>, pk(sk($y.1)))=true',
+                                                               process="if verify(sig_a.1, <sid.1, v_a.1>, pk(sk($y.1)))=true",
                                                                issapicrule, role='P_J']:
    [
    State_11111112111211111( $x.1, $y.1, c_AJ.1, c_SA.1, c_SJ.1, sid.1,
@@ -1350,7 +1277,7 @@ rule (modulo E) ifverifysigasidvapkskytrue_1_11111112111211111[color=#406580,
 
   /*
   rule (modulo AC) ifverifysigasidvapkskytrue_1_11111112111211111[color=#406580,
-                                                                  process='if verify(sig_a.1, <sid.1, v_a.1>, pk(sk($y.1)))=true',
+                                                                  process="if verify(sig_a.1, <sid.1, v_a.1>, pk(sk($y.1)))=true",
                                                                   issapicrule, role='P_J']:
      [
      State_11111112111211111( $x, $y, c_AJ, c_SA, c_SJ, sid, sid_a, sig1_s,
@@ -1378,7 +1305,7 @@ rule (modulo E) ifverifysigasidvapkskytrue_1_11111112111211111[color=#406580,
   */
 
 rule (modulo E) ifvsva_0_111111121112111111[color=#406580,
-                                            process='if v_s.1=v_a.1', issapicrule, role='P_J']:
+                                            process="if v_s.1=v_a.1", issapicrule, role='P_J']:
    [
    State_111111121112111111( $x.1, $y.1, c_AJ.1, c_SA.1, c_SJ.1, sid.1,
                              sid_a.1, sig1_s.1, sig2_s.1, sig_a.1, v_a.1, v_s.1, sid_s.2
@@ -1393,7 +1320,7 @@ rule (modulo E) ifvsva_0_111111121112111111[color=#406580,
 
   /*
   rule (modulo AC) ifvsva_0_111111121112111111[color=#406580,
-                                               process='if v_s.1=v_a.1', issapicrule, role='P_J']:
+                                               process="if v_s.1=v_a.1", issapicrule, role='P_J']:
      [
      State_111111121112111111( $x, $y, c_AJ, c_SA, c_SJ, sid, sid_a, sig1_s,
                                sig2_s, sig_a, v_a, v_s, sid_s
@@ -1408,7 +1335,7 @@ rule (modulo E) ifvsva_0_111111121112111111[color=#406580,
   */
 
 rule (modulo E) ifvsva_1_111111121112111111[color=#406580,
-                                            process='if v_s.1=v_a.1', issapicrule, role='P_J']:
+                                            process="if v_s.1=v_a.1", issapicrule, role='P_J']:
    [
    State_111111121112111111( $x.1, $y.1, c_AJ.1, c_SA.1, c_SJ.1, sid.1,
                              sid_a.1, sig1_s.1, sig2_s.1, sig_a.1, v_a.1, v_s.1, sid_s.2
@@ -1423,7 +1350,7 @@ rule (modulo E) ifvsva_1_111111121112111111[color=#406580,
 
   /*
   rule (modulo AC) ifvsva_1_111111121112111111[color=#406580,
-                                               process='if v_s.1=v_a.1', issapicrule, role='P_J']:
+                                               process="if v_s.1=v_a.1", issapicrule, role='P_J']:
      [
      State_111111121112111111( $x, $y, c_AJ, c_SA, c_SJ, sid, sid_a, sig1_s,
                                sig2_s, sig_a, v_a, v_s, sid_s
@@ -1438,7 +1365,7 @@ rule (modulo E) ifvsva_1_111111121112111111[color=#406580,
   */
 
 rule (modulo E) eventEqualsid_0_1111111211121111111[color=#406580,
-                                                    process='event Equal( sid.1 );', issapicrule, role='P_J']:
+                                                    process="event Equal( sid.1 );", issapicrule, role='P_J']:
    [
    State_1111111211121111111( $x.1, $y.1, c_AJ.1, c_SA.1, c_SJ.1, sid.1,
                               sid_a.1, sig1_s.1, sig2_s.1, sig_a.1, v_a.1, v_s.1, sid_s.2
@@ -1453,7 +1380,7 @@ rule (modulo E) eventEqualsid_0_1111111211121111111[color=#406580,
 
   /*
   rule (modulo AC) eventEqualsid_0_1111111211121111111[color=#406580,
-                                                       process='event Equal( sid.1 );', issapicrule,
+                                                       process="event Equal( sid.1 );", issapicrule,
                                                        role='P_J']:
      [
      State_1111111211121111111( $x, $y, c_AJ, c_SA, c_SJ, sid, sid_a, sig1_s,
@@ -1468,7 +1395,7 @@ rule (modulo E) eventEqualsid_0_1111111211121111111[color=#406580,
      ]
   */
 
-rule (modulo E) p_0_11111112111211111111[color=#406580, process='0',
+rule (modulo E) p_0_11111112111211111111[color=#406580, process="0",
                                          issapicrule, role='P_J']:
    [
    State_11111112111211111111( $x.1, $y.1, c_AJ.1, c_SA.1, c_SJ.1, sid.1,
@@ -1479,7 +1406,7 @@ rule (modulo E) p_0_11111112111211111111[color=#406580, process='0',
    [ ]
 
   /*
-  rule (modulo AC) p_0_11111112111211111111[color=#406580, process='0',
+  rule (modulo AC) p_0_11111112111211111111[color=#406580, process="0",
                                             issapicrule, role='P_J']:
      [
      State_11111112111211111111( $x, $y, c_AJ, c_SA, c_SJ, sid, sid_a, sig1_s,
@@ -1491,7 +1418,7 @@ rule (modulo E) p_0_11111112111211111111[color=#406580, process='0',
   */
 
 rule (modulo E) eventUnequalsid_0_1111111211121111112[color=#406580,
-                                                      process='event Unequal( sid.1 );', issapicrule,
+                                                      process="event Unequal( sid.1 );", issapicrule,
                                                       role='P_J']:
    [
    State_1111111211121111112( $x.1, $y.1, c_AJ.1, c_SA.1, c_SJ.1, sid.1,
@@ -1507,7 +1434,7 @@ rule (modulo E) eventUnequalsid_0_1111111211121111112[color=#406580,
 
   /*
   rule (modulo AC) eventUnequalsid_0_1111111211121111112[color=#406580,
-                                                         process='event Unequal( sid.1 );', issapicrule,
+                                                         process="event Unequal( sid.1 );", issapicrule,
                                                          role='P_J']:
      [
      State_1111111211121111112( $x, $y, c_AJ, c_SA, c_SJ, sid, sid_a, sig1_s,
@@ -1523,7 +1450,7 @@ rule (modulo E) eventUnequalsid_0_1111111211121111112[color=#406580,
   */
 
 rule (modulo E) eventBlamesidx_0_11111112111211111121[color=#406580,
-                                                      process='event Blame( sid.1, $x.1 );', issapicrule,
+                                                      process="event Blame( sid.1, $x.1 );", issapicrule,
                                                       role='P_J']:
    [
    State_11111112111211111121( $x.1, $y.1, c_AJ.1, c_SA.1, c_SJ.1, sid.1,
@@ -1539,7 +1466,7 @@ rule (modulo E) eventBlamesidx_0_11111112111211111121[color=#406580,
 
   /*
   rule (modulo AC) eventBlamesidx_0_11111112111211111121[color=#406580,
-                                                         process='event Blame( sid.1, $x.1 );', issapicrule,
+                                                         process="event Blame( sid.1, $x.1 );", issapicrule,
                                                          role='P_J']:
      [
      State_11111112111211111121( $x, $y, c_AJ, c_SA, c_SJ, sid, sid_a, sig1_s,
@@ -1554,7 +1481,7 @@ rule (modulo E) eventBlamesidx_0_11111112111211111121[color=#406580,
      ]
   */
 
-rule (modulo E) p_0_111111121112111111211[color=#406580, process='0',
+rule (modulo E) p_0_111111121112111111211[color=#406580, process="0",
                                           issapicrule, role='P_J']:
    [
    State_111111121112111111211( $x.1, $y.1, c_AJ.1, c_SA.1, c_SJ.1, sid.1,
@@ -1565,7 +1492,7 @@ rule (modulo E) p_0_111111121112111111211[color=#406580, process='0',
    [ ]
 
   /*
-  rule (modulo AC) p_0_111111121112111111211[color=#406580, process='0',
+  rule (modulo AC) p_0_111111121112111111211[color=#406580, process="0",
                                              issapicrule, role='P_J']:
      [
      State_111111121112111111211( $x, $y, c_AJ, c_SA, c_SJ, sid, sid_a,
@@ -1576,7 +1503,7 @@ rule (modulo E) p_0_111111121112111111211[color=#406580, process='0',
      [ ]
   */
 
-rule (modulo E) p_0_111111121112111112[color=#406580, process='0',
+rule (modulo E) p_0_111111121112111112[color=#406580, process="0",
                                        issapicrule, role='P_J']:
    [
    State_111111121112111112( $x.1, $y.1, c_AJ.1, c_SA.1, c_SJ.1, sid.1,
@@ -1587,7 +1514,7 @@ rule (modulo E) p_0_111111121112111112[color=#406580, process='0',
    [ ]
 
   /*
-  rule (modulo AC) p_0_111111121112111112[color=#406580, process='0',
+  rule (modulo AC) p_0_111111121112111112[color=#406580, process="0",
                                           issapicrule, role='P_J']:
      [
      State_111111121112111112( $x, $y, c_AJ, c_SA, c_SJ, sid, sid_a, sig1_s,
@@ -1598,7 +1525,7 @@ rule (modulo E) p_0_111111121112111112[color=#406580, process='0',
      [ ]
   */
 
-rule (modulo E) p_0_11111112111211112[color=#406580, process='0',
+rule (modulo E) p_0_11111112111211112[color=#406580, process="0",
                                       issapicrule, role='P_J']:
    [
    State_11111112111211112( $x.1, $y.1, c_AJ.1, c_SA.1, c_SJ.1, sid.1,
@@ -1609,7 +1536,7 @@ rule (modulo E) p_0_11111112111211112[color=#406580, process='0',
    [ ]
 
   /*
-  rule (modulo AC) p_0_11111112111211112[color=#406580, process='0',
+  rule (modulo AC) p_0_11111112111211112[color=#406580, process="0",
                                          issapicrule, role='P_J']:
      [
      State_11111112111211112( $x, $y, c_AJ, c_SA, c_SJ, sid, sid_a, sig1_s,
@@ -1620,7 +1547,7 @@ rule (modulo E) p_0_11111112111211112[color=#406580, process='0',
      [ ]
   */
 
-rule (modulo E) p_0_1111111211121112[color=#406580, process='0',
+rule (modulo E) p_0_1111111211121112[color=#406580, process="0",
                                      issapicrule, role='P_J']:
    [
    State_1111111211121112( $x.1, $y.1, c_AJ.1, c_SA.1, c_SJ.1, sid.1,
@@ -1631,7 +1558,7 @@ rule (modulo E) p_0_1111111211121112[color=#406580, process='0',
    [ ]
 
   /*
-  rule (modulo AC) p_0_1111111211121112[color=#406580, process='0',
+  rule (modulo AC) p_0_1111111211121112[color=#406580, process="0",
                                         issapicrule, role='P_J']:
      [
      State_1111111211121112( $x, $y, c_AJ, c_SA, c_SJ, sid, sid_a, sig1_s,
@@ -1642,68 +1569,50 @@ rule (modulo E) p_0_1111111211121112[color=#406580, process='0',
      [ ]
   */
 
-rule (modulo E) p_0_1111111211122[color=#6c8040, process='0',
-                                  issapicrule, role='P']:
-   [ State_1111111211122( $x.1, $y.1, c_AJ.1, c_SA.1, c_SJ.1, sid.1 ) ]
-  -->
-   [ ]
-
-  /*
-  rule (modulo AC) p_0_1111111211122[color=#6c8040, process='0',
-                                     issapicrule, role='P']:
-     [ State_1111111211122( $x, $y, c_AJ, c_SA, c_SJ, sid ) ] --> [ ]
-  */
-
-rule (modulo E) p_0_11111112112[color=#6c8040, process='!', issapicrule,
+rule (modulo E) p_0_11111112112[color=#6c8040, process="!", issapicrule,
                                 role='P']:
    [ State_11111112112( $x.1, $y.1, c_AJ.1, c_SA.1, c_SJ.1, sid.1 ) ]
   -->
    [ !Semistate_111111121121( $x.1, $y.1, c_AJ.1, c_SA.1, c_SJ.1, sid.1 ) ]
 
   /*
-  rule (modulo AC) p_0_11111112112[color=#6c8040, process='!', issapicrule,
+  rule (modulo AC) p_0_11111112112[color=#6c8040, process="!", issapicrule,
                                    role='P']:
      [ State_11111112112( $x, $y, c_AJ, c_SA, c_SJ, sid ) ]
     -->
      [ !Semistate_111111121121( $x, $y, c_AJ, c_SA, c_SJ, sid ) ]
   */
 
-rule (modulo E) p_1_11111112112[color=#6c8040, process='!', issapicrule,
+rule (modulo E) p_1_11111112112[color=#6c8040, process="!", issapicrule,
                                 role='P']:
    [ !Semistate_111111121121( $x.1, $y.1, c_AJ.1, c_SA.1, c_SJ.1, sid.1 ) ]
   -->
    [ State_111111121121( $x.1, $y.1, c_AJ.1, c_SA.1, c_SJ.1, sid.1 ) ]
 
   /*
-  rule (modulo AC) p_1_11111112112[color=#6c8040, process='!', issapicrule,
+  rule (modulo AC) p_1_11111112112[color=#6c8040, process="!", issapicrule,
                                    role='P']:
      [ !Semistate_111111121121( $x, $y, c_AJ, c_SA, c_SJ, sid ) ]
     -->
      [ State_111111121121( $x, $y, c_AJ, c_SA, c_SJ, sid ) ]
   */
 
-rule (modulo E) Adv_0_111111121121[color=#6c8040, process='Adv()',
+rule (modulo E) Adv_0_111111121121[color=#6c8040, process="Adv();",
                                    issapicrule, role='P']:
    [ State_111111121121( $x.1, $y.1, c_AJ.1, c_SA.1, c_SJ.1, sid.1 ) ]
   -->
-   [
-   State_1111111211211( $x.1, $y.1, c_AJ.1, c_SA.1, c_SJ.1, sid.1 ),
-   State_1111111211212( $x.1, $y.1, c_AJ.1, c_SA.1, c_SJ.1, sid.1 )
-   ]
+   [ State_1111111211211( $x.1, $y.1, c_AJ.1, c_SA.1, c_SJ.1, sid.1 ) ]
 
   /*
-  rule (modulo AC) Adv_0_111111121121[color=#6c8040, process='Adv()',
+  rule (modulo AC) Adv_0_111111121121[color=#6c8040, process="Adv();",
                                       issapicrule, role='P']:
      [ State_111111121121( $x, $y, c_AJ, c_SA, c_SJ, sid ) ]
     -->
-     [
-     State_1111111211211( $x, $y, c_AJ, c_SA, c_SJ, sid ),
-     State_1111111211212( $x, $y, c_AJ, c_SA, c_SJ, sid )
-     ]
+     [ State_1111111211211( $x, $y, c_AJ, c_SA, c_SJ, sid ) ]
   */
 
 rule (modulo E) inccorruptp_0_1111111211211[color=#768040,
-                                            process='in('c',<'corrupt', $p.1>);', issapicrule, role='P_Adv']:
+                                            process="in('c',<'corrupt', $p.1>);", issapicrule, role='P_Adv']:
    [
    State_1111111211211( $x.1, $y.1, c_AJ.1, c_SA.1, c_SJ.1, sid.1 ),
    Message( 'c', x.2 )
@@ -1717,7 +1626,7 @@ rule (modulo E) inccorruptp_0_1111111211211[color=#768040,
   // loop breaker: [1]
   /*
   rule (modulo AC) inccorruptp_0_1111111211211[color=#768040,
-                                               process='in('c',<'corrupt', $p.1>);', issapicrule,
+                                               process="in('c',<'corrupt', $p.1>);", issapicrule,
                                                role='P_Adv']:
      [
      State_1111111211211( $x, $y, c_AJ, c_SA, c_SJ, sid ), Message( 'c', x.1 )
@@ -1730,7 +1639,7 @@ rule (modulo E) inccorruptp_0_1111111211211[color=#768040,
   */
 
 rule (modulo E) inccorruptp_1_1111111211211[color=#768040,
-                                            process='in('c',<'corrupt', $p.1>);', issapicrule, role='P_Adv']:
+                                            process="in('c',<'corrupt', $p.1>);", issapicrule, role='P_Adv']:
    [
    Let_11111112112111( <'corrupt', $p.1>, $x.1, $y.1, c_AJ.1, c_SA.1,
                        c_SJ.1, sid.1
@@ -1742,7 +1651,7 @@ rule (modulo E) inccorruptp_1_1111111211211[color=#768040,
 
   /*
   rule (modulo AC) inccorruptp_1_1111111211211[color=#768040,
-                                               process='in('c',<'corrupt', $p.1>);', issapicrule,
+                                               process="in('c',<'corrupt', $p.1>);", issapicrule,
                                                role='P_Adv']:
      [ Let_11111112112111( <'corrupt', $p>, $x, $y, c_AJ, c_SA, c_SJ, sid ) ]
     -->
@@ -1750,7 +1659,7 @@ rule (modulo E) inccorruptp_1_1111111211211[color=#768040,
   */
 
 rule (modulo E) inccorruptp_2_1111111211211[color=#768040,
-                                            process='in('c',<'corrupt', $p.1>);', issapicrule, role='P_Adv']:
+                                            process="in('c',<'corrupt', $p.1>);", issapicrule, role='P_Adv']:
    [
    State_1111111211211( $x.1, $y.1, c_AJ.1, c_SA.1, c_SJ.1, sid.1 ),
    In( <'c', x.2> )
@@ -1760,7 +1669,7 @@ rule (modulo E) inccorruptp_2_1111111211211[color=#768040,
 
   /*
   rule (modulo AC) inccorruptp_2_1111111211211[color=#768040,
-                                               process='in('c',<'corrupt', $p.1>);', issapicrule,
+                                               process="in('c',<'corrupt', $p.1>);", issapicrule,
                                                role='P_Adv']:
      [ State_1111111211211( $x, $y, c_AJ, c_SA, c_SJ, sid ), In( <'c', x.1> )
      ]
@@ -1769,7 +1678,7 @@ rule (modulo E) inccorruptp_2_1111111211211[color=#768040,
   */
 
 rule (modulo E) inccorruptp_3_1111111211211[color=#768040,
-                                            process='in('c',<'corrupt', $p.1>);', issapicrule, role='P_Adv']:
+                                            process="in('c',<'corrupt', $p.1>);", issapicrule, role='P_Adv']:
    [
    Let_11111112112111( <'corrupt', $p.1>, $x.1, $y.1, c_AJ.1, c_SA.1,
                        c_SJ.1, sid.1
@@ -1781,7 +1690,7 @@ rule (modulo E) inccorruptp_3_1111111211211[color=#768040,
 
   /*
   rule (modulo AC) inccorruptp_3_1111111211211[color=#768040,
-                                               process='in('c',<'corrupt', $p.1>);', issapicrule,
+                                               process="in('c',<'corrupt', $p.1>);", issapicrule,
                                                role='P_Adv']:
      [ Let_11111112112111( <'corrupt', $p>, $x, $y, c_AJ, c_SA, c_SJ, sid ) ]
     -->
@@ -1789,7 +1698,7 @@ rule (modulo E) inccorruptp_3_1111111211211[color=#768040,
   */
 
 rule (modulo E) eventCorruptedp_0_11111112112111[color=#768040,
-                                                 process='event Corrupted( $p.1 );', issapicrule,
+                                                 process="event Corrupted( $p.1 );", issapicrule,
                                                  role='P_Adv']:
    [ State_11111112112111( $p.1, $x.1, $y.1, c_AJ.1, c_SA.1, c_SJ.1, sid.1 )
    ]
@@ -1800,7 +1709,7 @@ rule (modulo E) eventCorruptedp_0_11111112112111[color=#768040,
 
   /*
   rule (modulo AC) eventCorruptedp_0_11111112112111[color=#768040,
-                                                    process='event Corrupted( $p.1 );', issapicrule,
+                                                    process="event Corrupted( $p.1 );", issapicrule,
                                                     role='P_Adv']:
      [ State_11111112112111( $p, $x, $y, c_AJ, c_SA, c_SJ, sid ) ]
     --[ Corrupted( $p ) ]->
@@ -1808,7 +1717,7 @@ rule (modulo E) eventCorruptedp_0_11111112112111[color=#768040,
   */
 
 rule (modulo E) ifpx_0_111111121121111[color=#768040,
-                                       process='if $p.1=$x.1', issapicrule, role='P_Adv']:
+                                       process="if $p.1=$x.1", issapicrule, role='P_Adv']:
    [
    State_111111121121111( $p.1, $x.1, $y.1, c_AJ.1, c_SA.1, c_SJ.1, sid.1 )
    ]
@@ -1819,14 +1728,14 @@ rule (modulo E) ifpx_0_111111121121111[color=#768040,
 
   /*
   rule (modulo AC) ifpx_0_111111121121111[color=#768040,
-                                          process='if $p.1=$x.1', issapicrule, role='P_Adv']:
+                                          process="if $p.1=$x.1", issapicrule, role='P_Adv']:
      [ State_111111121121111( $p, $x, $y, c_AJ, c_SA, c_SJ, sid ) ]
     --[ Pred_Eq( $p, $x ) ]->
      [ State_1111111211211111( $p, $x, $y, c_AJ, c_SA, c_SJ, sid ) ]
   */
 
 rule (modulo E) ifpx_1_111111121121111[color=#768040,
-                                       process='if $p.1=$x.1', issapicrule, role='P_Adv']:
+                                       process="if $p.1=$x.1", issapicrule, role='P_Adv']:
    [
    State_111111121121111( $p.1, $x.1, $y.1, c_AJ.1, c_SA.1, c_SJ.1, sid.1 )
    ]
@@ -1837,14 +1746,14 @@ rule (modulo E) ifpx_1_111111121121111[color=#768040,
 
   /*
   rule (modulo AC) ifpx_1_111111121121111[color=#768040,
-                                          process='if $p.1=$x.1', issapicrule, role='P_Adv']:
+                                          process="if $p.1=$x.1", issapicrule, role='P_Adv']:
      [ State_111111121121111( $p, $x, $y, c_AJ, c_SA, c_SJ, sid ) ]
     --[ Pred_Not_Eq( $p, $x ) ]->
      [ State_1111111211211112( $p, $x, $y, c_AJ, c_SA, c_SJ, sid ) ]
   */
 
 rule (modulo E) outcskpsidcSAcSJ_0_1111111211211111[color=#768040,
-                                                    process='out('c',<sk($p.1), sid.1, c_SA.1, c_SJ.1>);',
+                                                    process="out('c',<sk($p.1), sid.1, c_SA.1, c_SJ.1>);",
                                                     issapicrule, role='P_Adv']:
    [
    State_1111111211211111( $p.1, $x.1, $y.1, c_AJ.1, c_SA.1, c_SJ.1, sid.1
@@ -1860,7 +1769,7 @@ rule (modulo E) outcskpsidcSAcSJ_0_1111111211211111[color=#768040,
 
   /*
   rule (modulo AC) outcskpsidcSAcSJ_0_1111111211211111[color=#768040,
-                                                       process='out('c',<sk($p.1), sid.1, c_SA.1, c_SJ.1>);',
+                                                       process="out('c',<sk($p.1), sid.1, c_SA.1, c_SJ.1>);",
                                                        issapicrule, role='P_Adv']:
      [ State_1111111211211111( $p, $x, $y, c_AJ, c_SA, c_SJ, sid ), In( 'c' )
      ]
@@ -1872,7 +1781,7 @@ rule (modulo E) outcskpsidcSAcSJ_0_1111111211211111[color=#768040,
   */
 
 rule (modulo E) outcskpsidcSAcSJ_1_1111111211211111[color=#768040,
-                                                    process='out('c',<sk($p.1), sid.1, c_SA.1, c_SJ.1>);',
+                                                    process="out('c',<sk($p.1), sid.1, c_SA.1, c_SJ.1>);",
                                                     issapicrule, role='P_Adv']:
    [
    State_1111111211211111( $p.1, $x.1, $y.1, c_AJ.1, c_SA.1, c_SJ.1, sid.1 )
@@ -1887,7 +1796,7 @@ rule (modulo E) outcskpsidcSAcSJ_1_1111111211211111[color=#768040,
 
   /*
   rule (modulo AC) outcskpsidcSAcSJ_1_1111111211211111[color=#768040,
-                                                       process='out('c',<sk($p.1), sid.1, c_SA.1, c_SJ.1>);',
+                                                       process="out('c',<sk($p.1), sid.1, c_SA.1, c_SJ.1>);",
                                                        issapicrule, role='P_Adv']:
      [ State_1111111211211111( $p, $x, $y, c_AJ, c_SA, c_SJ, sid ) ]
     -->
@@ -1898,7 +1807,7 @@ rule (modulo E) outcskpsidcSAcSJ_1_1111111211211111[color=#768040,
   */
 
 rule (modulo E) outcskpsidcSAcSJ_2_1111111211211111[color=#768040,
-                                                    process='out('c',<sk($p.1), sid.1, c_SA.1, c_SJ.1>);',
+                                                    process="out('c',<sk($p.1), sid.1, c_SA.1, c_SJ.1>);",
                                                     issapicrule, role='P_Adv']:
    [
    Semistate_11111112112111111( $p.1, $x.1, $y.1, c_AJ.1, c_SA.1, c_SJ.1,
@@ -1914,7 +1823,7 @@ rule (modulo E) outcskpsidcSAcSJ_2_1111111211211111[color=#768040,
 
   /*
   rule (modulo AC) outcskpsidcSAcSJ_2_1111111211211111[color=#768040,
-                                                       process='out('c',<sk($p.1), sid.1, c_SA.1, c_SJ.1>);',
+                                                       process="out('c',<sk($p.1), sid.1, c_SA.1, c_SJ.1>);",
                                                        issapicrule, role='P_Adv']:
      [
      Semistate_11111112112111111( $p, $x, $y, c_AJ, c_SA, c_SJ, sid ),
@@ -1924,7 +1833,7 @@ rule (modulo E) outcskpsidcSAcSJ_2_1111111211211111[color=#768040,
      [ State_11111112112111111( $p, $x, $y, c_AJ, c_SA, c_SJ, sid ) ]
   */
 
-rule (modulo E) p_0_11111112112111111[color=#768040, process='0',
+rule (modulo E) p_0_11111112112111111[color=#768040, process="0",
                                       issapicrule, role='P_Adv']:
    [
    State_11111112112111111( $p.1, $x.1, $y.1, c_AJ.1, c_SA.1, c_SJ.1, sid.1
@@ -1934,13 +1843,13 @@ rule (modulo E) p_0_11111112112111111[color=#768040, process='0',
    [ ]
 
   /*
-  rule (modulo AC) p_0_11111112112111111[color=#768040, process='0',
+  rule (modulo AC) p_0_11111112112111111[color=#768040, process="0",
                                          issapicrule, role='P_Adv']:
      [ State_11111112112111111( $p, $x, $y, c_AJ, c_SA, c_SJ, sid ) ] --> [ ]
   */
 
 rule (modulo E) ifpy_0_1111111211211112[color=#768040,
-                                        process='if $p.1=$y.1', issapicrule, role='P_Adv']:
+                                        process="if $p.1=$y.1", issapicrule, role='P_Adv']:
    [
    State_1111111211211112( $p.1, $x.1, $y.1, c_AJ.1, c_SA.1, c_SJ.1, sid.1 )
    ]
@@ -1952,14 +1861,14 @@ rule (modulo E) ifpy_0_1111111211211112[color=#768040,
 
   /*
   rule (modulo AC) ifpy_0_1111111211211112[color=#768040,
-                                           process='if $p.1=$y.1', issapicrule, role='P_Adv']:
+                                           process="if $p.1=$y.1", issapicrule, role='P_Adv']:
      [ State_1111111211211112( $p, $x, $y, c_AJ, c_SA, c_SJ, sid ) ]
     --[ Pred_Eq( $p, $y ) ]->
      [ State_11111112112111121( $p, $x, $y, c_AJ, c_SA, c_SJ, sid ) ]
   */
 
 rule (modulo E) ifpy_1_1111111211211112[color=#768040,
-                                        process='if $p.1=$y.1', issapicrule, role='P_Adv']:
+                                        process="if $p.1=$y.1", issapicrule, role='P_Adv']:
    [
    State_1111111211211112( $p.1, $x.1, $y.1, c_AJ.1, c_SA.1, c_SJ.1, sid.1 )
    ]
@@ -1971,14 +1880,14 @@ rule (modulo E) ifpy_1_1111111211211112[color=#768040,
 
   /*
   rule (modulo AC) ifpy_1_1111111211211112[color=#768040,
-                                           process='if $p.1=$y.1', issapicrule, role='P_Adv']:
+                                           process="if $p.1=$y.1", issapicrule, role='P_Adv']:
      [ State_1111111211211112( $p, $x, $y, c_AJ, c_SA, c_SJ, sid ) ]
     --[ Pred_Not_Eq( $p, $y ) ]->
      [ State_11111112112111122( $p, $x, $y, c_AJ, c_SA, c_SJ, sid ) ]
   */
 
 rule (modulo E) outcskpsidcSAcAJ_0_11111112112111121[color=#768040,
-                                                     process='out('c',<sk($p.1), sid.1, c_SA.1, c_AJ.1>);',
+                                                     process="out('c',<sk($p.1), sid.1, c_SA.1, c_AJ.1>);",
                                                      issapicrule, role='P_Adv']:
    [
    State_11111112112111121( $p.1, $x.1, $y.1, c_AJ.1, c_SA.1, c_SJ.1, sid.1
@@ -1994,7 +1903,7 @@ rule (modulo E) outcskpsidcSAcAJ_0_11111112112111121[color=#768040,
 
   /*
   rule (modulo AC) outcskpsidcSAcAJ_0_11111112112111121[color=#768040,
-                                                        process='out('c',<sk($p.1), sid.1, c_SA.1, c_AJ.1>);',
+                                                        process="out('c',<sk($p.1), sid.1, c_SA.1, c_AJ.1>);",
                                                         issapicrule, role='P_Adv']:
      [ State_11111112112111121( $p, $x, $y, c_AJ, c_SA, c_SJ, sid ), In( 'c' )
      ]
@@ -2006,7 +1915,7 @@ rule (modulo E) outcskpsidcSAcAJ_0_11111112112111121[color=#768040,
   */
 
 rule (modulo E) outcskpsidcSAcAJ_1_11111112112111121[color=#768040,
-                                                     process='out('c',<sk($p.1), sid.1, c_SA.1, c_AJ.1>);',
+                                                     process="out('c',<sk($p.1), sid.1, c_SA.1, c_AJ.1>);",
                                                      issapicrule, role='P_Adv']:
    [
    State_11111112112111121( $p.1, $x.1, $y.1, c_AJ.1, c_SA.1, c_SJ.1, sid.1
@@ -2022,7 +1931,7 @@ rule (modulo E) outcskpsidcSAcAJ_1_11111112112111121[color=#768040,
 
   /*
   rule (modulo AC) outcskpsidcSAcAJ_1_11111112112111121[color=#768040,
-                                                        process='out('c',<sk($p.1), sid.1, c_SA.1, c_AJ.1>);',
+                                                        process="out('c',<sk($p.1), sid.1, c_SA.1, c_AJ.1>);",
                                                         issapicrule, role='P_Adv']:
      [ State_11111112112111121( $p, $x, $y, c_AJ, c_SA, c_SJ, sid ) ]
     -->
@@ -2033,7 +1942,7 @@ rule (modulo E) outcskpsidcSAcAJ_1_11111112112111121[color=#768040,
   */
 
 rule (modulo E) outcskpsidcSAcAJ_2_11111112112111121[color=#768040,
-                                                     process='out('c',<sk($p.1), sid.1, c_SA.1, c_AJ.1>);',
+                                                     process="out('c',<sk($p.1), sid.1, c_SA.1, c_AJ.1>);",
                                                      issapicrule, role='P_Adv']:
    [
    Semistate_111111121121111211( $p.1, $x.1, $y.1, c_AJ.1, c_SA.1, c_SJ.1,
@@ -2049,7 +1958,7 @@ rule (modulo E) outcskpsidcSAcAJ_2_11111112112111121[color=#768040,
 
   /*
   rule (modulo AC) outcskpsidcSAcAJ_2_11111112112111121[color=#768040,
-                                                        process='out('c',<sk($p.1), sid.1, c_SA.1, c_AJ.1>);',
+                                                        process="out('c',<sk($p.1), sid.1, c_SA.1, c_AJ.1>);",
                                                         issapicrule, role='P_Adv']:
      [
      Semistate_111111121121111211( $p, $x, $y, c_AJ, c_SA, c_SJ, sid ),
@@ -2059,7 +1968,7 @@ rule (modulo E) outcskpsidcSAcAJ_2_11111112112111121[color=#768040,
      [ State_111111121121111211( $p, $x, $y, c_AJ, c_SA, c_SJ, sid ) ]
   */
 
-rule (modulo E) p_0_111111121121111211[color=#768040, process='0',
+rule (modulo E) p_0_111111121121111211[color=#768040, process="0",
                                        issapicrule, role='P_Adv']:
    [
    State_111111121121111211( $p.1, $x.1, $y.1, c_AJ.1, c_SA.1, c_SJ.1, sid.1
@@ -2069,12 +1978,12 @@ rule (modulo E) p_0_111111121121111211[color=#768040, process='0',
    [ ]
 
   /*
-  rule (modulo AC) p_0_111111121121111211[color=#768040, process='0',
+  rule (modulo AC) p_0_111111121121111211[color=#768040, process="0",
                                           issapicrule, role='P_Adv']:
      [ State_111111121121111211( $p, $x, $y, c_AJ, c_SA, c_SJ, sid ) ] --> [ ]
   */
 
-rule (modulo E) p_0_11111112112111122[color=#768040, process='0',
+rule (modulo E) p_0_11111112112111122[color=#768040, process="0",
                                       issapicrule, role='P_Adv']:
    [
    State_11111112112111122( $p.1, $x.1, $y.1, c_AJ.1, c_SA.1, c_SJ.1, sid.1
@@ -2084,40 +1993,37 @@ rule (modulo E) p_0_11111112112111122[color=#768040, process='0',
    [ ]
 
   /*
-  rule (modulo AC) p_0_11111112112111122[color=#768040, process='0',
+  rule (modulo AC) p_0_11111112112111122[color=#768040, process="0",
                                          issapicrule, role='P_Adv']:
      [ State_11111112112111122( $p, $x, $y, c_AJ, c_SA, c_SJ, sid ) ] --> [ ]
   */
-
-rule (modulo E) p_0_1111111211212[color=#6c8040, process='0',
-                                  issapicrule, role='P']:
-   [ State_1111111211212( $x.1, $y.1, c_AJ.1, c_SA.1, c_SJ.1, sid.1 ) ]
-  -->
-   [ ]
-
-  /*
-  rule (modulo AC) p_0_1111111211212[color=#6c8040, process='0',
-                                     issapicrule, role='P']:
-     [ State_1111111211212( $x, $y, c_AJ, c_SA, c_SJ, sid ) ] --> [ ]
-  */
-
-rule (modulo E) p_0_12[color=#ffffff, process='0', issapicrule,
-                       role='Process']:
-   [ State_12( ) ] --> [ ]
-
-  /* has exactly the trivial AC variant */
 
 restriction predicate_eq:
   "∀ #i a b. (Pred_Eq( a, b ) @ #i) ⇒ (a = b)"
   // safety formula
 
+  /*
+  expanded formula:
+  "∀ #i a b. (Pred_Eq( a, b ) @ #i) ⇒ (a = b)"
+  */
+
 restriction predicate_not_eq:
   "∀ #i a b. (Pred_Not_Eq( a, b ) @ #i) ⇒ (¬(a = b))"
   // safety formula
 
+  /*
+  expanded formula:
+  "∀ #i a b. (Pred_Not_Eq( a, b ) @ #i) ⇒ (¬(a = b))"
+  */
+
 restriction single_session:
   "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
   // safety formula
+
+  /*
+  expanded formula:
+  "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
+  */
 
 lemma acc_blamed_suff:
   exists-trace
@@ -47840,7 +47746,7 @@ solve( State_11111112111211111121( $x, $y, c_AJ, c_SA, c_SJ, sid, sid_a,
   qed
 qed
 
-predicate: blamed( x )<=>∃ sid #i. Blame( sid, x ) @ #i
+predicate: Blamed( x )<=>∃ sid #i. Blame( sid, x ) @ #i
 
 /*
 WARNING: the following wellformedness checks failed!
@@ -47859,10 +47765,10 @@ Accountability (RP check)
 
 /*
 Generated from:
-Tamarin version 1.11.0
-Maude version 3.5.1
-Git revision: d1fe8f7c328c32aac0588ab7e5a43be267577706 (with uncommited changes), branch: fix-remove-derivation-checks-regression-tests
-Compiled at: 2026-02-16 12:29:57.582345 UTC
+Tamarin version 1.13.0
+Maude version 3.4
+Git revision: 1deff12bd69c96308abb2463d4de5f2c7610c191 (with uncommited changes), branch: develop
+Compiled at: 2026-03-09 07:36:56.194364 UTC
 */
 
 end
@@ -47874,7 +47780,7 @@ summary of summaries:
 analyzed: examples/accountability/csf21-acc-unbounded/previous/whodunit.spthy
 
   output:          examples/accountability/csf21-acc-unbounded/previous/whodunit.spthy.tmp
-  processing time: 1219.39s
+  processing time: 870.62s
   
   WARNING: 1 wellformedness check failed!
            The analysis results might be wrong!

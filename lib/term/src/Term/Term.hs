@@ -91,6 +91,10 @@ module Term.Term (
     , oneSym
     , zeroSym
     , dhNeutralSym
+    , fstSym
+    , sndSym
+    , fstDestSym
+    , sndDestSym
 
     -- ** concrete signatures
     , dhFunSig

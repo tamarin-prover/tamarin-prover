@@ -36,7 +36,7 @@ macros = do symbol "macros" *> colon *> commaSep macro
         args <- parens $ commaSep lvar
         unless (length args == length (nub args))
             $ error $ show op ++ " have two arguments with the same name."
-        out <- equalSign *> term False llit
+        out <- equalSign *> msetterm False llit
         sign <- sig <$> getState
         let mc = (op, args, out)
         let k = length args
