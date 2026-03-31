@@ -18,6 +18,7 @@ import           Prelude                             hiding (id, (.))
 
 import           Data.ByteString (ByteString)
 import qualified Data.ByteString.Char8 as BC
+import Data.Function (on)
 import           Data.List
 import           Data.Maybe
 import qualified Data.Set                            as S
@@ -203,7 +204,8 @@ appSubst (x:xs) inst0 inst1 = do
 landFormula :: [LNFact] -> ProtoFormula Unit2 (String,LSort) Name  LVar
 landFormula facts = foldl (\ fm (idx, fact) -> fm .&&. Ato (Action (LIT (Var (Free (LVar (show (idx :: Integer)) LSortNode 0))) ) fact ))  ltrue (zip [0..]  (map (fmap (fmap (fmap Free))) facts))
 
--- | Naive deduction check: checks whether a fact is directly present in the given set of terms or can be derived from them by applying construction rules only. This is used as a quick check before performing the more expensive deduction check.
+-- | Naive deduction check: checks whether a fact is directly present in the given set of terms or can be derived from them by applying construction rules only.
+--   This is used as a quick check before performing the more expensive deduction check.
 dedNaive :: LNTerm -> [LNTerm] -> Bool
 dedNaive fact terms = ded fact
   where
@@ -231,18 +233,18 @@ deductionCheck sig intrR fact terms = null setD || checkProofd tabProof1 || chec
 
     tabProof1 = concatMap checkProofStatuses provenTheory1
     provenTheory1 = map (proveTheory (const True) defaultProver) closedTheory1
-    closedTheory1 = map (\t -> closeTheoryWithMaude sig t False False) modifiedTheory1 -- no AutoSources
+    closedTheory1 = {- trace ("\ntheory : \n" ++ tabTheory modifiedTheory1) -}  map (\t -> closeTheoryWithMaude sig t False False) modifiedTheory1 -- no AutoSources
     modifiedTheory1 = map (\s -> (addRules (newRules s) . addLemmas (newLemmas s) . addRestrictions [newRestriction0,newRestriction2]) emptyThy) setD
 
     tabProof2 = concatMap checkProofStatuses provenTheory2
     provenTheory2 = map (proveTheory (const True) defaultProver) closedTheory2
-    closedTheory2 = map (\t -> closeTheoryWithMaude sig t False False) modifiedTheory2 -- no AutoSources
+    closedTheory2 = {- trace ("\ntheory : \n" ++ tabTheory modifiedTheory2) -} map (\t -> closeTheoryWithMaude sig t False False) modifiedTheory2 -- no AutoSources
     modifiedTheory2 = map (\s -> (addRules (newRules s) . addLemmas (newLemmas s) . addRestrictions [newRestriction0]) emptyThy) setD
  
     tabTheory (th1:thq) = render (prettyTheory prettySignaturePure prettyOpenRuleCacheWithLimit prettyOpenProtoRule prettyProof prettyTranslationElement th1) ++ " \n\n " ++ tabTheory thq
     tabTheory [] = ""
 
-    -- trace ("\ntheory : \n" ++ tabTheory modifiedTheory)
+    -- trace ("\ntheory : \n" ++ tabTheory modifiedTheory1)
 
     newRules s = [OpenProtoRule (Rule (ProtoRuleEInfo (StandRule "Out0") (RuleAttributes Nothing Nothing False False Nothing) []) (pre s) (co s) (a s) []) []]
     varD s = frees $ concatMap factTerms s
@@ -335,7 +337,7 @@ ndcCheck _ _ _ _ = False
 
 -- Check if the conclusion of the second rule can be derived from the premises of both rules without chaining.
 chainedRulesDeductionTest :: SignatureWithMaude -> OpenRuleCache -> IntrRuleAC -> IntrRuleAC -> Bool
-chainedRulesDeductionTest sig intrR instSigma inst1Sigma = aux prems
+chainedRulesDeductionTest sig intrR instSigma inst1Sigma = aux factToDeduce
   where
     hnd   = L.get sigmMaudeHandle sig
     msig  = mhMaudeSig hnd
@@ -343,7 +345,7 @@ chainedRulesDeductionTest sig intrR instSigma inst1Sigma = aux prems
     
     facts = getDeconstrRulePremsTail instSigma ++ getDeconstrRulePremsTail inst1Sigma ++ [getDeconstrRuleKDPrem instSigma]
     terms = foldMap getFactTerms facts
-    prems = getConcFact inst1Sigma
+    factToDeduce = getConcFact inst1Sigma
 
     factOnlyOnce = protoFact Linear "OnlyOnceD" []
 
@@ -351,13 +353,13 @@ chainedRulesDeductionTest sig intrR instSigma inst1Sigma = aux prems
     intrRmodified = map boundToOne intrR
 
     boundToOne rule@(Rule (DestrRule name _ subterm constant) premis concs acts nvs)
-        | getRuleName rule == getRuleName instSigma   = Rule (DestrRule name 1 subterm constant) premis concs (acts ++ [factOnlyOnce]) nvs
+        | getRuleName rule == getRuleName instSigma   = Rule (DestrRule name 1 subterm constant) premis concs (acts ++ [factOnlyOnce]) nvs -- for the rule instance we want to check, we add the factOnlyOnce to the actions to ensure that it is only applied once
     boundToOne rule@(Rule (DestrRule name _ _ _) _ _ _ _)
         | any (`BC.isSuffixOf` name) builtInDestrRule = rule -- do not touch built-in deconstruction rules
     boundToOne rule@(Rule (DestrRule name _ True _) _ _ _ _)
-        | constrNameFunc name `notElem` acsig         = rule -- do not touch deconstruction rules for non-AC constructors
+        | constrNameFunc name `notElem` acsig         = rule -- do not touch rules for non-AC fonctions -- FIXME Does this make sense, in particular when considering combined rules?
     boundToOne (Rule (DestrRule name 0 subterm constant) premis concs acts nvs)
-                                                      = Rule (DestrRule name 1 subterm constant) premis concs acts nvs
+                                                      = Rule (DestrRule name 1 subterm constant) premis concs acts nvs -- bound the rule to one application other rules
     boundToOne rr                                     = rr
 
     aux fa@(Fact KDFact _ [f]) = dedNaive f terms || deductionCheck sig intrRmodified fa facts
@@ -397,10 +399,13 @@ closeIntrRule _ (Rule (DestrRule _ _ False _) _ _ _ _)   = error "closeIntrRule:
 closeIntrRule _ ir                                       = [ir]
 
 -- | Pretty print the result of chain reduction checks.
-prettyNDCcheck :: SignatureWithMaude -> String -> OpenRuleCache -> [[IntrRuleAC]] -> [IntrRuleAC]
-prettyNDCcheck s name o t = unsafePerformIO $ do
+prettyNDCcheck :: SignatureWithMaude -> String -> OpenRuleCache -> [IntrRuleAC]
+prettyNDCcheck sig name rules = unsafePerformIO $ do
+  -- for the no deconstruction check we group deconstruction rules of the same function together based on the rule name
+  -- FIXME: filter built-in rules
+  let t = groupBy ((==) `on` getRuleName) $ sortOn getRuleName rules
   traceM ("[Theory " ++ name ++ "] No Deconstruction Chain checks started")
-  rule <- evaluate . force $ applyNDCcheck s o t
+  rule <- evaluate . force $ applyNDCcheck sig rules t
   traceM ("Result : " ++ render (prettyOpenRuleCacheWithLimit rule))
   traceM ("[Theory " ++ name ++ "] No Deconstruction Chain checks ended")
   return rule

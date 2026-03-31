@@ -466,22 +466,11 @@ checkCloseIntrRule sign name thy = thy {_thyCache = intrRulesACred}
     hnd = sign._sigMaudeInfo
 
     intrRules = thy._thyCache
-    intrRulesAC = concat $ map (closeIntrRule hnd) intrRules
-
-    -- for the no deconstruction check we group deconstruction rules of the same function together based on the rule name
-    tabT = groupBy ((==) `on` getRuleName) $ sortOn getRuleName intrRulesAC
+    intrRulesAC = concatMap (closeIntrRule hnd) intrRules
 
     -- do the no deconstruction chain check or not?
-    noDeductionChainCheckBool = (thy._thyOptions)._noDeductionChainCheck
-    intrRulesACred = if noDeductionChainCheckBool then prettyNDCcheck sign name intrRulesAC tabT else intrRulesAC
-
--- | Copy the chain limit from the diff intruder rules to the closed intruder rules, if they are the same rule (i.e., same name, same premises and same conclusions).
-copyLimit :: [IntrRuleAC] -> IntrRuleAC -> IntrRuleAC
-copyLimit d rule@(Rule (DestrRule _ _ _ _) _ _ _ _) = checkDiff d rule
-  where
-    checkDiff (d1:dq) r = if (getRuleName r == getRuleName d1) && (enumPrems d1 == enumPrems r) && (enumConcs d1 == enumConcs r) then d1 else checkDiff dq r
-    checkDiff [] r = r
-copyLimit _ rule = rule
+    noDeductionChainCheckBool = thy._thyOptions._noDeductionChainCheck
+    intrRulesACred = if noDeductionChainCheckBool then prettyNDCcheck sign name intrRulesAC else intrRulesAC
 
 -- | Closes the intruder deduction rules and applies the no deconstruction chain check if enabled. Version for diff theories.
 checkCloseIntrRuleDiff :: SignatureWithMaude -> String -> OpenDiffTheory -> OpenDiffTheory
@@ -492,21 +481,18 @@ checkCloseIntrRuleDiff sign name diffthy = diffCRthy
     dcl = diffthy._diffThyDiffCacheLeft 
     cl  = diffthy._diffThyCacheLeft
 
-    dclAC = concat $ map (closeIntrRule hnd) dcl
-    clAC  = concat $ map (closeIntrRule hnd) cl
-
-    -- for the no deconstruction check we group deconstruction rules of the same function together based on the rule name
-    tabTDCL = groupBy ((==) `on` getRuleName) $ sortOn getRuleName dclAC
+    dclAC = concatMap (closeIntrRule hnd) dcl
+    clAC  = concatMap (closeIntrRule hnd) cl
 
     -- do the no deconstruction chain check or not?
-    noDeductionChainCheckBool = (diffthy._diffThyOptions)._noDeductionChainCheck
-    dclACred = if noDeductionChainCheckBool then prettyNDCcheck sign name dclAC tabTDCL else dclAC
+    noDeductionChainCheckBool = diffthy._diffThyOptions._noDeductionChainCheck
+    dclACred = if noDeductionChainCheckBool then prettyNDCcheck sign name dclAC else dclAC
     
     diffDCLthy = diffthy    {_diffThyDiffCacheLeft = dclACred} 
     diffDCRthy = diffDCLthy {_diffThyDiffCacheRight = dclACred}  -- diffThyDiffCacheLeft and diffThyDiffCacheRight contain the same Intruder Rules, so we use the same list of closed intruder rules for both sides
 
     -- we can copy over the limits we computed for the diff intruder rules to the trace intruder rules to avoid recomputing them
-    clACred   = map (copyLimit dclACred) clAC
+    clACred   = map (replaceMatchingRule dclACred) clAC
 
     diffCLthy = diffDCRthy {_diffThyCacheLeft = clACred}
     diffCRthy = diffCLthy  {_diffThyCacheRight = clACred}  -- diffThyCacheLeft and diffThyCacheRight contain the same Intruder Rules, so we use the same list of closed intruder rules for both sides

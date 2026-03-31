@@ -94,6 +94,7 @@ module Theory.Model.Rule (
   , getRuleNameDiff
   , getRemainingRuleApplications
   , setRemainingRuleApplications
+  , replaceMatchingRule
   , getDeconstrRuleKDPrem
   , getDeconstrRulePremsTail
   , getConcFact
@@ -836,6 +837,16 @@ setRemainingRuleApplications (Rule (IntrInfo (DestrRule name _ subterm constant)
 setRemainingRuleApplications rule _
     = rule
 
+-- | Replace a deconstructor rule by the version from a list of rules if they have the same name, premises and conclusions,
+--   otherwise return the rule unchanged. Used to Copy the chain limit of a deconstructor rule.
+replaceMatchingRule :: [IntrRuleAC] -> IntrRuleAC -> IntrRuleAC
+replaceMatchingRule d rule@(Rule (DestrRule _ _ _ _) _ _ _ _) = updateLimit d rule
+  where
+    updateLimit (d1:dq) r = if (getRuleName r == getRuleName d1) && (enumPrems d1 == enumPrems r) && (enumConcs d1 == enumConcs r) then d1 else updateLimit dq r
+    updateLimit [] r = r
+replaceMatchingRule _ rule = rule
+
+
 -- | Returns the first premise fact of an intruder rule. Should be the KD fact in case of a deconstruction rule.
 getDeconstrRuleKDPrem :: IntrRuleAC -> LNFact
 getDeconstrRuleKDPrem (Rule _ (fact:_) _ _ _) = fact
@@ -1102,12 +1113,12 @@ unifiableRuleACInsts :: RuleACInst -> RuleACInst -> WithMaude Bool
 unifiableRuleACInsts ru1 ru2 =
     not . null <$> unifyRuleACInstEqs [Equal ru1 ru2]
 
--- | Are these two rule instances equal up to renaming of variables?
-equalRuleUpToRenaming :: (Show a, Eq a, HasFrees a) => Rule a -> Rule a -> WithMaude Bool
-equalRuleUpToRenaming r1@(Rule rn1 pr1 co1 ac1 nvs1) r2@(Rule rn2 pr2 co2 ac2 nvs2) = reader $ \hnd ->
+-- | Are these two rule instances equal up to renaming of variables, and ignoring their names ?
+equalRuleUpToRenamingIgnoringNames :: (Show a, Eq a, HasFrees a) => Rule a -> Rule a -> WithMaude Bool
+equalRuleUpToRenamingIgnoringNames r1@(Rule _ pr1 co1 ac1 nvs1) r2@(Rule _ pr2 co2 ac2 nvs2) = reader $ \hnd ->
   case eqs of
        Nothing   -> False
-       Just eqs' -> (rn1 == rn2) && any isRenamingPerRule (unifs eqs' hnd)
+       Just eqs' -> any isRenamingPerRule (unifs eqs' hnd)
     where
        isRenamingPerRule subst = isRenaming (restrictVFresh (vars r1) subst) && isRenaming (restrictVFresh (vars r2) subst)
        vars ru = map fst $ varOccurences ru
@@ -1117,9 +1128,15 @@ equalRuleUpToRenaming r1@(Rule rn1 pr1 co1 ac1 nvs1) r2@(Rule rn2 pr2 co2 ac2 nv
        matchFacts (Just l) (Fact f1 _ t1, Fact f2 _ t2) | f1 == f2  = Just (zipWith Equal t1 t2 ++ l)
                                                         | otherwise = Nothing
 
+-- | Are these two rule instances equal up to renaming of variables?
+equalRuleUpToRenaming :: (Show a, Eq a, HasFrees a) => Rule a -> Rule a -> WithMaude Bool
+equalRuleUpToRenaming r1@(Rule rn1 _ _ _ _) r2@(Rule rn2 _ _ _ _) = if rn1 == rn2
+  then equalRuleUpToRenamingIgnoringNames r1 r2
+  else return False
+
 -- | Are these two rules equal up to renaming of variables?
 equalDuplicateRuleUpToRenaming :: (Show a, Eq a, HasFrees a) => Rule a -> Rule a -> WithMaude Bool
-equalDuplicateRuleUpToRenaming r1 r2 = equalRuleUpToRenaming r1 (r2 `renameAvoiding` r1)
+equalDuplicateRuleUpToRenaming r1 r2 = equalRuleUpToRenamingIgnoringNames r1 (r2 `renameAvoiding` r1)
 
 -- | Are the premisses of the first rule subset of those of the second rule up to renaming of variables?
 equalSubsetRuleUpToRenaming :: (Show a, Eq a, HasFrees a, Apply LNSubst a) => Rule a -> Rule a -> WithMaude Bool
