@@ -1,0 +1,15 @@
+theory issue849_diffS begin
+
+builtins: multiset
+functions: dec/3, enc/3, h/1, k/0, m/0
+
+equations: dec(enc(m, k, x), k, h(x)) = m
+
+rule Setup:
+  [ Fr( ~m ), Fr( ~k ), Fr( ~x ) ]
+--[ Setup() ]->
+  [ Out( diff( dec(enc(m, k, ~x), k, h(~x)), m ) )
+  , Out( diff( ~x, h(~x) ) )
+  ]
+
+end
