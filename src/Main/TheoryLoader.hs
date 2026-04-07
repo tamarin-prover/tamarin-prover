@@ -44,8 +44,7 @@ import Data.FileEmbed (embedFile)
 import Data.List (find, intercalate, isPrefixOf)
 import Data.Map (keys)
 import Data.Maybe (fromMaybe, isNothing)
-import Data.Set qualified
-import Debug.Trace
+import Data.Set qualified as S
 import Export qualified
 import Items.LemmaItem (HasLemmaAttributes, HasLemmaName)
 import Items.OptionItem (Option (..))
@@ -56,6 +55,7 @@ import System.Console.CmdArgs.Explicit
 import System.Timeout (timeout)
 import Text.Parsec (ParseError)
 import Text.Read (readEither)
+import Debug.Trace (traceM)
 import Theory hiding (closeTheory, transReport)
 import Theory.Module
 import Theory.Text.Parser (diffTheory, parseIntruderRules, theory)
@@ -469,7 +469,7 @@ checkTranslatedTheory ::
 checkTranslatedTheory thyOpts sign thy = do
   let transReport =
         either
-          (\thy -> checkWellformedness incompleteMSRs thy sign)
+          (\transThy -> checkWellformedness incompleteMSRs transThy sign)
           (`checkWellformednessDiff` sign)
           thy
 
@@ -525,8 +525,8 @@ checkTranslatedTheory thyOpts sign thy = do
           , irreducibleFunSyms = makepublicsym (irreducibleFunSyms s._sigMaudeInfo)
           , reducibleFunSyms = makepublicsym (reducibleFunSyms s._sigMaudeInfo)
           }
-    makepublic = Data.Set.map (\(name, (int, _, construct)) -> (name, (int, Public, construct)))
-    makepublicsym = Data.Set.map $ \case
+    makepublic = S.map (\(name, (int, _, construct)) -> (name, (int, Public, construct)))
+    makepublicsym = S.map $ \case
       NoEq (name, (int, _, constr)) -> NoEq (name, (int, Public, constr))
       x -> x
 
@@ -810,7 +810,9 @@ addMessageDeductionRuleVariantsDiff thy0
         ++ (if enableNat msig then natIntruderRules else [])
         ++ (if enableMSet msig then multisetIntruderRules else [])
         ++ (if enableXor msig then xorIntruderRules else [])
-    thy = addIntrRuleACsDiffBoth (rules False) $ addIntrRuleACsDiffBothDiff (rules True) thy0
+    rulesFalse = rules False
+    rulesTrue = rules True
+    thy = addIntrRuleACsDiffBoth rulesFalse $ addIntrRuleACsDiffBothDiff rulesTrue thy0
     addIntruderVariantsDiff mkRuless =
       addIntrRuleLabels $
         addIntrRuleACsDiffBothDiff
