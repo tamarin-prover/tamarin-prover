@@ -106,7 +106,7 @@ export class DotGraphViz extends HTMLElement {
   dotSrc?: string | null;
 
   dotSrcParams?: string;
-  checkDotSrcParamChangeInterval?: number;
+  checkDotSrcParamChangeInterval?: ReturnType<typeof setInterval>;
 
   json?: VizGraph;
   graph?: DiGraph;

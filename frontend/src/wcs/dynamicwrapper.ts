@@ -7,7 +7,7 @@ export class DynamicGraphWrapper extends HTMLElement {
 
     isPopoutWindowClosed() { return !this.popoutWindow || this.popoutWindow.closed; }
 
-    detectPopoutClosedInterval?: number
+    detectPopoutClosedInterval?: ReturnType<typeof setInterval>
 
     constructor() {
         super();
