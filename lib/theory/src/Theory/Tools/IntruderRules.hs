@@ -128,13 +128,14 @@ destructionRules :: Bool -> CtxtStRule -> [IntrRuleAC]
 destructionRules bool (CtxtStRule lhs@(viewTerm -> FApp _ _) (StRhs (pos:[]) rhs)) | (bool || (frees rhs /= []) || (containsPrivate rhs)) =
     go [] lhs pos empty []
   where
-    -- In diff mode, avoid creating destruction rules for public constructor subterms
-    -- when the equation itself produces a public constructor result. This prevents
-    -- spurious one-sided derivations in diff mode while preserving destructor rules
-    -- for projection-style equations (where rhs is a variable, not a constructor).
-    isPublicConstrTerm (viewTerm -> FApp (NoEq (_,(_,Public,Constructor))) _) = True
-    isPublicConstrTerm _                                                       = False
-    isPublicConstrRhs = isPublicConstrTerm rhs
+    -- In diff mode, avoid creating destruction rules for public constructor *constants*
+    -- when the equation itself produces a public constructor constant result.
+    -- This prevents spurious one-sided derivations in diff mode for constant public
+    -- terms like `c()` or `true`, while preserving destructor rules for non-constant
+    -- constructors such as `h(x)`.
+    isPublicConstrConstant (viewTerm -> FApp (NoEq (_,(_,Public,Constructor))) as) = null as
+    isPublicConstrConstant _                                                       = False
+    isPublicConstrRhs = isPublicConstrConstant rhs
     go _      _                       []     _ _                     = []
     -- term already in premises, but necessary for constant conclusions
     go _      (viewTerm -> FApp _ _)  (_:[]) _ _ | (frees rhs /= []) = []
@@ -146,7 +147,7 @@ destructionRules bool (CtxtStRule lhs@(viewTerm -> FApp _ _) (StRhs (pos:[]) rhs
         funs    = append (append n (pack "_")) f
         posname = "_" ++ show i ++ pd
         name    = append (pack posname) funs
-        canGenerate = t' /= rhs && rhs `notElem` uprems' && not (bool && isPublicConstrTerm t' && isPublicConstrRhs)
+        canGenerate = t' /= rhs && rhs `notElem` uprems' && not (bool && isPublicConstrConstant t' && isPublicConstrRhs)
         irule = if canGenerate
                 then [Rule (DestrRule name (-1) (rhs == lhs `atPos` pos) (frees rhs == []))
                             ((kdFact t'):(map kuFact uprems'))
