@@ -133,7 +133,7 @@ case-studies$(SUBDIR)%_analyzed-oracle-chaum.spthy: examples/%.spthy $(TAMARIN)
 
 # individual case studies, special case with sequential dfs
 case-studies$(SUBDIR)%_analyzed-seqdfs.spthy: examples/%.spthy $(TAMARIN)
-	mkdir -p case-studies$(SUBDIR)regression/trace
+	mkdir -p $(dir $@)
 	# Use -N3, as the fourth core is used by the OS and the console
 	$(TAMARIN) $< --prove --stop-on-trace=seqdfs -d=0 +RTS -N3  -RTS -o$<.tmp >$<.out
 	# We only produce the target after the run, otherwise aborted
@@ -146,7 +146,7 @@ case-studies$(SUBDIR)%_analyzed-seqdfs.spthy: examples/%.spthy $(TAMARIN)
 
 # individual case studies, special case with default oracle
 case-studies$(SUBDIR)%_analyzed-deforacle.spthy: examples/%.spthy $(TAMARIN)
-	mkdir -p case-studies$(SUBDIR)regression/trace
+	mkdir -p $(dir $@)
 	# Use -N3, as the fourth core is used by the OS and the console
 	cd examples/regression/trace && $(TAMARIN) defaultoracle.spthy --prove -d=0 +RTS -N3 -RTS -odefaultoracle.spthy.tmp >defaultoracle.spthy.out
 	# We only produce the target after the run, otherwise aborted
@@ -173,11 +173,7 @@ case-studies$(SUBDIR)features/derivation-checks/%_analyzed-derivcheck.spthy: exa
 
 # individual diff-based case studies
 case-studies$(SUBDIR)%_analyzed-diff.spthy:	examples/%.spthy $(TAMARIN)
-	mkdir -p case-studies$(SUBDIR)ccs15
-	mkdir -p case-studies$(SUBDIR)features/equivalence
-	mkdir -p case-studies$(SUBDIR)post17
-	mkdir -p case-studies$(SUBDIR)regression/diff
-	mkdir -p case-studies$(SUBDIR)csf18-xor/diff-models
+	mkdir -p $(dir $@)
 	# Use -N3, as the fourth core is used by the OS and the console
 	# For execution on server using -N14 for faster completion!
 	$(TAMARIN) $< --prove --diff --stop-on-trace=dfs -d=0 +RTS -N14 -RTS -o$<.tmp >$<.out
@@ -191,10 +187,7 @@ case-studies$(SUBDIR)%_analyzed-diff.spthy:	examples/%.spthy $(TAMARIN)
 
 # individual diff-based precomputed (no --prove) case studies
 case-studies$(SUBDIR)%_analyzed-diff-noprove.spthy:	examples/%.spthy $(TAMARIN)
-	mkdir -p case-studies$(SUBDIR)ccs15
-	mkdir -p case-studies$(SUBDIR)features/equivalence
-	mkdir -p case-studies$(SUBDIR)regression/diff
-	mkdir -p case-studies$(SUBDIR)csf18-xor/diff-models
+	mkdir -p $(dir $@)
 	# Use -N3, as the fourth core is used by the OS and the console
 	$(TAMARIN) $< --diff --stop-on-trace=dfs -d=0 +RTS -N3 -RTS -o$<.tmp >$<.out
 	# We only produce the target after the run, otherwise aborted
@@ -207,7 +200,7 @@ case-studies$(SUBDIR)%_analyzed-diff-noprove.spthy:	examples/%.spthy $(TAMARIN)
 
 # individual diff-based case studies running only on the Observational_equivalence lemma
 case-studies$(SUBDIR)%_analyzed-diff-obseqonly.spthy:	examples/%.spthy $(TAMARIN)
-	mkdir -p case-studies$(SUBDIR)csf18-xor/diff-models
+	mkdir -p $(dir $@)
 	# Use -N3, as the fourth core is used by the OS and the console
 	$(TAMARIN) $< --prove=Observational_equivalence --diff -d=0 --stop-on-trace=dfs +RTS -N3 -RTS -o$<.tmp >$<.out
 	# We only produce the target after the run, otherwise aborted
@@ -488,12 +481,19 @@ sapic-case-studies-superslow:	$(SAPIC_CS_TARGETS_SUPER_SLOW) # used to heat in w
 ## User-defined AC symbols
 ##########################
 
-# FIXME which files to include here? For now, we just include all files in the directory
-AC_CASE_STUDIES=$(notdir $(wildcard examples/csf26-ac/*.spthy))
-AC_CS_TARGETS=$(subst .spthy,_analyzed.spthy,$(addprefix case-studies$(SUBDIR)csf26-ac/,$(AC_CASE_STUDIES)))
-
-ac-case-studies:	$(AC_CS_TARGETS)
-	grep "verified\|falsified\|processing time" $^
+# diff with BFS
+case-studies$(SUBDIR)%_analyzed-diff-bfs.spthy:	examples/%.spthy $(TAMARIN)
+	mkdir -p $(dir $@)
+	# Use -N3, as the fourth core is used by the OS and the console
+	# For execution on server using -N14 for faster completion!
+	$(TAMARIN) $< --prove --diff --stop-on-trace=BFS -d=0 +RTS -N3 -RTS -o$<.tmp >$<.out
+	# We only produce the target after the run, otherwise aborted
+	# runs already 'finish' the case.
+	printf "\n/* Output\n" >>$<.tmp
+	cat $<.out >>$<.tmp
+	echo "*/" >>$<.tmp
+	mv $<.tmp $@
+	\rm -f $<.out
 
 FAST_AC_CASE_STUDIES=$(notdir $(wildcard examples/csf26-ac/fast/*.spthy))
 FAST_AC_CS_TARGETS=$(subst .spthy,_analyzed.spthy,$(addprefix case-studies$(SUBDIR)csf26-ac/fast/,$(FAST_AC_CASE_STUDIES)))
@@ -504,6 +504,18 @@ FAST_AC_DIFF_CS_TARGETS=$(subst .spthy,_analyzed-diff.spthy,$(addprefix case-stu
 fast-ac-case-studies:	$(FAST_AC_CS_TARGETS) $(FAST_AC_DIFF_CS_TARGETS)
 	grep "verified\|falsified\|processing time" $^
 
+AC_MIXNET=exponential_mixnet_V2.spthy
+AC_MIXNET_TARGETS=$(subst .spthy,_analyzed-diff-bfs.spthy,$(addprefix case-studies$(SUBDIR)csf26-ac/exponential_mixnet/,$(AC_MIXNET)))
+
+# FIXME needs to use different heuristics depending on the lemma
+# tamarin-prover toy_voting_system_not_diff.spthy +RTS -N3 -RTS --auto-sources --prove=eligibility
+# tamarin-prover toy_voting_system_not_diff.spthy +RTS -N3 -RTS --auto-sources --prove=exec
+# tamarin-prover toyVotingSystem_semi_manual.spthy +RTS -N3 -RTS --auto-sources --prove=AUTO_typing --heuristic={sourceLemmas}
+AC_TOY_VOTING_SYSTEM=toy_voting_system_not_diff.spthy
+AC_TOY_VOTING_SYSTEM_TARGETS=$(subst .spthy,_analyzed-diff.spthy,$(addprefix case-studies$(SUBDIR)csf26-ac/toy_voting_system/,$(AC_TOY_VOTING_SYSTEM)))
+
+ac-case-studies:	$(AC_MIXNET_TARGETS) $(FAST_AC_CS_TARGETS) $(FAST_AC_DIFF_CS_TARGETS)
+	grep "verified\|falsified\|processing time" $^
 
 ## Derivation checks
 ##########################
