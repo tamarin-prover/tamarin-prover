@@ -599,14 +599,19 @@ substNextGoalNr     = return ()
 -- sequent. This is an internal function.
 substPart :: Apply LNSubst a => (System :-> a) -> Reduction ()
 substPart l = do subst <- getM sSubst
-                 modM l (apply subst)
+                 unless (null $ substToList subst) $
+                   modM l (apply subst)
 
 -- | Apply the current substitution of the equation store the nodes of the
 -- constraint system. Indicates whether additional equalities were added to
 -- the equations store.
 substNodes :: Reduction ChangeIndicator
-substNodes =
-    substNodeIds <* ((modM sNodes . M.map . apply) =<< getM sSubst)
+substNodes = do
+    c <- substNodeIds
+    subst <- getM sSubst
+    unless (null $ substToList subst) $
+      modM sNodes (M.map $ apply subst)
+    return c
 
 -- | @setNodes nodes@ normalizes the @nodes@ such that node ids are unique and
 -- then updates the @sNodes@ field of the proof state to the corresponding map.
@@ -637,18 +642,21 @@ substNodeIds =
 substGoals :: Reduction ChangeIndicator
 substGoals = do
     subst <- getM sSubst
-    goals <- M.toList <$> getM sGoals
-    sGoals =: M.empty
-    changes <- forM goals $ \(goal, status) -> case goal of
-        -- Look out for KU-actions that might need to be solved again.
-        ActionG i fa@(kFactView -> Just (UpK, m))
-          | (isMsgVar m || isProduct m || isUnion m {--|| isXor m-}) && (apply subst m /= m) ->
-              insertAction i (apply subst fa)
-        _ -> do modM sGoals $
-                  M'.insertWith combineGoalStatus (apply subst goal) status
-                return Unchanged
+    if null $ substToList subst
+      then return Unchanged
+      else do
+        goals <- M.toList <$> getM sGoals
+        sGoals =: M.empty
+        changes <- forM goals $ \(goal, status) -> case goal of
+            -- Look out for KU-actions that might need to be solved again.
+            ActionG i fa@(kFactView -> Just (UpK, m))
+              | (isMsgVar m || isProduct m || isUnion m {--|| isXor m-}) && (apply subst m /= m) ->
+                  insertAction i (apply subst fa)
+            _ -> do modM sGoals $
+                      M'.insertWith combineGoalStatus (apply subst goal) status
+                    return Unchanged
 
-    return (mconcat changes)
+        return (mconcat changes)
 
 
 -- Conjoining two constraint systems

@@ -348,7 +348,12 @@ partialAtomValuation ctxt sys =
     runMaude   = (`runReader` get pcMaudeHandle ctxt)
     before     = alwaysBefore sys
     lessRel    = rawLessRel sys
-    nodesAfter = \i -> filter (i /=) $ S.toList $ D.reachableSet [i] lessRel
+    reachable  = M.fromList
+        [ (i, D.reachableSet [i] lessRel)
+        | i <- S.toList $ S.fromList $ concatMap (\(x, y) -> [x, y]) lessRel
+        ]
+    nodesAfter = \i -> filter (i /=) $ S.toList $
+        M.findWithDefault S.empty i reachable
     reducible  = reducibleFunSyms $ mhMaudeSig $ get pcMaudeHandle ctxt
     sst        = get sSubtermStore sys
 
@@ -679,19 +684,19 @@ nonInjectiveFactInstances ctxt se = do
 --    j <- S.toList $ D.reachableSet [i] less
     (j, _) <- M.toList $ get sNodes se
     -- check that j<k
-    guard  (k `S.member` D.reachableSet [j] less)
+    guard  (j `isBefore` k)
     let isCounterExample checkRule = (j /= i) && (j /= k) &&
                            maybe False checkRule (M.lookup j $ get sNodes se)
         checkRuleJK jRu    = (
                            -- check that f(t,...) occurs at j in prems and j<k
                            any conflictingFact (get rPrems jRu ++ get rConcs jRu) &&
-                           (k `S.member` D.reachableSet [j] less) &&
+                           (j `isBefore` k) &&
                             nonUnifiableNodes j i
                            )
         checkRuleIJ jRu    = (
                            -- check that f(t,...) occurs at j in concs and i<j
                            any conflictingFact (get rPrems jRu ++  get rConcs jRu) &&
-                           (j `S.member` D.reachableSet [i] less) &&
+                           (i `isBefore` j) &&
                             nonUnifiableNodes k j
                            )
     if (isCounterExample checkRuleJK) then return (j,i)
@@ -704,6 +709,11 @@ nonInjectiveFactInstances ctxt se = do
 --    return (i, j, k) -- counter-example to unique fact instances
   where
     less      = rawLessRel se
+    reachable = M.fromList
+        [ (i, D.reachableSet [i] less)
+        | i <- S.toList $ S.fromList $ concatMap (\(x, y) -> [x, y]) less
+        ]
+    isBefore i j = j `S.member` M.findWithDefault S.empty i reachable
     firstTerm = headMay . factTerms
     runMaude   = (`runReader` get pcMaudeHandle ctxt)
     nonUnifiableNodes :: NodeId -> NodeId -> Bool

@@ -1056,7 +1056,12 @@ safePartialAtomValuation ctxt sys =
     runMaude   = (`runReader` L.get pcMaudeHandle ctxt)
     before     = alwaysBefore sys
     lessRel    = rawLessRel sys
-    nodesAfter = \i -> filter (i /=) $ S.toList $ D.reachableSet [i] lessRel
+    reachable  = M.fromList
+        [ (i, D.reachableSet [i] lessRel)
+        | i <- S.toList $ S.fromList $ concatMap (\(x, y) -> [x, y]) lessRel
+        ]
+    nodesAfter = \i -> filter (i /=) $ S.toList $
+        M.findWithDefault S.empty i reachable
     reducible  = reducibleFunSyms $ mhMaudeSig $ L.get pcMaudeHandle ctxt
     sst        = L.get sSubtermStore sys
 
@@ -1645,10 +1650,14 @@ alwaysBefore sys =
     check -- lessRel is cached for partial applications
   where
     lessRel   = rawLessRel sys
+    reachable = M.fromList
+        [ (i, D.reachableSet [i] lessRel)
+        | i <- S.toList $ S.fromList $ concatMap (\(x, y) -> [x, y]) lessRel
+        ]
     check i j =
          -- speed-up check by first checking less-atoms
          ((i, j) `S.member` getLessAtoms sys)
-      || (j `S.member` D.reachableSet [i] lessRel)
+      || (j `S.member` M.findWithDefault S.empty i reachable)
 
 -- | 'True' iff the given node id is guaranteed to be instantiated to an
 -- index in the trace.
