@@ -304,8 +304,8 @@ execProofMethod ctxt method sys =
       let cases =   removeRedundantCases ctxt [] snd
                   . map (fmap cleanup . fst)
                   . getDisj $ runReduction (m <* simplifySystem) ctxt sys (avoid sys)
-      in  M.fromListWith (error "case names not unique")
-            $ uniqueListBy (comparing fst) id distinguish cases
+      in force $ M.fromListWith (error "case names not unique")
+               $ uniqueListBy (comparing fst) id distinguish cases
 
     cleanup :: System -> System
     cleanup s = L.set sSubst emptySubst (Precise.evalFresh (renamePrecise s) Precise.nothingUsed)
@@ -1199,4 +1199,3 @@ prettyDiffProofMethod method = case method of
     DiffRuleEquivalence      -> keyword_ "rule-equivalence"
     DiffBackwardSearch       -> keyword_ "backward-search"  
     DiffBackwardSearchStep s -> keyword_ "step(" <-> prettyProofMethod s <-> keyword_ ")"
-
