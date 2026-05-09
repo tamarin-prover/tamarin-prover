@@ -238,6 +238,8 @@ module Theory.Constraint.System (
 
   -- * Formula simplification
   , impliedFormulas
+  , impliedFormulasWithActions
+  , impliedFormulasWithSkActions
 
   -- * Pretty-printing
   , prettySystem
@@ -1109,7 +1111,21 @@ safePartialAtomValuation ctxt sys =
 -- | @impliedFormulas se imp@ returns the list of guarded formulas that are
 -- implied by @se@.
 impliedFormulas :: MaudeHandle -> System -> LNGuarded -> [LNGuarded]
-impliedFormulas hnd sys gf0 = res
+impliedFormulas hnd sys = impliedFormulasWithActions hnd actionsByTag
+  where
+    actionsByTag =
+        M.fromListWith (++) $ do
+            action@(_, fa) <- allActions sys
+            return (factTag fa, [action])
+
+impliedFormulasWithActions :: MaudeHandle -> M.Map FactTag [(NodeId, LNFact)] -> LNGuarded -> [LNGuarded]
+impliedFormulasWithActions hnd sysActionsByTag =
+    impliedFormulasWithSkActions hnd (fmap (map skolemizeAction) sysActionsByTag)
+  where
+    skolemizeAction (i, fa) = (skolemizeTerm (varTerm i), skolemizeFact fa)
+
+impliedFormulasWithSkActions :: MaudeHandle -> M.Map FactTag [(SkTerm, SkFact)] -> LNGuarded -> [LNGuarded]
+impliedFormulasWithSkActions hnd sysActionsByTag gf0 = res
   where
     res = case (openGuarded gf `evalFresh` avoid gf) of
       Just (All, _vs, antecedent, succedent) -> do
@@ -1125,13 +1141,11 @@ impliedFormulas hnd sys gf0 = res
     prepare (EqE s t)     = Left  (GEqE s t)
     prepare ato           = Right (fmap (fmapTerm (fmap Free)) ato)
 
-    sysActions = do (i, fa) <- allActions sys
-                    return (skolemizeTerm (varTerm i), skolemizeFact fa)
-
     candidateSubsts subst []               = return subst
     candidateSubsts subst ((GAction a fa):as) = do
-        sysAct <- sysActions
-        subst' <- (`runReader` hnd) $ matchAction sysAct (applySkAction subst (a, fa))
+        let action@(_, fa') = applySkAction subst (a, fa)
+        sysAct <- M.findWithDefault [] (factTag fa') sysActionsByTag
+        subst' <- (`runReader` hnd) $ matchAction sysAct action
         candidateSubsts (compose subst' subst) as
     candidateSubsts subst ((GEqE s' t'):as)   = do
         let s = applySkTerm subst s'
