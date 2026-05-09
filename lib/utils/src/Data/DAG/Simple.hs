@@ -13,6 +13,7 @@ module Data.DAG.Simple (
   , inverse
   , image
   , reachableSet
+  , reachableFrom
   , restrict
 
   -- ** Cycles
@@ -29,6 +30,7 @@ import           Control.Monad.RWS
 
 import           Data.List
 import qualified Data.DList as D
+import qualified Data.Map   as M
 import qualified Data.Set   as S
 import           Data.Maybe
 
@@ -77,6 +79,13 @@ reachableSet start dag =
       | x `S.member` visited = visited
       | otherwise            =
           foldl' visit (S.insert x visited) (x `image` dag)
+
+-- | Produce a function for querying the nodes reachable from a given node.
+reachableFrom :: Ord a => [(a, a)] -> a -> S.Set a
+reachableFrom dag = \i -> M.findWithDefault (S.singleton i) i memo
+  where
+    memo  = M.fromList [ (i, reachableSet [i] dag) | i <- nodes ]
+    nodes = S.toList $ S.fromList $ concatMap (\(x, y) -> [x, y]) dag
 
 -- | Is the relation cyclic.
 cyclic :: Ord a => [(a,a)] -> Bool
