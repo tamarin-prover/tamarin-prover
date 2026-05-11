@@ -140,7 +140,8 @@ term plit eqn = asum
       maudeSig <- sig <$> getState
       -- FIXME: This try should not be necessary.
       asum [ try (symbol (BC.unpack sym)) $> fApp fs []
-           | fs@(NoEq (sym,(0,_,_))) <- S.toList $ funSyms maudeSig ]
+           | fs@(NoEq (sym,(0,_,_))) <- S.toList $
+               funSyms maudeSig `S.union` S.map NoEq (macroNames maudeSig) ]
 
 -- | A left-associative sequence of exponentations.
 expterm :: Ord l => Bool -> Parser (Term l) -> Parser (Term l)
