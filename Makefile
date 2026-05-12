@@ -27,6 +27,31 @@ tamarin: frontend
 	stack setup
 	stack install
 
+# Versioned Tamarin: `make version` installs as tamarin-prover-<git describe>, appending _sha256-<hash> if dirty/broken
+# In practice, this gives a unique name to each installation, so that multiple versions can be installed at the same time and not interfere with each other. 
+# The naming is also designed to be unique even if versions are compiled with uncommitted changes. Such versions are marked "dirty" or broken by git describe. To ensure we still get unique versions without knowing the specific edits, we append in such cases the sha256 hash of the binary to the name. This should also imply that the version name uniquely determines the binary, so that we can use the name for caching or reproduction.
+# Caveat: The sha256 hash depends on the platform-dependent build, so for reproducibility across platforms one should use non-dirty commits.
+.PHONY: git-version
+git-version: frontend
+	stack setup
+	stack build
+	@GIT_DESC=$$(git describe --tags --dirty --broken 2>/dev/null || echo "broken"); \
+	BINDIR=$$(stack path --local-bin); \
+	SRC=$$(stack path --local-install-root)/bin/tamarin-prover; \
+	NAME="tamarin-prover-$$GIT_DESC"; \
+	case "$$GIT_DESC" in *-dirty*|*broken*) \
+	    SHA=$$(if command -v shasum >/dev/null 2>&1; then \
+	        shasum -a 256 "$$SRC"; \
+	    elif command -v sha256sum >/dev/null 2>&1; then \
+	        sha256sum "$$SRC"; \
+	    else \
+	        openssl dgst -sha256 -r "$$SRC"; \
+	    fi | awk '{print $$1}'); \
+	    NAME="$${NAME}_sha256-$$SHA" ;; \
+	esac; \
+	cp "$$SRC" "$$BINDIR/$$NAME"; \
+	echo "Installed: $$BINDIR/$$NAME"
+
 # Single-threaded Tamarin
 .PHONY: single
 single: frontend
