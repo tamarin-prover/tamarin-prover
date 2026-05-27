@@ -76,6 +76,10 @@ using an untyped protocol model, the tool cannot determine that `nr.7` should be
 a fresh nonce, but that it could be any message. For this reason Tamarin
 concludes that it can derive any message with this rule.
 
+For larger models, Tamarin may have difficulty displaying raw or refined sources.
+To improve accessibility, use the `--output-pd-dot` flag: (e.g. `tamarin-prover example.spthy --output-pd-dot=<FOLDER>`).
+This exports all partial deconstructions graph files to the specified folder.
+
 <!--**FIX Cas: In the above, we mention untyped protocol model. Did we explain
 this?**-->
 

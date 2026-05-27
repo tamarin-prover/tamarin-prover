@@ -16,6 +16,8 @@ import Control.Monad.IO.Class (MonadIO(liftIO))
 import Data.List
 import Data.Maybe (isJust)
 import System.Console.CmdArgs.Explicit as CmdArgs
+import System.Directory (createDirectoryIfMissing)
+import Extension.Data.Label qualified as L
 import System.Exit (die)
 import System.FilePath
 import System.Timing (timedIO)
@@ -78,6 +80,7 @@ batchMode = tamarinMode
       , flagOpt "spthy" ["output-module", "m"] (updateArg "outModule") moduleList moduleDescriptions
       , flagReq ["output-json","oj"] (updateArg "traceJSON") "FILE" "Serialize found traces as JSON to FILE."
       , flagReq ["output-dot","od"] (updateArg "traceDot") "FILE" "Serialize found traces as dot to FILE."
+      , flagReq ["output-pd-dot", "pd"] (updateArg "partialDeconstructionsDot") "DIR" "Serialize partial deconstruction traces as dot to FOLDER."
       ]
     moduleConstructors = enumFrom minBound :: [ModuleType]
     moduleList = intercalate "|" $ map show moduleConstructors
@@ -202,6 +205,7 @@ run thisMode as
         (report, thy') <- closeTheory versionData thyLoadOptions sig' thy
         case thy' of
           Left thy'' -> do
+            liftIO $ outputPartialDeconstructionDots thy''
             pure (ppWf report Pretty.$--$ prettyPrecomputation thy'', ppWf report)
           Right thy'' -> do
             pure (ppWf report Pretty.$--$ prettyDiffPrecomputation thy'', ppWf report)
@@ -222,7 +226,10 @@ run thisMode as
       -- | Close and potentially prove theory.
       else do
         (report, thy') <- closeTheory versionData thyLoadOptions sig' thy
-        _ <- liftIO $ bitraverse outputTraces (const $ return ()) thy'
+        _ <- liftIO $ bitraverse
+          (\t -> outputTraces t >> outputPartialDeconstructionDots t)
+          (const $ return ())
+          thy'
 
         pure $
           either (\t -> (prettyClosedTheory t,     ppWf report Pretty.$--$ prettyClosedSummary t))
@@ -244,6 +251,50 @@ run thisMode as
         ppWf rep = Pretty.vcat $
           Pretty.text ("WARNING: " ++ show (length rep) ++ " wellformedness check failed!")
           : [ Pretty.text   "         The analysis results might be wrong!" | thyLoadOptions.proveMode ]
+
+        outputPartialDeconstructionDots :: ClosedTheory -> IO ()
+        outputPartialDeconstructionDots thy =
+          case findArg "partialDeconstructionsDot" as of
+            Nothing  -> pure ()
+            Just dir -> do
+              createDirectoryIfMissing True dir
+              let graphOptions  = defaultGraphOptions
+                  dotOptions    = defaultDotOptions
+                  sources       = getSource RefinedSource thy
+                  pdSources     = filter isPartialDeconstruction sources
+                  indexedCases  =
+                    [ (srcIdx, caseIdx, src, names, system)
+                    | (srcIdx, src)              <- zip [1::Int ..] pdSources
+                    , (caseIdx, (names, system)) <- zip [1::Int ..] (getDisj (L.get cdCases src))
+                    , let unsolvedInThisCase = unsolvedChainConstraints src !! (caseIdx - 1)
+                    , unsolvedInThisCase > 0
+                    ]
+
+              mapM_ (\(srcIdx, caseIdx, src, names, system) -> do
+                let goal         = L.get cdGoal src
+                    unsolvedPerCase = unsolvedChainConstraints src
+                    caseName     = if null names then "unnamed" else intercalate "_" names
+                    label        = "pd_" ++ show srcIdx ++ "_" ++ show caseIdx ++ "_" ++ caseName
+                    outFile      = dir </> label ++ ".dot"
+                    meta         = unlines
+                      [ "// ========================================"
+                      , "// Partial Deconstruction - Meta Information"
+                      , "// ========================================"
+                      , "// Source index:       " ++ show srcIdx
+                      , "// Case index:         " ++ show caseIdx
+                      , "// Case names:         " ++ intercalate ", " names
+                      , "// Goal:               " ++ show goal
+                      , "// Total cases in src: " ++ show (length (getDisj (L.get cdCases src)))
+                      , "// Unsolved chains:    " ++ show unsolvedPerCase
+                      , "// ========================================"
+                      ]
+                    content      = meta ++ D.showDot label (dotSystemCompact graphOptions dotOptions system)
+
+                writeFile outFile content
+                ) indexedCases
+          where
+            isPartialDeconstruction :: Source -> Bool
+            isPartialDeconstruction src = any (> 0) (unsolvedChainConstraints src)
 
         -- | Output any found traces of the analyzed theory in dot/JSON format if the corresponing command line option is set.
         -- The output is dumped into a single file per format. Multiple dot graphs are simply concatenated into a single file,
