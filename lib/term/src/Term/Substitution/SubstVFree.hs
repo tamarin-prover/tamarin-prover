@@ -23,6 +23,7 @@ module Term.Substitution.SubstVFree (
   , substFromList
   , substFromMap
   , emptySubst
+  , nullSubst
 
   -- * Composition of substitutions
   , compose
@@ -102,7 +103,30 @@ applyLit _     c@(Con _)  = lit c
 
 -- | @applyVTerm subst t@ applies the substitution @subst@ to the term @t@.
 applyVTerm :: (IsConst c, IsVar v) => Subst c v -> VTerm c v -> VTerm c v
-applyVTerm = applyVTermProj applyLit
+applyVTerm (Subst smap)
+    | M.null smap = id
+    | otherwise   = go
+  where
+    go t = case viewTerm t of
+        Lit (Var i)      -> fromMaybe t (M.lookup i smap)
+        Lit (Con _)      -> t
+        FApp (AC o)   ts -> rebuild t ts (fAppAC o)
+        FApp (C o)    ts -> rebuild t ts (fAppC o)
+        FApp (NoEq o) ts -> rebuild t ts (fAppNoEq o)
+        FApp List     ts -> rebuild t ts fAppList
+
+    -- Rebuild the application only if some argument changed; otherwise share.
+    rebuild t ts mk = let ts' = goList ts
+                      in if ts' `unsafeEq` ts then t else mk ts'
+
+    -- Map 'go' over the arguments, returning the original list (by pointer)
+    -- when no element changed, so the parent can detect "nothing changed".
+    goList []        = []
+    goList ts@(x:xs) = let x'  = go x
+                           xs' = goList xs
+                       in if x' `unsafeEq` x && xs' `unsafeEq` xs
+                          then ts
+                          else x' : xs'
 
 -- | Variant of @applyVTerm@ with custom function to apply literals
 applyVTermProj :: Ord a => (t1 -> t2 -> Term a) -> t1 -> Term t2 -> Term a
@@ -135,6 +159,12 @@ substFromMap = Subst . M.filterWithKey (\v t -> not $ equalToVar t v)
 -- | @emptySubVFree@ is the substitution with empty domain.
 emptySubst :: Subst c v
 emptySubst = Subst M.empty
+
+-- | @nullSubst subst@ is 'True' iff @subst@ has an empty domain, i.e. applying
+-- it is the identity. This is a cheap (O(1)) check used to skip no-op
+-- substitution passes.
+nullSubst :: Subst c v -> Bool
+nullSubst = M.null . sMap
 
 -- Composition
 ----------------------------------------------------------------------
