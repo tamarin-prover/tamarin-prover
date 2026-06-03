@@ -203,7 +203,6 @@ module Theory (
   , openTranslatedTheory
   , openDiffTheory
 
-  , closeIntrRule
   , applyNDCcheck
   , prettyNDCcheck
 

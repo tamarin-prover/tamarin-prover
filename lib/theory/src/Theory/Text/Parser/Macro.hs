@@ -43,7 +43,7 @@ macros = do symbol "macros" *> colon *> commaSep macro
         if op `elem` map extractName (S.toList (userDefinedFunSyms sign) ++ map NoEqUser (S.toList (macroNames sign)))
             then fail $ "Conflicting name for macro " ++ BC.unpack op
             else do 
-                modifyStateSig $ addMacroSym (op,(k,Private,Destructor))
+                modifyStateSig $ addMacroSym (op,(k,Private,Destructor,NotNDC))
                 return mc
 
       extractName (NoEqUser (o, _))  = o

@@ -37,6 +37,9 @@ module Utils.Misc (
   , fst3
   , snd3
   , thd3
+
+  -- list operations
+  , mapHead
 ) where
 
 import Data.List
@@ -175,3 +178,8 @@ fixpoint f x
     | x' == x = x'
     | otherwise = fixpoint f x'
   where x' = f x
+
+-- map a function to the head of a list
+mapHead :: (a -> a) -> [a] -> [a]
+mapHead _ []     = []
+mapHead f (x:xs) = f x : xs

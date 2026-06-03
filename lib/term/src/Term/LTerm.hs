@@ -369,7 +369,7 @@ flattenedACTerms _ term = [term]
 containsPrivate :: Term t -> Bool
 containsPrivate t = case viewTerm t of
     Lit _                          -> False
-    FApp (NoEq (_,(_,Private,_))) _  -> True
+    FApp (NoEq (_,(_,Private,_,_))) _  -> True
     FApp _                      as -> any containsPrivate as
 
 -- | @containsOnlyNoEq t@ returns @True@ if @t@ contains only NoEq function symbols (no AC function or C function)
@@ -380,11 +380,11 @@ containsOnlyNoEq t = case viewTerm t of
     FApp _ _         -> False
 
 -- | containsNoPrivateExcept t t2@ returns @True@ if @t2@ contains private function symbols other than @t@.
-containsNoPrivateExcept :: [BC.ByteString] -> Term t -> Bool
+containsNoPrivateExcept :: [FunSym] -> Term t -> Bool
 containsNoPrivateExcept funs t = case viewTerm t of
-    Lit _                          -> True
-    FApp (NoEq (f,(_,Private,_))) as -> (elem f funs) && (all (containsNoPrivateExcept funs) as)
-    FApp _                      as -> all (containsNoPrivateExcept funs) as
+    Lit _                                -> True
+    FApp f@(NoEq (_,(_,Private,_,_))) as -> elem f funs && all (containsNoPrivateExcept funs) as
+    FApp _                            as -> all (containsNoPrivateExcept funs) as
 
 
 -- | A term is *simple* iff there is an instance of this term that can be
@@ -396,9 +396,8 @@ isSimpleTerm t =
     (getAll . foldMap (All . (LSortFresh /=) . sortOfLit) $ t)
 
 -- | True if the term is a given function term with only message variables as arguments
-isTrivialFunSymTerm :: LNTerm -> String -> Bool
-isTrivialFunSymTerm (viewTerm -> FApp f t) sym =
-    showFunSymName f == sym && all isMsgVar t
+isTrivialFunSymTerm :: LNTerm -> FunSym -> Bool
+isTrivialFunSymTerm (viewTerm -> FApp f t) sym = f == sym && all isMsgVar t
 isTrivialFunSymTerm _                      _   = False
 
 -- | True if the term is a given function term with only message variables as arguments

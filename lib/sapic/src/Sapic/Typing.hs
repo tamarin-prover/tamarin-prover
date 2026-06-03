@@ -80,7 +80,7 @@ typeWith t tt
         te <- get
         modify' (\s -> s { vars = Map.insert (slvar v) t' te.vars })
         return (termViewToTerm $ Lit (Var (SapicLVar lvar' t')), t')
-    | FAppNoEq fs@(_,(n,_,_)) ts   <- viewTerm2 t -- CASE: standard function application
+    | FAppNoEq fs@(_,(n,_,_,_)) ts   <- viewTerm2 t -- CASE: standard function application
     = do
         -- First determine output type of function from target constraint and update FunctionTypingEnvironment
         (intypes1,outtype1) <- getFun n (NoEqUser fs)
@@ -188,8 +188,8 @@ initTEFromSig th = do
     sig = th._thySignature._sigMaudeInfo
     funSet = stFunSyms sig
     funACSet = stACFunSyms sig
-    funTyped = foldMap (\fs@(_,(n,_,_)) -> Map.singleton (NoEqUser fs) (defaultFunctionType n)) funSet
-    funACTyped = foldMap (\fs@(_,(_,_)) -> Map.singleton (ACfctUser fs) (defaultFunctionType 2)) funACSet
+    funTyped = foldMap (\fs@(_,(n,_,_,_)) -> Map.singleton (NoEqUser fs) (defaultFunctionType n)) funSet
+    funACTyped = foldMap (\fs@(_,(_,_,_)) -> Map.singleton (ACfctUser fs) (defaultFunctionType 2)) funACSet
     funAll = Map.union funTyped funACTyped
     -- we then also add the custom used defined types
     withUserDefinedFuns = foldr (\(s,inp,out) acc -> Map.insert s (inp,out) acc) funAll (theoryFunctionTypingInfos th)

@@ -167,6 +167,7 @@ functionAttribute = asum
   , symbol "destructor" Data.Functor.$> Constructability Destructor
   , symbol "constructor" Data.Functor.$> Constructability Constructor
   , symbol "AC" Data.Functor.$> ACstate IsAC
+  , symbol "NDC" Data.Functor.$> NDCstate IsNDC
   ]
 
 getReservedNames :: MaudeSig -> [String]
@@ -189,7 +190,8 @@ function = do
         let priv = if Privacy Private `elem` atts then Private else Public
         let destr = if Constructability Destructor `elem` atts then Destructor else Constructor
         let ac = if ACstate IsAC `elem` atts then IsAC else NotAC
-        let requested = (k, priv, destr)
+        let ndc = if NDCstate IsNDC `elem` atts then IsNDC else NotNDC
+        let requested = (k, priv, destr, ndc)
 
         -- Check specifically for conflicts with builtins to give a precise error message.
         let allReservedNames = reservedBuiltinNames st
@@ -204,19 +206,19 @@ function = do
 
         -- Check for any conflict with existing functions.
         case lookup f (S.toList (stFunSyms sign) ++ S.toList(macroNames sign)) of
-          Just kp' | kp' /= (k,priv,destr) && (BC.unpack f /= "fst" || k /= 1 || priv == Private) && (BC.unpack f /= "snd" || k /= 1 || priv == Private) ->
+          Just kp' | kp' /= (k,priv,destr,ndc) && (BC.unpack f /= "fst" || k /= 1 || priv == Private) && (BC.unpack f /= "snd" || k /= 1 || priv == Private) ->
             fail $ "conflicting arities/options " ++
-                   show kp' ++ " and " ++ show (k,priv,destr) ++
+                   show kp' ++ " and " ++ show (k,priv,destr,ndc) ++
                    " for `" ++ BC.unpack f ++ "`. Please choose a different name for this function."
           Just kp' | BC.unpack f == "fst" || BC.unpack f == "snd" -> do
                 return (NoEqUser (f,kp'),argTypes,outType)
           _ -> case ac of
             IsAC -> if k /= 2 then fail "conflicting arity : AC function must be binary" else do
-                modifyStateSig $ addFunSym (ACfctUser (f,(priv,destr)))
-                return (ACfctUser (f,(priv,destr)),argTypes,outType)
+                modifyStateSig $ addFunSym (ACfctUser (f,(priv,destr,ndc)))
+                return (ACfctUser (f,(priv,destr,ndc)),argTypes,outType)
             NotAC -> do
-                modifyStateSig $ addFunSym (NoEqUser (f,(k,priv,destr)))
-                return (NoEqUser (f,(k,priv,destr)),argTypes,outType)
+                modifyStateSig $ addFunSym (NoEqUser (f,(k,priv,destr,ndc)))
+                return (NoEqUser (f,(k,priv,destr,ndc)),argTypes,outType)
 
 
 functions :: Parser [SapicFunSym]

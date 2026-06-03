@@ -18,6 +18,7 @@ module Term.Term.FunctionSymbols (
     , Privacy(..)
     , Constructability(..)
     , ACstate(..)
+    , NDCstate(..)
     , FctAttr(..)
     , UserDefinedSym(..)
     , ACfctSym
@@ -28,6 +29,12 @@ module Term.Term.FunctionSymbols (
     , NoEqFunSig
     , ACfctFunSig
     , UserDefinedSig
+
+    -- ** NDC property
+    , isNDCFunSym
+    , setNDC
+    , setNDCNoEqSym
+    , setNDCACfctSym
 
     -- ** concrete symbols strings
     , diffSymString
@@ -108,14 +115,18 @@ data Constructability = Constructor | Destructor
 data ACstate = IsAC | NotAC
   deriving (Eq, Ord, Typeable, Data, Show, Generic, NFData, Binary)
 
-data FctAttr = Privacy Privacy | Constructability Constructability | ACstate ACstate
+-- | A function symbol can be NDC or not.
+data NDCstate = IsNDC | NotNDC
+  deriving (Eq, Ord, Typeable, Data, Show, Generic, NFData, Binary)
+
+data FctAttr = Privacy Privacy | Constructability Constructability | ACstate ACstate | NDCstate NDCstate
   deriving (Eq, Ord, Typeable, Data, Show, Generic, NFData, Binary)
 
 -- | NoEq function symbols (with respect to the background theory).
-type NoEqSym = (ByteString, (Int, Privacy,Constructability)) -- ^ operator name, arity, private, destructor
+type NoEqSym = (ByteString, (Int, Privacy, Constructability, NDCstate)) -- ^ operator name, arity, private, destructor, NDC property
 
 -- | User-defined AC function symbols.
-type ACfctSym = (ByteString, (Privacy,Constructability)) -- ^ operator name, private, destructor
+type ACfctSym = (ByteString, (Privacy, Constructability, NDCstate)) -- ^ operator name, private, destructor, NDC property
 
 -- | AC function symbols.
 data ACSym = Union | Mult | Xor | NatPlus | ACfct ACfctSym 
@@ -148,6 +159,22 @@ type ACfctFunSig = Set ACfctSym
 -- | User-defined function signatures.
 type UserDefinedSig = Set UserDefinedSym
 
+isNDCFunSym :: FunSym -> Bool
+isNDCFunSym (NoEq (_, (_, _, _, IsNDC))) = True
+isNDCFunSym (AC (ACfct (_, (_, _, IsNDC)))) = True
+isNDCFunSym _ = False
+
+setNDC :: NDCstate -> FunSym -> FunSym
+setNDC ndcState (NoEq (name, (arity, privacy, constructability, _))) = NoEq (name, (arity, privacy, constructability, ndcState))
+setNDC ndcState (AC (ACfct (name, (privacy, constructability, _))))  = AC (ACfct (name, (privacy, constructability, ndcState)))
+setNDC _ fctSym                                                      = fctSym
+
+setNDCNoEqSym :: NDCstate -> NoEqSym -> NoEqSym
+setNDCNoEqSym ndcState (name, (arity, privacy, constructability, _)) = (name, (arity, privacy, constructability, ndcState))
+
+setNDCACfctSym :: NDCstate -> ACfctSym -> ACfctSym
+setNDCACfctSym ndcState (name, (privacy, constructability, _)) = (name, (privacy, constructability, ndcState))
+
 ----------------------------------------------------------------------
 -- Fixed function symbols
 ----------------------------------------------------------------------
@@ -178,30 +205,30 @@ pmultSymString = "pmult"
 
 pairSym, diffSym, expSym, invSym, oneSym, dhNeutralSym, fstSym, sndSym, pmultSym, zeroSym, natOneSym :: NoEqSym
 -- | Pairing.
-pairSym  = ("pair",(2,Public,Constructor))
+pairSym  = ("pair",(2,Public,Constructor,NotNDC))
 -- | Diff.
-diffSym  = (diffSymString,(2,Private,Constructor))
+diffSym  = (diffSymString,(2,Private,Constructor,NotNDC))
 -- | Exponentiation.
-expSym   = (expSymString,(2,Public,Constructor))
+expSym   = (expSymString,(2,Public,Constructor,NotNDC))
 -- | The inverse in the groups of exponents.
-invSym   = (invSymString,(1,Public,Constructor))
+invSym   = (invSymString,(1,Public,Constructor,NotNDC))
 -- | The one in the group of exponents.
-oneSym   = (oneSymString,(0,Public,Constructor))
+oneSym   = (oneSymString,(0,Public,Constructor,NotNDC))
 -- | The groupd identity
-dhNeutralSym = (dhNeutralSymString,(0,Public, Constructor))
+dhNeutralSym = (dhNeutralSymString,(0,Public, Constructor,NotNDC))
 -- | Projection of first component of pair.
-fstSym   = (fstSymString,(1,Public,Constructor))
+fstSym   = (fstSymString,(1,Public,Constructor,NotNDC))
 -- | Projection of second component of pair.
-sndSym   = (sndSymString,(1,Public,Constructor))
+sndSym   = (sndSymString,(1,Public,Constructor,NotNDC))
 -- | Multiplication of points (in G1) on elliptic curve by scalars.
-pmultSym = (pmultSymString,(2,Public,Constructor))
+pmultSym = (pmultSymString,(2,Public,Constructor,NotNDC))
 -- | The zero for XOR.
-zeroSym  = (zeroSymString,(0,Public,Constructor))
+zeroSym  = (zeroSymString,(0,Public,Constructor,NotNDC))
 -- | One for natural numbers.
-natOneSym = (natOneSymString, (0,Public,Constructor))
+natOneSym = (natOneSymString, (0,Public,Constructor,NotNDC))
 
 mkDestSym :: NoEqSym -> NoEqSym
-mkDestSym (name,(k,p,_)) = (name,(k,p, Destructor))
+mkDestSym (name,(k,p,_,n)) = (name,(k,p, Destructor,n))
 
 fstDestSym, sndDestSym :: NoEqSym
 -- | Projection of first component of pair.

@@ -44,7 +44,7 @@ import           Theory.Constraint.Solver.AnnotatedGoals
 import           Theory.Constraint.Solver.Contradictions (substCreatesNonNormalTerms)
 import           Theory.Constraint.Solver.Reduction
 import           Theory.Constraint.System
-import           Theory.Tools.IntruderRules (mkDUnionRule, isDExpRule, isDPMultRule, isDEMapRule)
+import           Theory.Tools.IntruderRules (mkDUnionRule, isDExpRule, isDPMultRule, isDEMapRule, isNDCRule)
 import           Theory.Model
 import           Term.Builtin.Convenience
 
@@ -344,12 +344,15 @@ solveChain rules (c, p) = do
     -- to dpmult KD premise, and no edge from dpmult to demap KD premise
     -- (this condition replaces the exp/noexp tags)
     -- no more than the allowed consecutive rule applications
+    -- no consecutive deconstruction rules for NDC functions
     forbiddenEdge :: RuleACInst -> RuleACInst -> Bool
-    forbiddenEdge cRule pRule = isDExpRule   cRule && isDExpRule  pRule  ||
-                                isDPMultRule cRule && isDPMultRule pRule ||
-                                isDPMultRule cRule && isDEMapRule  pRule ||
-                                (getRuleName cRule == getRuleName pRule)
-                                    && (getRemainingRuleApplications cRule == 1)
+    forbiddenEdge cRule pRule = (isDExpRule   cRule && isDExpRule  pRule)  ||
+                                (isDPMultRule cRule && isDPMultRule pRule) ||
+                                (isDPMultRule cRule && isDEMapRule  pRule) ||
+                                (getRuleName cRule == getRuleName pRule
+                                    && getRemainingRuleApplications cRule == 1) ||
+                                (isNDCRule cRule /= Nothing &&
+                                    isNDCRule cRule == isNDCRule pRule)
 
     -- Contradicts normal form condition N2:
     -- No coerce of a pair of inverse.

@@ -22,10 +22,6 @@ import Term.Macro
 import Theory.Constraint.Solver.Sources (IntegerParameters)
 import Data.Maybe (maybeToList)
 
-
-
-
-
 -- | Get an OpenProtoRule's name
 getOpenProtoRuleName :: OpenProtoRule -> String
 getOpenProtoRuleName (OpenProtoRule ruE _) = getRuleName ruE

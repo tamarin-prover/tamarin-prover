@@ -243,8 +243,7 @@ isTrivialKUFact (Fact KUFact _ [t]) = isMsgVar t
 isTrivialKUFact _                   = False
 
 -- | True if the fact is a "nearly" trivial KU-fact, i.e., contains a given operator where all arguments are simple msg variables.
--- FIXME: we should use function argument here instead of string matching. Requires constructor rules to be annotated with function symbols rather than names.
-isNearlyTrivialKUFact :: String -> LNFact -> Bool
+isNearlyTrivialKUFact :: FunSym -> LNFact -> Bool
 isNearlyTrivialKUFact s (Fact KUFact _ [t]) = isTrivialFunSymTerm t s
 isNearlyTrivialKUFact _ _                   = False
 

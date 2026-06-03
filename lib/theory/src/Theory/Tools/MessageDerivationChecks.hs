@@ -96,8 +96,8 @@ deleteRulesAndLemmasAndRestrictionsFromTheory = L.modify thyItems deleteRules
 
 replacePrivate :: Term t -> Term t
 replacePrivate t = case viewTerm t of
-    FApp (NoEq (num,(name,Private,constr))) term  -> termViewToTerm $ FApp (NoEq (num, (name, Public, constr))) (map replacePrivate term)
-    FApp (AC (ACfct (num,(Private,constr)))) term  -> termViewToTerm $ FApp (AC (ACfct (num, (Public, constr)))) (map replacePrivate term)
+    FApp (NoEq (num,(name,Private,constr,ndc))) term  -> termViewToTerm $ FApp (NoEq (num, (name, Public, constr, ndc))) (map replacePrivate term)
+    FApp (AC (ACfct (num,(Private,constr,ndc)))) term  -> termViewToTerm $ FApp (AC (ACfct (num, (Public, constr, ndc)))) (map replacePrivate term)
     FApp sym as -> termViewToTerm $ FApp sym (map replacePrivate as)
     x -> termViewToTerm x
 

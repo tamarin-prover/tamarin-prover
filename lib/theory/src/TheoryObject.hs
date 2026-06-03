@@ -797,29 +797,41 @@ prettyTranslationElement (ProcessDefItem p) =
         )
     <-> (text "=")
     <-> nest 2 (prettyProcess $ L.get pBody p)
-prettyTranslationElement (FunctionTypingInfo (ACfctUser (fsn,(priv,_)), intypes, outtype)) =
+prettyTranslationElement (FunctionTypingInfo (ACfctUser (fsn,(priv,constr,ndc)), intypes, outtype)) =
   (text "function:")
     <-> text (unpack fsn)
     <-> parens (fsep $ punctuate comma $ map printType intypes)
     <-> text ":"
     <-> printType outtype
-    <-> text "  [AC]"
+    <-> text " [AC]"
     <-> text (showPriv priv)
+    <-> text (showConst constr)
+    <-> text (showNDC ndc)
   where
     printType = maybe (text defaultSapicTypeS) text
     showPriv Private = " [private]"
     showPriv Public = ""
-prettyTranslationElement (FunctionTypingInfo (NoEqUser (fsn, (_, priv, _)), intypes, outtype)) =
+    showConst Constructor = ""
+    showConst Destructor = " [destructor]"
+    showNDC NotNDC = ""
+    showNDC IsNDC = " [ndc]"
+prettyTranslationElement (FunctionTypingInfo (NoEqUser (fsn, (_, priv, constr, ndc)), intypes, outtype)) =
   (text "function:")
     <-> text (unpack fsn)
     <-> parens (fsep $ punctuate comma $ map printType intypes)
     <-> text ":"
     <-> printType outtype
     <-> text (showPriv priv)
+    <-> text (showConst constr)
+    <-> text (showNDC ndc)
   where
     printType = maybe (text defaultSapicTypeS) text
     showPriv Private = " [private]"
     showPriv Public = ""
+    showConst Constructor = ""
+    showConst Destructor = " [destructor]"
+    showNDC NotNDC = ""
+    showNDC IsNDC = " [ndc]"
 prettyTranslationElement (ExportInfoItem eInfo) =
   (text "export: ")
     <-> text (L.get eTag eInfo)

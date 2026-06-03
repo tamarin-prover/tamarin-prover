@@ -441,7 +441,7 @@ precomputeSources parameters ctxt restrictions =
           , fAppAC NatPlus [varTerm (LVar "t" LSortNat 1), varTerm (LVar "t" LSortNat 2)] ]
           else []
       , [ fAppNoEq o $ nMsgVars k
-        | o@(_,(k,priv,_)) <- S.toList . noEqFunSyms  $ msig
+        | o@(_,(k,priv,_,_)) <- S.toList . noEqFunSyms  $ msig
         , NoEq o `S.notMember` implicitFunSig, k > 0 || priv==Private]
       ]
 

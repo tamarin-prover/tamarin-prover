@@ -54,10 +54,16 @@ module Term.Term (
     , Privacy(..)
     , Constructability(..)
     , ACstate(..)
+    , NDCstate(..)
     , FctAttr(..)
     , UserDefinedSym(..)
     , ACfctSym
     , NoEqSym
+
+    , isNDCFunSym
+    , setNDC
+    , setNDCNoEqSym
+    , setNDCACfctSym
 
     -- ** Signatures
     , FunSig
@@ -87,12 +93,14 @@ module Term.Term (
     , diffSym
     , expSym
     , pmultSym
+    , invSym
     , natOneSym
     , oneSym
     , zeroSym
     , dhNeutralSym
     , fstSym
     , sndSym
+    , pairSym
     , fstDestSym
     , sndDestSym
 
@@ -205,11 +213,11 @@ isUnion _                       = False
 
 -- | 'True' iff the term is a nullary, public function.
 isNullaryPublicFunction :: Term a -> Bool
-isNullaryPublicFunction (viewTerm -> FApp (NoEq (_, (0, Public,_))) _) = True
+isNullaryPublicFunction (viewTerm -> FApp (NoEq (_, (0, Public,_,_))) _) = True
 isNullaryPublicFunction _                                            = False
 
 isPrivateFunction :: Term a -> Bool
-isPrivateFunction (viewTerm -> FApp (NoEq (_, (_,Private,_))) _) = True
+isPrivateFunction (viewTerm -> FApp (NoEq (_, (_,Private,_,_))) _) = True
 isPrivateFunction _                                            = False
 
 -- | 'True' iff the term is an AC-operator.
@@ -227,7 +235,7 @@ getSide dt (FAPP (NoEq o) [t1,t2]) = case dt of
     DiffLeft  | o == diffSym -> getSide dt t1
     DiffRight | o == diffSym -> getSide dt t2
     DiffBoth  | o == diffSym -> FAPP (NoEq o) [(getSide dt t1),(getSide dt t2)]
-    DiffNone  | o == diffSym -> error $ "getSide: illegal use of diff"
+    DiffNone  | o == diffSym -> error "getSide: illegal use of diff"
     _                        -> FAPP (NoEq o) [(getSide dt t1),(getSide dt t2)]
 getSide dt (FAPP sym ts) = FAPP sym (map (getSide dt) ts)
 
@@ -269,8 +277,13 @@ elemNotBelowReducible _ _ _ = False
 showFunSymName :: FunSym -> String
 showFunSymName (NoEq (bs, _))       = BC.unpack bs
 showFunSymName (AC (ACfct (bs, _))) = BC.unpack bs
-showFunSymName (AC op)              = show op
-showFunSymName (C op )              = show op
+showFunSymName (AC op)              = BC.unpack $ case op of
+    Union   -> munSymString
+    Mult    -> multSymString
+    Xor     -> xorSymString
+    NatPlus -> natPlusSymString
+showFunSymName (C op )              = BC.unpack $ case op of
+    EMap    -> emapSymString
 showFunSymName List                 = "List"
 
 -- | Pretty print a term.

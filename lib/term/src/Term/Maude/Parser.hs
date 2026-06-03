@@ -73,8 +73,8 @@ funSymPrefix :: ByteString
 funSymPrefix = "tam"
 
 -- | Encode attributes in additional prefix
-funSymEncodeAttr :: Privacy -> Constructability -> ACstate -> ByteString
-funSymEncodeAttr priv constr acstate = f priv <> g constr <> h acstate
+funSymEncodeAttr :: Privacy -> Constructability -> ACstate -> NDCstate -> ByteString
+funSymEncodeAttr priv constr acstate ndcstate = f priv <> g constr <> h acstate <> i ndcstate
     where
         f Private = "P"
         f Public  = "X"
@@ -82,19 +82,25 @@ funSymEncodeAttr priv constr acstate = f priv <> g constr <> h acstate
         g Destructor = "D"
         h IsAC = "A"
         h NotAC = "F"
+        i IsNDC = "N"
+        i NotNDC = "U"
 
 -- | Decode string @funSymPrefix || funSymEncodeAttr p c || ident@ into
 --   @(ident,p,c)@
-funSymDecode :: ByteString -> (ByteString, Privacy, Constructability)
-funSymDecode s = (ident,priv,constr)
+funSymDecode :: ByteString -> (ByteString, Privacy, Constructability, NDCstate)
+funSymDecode s = (ident,priv,constr,ndc)
     where
         prefixLen      = BC.length funSymPrefix
-        (eAttr,ident)  = BC.splitAt 3 (BC.drop prefixLen s)
-        (priv,constr)  = case eAttr of
-                            attr | attr `elem` ["PDA","PDF"]-> (Private,Destructor)
-                            attr | attr `elem` ["PCA","PCF"]-> (Private,Constructor)
-                            attr | attr `elem` ["XDA","XDF"]-> (Public,Destructor)
-                            _    -> (Public,Constructor)
+        (eAttr,ident)  = BC.splitAt 4 (BC.drop prefixLen s)
+        (priv,constr,ndc)  = case eAttr of
+                            attr | attr `elem` ["PDAN","PDFN"]-> (Private,Destructor,IsNDC)
+                            attr | attr `elem` ["PCAN","PCFN"]-> (Private,Constructor,IsNDC)
+                            attr | attr `elem` ["XDAN","XDFN"]-> (Public,Destructor,IsNDC)
+                            attr | attr `elem` ["PDAU","PDFU"]-> (Private,Destructor,NotNDC)
+                            attr | attr `elem` ["PCAU","PCFU"]-> (Private,Constructor,NotNDC)
+                            attr | attr `elem` ["XDAU","XDFU"]-> (Public,Destructor,NotNDC)
+                            attr | attr `elem` ["XCAU","XCFU"]-> (Public,Constructor,NotNDC)
+                            _    -> (Public,Constructor,IsNDC)
 
 
 
@@ -128,15 +134,15 @@ replaceMinusFunAC (s, p) = (replaceMinus s, p)
 ppMaudeACSym :: ACSym -> ByteString
 ppMaudeACSym o =
     funSymPrefix <> case o of
-                      Mult                    -> multSymString
-                      Union                   -> munSymString
-                      Xor                     -> xorSymString
-                      NatPlus                 -> natPlusSymString
-                      ACfct (f,(prv,cnstr))   -> funSymEncodeAttr prv cnstr IsAC <> replaceUnderscore f
+                      Mult                      -> multSymString
+                      Union                     -> munSymString
+                      Xor                       -> xorSymString
+                      NatPlus                   -> natPlusSymString
+                      ACfct (f,(prv,cnstr,ndc)) -> funSymEncodeAttr prv cnstr IsAC ndc <> replaceUnderscore f
 
 -- | Pretty print a non-AC symbol for Maude.
 ppMaudeNoEqSym :: NoEqSym -> ByteString
-ppMaudeNoEqSym (o,(_,prv,cnstr))  = funSymPrefix <> funSymEncodeAttr prv cnstr NotAC <> replaceUnderscore o
+ppMaudeNoEqSym (o,(_,prv,cnstr,ndc)) = funSymPrefix <> funSymEncodeAttr prv cnstr NotAC ndc <> replaceUnderscore o
 
 -- | Pretty print a C symbol for Maude.
 ppMaudeCSym :: CSym -> ByteString
@@ -244,19 +250,19 @@ ppTheory msig = BC.unlines $
     ++
     [ "endfm" ]
   where
-    maybeEncode (Just (priv,cnstr,acstate)) = funSymEncodeAttr priv cnstr acstate
+    maybeEncode (Just (priv,cnstr,acstate,ndc)) = funSymEncodeAttr priv cnstr acstate ndc
     maybeEncode Nothing             = ""
     theoryOp attr fsort =
         "  op " <> funSymPrefix <> maybeEncode attr <> fsort <>" ."
     theoryOpACUser attr fsort =
         "  op " <> funSymPrefix <> maybeEncode attr <> fsort <>" ."
-    theoryOpEq = theoryOp (Just (Public,Constructor,NotAC))
+    theoryOpEq = theoryOp (Just (Public,Constructor,NotAC,NotNDC))
     theoryOpAC = theoryOp Nothing
     theoryOpC  = theoryOp Nothing
-    theoryFunSym (s,(ar,priv,cnstr)) =
-        theoryOp  (Just (priv,cnstr,NotAC)) (replaceUnderscore s <> " : " <> (B.concat $ replicate ar "Msg ") <> " -> Msg")
-    theoryACFunSym (s,(priv,cnstr)) =
-        theoryOpACUser  (Just (priv,cnstr,IsAC)) (replaceUnderscore s <> " : " <> (B.concat $ replicate 2 "Msg ") <> "-> Msg" <> " [comm assoc]")
+    theoryFunSym (s,(ar,priv,cnstr,ndc)) =
+        theoryOp  (Just (priv,cnstr,NotAC,ndc)) (replaceUnderscore s <> " : " <> (B.concat $ replicate ar "Msg ") <> " -> Msg")
+    theoryACFunSym (s,(priv,cnstr,ndc)) =
+        theoryOpACUser  (Just (priv,cnstr,IsAC,ndc)) (replaceUnderscore s <> " : " <> (B.concat $ replicate 2 "Msg ") <> "-> Msg" <> " [comm assoc]")
     theoryRule (l `RRule` r) =
         "  eq " <> ppMaude lm <> " = " <> ppMaude rm <> " [variant] ."
       where (lm,rm) = evalBindT ((,) <$>  lTermToMTerm' l <*> lTermToMTerm' r) noBindings
@@ -337,8 +343,8 @@ parseTerm msig = choice
                ]
    ]
   where
-    consSym = ("cons",(2,Public,Constructor))
-    nilSym  = ("nil",(0,Public,Constructor))
+    consSym = ("cons",(2,Public,Constructor,NotNDC))
+    nilSym  = ("nil",(0,Public,Constructor,NotNDC))
 
     parseFunSym ident args
       | op `elem` allowedfunSyms = replaceMinusFun op
@@ -348,16 +354,16 @@ parseTerm msig = choice
                   ++ show allowedfunSyms
       where
             special             = ident `elem` ["list", "cons", "nil" ]
-            (ident',priv,cnstr) = funSymDecode ident
+            (ident',priv,cnstr,ndc) = funSymDecode ident
             op                  = if special then
-                                        (ident , (length args,Public,Constructor))
-                                  else  (ident', (length args, priv, cnstr))
+                                        (ident , (length args,Public,Constructor,NotNDC))
+                                  else  (ident', (length args, priv, cnstr, ndc))
             allowedfunSyms = [consSym, nilSym, natOneSym]
                 ++ map replaceUnderscoreFun (S.toList $ noEqFunSyms msig)
 
-    parseFunACSym ident = replaceMinusFunAC (ident', (priv, cnstr))
+    parseFunACSym ident = replaceMinusFunAC (ident', (priv, cnstr, ndc))
       where
-        (ident',priv,cnstr) = funSymDecode ident
+        (ident',priv,cnstr,ndc) = funSymDecode ident
 
     parseConst s = lit <$> (flip MaudeConst s <$> decimal) <* string ")"
 

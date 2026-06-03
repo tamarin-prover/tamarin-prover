@@ -944,5 +944,5 @@ prettyDiffTheory ppSig ppCache ppRule ppDiffPrf ppPrf thy =
 prettyOpenRuleCache :: HighlightDocument d => OpenRuleCache -> d
 prettyOpenRuleCache = vcat . map prettyIntrRuleAC
 
-prettyOpenRuleCacheWithLimit :: HighlightDocument d => OpenRuleCache -> d
-prettyOpenRuleCacheWithLimit = vcat . map prettyIntrRuleACWithLimit
+prettyOpenRuleCacheWithLimitAndNDC :: HighlightDocument d => OpenRuleCache -> d
+prettyOpenRuleCacheWithLimitAndNDC = vcat . map prettyIntrRuleACWithLimitAndNDC

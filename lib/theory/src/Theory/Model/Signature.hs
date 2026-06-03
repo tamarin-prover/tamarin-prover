@@ -29,6 +29,7 @@ module Theory.Model.Signature
     toSignatureWithMaude,
     toSignaturePure,
     sigmMaudeHandle,
+    setNDCinSigWMaude,
 
     -- ** Pretty-printing
     prettySignaturePure,
@@ -45,7 +46,7 @@ import Data.Set qualified as S
 import System.IO.Unsafe (unsafePerformIO)
 import Term.LTerm
 import Term.Maude.Process (MaudeHandle, mhFilePath, mhMaudeSig, startMaude)
-import Term.Maude.Signature (MaudeSig, minimalMaudeSig, prettyMaudeSig, prettyMaudeSigExcept)
+import Term.Maude.Signature (MaudeSig, minimalMaudeSig, prettyMaudeSig, prettyMaudeSigExcept, setNDCinSig)
 import Theory.Text.Pretty
 
 -- | A theory signature.
@@ -111,6 +112,13 @@ toSignatureWithMaude maudePath sig = do
 -- | The pure signature of a 'SignatureWithMaude'.
 toSignaturePure :: SignatureWithMaude -> SignaturePure
 toSignaturePure sig = sig {_sigMaudeInfo = mhMaudeSig $ L.get sigMaudeInfo sig}
+
+setNDCinSigWMaude :: SignatureWithMaude -> FunSym -> NDCstate -> SignatureWithMaude
+setNDCinSigWMaude sig funSym ndcState = sig {_sigMaudeInfo = mh}
+  where
+    mh = (L.get sigMaudeInfo sig) {mhMaudeSig = setNDCinSig (mhMaudeSig $ L.get sigMaudeInfo sig) funSym ndcState}
+    
+
 
 {- TODO: There should be a finalizer in place such that as soon as the
    MaudeHandle is garbage collected, the appropriate command is sent to Maude
