@@ -104,6 +104,14 @@ import           Debug.Trace.Ignore
 ----------------------------------------------------------------------
 
 -- | @unifyLTerm sortOf eqs@ returns a complete set of unifiers for @eqs@ modulo AC.
+-- Almost always called at the concrete 'LNTerm' type from the @theory@ package;
+-- without an exposed unfolding GHC compiles the RWST plumbing of @unif@
+-- (sequence/execRWST/the writer monoid) once with dictionary passing, so we
+-- hint the 'Name' specialisation here.
+{-# INLINABLE unifyLTermFactored #-}
+{-# SPECIALIZE unifyLTermFactored
+      :: (Name -> LSort) -> [Equal LNTerm]
+      -> WithMaude (LNSubst, [SubstVFresh Name LVar]) #-}
 unifyLTermFactored :: (IsConst c)
                    => (c -> LSort)
                    -> [Equal (LTerm c)]
