@@ -90,6 +90,7 @@ module Theory.Proof (
   , prettyProof
   , prettyDiffProof
   , prettyProofWith
+  , prettyProofWithWrap
   , prettyDiffProofWith
 
   , showProofStatus
@@ -1057,9 +1058,23 @@ prettyProofWith :: HighlightDocument d
                 -> Proof a                 -- ^ The proof to prettify
                 -> d
 prettyProofWith prettyStep prettyCase =
+    prettyProofWithWrap prettyStep prettyCase (\_ d -> d)
+
+-- | Like 'prettyProofWith', but additionally wraps the rendering of every
+-- node's whole sub-proof with the given function (which receives that node's
+-- proof step). The web UI uses this to mark each sub-proof with an
+-- identifiable container, so that applying a proof method can replace just the
+-- affected sub-proof in place instead of re-rendering the whole lemma.
+prettyProofWithWrap :: HighlightDocument d
+                => (ProofStep a -> d)      -- ^ Make proof step pretty
+                -> (ProofStep a -> d -> d) -- ^ Make whole case pretty
+                -> (ProofStep a -> d -> d) -- ^ Wrap a node's whole sub-proof
+                -> Proof a                 -- ^ The proof to prettify
+                -> d
+prettyProofWithWrap prettyStep prettyCase wrapSub =
     ppPrf
   where
-    ppPrf (LNode ps cs) = ppCases ps (M.toList cs)
+    ppPrf (LNode ps cs) = wrapSub ps (ppCases ps (M.toList cs))
 
     ppCases ps@(ProofStep (Finished Solved) _) [] = prettyStep ps
     ppCases ps []                      = prettyCase ps (kwBy <> text " ")

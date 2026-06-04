@@ -29,6 +29,22 @@ var theory = {
      */
     extractTheoryPath : function(urlPath) {
         return urlPath.split("/").splice(5).join("/");
+    },
+
+    /**
+     * Rebuild a link's path against the *current* theory index (the single
+     * source of truth), optionally overriding the section. After a progressive
+     * update bumps the index, links in untouched lemmas still carry the older
+     * index in their href; resolving them through here keeps them correct
+     * without re-rendering the whole sidebar.
+     * @param href The original (absolute) href of the link.
+     * @param section Optional section override (e.g. "del/path"); when falsy
+     *                the link's existing section (segment 4) is kept.
+     * @return The absolute path against the current index.
+     */
+    reindex: function(href, section) {
+        var sec = section ? section : href.split("/")[4];
+        return this.absolutePath(sec, this.extractTheoryPath(href));
     }
 }
 
@@ -71,7 +87,11 @@ var server = {
      */
     handleJson: function(data, html) {
         // Parse resulting json
-        if(data.redirect) {
+        if(data.progress) {
+            // Progressive update: swap only the changed sidebar block and the
+            // main view in place, no full page reload.
+            progressUpdate.apply(data);
+        } else if(data.redirect) {
             // Server wants redirect
             loadingScreen.show(data.redirect);
             // Add the image query parameters so that the server response directly contains an image url with the correct parameters.
@@ -412,38 +432,16 @@ var ui = {
             "west",
             "div.ui-layout-west div.scroll-wrapper");
 
-        // Install handlers on plain internal links
-        events.installRelativeClickHandler(
-            "div#proof a.internal-link",
-            null,
-            null);
-
-        // FIXME: delete is disabled
-        // Install handlers on delete links
-        // events.installRelativeClickHandler(
-        //     "div#proof a.internal-link.delete-link",
-        //    "del/path",
-        //    null);
-
-        // Install handlers on proof-step links
-        events.installRelativeClickHandler(
-            "div#proof a.internal-link.proof-step",
-            null,
-            null
-            );
+        // Install click handlers on the proof-scripts sidebar (#proof). Kept in
+        // one place so a progressive update can re-bind them after swapping
+        // part of the sidebar.
+        events.bindProofHandlers();
 
         // Install click handlers on main
         events.installRelativeClickHandler(
             "div#ui-main-display a.internal-link",
             null,
             null);
-
-        // Install handlers on removal links
-        events.installRelativeClickHandler(
-            "div#proof a.internal-link.remove-step",
-            "del/path",
-            null
-            );
     },
 
     /**
@@ -563,9 +561,13 @@ var ui = {
      * @param target The path
      */
     setActiveLink: function(target) {
-        var selector = "a.internal-link[href='" + target + "']";
+        // Match by index-independent path (data-path) rather than the full
+        // href, so the active link is found even when its href still carries an
+        // older theory index after a progressive update. Scoped to #proof: the
+        // active link is a sidebar entry, and a main-view link can share a path.
+        var selector = "a.internal-link[data-path='" + theory.extractTheoryPath(target) + "']";
         $("a.active-link").removeClass("active-link");
-        $(selector).first().addClass("active-link");
+        $("#proof").find(selector).first().addClass("active-link");
     }
 
 }
@@ -617,23 +619,22 @@ var events = {
     /**
      * Install click handler for relative links.
      * @param selector The CSS selector to use.
+     * @param context  Optional jQuery root to scope the selector to (so a
+     *                 progressive update only re-binds the swapped region
+     *                 instead of walking the whole sidebar).
      */
-    installRelativeClickHandler: function(selector, section, callback) {
+    installRelativeClickHandler: function(selector, section, callback, context) {
+        var $els = context ? context.find(selector) : $(selector);
         // Remove (possible) old click handler(s)
-        $(selector).unbind('click');
+        $els.unbind('click');
         // Add new click handler
-        $(selector).click(function(ev) {
+        $els.click(function(ev) {
             ev.preventDefault();
 
-            // FIXME: always set the right link on the Haskell side
-            //        and get rid of section
-            path = $(this).attr("href");
-            if(section) {
-              // replace section in path
-              elementPath = $(this).attr("href").split("/");
-              elementPath[4] = section;
-              path = elementPath.join("/");
-            }
+            // Resolve the link against the *current* theory index (links in
+            // untouched lemmas may still carry an older index after a
+            // progressive update), optionally overriding the section.
+            path = theory.reindex($(this).attr("href"), section);
             // if is a call not from the toggle (the first time to enter in the lemma)
             if ($.cookie("not-init")== null) {
                 // show annotation auto-sources for lemma AUTO_typing
@@ -658,6 +659,22 @@ var events = {
                     if(callback) callback(element);
                 });
         });
+    },
+
+    /**
+     * (Re)install click handlers on the proof-scripts sidebar. Called at init
+     * (root defaults to #proof) and after a progressive update with the swapped
+     * node as root, so only the replaced region is re-bound rather than the
+     * whole sidebar. Replaced DOM nodes lose their handlers, so re-binding is
+     * required; untouched nodes keep their (still-valid, index-indirected) ones.
+     */
+    bindProofHandlers: function(root) {
+        var ctx = (root && root.length) ? root : $("#proof");
+        // All internal links (proof-step links are a subset that use the same
+        // null section, so the general bind covers them).
+        events.installRelativeClickHandler("a.internal-link", null, null, ctx);
+        // Removal links: rewritten to the del/path section at click time.
+        events.installRelativeClickHandler("a.internal-link.remove-step", "del/path", null, ctx);
     },
 
     /**
@@ -756,7 +773,9 @@ var proofScript = {
                 false,
                 // Success callback
                 function(data, textStatus) {
-                    var selector = "a.internal-link[href='" + data + "']";
+                    // 'data' is an absolute path returned by the server; match
+                    // the proof-step link by its index-independent path.
+                    var selector = "a.internal-link[data-path='" + theory.extractTheoryPath(data) + "']";
                     var link = element.find(selector);
 
                     if(link.length > 0) {
@@ -811,7 +830,7 @@ var proofScript = {
      */
     focusTarget: function(target) {
         var element = $("#proof");
-        var selector = "a.proof-step.[href='" + target + "']";
+        var selector = "a.proof-step[data-path='" + theory.extractTheoryPath(target) + "']";
         var link = element.find(selector)
         link.addClass("active-link");
         return link;
@@ -981,6 +1000,57 @@ var mainDisplay = {
             obj.removeClass('disabled-option');
             obj.addClass('active-option');
         }
+    }
+}
+
+/*-----------------------------------------------------------*
+ * Progressive (partial) updates                             *
+ *-----------------------------------------------------------*/
+
+var progressUpdate = {
+    /**
+     * Apply a progressive update returned by the server after a proof
+     * mutation. Instead of reloading the whole page, this:
+     *   - adopts the new theory index as the source of truth,
+     *   - swaps the changed region (sub-proof / lemma block / whole sidebar),
+     *   - swaps the main view,
+     *   - updates the history URL and active link, scrolling it into view.
+     * @param data JSON payload {newIdx, newPath, title, mainHtml, targetId,
+     *             subtreeKey, partHtml}.
+     */
+    apply: function(data) {
+        // The new theory snapshot is now the current one. Links rendered for
+        // older snapshots get reindexed to this value at click time.
+        theory.idx = String(data.newIdx);
+
+        // Swap the changed region in place and capture the new node, so handlers
+        // are re-bound only within the swapped region (not the whole sidebar).
+        var scope;
+        if(data.subtreeKey) {
+            var subSel = '#proof [data-subtree="' + data.subtreeKey + '"]';
+            $(subSel).first().replaceWith(data.partHtml);
+            scope = $(subSel).first();
+        } else if(data.targetId) {
+            $("#" + data.targetId).replaceWith(data.partHtml);
+            scope = $("#" + data.targetId);
+        } else {
+            $("#proof").html(data.partHtml);
+            scope = $("#proof");
+        }
+        events.bindProofHandlers(scope);
+
+        // Swap the main view (re-binds main-view handlers; the graph web
+        // component applies image settings from cookies on its own).
+        mainDisplay.setContent(data.title, data.mainHtml);
+
+        // Update history and active link, then bring the active step into view
+        // (as a full reload used to do via ui.init).
+        if(window.history && window.history.replaceState) {
+            window.history.replaceState(
+                {}, "", theory.absolutePath("overview", data.newPath));
+        }
+        ui.setActiveLink(theory.absolutePath("main", data.newPath));
+        proofScript.focusActive();
     }
 }
 

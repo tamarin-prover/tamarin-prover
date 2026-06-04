@@ -18,6 +18,10 @@ module Web.Theory
   , titleThyPath
   , titleDiffThyPath
   , theoryIndex
+  , htmlTheoryIndex
+  , htmlSingleLemmaUpdate
+  , ProgressTarget(..)
+  , urlPathSuffix
   , diffTheoryIndex
   , nextThyPath
   , nextDiffThyPath
@@ -42,7 +46,7 @@ import Debug.Trace (trace)
 import Control.Basics
 import Control.Concurrent           (threadDelay)
 
-import Data.Char (toUpper)
+import Data.Char (toUpper, isSpace)
 import Data.List
 import Data.Map qualified as M
 import Data.Maybe
@@ -207,10 +211,22 @@ linkToPath :: HtmlDocument d
            -> [String]    -- ^ Additional class
            -> d           -- ^ Document that carries the link.
            -> d
-linkToPath renderUrl route cls = withTag "a" [("class", classes), ("href", linkPath)]
+linkToPath renderUrl route cls =
+    withTag "a" [("class", classes), ("href", linkPath), ("data-path", dataPath)]
   where
-    classes = unwords $ "internal-link" : cls
-    linkPath = T.unpack $ renderUrl route
+    classes   = unwords $ "internal-link" : cls
+    linkPathT = renderUrl route
+    linkPath  = T.unpack linkPathT
+    -- Index-independent path suffix lets the client match and activate links by
+    -- path even when an untouched lemma's href still carries an older theory
+    -- index (see the progressive-update logic in tamarin-prover-ui.js).
+    dataPath  = T.unpack $ urlPathSuffix linkPathT
+
+-- | The index-independent path suffix of a rendered theory URL, mirroring the
+-- client's @theory.extractTheoryPath@: drop the leading @""@, @"thy"@,
+-- @"<type>"@, @"<idx>"@ and @"<section>"@ segments.
+urlPathSuffix :: T.Text -> T.Text
+urlPathSuffix = T.intercalate "/" . drop 5 . T.splitOn "/"
 
 -- | Output some preformatted text.
 preformatted :: HtmlDocument d => Maybe String -> d -> d
@@ -228,9 +244,17 @@ proofIndex :: HtmlDocument d
            -> Proof (Maybe System, ProofStepColor) -- ^ The annotated incremental proof
            -> d
 proofIndex l tidx renderUrl mkRoute =
-    prettyProofWith ppStep ppCase . insertPaths
+    prettyProofWithWrap ppStep ppCase wrapSub . insertPaths
   where
     ppCase step = markStatus (fst $ psInfo step)
+
+    -- Wrap each node's whole sub-proof in an identifiable, layout-transparent
+    -- container (key = the node's index-independent proof path), so a single
+    -- sub-proof can be replaced in place on a proof step. See 'CSS .proof-subtree'.
+    wrapSub step = withTag "span"
+        [ ("class", "proof-subtree")
+        , ("data-subtree", subtreeKey (snd $ psInfo step)) ]
+    subtreeKey pp = T.unpack $ urlPathSuffix $ renderUrl (mkRoute pp)
 
     ppStep step =
            case fst $ psInfo step of
@@ -367,6 +391,31 @@ diffLemmaIndex renderUrl tidx l =
     mkRoute proofPath = TheoryPathDiffMR tidx (DiffTheoryDiffProof l._lDiffName proofPath)
 
 
+-- | DOM id of a lemma block, by its ordinal in 'getLemmas'. The producer
+-- ('lemmaIndexBlock') and the consumer ('htmlSingleLemmaUpdate', which sends
+-- this id as the client's @replaceWith@ target) must agree, so both go through
+-- this one definition.
+lemmaBlockId :: Int -> String
+lemmaBlockId ordinal = "lemma-block-" ++ show ordinal
+
+-- | Wrap a single lemma's index in an identifiable, layout-transparent DOM
+-- block, so a progressive update can replace exactly one lemma without
+-- re-rendering the whole sidebar. The ordinal is the lemma's position in
+-- 'getLemmas' and must agree between a full render (see 'theoryIndex') and a
+-- later single-lemma render (see 'htmlSingleLemmaUpdate'). The wrapping @div@ is
+-- made @display: inline@ in the stylesheet so it adds no visual change.
+lemmaIndexBlock :: HtmlDocument d
+                => RenderUrl
+                -> TheoryIdx
+                -> Int                      -- ^ The lemma's ordinal in 'getLemmas'
+                -> Lemma IncrementalProof
+                -> d
+lemmaIndexBlock renderUrl tidx ordinal l =
+    withTag "div" [ ("class", "lemma-index")
+                  , ("id", lemmaBlockId ordinal)
+                  , ("data-lemma-name", l._lName) ]
+                  (lemmaIndex renderUrl tidx l)
+
 -- | Render the theory index.
 theoryIndex :: HtmlDocument d => RenderUrl -> TheoryIdx -> ClosedTheory -> d
 theoryIndex renderUrl tidx thy = foldr1 ($-$)
@@ -391,9 +440,10 @@ theoryIndex renderUrl tidx thy = foldr1 ($-$)
     , kwEnd
     ]
   where
-    lemmaIndex' = lemmaIndex renderUrl tidx
-
-    lemmas         = map lemmaIndex' (getLemmas thy)
+    -- Each lemma is wrapped in an identifiable block (see 'lemmaIndexBlock') so
+    -- progressive updates can swap one lemma's subtree in place. Ordinals must
+    -- match 'htmlSingleLemmaUpdate', which also indexes into 'getLemmas'.
+    lemmas = zipWith (lemmaIndexBlock renderUrl tidx) [0..] (getLemmas thy)
     rules          = getClassifiedRules thy
     rulesInfo      = parens $ int $ length rules._crProtocol
     casesInfo kind =
@@ -414,6 +464,117 @@ theoryIndex renderUrl tidx thy = foldr1 ($-$)
     tacticLink          = overview "Tactic(s)" (text "") TheoryTactic
 
     reqCasesLink name k = overview name (casesInfo k) (TheorySource k 0 0)
+
+-- | Render the entire proof-scripts sidebar to HTML. Used for progressive
+-- updates that change the set of lemmas (e.g. prove-all or lemma removal),
+-- where a single-lemma swap is not enough.
+htmlTheoryIndex :: RenderUrl -> TheoryIdx -> ClosedTheory -> Html
+htmlTheoryIndex renderUrl tidx thy =
+    preEscapedToMarkup $ renderHtmlDoc $ theoryIndex renderUrl tidx thy
+
+-- | Drop the single trailing @<br/>@ that 'renderHtmlDoc' appends after a
+-- block's final line. The inter-lemma separators live *outside* the lemma
+-- blocks in the sidebar DOM, so a block swapped in via @replaceWith@ must not
+-- carry its own trailing break — otherwise each in-place replacement would
+-- accumulate one extra line of vertical space.
+dropTrailingBreak :: String -> String
+dropTrailingBreak s =
+    let trimmed = dropWhileEnd isSpace s
+    in if "<br/>" `isSuffixOf` trimmed
+         then dropWhileEnd isSpace (take (length trimmed - 5) trimmed)
+         else trimmed
+
+-- | What a progressive sidebar update should replace in the DOM.
+data ProgressTarget
+  = ReplaceLemma   T.Text Html   -- ^ replace @#\<id\>@ (a whole lemma block)
+  | ReplaceSubtree T.Text Html   -- ^ replace @[data-subtree="\<key\>"]@ (one sub-proof)
+  | ReplaceSidebar Html          -- ^ replace the whole @#proof@ sidebar
+
+-- | Compute the minimal progressive update for a single-lemma change whose
+-- mutation acted at proof path @p@.
+--
+-- We diff the proof-step colours of the old and new proofs along @p@. The
+-- highest ancestor whose colour changed dictates how much must be re-rendered:
+-- we replace its /parent's/ sub-proof, so the @case:@ header that displays that
+-- colour is included. If the root colour changed (or anything is amiss) we fall
+-- back to replacing the whole lemma block, which also carries the lemma-header
+-- colour. Otherwise — the common case of expanding a sorry deep in a proof — we
+-- replace just the affected sub-proof, extracted byte-for-byte from the freshly
+-- rendered block so indentation and colours match the in-context rendering
+-- exactly.
+htmlSingleLemmaUpdate
+  :: RenderUrl
+  -> TheoryIdx
+  -> ClosedTheory   -- ^ old theory (for the colour diff)
+  -> ClosedTheory   -- ^ new theory
+  -> String         -- ^ lemma name
+  -> ProofPath      -- ^ proof path that was acted on
+  -> ProgressTarget
+htmlSingleLemmaUpdate renderUrl tidx oldThy newThy name p =
+    case find ((name ==) . (._lName) . snd) (zip [0 ..] (getLemmas newThy)) of
+      Nothing -> ReplaceSidebar (htmlTheoryIndex renderUrl tidx newThy) -- lemma vanished
+      Just (ordinal, newL) ->
+        let tid        = T.pack (lemmaBlockId ordinal)
+            blockStr   = renderHtmlDoc $ lemmaIndexBlock renderUrl tidx ordinal newL
+            wholeLemma = ReplaceLemma tid (preEscapedToMarkup (dropTrailingBreak blockStr))
+        in case swapPath newL of
+             Nothing -> wholeLemma
+             Just a  ->
+               let key = urlPathSuffix $ renderUrl (mkRoute a)
+               in case extractSubtreeSpan key (T.pack blockStr) of
+                    Just spanT -> ReplaceSubtree key (preEscapedToMarkup (T.unpack spanT))
+                    Nothing    -> wholeLemma
+  where
+    mkRoute pp = TheoryPathMR tidx (TheoryProof name pp)
+
+    -- The sub-proof path to replace: 'Nothing' => fall back to the whole lemma
+    -- block (lemma not in old theory, or the root proof colour changed so the
+    -- lemma header must be refreshed too).
+    swapPath newL = do
+      oldL <- lookupLemma name oldThy
+      let oldAnn = annotateLemmaProof oldL
+          newAnn = annotateLemmaProof newL
+          colourAt ann path = (snd . psInfo . root) <$> atPath ann path
+          changed path = colourAt oldAnn path /= colourAt newAnn path
+      case filter changed (inits p) of
+        []    -> Just p                          -- only the structure at P changed
+        (c:_) | null c    -> Nothing             -- root colour changed -> whole lemma
+              | otherwise -> Just (init c)       -- parent of highest colour-changed node
+
+-- | Extract the balanced @\<span class="proof-subtree" data-subtree="key"\>…\</span\>@
+-- from a rendered block, byte-for-byte. 'Nothing' if not found / unbalanced.
+extractSubtreeSpan :: T.Text -> T.Text -> Maybe T.Text
+extractSubtreeSpan key html =
+    let open          = "<span class=\"proof-subtree\" data-subtree=\"" <> key <> "\">"
+        (_, fromOpen) = T.breakOn open html
+    in if T.null fromOpen
+         then Nothing
+         else (\body -> open <> body <> "</span>")
+                <$> balancedSpanBody (T.drop (T.length open) fromOpen)
+
+-- | Given the text immediately after an opening @\<span …\>@ (nesting depth 1),
+-- return the text up to (but excluding) the matching @\</span\>@, accounting for
+-- nested spans. 'Nothing' if the spans are unbalanced. Linear in the body
+-- length: we carry the remaining suffix forward rather than re-slicing @t@ from
+-- the front on every step.
+balancedSpanBody :: T.Text -> Maybe T.Text
+balancedSpanBody t = go (1 :: Int) 0 t
+  where
+    -- Offset of @needle@ within @rest@, or 'Nothing' if absent.
+    nextIx needle rest =
+      let (before, after) = T.breakOn needle rest
+      in if T.null after then Nothing else Just (T.length before)
+    -- depth: open spans still to close; consumed: absolute offset of @rest@ in @t@.
+    go depth consumed rest =
+      case (nextIx "<span" rest, nextIx "</span>" rest) of
+        (_, Nothing)      -> Nothing
+        (Just o, Just c)
+          | o < c         -> go (depth + 1) (consumed + o + 5) (T.drop (o + 5) rest)
+          | otherwise     -> atClose depth consumed c rest     -- length "<span"
+        (Nothing, Just c) -> atClose depth consumed c rest
+    atClose depth consumed c rest
+      | depth <= 1 = Just (T.take (consumed + c) t)
+      | otherwise  = go (depth - 1) (consumed + c + 7) (T.drop (c + 7) rest)  -- "</span>"
 
 -- | Render the theory index.
 diffTheoryIndex :: HtmlDocument d => RenderUrl -> TheoryIdx -> ClosedDiffTheory -> d
@@ -2163,6 +2324,7 @@ markStatusDiff (Just _,  Unmarked) = id
 
 
 data ProofStepColor = Unmarked | Green | Red | Yellow
+  deriving (Eq, Show)
 
 -- | Annotate a proof for pretty printing.
 -- The boolean flag indicates that the given proof step's children

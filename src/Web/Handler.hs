@@ -102,6 +102,7 @@ import Theory.Proof
   , LTree(..)
   , ProofStep(..)
   , ProofMethod(..)
+  , ProofPath
   )
 
 import Web.Hamlet
@@ -627,6 +628,15 @@ responseToJson = go
     go (JsonHtml title content) = object
       [ "html"  .= contentToJson content
       , "title" .= title ]
+    go (JsonProgress d)         = object
+      [ "progress"   .= True
+      , "newIdx"     .= d.jpNewIdx
+      , "newPath"    .= d.jpNewPath
+      , "title"      .= d.jpTitle
+      , "mainHtml"   .= contentToJson d.jpMainHtml
+      , "targetId"   .= d.jpTargetId
+      , "subtreeKey" .= d.jpSubtreeKey
+      , "partHtml"   .= contentToJson d.jpPartHtml ]
 
     contentToJson (ContentBuilder b _) = toJSON $ TLE.decodeUtf8 $ B.toLazyByteString b
     contentToJson _ = error "Unsupported content format in json response!"
@@ -726,22 +736,55 @@ formHandler title formlet template success = do
 -}
 
 
--- | Modify a theory, redirect if successful.
+-- | How much of the proof-scripts sidebar a mutation affects, and hence how
+-- much of it a progressive response must re-render.
+data ProgressScope
+  = SingleLemma String ProofPath
+      -- ^ A change within one lemma's proof, at the given proof path. The
+      --   response narrows to just the affected sub-proof when possible.
+  | WholeSidebar
+      -- ^ The set or status of lemmas changed (prove-all, removal)
+
+-- | Modify a theory. On success, return a progressive update (the new theory
+-- index, the changed sidebar block, and the new main view) so the client can
+-- swap only what changed instead of reloading the whole page.
 modifyTheory
   :: TheoryInfo                                -- ^ Theory to modify
   -> (ClosedTheory -> IO (Maybe ClosedTheory)) -- ^ Function to apply
   -> (ClosedTheory -> TheoryPath)              -- ^ Compute the new path
   -> JsonResponse                              -- ^ Response on failure
+  -> ProgressScope                             -- ^ How much of the sidebar changed
   -> Handler Value
-modifyTheory ti f fpath errResponse = do
+modifyTheory ti f fpath errResponse scope = do
   res <- evalInThread (liftIO $ f ti.theory)
   case res of
     Left e           -> pure (excResponse e)
     Right Nothing    -> pure (responseToJson errResponse)
     Right (Just thy) -> do
       newThyIdx <- putTheory (Just ti) Nothing thy ti.errorsHtml
-      newUrl <- getUrlRender <*> pure (InteractiveOverviewR newThyIdx (fpath thy))
-      pure . responseToJson $ JsonRedirect newUrl
+      renderUrl <- getUrlRender
+      let newPath   = fpath thy
+          -- Only the index and theory matter for rendering the new main view.
+          newTi     = ti { index = newThyIdx, theory = thy }
+          mainHtml  = htmlThyPath renderUrl renderUrl newTi newPath ""
+          title     = T.pack $ titleThyPath thy newPath
+          newPathSx = urlPathSuffix $ renderUrl (InteractiveOverviewR newThyIdx newPath)
+          target = case scope of
+            WholeSidebar       -> ReplaceSidebar (htmlTheoryIndex renderUrl newThyIdx thy)
+            SingleLemma nm p   -> htmlSingleLemmaUpdate renderUrl newThyIdx ti.theory thy nm p
+          (targetId, subtreeKey, partHtml) = case target of
+            ReplaceSubtree key h -> (Nothing,  Just key, h)
+            ReplaceLemma   tid h -> (Just tid, Nothing,  h)
+            ReplaceSidebar     h -> (Nothing,  Nothing,  h)
+      pure . responseToJson $ JsonProgress JsonProgressData
+        { jpNewIdx     = newThyIdx
+        , jpNewPath    = newPathSx
+        , jpTitle      = title
+        , jpMainHtml   = toContent mainHtml
+        , jpTargetId   = targetId
+        , jpSubtreeKey = subtreeKey
+        , jpPartHtml   = toContent partHtml
+        }
   where
    excResponse e = responseToJson
                      (JsonAlert $ "Last request failed with exception: " <> T.pack (show e))
@@ -1014,6 +1057,7 @@ getTheoryPathMR idx path = do
             (\thy -> pure $ applyMethodAtPath thy lemma proofPath ti.autoProver i)
             (\thy -> nextSmartThyPath thy (TheoryProof lemma proofPath))
             (JsonAlert "Sorry, but the prover failed on the selected method!")
+            (SingleLemma lemma proofPath)
 
         go renderUrl curr_path ti = do
           let title = T.pack $ titleThyPath ti.theory curr_path
@@ -1066,6 +1110,7 @@ getProverR (name, mkProver) idx path = do
         (\thy -> pure $ applyProverAtPath thy lemma proofPath autoProver)
         (`nextSmartThyPath` path)
         (JsonAlert $ "Sorry, but " <> name <> " failed!")
+        (SingleLemma lemma proofPath)
       where
         autoProver = mkProver ti.autoProver
 
@@ -1084,6 +1129,7 @@ getProverAllR (name, mkProver) idx = do
         proveAll
         (\thy -> nextSmartThyPath thy (TheoryProof (last $ names thy) []))
         (JsonAlert $ "Sorry, but " <> name <> " failed!")
+        WholeSidebar
       where
         names thy = (._lName) <$> getLemmas thy
         autoProver = mkProver ti.autoProver
@@ -1593,12 +1639,14 @@ getDeleteStepR idx path = do
       (pure . removeLemma lemma)
       (const path)
       (JsonAlert "Sorry, but removing the selected lemma failed!")
+      WholeSidebar
 
     go (TheoryProof lemma proofPath) ti = modifyTheory ti
       (\thy -> pure $
           applyProverAtPath thy lemma proofPath (sorryProver (Just "removed")))
       (const path)
       (JsonAlert "Sorry, but removing the selected proof step failed!")
+      (SingleLemma lemma proofPath)
 
     go _ _ = pure . responseToJson $ JsonAlert
       "Can't delete the given theory path!"
