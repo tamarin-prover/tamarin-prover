@@ -101,10 +101,18 @@ applyLit subst v@(Var i)  = fromMaybe (lit v) $ M.lookup i (sMap subst)
 applyLit _     c@(Con _)  = lit c
 
 -- | @applyVTerm subst t@ applies the substitution @subst@ to the term @t@.
+--
+-- This is one of the hottest functions in the constraint solver and is called
+-- almost exclusively at the concrete 'LNTerm' type from a different package
+-- (@theory@), so GHC seems to miss the change to specialise that case without
+-- an added hint here.
+{-# INLINABLE applyVTerm #-}
+{-# SPECIALIZE applyVTerm :: LNSubst -> LNTerm -> LNTerm #-}
 applyVTerm :: (IsConst c, IsVar v) => Subst c v -> VTerm c v -> VTerm c v
 applyVTerm = applyVTermProj applyLit
 
 -- | Variant of @applyVTerm@ with custom function to apply literals
+{-# INLINABLE applyVTermProj #-}
 applyVTermProj :: Ord a => (t1 -> t2 -> Term a) -> t1 -> Term t2 -> Term a
 applyVTermProj f subst t = case viewTerm t of
     Lit l            -> f subst l
@@ -118,6 +126,7 @@ applyVTermProj f subst t = case viewTerm t of
 ----------------------------------------------------------------------
 
 -- | Convert a list to a substitution. The @x/x@ mappings are removed.
+{-# INLINABLE substFromList #-}
 substFromList :: IsVar v => [(v, VTerm c v)] -> Subst c v
 substFromList xs  =
     Subst (M.fromList [ (v,t) | (v,t) <- xs, not (equalToVar t v) ])
@@ -129,6 +138,7 @@ equalToVar _                          _ = False
 
 -- | Convert a map to a substitution. The @x/x@ mappings are removed.
 -- FIXME: implement directly, use substFromMap for substFromList.
+{-# INLINABLE substFromMap #-}
 substFromMap :: IsVar v => Map v (VTerm c v) -> Subst c v
 substFromMap = Subst . M.filterWithKey (\v t -> not $ equalToVar t v)
 
@@ -219,8 +229,10 @@ instance Sized (Subst c v) where
 ------------
 
 instance Ord c => HasFrees (LSubst c) where
+    {-# INLINABLE foldFrees #-}
     foldFrees  f = foldFrees f . sMap
     foldFreesOcc = mempty -- we ignore occurences in substitutions for now
+    {-# INLINABLE mapFrees #-}
     mapFrees   f = (substFromList <$>) . mapFrees   f . substToList
 
 -- | Types that support the application of some type

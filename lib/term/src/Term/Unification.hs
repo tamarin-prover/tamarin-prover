@@ -227,6 +227,12 @@ solveMatchLNTerm = solveMatchLTerm sortOfName
 type UnifyRaw c = RWST (c -> LSort) [Equal (LTerm c)] (Map LVar (VTerm c LVar)) Maybe
 
 -- | Unify two 'LTerm's with delayed AC-unification.
+--
+-- This is the innermost loop of free unification and is called only at the
+-- concrete 'Name' constant type. Exposing the unfolding (INLINABLE) and forcing
+-- a 'Name'-specialised copy seems to help GHC optimise.
+{-# INLINABLE unifyRaw #-}
+{-# SPECIALIZE unifyRaw :: LNTerm -> LNTerm -> UnifyRaw Name () #-}
 unifyRaw :: IsConst c => LTerm c -> LTerm c -> UnifyRaw c ()
 unifyRaw l0 r0 = do
     mappings <- get
@@ -290,6 +296,9 @@ instance Monoid MatchFailure where
 
 -- | Ensure that the computed substitution @sigma@ satisfies
 -- @t ==_AC apply sigma p@ after the delayed equations are solved.
+{-# INLINABLE matchRaw #-}
+{-# SPECIALIZE matchRaw :: (Name -> LSort) -> LNTerm -> LNTerm
+                        -> ExceptT MatchFailure (State (Map LVar LNTerm)) () #-}
 matchRaw :: IsConst c
          => (c -> LSort)
          -> LTerm c -- ^ Term @t@
@@ -324,6 +333,7 @@ matchRaw sortOf t p = do
 
 -- | @sortGreaterEq v t@ returns @True@ if the sort ensures that the sort of @v@ is greater or equal to
 --   the sort of @t@.
+{-# INLINABLE sortGeqLTerm #-}
 sortGeqLTerm :: IsConst c => (c -> LSort) -> LVar -> LTerm c -> Bool
 sortGeqLTerm st v t = do
     case (lvarSort v, sortOfLTerm st t) of
