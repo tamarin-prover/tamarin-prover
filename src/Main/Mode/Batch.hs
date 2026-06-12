@@ -117,7 +117,7 @@ run thisMode as
       versionData <- ensureMaudeAndGetVersion as
       resTimed <- mapM (timedIO . processThy versionData) inFiles
       let (docs, reps, times) = unzip3 $ fmap (\((d, r), t) -> (d, r, t)) resTimed
-
+      
       if writeOutput then do
         let maybeOutFiles = mapM mkOutPath inFiles
         outFiles <- case maybeOutFiles of
@@ -205,20 +205,20 @@ run thisMode as
         (report, thy') <- closeTheory versionData thyLoadOptions sig' thy
         case thy' of
           Left thy'' -> do
-            liftIO $ outputPartialDeconstructionDots thy''
+            case findArg "partialDeconstructionsDot" as of
+              Just dir -> liftIO $ outputPartialDeconstructionDots dir thy''
+              Nothing  -> return ()
             pure (ppWf report Pretty.$--$ prettyPrecomputation thy'', ppWf report)
-          Right thy'' -> do
+          Right thy'' ->
             pure (ppWf report Pretty.$--$ prettyDiffPrecomputation thy'', ppWf report)
-    
-      -- | Translate and check thoery based on specified output module.
+
+      -- | Translate and check theory based on specified output module.
       else if isTranslateOnlyMode then do
         (report, thy') <- translateAndCheckTheory versionData thyLoadOptions sig' thy
-
         -- comment: Not sure why this was needed. It just duplicates all comments in the theory.
         -- let thy'' = bimap (modify thyItems (++ (TextItem <$> formalComments thy')))
         --                   (modify diffThyItems (++ (DiffTextItem <$> formalComments thy')))
         --                   thy'
-
         (, ppWf report) <$> either (liftIO . prettyOpenTheoryByModule thyLoadOptions)
                                    (pure . prettyOpenDiffTheory)
                                    thy'
@@ -226,11 +226,12 @@ run thisMode as
       -- | Close and potentially prove theory.
       else do
         (report, thy') <- closeTheory versionData thyLoadOptions sig' thy
-        _ <- liftIO $ bitraverse
-          (\t -> outputTraces t >> outputPartialDeconstructionDots t)
-          (const $ return ())
-          thy'
-
+        _ <- liftIO $ bitraverse outputTraces (const $ return ()) thy'
+        case findArg "partialDeconstructionsDot" as of
+          Just dir -> liftIO $ case thy' of
+            Left  t -> outputPartialDeconstructionDots dir t
+            Right _ -> return ()
+          Nothing  -> return ()
         pure $
           either (\t -> (prettyClosedTheory t,     ppWf report Pretty.$--$ prettyClosedSummary t))
                  (\d -> (prettyClosedDiffTheory d, ppWf report Pretty.$--$ prettyClosedDiffSummary d))
@@ -250,118 +251,116 @@ run thisMode as
         ppWf []  = Pretty.emptyDoc
         ppWf rep = Pretty.vcat $
           Pretty.text ("WARNING: " ++ show (length rep) ++ " wellformedness check failed!")
-          : [ Pretty.text   "         The analysis results might be wrong!" | thyLoadOptions.proveMode ]
+          : [ Pretty.text "         The analysis results might be wrong!" | thyLoadOptions.proveMode ]
 
-        outputPartialDeconstructionDots :: ClosedTheory -> IO ()
-        outputPartialDeconstructionDots thy =
-          case findArg "partialDeconstructionsDot" as of
-            Nothing  -> pure ()
-            Just dir -> do
-              createDirectoryIfMissing True dir
-              let graphOptions  = defaultGraphOptions
-                  dotOptions    = defaultDotOptions
-                  sources       = getSource RefinedSource thy
-                  pdSources     = filter isPartialDeconstruction sources
-                  indexedCases  =
-                    [ (srcIdx, caseIdx, src, names, system)
-                    | (srcIdx, src)              <- zip [1::Int ..] pdSources
-                    , (caseIdx, (names, system)) <- zip [1::Int ..] (getDisj (L.get cdCases src))
-                    , let unsolvedInThisCase = unsolvedChainConstraints src !! (caseIdx - 1)
-                    , unsolvedInThisCase > 0
-                    ]
+    -- | Serialize partial deconstruction constraint systems as dot files into dir.
+    -- Only cases with unsolved chain constraints are written.
+    outputPartialDeconstructionDots :: FilePath -> ClosedTheory -> IO ()
+    outputPartialDeconstructionDots dir thy = do
+      createDirectoryIfMissing True dir
+      let graphOptions = defaultGraphOptions
+          dotOptions   = defaultDotOptions
+          sources      = getSource RefinedSource thy
+          -- Zip cases and their unsolved-chain counts in one pass so that
+          -- unsolvedChainConstraints is evaluated only once per source.
+          indexedCases =
+            [ (srcIdx, caseIdx, src, names, system, unsolvedInThisCase)
+            | (srcIdx, src) <- zip [1::Int ..] sources
+            , let casesWithUnsolved = zip (getDisj (L.get cdCases src))
+                                         (unsolvedChainConstraints src)
+            , (caseIdx, ((names, system), unsolvedInThisCase))
+                <- zip [1::Int ..] casesWithUnsolved
+            , unsolvedInThisCase > 0
+            ]
+      mapM_ (\(srcIdx, caseIdx, src, names, system, unsolvedInThisCase) -> do
+        let goal     = L.get cdGoal src
+            caseName = if null names then "unnamed" else intercalate "_" names
+            label    = "pd_" ++ show srcIdx ++ "_" ++ show caseIdx ++ "_" ++ caseName
+            outFile  = dir </> label ++ ".dot"
+            meta     = unlines
+              [ "// ========================================"
+              , "// Partial Deconstruction - Meta Information"
+              , "// ========================================"
+              , "// Source index:       " ++ show srcIdx
+              , "// Case index:         " ++ show caseIdx
+              , "// Case names:         " ++ intercalate ", " names
+              , "// Goal:               " ++ show goal
+              , "// Total cases in src: " ++ show (length (getDisj (L.get cdCases src)))
+              , "// Unsolved chains:    " ++ show unsolvedInThisCase
+              , "// ========================================"
+              ]
+            content  = meta ++ D.showDot label (dotSystemCompact graphOptions dotOptions system)
+        writeFile outFile content
+        ) indexedCases
 
-              mapM_ (\(srcIdx, caseIdx, src, names, system) -> do
-                let goal         = L.get cdGoal src
-                    unsolvedPerCase = unsolvedChainConstraints src
-                    caseName     = if null names then "unnamed" else intercalate "_" names
-                    label        = "pd_" ++ show srcIdx ++ "_" ++ show caseIdx ++ "_" ++ caseName
-                    outFile      = dir </> label ++ ".dot"
-                    meta         = unlines
-                      [ "// ========================================"
-                      , "// Partial Deconstruction - Meta Information"
-                      , "// ========================================"
-                      , "// Source index:       " ++ show srcIdx
-                      , "// Case index:         " ++ show caseIdx
-                      , "// Case names:         " ++ intercalate ", " names
-                      , "// Goal:               " ++ show goal
-                      , "// Total cases in src: " ++ show (length (getDisj (L.get cdCases src)))
-                      , "// Unsolved chains:    " ++ show unsolvedPerCase
-                      , "// ========================================"
-                      ]
-                    content      = meta ++ D.showDot label (dotSystemCompact graphOptions dotOptions system)
+    -- | Output any found traces of the analyzed theory in dot/JSON format if the
+    -- corresponding command line option is set.
+    -- The output is dumped into a single file per format. Multiple dot graphs are
+    -- simply concatenated into a single file, while the JSON schema already allows
+    -- for multiple graphs.
+    outputTraces :: ClosedTheory -> IO ()
+    outputTraces thy = do
+      let graphOptions = defaultGraphOptions
+          dotOptions = defaultDotOptions
+          serializeDot (label, system) = D.showDot label $ dotSystemCompact graphOptions dotOptions system
+          serializeJSON = sequentsToJSONPretty graphOptions
+          labelledSystems = map (\(lemma, proof, system) ->
+            let label = traceOutputLabel graphOptions dotOptions lemma proof in
+              (label, system)) systemsWithMetadata
 
-                writeFile outFile content
-                ) indexedCases
-          where
-            isPartialDeconstruction :: Source -> Bool
-            isPartialDeconstruction src = any (> 0) (unsolvedChainConstraints src)
+      case findArg "traceDot" as of
+        Nothing -> pure ()
+        Just outfile ->
+          let serialized = intercalate "\n" $ map serializeDot labelledSystems in
+            writeFile outfile serialized
 
-        -- | Output any found traces of the analyzed theory in dot/JSON format if the corresponing command line option is set.
-        -- The output is dumped into a single file per format. Multiple dot graphs are simply concatenated into a single file,
-        -- while the JSON schema already allows for multiple graphs.
-        outputTraces :: ClosedTheory -> IO ()
-        outputTraces thy = do
-            let graphOptions = defaultGraphOptions
-                dotOptions = defaultDotOptions
-                serializeDot (label, system) = D.showDot label $ dotSystemCompact graphOptions dotOptions system
-                serializeJSON = sequentsToJSONPretty graphOptions
-                labelledSystems = map (\(lemma, proof, system) ->
-                  let label = traceOutputLabel graphOptions dotOptions lemma proof in
-                  (label, system)) systemsWithMetadata
+      case findArg "traceJSON" as of
+        Nothing -> pure ()
+        Just outfile ->
+          let serialized = serializeJSON labelledSystems in
+            writeFile outfile serialized
+      where
+        -- | Collect all solved (i.e. a trace was found) systems of the theory along with their
+        -- path in the proof and the lemma in which they appear in the given theory.
+        systemsWithMetadata :: [(Lemma IncrementalProof, ProofPath, System)]
+        systemsWithMetadata = do
+          lemma <- getLemmas thy
+          let proof = lemma._lProof
+          [(lemma, proofPath, system) | (proofPath, system) <- proofSystems proof]
 
-            case findArg "traceDot" as of
-              Nothing -> pure ()
-              Just outfile ->
-                let serialized = intercalate "\n" $ map serializeDot labelledSystems in
-                writeFile outfile serialized
+        -- | Collect all solved (i.e. a trace was found) systems of the theory along with their
+        -- path in the proof.
+        proofSystems :: IncrementalProof -> [(ProofPath, System)]
+        proofSystems (LNode (ProofStep (Finished Solved) (Just rootSystem)) _) =  [([], rootSystem)]
+        proofSystems (LNode (ProofStep _ _) children) =
+          [(l : ls, system) | (l, subProof) <- M.toList children
+                            , (ls, system) <- proofSystems subProof ]
 
-            case findArg "traceJSON" as of
-              Nothing -> pure ()
-              Just outfile ->
-                let serialized = serializeJSON labelledSystems in
-                writeFile outfile serialized
-          where
-            -- | Collect all solved (i.e. a trace was found) systems of the theory along with their
-            -- path in the proof and the lemma in which they appear in the given theory.
-            systemsWithMetadata :: [(Lemma IncrementalProof, ProofPath, System)]
-            systemsWithMetadata = do
-              lemma <- getLemmas thy
-              let proof = lemma._lProof
-              [(lemma, proofPath, system) | (proofPath, system) <- proofSystems proof]
+        -- | Make a label for use in the trace output out of all relevant information for a constraint system.
+        traceOutputLabel :: GraphOptions
+                         -> DotOptions
+                         -> Lemma IncrementalProof
+                         -> ProofPath
+                         -> String
+        traceOutputLabel graphOptions dotOptions lemma proofPath =
+          "trace_"
+          ++ thy._thyName                              -- Name of the theory in which the constraint system appears.
+          ++ "_"
+          ++ traceLabelOptions graphOptions dotOptions -- Graph options are included in a short format.
+          ++ "_"
+          ++ lemma._lName                              -- Name of the lemma in which the constraint system appears.
+          ++ intercalate "-" proofPath                 -- Path through the proof where the constraint system is located.
 
-            -- | Collect all solved (i.e. a trace was found) systems of the theory along with their
-            -- path in the proof.
-            proofSystems :: IncrementalProof -> [(ProofPath, System)]
-            proofSystems (LNode (ProofStep (Finished Solved) (Just rootSystem)) _) =  [([], rootSystem)]
-            proofSystems (LNode (ProofStep _ _) children) =  
-              [(l : ls, system) | (l, subProof) <- M.toList children 
-                                , (ls, system) <- proofSystems subProof ]
-
-            -- | Make a label for use in the trace output out of all relevant information for a constraint system.
-            traceOutputLabel :: GraphOptions
-                             -> DotOptions
-                             -> Lemma IncrementalProof
-                             -> ProofPath
-                             -> String
-            traceOutputLabel graphOptions dotOptions lemma proofPath =
-              "trace_"
-              ++ thy._thyName                              -- Name of the theory in which the constraint system appears.
-              ++ "_"
-              ++ traceLabelOptions graphOptions dotOptions -- Graph options are included in a short format.
-              ++ "_"
-              ++ lemma._lName                              -- Name of the lemma in which the constraint system appears.
-              ++ intercalate "-" proofPath                 -- Path through the proof where the constraint system is located.
-
-            -- | Format the graph rendering options in a concise way.
-            traceLabelOptions :: GraphOptions -> DotOptions -> String
-            traceLabelOptions graphOptions dotOptions =
-              let s1 = show graphOptions._goSimplificationLevel
-                  s2 = if graphOptions._goShowAutoSource then "AS1" else "AS0"
-                  s3 = if graphOptions._goClustering then "CL1" else "CL0"
-                  s4 = if graphOptions._goAbbreviate then "A1" else "A0"
-                  s5 = if graphOptions._goCompress then "C1" else "C0"
-                  s6 = case dotOptions._doNodeStyle of
-                         FullBoringNodes -> "NF"
-                         CompactBoringNodes -> "NB"
-              in
-                intercalate "-" [s1, s2, s3, s4, s5, s6]
+        -- | Format the graph rendering options in a concise way.
+        traceLabelOptions :: GraphOptions -> DotOptions -> String
+        traceLabelOptions graphOptions dotOptions =
+          let s1 = show graphOptions._goSimplificationLevel
+              s2 = if graphOptions._goShowAutoSource then "AS1" else "AS0"
+              s3 = if graphOptions._goClustering then "CL1" else "CL0"
+              s4 = if graphOptions._goAbbreviate then "A1" else "A0"
+              s5 = if graphOptions._goCompress then "C1" else "C0"
+              s6 = case dotOptions._doNodeStyle of
+                     FullBoringNodes -> "NF"
+                     CompactBoringNodes -> "NB"
+          in
+            intercalate "-" [s1, s2, s3, s4, s5, s6]
