@@ -140,8 +140,12 @@ term eqn plit = asum
     [ pairing       <?> "pairs"
     , parens (msetterm eqn plit)
     , symbol "DH_neutral" *> pure fAppDHNeutral    
-    , symbol "1:nat"      *> pure fAppNatOne
-    , symbol "%1"         *> pure fAppNatOne
+    , symbol "1:nat"
+        *> requireNaturalNumbers "natural-number literal 1:nat"
+        *> pure fAppNatOne
+    , symbol "%1"
+        *> requireNaturalNumbers "natural-number literal %1"
+        *> pure fAppNatOne
     , symbol "1"          *> pure fAppOne
     , application        <?> "function application"
     , nullaryApp
@@ -155,7 +159,8 @@ term eqn plit = asum
       maudeSig <- sig <$> getState
       -- FIXME: This try should not be necessary.
       asum [ try (symbol (BC.unpack sym)) $> fApp fs []
-           | fs@(NoEq (sym,(0,_,_,_))) <- S.toList $ funSyms maudeSig ]
+           | fs@(NoEq (sym,(0,_,_,_))) <- S.toList $
+               funSyms maudeSig `S.union` S.map NoEq (macroNames maudeSig) ]
 
 -- | A left-associative sequence of user-defined AC operators.
 acterm :: Ord l => Bool -> Parser (Term l) -> Parser (Term l)
