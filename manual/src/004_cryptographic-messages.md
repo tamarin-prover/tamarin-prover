@@ -77,11 +77,34 @@ Private functions can be used to model functions that implicitly use some secret
 that is shared between all (honest) users. To make a function private,
 simply add the attribute `[private]` after the function declaration. For example, the line
 
-    functions: f/3, g/2 [private], h/1
+    functions: f/3, g/2 [private], l/1
 
 defines the private function `g` and the public functions `f` and `h`.
 We will describe in the next section how you can define equations that formalize
 properties of functions.
+
+Functions can be *associative and commutative* (AC), declared using the attribute `[AC]`:
+
+    functions: h/2 [AC]
+    
+In this case, `h` has the following properties:
+
+    h(x, h(y, z)) = h(h(x, y), z) (associativity)
+    h(x, y) = h(y, x) (commutativity)
+    
+Note that `AC` functions must necessarily be of arity 2.
+Function attributes can be combined, for example a function can be `AC` and `private`:
+
+    functions: k/2 [AC, private]
+
+A function can also have the *No Deconstruction Chain* (NDC) property (see [@DKK-csf26]
+for details). This property, which only depends on the functions and equational
+theory (and *not* the protocol model), allows Tamarin to eliminate certain branches
+in its internal reasoning. Tamarin automatically detects if a function has this property,
+and annotates such functions with the attribute `[NDC]` when exporting proofs.
+This avoids re-checking whether a function has the property when loading a file
+again. Functions can also be manually annotated, but note that incorrectly declaring
+a function to have the `NDC` property can lead to incorrect results.
 
 Equational theories {#sec:equational-theories}
 -------------------

@@ -250,6 +250,8 @@ module.exports = grammar({
       function_attribute: $ => choice(
             'private',
             'destructor',
+            'AC',
+            'NDC',
       ),
 
       function_typed: $ => seq(
