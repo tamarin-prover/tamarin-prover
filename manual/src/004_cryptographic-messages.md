@@ -79,7 +79,7 @@ simply add the attribute `[private]` after the function declaration. For example
 
     functions: f/3, g/2 [private], l/1
 
-defines the private function `g` and the public functions `f` and `h`.
+defines the private function `g` and the public functions `f` and `l`.
 We will describe in the next section how you can define equations that formalize
 properties of functions.
 
@@ -92,7 +92,8 @@ In this case, `h` has the following properties:
     h(x, h(y, z)) = h(h(x, y), z) (associativity)
     h(x, y) = h(y, x) (commutativity)
     
-Note that `AC` functions must necessarily be of arity 2.
+Note that `AC` functions must necessarily be of arity 2, and can be written in infix 
+notation, for example, `h(x, y)` can be written as `x h y`.
 Function attributes can be combined, for example a function can be `AC` and `private`:
 
     functions: k/2 [AC, private]
@@ -121,16 +122,25 @@ used by Tamarin supports a certain class of user-defined equations, namely
 *convergent* equational theories that have the *finite variant property*
 [@Comon-LundhD05]. Note that Tamarin does *not* check whether the given equations
 belong to this class, so writing equations outside this class can cause
-non-termination or incorrect results *without any warning*.
+*non-termination or incorrect results*.
 
 Also note that Tamarin's reasoning is particularly efficient when considering only
-subterm-convergent equations, i.e., if the right-hand-side is either a ground
+*subterm-convergent* equations, i.e., if the right-hand-side is either a ground
 term (i.e., it does not contain any variables) or a proper subterm of the
 left-hand-side. These equations are thus preferred if they are sufficient to model
-the required properties. However, for example the equations modeled by the
-built-in message theories `diffie-hellman`, `bilinear-pairing`, `xor`, and `multiset`
-do not belong to this restricted class since they include for example
-associativity and commutativity. All other built-in message theories can
+the required properties, as moreover they have the finite variant 
+property and are convergent. Tamarin issues a warning if the equational theory is 
+*not* subterm-convergent to remind users that one needs to guarantee convergence 
+and the finite variant property in this case.
+
+Note that associativity and commutativity need to be specified by annotating the 
+concerned functions (see above) rather than by writing the corresponding equations.
+
+Some built-in message theories such as `diffie-hellman`, `bilinear-pairing`, 
+and `natural-numbers` include special features or optimizations, and cannot be 
+equivalently defined using functions and equations. For other theories such as 
+`xor` and  `multiset` it is often simpler to use the built-in to avoid 
+specification errors. All other built-in message theories can
 be equivalently defined by using `functions: ...` and `equations: ...`
 and we will see some examples of allowed equations in the next
 section.
