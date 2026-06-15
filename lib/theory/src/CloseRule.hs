@@ -11,12 +11,10 @@ module CloseRule (
     prettyNDCcheck
 )where
 
-import Items.RuleItem
-
 import           Prelude                             hiding (id, (.))
 
 import qualified Data.ByteString.Char8 as BC
-import Data.Function (on)
+import           Data.Function (on)
 import           Data.List
 import           Data.Maybe
 import qualified Data.Set                            as S
@@ -33,6 +31,8 @@ import           Control.Parallel.Strategies
 import qualified Extension.Data.Label                as L
 import           Extension.Data.Label                hiding (get)
 
+import           Items.RuleItem
+
 import           ClosedTheory
 import           TheoryObject
 import           OpenTheory
@@ -40,16 +40,16 @@ import           Theory.Model
 import           Theory.Proof
 import           Theory.Tools.InjectiveFactInstances
 import           Theory.Tools.IntruderRules
-
 import           Theory.Constraint.Solver.Sources (IntegerParameters)
 import           Theory.Constraint.Solver.Sources     as Sources (IntegerParameters(..))
 import           Theory.Tools.LoopBreakers
 
 import           Utils.Misc
 
-import  Debug.Trace
-import Text.PrettyPrint.Class
-import GHC.IO (unsafePerformIO)
+import           Text.PrettyPrint.Class
+
+import           Debug.Trace
+import           GHC.IO (unsafePerformIO)
 
 -- | Close a theory given a maude signature. This signature must be valid for
 -- the given theory.
@@ -213,7 +213,7 @@ dedNaive fact terms = ded fact
 
 -- | Checks whether given a Maude signature and intruder rules a certain fact can be derived from a given set of terms.
 deductionCheck :: SignatureWithMaude -> OpenRuleCache -> LNFact -> [LNFact] -> Bool
-deductionCheck sig intrR fact terms = null setD || checkProofd tabProof1 || checkProofd tabProof2 -- trace ("\ntabProof : " ++ show tabProof) 
+deductionCheck sig intrR fact terms = null setD || checkProofd tabProof1 || checkProofd tabProof2
   where
     tInf (Fact _ _ [f]) = f
     tInListf = foldMap getFactTerms
@@ -229,18 +229,16 @@ deductionCheck sig intrR fact terms = null setD || checkProofd tabProof1 || chec
 
     tabProof1 = concatMap checkProofStatuses provenTheory1
     provenTheory1 = map (proveTheory (const True) defaultProver) closedTheory1
-    closedTheory1 = {- trace ("\ntheory : \n" ++ tabTheory modifiedTheory1) -}  map (\t -> closeTheoryWithMaude sig t False False) modifiedTheory1 -- no AutoSources
+    closedTheory1 = map (\t -> closeTheoryWithMaude sig t False False) modifiedTheory1 -- no AutoSources
     modifiedTheory1 = map (\s -> (addRules (newRules s) . addLemmas (newLemmas s) . addRestrictions [newRestriction0,newRestriction2]) emptyThy) setD
 
     tabProof2 = concatMap checkProofStatuses provenTheory2
     provenTheory2 = map (proveTheory (const True) defaultProver) closedTheory2
-    closedTheory2 = {- trace ("\ntheory : \n" ++ tabTheory modifiedTheory2) -} map (\t -> closeTheoryWithMaude sig t False False) modifiedTheory2 -- no AutoSources
+    closedTheory2 = map (\t -> closeTheoryWithMaude sig t False False) modifiedTheory2 -- no AutoSources
     modifiedTheory2 = map (\s -> (addRules (newRules s) . addLemmas (newLemmas s) . addRestrictions [newRestriction0]) emptyThy) setD
  
     tabTheory (th1:thq) = render (prettyTheory prettySignaturePure prettyOpenRuleCacheWithLimitAndNDC prettyOpenProtoRule prettyProof prettyTranslationElement th1) ++ " \n\n " ++ tabTheory thq
     tabTheory [] = ""
-
-    -- trace ("\ntheory : \n" ++ tabTheory modifiedTheory1)
 
     newRules s = [OpenProtoRule (Rule (ProtoRuleEInfo (StandRule "Out0") (RuleAttributes Nothing Nothing False False Nothing) []) (pre s) (co s) (a s) []) []]
     varD s = frees $ concatMap factTerms s
@@ -248,11 +246,11 @@ deductionCheck sig intrR fact terms = null setD || checkProofd tabProof1 || chec
     pre = freesToFresh . varFresh
     co = map (outFact . msgToFreshTerms) . concatMap factTerms
     a s = [protoFact Linear "Generated_0" (map (msgToFreshTerms . lvarToLnterm) (varD s)),factOnlyOnce]
-    alemma s = [protoFact Linear "Generated_0" (map lvarToLnterm (varD s))]
+    aLemma s = [protoFact Linear "Generated_0" (map lvarToLnterm (varD s))]
 
-    newLemmas s = [Lemma "Deduction" "Deduction" False AllTraces f (Just f) [] (unproven ())] -- FIXME : the head could be a problem
+    newLemmas s = [Lemma "Deduction" "Deduction" False AllTraces f (Just f) [] (unproven ())]
       where
-        f = Not (existFormula $ landFormula $ alemma s ++ [kLogFact (head (factTerms fact))])
+        f = Not (existFormula $ landFormula $ aLemma s ++ [kLogFact (head (factTerms fact))]) -- FIXME : the head could be a problem
     
     newRestriction0 :: Restriction
     newRestriction0 = Restriction "OnlyOnce" f (Just f)
@@ -293,8 +291,6 @@ ndcCheck sig intrR r@(Rule (DestrRule name0 i _ _ _) ((Fact KDFact _ _):_) conc@
   case runMaude $ unifyLNFactEqs [Equal (head conc) (getDeconstrRuleKDPrem freshInst1)] of
     []    -> True
     subst -> checkDeduction (applySubsts subst r freshInst1)
-    
-    -- trace ("\nsigma instance : " ++ concatMap ppPair (applySubsts subst r freshInst1) ++ "\n\nsigma instance filtered : " ++ concatMap ppPair (auxMatcherFilter (applySubsts subst r freshInst1)))
   where
     hnd        = L.get sigmMaudeHandle sig
     runMaude   = (`runReader` hnd)
@@ -327,8 +323,6 @@ chainedRulesDeductionTest sig intrR instSigma inst1Sigma = aux factToDeduce
         | getDestrRuleFunction rule == getDestrRuleFunction instSigma   = Rule (DestrRule name i subterm constant (mapHead (setNDC IsNDC) funs)) premis concs (acts ++ [factOnlyOnce]) nvs -- for the rule instance we want to check, we add the factOnlyOnce to the actions to ensure that it is only applied once
     boundToOne rule@(Rule (DestrRule name _ _ _ _) _ _ _ _)
         | any (`BC.isSuffixOf` name) builtInDestrRuleInclPair = rule -- do not touch built-in deconstruction rules
-    -- boundToOne rule@(Rule (DestrRule name _ True _) _ _ _ _)
-    --     | constrNameFunc name `notElem` acsig         = rule -- do not touch rules for non-AC fonctions -- FIXME Does this make sense, in particular when considering combined rules?
     boundToOne (Rule (DestrRule name 0 subterm constant funs) premis concs acts nvs)
                                                       = Rule (DestrRule name 1 subterm constant funs) premis concs acts nvs -- bound the rule to one application other rules
     boundToOne rr                                     = rr
@@ -378,7 +372,7 @@ closeRuleCache :: IntegerParameters  -- ^ Parameters for open chains and saturat
                -> Bool               -- ^ Diff or not
                -> Bool               -- ^ isSapic or not
                -> ClosedRuleCache    -- ^ Cached rules and case distinctions.
-closeRuleCache parameters restrictions typAsms forcedInjFacts sig protoRules intrRules verbose isdiff isSapic = -- trace ("closeRuleCache: " ++ show classifiedRules) $ 
+closeRuleCache parameters restrictions typAsms forcedInjFacts sig protoRules intrRules verbose isdiff isSapic =
    ClosedRuleCache
         classifiedRules rawSources refinedSources injFactInstances
   where
@@ -386,7 +380,7 @@ closeRuleCache parameters restrictions typAsms forcedInjFacts sig protoRules int
         sig classifiedRules injFactInstances RawSource [] AvoidInduction Nothing Nothing
         (error "closeRuleCache: trace quantifier should not matter here")
         (error "closeRuleCache: lemma name should not matter here") [] verbose isdiff
-        (all isSubtermRule {-- $ trace (show destr ++ " - " ++ show (map isSubtermRule destr))-} destr) (any isConstantRule destr)
+        (all isSubtermRule destr) (any isConstantRule destr)
         isSapic
 
     -- Maude handle
