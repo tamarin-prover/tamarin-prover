@@ -74,7 +74,7 @@ import Text.PrettyPrint.Class qualified as PP
 import Paths_tamarin_prover (version)
 
 import Language.Haskell.TH
-import Development.GitRev
+import GitHash
 
 ------------------------------------------------------------------------------
 -- Maude version functions - previously in Environment.hs
@@ -198,15 +198,19 @@ ensureMaudeAndGetVersion as = do
 
 -- | Git Version
 gitVersion :: String
-gitVersion = concat
-  [ "Git revision: "
-  , $(gitHash)
-  , if $(gitDirty) then
-      " (with uncommited changes)"
-    else ""
-  , ", branch: "
-  , $(gitBranch)
-  ]
+gitVersion = case $$tGitInfoCwdTry of
+  -- Built outside a git checkout (e.g. from a source tarball): fall back
+  -- gracefully, as the old gitrev-based code did with "UNKNOWN".
+  Left _err -> "Git revision: UNKNOWN"
+  Right gi  -> concat
+    [ "Git revision: "
+    , giHash gi
+    , if giDirty gi then
+        " (with uncommited changes)"
+      else ""
+    , ", branch: "
+    , giBranch gi
+    ]
 
 -- | Compile Time
 compileTime :: String
