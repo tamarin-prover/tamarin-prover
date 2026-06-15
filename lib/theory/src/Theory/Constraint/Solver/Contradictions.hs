@@ -108,7 +108,7 @@ contradictions ctxt sys = F.asum
     -- New CR-Rule *N6'*
     , guard (hasForbiddenChain sys)                 $> ForbiddenChain
     -- New Constraint for AC constructors
-    , guard (hasForbiddenConstrChain sys)      $> ForbiddenACConstrChain
+    , guard (hasForbiddenConstrChain sys)           $> ForbiddenACConstrChain
     -- CR-rules *S_≐* and *S_≈* are implemented via the equation store
     , guard (eqsIsFalse $ L.get sEqStore sys)       $> IncompatibleEqs
     -- CR-rules *S_⟂*, *S_{¬,last,1}*, *S_{¬,≐}*, *S_{¬,≈}*
@@ -303,7 +303,7 @@ hasForbiddenChain sys =
         ku_before       <- pure $ any (\(_, x) -> alwaysBefore sys x (fst c)) ku_start
         return (is_msg_var && is_not_equality && ku_before)
 
--- | Detect non-normal chains chaining two instances of the constructor rule of an AC-symbol where both add a single msg variable
+-- | Detect non-normal chains chaining two instances of the constructor rule of an AC-symbol where both are "trivial"
 hasForbiddenConstrChain :: System -> Bool
 hasForbiddenConstrChain sys =
     fst finalMap

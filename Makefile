@@ -555,13 +555,6 @@ fast-ac-case-studies:	$(FAST_AC_CS_TARGETS) $(FAST_AC_DIFF_CS_TARGETS)
 AC_MIXNET=exponential_mixnet_V2.spthy
 AC_MIXNET_TARGETS=$(subst .spthy,_analyzed-diff-bfs.spthy,$(addprefix case-studies$(SUBDIR)csf26-ac/exponential_mixnet/,$(AC_MIXNET)))
 
-# FIXME needs to use different heuristics depending on the lemma
-# tamarin-prover toy_voting_system_not_diff.spthy +RTS -N3 -RTS --auto-sources --prove=eligibility
-# tamarin-prover toy_voting_system_not_diff.spthy +RTS -N3 -RTS --auto-sources --prove=exec
-# tamarin-prover toyVotingSystem_semi_manual.spthy +RTS -N3 -RTS --auto-sources --prove=AUTO_typing --heuristic={sourceLemmas}
-AC_TOY_VOTING_SYSTEM=toy_voting_system_not_diff.spthy
-AC_TOY_VOTING_SYSTEM_TARGETS=$(subst .spthy,_analyzed-diff.spthy,$(addprefix case-studies$(SUBDIR)csf26-ac/toy_voting_system/,$(AC_TOY_VOTING_SYSTEM)))
-
 ac-case-studies:	$(AC_MIXNET_TARGETS) $(FAST_AC_CS_TARGETS) $(FAST_AC_DIFF_CS_TARGETS)
 	grep "verified\|falsified\|processing time" $^
 

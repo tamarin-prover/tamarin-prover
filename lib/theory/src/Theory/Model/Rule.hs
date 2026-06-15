@@ -706,8 +706,8 @@ isConstrRule ru = case ruleName ru of
 -- | Returns the function iff the rule is a construction rule for an AC symbol, Nothing otherwise.
 isACConstrRule :: HasRuleName r => r -> Maybe FunSym
 isACConstrRule ru = case ruleName ru of
-  IntrInfo (ConstrRule _ f)  -> Just f
-  _                          -> Nothing
+  IntrInfo (ConstrRule _ f@(AC _)) -> Just f
+  _                                -> Nothing
 
 -- | True iff the rule is a construction rule.
 isPubConstrRule :: HasRuleName r => r -> Bool
