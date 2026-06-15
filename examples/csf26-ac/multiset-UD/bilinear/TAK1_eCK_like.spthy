@@ -1,0 +1,157 @@
+theory TAK1_eCK_like begin
+
+// Function signature and definition of the equational theory E
+
+builtins: diffie-hellman, bilinear-pairing
+functions: fst/1, h/1, kdf/1, pair/2, snd/1, tag/1, add/2 [AC],
+           unionUD/1 [destructor]
+equations:
+    fst(<x.1, x.2>) = x.1,
+    snd(<x.1, x.2>) = x.2,
+    unionUD(add(x, y)) = x
+
+
+
+
+
+section{* The TAK1 Protocol. *}
+
+
+
+
+
+
+
+
+
+
+
+rule (modulo E) Register_pk:
+   [ Fr( ~ea ) ]
+  -->
+   [
+   !Ltk( $A, ~ea ), !Pk( $A, pmult(~ea, 'P') ), Out( pmult(~ea, 'P') )
+   ]
+
+rule (modulo E) Reveal_ltk:
+   [ !Ltk( $A, ~ea ) ] --[ LtkRev( $A ) ]-> [ Out( ~ea ) ]
+
+rule (modulo E) Reveal_ephk:
+   [ !EphKey( ~ek ) ] --[ EphkRev( ~ek ) ]-> [ Out( ~ek ) ]
+
+rule (modulo E) Reveal_sessk:
+   [ !SessKey( ~sid, kdf(sessKey) ) ]
+  --[ SesskRev( ~sid ) ]->
+   [ Out( kdf(sessKey) ) ]
+
+rule (modulo E) Proto1:
+   [ Fr( ~ex ) ]
+  --[ Origin( ~ex, pmult(~ex, 'P') ), Participants( add($A, $B, $C) )
+  ]->
+   [
+   PState1( ~ex, $A, $B, $C ), Out( pmult(~ex, 'P') ), !EphKey( ~ex )
+   ]
+
+rule (modulo E) Proto2:
+   [ PState1( ~ex, $A, $B, $C ), In( XB ), In( XC ) ]
+  -->
+   [ PState2( ~ex, $A, $B, $C, tag(XB), tag(XC), em(XB, XC) ) ]
+
+rule (modulo E) Proto3:
+   [
+   PState2( ~ex, $A, $B, $C, tag(XB), tag(XC), emXBXC ),
+   !Ltk( $A, ~ea ), !Pk( $B, pmult(~eb, 'P') ),
+   !Pk( $C, pmult(~ec, 'P') )
+   ]
+  --[
+  Accept( ~ex, $A, $B, $C, pmult(~ex, 'P'), tag(XB), tag(XC),
+          kdf(<emXBXC^~ex, em(pmult(~eb, 'P'), pmult(~ec, 'P'))^~ea, 
+               add($A, $B, $C), add(tag(XB), tag(XC), tag(pmult(~ex, 'P')))>)
+  ),
+  Match( ~ex,
+         <add(tag(XB), tag(XC), tag(pmult(~ex, 'P'))), add($A, $B, $C)>
+  ),
+  Sid( ~ex,
+       <add(tag(XB), tag(XC), tag(pmult(~ex, 'P'))), add($A, $B, $C)>
+  )
+  ]->
+   [
+   !SessKey( ~ex,
+             kdf(<emXBXC^~ex, em(pmult(~eb, 'P'), pmult(~ec, 'P'))^~ea, 
+                  add($A, $B, $C), add(tag(XB), tag(XC), tag(pmult(~ex, 'P')))>)
+   )
+   ]
+
+lemma session_key_establish:
+  exists-trace
+  "∃ A B C XA XB XC sa sb sc #ia #ib #ic k.
+    ((((((((Accept( sa, A, B, C, XA, tag(XB), tag(XC), k ) @ #ia) ∧
+           (Accept( sb, B, A, C, XB, tag(XA), tag(XC), k ) @ #ib)) ∧
+          (Accept( sc, C, A, B, XC, tag(XA), tag(XB), k ) @ #ic)) ∧
+         (¬(A = B))) ∧
+        (¬(B = C))) ∧
+       (¬(A = C))) ∧
+      (¬(∃ #j. LtkRev( A ) @ #j))) ∧
+     (¬(∃ #j. LtkRev( B ) @ #j))) ∧
+    (¬(∃ #j. LtkRev( C ) @ #j))"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ A B C XA XB XC sa sb sc #ia #ib #ic k.
+  (Accept( sa, A, B, C, XA, tag(XB), tag(XC), k ) @ #ia) ∧
+  (Accept( sb, B, A, C, XB, tag(XA), tag(XC), k ) @ #ib) ∧
+  (Accept( sc, C, A, B, XC, tag(XA), tag(XB), k ) @ #ic)
+ ∧
+  (¬(A = B)) ∧
+  (¬(B = C)) ∧
+  (¬(A = C)) ∧
+  (∀ #j. (LtkRev( A ) @ #j) ⇒ ⊥) ∧
+  (∀ #j. (LtkRev( B ) @ #j) ⇒ ⊥) ∧
+  (∀ #j. (LtkRev( C ) @ #j) ⇒ ⊥)"
+*/
+by sorry
+
+lemma Session_Key_Secrecy:
+  all-traces
+  "∀ stest A B C XA XB XC sessKey sessString #i #j.
+    (((Accept( stest, A, B, C, XA, tag(XB), tag(XC), sessKey ) @ #i) ∧
+      (K( sessKey ) @ #j)) ∧
+     (Match( stest, sessString ) @ #i)) ⇒
+    (((∃ #m #n smatch.
+        (Sid( smatch, sessString ) @ #m) ∧ (SesskRev( smatch ) @ #n)) ∨
+      (((¬(∃ #k spartner. Origin( spartner, XC ) @ #k)) ∨
+        (¬(∃ #k spartner. Origin( spartner, XB ) @ #k))) ∧
+       (((∃ #m. LtkRev( A ) @ #m) ∨ (∃ #m. LtkRev( B ) @ #m)) ∨
+        (∃ #m. LtkRev( C ) @ #m)))) ∨
+     (∃ #k #l spartner1 spartner2.
+       ((Origin( spartner1, XB ) @ #k) ∧ (Origin( spartner2, XC ) @ #l)) ∧
+       ((((∃ #v1. LtkRev( B ) @ #v1) ∨ (∃ #v1. LtkRev( C ) @ #v1)) ∧
+         ((∃ #v2. EphkRev( spartner1 ) @ #v2) ∨
+          (∃ #v2. EphkRev( spartner2 ) @ #v2))) ∨
+        ((∃ #v1. LtkRev( A ) @ #v1) ∧ (∃ #v2. EphkRev( stest ) @ #v2)))))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ stest A B C XA XB XC sessKey sessString #i #j.
+  (Accept( stest, A, B, C, XA, tag(XB), tag(XC), sessKey ) @ #i) ∧
+  (K( sessKey ) @ #j) ∧
+  (Match( stest, sessString ) @ #i)
+ ∧
+  (∀ #m #n smatch.
+    (Sid( smatch, sessString ) @ #m) ∧ (SesskRev( smatch ) @ #n) ⇒ ⊥) ∧
+  ((((∃ #k spartner. (Origin( spartner, XC ) @ #k)) ∧
+     (∃ #k spartner. (Origin( spartner, XB ) @ #k))) ∨
+    ((∀ #m. (LtkRev( A ) @ #m) ⇒ ⊥) ∧
+     (∀ #m. (LtkRev( B ) @ #m) ⇒ ⊥) ∧
+     (∀ #m. (LtkRev( C ) @ #m) ⇒ ⊥)))) ∧
+  (∀ #k #l spartner1 spartner2.
+    (Origin( spartner1, XB ) @ #k) ∧ (Origin( spartner2, XC ) @ #l)
+   ⇒
+    ((((∀ #v1. (LtkRev( B ) @ #v1) ⇒ ⊥) ∧
+       (∀ #v1. (LtkRev( C ) @ #v1) ⇒ ⊥)) ∨
+      ((∀ #v2. (EphkRev( spartner1 ) @ #v2) ⇒ ⊥) ∧
+       (∀ #v2. (EphkRev( spartner2 ) @ #v2) ⇒ ⊥)))) ∧
+    (((∀ #v1. (LtkRev( A ) @ #v1) ⇒ ⊥) ∨
+      (∀ #v2. (EphkRev( stest ) @ #v2) ⇒ ⊥))))"
+*/
+by sorry
+
+end

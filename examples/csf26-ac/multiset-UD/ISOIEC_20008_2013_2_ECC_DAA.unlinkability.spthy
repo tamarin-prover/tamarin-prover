@@ -1,0 +1,231 @@
+theory ISOIEC_20008_2013_2_ECC_DAA_UNLINKABILITY begin
+
+// Function signature and definition of the equational theory E
+
+functions: H1/1, H2/6, H3/5, H4/8, PRF/3, accept/0, adec/2, aenc/2,
+           fst/1, minus/2, multp/2, pair/2, pk/1, plus/2, s/2, snd/1,
+           add/2 [AC], unionUD/1 [destructor]
+equations:
+    adec(aenc(x.1, pk(x.2)), x.2) = x.1,
+    fst(<x.1, x.2>) = x.1,
+    snd(<x.1, x.2>) = x.2,
+    unionUD(add(x, y)) = x
+
+tactic: Observational_equivalence
+presort: S
+prio: {id}
+  regex".*!F_IssuerSK\(.*"
+  regex".*!F_IssuerPK\(.*"
+  regex".*!F_IssuerKi\(.*"
+  regex".*!F_IssuerGenerator\(.*"
+  regex".*!F_BSN\(.*"
+  regex".*Shuffle\(.*"
+
+
+
+
+
+
+
+restriction issuer_init [right]:
+  "∀ #i #j.
+    ((IssuerInit( ) @ #i) ∧ (IssuerInit( ) @ #j)) ⇒ (#i = #j)"
+  // safety formula
+
+restriction issuer_init [left]:
+  "∀ #i #j.
+    ((IssuerInit( ) @ #i) ∧ (IssuerInit( ) @ #j)) ⇒ (#i = #j)"
+  // safety formula
+
+restriction signA [right]:
+  "∀ #i #j x.
+    ((UniqueExecSign( x ) @ #i) ∧ (UniqueExecSign( x ) @ #j)) ⇒
+    (#i = #j)"
+  // safety formula
+
+restriction signA [left]:
+  "∀ #i #j x.
+    ((UniqueExecSign( x ) @ #i) ∧ (UniqueExecSign( x ) @ #j)) ⇒
+    (#i = #j)"
+  // safety formula
+
+rule (modulo E) ISSUER_SETUP:
+   [ Fr( ~Ki ), Fr( ~P1 ), Fr( ~isk ), Fr( ~bottom ) ]
+  --[ IssuerInit( ), UniqueExecJoin( 'ISSUER_SETUP' ), Create( $I )
+  ]->
+   [
+   !F_IssuerSK( $I, ~isk ), !F_IssuerPK( $I, pk(~isk) ),
+   !F_IssuerKi( $I, ~Ki ), !F_IssuerGenerator( $I, ~P1 ),
+   !F_BSN( $I, ~bottom ), Out( <pk(~isk), ~Ki, ~P1, ~bottom> )
+   ]
+
+rule (modulo E) ISSUER_KEY_REVEAL:
+   [ !F_IssuerSK( $I, isk ) ]
+  --[ IssuerKeyReveal( $I ) ]->
+   [ Out( isk ) ]
+
+rule (modulo E) DIFF_DAA_SIGN:
+   [
+   !F_IssuerSK( $I, isk ), !F_IssuerGenerator( $I, P1 ),
+   !F_IssuerKi( $I, Ki ), !F_BSN( $I, bsn ), Fr( ~creRandom ),
+   Fr( ~DAASeed ), Fr( ~cnt ), Fr( ~l ), Fr( ~J ), Fr( ~randS1 ),
+   Fr( ~nt ), Fr( ~l2 ), Fr( ~J2 ), Fr( ~randS12 ), Fr( ~nt2 ),
+   Fr( ~DAASeedP ), Fr( ~cntP ), Fr( ~creRandomP ), Fr( ~lP ),
+   Fr( ~JP ), Fr( ~randS1P ), Fr( ~ntP ), Fr( ~nv ), Fr( ~m )
+   ]
+  --[ Finished( ), UniqueExecSign( 'SIGN' ) ]->
+   [
+   Out( <'diffSigma', 
+         <'sigma', multp(~l, multp(~creRandom, P1)), 
+          multp(~l, multp(isk, multp(~creRandom, P1))), 
+          multp(~l,
+                plus(multp(isk, multp(~creRandom, P1)),
+                     multp(multp(~creRandom, isk),
+                           multp(P1, PRF(~DAASeed, Ki, ~cnt))))), 
+          multp(~l,
+                multp(PRF(~DAASeed, Ki, ~cnt),
+                      multp(isk, multp(~creRandom, P1)))), 
+          ~J, multp(PRF(~DAASeed, Ki, ~cnt), ~J), 
+          H4(H3(multp(~l, multp(~creRandom, P1)),
+                multp(~l, multp(isk, multp(~creRandom, P1))),
+                multp(~l,
+                      plus(multp(isk, multp(~creRandom, P1)),
+                           multp(multp(~creRandom, isk),
+                                 multp(P1, PRF(~DAASeed, Ki, ~cnt))))),
+                multp(~l,
+                      multp(PRF(~DAASeed, Ki, ~cnt), multp(isk, multp(~creRandom, P1)))),
+                ~nv),
+             ~m, ~J, multp(PRF(~DAASeed, Ki, ~cnt), ~J), bsn,
+             multp(~randS1, ~J),
+             multp(~randS1, multp(~l, multp(isk, multp(~creRandom, P1)))),
+             ~nt), 
+          s(~randS1, PRF(~DAASeed, Ki, ~cnt)), ~nv, ~nt>, 
+         diff(<'sigma', multp(~l2, multp(~creRandom, P1)), 
+               multp(~l2, multp(isk, multp(~creRandom, P1))), 
+               multp(~l2,
+                     plus(multp(isk, multp(~creRandom, P1)),
+                          multp(multp(~creRandom, isk),
+                                multp(P1, PRF(~DAASeed, Ki, ~cnt))))), 
+               multp(~l2,
+                     multp(PRF(~DAASeed, Ki, ~cnt),
+                           multp(isk, multp(~creRandom, P1)))), 
+               ~J2, multp(PRF(~DAASeed, Ki, ~cnt), ~J2), 
+               H4(H3(multp(~l2, multp(~creRandom, P1)),
+                     multp(~l2, multp(isk, multp(~creRandom, P1))),
+                     multp(~l2,
+                           plus(multp(isk, multp(~creRandom, P1)),
+                                multp(multp(~creRandom, isk),
+                                      multp(P1, PRF(~DAASeed, Ki, ~cnt))))),
+                     multp(~l2,
+                           multp(PRF(~DAASeed, Ki, ~cnt), multp(isk, multp(~creRandom, P1)))),
+                     ~nv),
+                  ~m, ~J2, multp(PRF(~DAASeed, Ki, ~cnt), ~J2), bsn,
+                  multp(~randS12, ~J2),
+                  multp(~randS12, multp(~l2, multp(isk, multp(~creRandom, P1)))),
+                  ~nt2), 
+               s(~randS12, PRF(~DAASeed, Ki, ~cnt)), ~nv, ~nt2>, <'sigma', 
+                                                                  multp(~lP,
+                                                                        multp(~creRandomP, P1)), 
+                                                                  multp(~lP,
+                                                                        multp(isk,
+                                                                              multp(~creRandomP,
+                                                                                    P1))), 
+                                                                  multp(~lP,
+                                                                        plus(multp(isk,
+                                                                                   multp(~creRandomP,
+                                                                                         P1)),
+                                                                             multp(multp(~creRandomP,
+                                                                                         isk),
+                                                                                   multp(P1,
+                                                                                         PRF(~DAASeedP,
+                                                                                             Ki,
+                                                                                             ~cntP))))), 
+                                                                  multp(~lP,
+                                                                        multp(PRF(~DAASeedP, Ki,
+                                                                                  ~cntP),
+                                                                              multp(isk,
+                                                                                    multp(~creRandomP,
+                                                                                          P1)))), 
+                                                                  ~JP, 
+                                                                  multp(PRF(~DAASeedP, Ki, ~cntP),
+                                                                        ~JP), 
+                                                                  H4(H3(multp(~lP,
+                                                                              multp(~creRandomP,
+                                                                                    P1)),
+                                                                        multp(~lP,
+                                                                              multp(isk,
+                                                                                    multp(~creRandomP,
+                                                                                          P1))),
+                                                                        multp(~lP,
+                                                                              plus(multp(isk,
+                                                                                         multp(~creRandomP,
+                                                                                               P1)),
+                                                                                   multp(multp(~creRandomP,
+                                                                                               isk),
+                                                                                         multp(P1,
+                                                                                               PRF(~DAASeedP,
+                                                                                                   Ki,
+                                                                                                   ~cntP))))),
+                                                                        multp(~lP,
+                                                                              multp(PRF(~DAASeedP,
+                                                                                        Ki, ~cntP),
+                                                                                    multp(isk,
+                                                                                          multp(~creRandomP,
+                                                                                                P1)))),
+                                                                        ~nv),
+                                                                     ~m, ~JP,
+                                                                     multp(PRF(~DAASeedP, Ki,
+                                                                               ~cntP),
+                                                                           ~JP),
+                                                                     bsn, multp(~randS1P, ~JP),
+                                                                     multp(~randS1P,
+                                                                           multp(~lP,
+                                                                                 multp(isk,
+                                                                                       multp(~creRandomP,
+                                                                                             P1)))),
+                                                                     ~ntP), 
+                                                                  s(~randS1P,
+                                                                    PRF(~DAASeedP, Ki, ~cntP)), 
+                                                                  ~nv, ~ntP>)
+        >
+   ),
+   Out( <~nv, ~m, multp(P1, PRF(~DAASeed, Ki, ~cnt)), 
+         multp(P1, PRF(~DAASeedP, Ki, ~cntP)), multp(~randS1, ~J), 
+         multp(~randS1, multp(~l, multp(isk, multp(~creRandom, P1))))>
+   ),
+   Shuffle( add(<multp(~randS12, ~J2), 
+                 multp(~randS12, multp(~l2, multp(isk, multp(~creRandom, P1))))>,
+                <multp(~randS1P, ~JP), 
+                 multp(~randS1P, multp(~lP, multp(isk, multp(~creRandomP, P1))))>)
+   )
+   ]
+
+rule (modulo E) SHUFFLE:
+   [ Shuffle( add(x, y) ) ] --> [ Out( <x, y> ) ]
+
+lemma functional_correctness [right]:
+  exists-trace
+  "∃ #r.
+    (¬(∃ C #k1. IssuerKeyReveal( C ) @ #k1)) ∧ (Finished( ) @ #r)"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #r.
+  (Finished( ) @ #r) ∧ ∀ C #k1. (IssuerKeyReveal( C ) @ #k1) ⇒ ⊥"
+*/
+by sorry
+
+lemma functional_correctness [left]:
+  exists-trace
+  "∃ #r.
+    (¬(∃ C #k1. IssuerKeyReveal( C ) @ #k1)) ∧ (Finished( ) @ #r)"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #r.
+  (Finished( ) @ #r) ∧ ∀ C #k1. (IssuerKeyReveal( C ) @ #k1) ⇒ ⊥"
+*/
+by sorry
+
+diffLemma Observational_equivalence[heuristic={Observational_equivalence}]:
+by sorry
+
+end
