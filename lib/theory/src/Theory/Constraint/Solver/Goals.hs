@@ -71,7 +71,7 @@ openGoals ctxt sys = do
         ActionG i (kFactView -> Just (UpK, m)) ->
           if get sDiffSystem sys
              -- In a diff proof, all action goals need to be solved.
-             then not (solved) -- FIXME : || isTrivialACFunSymTerm m ?
+             then not solved
              else
                not $    solved
                     -- message variables are not solved, except if the node already exists in the system -> facilitates finding contradictions
