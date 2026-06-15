@@ -198,19 +198,22 @@ ensureMaudeAndGetVersion as = do
 
 -- | Git Version
 gitVersion :: String
-gitVersion = case $$tGitInfoCwdTry of
-  -- Built outside a git checkout (e.g. from a source tarball): fall back
-  -- gracefully, as the old gitrev-based code did with "UNKNOWN".
-  Left _err -> "Git revision: UNKNOWN"
-  Right gi  -> concat
-    [ "Git revision: "
-    , giHash gi
-    , if giDirty gi then
-        " (with uncommited changes)"
-      else ""
-    , ", branch: "
-    , giBranch gi
-    ]
+-- We go through 'either' rather than matching the 'Either' directly: the
+-- compile-time splice resolves to a concrete 'Left'/'Right' in any given
+-- build, so a literal @case@ here trips -Woverlapping-patterns on the unused
+-- branch. The 'Left' case handles builds outside a git checkout (e.g. from a
+-- source tarball), falling back to "UNKNOWN" as the old gitrev code did.
+gitVersion = either (const "Git revision: UNKNOWN") fmtGitInfo $$tGitInfoCwdTry
+  where
+    fmtGitInfo gi = concat
+      [ "Git revision: "
+      , giHash gi
+      , if giDirty gi then
+          " (with uncommited changes)"
+        else ""
+      , ", branch: "
+      , giBranch gi
+      ]
 
 -- | Compile Time
 compileTime :: String
