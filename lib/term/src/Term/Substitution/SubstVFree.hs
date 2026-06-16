@@ -105,28 +105,26 @@ applyLit _     c@(Con _)  = lit c
 applyVTerm :: (IsConst c, IsVar v) => Subst c v -> VTerm c v -> VTerm c v
 applyVTerm (Subst smap)
     | M.null smap = id
-    | otherwise   = go
+    | otherwise   = \t -> fromMaybe t (go t)
   where
+    -- 'go' returns 'Nothing' when the term is unchanged by the substitution, so
+    -- the caller can reuse the original term and share the untouched subtree.
+    -- 'Just t'' carries the rebuilt term. This avoids reallocating subterms the
+    -- substitution does not touch.
     go t = case viewTerm t of
-        Lit (Var i)      -> fromMaybe t (M.lookup i smap)
-        Lit (Con _)      -> t
-        FApp (AC o)   ts -> rebuild t ts (fAppAC o)
-        FApp (C o)    ts -> rebuild t ts (fAppC o)
-        FApp (NoEq o) ts -> rebuild t ts (fAppNoEq o)
-        FApp List     ts -> rebuild t ts fAppList
+        Lit (Var i)      -> M.lookup i smap
+        Lit (Con _)      -> Nothing
+        FApp (AC o)   ts -> fAppAC   o <$> goList ts
+        FApp (C o)    ts -> fAppC    o <$> goList ts
+        FApp (NoEq o) ts -> fAppNoEq o <$> goList ts
+        FApp List     ts -> fAppList   <$> goList ts
 
-    -- Rebuild the application only if some argument changed; otherwise share.
-    rebuild t ts mk = let ts' = goList ts
-                      in if ts' `unsafeEq` ts then t else mk ts'
-
-    -- Map 'go' over the arguments, returning the original list (by pointer)
-    -- when no element changed, so the parent can detect "nothing changed".
-    goList []        = []
-    goList ts@(x:xs) = let x'  = go x
-                           xs' = goList xs
-                       in if x' `unsafeEq` x && xs' `unsafeEq` xs
-                          then ts
-                          else x' : xs'
+    -- Map 'go' over the arguments. 'Nothing' means no element changed (so the
+    -- parent reuses the original term); 'Just ts'' is the rebuilt argument list.
+    goList []     = Nothing
+    goList (x:xs) = case go x of
+        Nothing -> (x :)             <$> goList xs
+        Just x' -> Just (x' : fromMaybe xs (goList xs))
 
 -- | Variant of @applyVTerm@ with custom function to apply literals
 applyVTermProj :: Ord a => (t1 -> t2 -> Term a) -> t1 -> Term t2 -> Term a
