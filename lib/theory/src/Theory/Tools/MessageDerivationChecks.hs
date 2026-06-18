@@ -1,6 +1,6 @@
 module Theory.Tools.MessageDerivationChecks (
-      checkVariableDeducability
-    , diffCheckVariableDeducability
+      checkVariableDeducibility
+    , diffCheckVariableDeducibility
 ) where
 
 import  Theory.Model.Formula
@@ -33,8 +33,8 @@ import OpenTheory
 -----------------------------------------------
 
 
-checkVariableDeducability :: OpenTranslatedTheory -> SignatureWithMaude -> Bool -> Prover -> WfErrorReport
-checkVariableDeducability thy sig sources prover =
+checkVariableDeducibility :: OpenTranslatedTheory -> SignatureWithMaude -> Bool -> Prover -> WfErrorReport
+checkVariableDeducibility thy sig sources prover =
     reportVars (map checkProofStatuses provenTheories) originalRules freeVars
     where
         originalRules = map (applyMacroInProtoRule (theoryMacros thy)) $ theoryRules thy
@@ -42,15 +42,15 @@ checkVariableDeducability thy sig sources prover =
         closedTheories = map (\t -> closeTheoryWithMaude sig t sources False) modifiedTheories
         modifiedTheories =  zipWith3 (\r l t -> (addRules [r] . addLemmas l ) t)  newRules newLemmas (repeat emptyPublicThy)
         emptyPublicThy = L.set thyOptions newOptions emptyPublicThy0
-        newOptions =  L.set noDeductionChainCheck False (L.get thyOptions emptyPublicThy0)
+        newOptions =  L.set deductionChainCheck False (L.get thyOptions emptyPublicThy0)
         emptyPublicThy0 = makeFunsPublic (toSignaturePure sig) $ deleteRulesAndLemmasAndRestrictionsFromTheory thy
         newRules = zipWith3 (\idx freevs prems -> generateRule freevs (premisesToOut prems) idx) [0..] freeVars premises
         newLemmas = zipWith3 (\idx freevs _-> generateSeparatedLemmas idx freevs) [0..] freeVars premises
         premises = map (map (fmap replacePrivate)) $ premsOfThyRules originalRules
         freeVars = freesInThyRules originalRules
 
-diffCheckVariableDeducability :: OpenDiffTheory -> SignatureWithMaude -> Bool -> Prover -> DiffProver -> WfErrorReport
-diffCheckVariableDeducability thy sig sources prover diffprover =
+diffCheckVariableDeducibility :: OpenDiffTheory -> SignatureWithMaude -> Bool -> Prover -> DiffProver -> WfErrorReport
+diffCheckVariableDeducibility thy sig sources prover diffprover =
     reportDiffVars (map checkDiffProofStatuses provenTheories) originalRules freeVars
     where
         originalRules = diffTheoryDiffRules thy

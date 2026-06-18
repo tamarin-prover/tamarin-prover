@@ -107,6 +107,9 @@ This avoids re-checking whether a function has the property when loading a file
 again. Functions can also be manually annotated, but note that incorrectly declaring
 a function to have the `NDC` property can lead to incorrect results.
 
+The automatic check whether functions have the `NDC` property can be disabled using
+the `--no-ndc` flag in the command line.
+
 Equational theories {#sec:equational-theories}
 -------------------
 

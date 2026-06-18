@@ -29,7 +29,7 @@ data Option = Option
         , _stateChannelOpt                   :: Bool
         , _asynchronousChannels              :: Bool
         , _compressEvents                    :: Bool
-        , _noDeductionChainCheck             :: Bool
+        , _deductionChainCheck               :: Bool
         , _forcedInjectiveFacts              :: S.Set FactTag
         , _lemmasToProve                     :: [String]
         , _openChainsLimit                   :: Integer

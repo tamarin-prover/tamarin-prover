@@ -80,7 +80,7 @@ import Theory.Tools.IntruderRules
   )
 import Theory.Tools.MessageDerivationChecks
 import Theory.Tools.Wellformedness
-import TheoryObject (diffTheoryConfigBlock, theoryConfigBlock, theoryConfigBlock, noDeductionChainCheck)
+import TheoryObject (diffTheoryConfigBlock, theoryConfigBlock, theoryConfigBlock, deductionChainCheck)
 
 ------------------------------------------------------------------------------
 -- Theory loading: shared between interactive and batch mode
@@ -198,7 +198,11 @@ theoryLoadFlags =
       ["replication-bound"]
       (updateArg "replication-bound")
       "INT"
-      "Replication bound for DeepSec export"
+      "Replication bound for DeepSec export",
+    flagNone
+      ["no-ndc"]
+      (addEmptyArg "no-ndc")
+      "Deactivate the no deconstruction chain (NDC) check (enabled by default)"
   ]
 
 -----------------------------------------------
@@ -227,7 +231,8 @@ data TheoryLoadOptions = TheoryLoadOptions
     derivationChecks :: Int,
     noReuse :: Bool,
     noRestrictions :: Bool,
-    replicationBound :: Int
+    replicationBound :: Int,
+    ndcCheck :: Bool -- ^ Whether to run the no deconstruction chain (NDC) check (enabled by default).
   }
   deriving (Show)
 
@@ -255,7 +260,8 @@ defaultTheoryLoadOptions =
       derivationChecks = 5,
       noReuse = False,
       noRestrictions = False,
-      replicationBound = 3
+      replicationBound = 3,
+      ndcCheck = True
     }
 
 toParserFlags :: TheoryLoadOptions -> [String]
@@ -293,6 +299,7 @@ mkTheoryLoadOptions as =
     <*> noReuse
     <*> noRestrictions
     <*> replicationBound
+    <*> ndcCheck
   where
     proveMode = pure $ argExists "prove" as
     lemmaNames = pure $ findArg "prove" as ++ findArg "lemma" as
@@ -336,6 +343,8 @@ mkTheoryLoadOptions as =
     autoSources = pure $ argExists "auto-sources" as
     noReuse = pure $ argExists "no-reuse" as
     noRestrictions = pure $ argExists "no-restrictions" as
+    -- The NDC check is enabled by default; --no-ndc deactivates it.
+    ndcCheck = pure $ not $ argExists "no-ndc" as
 
     outputModule = case findArg "outModule" as of
       Just str -> case find ((str ==) . show) [minBound ..] of
@@ -478,11 +487,11 @@ checkCloseIntrRule sign name thy = (sigWithMaude', thy {_thyCache = intrRulesACr
     intrRules = thy._thyCache
     
     -- do the no deconstruction chain check or not?
-    noDeductionChainCheckBool = thy._thyOptions._noDeductionChainCheck
-    ndcChecks = if noDeductionChainCheckBool then prettyNDCcheck sign name intrRules else (sign, intrRules)
+    deductionChainCheckBool = thy._thyOptions._deductionChainCheck
+    ndcChecks = if deductionChainCheckBool then prettyNDCcheck sign name intrRules else (sign, intrRules)
     intrRulesACred = snd ndcChecks
     sigWithMaude' = fst ndcChecks
-    sig' = if noDeductionChainCheckBool then toSignaturePure sigWithMaude' else sig
+    sig' = if deductionChainCheckBool then toSignaturePure sigWithMaude' else sig
 
 -- | Closes the intruder deduction rules and applies the no deconstruction chain check if enabled. Version for diff theories.
 checkCloseIntrRuleDiff :: SignatureWithMaude -> String -> OpenDiffTheory -> (SignatureWithMaude, OpenDiffTheory)
@@ -496,12 +505,12 @@ checkCloseIntrRuleDiff sign name diffthy = (sigWithMaude', diffCRthy)
 
     
     -- do the no deconstruction chain check or not?
-    noDeductionChainCheckBool = diffthy._diffThyOptions._noDeductionChainCheck
+    deductionChainCheckBool = diffthy._diffThyOptions._deductionChainCheck
     -- FIXME : update signature
-    ndcChecks = if noDeductionChainCheckBool then prettyNDCcheck sign name dcl else (sign, dcl)
+    ndcChecks = if deductionChainCheckBool then prettyNDCcheck sign name dcl else (sign, dcl)
     dclACred = snd ndcChecks
     sigWithMaude' = fst ndcChecks
-    sig' = if noDeductionChainCheckBool then toSignaturePure sigWithMaude' else sig
+    sig' = if deductionChainCheckBool then toSignaturePure sigWithMaude' else sig
 
     diffDCLthy = diffthy    {_diffThyDiffCacheLeft = dclACred, _diffThySignature = sig'}  -- diffThySignature is the same for both sides, so we can just update it once for the left side
     diffDCRthy = diffDCLthy {_diffThyDiffCacheRight = dclACred}  -- diffThyDiffCacheLeft and diffThyDiffCacheRight contain the same Intruder Rules, so we use the same list of closed intruder rules for both sides
@@ -551,8 +560,8 @@ checkTranslatedTheory thyOpts sign thy = do
           timeout (1000000 * derivChecks) $
             evaluate . force $
               either
-                (\t -> checkVariableDeducability t derivCheckSignature autoSources defaultProver)
-                (\t -> diffCheckVariableDeducability t derivCheckSignature autoSources defaultProver defaultDiffProver)
+                (\t -> checkVariableDeducibility t derivCheckSignature autoSources defaultProver)
+                (\t -> diffCheckVariableDeducibility t derivCheckSignature autoSources defaultProver defaultDiffProver)
                 deducThy
       traceM ("[Theory " ++ theoryName thy ++ "] Derivation checks ended")
       pure rep
@@ -777,8 +786,12 @@ addParamsOptions ::
   TheoryLoadOptions ->
   Either OpenTheory OpenDiffTheory ->
   Either OpenTheory OpenDiffTheory
-addParamsOptions opt = addVerboseOptions . addPrecomputationOnlyOptions . addSatArg . addChainsArg . addLemmaToProve
+addParamsOptions opt = addVerboseOptions . addPrecomputationOnlyOptions . addSatArg . addChainsArg . addLemmaToProve . addNdcOption
   where
+    -- Add the no deconstruction chain (NDC) check parameter in the Options
+    _deductionChainCheck = opt.ndcCheck
+    addNdcOption (Left thy) = Left thy {_thyOptions = thy._thyOptions {_deductionChainCheck}}
+    addNdcOption (Right diffThy) = Right diffThy {_diffThyOptions = diffThy._diffThyOptions {_deductionChainCheck}}
     -- Add Open Chain Limit parameters in the Options
     _openChainsLimit = opt.openChain
     addChainsArg (Left thy) = Left thy {_thyOptions = thy._thyOptions {_openChainsLimit}}
