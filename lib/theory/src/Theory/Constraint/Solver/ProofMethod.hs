@@ -304,9 +304,8 @@ execProofMethod ctxt method sys =
       let cases =   removeRedundantCases ctxt [] snd
                   . map (fmap cleanup . fst)
                   . getDisj $ runReduction (m <* simplifySystem) ctxt sys (avoid sys)
-          casesMap = M.fromListWith (error "case names not unique")
-                   $ uniqueListBy (comparing fst) id distinguish cases
-      in casesMap `deepseq` casesMap
+      in force $ M.fromListWith (error "case names not unique")
+               $ uniqueListBy (comparing fst) id distinguish cases
 
     cleanup :: System -> System
     cleanup s = L.set sSubst emptySubst (Precise.evalFresh (renamePrecise s) Precise.nothingUsed)

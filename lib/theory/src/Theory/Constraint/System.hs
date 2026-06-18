@@ -238,7 +238,6 @@ module Theory.Constraint.System (
 
   -- * Formula simplification
   , impliedFormulas
-  , impliedFormulasWithActions
   , impliedFormulasWithSkActions
 
   -- * Pretty-printing
@@ -1056,12 +1055,8 @@ safePartialAtomValuation ctxt sys =
     runMaude   = (`runReader` L.get pcMaudeHandle ctxt)
     before     = alwaysBefore sys
     lessRel    = rawLessRel sys
-    reachable  = M.fromList
-        [ (i, D.reachableSet [i] lessRel)
-        | i <- S.toList $ S.fromList $ concatMap (\(x, y) -> [x, y]) lessRel
-        ]
     nodesAfter = \i -> filter (i /=) $ S.toList $
-        M.findWithDefault S.empty i reachable
+        D.reachableFrom lessRel i
     reducible  = reducibleFunSyms $ mhMaudeSig $ L.get pcMaudeHandle ctxt
     sst        = L.get sSubtermStore sys
 
@@ -1116,18 +1111,11 @@ safePartialAtomValuation ctxt sys =
 -- | @impliedFormulas se imp@ returns the list of guarded formulas that are
 -- implied by @se@.
 impliedFormulas :: MaudeHandle -> System -> LNGuarded -> [LNGuarded]
-impliedFormulas hnd sys = impliedFormulasWithActions hnd actionsByTag
+impliedFormulas hnd sys = impliedFormulasWithSkActions hnd skActionsByTag
   where
-    actionsByTag =
-        M.fromListWith (++) $ do
-            action@(_, fa) <- allActions sys
-            return (factTag fa, [action])
-
-impliedFormulasWithActions :: MaudeHandle -> M.Map FactTag [(NodeId, LNFact)] -> LNGuarded -> [LNGuarded]
-impliedFormulasWithActions hnd sysActionsByTag =
-    impliedFormulasWithSkActions hnd (fmap (map skolemizeAction) sysActionsByTag)
-  where
-    skolemizeAction (i, fa) = (skolemizeTerm (varTerm i), skolemizeFact fa)
+    skActionsByTag = M.fromListWith (++)
+        [ (factTag fa, [(skolemizeTerm (varTerm i), skolemizeFact fa)])
+        | (i, fa) <- allActions sys ]
 
 impliedFormulasWithSkActions :: MaudeHandle -> M.Map FactTag [(SkTerm, SkFact)] -> LNGuarded -> [LNGuarded]
 impliedFormulasWithSkActions hnd sysActionsByTag gf0 = res
@@ -1649,15 +1637,12 @@ alwaysBefore :: System -> (NodeId -> NodeId -> Bool)
 alwaysBefore sys =
     check -- lessRel is cached for partial applications
   where
-    lessRel   = rawLessRel sys
-    reachable = M.fromList
-        [ (i, D.reachableSet [i] lessRel)
-        | i <- S.toList $ S.fromList $ concatMap (\(x, y) -> [x, y]) lessRel
-        ]
+    lessRel       = rawLessRel sys
+    reachableFrom = D.reachableFrom lessRel
     check i j =
          -- speed-up check by first checking less-atoms
          ((i, j) `S.member` getLessAtoms sys)
-      || (j `S.member` M.findWithDefault S.empty i reachable)
+      || (j `S.member` reachableFrom i)
 
 -- | 'True' iff the given node id is guaranteed to be instantiated to an
 -- index in the trace.

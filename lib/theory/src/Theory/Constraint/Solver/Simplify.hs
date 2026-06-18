@@ -348,12 +348,8 @@ partialAtomValuation ctxt sys =
     runMaude   = (`runReader` get pcMaudeHandle ctxt)
     before     = alwaysBefore sys
     lessRel    = rawLessRel sys
-    reachable  = M.fromList
-        [ (i, D.reachableSet [i] lessRel)
-        | i <- S.toList $ S.fromList $ concatMap (\(x, y) -> [x, y]) lessRel
-        ]
     nodesAfter = \i -> filter (i /=) $ S.toList $
-        M.findWithDefault S.empty i reachable
+        D.reachableFrom lessRel i
     reducible  = reducibleFunSyms $ mhMaudeSig $ get pcMaudeHandle ctxt
     sst        = get sSubtermStore sys
 
@@ -709,11 +705,8 @@ nonInjectiveFactInstances ctxt se = do
 --    return (i, j, k) -- counter-example to unique fact instances
   where
     less      = rawLessRel se
-    reachable = M.fromList
-        [ (i, D.reachableSet [i] less)
-        | i <- S.toList $ S.fromList $ concatMap (\(x, y) -> [x, y]) less
-        ]
-    isBefore i j = j `S.member` M.findWithDefault S.empty i reachable
+    reachableFrom = D.reachableFrom less
+    isBefore i j = j `S.member` reachableFrom i
     firstTerm = headMay . factTerms
     runMaude   = (`runReader` get pcMaudeHandle ctxt)
     nonUnifiableNodes :: NodeId -> NodeId -> Bool
