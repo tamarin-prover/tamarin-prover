@@ -32,9 +32,7 @@ import           Control.Monad.Bind
 -- import           Control.Applicative
 
 -- import           Data.Traversable hiding (mapM)
-import           Data.List (sortBy)
 import           Data.Maybe
-import           Data.Ord (comparing)
 import qualified Data.Map as M
 import           Data.Map (Map)
 
@@ -131,7 +129,7 @@ msubstToLSubstVFresh bindings substMaude
         error $ "msubstToLSubstVFresh: nonfresh variables in `"++show substMaude++"'"
     | otherwise = removeRenamings $ substFromListVFresh slist
  where
-   slist = runBackConversion (traverse translate (sortBy (comparing (snd . fst)) substMaude)) bindings
+   slist = runBackConversion (traverse translate substMaude) bindings
    -- try to keep variable name for xi -> xj mappings
    -- commented out, seems wrong
    --  translate ((s,i), mt@(Lit (FreshVar _ _))) = do
