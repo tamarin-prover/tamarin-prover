@@ -117,7 +117,7 @@ run thisMode as
       versionData <- ensureMaudeAndGetVersion as
       resTimed <- mapM (timedIO . processThy versionData) inFiles
       let (docs, reps, times) = unzip3 $ fmap (\((d, r), t) -> (d, r, t)) resTimed
-      
+
       if writeOutput then do
         let maybeOutFiles = mapM mkOutPath inFiles
         outFiles <- case maybeOutFiles of
