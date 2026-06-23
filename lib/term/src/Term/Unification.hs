@@ -231,8 +231,14 @@ unifyRaw :: IsConst c => LTerm c -> LTerm c -> UnifyRaw c ()
 unifyRaw l0 r0 = do
     mappings <- get
     sortOf <- ask
-    l <- gets ((`applyVTerm` l0) . substFromMap)
-    r <- gets ((`applyVTerm` r0) . substFromMap)
+    -- Build the substitution for the partial mappings once and reuse it for
+    -- both sides, instead of reconstructing it (via 'substFromMap', which
+    -- rebuilds the whole map) separately for @l0@ and @r0@ on every call. We
+    -- keep 'substFromMap' (rather than the raw 'Subst' constructor) so trivial
+    -- @x/x@ bindings are dropped, which preserves sharing in 'applyVTerm'.
+    let subst = substFromMap mappings
+        l = applyVTerm subst l0
+        r = applyVTerm subst r0
     guard (trace (show ("unifyRaw", mappings, l ,r)) True)
     case (viewTerm l, viewTerm r) of
        (Lit (Var vl), Lit (Var vr))

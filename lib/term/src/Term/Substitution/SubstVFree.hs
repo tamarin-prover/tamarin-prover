@@ -23,6 +23,7 @@ module Term.Substitution.SubstVFree (
   , substFromList
   , substFromMap
   , emptySubst
+  , nullSubst
 
   -- * Composition of substitutions
   , compose
@@ -102,7 +103,28 @@ applyLit _     c@(Con _)  = lit c
 
 -- | @applyVTerm subst t@ applies the substitution @subst@ to the term @t@.
 applyVTerm :: (IsConst c, IsVar v) => Subst c v -> VTerm c v -> VTerm c v
-applyVTerm = applyVTermProj applyLit
+applyVTerm (Subst smap)
+    | M.null smap = id
+    | otherwise   = \t -> fromMaybe t (go t)
+  where
+    -- 'go' returns 'Nothing' when the term is unchanged by the substitution, so
+    -- the caller can reuse the original term and share the untouched subtree.
+    -- 'Just t'' carries the rebuilt term. This avoids reallocating subterms the
+    -- substitution does not touch.
+    go t = case viewTerm t of
+        Lit (Var i)      -> M.lookup i smap
+        Lit (Con _)      -> Nothing
+        FApp (AC o)   ts -> fAppAC   o <$> goList ts
+        FApp (C o)    ts -> fAppC    o <$> goList ts
+        FApp (NoEq o) ts -> fAppNoEq o <$> goList ts
+        FApp List     ts -> fAppList   <$> goList ts
+
+    -- Map 'go' over the arguments. 'Nothing' means no element changed (so the
+    -- parent reuses the original term); 'Just ts'' is the rebuilt argument list.
+    goList []     = Nothing
+    goList (x:xs) = case go x of
+        Nothing -> (x :)             <$> goList xs
+        Just x' -> Just (x' : fromMaybe xs (goList xs))
 
 -- | Variant of @applyVTerm@ with custom function to apply literals
 applyVTermProj :: Ord a => (t1 -> t2 -> Term a) -> t1 -> Term t2 -> Term a
@@ -135,6 +157,12 @@ substFromMap = Subst . M.filterWithKey (\v t -> not $ equalToVar t v)
 -- | @emptySubVFree@ is the substitution with empty domain.
 emptySubst :: Subst c v
 emptySubst = Subst M.empty
+
+-- | @nullSubst subst@ is 'True' iff @subst@ has an empty domain, i.e. applying
+-- it is the identity. This is a cheap (O(1)) check used to skip no-op
+-- substitution passes.
+nullSubst :: Subst c v -> Bool
+nullSubst = M.null . sMap
 
 -- Composition
 ----------------------------------------------------------------------

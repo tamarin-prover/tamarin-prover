@@ -570,17 +570,26 @@ removeSolvedSplitGoals = do
 -- the sequent.
 substSystem :: Reduction ChangeIndicator
 substSystem = do
-    c1 <- substNodes
-    substEdges
-    substLastAtom
-    substLessAtoms
-    substSubtermStore
-    substFormulas
-    substSolvedFormulas
-    substLemmas
-    c2 <- substGoals
-    substNextGoalNr
-    return (c1 <> c2)
+    -- The equation-store substitution is applied to the whole system after
+    -- every solving step and is idempotent, so it is frequently empty (e.g.
+    -- right after a proof step renamed and reset it). Applying an empty
+    -- substitution cannot change anything and maintains no invariants, so we
+    -- skip the (otherwise O(system size)) traversal entirely.
+    subst <- getM sSubst
+    if nullSubst subst
+      then return Unchanged
+      else do
+        c1 <- substNodes
+        substEdges
+        substLastAtom
+        substLessAtoms
+        substSubtermStore
+        substFormulas
+        substSolvedFormulas
+        substLemmas
+        c2 <- substGoals
+        substNextGoalNr
+        return (c1 <> c2)
 
 -- no invariants to maintain here
 substEdges, substLessAtoms, substSubtermStore, substLastAtom, substFormulas,
