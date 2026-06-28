@@ -1054,8 +1054,10 @@ safePartialAtomValuation ctxt sys =
     runMaude   = (`runReader` L.get pcMaudeHandle ctxt)
     before     = alwaysBefore sys
     lessRel    = rawLessRel sys
-    nodesAfter = \i -> filter (i /=) $ S.toList $
-        D.reachableFrom lessRel i
+    -- Bind the memoising reachability query once so the adjacency map and the
+    -- per-node reachable sets are shared across all 'nodesAfter' calls.
+    reachableFrom = D.reachableFrom lessRel
+    nodesAfter = \i -> filter (i /=) $ S.toList $ reachableFrom i
     reducible  = reducibleFunSyms $ mhMaudeSig $ L.get pcMaudeHandle ctxt
     sst        = L.get sSubtermStore sys
 
@@ -1629,13 +1631,17 @@ getLessAtoms = S.fromList . getLessRel . S.toList . L.get sLessAtoms
 -- the second argument in all models of the sequent.
 alwaysBefore :: System -> (NodeId -> NodeId -> Bool)
 alwaysBefore sys =
-    check -- lessRel is cached for partial applications
+    check -- lessRel/reachability/less-atoms are cached for partial applications
   where
     lessRel       = rawLessRel sys
     reachableFrom = D.reachableFrom lessRel
+    -- Compute the less-atom set once per partial application rather than on
+    -- every 'check i j' query (this predicate is queried per-atom during
+    -- formula evaluation).
+    lessAtoms     = getLessAtoms sys
     check i j =
          -- speed-up check by first checking less-atoms
-         ((i, j) `S.member` getLessAtoms sys)
+         ((i, j) `S.member` lessAtoms)
       || (j `S.member` reachableFrom i)
 
 -- | 'True' iff the given node id is guaranteed to be instantiated to an
