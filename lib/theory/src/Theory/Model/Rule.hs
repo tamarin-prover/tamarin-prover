@@ -277,6 +277,7 @@ instance Functor Rule where
     fmap f (Rule i ps cs as nvs) = Rule (f i) ps cs as nvs
 
 instance (Show i, HasFrees i) => HasFrees (Rule i) where
+    {-# INLINABLE foldFrees #-}
     foldFrees f (Rule i ps cs as nvs) =
         (foldFrees f i  `mappend`) $
         (foldFrees f ps `mappend`) $
@@ -286,6 +287,7 @@ instance (Show i, HasFrees i) => HasFrees (Rule i) where
     -- We do not include the new variables in the occurrences
     foldFreesOcc f c (Rule i ps cs as _) =
         foldFreesOcc f ((show i):c) (ps, cs, as)
+    {-# INLINABLE mapFrees #-}
     mapFrees f (Rule i ps cs as nvs) =
         Rule <$> mapFrees f i
              <*> mapFrees f ps <*> mapFrees f cs <*> mapFrees f as
@@ -334,8 +336,10 @@ ruleInfo _     intr (IntrInfo  x) = intr x
 ------------
 
 instance (HasFrees p, HasFrees i) => HasFrees (RuleInfo p i) where
+    {-# INLINABLE foldFrees #-}
     foldFrees  f = ruleInfo (foldFrees f) (foldFrees f)
     foldFreesOcc _ _ = const mempty
+    {-# INLINABLE mapFrees #-}
     mapFrees   f = ruleInfo (fmap ProtoInfo . mapFrees   f)
                             (fmap IntrInfo . mapFrees   f)
 
@@ -473,9 +477,11 @@ instance HasFrees ConcIdx where
     mapFrees   _ = pure
 
 instance HasFrees ProtoRuleEInfo where
+    {-# INLINABLE foldFrees #-}
     foldFrees f (ProtoRuleEInfo na attr rstr) =
         foldFrees f na `mappend` foldFrees f attr `mappend` foldFrees f rstr
     foldFreesOcc  _ _ = const mempty
+    {-# INLINABLE mapFrees #-}
     mapFrees f (ProtoRuleEInfo na attr rstr) =
         ProtoRuleEInfo na <$> mapFrees f attr <*> mapFrees f rstr
 
@@ -483,12 +489,14 @@ instance Apply s ProtoRuleEInfo where
     apply _ = id
 
 instance HasFrees ProtoRuleACInfo where
+    {-# INLINABLE foldFrees #-}
     foldFrees f (ProtoRuleACInfo na attr vari breakers) =
         foldFrees f na `mappend` foldFrees f attr
                        `mappend` foldFrees f vari
                        `mappend` foldFrees f breakers
     foldFreesOcc  _ _ = const mempty
 
+    {-# INLINABLE mapFrees #-}
     mapFrees f (ProtoRuleACInfo na attr vari breakers) =
         ProtoRuleACInfo na <$> mapFrees f attr
                            <*> mapFrees f vari
@@ -499,12 +507,14 @@ instance Apply s ProtoRuleACInstInfo where
         ProtoRuleACInstInfo (apply subst na) attr breakers
 
 instance HasFrees ProtoRuleACInstInfo where
+    {-# INLINABLE foldFrees #-}
     foldFrees f (ProtoRuleACInstInfo na attr breakers) =
         foldFrees f na `mappend` foldFrees f attr
                        `mappend` foldFrees f breakers
 
     foldFreesOcc  _ _ = const mempty
 
+    {-# INLINABLE mapFrees #-}
     mapFrees f (ProtoRuleACInstInfo na attr breakers) =
         ProtoRuleACInstInfo na <$> mapFrees f attr <*> mapFrees f breakers
 
