@@ -348,8 +348,10 @@ partialAtomValuation ctxt sys =
     runMaude   = (`runReader` get pcMaudeHandle ctxt)
     before     = alwaysBefore sys
     lessRel    = rawLessRel sys
-    nodesAfter = \i -> filter (i /=) $ S.toList $
-        D.reachableFrom lessRel i
+    -- Bind the memoising reachability query once so the adjacency map and the
+    -- per-node reachable sets are shared across all 'nodesAfter' calls.
+    reachableFrom = D.reachableFrom lessRel
+    nodesAfter = \i -> filter (i /=) $ S.toList $ reachableFrom i
     reducible  = reducibleFunSyms $ mhMaudeSig $ get pcMaudeHandle ctxt
     sst        = get sSubtermStore sys
 
