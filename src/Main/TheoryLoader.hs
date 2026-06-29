@@ -488,7 +488,9 @@ checkCloseIntrRule sign name thy = (sigWithMaude', thy {_thyCache = intrRulesACr
     
     -- do the no deconstruction chain check or not?
     deductionChainCheckBool = thy._thyOptions._deductionChainCheck
-    ndcChecks = if deductionChainCheckBool then prettyNDCcheck sign name intrRules else (sign, intrRules)
+    ocLimit = thy._thyOptions._openChainsLimit
+    satLimit = thy._thyOptions._saturationLimit
+    ndcChecks = if deductionChainCheckBool then prettyNDCcheck ocLimit satLimit sign name intrRules else (sign, intrRules)
     intrRulesACred = snd ndcChecks
     sigWithMaude' = fst ndcChecks
     sig' = if deductionChainCheckBool then toSignaturePure sigWithMaude' else sig
@@ -506,8 +508,10 @@ checkCloseIntrRuleDiff sign name diffthy = (sigWithMaude', diffCRthy)
     
     -- do the no deconstruction chain check or not?
     deductionChainCheckBool = diffthy._diffThyOptions._deductionChainCheck
+    ocLimit = diffthy._diffThyOptions._openChainsLimit
+    satLimit = diffthy._diffThyOptions._saturationLimit
     -- FIXME : update signature
-    ndcChecks = if deductionChainCheckBool then prettyNDCcheck sign name dcl else (sign, dcl)
+    ndcChecks = if deductionChainCheckBool then prettyNDCcheck ocLimit satLimit sign name dcl else (sign, dcl)
     dclACred = snd ndcChecks
     sigWithMaude' = fst ndcChecks
     sig' = if deductionChainCheckBool then toSignaturePure sigWithMaude' else sig
