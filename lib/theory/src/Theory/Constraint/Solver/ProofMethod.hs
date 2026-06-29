@@ -54,7 +54,6 @@ import qualified Data.ByteString.Char8 as BC
 
 import           Control.Basics
 import           Control.DeepSeq
-import qualified Control.Monad.Trans.PreciseFresh          as Precise
 import qualified Control.Monad.Trans.State                 as St
 
 import           Debug.Trace
@@ -308,7 +307,7 @@ execProofMethod ctxt method sys =
             $ uniqueListBy (comparing fst) id distinguish cases
 
     cleanup :: System -> System
-    cleanup s = L.set sSubst emptySubst (Precise.evalFresh (renamePrecise s) Precise.nothingUsed)
+    cleanup s = L.set sSubst emptySubst (renamePrecise s)
 
     -- solve the given goal
     -- PRE: Goal must be valid in this system.
