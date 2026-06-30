@@ -213,8 +213,22 @@ dedNaive fact terms = ded fact
 
 -- | Checks whether given a Maude signature and intruder rules a certain fact can be derived from a given set of terms.
 deductionCheck :: Integer -> Integer -> SignatureWithMaude -> OpenRuleCache -> LNFact -> [LNFact] -> Bool
-deductionCheck ocLimit satLimit sig intrR fact terms = null setD || checkProofd tabProof1 || checkProofd tabProof2
+deductionCheck ocLimit satLimit sig intrR fact terms =
+    -- (if null setD then id else trace ndcTheoryTrace)
+    (null setD || checkProofd tabProof1 || checkProofd tabProof2)
   where
+    -- Dump the synthetic Tamarin theory/theories used for this NDC deduction
+    -- check to the command line. We print the open (.spthy-renderable) theories,
+    -- which show the generated Out0 source rule and the (not-yet-NDC-tagged)
+    -- destructor rules.
+    ndcTheoryTrace =
+         "\n===== [NDC check] synthetic theory used for the deduction check =====\n"
+      ++ "----- with restrictions OnlyOnce and OnlyOnceD -----\n"
+      ++ tabTheory modifiedTheory1
+      ++ "\n----- with restriction OnlyOnce only -----\n"
+ --     ++ tabTheory modifiedTheory2
+      ++ "\n===== [NDC check] end of synthetic theory =====\n"
+
     tInf (Fact _ _ [f]) = f
     tInListf = foldMap getFactTerms
     setD = filter (not . (dedNaive (tInf fact) . tInListf)) (decompose terms)
@@ -237,7 +251,7 @@ deductionCheck ocLimit satLimit sig intrR fact terms = null setD || checkProofd 
     closedTheory2 = map (\t -> closeTheoryWithMaude sig t False False) modifiedTheory2 -- no AutoSources
     modifiedTheory2 = map (\s -> (addRules (newRules s) . addLemmas (newLemmas s) . addRestrictions [newRestriction0]) emptyThy) setD
  
-    tabTheory (th1:thq) = render (prettyTheory prettySignaturePure prettyOpenRuleCacheWithLimitAndNDC prettyOpenProtoRule prettyProof prettyTranslationElement th1) ++ " \n\n " ++ tabTheory thq
+    tabTheory (th1:thq) = render (prettyTheory prettySignaturePure prettyOpenRuleCache{-WithLimitAndNDC-} prettyOpenProtoRule prettyProof prettyTranslationElement th1) ++ " \n\n " ++ tabTheory thq
     tabTheory [] = ""
 
     newRules s = [OpenProtoRule (Rule (ProtoRuleEInfo (StandRule "Out0") (RuleAttributes Nothing Nothing False False Nothing) []) (pre s) (co s) (a s) []) []]
@@ -284,13 +298,16 @@ deductionCheck ocLimit satLimit sig intrR fact terms = null setD || checkProofd 
       Lit _                              -> t
       FApp f as                          -> termViewToTerm $ FApp f (map msgToFreshTerms as)
 
--- | Check if the chain of the two given intruder rules can be reduced. This is done by checking if the conclusion of one rule can be unified with a premise of the other rule and then checking if the resulting terms can be derived from the premises of both rules without chaining.
-ndcCheck :: Integer -> Integer -> SignatureWithMaude -> OpenRuleCache -> IntrRuleAC -> IntrRuleAC -> Bool
-ndcCheck ocLimit satLimit sig intrR r@(Rule (DestrRule name0 i _ _ _) ((Fact KDFact _ _):_) conc@[Fact KDFact _ _] _ _) r1@(Rule (DestrRule name1 j _ _ _) ((Fact KDFact _ _):_) [Fact KDFact _ _] _ _)
+-- | Check if the chain of the two given intruder rules can be reduced. This is done by checking if the conclusion of one rule can be unified with a 
+--   premise of the other rule and then checking if the resulting terms can be derived from the premises of both rules without chaining.
+--   If the two rules cannot be chained, then Nothing is returned. If they can be chained, then Just True is returned if the chain can be reduced and
+--   Just False is returned if the chain cannot be reduced.
+ndcCheck :: Integer -> Integer -> SignatureWithMaude -> OpenRuleCache -> IntrRuleAC -> IntrRuleAC -> Maybe Bool
+ndcCheck ocLimit satLimit sig intrR r@(Rule (DestrRule _ i _ _ _) ((Fact KDFact _ _):_) conc@[Fact KDFact _ _] _ _) r1@(Rule (DestrRule _ j _ _ _) ((Fact KDFact _ _):_) [Fact KDFact _ _] _ _)
   | i /= 1 && j /= 1 =
   case runMaude $ unifyLNFactEqs [Equal (head conc) (getDeconstrRuleKDPrem freshInst1)] of
-    []    -> True
-    subst -> checkDeduction (applySubsts subst r freshInst1)
+    []    -> Nothing
+    subst -> Just (checkDeduction (applySubsts subst r freshInst1))
   where
     hnd        = L.get sigmMaudeHandle sig
     runMaude   = (`runReader` hnd)
@@ -304,7 +321,7 @@ ndcCheck ocLimit satLimit sig intrR r@(Rule (DestrRule name0 i _ _ _) ((Fact KDF
     -- Apply the deduction check to all pairs of rules resulting from applying the unifying substitutions to the two given intruder rules.
     checkDeduction ((s1,h1):sq) = chainedRulesDeductionTest ocLimit satLimit sig intrR s1 h1 && checkDeduction sq
     checkDeduction []           = True
-ndcCheck _ _ _ _ _ _ = False
+ndcCheck _ _ _ _ _ _ = Nothing
 
 -- Check if the conclusion of the second rule can be derived from the premises of both rules without chaining.
 chainedRulesDeductionTest :: Integer -> Integer -> SignatureWithMaude -> OpenRuleCache -> IntrRuleAC -> IntrRuleAC -> Bool
@@ -333,14 +350,19 @@ chainedRulesDeductionTest ocLimit satLimit sig intrR instSigma inst1Sigma = aux 
 -- | Apply no deconstruction chain check to a list of intruder rules.
 applyNDCcheck :: Integer -> Integer -> SignatureWithMaude -> OpenRuleCache -> [[IntrRuleAC]] -> (SignatureWithMaude, OpenRuleCache)
 applyNDCcheck ocLimit satLimit sig intrR (t1:tq)  =
-    if checkChainReductionIter ruleTuples
+    if checkChainReductionIter ruleTuples == (True, False)
       then trace ("Function " ++ showFunSymName f ++ " has the NDC property.") (setNDCinSigWMaude sig' f IsNDC, map setNDCToTrue t1 ++ intrR')
       else trace ("Function " ++ showFunSymName f ++ " does not have the NDC property.") (sig', t1 ++ intrR')
   where
     f = fromJust (getDestrRuleFunction $ head t1)
     (sig', intrR') = applyNDCcheck ocLimit satLimit sig intrR tq
     ruleTuples = [(x,y) | x <- t1, y <- t1]
-    checkChainReductionIter = foldr (\(x,y) -> (&& ndcCheck ocLimit satLimit sig intrR x y)) True
+    checkChainReductionIter = foldr g (True, True)
+      where
+        g (x,y) (resSoFar, allNotChainable) = 
+          case ndcCheck ocLimit satLimit sig intrR x y of
+            Just result -> (resSoFar && result, False)
+            Nothing -> (resSoFar, allNotChainable)
 
     setNDCToTrue (Rule (DestrRule name i subterm constant funs) prems concs acts nvs) = Rule (DestrRule name i subterm constant (mapHead (setNDC IsNDC) funs)) prems concs acts nvs
     setNDCToTrue r = r
@@ -348,13 +370,13 @@ applyNDCcheck _ _ sig _ [] = (sig, [])
 
 -- | Pretty print the result of chain reduction checks.
 prettyNDCcheck :: Integer -> Integer -> SignatureWithMaude -> String -> OpenRuleCache -> (SignatureWithMaude, OpenRuleCache)
-prettyNDCcheck ocLimit satLimit sig name rules = unsafePerformIO $ do
-  let (builtInOrConstrOrNDC, nonBuiltInDestr) = partition (\x -> isBuiltInIntruderRule x || isConstrRule x || isNDCRule x /= Nothing) rules
-  --not (any (`BC.isSuffixOf` name0) builtInDestrRuleInclPair) && not (any (`BC.isSuffixOf`name1) builtInDestrRuleInclPair)
+prettyNDCcheck ocLimit satLimit sig name initRules = unsafePerformIO $ do
+  let (builtInOrConstrOrNDC, nonBuiltInDestr) = partition (\x -> isBuiltInIntruderRule x || isConstrRule x || isJust (isNDCRule x)) initRules
   -- for the no deconstruction check we group deconstruction rules of the same function together based on the rule function, as the NDC property is a property of the function and not of the individual rules. We then apply the NDC check to each group of rules separately, as the NDC property is a property of the function and not of the individual rules. This also allows us to parallelize the NDC check for different functions.
-  let t = groupBy ((==) `on` getDestrRuleFunction) $ sortOn getDestrRuleFunction nonBuiltInDestr
+  let t' = groupBy ((==) `on` getDestrRuleFunction) $ sortOn getDestrRuleFunction nonBuiltInDestr
+  let t = filter (not . all isSubtermRule) t' -- we only check the NDC property for deconstruction rules that are not subterm rules
   traceM ("[Theory " ++ name ++ "] No Deconstruction Chain checks started")
-  (sig', rules) <- evaluate . force $ applyNDCcheck ocLimit satLimit sig rules t
+  (sig', rules) <- evaluate . force $ applyNDCcheck ocLimit satLimit sig initRules t
   -- traceM ("Result : " ++ render (prettyOpenRuleCacheWithLimitAndNDC $ rules ++ builtInOrConstrOrNDC))
   traceM ("[Theory " ++ name ++ "] No Deconstruction Chain checks ended")
   return (sig', rules ++ builtInOrConstrOrNDC) -- we add the built-in rules back to the intruder rules, as they are not modified by the NDC check
