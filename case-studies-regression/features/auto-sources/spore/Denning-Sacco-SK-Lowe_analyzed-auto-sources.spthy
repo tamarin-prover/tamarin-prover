@@ -717,7 +717,7 @@ summary of summaries:
 analyzed: examples/features/auto-sources/spore/Denning-Sacco-SK-Lowe.spthy
 
   output:          examples/features/auto-sources/spore/Denning-Sacco-SK-Lowe.spthy.tmp
-  processing time: 1.07s
+  processing time: 1.08s
   
   executability (exists-trace): verified (9 steps)
   secrecy (all-traces): verified (38 steps)

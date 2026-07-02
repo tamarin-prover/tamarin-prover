@@ -300,16 +300,14 @@ rule (modulo E) p_0_1111[color=#ffffff, process="|", issapicrule,
      [ State_1111( skT ) ] --> [ State_11111( skT ), State_11112( skT ) ]
   */
 
-rule (modulo E) Abort_0_11111[color=#ffffff, process="Abort1()",
+rule (modulo E) Abort_0_11111[color=#ffffff, process="Abort1();",
                               issapicrule, role='Process']:
-   [ State_11111( skT.1 ) ]
-  -->
-   [ State_111111( skT.1 ), State_111112( skT.1 ) ]
+   [ State_11111( skT.1 ) ] --> [ State_111111( skT.1 ) ]
 
   /*
-  rule (modulo AC) Abort_0_11111[color=#ffffff, process="Abort1()",
+  rule (modulo AC) Abort_0_11111[color=#ffffff, process="Abort1();",
                                  issapicrule, role='Process']:
-     [ State_11111( skT ) ] --> [ State_111111( skT ), State_111112( skT ) ]
+     [ State_11111( skT ) ] --> [ State_111111( skT ) ]
   */
 
 rule (modulo E) inabortctpkpkysig_0_111111[color=#804046,
@@ -534,16 +532,6 @@ rule (modulo E) p_0_11111112[color=#804046, process="0", issapicrule,
      [ State_11111112( ct, pk1, pk2, skT, ysig ) ] --> [ ]
   */
 
-rule (modulo E) p_0_111112[color=#ffffff, process="0", issapicrule,
-                           role='Process']:
-   [ State_111112( skT.1 ) ] --> [ ]
-
-  /*
-  rule (modulo AC) p_0_111112[color=#ffffff, process="0", issapicrule,
-                              role='Process']:
-     [ State_111112( skT ) ] --> [ ]
-  */
-
 rule (modulo E) p_0_11112[color=#ffffff, process="!", issapicrule,
                           role='Process']:
    [ State_11112( skT.1 ) ] --> [ !Semistate_111121( skT.1 ) ]
@@ -578,18 +566,14 @@ rule (modulo E) p_0_111121[color=#ffffff, process="|", issapicrule,
      [ State_1111211( skT ), State_1111212( skT ) ]
   */
 
-rule (modulo E) Resolve_0_1111211[color=#ffffff, process="Resolve2()",
+rule (modulo E) Resolve_0_1111211[color=#ffffff, process="Resolve2();",
                                   issapicrule, role='Process']:
-   [ State_1111211( skT.1 ) ]
-  -->
-   [ State_11112111( skT.1 ), State_11112112( skT.1 ) ]
+   [ State_1111211( skT.1 ) ] --> [ State_11112111( skT.1 ) ]
 
   /*
-  rule (modulo AC) Resolve_0_1111211[color=#ffffff, process="Resolve2()",
+  rule (modulo AC) Resolve_0_1111211[color=#ffffff, process="Resolve2();",
                                      issapicrule, role='Process']:
-     [ State_1111211( skT ) ]
-    -->
-     [ State_11112111( skT ), State_11112112( skT ) ]
+     [ State_1111211( skT ) ] --> [ State_11112111( skT ) ]
   */
 
 rule (modulo E) inresolvectpkpkypcsysig_0_11112111[color=#5c8040,
@@ -1063,16 +1047,6 @@ rule (modulo E) p_0_1111211112[color=#5c8040, process="0", issapicrule,
      [ State_1111211112( skT, ypcs1, ysig2, ct, pk1, pk2 ) ] --> [ ]
   */
 
-rule (modulo E) p_0_11112112[color=#ffffff, process="0", issapicrule,
-                             role='Process']:
-   [ State_11112112( skT.1 ) ] --> [ ]
-
-  /*
-  rule (modulo AC) p_0_11112112[color=#ffffff, process="0", issapicrule,
-                                role='Process']:
-     [ State_11112112( skT ) ] --> [ ]
-  */
-
 rule (modulo E) p_0_1111212[color=#ffffff, process="!", issapicrule,
                             role='Process']:
    [ State_1111212( skT.1 ) ] --> [ !Semistate_11112121( skT.1 ) ]
@@ -1107,18 +1081,14 @@ rule (modulo E) p_0_11112121[color=#ffffff, process="|", issapicrule,
      [ State_111121211( skT ), State_111121212( skT ) ]
   */
 
-rule (modulo E) Resolve_0_111121211[color=#ffffff, process="Resolve1()",
+rule (modulo E) Resolve_0_111121211[color=#ffffff, process="Resolve1();",
                                     issapicrule, role='Process']:
-   [ State_111121211( skT.1 ) ]
-  -->
-   [ State_1111212111( skT.1 ), State_1111212112( skT.1 ) ]
+   [ State_111121211( skT.1 ) ] --> [ State_1111212111( skT.1 ) ]
 
   /*
-  rule (modulo AC) Resolve_0_111121211[color=#ffffff, process="Resolve1()",
-                                       issapicrule, role='Process']:
-     [ State_111121211( skT ) ]
-    -->
-     [ State_1111212111( skT ), State_1111212112( skT ) ]
+  rule (modulo AC) Resolve_0_111121211[color=#ffffff,
+                                       process="Resolve1();", issapicrule, role='Process']:
+     [ State_111121211( skT ) ] --> [ State_1111212111( skT ) ]
   */
 
 rule (modulo E) inresolvectpkpkysigypcs_0_1111212111[color=#798040,
@@ -1602,16 +1572,6 @@ rule (modulo E) p_0_111121211112[color=#798040, process="0", issapicrule,
      [ State_111121211112( skT, ypcs2, ysig1, ct, pk1, pk2 ) ] --> [ ]
   */
 
-rule (modulo E) p_0_1111212112[color=#ffffff, process="0", issapicrule,
-                               role='Process']:
-   [ State_1111212112( skT.1 ) ] --> [ ]
-
-  /*
-  rule (modulo AC) p_0_1111212112[color=#ffffff, process="0", issapicrule,
-                                  role='Process']:
-     [ State_1111212112( skT ) ] --> [ ]
-  */
-
 rule (modulo E) p_0_111121212[color=#ffffff, process="!", issapicrule,
                               role='Process']:
    [ State_111121212( skT.1 ) ] --> [ !Semistate_1111212121( skT.1 ) ]
@@ -1647,17 +1607,13 @@ rule (modulo E) p_0_1111212121[color=#ffffff, process="|", issapicrule,
   */
 
 rule (modulo E) WitnessAbort_0_11112121211[color=#ffffff,
-                                           process="WitnessAbort()", issapicrule, role='Process']:
-   [ State_11112121211( skT.1 ) ]
-  -->
-   [ State_111121212111( skT.1 ), State_111121212112( skT.1 ) ]
+                                           process="WitnessAbort();", issapicrule, role='Process']:
+   [ State_11112121211( skT.1 ) ] --> [ State_111121212111( skT.1 ) ]
 
   /*
   rule (modulo AC) WitnessAbort_0_11112121211[color=#ffffff,
-                                              process="WitnessAbort()", issapicrule, role='Process']:
-     [ State_11112121211( skT ) ]
-    -->
-     [ State_111121212111( skT ), State_111121212112( skT ) ]
+                                              process="WitnessAbort();", issapicrule, role='Process']:
+     [ State_11112121211( skT ) ] --> [ State_111121212111( skT ) ]
   */
 
 rule (modulo E) insigned_0_111121212111[color=#804059,
@@ -1830,16 +1786,6 @@ rule (modulo E) p_0_111121212111112[color=#804059, process="0",
      [ State_111121212111112( signed, signed2, sk1, skT, ct, pk2 ) ] --> [ ]
   */
 
-rule (modulo E) p_0_111121212112[color=#ffffff, process="0", issapicrule,
-                                 role='Process']:
-   [ State_111121212112( skT.1 ) ] --> [ ]
-
-  /*
-  rule (modulo AC) p_0_111121212112[color=#ffffff, process="0",
-                                    issapicrule, role='Process']:
-     [ State_111121212112( skT ) ] --> [ ]
-  */
-
 rule (modulo E) p_0_11112121212[color=#ffffff, process="!", issapicrule,
                                 role='Process']:
    [ State_11112121212( skT.1 ) ] --> [ !Semistate_111121212121( skT.1 ) ]
@@ -1861,17 +1807,13 @@ rule (modulo E) p_1_11112121212[color=#ffffff, process="!", issapicrule,
   */
 
 rule (modulo E) WitnessResolved_0_111121212121[color=#ffffff,
-                                               process="WitnessResolved()", issapicrule, role='Process']:
-   [ State_111121212121( skT.1 ) ]
-  -->
-   [ State_1111212121211( skT.1 ), State_1111212121212( skT.1 ) ]
+                                               process="WitnessResolved();", issapicrule, role='Process']:
+   [ State_111121212121( skT.1 ) ] --> [ State_1111212121211( skT.1 ) ]
 
   /*
   rule (modulo AC) WitnessResolved_0_111121212121[color=#ffffff,
-                                                  process="WitnessResolved()", issapicrule, role='Process']:
-     [ State_111121212121( skT ) ]
-    -->
-     [ State_1111212121211( skT ), State_1111212121212( skT ) ]
+                                                  process="WitnessResolved();", issapicrule, role='Process']:
+     [ State_111121212121( skT ) ] --> [ State_1111212121211( skT ) ]
   */
 
 rule (modulo E) inxsigpkpk_0_1111212121211[color=#40805f,
@@ -2167,16 +2109,6 @@ rule (modulo E) p_0_1111212121211112[color=#40805f, process="0",
      [ State_1111212121211112( skT, xsig, xsig1, xsig2, pk1, pk2 ) ] --> [ ]
   */
 
-rule (modulo E) p_0_1111212121212[color=#ffffff, process="0",
-                                  issapicrule, role='Process']:
-   [ State_1111212121212( skT.1 ) ] --> [ ]
-
-  /*
-  rule (modulo AC) p_0_1111212121212[color=#ffffff, process="0",
-                                     issapicrule, role='Process']:
-     [ State_1111212121212( skT ) ] --> [ ]
-  */
-
 restriction set_in:
   "∀ x y #t3.
     (IsIn( x, y ) @ #t3) ⇒
@@ -2354,7 +2286,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/GJM-contract/contract.spthy
 
   output:          examples/sapic/fast/GJM-contract/contract.spthy.tmp
-  processing time: 8.08s
+  processing time: 7.82s
   
   aborted_and_resolved_exclusive (all-traces): verified (18 steps)
   aborted_contract_reachable (exists-trace): verified (6 steps)

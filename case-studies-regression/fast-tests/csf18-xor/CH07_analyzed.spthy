@@ -708,7 +708,7 @@ summary of summaries:
 analyzed: examples/csf18-xor/CH07.spthy
 
   output:          examples/csf18-xor/CH07.spthy.tmp
-  processing time: 0.52s
+  processing time: 0.48s
   
   recentalive_tag (all-traces): falsified - found trace (11 steps)
   recentalive_reader (all-traces): verified (23 steps)

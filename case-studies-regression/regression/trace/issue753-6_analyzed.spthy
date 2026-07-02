@@ -1,0 +1,33 @@
+theory FunctionRedefiningBuiltinsSameArity
+
+begin
+
+// Function signature and definition of the equational theory E
+
+functions: fst/1, h/1, pair/2, snd/1
+equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
+
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.13.0
+Maude version 3.5.1
+Git revision: 4be571f9d2b4fc31ac730003e11f29fcd3c023d5 (with uncommited changes), branch: fix-builtin
+Compiled at: 2026-03-26 09:56:07.964215 UTC
+*/
+
+end
+/* Output
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/regression/trace/issue753-6.spthy
+
+  output:          examples/regression/trace/issue753-6.spthy.tmp
+  processing time: 0.02s
+  
+
+==============================================================================
+*/

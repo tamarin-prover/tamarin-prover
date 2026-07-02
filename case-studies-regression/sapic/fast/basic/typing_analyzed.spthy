@@ -144,16 +144,14 @@ rule (modulo E) p_0_1111211[color=#ffffff, process="0", issapicrule,
      [ State_1111211( a, n, n.1 ) ] --> [ ]
   */
 
-rule (modulo E) Palol_0_1112[color=#ffffff, process="P(a.1:lol)",
+rule (modulo E) Palol_0_1112[color=#ffffff, process="P(a.1:lol);",
                              issapicrule, role='Process']:
-   [ State_1112( a.1, n.1 ) ]
-  -->
-   [ State_11121( a.1, n.1 ), State_11122( a.1, n.1 ) ]
+   [ State_1112( a.1, n.1 ) ] --> [ State_11121( a.1, n.1 ) ]
 
   /*
-  rule (modulo AC) Palol_0_1112[color=#ffffff, process="P(a.1:lol)",
+  rule (modulo AC) Palol_0_1112[color=#ffffff, process="P(a.1:lol);",
                                 issapicrule, role='Process']:
-     [ State_1112( a, n ) ] --> [ State_11121( a, n ), State_11122( a, n ) ]
+     [ State_1112( a, n ) ] --> [ State_11121( a, n ) ]
   */
 
 rule (modulo E) newxlol_0_11121[color=#6c8040, process="new x.1:lol;",
@@ -376,26 +374,14 @@ rule (modulo E) p_0_111211111111111121[color=#6c8040, process="0",
      [ State_111211111111111121( a, n, x, y, b ) ] --> [ ]
   */
 
-rule (modulo E) p_0_11122[color=#ffffff, process="0", issapicrule,
-                          role='Process']:
-   [ State_11122( a.1, n.1 ) ] --> [ ]
-
-  /*
-  rule (modulo AC) p_0_11122[color=#ffffff, process="0", issapicrule,
-                             role='Process']:
-     [ State_11122( a, n ) ] --> [ ]
-  */
-
-rule (modulo E) Qhalol_0_112[color=#ffffff, process="Q(h(a.1:lol))",
+rule (modulo E) Qhalol_0_112[color=#ffffff, process="Q(h(a.1:lol));",
                              issapicrule, role='Process']:
-   [ State_112( a.1, n.1 ) ]
-  -->
-   [ State_1121( a.1, n.1 ), State_1122( a.1, n.1 ) ]
+   [ State_112( a.1, n.1 ) ] --> [ State_1121( a.1, n.1 ) ]
 
   /*
-  rule (modulo AC) Qhalol_0_112[color=#ffffff, process="Q(h(a.1:lol))",
+  rule (modulo AC) Qhalol_0_112[color=#ffffff, process="Q(h(a.1:lol));",
                                 issapicrule, role='Process']:
-     [ State_112( a, n ) ] --> [ State_1121( a, n ), State_1122( a, n ) ]
+     [ State_112( a, n ) ] --> [ State_1121( a, n ) ]
   */
 
 rule (modulo E) inyhalol_0_1121[color=#807140,
@@ -418,16 +404,6 @@ rule (modulo E) p_0_11211[color=#807140, process="0", issapicrule,
   rule (modulo AC) p_0_11211[color=#807140, process="0", issapicrule,
                              role='Q']:
      [ State_11211( a, n, y ) ] --> [ ]
-  */
-
-rule (modulo E) p_0_1122[color=#ffffff, process="0", issapicrule,
-                         role='Process']:
-   [ State_1122( a.1, n.1 ) ] --> [ ]
-
-  /*
-  rule (modulo AC) p_0_1122[color=#ffffff, process="0", issapicrule,
-                            role='Process']:
-     [ State_1122( a, n ) ] --> [ ]
   */
 
 restriction single_session:

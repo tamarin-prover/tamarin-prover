@@ -298,7 +298,7 @@ summary of summaries:
 analyzed: examples/csf12/KEA_plus_KI_KCI.spthy
 
   output:          examples/csf12/KEA_plus_KI_KCI.spthy.tmp
-  processing time: 0.18s
+  processing time: 0.17s
   
   keaplus_initiator_key (all-traces): verified (13 steps)
   keaplus_responder_key (all-traces): verified (13 steps)

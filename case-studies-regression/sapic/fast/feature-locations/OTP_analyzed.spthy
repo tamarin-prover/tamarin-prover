@@ -1356,25 +1356,19 @@ rule (modulo E) p_0_1111111111[color=#ffffff, process="|", issapicrule,
   */
 
 rule (modulo E) userpcchannelcuchannelpw_0_11111111111[color=#ffffff,
-                                                       process="user(pc.1:channel, cu.1:channel, pw.1)",
+                                                       process="user(pc.1:channel, cu.1:channel, pw.1);",
                                                        issapicrule, role='Process']:
    [ State_11111111111( cu.1, pc.1, pw.1, skV.1 ) ]
   -->
-   [
-   State_111111111111( cu.1, pc.1, pw.1, skV.1 ),
-   State_111111111112( cu.1, pc.1, pw.1, skV.1 )
-   ]
+   [ State_111111111111( cu.1, pc.1, pw.1, skV.1 ) ]
 
   /*
   rule (modulo AC) userpcchannelcuchannelpw_0_11111111111[color=#ffffff,
-                                                          process="user(pc.1:channel, cu.1:channel, pw.1)",
+                                                          process="user(pc.1:channel, cu.1:channel, pw.1);",
                                                           issapicrule, role='Process']:
      [ State_11111111111( cu, pc, pw, skV ) ]
     -->
-     [
-     State_111111111111( cu, pc, pw, skV ),
-     State_111111111112( cu, pc, pw, skV )
-     ]
+     [ State_111111111111( cu, pc, pw, skV ) ]
   */
 
 rule (modulo E) inpcchannelcode_0_111111111111[color=#504080,
@@ -1554,16 +1548,6 @@ rule (modulo E) p_0_1111111111111111111[color=#504080, process="0",
      [ State_1111111111111111111( code, cu, fr, pc, pw, skV ) ] --> [ ]
   */
 
-rule (modulo E) p_0_111111111112[color=#ffffff, process="0", issapicrule,
-                                 role='Process']:
-   [ State_111111111112( cu.1, pc.1, pw.1, skV.1 ) ] --> [ ]
-
-  /*
-  rule (modulo AC) p_0_111111111112[color=#ffffff, process="0",
-                                    issapicrule, role='Process']:
-     [ State_111111111112( cu, pc, pw, skV ) ] --> [ ]
-  */
-
 rule (modulo E) p_0_11111111112[color=#ffffff, process="!", issapicrule,
                                 role='Process']:
    [ State_11111111112( cu.1, pc.1, pw.1, skV.1 ) ]
@@ -1613,25 +1597,19 @@ rule (modulo E) p_0_111111111121[color=#ffffff, process="|", issapicrule,
   */
 
 rule (modulo E) enclavepkskVcuchannelpw_0_1111111111211[color=#ffffff,
-                                                        process="enclave(pk(skV.1), cu.1:channel, pw.1)",
+                                                        process="enclave(pk(skV.1), cu.1:channel, pw.1);",
                                                         issapicrule, role='Process']:
    [ State_1111111111211( cu.1, pc.1, pw.1, skV.1 ) ]
   -->
-   [
-   State_11111111112111( cu.1, pc.1, pw.1, skV.1 ),
-   State_11111111112112( cu.1, pc.1, pw.1, skV.1 )
-   ]
+   [ State_11111111112111( cu.1, pc.1, pw.1, skV.1 ) ]
 
   /*
   rule (modulo AC) enclavepkskVcuchannelpw_0_1111111111211[color=#ffffff,
-                                                           process="enclave(pk(skV.1), cu.1:channel, pw.1)",
+                                                           process="enclave(pk(skV.1), cu.1:channel, pw.1);",
                                                            issapicrule, role='Process']:
      [ State_1111111111211( cu, pc, pw, skV ) ]
     -->
-     [
-     State_11111111112111( cu, pc, pw, skV ),
-     State_11111111112112( cu, pc, pw, skV )
-     ]
+     [ State_11111111112111( cu, pc, pw, skV ) ]
   */
 
 rule (modulo E) newsharedk_0_11111111112111[color=#80407b,
@@ -2120,16 +2098,6 @@ rule (modulo E) p_0_11111111112111111111111111[color=#80407b,
      [ ]
   */
 
-rule (modulo E) p_0_11111111112112[color=#ffffff, process="0",
-                                   issapicrule, role='Process']:
-   [ State_11111111112112( cu.1, pc.1, pw.1, skV.1 ) ] --> [ ]
-
-  /*
-  rule (modulo AC) p_0_11111111112112[color=#ffffff, process="0",
-                                      issapicrule, role='Process']:
-     [ State_11111111112112( cu, pc, pw, skV ) ] --> [ ]
-  */
-
 rule (modulo E) p_0_1111111111212[color=#ffffff, process="!",
                                   issapicrule, role='Process']:
    [ State_1111111111212( cu.1, pc.1, pw.1, skV.1 ) ]
@@ -2159,25 +2127,19 @@ rule (modulo E) p_1_1111111111212[color=#ffffff, process="!",
   */
 
 rule (modulo E) serverskVpcchannelpw_0_11111111112121[color=#ffffff,
-                                                      process="server(skV.1, pc.1:channel, pw.1)",
+                                                      process="server(skV.1, pc.1:channel, pw.1);",
                                                       issapicrule, role='Process']:
    [ State_11111111112121( cu.1, pc.1, pw.1, skV.1 ) ]
   -->
-   [
-   State_111111111121211( cu.1, pc.1, pw.1, skV.1 ),
-   State_111111111121212( cu.1, pc.1, pw.1, skV.1 )
-   ]
+   [ State_111111111121211( cu.1, pc.1, pw.1, skV.1 ) ]
 
   /*
   rule (modulo AC) serverskVpcchannelpw_0_11111111112121[color=#ffffff,
-                                                         process="server(skV.1, pc.1:channel, pw.1)",
+                                                         process="server(skV.1, pc.1:channel, pw.1);",
                                                          issapicrule, role='Process']:
      [ State_11111111112121( cu, pc, pw, skV ) ]
     -->
-     [
-     State_111111111121211( cu, pc, pw, skV ),
-     State_111111111121212( cu, pc, pw, skV )
-     ]
+     [ State_111111111121211( cu, pc, pw, skV ) ]
   */
 
 rule (modulo E) inshare_0_111111111121211[color=#658040,
@@ -3186,16 +3148,6 @@ rule (modulo E) p_0_111111111121211112[color=#658040, process="0",
      [ ]
   */
 
-rule (modulo E) p_0_111111111121212[color=#ffffff, process="0",
-                                    issapicrule, role='Process']:
-   [ State_111111111121212( cu.1, pc.1, pw.1, skV.1 ) ] --> [ ]
-
-  /*
-  rule (modulo AC) p_0_111111111121212[color=#ffffff, process="0",
-                                       issapicrule, role='Process']:
-     [ State_111111111121212( cu, pc, pw, skV ) ] --> [ ]
-  */
-
 restriction predicate_eq:
   "∀ #i a b. (Pred_Eq( a, b ) @ #i) ⇒ (a = b)"
   // safety formula
@@ -3242,7 +3194,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-locations/OTP.spthy
 
   output:          examples/sapic/fast/feature-locations/OTP.spthy.tmp
-  processing time: 36.87s
+  processing time: 36.34s
   
   reachV (exists-trace): falsified - no trace found (29 steps)
   secrecy_key (all-traces): verified (8 steps)

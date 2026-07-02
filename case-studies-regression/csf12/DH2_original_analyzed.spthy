@@ -1832,7 +1832,7 @@ summary of summaries:
 analyzed: examples/csf12/DH2_original.spthy
 
   output:          examples/csf12/DH2_original.spthy.tmp
-  processing time: 7.73s
+  processing time: 7.53s
   
   KAS_key_secrecy (all-traces): verified (501 steps)
 

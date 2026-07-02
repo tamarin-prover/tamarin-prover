@@ -72,6 +72,7 @@ reportMapTermsAction f loc ac
         | (Event fa) <- ac      = Event (fmap (f loc) fa)
         | (MSR l a r rest vs) <- ac  = MSR (f2mapf l) (f2mapf a) (f2mapf r) (fmap formulaMap rest) vs
         |  Rep <- ac            = Rep
+        |  (ProcessCall _ _) <- ac  = ac
             where f2mapf = fmap $ fmap (f loc)
                   -- something like
                   -- formulaMap = mapAtoms $ const $ fmap $ fmap f

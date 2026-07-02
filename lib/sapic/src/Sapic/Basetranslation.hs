@@ -201,6 +201,10 @@ baseTransAction
       , (l,a,r,res) <- ( map toLNFact l' , map toLNFact a' , map toLNFact r', map toLFormula res') =
           let tx' = freeset' l `union` tildex in
           ([(def_state:map TamarinFact l, map TamarinAct a ++ [EventEmpty | needsAssImmediate ], def_state' tx':map TamarinFact r, res)], tx')
+    -- Process Calls are currently made by a simple inlining of the process, where the parameters have already been substituded by the value of the caller inside the parser. Variants could be defined to optimize this behaviour.
+    | ProcessCall {} <- ac =
+          ([ ([def_state], [], [def_state' tildex], [])], -- TODO remove second state def_state2 but make sure `gen` does not produce rule for it in this case, otherwise we get warnings.
+              tildex)
     | otherwise = throw ((NotImplementedError $ "baseTransAction:" ++ prettySapicAction ac) :: SapicException AnnotatedProcess)
     where
         def_state = State LState p tildex -- default state when entering
@@ -293,10 +297,6 @@ baseTransComb c an p tildex
        [ ([def_state], [IsIn t v], [def_state1 tx' ], []),
          ([def_state], [IsNotSet t], [def_state2 tildex], [])]
              , tx', Just tildex )
--- Process Calls are currently made by a simple inlining of the process, where the parameters have already been substituded by the value of the caller inside the parser. Variants could be defined to optimize this behaviour.
-    | ProcessCall {} <- c =
-       ([ ([def_state], [], [def_state1 tildex, def_state2 tildex ], [])], -- TODO remove second state def_state2 but make sure `gen` does not produce rule for it in this case, otherwise we get warnings.
-        tildex, Just tildex)
 
     -- | otherwise = throw (NotImplementedError "baseTransComb":: SapicException AnnotatedProcess)
     where

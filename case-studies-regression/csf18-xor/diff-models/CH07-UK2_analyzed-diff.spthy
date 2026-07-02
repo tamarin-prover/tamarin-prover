@@ -8710,7 +8710,7 @@ summary of summaries:
 analyzed: examples/csf18-xor/diff-models/CH07-UK2.spthy
 
   output:          examples/csf18-xor/diff-models/CH07-UK2.spthy.tmp
-  processing time: 15.17s
+  processing time: 14.96s
   
   RHS :  executable (exists-trace): verified (5 steps)
   LHS :  executable (exists-trace): verified (5 steps)

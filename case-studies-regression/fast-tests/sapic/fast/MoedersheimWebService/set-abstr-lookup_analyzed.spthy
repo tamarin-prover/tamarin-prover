@@ -113,16 +113,14 @@ rule (modulo E) p_0_111[color=#ffffff, process="|", issapicrule,
      [ State_111( pki ) ] --> [ State_1111( pki ), State_1112( pki ) ]
   */
 
-rule (modulo E) Server_0_1111[color=#ffffff, process="Server()",
+rule (modulo E) Server_0_1111[color=#ffffff, process="Server();",
                               issapicrule, role='Process']:
-   [ State_1111( pki.1 ) ]
-  -->
-   [ State_11111( pki.1 ), State_11112( pki.1 ) ]
+   [ State_1111( pki.1 ) ] --> [ State_11111( pki.1 ) ]
 
   /*
-  rule (modulo AC) Server_0_1111[color=#ffffff, process="Server()",
+  rule (modulo AC) Server_0_1111[color=#ffffff, process="Server();",
                                  issapicrule, role='Process']:
-     [ State_1111( pki ) ] --> [ State_11111( pki ), State_11112( pki ) ]
+     [ State_1111( pki ) ] --> [ State_11111( pki ) ]
   */
 
 rule (modulo E) p_0_11111[color=#806040, process="|", issapicrule,
@@ -521,16 +519,6 @@ rule (modulo E) p_0_1111121112[color=#806040, process="0", issapicrule,
      [ State_1111121112( lock, nsk, pki, sk, user ) ] --> [ ]
   */
 
-rule (modulo E) p_0_11112[color=#ffffff, process="0", issapicrule,
-                          role='Process']:
-   [ State_11112( pki.1 ) ] --> [ ]
-
-  /*
-  rule (modulo AC) p_0_11112[color=#ffffff, process="0", issapicrule,
-                             role='Process']:
-     [ State_11112( pki ) ] --> [ ]
-  */
-
 rule (modulo E) newuser_0_1112[color=#ffffff, process="new user.3;",
                                issapicrule, role='Process']:
    [ State_1112( pki.1 ), Fr( user.3 ) ]
@@ -581,18 +569,16 @@ rule (modulo E) p_1_111211[color=#ffffff, process="!", issapicrule,
      [ !Semistate_1112111( pki, user ) ] --> [ State_1112111( pki, user ) ]
   */
 
-rule (modulo E) Client_0_1112111[color=#ffffff, process="Client()",
+rule (modulo E) Client_0_1112111[color=#ffffff, process="Client();",
                                  issapicrule, role='Process']:
    [ State_1112111( pki.1, user.3 ) ]
   -->
-   [ State_11121111( pki.1, user.3 ), State_11121112( pki.1, user.3 ) ]
+   [ State_11121111( pki.1, user.3 ) ]
 
   /*
-  rule (modulo AC) Client_0_1112111[color=#ffffff, process="Client()",
+  rule (modulo AC) Client_0_1112111[color=#ffffff, process="Client();",
                                     issapicrule, role='Process']:
-     [ State_1112111( pki, user ) ]
-    -->
-     [ State_11121111( pki, user ), State_11121112( pki, user ) ]
+     [ State_1112111( pki, user ) ] --> [ State_11121111( pki, user ) ]
   */
 
 rule (modulo E) newnsk_0_11121111[color=#518040, process="new ~nsk.2;",
@@ -853,16 +839,6 @@ rule (modulo E) p_0_11121111112[color=#518040, process="0", issapicrule,
      [ State_11121111112( pki, ~nsk, lock, user ) ] --> [ ]
   */
 
-rule (modulo E) p_0_11121112[color=#ffffff, process="0", issapicrule,
-                             role='Process']:
-   [ State_11121112( pki.1, user.3 ) ] --> [ ]
-
-  /*
-  rule (modulo AC) p_0_11121112[color=#ffffff, process="0", issapicrule,
-                                role='Process']:
-     [ State_11121112( pki, user ) ] --> [ ]
-  */
-
 restriction set_in:
   "∀ x y #t3.
     (IsIn( x, y ) @ #t3) ⇒
@@ -1049,7 +1025,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/MoedersheimWebService/set-abstr-lookup.spthy
 
   output:          examples/sapic/fast/MoedersheimWebService/set-abstr-lookup.spthy.tmp
-  processing time: 0.82s
+  processing time: 0.76s
   
   Knows_Honest_Key_imp_Revoked (all-traces): verified (11 steps)
 

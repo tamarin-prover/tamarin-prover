@@ -68,7 +68,7 @@ summary of summaries:
 analyzed: examples/features/macros/MacroInLemmasAndRestrictions.spthy
 
   output:          examples/features/macros/MacroInLemmasAndRestrictions.spthy.tmp
-  processing time: 0.02s
+  processing time: 0.03s
   
   M (exists-trace): verified (2 steps)
 

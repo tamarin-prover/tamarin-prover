@@ -62,14 +62,14 @@ rule (modulo E) p_0_1[color=#ffffff, process="|", issapicrule,
      [ State_1( c ) ] --> [ State_11( c ), State_12( c ) ]
   */
 
-rule (modulo E) P_0_11[color=#ffffff, process="P()", issapicrule,
+rule (modulo E) P_0_11[color=#ffffff, process="P();", issapicrule,
                        role='Process']:
-   [ State_11( c.1 ) ] --> [ State_111( c.1 ), State_112( c.1 ) ]
+   [ State_11( c.1 ) ] --> [ State_111( c.1 ) ]
 
   /*
-  rule (modulo AC) P_0_11[color=#ffffff, process="P()", issapicrule,
+  rule (modulo AC) P_0_11[color=#ffffff, process="P();", issapicrule,
                           role='Process']:
-     [ State_11( c ) ] --> [ State_111( c ), State_112( c ) ]
+     [ State_11( c ) ] --> [ State_111( c ) ]
   */
 
 rule (modulo E) newa_0_111[color=#6c8040, process="new a.1;",
@@ -152,24 +152,14 @@ rule (modulo E) p_0_1111111[color=#6c8040, process="0", issapicrule,
      [ State_1111111( a, c ) ] --> [ ]
   */
 
-rule (modulo E) p_0_112[color=#ffffff, process="0", issapicrule,
-                        role='Process']:
-   [ State_112( c.1 ) ] --> [ ]
-
-  /*
-  rule (modulo AC) p_0_112[color=#ffffff, process="0", issapicrule,
-                           role='Process']:
-     [ State_112( c ) ] --> [ ]
-  */
-
-rule (modulo E) Q_0_12[color=#ffffff, process="Q()", issapicrule,
+rule (modulo E) Q_0_12[color=#ffffff, process="Q();", issapicrule,
                        role='Process']:
-   [ State_12( c.1 ) ] --> [ State_121( c.1 ), State_122( c.1 ) ]
+   [ State_12( c.1 ) ] --> [ State_121( c.1 ) ]
 
   /*
-  rule (modulo AC) Q_0_12[color=#ffffff, process="Q()", issapicrule,
+  rule (modulo AC) Q_0_12[color=#ffffff, process="Q();", issapicrule,
                           role='Process']:
-     [ State_12( c ) ] --> [ State_121( c ), State_122( c ) ]
+     [ State_12( c ) ] --> [ State_121( c ) ]
   */
 
 rule (modulo E) incx_0_121[color=#807140, process="in(c.1,x.1);",
@@ -236,16 +226,6 @@ rule (modulo E) p_0_12111[color=#807140, process="0", issapicrule,
      [ State_12111( c, x ) ] --> [ ]
   */
 
-rule (modulo E) p_0_122[color=#ffffff, process="0", issapicrule,
-                        role='Process']:
-   [ State_122( c.1 ) ] --> [ ]
-
-  /*
-  rule (modulo AC) p_0_122[color=#ffffff, process="0", issapicrule,
-                           role='Process']:
-     [ State_122( c ) ] --> [ ]
-  */
-
 restriction single_session:
   "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
   // safety formula
@@ -274,7 +254,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/basic/channels1.spthy
 
   output:          examples/sapic/fast/basic/channels1.spthy.tmp
-  processing time: 0.14s
+  processing time: 0.13s
   
   secret (all-traces): verified (4 steps)
   received (exists-trace): verified (3 steps)
