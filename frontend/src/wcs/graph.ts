@@ -7,6 +7,7 @@ import { DiGraph, DiGraphConnections } from "../digraph";
 import './graph.css';
 import { JSONGraphs, prettyPrintTerm } from "../jsongraph";
 import { TamarinGraph, TamarinGraphBuildContext } from "../tmgraph";
+import { prettierJSONGraphNodeTerm } from "../prettier";
 
 const ARROW_HEAD_WIDTH = 7;
 const ARROW_HEAD_HEIGHT = 10;
@@ -241,7 +242,7 @@ export class DotGraphViz extends HTMLElement {
         legend.setAttribute("class", "lgd-item");
 
         const highlightNodes = () => {
-          this.highlightConnections = { nodes: Array.from(ctx.abbrevMap[index].values()).map(id => id.slice(4)), edges: [] };
+          this.highlightConnections = { nodes: Array.from(ctx.abbrevMap[index]?.values() ?? []).map(id => id.slice(4)), edges: [] };
           this.highlight();
         }
 
@@ -264,7 +265,7 @@ export class DotGraphViz extends HTMLElement {
         // the three columns of the legend row
         // the abbreviation
         const legendAbbrev = document.createElement("td");
-        legendAbbrev.textContent = prettyPrintTerm(abbrev.jgaAbbrev);
+        legendAbbrev.textContent = prettierJSONGraphNodeTerm(abbrev.jgaAbbrev);
         legend.appendChild(legendAbbrev);
 
         // the equal sign
@@ -274,7 +275,7 @@ export class DotGraphViz extends HTMLElement {
 
         // the expansion of the abbreviation
         const legendExpand = document.createElement("td");
-        legendExpand.textContent = prettyPrintTerm(abbrev.jgaExpansion);
+        legendExpand.textContent = prettierJSONGraphNodeTerm(abbrev.jgaExpansion);
         legend.appendChild(legendExpand);
 
         ltable.appendChild(legend);

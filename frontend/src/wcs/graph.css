@@ -51,6 +51,9 @@ dot-graph-viz>svg{
 .lgd-container > table {
   border-collapse: collapse;
 }
+.lgd-container td {
+    white-space: pre-wrap;
+}
 
 tr.lgd-item > td {
   padding: 4px;

@@ -119,6 +119,48 @@ function renderDoc(width: number, d: Doc): string {
     }
     return out.join('');
 }
+function renderDocTerm(width: number, d: Doc): string {
+    type Frame = { indent: number; doc: Doc };
+    const stack: Frame[] = [{ indent: 0, doc: d }];
+    const out: string[] = [];
+    let col = 0;
+
+    while (stack.length > 0) {
+        const { indent, doc } = stack.pop()!;
+        switch (doc.tag) {
+            case 'Empty':
+                break;
+
+            case 'Text':
+                out.push(doc.s);
+                col += doc.s.length;
+                break;
+
+            case 'Line':
+                out.push("\n" + " ".repeat(indent));
+                col = indent;
+                break;
+
+            case 'Concat':
+                stack.push({ indent, doc: doc.b });
+                stack.push({ indent, doc: doc.a });
+                break;
+
+            case 'Nest':
+                stack.push({ indent: indent + doc.n, doc: doc.d });
+                break;
+
+            case 'Union':
+                stack.push({
+                    indent,
+                    doc: fits(width - col, doc.flat) ? doc.flat : doc.full
+                });
+                break;
+        }
+    }
+
+    return out.join("");
+}
 
 // -----------------------------------------------------------------------------
 // Combinators
@@ -261,7 +303,7 @@ function prettyFact(f: JSONGraphNodeFact): Doc {
 // -----------------------------------------------------------------------------
 
 export function prettierJSONGraphNodeTerm(t: JSONGraphNodeTerm): string {
-    return renderDoc(LINE_WIDTH, prettyTerm(t));
+    return renderDocTerm(LINE_WIDTH, prettyTerm(t));
 }
 
 export function prettierJSONGraphNodeFact(f: JSONGraphNodeFact): string {

@@ -413,12 +413,11 @@ dotLessEdge (src, tgt, color) = do
   liftDot $ D.edge srcId tgtId [("color",color),("style","dashed")]
 
 -- | Function to order abbreviations for JSON output. Replicating the topological sort used in the legend generation to ensure consistent ordering.
-orderAbbreviationsForJSON :: Abbreviations -> [(AbbreviationTerm, AbbreviationExpansion)]
+orderAbbreviationsForJSON :: Abbreviations -> [(LNTerm, (AbbreviationTerm, AbbreviationExpansion))]
 orderAbbreviationsForJSON abbrevs =
-  topoSortAbbrevs $ zip [0..] $
-    sortOn (Data.Ord.Down . render . Sys.prettyLNTerm . fst) $ M.elems abbrevs
+  topoSortAbbrevs $ zip [0..] $ sortOn( Data.Ord.Down . render . Sys.prettyLNTerm . fst . snd) (M.toList abbrevs)
   where
-    topoSortAbbrevs :: [(Int, (AbbreviationTerm, AbbreviationExpansion))] -> [(AbbreviationTerm, AbbreviationExpansion)]
+    topoSortAbbrevs :: [(Int, (LNTerm, (AbbreviationTerm, AbbreviationExpansion)))]  -> [(LNTerm,(AbbreviationTerm,AbbreviationExpansion))]
     topoSortAbbrevs keyedElems =
       let edgeList = map (\(key1, node) ->
                             let outlist = findLegendEdges keyedElems node in
@@ -427,9 +426,9 @@ orderAbbreviationsForJSON abbrevs =
           vertices = G.topSort graph in
       map (\v -> fst3 $ vf v) vertices
 
-    findLegendEdges :: [(Int, (AbbreviationTerm, AbbreviationExpansion))] -> (AbbreviationTerm, AbbreviationExpansion) -> [Int]
-    findLegendEdges keyedElems (abbrevName1, _) =
-      mapMaybe (\(key2, (_, recursiveExpansion2)) ->
+    findLegendEdges :: [(Int, (LNTerm, (AbbreviationTerm, AbbreviationExpansion)))]  -> (LNTerm, (AbbreviationTerm, AbbreviationExpansion)) -> [Int]
+    findLegendEdges keyedElems (_, (abbrevName1, _)) =
+      mapMaybe (\(key2, (_,(_, recursiveExpansion2))) ->
                   if isProperSubterm abbrevName1 recursiveExpansion2
                   then Just key2
                   else Nothing) keyedElems

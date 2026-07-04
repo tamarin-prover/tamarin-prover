@@ -13,6 +13,7 @@ import {
     JSONGraphNode, 
     JSONGraphNodeFact, 
     prettyPrintFact, 
+    prettyPrintTerm, 
     replace
 } from "./jsongraph";
 import { DotNodeLabelCell, DotNodeLabelContainer } from "./vizhtml";
@@ -94,16 +95,17 @@ export class TamarinGraphBuildContext {
 // export type TamarinGraphSimplificationLevel = 0 | 1 | 2 | 3 ;
 
 function abbreviate(
-    nodeName: string, 
-    fact: JSONGraphNodeFact, 
+    nodeName: string,
+    fact: JSONGraphNodeFact,
     ctx: TamarinGraphBuildContext): JSONGraphNodeFact {
     // TODO(J): fact is being mutated here, do we still need return?
     fact.jgnFactTerms = fact.jgnFactTerms.map(t => {
         // desc order
-        for (const [index, abbrev] of ctx.abbreviations.sort((a, b) => depth(b.jgaTerm) - depth(a.jgaTerm)).entries()) {
+        const sortedAbbrevs = ctx.abbreviations.map((a, i) => ({ a, i })).sort((x, y) => depth(y.a.jgaTerm) - depth(x.a.jgaTerm));
+        for (const { a: abbrev, i } of sortedAbbrevs) {
             const result = replace(t, abbrev.jgaTerm, abbrev.jgaAbbrev);
             if (result.replaced) {
-                ctx.recordAbbrev(index, nodeName);
+                ctx.recordAbbrev(i, nodeName);
                 t = result.term;
             }
         }
@@ -555,9 +557,8 @@ function createTamarinGraphNode(
 
 function createTamarinGraphEdge(
     jgEdge: JSONGraphEdge, 
-    ctx: TamarinGraphBuildContext, 
-    simplification: number): TamarinGraphEdge {
-        console.debug(simplification);
+    ctx: TamarinGraphBuildContext): TamarinGraphEdge {
+        
         switch(jgEdge.jgeRelation) {
             case "KFact":
                 return new TamarinGraphKFactEdge(jgEdge, ctx);
@@ -598,7 +599,7 @@ export class TamarinGraph {
         this.nodes = this.jsonGraph.jgNodes.map(n => createTamarinGraphNode(n, ctx, simplification));
 
         this.edges = this.jsonGraph.jgEdges
-            .map(e => createTamarinGraphEdge(e, ctx, simplification).dot())
+            .map(e => createTamarinGraphEdge(e, ctx).dot())
             .filter((e): e is DotEdge => e !== null);
        
     }

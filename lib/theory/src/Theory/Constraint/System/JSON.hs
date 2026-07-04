@@ -490,7 +490,7 @@ sequentToJSONGraph label nodeColorMap = do
   jedges <- mapM graphEdgeToJSONGraphEdge (L.get grEdges repr)
   jclusters <- mapM (\n -> graphClusterToJSONGraphCluster n nodeColorMap) (L.get grClusters repr)
   let orderedAbbrevs = orderAbbreviationsForJSON (get gAbbreviations graph)
-  jabbrevs <- mapM (\(term, expansion) -> graphAbbrevtoJSONGraphAbbrev (term, (term, expansion))) orderedAbbrevs
+  jabbrevs <- mapM graphAbbrevtoJSONGraphAbbrev orderedAbbrevs
   return $ JSONGraph 
             { jgDirected = True
             , jgType  = "Tamarin prover constraint system"
