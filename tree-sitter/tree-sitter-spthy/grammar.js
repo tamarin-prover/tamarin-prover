@@ -446,7 +446,7 @@ module.exports = grammar({
           $._extended_process,
           $._stateful_process,
           $.inline_msr_process,
-          $._nested_process,
+          $.nested_process,
           $.location_process,
           $.predefined_process
 
@@ -493,8 +493,7 @@ module.exports = grammar({
           optional(seq(';', $._process))
       )),
 
-      // represents processes that have been defined and named in let-blocks:
-      _nested_process: $ => seq(
+      nested_process: $ => seq(
           '(', $._process, ')'
       ),
 
