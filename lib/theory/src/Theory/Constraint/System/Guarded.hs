@@ -402,14 +402,14 @@ type LNGuarded = Guarded (String,LSort) Name LVar
 -- e.g. A ∧ B -> A ∧ A) then without normalisation this formula will be
 -- preserved and printed. When parsed later it is constructed via gconj
 -- below which nubs gconj [A, A] to [A], which would not match the
--- unnormalised formula in the system and therefore fail to parse.
+-- unnormalised formula in the system and therefore be considered an invalid
+-- proof step.
 normaliseGuarded :: (Ord s, Ord c, Ord v) => Guarded s c v -> Guarded s c v
 normaliseGuarded = foldGuarded GAto (GDisj . normaliseDisj) (gconj . getConj) GGuarded
 
 -- | Flatten nested disjunctions and drop duplicate disjuncts.
 -- Note this works differently than gconj because disjunctions are
--- also associated with a GDisj goal, so top level disjunctions have
--- to be preserved.
+-- also associated with a DisjG, so disjunctions have to be preserved.
 normaliseDisj :: (Ord s, Ord c, Ord v) => Disj (Guarded s c v) -> Disj (Guarded s c v)
 normaliseDisj (Disj gfs) =
     Disj . nub . concatMap flat $ gfs
@@ -421,8 +421,7 @@ normaliseDisjList :: (Ord s, Ord c, Ord v) => Disj (Guarded s c v) -> Disj (Guar
 normaliseDisjList (Disj gfs) = normaliseDisj (Disj (map normaliseGuarded gfs))
 
 -- | Normalise a formula for storage in the constraint system.
--- Top level disjunctions have to be preserved to match its associated
--- DisjG goal.
+-- Disjunctions have to be preserved to match their associated DisjG goal.
 normaliseStoredFormula :: LNGuarded -> LNGuarded
 normaliseStoredFormula (GDisj d) = GDisj (normaliseDisjList d)
 normaliseStoredFormula gf        = normaliseGuarded gf
