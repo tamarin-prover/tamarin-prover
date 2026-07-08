@@ -29,6 +29,7 @@ module Theory.Tools.IntruderRules (
   , isDEMapRule
   , isDPMultRule
   , isNDCRule
+  , isNDCDiffRule
   ) where
 
 import           Control.Basics hiding (empty)
@@ -518,4 +519,9 @@ isDEMapRule  = isDRule emapSymString
 isNDCRule :: HasRuleName r => r -> Maybe FunSym
 isNDCRule ru = case ruleName ru of
     IntrInfo (DestrRule _ _ _ _ (f:_)) | isNDCFunSym f -> Just f
+    _                                                  -> Nothing
+
+isNDCDiffRule :: HasRuleName r => r -> Maybe FunSym
+isNDCDiffRule ru = case ruleName ru of
+    IntrInfo (DestrRule _ _ _ _ (f:_)) | isNDCDiffFunSym f -> Just f
     _                                                  -> Nothing

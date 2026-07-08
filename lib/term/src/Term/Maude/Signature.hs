@@ -56,7 +56,7 @@ module Term.Maude.Signature (
   , addFunSym
   , addMacroSym
   , addCtxtStRule
-  , setNDCinSig
+  , joinNDCinSig
 
   -- * pretty printing
   , prettyMaudeSig
@@ -74,6 +74,7 @@ import Control.DeepSeq
 import GHC.Generics (Generic)
 import Data.Binary
 import Data.Foldable (asum)
+import Data.List (intercalate)
 -- import Data.Monoid
 import Data.Set (Set)
 import qualified Data.Set as S
@@ -229,10 +230,20 @@ minimalMaudeSig flag = maudeSig $ mempty {enableDiff=flag,stFunSyms=pairFunSig,s
 enableDiffMaudeSig :: MaudeSig
 enableDiffMaudeSig = maudeSig $ mempty {enableDiff=True}
 
--- | Sets the NDC flag for a specific function symbol in the signature.
-setNDCinSig :: MaudeSig -> FunSym -> NDCstate -> MaudeSig
-setNDCinSig sig funSym ndcState = sig {stFunSyms = S.map (\x -> if NoEq x == funSym then setNDCNoEqSym ndcState x else x) (stFunSyms sig)}
-                                      {stACFunSyms = S.map (\x -> if AC (ACfct x) == funSym then setNDCACfctSym ndcState x else x) (stACFunSyms sig)}
+-- | Adds the given NDC state to a specific function symbol in the signature. The symbol is
+--   identified by name, as the NDC state of the given symbol may differ from the one in the
+--   signature (e.g., for symbols taken from the metadata of diff-mode intruder rules).
+joinNDCinSig :: MaudeSig -> FunSym -> NDCstate -> MaudeSig
+joinNDCinSig sig funSym ndcState = sig {stFunSyms = S.map updNoEq (stFunSyms sig)}
+                                       {stACFunSyms = S.map updAC (stACFunSyms sig)}
+  where
+    fName (NoEq (n,_))       = Just n
+    fName (AC (ACfct (n,_))) = Just n
+    fName _                  = Nothing
+    updNoEq x@(n,_) = if Just n == fName funSym then setNDCNoEqSym (joinNDC ndcState (ndcNoEq x)) x else x
+    updAC x@(n,_)   = if Just n == fName funSym then setNDCACfctSym (joinNDC ndcState (ndcAC x)) x else x
+    ndcNoEq (_,(_,_,_,ndc)) = ndc
+    ndcAC (_,(_,_,ndc))     = ndc
 
 ------------------------------------------------------------------------------
 -- Pretty Printing
@@ -260,28 +271,25 @@ prettyMaudeSigExcept sig excl = P.vcat
       ]
 
     ppFunSymb (NoEqUser (f,(k,priv,constr,ndc))) = P.text $ BC.unpack f ++ "/" ++ show k
-                                             ++ showAttrNoEq (priv,constr,ndc)
+                                             ++ showAttrs (attrsNoEq priv constr ++ attrsNDC ndc)
       where
-            showAttrNoEq (Public,Destructor,NotNDC) = " [destructor]"
-            showAttrNoEq (Private,Destructor,NotNDC) = " [private,destructor]"
-            showAttrNoEq (Private,Constructor,NotNDC) = " [private,constructor]"
-            showAttrNoEq (Public,Constructor,NotNDC) = ""
-            showAttrNoEq (Public,Destructor,IsNDC) = " [destructor,NDC]"
-            showAttrNoEq (Private,Destructor,IsNDC) = " [private,destructor,NDC]"
-            showAttrNoEq (Private,Constructor,IsNDC) = " [private,constructor,NDC]"
-            showAttrNoEq (Public,Constructor,IsNDC) = " [NDC]"
+            attrsNoEq Public Destructor = ["destructor"]
+            attrsNoEq Private Destructor = ["private","destructor"]
+            attrsNoEq Private Constructor = ["private","constructor"]
+            attrsNoEq Public Constructor = []
 
-    ppFunSymb (ACfctUser (f,(priv,constr,ndc))) = P.text $ BC.unpack f ++ "/2" ++ showAttrAC (priv,constr,ndc)
+    ppFunSymb (ACfctUser (f,(priv,constr,ndc))) = P.text $ BC.unpack f ++ "/2"
+                                             ++ showAttrs (attrsAC priv constr ++ ["AC"] ++ attrsNDC ndc)
       where
-            showAttrAC (Public,Destructor,NotNDC) = " [destructor,AC]"
-            showAttrAC (Private,Destructor,NotNDC) = " [private,destructor,AC]"
-            showAttrAC (Private,Constructor,NotNDC) = " [private,AC]"
-            showAttrAC (Public,Constructor,NotNDC) = " [AC]"
-            showAttrAC (Public,Destructor,IsNDC) = " [destructor,AC,NDC]"
-            showAttrAC (Private,Destructor,IsNDC) = " [private,destructor,AC,NDC]"
-            showAttrAC (Private,Constructor,IsNDC) = " [private,AC,NDC]"
-            showAttrAC (Public,Constructor,IsNDC) = " [AC,NDC]"
+            attrsAC Public Destructor = ["destructor"]
+            attrsAC Private Destructor = ["private","destructor"]
+            attrsAC Private Constructor = ["private"]
+            attrsAC Public Constructor = []
 
+    attrsNDC ndc = ["NDC" | hasNDC ndc] ++ ["NDC-diff" | hasNDCdiff ndc]
+
+    showAttrs [] = ""
+    showAttrs as = " [" ++ intercalate "," as ++ "]"
 
     exclNoEq = S.fromList [ o | NoEqUser o <- S.toList excl ]
     exclAC = S.fromList [ o | ACfctUser o <- S.toList excl ]

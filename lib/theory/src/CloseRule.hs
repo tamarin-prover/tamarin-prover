@@ -347,15 +347,19 @@ chainedRulesDeductionTest ocLimit satLimit sig intrR instSigma inst1Sigma = aux 
     aux fa@(Fact KDFact _ [f]) = dedNaive f terms || deductionCheck ocLimit satLimit sig intrRmodified fa facts
     aux _                      = error "No Deconstruction Chain Check: This case should not happen, please report it on the github page" 
 
--- | Apply no deconstruction chain check to a list of intruder rules.
-applyNDCcheck :: Integer -> Integer -> SignatureWithMaude -> OpenRuleCache -> [[IntrRuleAC]] -> (SignatureWithMaude, OpenRuleCache)
-applyNDCcheck ocLimit satLimit sig intrR (t1:tq)  =
+-- | Apply no deconstruction chain check to a list of intruder rules. The first argument states
+--   whether the rules belong to the diff-mode intruder rules, whose NDC property is recorded
+--   separately in the signature.
+applyNDCcheck :: Bool -> Integer -> Integer -> SignatureWithMaude -> OpenRuleCache -> [[IntrRuleAC]] -> (SignatureWithMaude, OpenRuleCache)
+applyNDCcheck forDiff ocLimit satLimit sig intrR (t1:tq)  =
     if checkChainReductionIter ruleTuples == (True, False)
-      then trace ("Function " ++ showFunSymName f ++ " has the NDC property.") (setNDCinSigWMaude sig' f IsNDC, map setNDCToTrue t1 ++ intrR')
-      else trace ("Function " ++ showFunSymName f ++ " does not have the NDC property.") (sig', t1 ++ intrR')
+      then trace ("Function " ++ showFunSymName f ++ " has the NDC property" ++ modeSuffix ++ ".") (setNDCinSig' sig' f, map setNDCToTrue t1 ++ intrR')
+      else trace ("Function " ++ showFunSymName f ++ " does not have the NDC property" ++ modeSuffix ++ ".") (sig', t1 ++ intrR')
   where
     f = fromJust (getDestrRuleFunction $ head t1)
-    (sig', intrR') = applyNDCcheck ocLimit satLimit sig intrR tq
+    (sig', intrR') = applyNDCcheck forDiff ocLimit satLimit sig intrR tq
+    modeSuffix = if forDiff then " in diff mode" else ""
+    setNDCinSig' s fs = joinNDCinSigWMaude s fs (if forDiff then IsNDCDiff else IsNDC)
     ruleTuples = [(x,y) | x <- t1, y <- t1]
     checkChainReductionIter = foldr g (True, True)
       where
@@ -366,17 +370,18 @@ applyNDCcheck ocLimit satLimit sig intrR (t1:tq)  =
 
     setNDCToTrue (Rule (DestrRule name i subterm constant funs) prems concs acts nvs) = Rule (DestrRule name i subterm constant (mapHead (setNDC IsNDC) funs)) prems concs acts nvs
     setNDCToTrue r = r
-applyNDCcheck _ _ sig _ [] = (sig, [])
+applyNDCcheck _ _ _ sig _ [] = (sig, [])
 
--- | Pretty print the result of chain reduction checks.
-prettyNDCcheck :: Integer -> Integer -> SignatureWithMaude -> String -> OpenRuleCache -> (SignatureWithMaude, OpenRuleCache)
-prettyNDCcheck ocLimit satLimit sig name initRules = unsafePerformIO $ do
+-- | Pretty print the result of chain reduction checks. The first argument states whether the
+--   rules belong to the diff-mode intruder rules.
+prettyNDCcheck :: Bool -> Integer -> Integer -> SignatureWithMaude -> String -> OpenRuleCache -> (SignatureWithMaude, OpenRuleCache)
+prettyNDCcheck forDiff ocLimit satLimit sig name initRules = unsafePerformIO $ do
   let (builtInOrConstrOrNDC, nonBuiltInDestr) = partition (\x -> isBuiltInIntruderRule x || isConstrRule x || isJust (isNDCRule x)) initRules
   -- for the no deconstruction check we group deconstruction rules of the same function together based on the rule function, as the NDC property is a property of the function and not of the individual rules. We then apply the NDC check to each group of rules separately, as the NDC property is a property of the function and not of the individual rules. This also allows us to parallelize the NDC check for different functions.
   let t' = groupBy ((==) `on` getDestrRuleFunction) $ sortOn getDestrRuleFunction nonBuiltInDestr
   let t = filter (not . all isSubtermRule) t' -- we only check the NDC property for deconstruction rules that are not subterm rules
   traceM ("[Theory " ++ name ++ "] No Deconstruction Chain checks started")
-  (sig', rules) <- evaluate . force $ applyNDCcheck ocLimit satLimit sig initRules t
+  (sig', rules) <- evaluate . force $ applyNDCcheck forDiff ocLimit satLimit sig initRules t
   -- traceM ("Result : " ++ render (prettyOpenRuleCacheWithLimitAndNDC $ rules ++ builtInOrConstrOrNDC))
   traceM ("[Theory " ++ name ++ "] No Deconstruction Chain checks ended")
   return (sig', rules ++ builtInOrConstrOrNDC) -- we add the built-in rules back to the intruder rules, as they are not modified by the NDC check

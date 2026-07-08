@@ -485,45 +485,44 @@ checkCloseIntrRule sign name thy = (sigWithMaude', thy {_thyCache = intrRulesACr
     sig = thy._thySignature
 
     intrRules = thy._thyCache
-    
+
     -- do the no deconstruction chain check or not?
     deductionChainCheckBool = thy._thyOptions._deductionChainCheck
     ocLimit = thy._thyOptions._openChainsLimit
     satLimit = thy._thyOptions._saturationLimit
-    ndcChecks = if deductionChainCheckBool then prettyNDCcheck ocLimit satLimit sign name intrRules else (sign, intrRules)
-    intrRulesACred = snd ndcChecks
-    sigWithMaude' = fst ndcChecks
+    ndcChecks = if deductionChainCheckBool then prettyNDCcheck False ocLimit satLimit sign name intrRules else (sign, intrRules)
+    (sigWithMaude', intrRulesACred) = ndcChecks
     sig' = if deductionChainCheckBool then toSignaturePure sigWithMaude' else sig
 
 -- | Closes the intruder deduction rules and applies the no deconstruction chain check if enabled. Version for diff theories.
 checkCloseIntrRuleDiff :: SignatureWithMaude -> String -> OpenDiffTheory -> (SignatureWithMaude, OpenDiffTheory)
-checkCloseIntrRuleDiff sign name diffthy = (sigWithMaude', diffCRthy)
+checkCloseIntrRuleDiff sign name diffThy = if deductionChainCheckBool then (sigWithMaude'', diffCRThy) else (sign, diffThy)
   where
-    hnd = sign._sigMaudeInfo
-    sig = diffthy._diffThySignature
+    -- hnd = sign._sigMaudeInfo
+    -- sig = diffThy._diffThySignature
 
-    dcl = diffthy._diffThyDiffCacheLeft 
-    cl  = diffthy._diffThyCacheLeft
+    dcl = diffThy._diffThyDiffCacheLeft
+    cl  = diffThy._diffThyCacheLeft
 
-    
     -- do the no deconstruction chain check or not?
-    deductionChainCheckBool = diffthy._diffThyOptions._deductionChainCheck
-    ocLimit = diffthy._diffThyOptions._openChainsLimit
-    satLimit = diffthy._diffThyOptions._saturationLimit
-    -- FIXME : update signature
-    ndcChecks = if deductionChainCheckBool then prettyNDCcheck ocLimit satLimit sign name dcl else (sign, dcl)
-    dclACred = snd ndcChecks
-    sigWithMaude' = fst ndcChecks
-    sig' = if deductionChainCheckBool then toSignaturePure sigWithMaude' else sig
+    deductionChainCheckBool = diffThy._diffThyOptions._deductionChainCheck
+    ocLimit = diffThy._diffThyOptions._openChainsLimit
+    satLimit = diffThy._diffThyOptions._saturationLimit
 
-    diffDCLthy = diffthy    {_diffThyDiffCacheLeft = dclACred, _diffThySignature = sig'}  -- diffThySignature is the same for both sides, so we can just update it once for the left side
-    diffDCRthy = diffDCLthy {_diffThyDiffCacheRight = dclACred}  -- diffThyDiffCacheLeft and diffThyDiffCacheRight contain the same Intruder Rules, so we use the same list of closed intruder rules for both sides
+    -- we need to do the NDC check for trace and equivalence mode separately:
+    -- the NDC attribute governs the trace intruder rules, NDC-diff the diff intruder rules
+    ndcChecksTrace = prettyNDCcheck False ocLimit satLimit sign name cl
+    (sigWithMaude', clACred) = ndcChecksTrace
 
-    -- we can copy over the limits we computed for the diff intruder rules to the trace intruder rules to avoid recomputing them
-    clACred   = map (replaceMatchingRule dclACred) cl
+    ndcChecksDiff = prettyNDCcheck True ocLimit satLimit sigWithMaude' name dcl
+    (sigWithMaude'', dclACred) = ndcChecksDiff
+    sig'' = toSignaturePure sigWithMaude''
 
-    diffCLthy = diffDCRthy {_diffThyCacheLeft = clACred}
-    diffCRthy = diffCLthy  {_diffThyCacheRight = clACred}  -- diffThyCacheLeft and diffThyCacheRight contain the same Intruder Rules, so we use the same list of closed intruder rules for both sides
+    diffDCLThy = diffThy    {_diffThyDiffCacheLeft = dclACred, _diffThySignature = sig''}  -- diffThySignature is the same for both sides, so we can just update it once
+    diffDCRThy = diffDCLThy {_diffThyDiffCacheRight = dclACred}  -- diffThyDiffCacheLeft and diffThyDiffCacheRight contain the same Intruder Rules, so we use the same list of closed intruder rules for both sides
+
+    diffCLThy = diffDCRThy {_diffThyCacheLeft = clACred}
+    diffCRThy = diffCLThy  {_diffThyCacheRight = clACred}  -- diffThyCacheLeft and diffThyCacheRight contain the same Intruder Rules, so we use the same list of closed intruder rules for both sides
 
 -- | Perform wellformedness and deducability checks on a theory.
 checkTranslatedTheory ::
@@ -541,7 +540,7 @@ checkTranslatedTheory thyOpts sign thy = do
 
   deducThy0 <- bitraverse (\x -> return ((addMessageDeductionRuleVariants x) `runReader` (mh)))
                           (\x -> return ((addMessageDeductionRuleVariantsDiff x) `runReader` (mh))) thy
- 
+
   deducThyAndSig <- bitraverse (liftIO . evaluate . force . (checkCloseIntrRule sign (theoryName thy))) (liftIO . evaluate . force . (checkCloseIntrRuleDiff sign (theoryName thy))) deducThy0
 
   let deducThy = case deducThyAndSig of
@@ -911,7 +910,7 @@ addMessageDeductionRuleVariantsDiff thy0
     rules diff' = liftA2 (++) (rules0 diff') (rulesACNoEq diff')
     bothDiffTh = rules True >>= \x -> return (addIntrRuleACsDiffBothDiff x thy0)
     thy = rules False >>= (\x -> (bothDiffTh >>= (return . addIntrRuleACsDiffBoth x)))
-    addIntruderVariantsDiff mkRuless = thy >>= (\x -> return 
-      (addIntrRuleLabels $ 
-        addIntrRuleACsDiffBothDiff (concatMap ($ msig) mkRuless) 
+    addIntruderVariantsDiff mkRuless = thy >>= (\x -> return
+      (addIntrRuleLabels $
+        addIntrRuleACsDiffBothDiff (concatMap ($ msig) mkRuless)
         (addIntrRuleACsDiffBoth (concatMap ($ msig) mkRuless) x)))

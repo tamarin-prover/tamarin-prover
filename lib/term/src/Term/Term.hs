@@ -60,7 +60,11 @@ module Term.Term (
     , ACfctSym
     , NoEqSym
 
+    , hasNDC
+    , hasNDCdiff
     , isNDCFunSym
+    , isNDCDiffFunSym
+    , joinNDC
     , setNDC
     , setNDCNoEqSym
     , setNDCACfctSym

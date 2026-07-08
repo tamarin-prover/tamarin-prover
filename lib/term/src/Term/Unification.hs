@@ -79,7 +79,7 @@ module Term.Unification (
   , addFunSym
   , addMacroSym
   , addCtxtStRule
-  , setNDCinSig
+  , joinNDCinSig
 
   -- * Convenience exports
   , module Term.Substitution

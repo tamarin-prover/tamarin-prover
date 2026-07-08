@@ -31,7 +31,11 @@ module Term.Term.FunctionSymbols (
     , UserDefinedSig
 
     -- ** NDC property
+    , hasNDC
+    , hasNDCdiff
     , isNDCFunSym
+    , isNDCDiffFunSym
+    , joinNDC
     , setNDC
     , setNDCNoEqSym
     , setNDCACfctSym
@@ -115,8 +119,9 @@ data Constructability = Constructor | Destructor
 data ACstate = IsAC | NotAC
   deriving (Eq, Ord, Typeable, Data, Show, Generic, NFData, Binary)
 
--- | A function symbol can be NDC or not.
-data NDCstate = IsNDC | NotNDC
+-- | A function symbol can have the NDC property for the trace intruder rules (IsNDC),
+-- for the diff-mode intruder rules (IsNDCDiff), for both (IsNDCBoth), or for neither (NotNDC).
+data NDCstate = IsNDC | NotNDC | IsNDCDiff | IsNDCBoth
   deriving (Eq, Ord, Typeable, Data, Show, Generic, NFData, Binary)
 
 data FctAttr = Privacy Privacy | Constructability Constructability | ACstate ACstate | NDCstate NDCstate
@@ -159,10 +164,35 @@ type ACfctFunSig = Set ACfctSym
 -- | User-defined function signatures.
 type UserDefinedSig = Set UserDefinedSym
 
+-- | Does the state include the NDC property for the trace intruder rules?
+hasNDC :: NDCstate -> Bool
+hasNDC IsNDC     = True
+hasNDC IsNDCBoth = True
+hasNDC _         = False
+
+-- | Does the state include the NDC property for the diff-mode intruder rules?
+hasNDCdiff :: NDCstate -> Bool
+hasNDCdiff IsNDCDiff = True
+hasNDCdiff IsNDCBoth = True
+hasNDCdiff _         = False
+
+-- | Combine two NDC states, keeping the properties asserted by either one.
+joinNDC :: NDCstate -> NDCstate -> NDCstate
+joinNDC s1 s2 = case (hasNDC s1 || hasNDC s2, hasNDCdiff s1 || hasNDCdiff s2) of
+    (True, True)   -> IsNDCBoth
+    (True, False)  -> IsNDC
+    (False, True)  -> IsNDCDiff
+    (False, False) -> NotNDC
+
 isNDCFunSym :: FunSym -> Bool
-isNDCFunSym (NoEq (_, (_, _, _, IsNDC))) = True
-isNDCFunSym (AC (ACfct (_, (_, _, IsNDC)))) = True
+isNDCFunSym (NoEq (_, (_, _, _, ndc))) = hasNDC ndc
+isNDCFunSym (AC (ACfct (_, (_, _, ndc)))) = hasNDC ndc
 isNDCFunSym _ = False
+
+isNDCDiffFunSym :: FunSym -> Bool
+isNDCDiffFunSym (NoEq (_, (_, _, _, ndc))) = hasNDCdiff ndc
+isNDCDiffFunSym (AC (ACfct (_, (_, _, ndc)))) = hasNDCdiff ndc
+isNDCDiffFunSym _ = False
 
 setNDC :: NDCstate -> FunSym -> FunSym
 setNDC ndcState (NoEq (name, (arity, privacy, constructability, _))) = NoEq (name, (arity, privacy, constructability, ndcState))

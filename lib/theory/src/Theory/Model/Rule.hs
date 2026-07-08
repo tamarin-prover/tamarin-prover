@@ -1432,6 +1432,7 @@ prettyIntrRuleACWithLimitAndNDC r@(Rule (DestrRule _ i _ _ funs) _ _ _ _) =
   vcat [prettyNamedRule (kwRuleModulo "AC") (const emptyDoc) r,
         text ("Remaining consecutive applications : " ++ show i ++ "\n"),
         text ("NDC property : " ++ show (fromMaybe False (isNDCFunSym <$> headMay funs)) ++ "\n"),
+        text ("NDC property in diff mode : " ++ show (fromMaybe False (isNDCDiffFunSym <$> headMay funs)) ++ "\n"),
         text ("Functions : " ++ show (map showFunSymName funs) ++ "\n")]
 prettyIntrRuleACWithLimitAndNDC r = prettyNamedRule (kwRuleModulo "AC") (const emptyDoc) r
 

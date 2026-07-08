@@ -29,7 +29,7 @@ module Theory.Model.Signature
     toSignatureWithMaude,
     toSignaturePure,
     sigmMaudeHandle,
-    setNDCinSigWMaude,
+    joinNDCinSigWMaude,
 
     -- ** Pretty-printing
     prettySignaturePure,
@@ -46,7 +46,7 @@ import Data.Set qualified as S
 import System.IO.Unsafe (unsafePerformIO)
 import Term.LTerm
 import Term.Maude.Process (MaudeHandle, mhFilePath, mhMaudeSig, startMaude)
-import Term.Maude.Signature (MaudeSig, minimalMaudeSig, prettyMaudeSig, prettyMaudeSigExcept, setNDCinSig)
+import Term.Maude.Signature (MaudeSig, minimalMaudeSig, prettyMaudeSig, prettyMaudeSigExcept, joinNDCinSig)
 import Theory.Text.Pretty
 
 -- | A theory signature.
@@ -113,10 +113,11 @@ toSignatureWithMaude maudePath sig = do
 toSignaturePure :: SignatureWithMaude -> SignaturePure
 toSignaturePure sig = sig {_sigMaudeInfo = mhMaudeSig $ L.get sigMaudeInfo sig}
 
-setNDCinSigWMaude :: SignatureWithMaude -> FunSym -> NDCstate -> SignatureWithMaude
-setNDCinSigWMaude sig funSym ndcState = sig {_sigMaudeInfo = mh}
+-- | Adds the given NDC state to a function symbol (by name) in the signature.
+joinNDCinSigWMaude :: SignatureWithMaude -> FunSym -> NDCstate -> SignatureWithMaude
+joinNDCinSigWMaude sig funSym ndcState = sig {_sigMaudeInfo = mh}
   where
-    mh = (L.get sigMaudeInfo sig) {mhMaudeSig = setNDCinSig (mhMaudeSig $ L.get sigMaudeInfo sig) funSym ndcState}
+    mh = (L.get sigMaudeInfo sig) {mhMaudeSig = joinNDCinSig (mhMaudeSig $ L.get sigMaudeInfo sig) funSym ndcState}
     
 
 

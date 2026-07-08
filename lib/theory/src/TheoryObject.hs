@@ -815,6 +815,8 @@ prettyTranslationElement (FunctionTypingInfo (ACfctUser (fsn,(priv,constr,ndc)),
     showConst Destructor = " [destructor]"
     showNDC NotNDC = ""
     showNDC IsNDC = " [ndc]"
+    showNDC IsNDCDiff = " [ndc-diff]"
+    showNDC IsNDCBoth = " [ndc,ndc-diff]"
 prettyTranslationElement (FunctionTypingInfo (NoEqUser (fsn, (_, priv, constr, ndc)), intypes, outtype)) =
   (text "function:")
     <-> text (unpack fsn)
@@ -832,6 +834,8 @@ prettyTranslationElement (FunctionTypingInfo (NoEqUser (fsn, (_, priv, constr, n
     showConst Destructor = " [destructor]"
     showNDC NotNDC = ""
     showNDC IsNDC = " [ndc]"
+    showNDC IsNDCDiff = " [ndc-diff]"
+    showNDC IsNDCBoth = " [ndc,ndc-diff]"
 prettyTranslationElement (ExportInfoItem eInfo) =
   (text "export: ")
     <-> text (L.get eTag eInfo)

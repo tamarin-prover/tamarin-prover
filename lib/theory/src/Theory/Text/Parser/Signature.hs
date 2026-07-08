@@ -167,6 +167,7 @@ functionAttribute = asum
   , symbol "destructor" Data.Functor.$> Constructability Destructor
   , symbol "constructor" Data.Functor.$> Constructability Constructor
   , symbol "AC" Data.Functor.$> ACstate IsAC
+  , try (symbol "NDC-diff") Data.Functor.$> NDCstate IsNDCDiff
   , symbol "NDC" Data.Functor.$> NDCstate IsNDC
   ]
 
@@ -190,7 +191,10 @@ function = do
         let priv = if Privacy Private `elem` atts then Private else Public
         let destr = if Constructability Destructor `elem` atts then Destructor else Constructor
         let ac = if ACstate IsAC `elem` atts then IsAC else NotAC
-        let ndc = if NDCstate IsNDC `elem` atts then IsNDC else NotNDC
+        -- The NDC attribute states the NDC property for the trace intruder rules, the NDC-diff
+        -- attribute for the diff intruder rules.
+        let ndc = joinNDC (if NDCstate IsNDC `elem` atts then IsNDC else NotNDC)
+                          (if NDCstate IsNDCDiff `elem` atts then IsNDCDiff else NotNDC)
         let requested = (k, priv, destr, ndc)
 
         -- Check specifically for conflicts with builtins to give a precise error message.

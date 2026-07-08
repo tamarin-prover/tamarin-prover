@@ -84,6 +84,8 @@ funSymEncodeAttr priv constr acstate ndcstate = f priv <> g constr <> h acstate 
         h NotAC = "F"
         i IsNDC = "N"
         i NotNDC = "U"
+        i IsNDCDiff = "D"
+        i IsNDCBoth = "B"
 
 -- | Decode string @funSymPrefix || funSymEncodeAttr p c || ident@ into
 --   @(ident,p,c)@
@@ -92,15 +94,15 @@ funSymDecode s = (ident,priv,constr,ndc)
     where
         prefixLen      = BC.length funSymPrefix
         (eAttr,ident)  = BC.splitAt 4 (BC.drop prefixLen s)
-        (priv,constr,ndc)  = case eAttr of
-                            attr | attr `elem` ["PDAN","PDFN"]-> (Private,Destructor,IsNDC)
-                            attr | attr `elem` ["PCAN","PCFN"]-> (Private,Constructor,IsNDC)
-                            attr | attr `elem` ["XDAN","XDFN"]-> (Public,Destructor,IsNDC)
-                            attr | attr `elem` ["PDAU","PDFU"]-> (Private,Destructor,NotNDC)
-                            attr | attr `elem` ["PCAU","PCFU"]-> (Private,Constructor,NotNDC)
-                            attr | attr `elem` ["XDAU","XDFU"]-> (Public,Destructor,NotNDC)
-                            attr | attr `elem` ["XCAU","XCFU"]-> (Public,Constructor,NotNDC)
-                            _    -> (Public,Constructor,IsNDC)
+        (priv,constr,ndc)  = (decodePriv (BC.index eAttr 0), decodeConstr (BC.index eAttr 1), decodeNDC (BC.index eAttr 3))
+        decodePriv 'P' = Private
+        decodePriv _   = Public
+        decodeConstr 'D' = Destructor
+        decodeConstr _   = Constructor
+        decodeNDC 'U' = NotNDC
+        decodeNDC 'D' = IsNDCDiff
+        decodeNDC 'B' = IsNDCBoth
+        decodeNDC _   = IsNDC
 
 
 
