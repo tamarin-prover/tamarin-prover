@@ -417,13 +417,14 @@ normaliseDisj (Disj gfs) =
     flat (GDisj (Disj ds)) = ds
     flat gf                = [gf]
 
+normaliseDisjList :: (Ord s, Ord c, Ord v) => Disj (Guarded s c v) -> Disj (Guarded s c v)
+normaliseDisjList (Disj gfs) = normaliseDisj (Disj (map normaliseGuarded gfs))
+
 -- | Normalise a formula for storage in the constraint system.
 -- Top level disjunctions have to be preserved to match its associated
 -- DisjG goal.
 normaliseStoredFormula :: LNGuarded -> LNGuarded
 normaliseStoredFormula (GDisj d) = GDisj (normaliseDisjList d)
-  where
-    normaliseDisjList (Disj gfs) = normaliseDisj (Disj (map normaliseGuarded gfs))
 normaliseStoredFormula gf        = normaliseGuarded gf
 
 instance Apply LNSubst LNGuarded where
