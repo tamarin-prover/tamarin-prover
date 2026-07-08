@@ -423,7 +423,7 @@ insertAtom ato = case ato of
 -- formula is marked as solved. Other intermediate formulas are not marked.
 insertFormula :: LNGuarded -> Reduction ()
 insertFormula = do
-    insert True
+    insert True . normaliseStoredFormula
   where
     insert mark fm = do
         formulas       <- getM sFormulas
@@ -599,10 +599,17 @@ substEdges          = substPart sEdges
 substLessAtoms      = substPart sLessAtoms
 substSubtermStore   = substPart sSubtermStore
 substLastAtom       = substPart sLastAtom
-substFormulas       = substPart sFormulas
-substSolvedFormulas = substPart sSolvedFormulas
-substLemmas         = substPart sLemmas
+substFormulas       = substFormulaPart sFormulas
+substSolvedFormulas = substFormulaPart sSolvedFormulas
+substLemmas         = substFormulaPart sLemmas
 substNextGoalNr     = return ()
+
+-- | 'substPart' for the guarded-formula sets, re-normalising each member
+-- after the substitution is applied.
+substFormulaPart :: (System :-> S.Set LNGuarded) -> Reduction ()
+substFormulaPart l = do
+    subst <- getM sSubst
+    modM l (S.map (normaliseStoredFormula . apply subst))
 
 -- | Apply the current substitution of the equation store to a part of the
 -- sequent. This is an internal function.
@@ -653,6 +660,10 @@ substGoals = do
         ActionG i fa@(kFactView -> Just (UpK, m))
           | (isMsgVar m || isProduct m || isUnion m {--|| isXor m-}) && (apply subst m /= m) ->
               insertAction i (apply subst fa)
+        DisjG disj -> do
+            let disj' = normaliseDisjList (apply subst disj)
+            modM sGoals $ M'.insertWith combineGoalStatus (DisjG disj') status
+            return Unchanged
         _ -> do modM sGoals $
                   M'.insertWith combineGoalStatus (apply subst goal) status
                 return Unchanged

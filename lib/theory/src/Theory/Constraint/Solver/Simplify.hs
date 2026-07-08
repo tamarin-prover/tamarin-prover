@@ -411,7 +411,7 @@ insertImpliedFormulas = do
     applyChangeList $ do
         clause  <- (S.toList $ get sFormulas sys) ++
                    (S.toList $ get sLemmas sys)
-        implied <- impliedFormulas hnd sys clause
+        implied <- map normaliseStoredFormula (impliedFormulas hnd sys clause)
         if ( implied `S.notMember` get sFormulas sys &&
              implied `S.notMember` get sSolvedFormulas sys )
           then return (insertFormula implied)
