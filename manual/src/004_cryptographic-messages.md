@@ -101,13 +101,19 @@ Function attributes can be combined, for example a function can be `AC` and `pri
 A function can also have the *No Deconstruction Chain* (NDC) property (see [@DKK-csf26]
 for details). This property, which only depends on the functions and equational
 theory (and *not* the protocol model), allows Tamarin to eliminate certain branches
-in its internal reasoning. Tamarin automatically detects if a function has this property,
-and annotates such functions with the attribute `[NDC]` when exporting proofs.
+in its internal reasoning. For all functions with non subterm-convergent equations,
+Tamarin automatically detects if a function has this property, and annotates such
+functions with the attribute `[NDC]` when exporting proofs.
 This avoids re-checking whether a function has the property when loading a file
 again. Functions can also be manually annotated, but note that incorrectly declaring
 a function to have the `NDC` property can lead to incorrect results.
 
-The automatic check whether functions have the `NDC` property can be disabled using
+As the intruder rules can differ between trace and equivalence mode, Tamarin will do
+the same check in equivalence mode. If a function has the property in equivalence mode,
+it will be annotated with `[NDC-diff]`. Note that functions can be `NDC`, `NDC-diff`,
+or both.
+
+The automatic check whether functions have the `NDC` or `NDC-diff` property can be disabled using
 the `--no-ndc` flag in the command line.
 
 Equational theories {#sec:equational-theories}
