@@ -683,6 +683,18 @@
         {
           "type": "STRING",
           "value": "destructor"
+        },
+        {
+          "type": "STRING",
+          "value": "AC"
+        },
+        {
+          "type": "STRING",
+          "value": "NDC"
+        },
+        {
+          "type": "STRING",
+          "value": "NDC-diff"
         }
       ]
     },

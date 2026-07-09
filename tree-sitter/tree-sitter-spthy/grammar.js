@@ -252,6 +252,7 @@ module.exports = grammar({
             'destructor',
             'AC',
             'NDC',
+            'NDC-diff',
       ),
 
       function_typed: $ => seq(

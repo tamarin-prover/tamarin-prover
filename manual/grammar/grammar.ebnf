@@ -28,7 +28,7 @@ rules:
   functions  ::=  >('functions' ':' _function_sym (',' _function_sym)* ','?)
   _function_sym  ::=  function_untyped | function_typed
   function_untyped  ::=  (ident: function_identifier) '/' (natural: arity) ('[' function_attribute (',' function_attribute)* ','? ']')?
-  function_attribute  ::=  'private' | 'destructor' | 'AC' | 'NDC'
+  function_attribute  ::=  'private' | 'destructor' | 'AC' | 'NDC' | 'NDC-diff'
   function_typed  ::=  (ident: function_identifier) '(' arguments? ')' ':' (ident: function_type)
   equations  ::=  >('equations' ('[' 'convergent' ']')? ':' equation (',' equation)* ','?)
   equation  ::=  (mset_term: left) '=' (mset_term: right)
