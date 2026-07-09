@@ -24,7 +24,7 @@ module.exports = grammar({
       [$.nary_app, $.predicate_ref],
 
       // Conflict between fact identifiers (uppercase) and general identifiers
-      [$.fact, $._term_ident],
+      [$._base_fact, $._term_ident],
 
       // Conflict since parser cannot decide how to parse ident
       [$.nullary_fun, $.nary_app, $.msg_var_or_nullary_fun]
@@ -822,14 +822,15 @@ module.exports = grammar({
       )),
 
       _fact: $ => choice(
-          alias($.fact, $.linear_fact),
-          seq(
-              '!',
-              alias($.fact, $.persistent_fact)
-          )
+          $.linear_fact,
+          $.persistent_fact
       ),
 
-      fact: $ => prec.left(seq(
+      linear_fact: $ => $._base_fact,
+
+      persistent_fact: $ => seq('!', $._base_fact),
+
+      _base_fact: $ => prec.left(seq(
           field('fact_identifier', alias($.fact_identifier, $.ident)),
           '(',
           optional($.arguments),
