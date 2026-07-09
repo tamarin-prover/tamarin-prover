@@ -352,11 +352,11 @@ solveChain rules (c, p) = do
                                 (isDPMultRule cRule && isDEMapRule  pRule) ||
                                 (getRuleName cRule == getRuleName pRule
                                     && getRemainingRuleApplications cRule == 1) ||
-                                if isDiffProof
+                                (if isDiffProof
                                     then isNDCDiffRule cRule /= Nothing &&
                                       isNDCDiffRule cRule == isNDCDiffRule pRule
                                     else isNDCRule cRule /= Nothing &&
-                                      isNDCRule cRule == isNDCRule pRule
+                                      isNDCRule cRule == isNDCRule pRule)
 
     -- Contradicts normal form condition N2:
     -- No coerce of a pair of inverse.

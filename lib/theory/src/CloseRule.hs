@@ -376,15 +376,15 @@ applyNDCcheck _ _ _ sig _ [] = (sig, [])
 --   rules belong to the diff-mode intruder rules.
 prettyNDCcheck :: Bool -> Integer -> Integer -> SignatureWithMaude -> String -> OpenRuleCache -> (SignatureWithMaude, OpenRuleCache)
 prettyNDCcheck forDiff ocLimit satLimit sig name initRules = unsafePerformIO $ do
-  let (builtInOrConstrOrNDC, nonBuiltInDestr) = partition (\x -> isBuiltInIntruderRule x || isConstrRule x || isJust (isNDCRule x)) initRules
+  let (builtInOrConstrOrNDC, nonBuiltInDestr) = partition (\x -> isBuiltInIntruderRule x || isConstrRule x || isJust (if forDiff then isNDCDiffRule x else isNDCRule x)) initRules
   -- for the no deconstruction check we group deconstruction rules of the same function together based on the rule function, as the NDC property is a property of the function and not of the individual rules. We then apply the NDC check to each group of rules separately, as the NDC property is a property of the function and not of the individual rules. This also allows us to parallelize the NDC check for different functions.
   let t' = groupBy ((==) `on` getDestrRuleFunction) $ sortOn getDestrRuleFunction nonBuiltInDestr
-  let t = filter (not . all isSubtermRule) t' -- we only check the NDC property for deconstruction rules that are not subterm rules
+  let (subtermRules, t) = partition (all isSubtermRule) t' -- we only check the NDC property for deconstruction rules that are not subterm rules
   traceM ("[Theory " ++ name ++ "] No Deconstruction Chain checks " ++ (if forDiff then "for diff mode " else "") ++ "started")
   (sig', rules) <- evaluate . force $ applyNDCcheck forDiff ocLimit satLimit sig initRules t
-  traceM ("Result : " ++ render (prettyOpenRuleCacheWithLimitAndNDC $ rules ++ builtInOrConstrOrNDC))
+  -- traceM ("Result : " ++ render (prettyOpenRuleCacheWithLimitAndNDC $ rules ++ builtInOrConstrOrNDC))
   traceM ("[Theory " ++ name ++ "] No Deconstruction Chain checks ended")
-  return (sig', rules ++ builtInOrConstrOrNDC) -- we add the built-in rules back to the intruder rules, as they are not modified by the NDC check
+  return (sig', rules ++ builtInOrConstrOrNDC ++ concat subtermRules) -- we add the built-in rules back to the intruder rules, as they are not modified by the NDC check
 
 -- | Close a rule cache. Hower, note that the
 -- requires case distinctions are not computed here.

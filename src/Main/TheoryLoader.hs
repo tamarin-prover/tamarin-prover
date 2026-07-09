@@ -514,6 +514,7 @@ checkCloseIntrRuleDiff sign name diffThy = if deductionChainCheckBool then (sigW
     ndcChecksTrace = prettyNDCcheck False ocLimit satLimit sign name cl
     (sigWithMaude', clACred) = ndcChecksTrace
 
+    -- FIXME : should we copy the trace NDC over to the diff rule caches ?
     ndcChecksDiff = prettyNDCcheck True ocLimit satLimit sigWithMaude' name dcl
     (sigWithMaude'', dclACred) = ndcChecksDiff
     sig'' = toSignaturePure sigWithMaude''

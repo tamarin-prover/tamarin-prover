@@ -516,12 +516,12 @@ isDExpRule   = isDRule expSymString
 isDPMultRule = isDRule pmultSymString
 isDEMapRule  = isDRule emapSymString
 
-isNDCRule :: HasRuleName r => r -> Maybe FunSym
+isNDCRule :: HasRuleName r => r -> Maybe NDCstate
 isNDCRule ru = case ruleName ru of
-    IntrInfo (DestrRule _ _ _ _ (f:_)) | isNDCFunSym f -> Just f
+    IntrInfo (DestrRule _ _ _ _ (f:_)) | isNDCFunSym f -> Just IsNDC
     _                                                  -> Nothing
 
-isNDCDiffRule :: HasRuleName r => r -> Maybe FunSym
+isNDCDiffRule :: HasRuleName r => r -> Maybe NDCstate
 isNDCDiffRule ru = case ruleName ru of
-    IntrInfo (DestrRule _ _ _ _ (f:_)) | isNDCDiffFunSym f -> Just f
+    IntrInfo (DestrRule _ _ _ _ (f:_)) | isNDCDiffFunSym f -> Just IsNDCDiff
     _                                                  -> Nothing
