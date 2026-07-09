@@ -250,7 +250,8 @@ def testOutputFileParsing(path):
 		is_diff_file = any(pattern in path for pattern in [
 			"_analyzed-diff.spthy", 
 			"_analyzed-diff-noprove.spthy",
-			"_analyzed-diff-obseqonly.spthy"
+			"_analyzed-diff-obseqonly.spthy",
+			"_analyzed-diff-bfs.spthy"
 		])
 
 		is_sapic_or_accountability_file = any(pattern in path for pattern in [
