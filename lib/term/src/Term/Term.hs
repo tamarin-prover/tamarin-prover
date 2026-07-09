@@ -66,6 +66,7 @@ module Term.Term (
     , isNDCDiffFunSym
     , joinNDC
     , setNDC
+    , addNDC
     , setNDCNoEqSym
     , setNDCACfctSym
 

@@ -37,6 +37,7 @@ module Term.Term.FunctionSymbols (
     , isNDCDiffFunSym
     , joinNDC
     , setNDC
+    , addNDC
     , setNDCNoEqSym
     , setNDCACfctSym
 
@@ -198,6 +199,14 @@ setNDC :: NDCstate -> FunSym -> FunSym
 setNDC ndcState (NoEq (name, (arity, privacy, constructability, _))) = NoEq (name, (arity, privacy, constructability, ndcState))
 setNDC ndcState (AC (ACfct (name, (privacy, constructability, _))))  = AC (ACfct (name, (privacy, constructability, ndcState)))
 setNDC _ fctSym                                                      = fctSym
+
+addNDC :: NDCstate -> FunSym -> FunSym
+addNDC ndcState (NoEq (name, (arity, privacy, constructability, ndcStateOld))) =
+  NoEq (name, (arity, privacy, constructability, joinNDC ndcState ndcStateOld))
+addNDC ndcState (AC (ACfct (name, (privacy, constructability, ndcStateOld))))  =
+  AC (ACfct (name, (privacy, constructability, joinNDC ndcState ndcStateOld)))
+addNDC _ fctSym                                                                =
+  fctSym
 
 setNDCNoEqSym :: NDCstate -> NoEqSym -> NoEqSym
 setNDCNoEqSym ndcState (name, (arity, privacy, constructability, _)) = (name, (arity, privacy, constructability, ndcState))
