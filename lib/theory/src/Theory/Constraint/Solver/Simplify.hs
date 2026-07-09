@@ -601,37 +601,44 @@ simpInjectiveFactEqMon = do
       getPairs [] _ = []
       getPairs ((tag, behaviours):rest) nodes = paired ++ getPairs rest nodes
         where
-          -- Flatten a (n-1)-tuple by only expanding the right-hand side of the tuple
-          -- This function errors when n is bigger than the _length_ of the tuple
-          -- E.g., shapeTerm 2 <t1, t2> = [t1, t2]
-          -- E.g., shapeTerm 2 <<t1, t2>, t3> = [<t1, t2>, t3]
+          -- Flatten a (n-1)-tuple by only expanding the right-hand side of the tuple.
+          -- Returns Nothing when n is bigger than the _length_ of the tuple, since
+          -- such a fact instance (e.g. with a bare variable in a position where the
+          -- inferred shape expects a deeper pair) cannot participate in injective
+          -- copy-chain reasoning yet — see #813.
+          -- E.g., shapeTerm 2 <t1, t2> = Just [t1, t2]
+          -- E.g., shapeTerm 2 <<t1, t2>, t3> = Just [<t1, t2>, t3]
           -- Note that the above list has only 2 elements as the first tuple is not flattened
-          -- E.g., shapeTerm 3 <t1, t2> throws an error
-          -- Note that this code is identical to existing code in `InjectiveFactInstances.hs`.
-          shapeTerm :: Int -> LNTerm -> [LNTerm]
-          shapeTerm x (viewTerm2 -> FPair t1 t2) | x>1 = t1 : shapeTerm (x-1) t2
-          shapeTerm x t | x>1 = error ("shapeTerm: the term (" ++ show t ++ ") does not have enough pairs."
-            ++ "\nOccured in fact: (" ++ show tag ++") with behavior " ++ show behaviours)
-          shapeTerm x t | x==1 = [t]
+          -- E.g., shapeTerm 3 <t1, t2> = Nothing
+          shapeTerm :: Int -> LNTerm -> Maybe [LNTerm]
+          shapeTerm x (viewTerm2 -> FPair t1 t2) | x>1 = (t1 :) <$> shapeTerm (x-1) t2
+          shapeTerm x _ | x>1  = Nothing
+          shapeTerm x t | x==1 = Just [t]
           shapeTerm _ _ = error "shapeTerm: cannot take an integer with size less than 1"
 
           -- Given an injective fact instance and the behaviour/shape of the corresponding FactTag
           -- (bound by the behaviours variable introduced in 'getPairs'), return a tuple that contains
-          -- its _injective identitifer_ and 
+          -- its _injective identitifer_ and the per-position (behaviour, term) pairs.
+          -- Returns Nothing when any position's term cannot be unfolded to the inferred shape.
           -- E.g., For behaviour/shape = [[=, =]]
-          -- trimmedPairTerms S(~id, <a, b>) = (~id, [(=, a), (=, b)])
+          -- trimmedPairTerms S(~id, <a, b>) = Just (~id, [(=, a), (=, b)])
           -- E.g., For behaviour/shape = [[=]]
-          -- trimmedPairTerms S(~id, <a, b>) = (~id, [(=, <a, b>)])
+          -- trimmedPairTerms S(~id, <a, b>) = Just (~id, [(=, <a, b>)])
           -- E.g., For behaviour/shape = [[=, <]]
-          -- trimmedPairTerms S(~id, <<a, b>, c>) = (~id, [(=, <a, b>), (<, c)])
-          trimmedPairTerms :: LNFact -> (LNTerm, [(MonotonicBehaviour, LNTerm)])
-          trimmedPairTerms (factTerms -> firstTerm:terms) = (firstTerm, concat $ zipWith (\behaviour term -> zip behaviour (shapeTerm (length behaviour) term)) behaviours terms )
+          -- trimmedPairTerms S(~id, <<a, b>, c>) = Just (~id, [(=, <a, b>), (<, c)])
+          -- E.g., For behaviour/shape = [[=, <]] and a bare variable
+          -- trimmedPairTerms S(~id, x) = Nothing
+          trimmedPairTerms :: LNFact -> Maybe (LNTerm, [(MonotonicBehaviour, LNTerm)])
+          trimmedPairTerms (factTerms -> firstTerm:terms) = do
+            shaped <- sequence $ zipWith (\behaviour term -> shapeTerm (length behaviour) term) behaviours terms
+            return (firstTerm, concat $ zipWith zip behaviours shaped)
           trimmedPairTerms _ = error "a fact with no terms cannot be injective"
 
           -- For each rule instance, filter its rhs for the current injective fact 'tag'
-          -- and compute the pairs via 'trimmedPairTerms'
+          -- and compute the pairs via 'trimmedPairTerms', skipping fact instances whose
+          -- terms do not yet match the inferred shape.
           behaviourTerms :: M.Map NodeId [(LNTerm, [(MonotonicBehaviour, LNTerm)])]
-          behaviourTerms = M.map (map trimmedPairTerms . filter (\x -> factTag x == tag) . get rPrems) nodes  --all node premises with the matching tag
+          behaviourTerms = M.map (mapMaybe trimmedPairTerms . filter (\x -> factTag x == tag) . get rPrems) nodes  --all node premises with the matching tag
 
           -- Returns a list of pairs (i, s), (j, t) together with the behaviour b
           -- between s and t. i and j are the time points where the fact instances

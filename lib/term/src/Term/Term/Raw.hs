@@ -115,6 +115,7 @@ fApp List        ts = FAPP List ts
 fApp s@(NoEq _)  ts = FAPP s ts
 
 -- | Smart constructor for AC terms.
+{-# INLINABLE fAppAC #-}
 fAppAC :: Ord a => ACSym -> [Term a] -> Term a
 fAppAC _     []  = error "Term.fAppAC: empty argument list"
 fAppAC _     [a] = a
@@ -128,6 +129,7 @@ fAppAC acsym as  =
     o_as              = [ a | FAPP _ ts <- o_as0, a <- ts ]
 
 -- | Smart constructor for C terms.
+{-# INLINABLE fAppC #-}
 fAppC :: Ord a => CSym -> [Term a] -> Term a
 fAppC nacsym as = FAPP (C nacsym) (sort as)
 

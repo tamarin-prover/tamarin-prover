@@ -109,6 +109,14 @@ import           Debug.Trace.Ignore
 ----------------------------------------------------------------------
 
 -- | @unifyLTerm sortOf eqs@ returns a complete set of unifiers for @eqs@ modulo AC.
+-- Almost always called at the concrete 'LNTerm' type from the @theory@ package;
+-- without an exposed unfolding GHC compiles the RWST plumbing of @unif@
+-- (sequence/execRWST/the writer monoid) once with dictionary passing, so we
+-- hint the 'Name' specialisation here.
+{-# INLINABLE unifyLTermFactored #-}
+{-# SPECIALIZE unifyLTermFactored
+      :: (Name -> LSort) -> [Equal LNTerm]
+      -> WithMaude (LNSubst, [SubstVFresh Name LVar]) #-}
 unifyLTermFactored :: (IsConst c)
                    => (c -> LSort)
                    -> [Equal (LTerm c)]
@@ -232,12 +240,24 @@ solveMatchLNTerm = solveMatchLTerm sortOfName
 type UnifyRaw c = RWST (c -> LSort) [Equal (LTerm c)] (Map LVar (VTerm c LVar)) Maybe
 
 -- | Unify two 'LTerm's with delayed AC-unification.
+--
+-- This is the innermost loop of free unification and is called only at the
+-- concrete 'Name' constant type. Exposing the unfolding (INLINABLE) and forcing
+-- a 'Name'-specialised copy seems to help GHC optimise.
+{-# INLINABLE unifyRaw #-}
+{-# SPECIALIZE unifyRaw :: LNTerm -> LNTerm -> UnifyRaw Name () #-}
 unifyRaw :: IsConst c => LTerm c -> LTerm c -> UnifyRaw c ()
 unifyRaw l0 r0 = do
     mappings <- get
     sortOf <- ask
-    l <- gets ((`applyVTerm` l0) . substFromMap)
-    r <- gets ((`applyVTerm` r0) . substFromMap)
+    -- Build the substitution for the partial mappings once and reuse it for
+    -- both sides, instead of reconstructing it (via 'substFromMap', which
+    -- rebuilds the whole map) separately for @l0@ and @r0@ on every call. We
+    -- keep 'substFromMap' (rather than the raw 'Subst' constructor) so trivial
+    -- @x/x@ bindings are dropped, which preserves sharing in 'applyVTerm'.
+    let subst = substFromMap mappings
+        l = applyVTerm subst l0
+        r = applyVTerm subst r0
     guard (trace (show ("unifyRaw", mappings, l ,r)) True)
     case (viewTerm l, viewTerm r) of
        (Lit (Var vl), Lit (Var vr))
@@ -295,6 +315,9 @@ instance Monoid MatchFailure where
 
 -- | Ensure that the computed substitution @sigma@ satisfies
 -- @t ==_AC apply sigma p@ after the delayed equations are solved.
+{-# INLINABLE matchRaw #-}
+{-# SPECIALIZE matchRaw :: (Name -> LSort) -> LNTerm -> LNTerm
+                        -> ExceptT MatchFailure (State (Map LVar LNTerm)) () #-}
 matchRaw :: IsConst c
          => (c -> LSort)
          -> LTerm c -- ^ Term @t@
@@ -329,6 +352,7 @@ matchRaw sortOf t p = do
 
 -- | @sortGreaterEq v t@ returns @True@ if the sort ensures that the sort of @v@ is greater or equal to
 --   the sort of @t@.
+{-# INLINABLE sortGeqLTerm #-}
 sortGeqLTerm :: IsConst c => (c -> LSort) -> LVar -> LTerm c -> Bool
 sortGeqLTerm st v t = do
     case (lvarSort v, sortOfLTerm st t) of
