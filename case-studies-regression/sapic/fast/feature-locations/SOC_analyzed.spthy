@@ -4,9 +4,9 @@ begin
 
 // Function signature and definition of the equational theory E
 
-functions: adec/2, aenc/2, check_rep/2[destructor], fst/1,
-           get_rep/1[destructor], pair/2, pk/1, prog/2, rep/2[private,constructor],
-           report/1, sdec/2, senc/2, snd/1
+functions: adec/2, aenc/2, check_rep/2 [destructor], fst/1,
+           get_rep/1 [destructor], pair/2, pk/1, prog/2,
+           rep/2 [private,constructor], report/1, sdec/2, senc/2, snd/1
 equations:
     adec(aenc(x.1, pk(x.2)), x.2) = x.1,
     check_rep(rep(x.1, x.2), x.2) = x.1,
@@ -1617,9 +1617,9 @@ restriction locking_1:
 /*
 Generated from:
 Tamarin version 1.13.0
-Maude version 3.4
-Git revision: 1deff12bd69c96308abb2463d4de5f2c7610c191 (with uncommited changes), branch: develop
-Compiled at: 2026-03-09 07:36:56.194364 UTC
+Maude version 3.5.1
+Git revision: 53c49a44efa784b133c907eedf84491d61a48803 (with uncommited changes), branch: AC-NDC-property
+Compiled at: 2026-07-09 13:42:51.535083 UTC
 */
 
 end
@@ -1631,7 +1631,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-locations/SOC.spthy
 
   output:          examples/sapic/fast/feature-locations/SOC.spthy.tmp
-  processing time: 2.89s
+  processing time: 3.77s
   
   secrecy (all-traces): verified (2 steps)
   Reach (exists-trace): falsified - no trace found (4 steps)

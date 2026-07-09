@@ -5,8 +5,8 @@ begin
 // Function signature and definition of the equational theory E
 
 builtins: multiset
-functions: blind/2, checksign/2, f/4, fst/1, open/2, pair/2, pk/1,
-           sign/2, snd/1, tdcommit/3, unblind/2
+functions: blind/2, checksign/2, f/4 [NDC,NDC-diff], fst/1, open/2,
+           pair/2, pk/1, sign/2, snd/1, tdcommit/3, unblind/2
 equations [convergent]:
     checksign(sign(m, sk), pk(sk)) = m,
     f(m1, f(m, r, td, m1), td, m2) = f(m, r, td, m2),
@@ -199,7 +199,7 @@ rule-equivalence
   backward-search
     case LHS
     step( simplify )
-    step( solve( !KD( blind(m, b) ) ▶₀ #i ) )
+    step( solve( !KD( blind(x, x.1) ) ▶₀ #i ) )
       case Register_Admin_pk
       by step( solve( (#vl, 0) ~~> (#i, 0) ) )
     next
@@ -314,7 +314,7 @@ rule-equivalence
   next
     case RHS
     step( simplify )
-    step( solve( !KD( blind(m, b) ) ▶₀ #i ) )
+    step( solve( !KD( blind(x, x.1) ) ▶₀ #i ) )
       case Register_Admin_pk
       by step( solve( (#vl, 0) ~~> (#i, 0) ) )
     next
@@ -432,7 +432,7 @@ next
   backward-search
     case LHS
     step( simplify )
-    step( solve( !KD( sign(m, sk) ) ▶₀ #i ) )
+    step( solve( !KD( sign(x, x.1) ) ▶₀ #i ) )
       case Register_Admin_pk
       by step( solve( (#vl, 0) ~~> (#i, 0) ) )
     next
@@ -734,7 +734,7 @@ next
   next
     case RHS
     step( simplify )
-    step( solve( !KD( sign(m, sk) ) ▶₀ #i ) )
+    step( solve( !KD( sign(x, x.1) ) ▶₀ #i ) )
       case Register_Admin_pk
       by step( solve( (#vl, 0) ~~> (#i, 0) ) )
     next
@@ -1520,7 +1520,7 @@ next
   backward-search
     case LHS
     step( simplify )
-    step( solve( !KD( tdcommit(m, r, td) ) ▶₀ #i ) )
+    step( solve( !KD( tdcommit(x, x.1, x.2) ) ▶₀ #i ) )
       case Register_Admin_pk
       by step( solve( (#vl, 0) ~~> (#i, 0) ) )
     next
@@ -1710,7 +1710,7 @@ next
   next
     case RHS
     step( simplify )
-    step( solve( !KD( tdcommit(m, r, td) ) ▶₀ #i ) )
+    step( solve( !KD( tdcommit(x, x.1, x.2) ) ▶₀ #i ) )
       case Register_Admin_pk
       by step( solve( (#vl, 0) ~~> (#i, 0) ) )
     next
@@ -2386,7 +2386,7 @@ next
     step( simplify )
     step( solve( DiffIntrDestrd_0_unblind( ) @ #i ) )
       case d_0_unblind_case_1
-      step( solve( !KD( blind(m, b) ) ▶₀ #i ) )
+      step( solve( !KD( blind(x, x.1) ) ▶₀ #i ) )
         case Register_Admin_pk
         by step( solve( (#vl, 0) ~~> (#i, 0) ) )
       next
@@ -2500,7 +2500,7 @@ next
       qed
     next
       case d_0_unblind_case_2
-      step( solve( !KD( sign(blind(m, b), sk) ) ▶₀ #i ) )
+      step( solve( !KD( sign(blind(x, x.1), x.2) ) ▶₀ #i ) )
         case Register_Admin_pk
         by step( solve( (#vl, 0) ~~> (#i, 0) ) )
       next
@@ -2603,7 +2603,7 @@ next
     step( simplify )
     step( solve( DiffIntrDestrd_0_unblind( ) @ #i ) )
       case d_0_unblind_case_1
-      step( solve( !KD( blind(m, b) ) ▶₀ #i ) )
+      step( solve( !KD( blind(x, x.1) ) ▶₀ #i ) )
         case Register_Admin_pk
         by step( solve( (#vl, 0) ~~> (#i, 0) ) )
       next
@@ -2717,7 +2717,7 @@ next
       qed
     next
       case d_0_unblind_case_2
-      step( solve( !KD( sign(blind(m, b), sk) ) ▶₀ #i ) )
+      step( solve( !KD( sign(blind(x, x.1), x.2) ) ▶₀ #i ) )
         case Register_Admin_pk
         by step( solve( (#vl, 0) ~~> (#i, 0) ) )
       next
@@ -2817,184 +2817,11 @@ next
     qed
   qed
 next
-  case Rule_Destrd_1_f
-  backward-search
-    case LHS
-    step( simplify )
-    step( solve( !KD( f(m, r, td, m1) ) ▶₀ #i ) )
-      case Register_Admin_pk
-      by step( solve( (#vl, 0) ~~> (#i, 0) ) )
-    next
-      case Register_Voter_pk1
-      by step( solve( (#vl, 0) ~~> (#i, 0) ) )
-    next
-      case Register_Voter_pk2
-      by step( solve( (#vl, 0) ~~> (#i, 0) ) )
-    next
-      case V_1
-      step( solve( (#vl, 0) ~~> (#i, 0) ) )
-        case d_0_fst
-        step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
-          case d_0_0_unblind_sign
-          step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
-            case d_0_checksign
-            step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
-              case d_0_open
-              by step( solve( (#vr.4, 0) ~~> (#i, 0) ) )
-            qed
-          qed
-        next
-          case d_0_unblind
-          step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
-            case d_0_open
-            by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
-          qed
-        qed
-      next
-        case d_0_snd
-        step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
-          case d_0_checksign
-          step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
-            case d_0_0_unblind_sign
-            step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
-              case d_0_checksign
-              step( solve( (#vr.4, 0) ~~> (#i, 0) ) )
-                case d_0_open
-                by step( solve( (#vr.5, 0) ~~> (#i, 0) ) )
-              qed
-            qed
-          next
-            case d_0_unblind
-            step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
-              case d_0_open
-              by step( solve( (#vr.4, 0) ~~> (#i, 0) ) )
-            qed
-          qed
-        next
-          case d_0_unblind
-          step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
-            case d_0_checksign
-            step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
-              case d_0_open
-              by step( solve( (#vr.4, 0) ~~> (#i, 0) ) )
-            qed
-          qed
-        qed
-      qed
-    next
-      case V_3
-      step( solve( (#vl, 0) ~~> (#i, 0) ) )
-        case d_0_fst
-        step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
-          case d_0_open
-          by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
-        qed
-      next
-        case d_0_snd
-        step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
-          case d_0_checksign
-          step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
-            case d_0_open
-            by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
-          qed
-        qed
-      qed
-    next
-      case select_vote
-      by step( solve( (#vl, 0) ~~> (#i, 0) ) )
-    qed
-  next
-    case RHS
-    step( simplify )
-    step( solve( !KD( f(m, r, td, m1) ) ▶₀ #i ) )
-      case Register_Admin_pk
-      by step( solve( (#vl, 0) ~~> (#i, 0) ) )
-    next
-      case Register_Voter_pk1
-      by step( solve( (#vl, 0) ~~> (#i, 0) ) )
-    next
-      case Register_Voter_pk2
-      by step( solve( (#vl, 0) ~~> (#i, 0) ) )
-    next
-      case V_1
-      step( solve( (#vl, 0) ~~> (#i, 0) ) )
-        case d_0_fst
-        step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
-          case d_0_0_unblind_sign
-          step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
-            case d_0_checksign
-            step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
-              case d_0_open
-              by step( solve( (#vr.4, 0) ~~> (#i, 0) ) )
-            qed
-          qed
-        next
-          case d_0_unblind
-          step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
-            case d_0_open
-            by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
-          qed
-        qed
-      next
-        case d_0_snd
-        step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
-          case d_0_checksign
-          step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
-            case d_0_0_unblind_sign
-            step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
-              case d_0_checksign
-              step( solve( (#vr.4, 0) ~~> (#i, 0) ) )
-                case d_0_open
-                by step( solve( (#vr.5, 0) ~~> (#i, 0) ) )
-              qed
-            qed
-          next
-            case d_0_unblind
-            step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
-              case d_0_open
-              by step( solve( (#vr.4, 0) ~~> (#i, 0) ) )
-            qed
-          qed
-        next
-          case d_0_unblind
-          step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
-            case d_0_checksign
-            step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
-              case d_0_open
-              by step( solve( (#vr.4, 0) ~~> (#i, 0) ) )
-            qed
-          qed
-        qed
-      qed
-    next
-      case V_3
-      step( solve( (#vl, 0) ~~> (#i, 0) ) )
-        case d_0_fst
-        step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
-          case d_0_open
-          by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
-        qed
-      next
-        case d_0_snd
-        step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
-          case d_0_checksign
-          step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
-            case d_0_open
-            by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
-          qed
-        qed
-      qed
-    next
-      case select_vote
-      by step( solve( (#vl, 0) ~~> (#i, 0) ) )
-    qed
-  qed
-next
   case Rule_Destrd_1_open
   backward-search
     case LHS
     step( simplify )
-    step( solve( !KD( f(m1, r, td, m2) ) ▶₀ #i ) )
+    step( solve( !KD( f(x, x.1, x.2, x.3) ) ▶₀ #i ) )
       case Register_Admin_pk
       by step( solve( (#vl, 0) ~~> (#i, 0) ) )
     next
@@ -3079,7 +2906,7 @@ next
   next
     case RHS
     step( simplify )
-    step( solve( !KD( f(m1, r, td, m2) ) ▶₀ #i ) )
+    step( solve( !KD( f(x, x.1, x.2, x.3) ) ▶₀ #i ) )
       case Register_Admin_pk
       by step( solve( (#vl, 0) ~~> (#i, 0) ) )
     next
@@ -3163,11 +2990,11 @@ next
     qed
   qed
 next
-  case Rule_Destrd_1_tdcommit
+  case Rule_Destrd_2_tdcommit
   backward-search
     case LHS
     step( simplify )
-    step( solve( !KD( f(m1, r, td, m2) ) ▶₀ #i ) )
+    step( solve( !KD( f(x, x.1, x.2, x.3) ) ▶₀ #i ) )
       case Register_Admin_pk
       by step( solve( (#vl, 0) ~~> (#i, 0) ) )
     next
@@ -3252,7 +3079,180 @@ next
   next
     case RHS
     step( simplify )
-    step( solve( !KD( f(m1, r, td, m2) ) ▶₀ #i ) )
+    step( solve( !KD( f(x, x.1, x.2, x.3) ) ▶₀ #i ) )
+      case Register_Admin_pk
+      by step( solve( (#vl, 0) ~~> (#i, 0) ) )
+    next
+      case Register_Voter_pk1
+      by step( solve( (#vl, 0) ~~> (#i, 0) ) )
+    next
+      case Register_Voter_pk2
+      by step( solve( (#vl, 0) ~~> (#i, 0) ) )
+    next
+      case V_1
+      step( solve( (#vl, 0) ~~> (#i, 0) ) )
+        case d_0_fst
+        step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+          case d_0_0_unblind_sign
+          step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+            case d_0_checksign
+            step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
+              case d_0_open
+              by step( solve( (#vr.4, 0) ~~> (#i, 0) ) )
+            qed
+          qed
+        next
+          case d_0_unblind
+          step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+            case d_0_open
+            by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
+          qed
+        qed
+      next
+        case d_0_snd
+        step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+          case d_0_checksign
+          step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+            case d_0_0_unblind_sign
+            step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
+              case d_0_checksign
+              step( solve( (#vr.4, 0) ~~> (#i, 0) ) )
+                case d_0_open
+                by step( solve( (#vr.5, 0) ~~> (#i, 0) ) )
+              qed
+            qed
+          next
+            case d_0_unblind
+            step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
+              case d_0_open
+              by step( solve( (#vr.4, 0) ~~> (#i, 0) ) )
+            qed
+          qed
+        next
+          case d_0_unblind
+          step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+            case d_0_checksign
+            step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
+              case d_0_open
+              by step( solve( (#vr.4, 0) ~~> (#i, 0) ) )
+            qed
+          qed
+        qed
+      qed
+    next
+      case V_3
+      step( solve( (#vl, 0) ~~> (#i, 0) ) )
+        case d_0_fst
+        step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+          case d_0_open
+          by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+        qed
+      next
+        case d_0_snd
+        step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+          case d_0_checksign
+          step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+            case d_0_open
+            by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
+          qed
+        qed
+      qed
+    next
+      case select_vote
+      by step( solve( (#vl, 0) ~~> (#i, 0) ) )
+    qed
+  qed
+next
+  case Rule_Destrd_3_f
+  backward-search
+    case LHS
+    step( simplify )
+    step( solve( !KD( f(x, x.1, x.2, x.3) ) ▶₀ #i ) )
+      case Register_Admin_pk
+      by step( solve( (#vl, 0) ~~> (#i, 0) ) )
+    next
+      case Register_Voter_pk1
+      by step( solve( (#vl, 0) ~~> (#i, 0) ) )
+    next
+      case Register_Voter_pk2
+      by step( solve( (#vl, 0) ~~> (#i, 0) ) )
+    next
+      case V_1
+      step( solve( (#vl, 0) ~~> (#i, 0) ) )
+        case d_0_fst
+        step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+          case d_0_0_unblind_sign
+          step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+            case d_0_checksign
+            step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
+              case d_0_open
+              by step( solve( (#vr.4, 0) ~~> (#i, 0) ) )
+            qed
+          qed
+        next
+          case d_0_unblind
+          step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+            case d_0_open
+            by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
+          qed
+        qed
+      next
+        case d_0_snd
+        step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+          case d_0_checksign
+          step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+            case d_0_0_unblind_sign
+            step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
+              case d_0_checksign
+              step( solve( (#vr.4, 0) ~~> (#i, 0) ) )
+                case d_0_open
+                by step( solve( (#vr.5, 0) ~~> (#i, 0) ) )
+              qed
+            qed
+          next
+            case d_0_unblind
+            step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
+              case d_0_open
+              by step( solve( (#vr.4, 0) ~~> (#i, 0) ) )
+            qed
+          qed
+        next
+          case d_0_unblind
+          step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+            case d_0_checksign
+            step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
+              case d_0_open
+              by step( solve( (#vr.4, 0) ~~> (#i, 0) ) )
+            qed
+          qed
+        qed
+      qed
+    next
+      case V_3
+      step( solve( (#vl, 0) ~~> (#i, 0) ) )
+        case d_0_fst
+        step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+          case d_0_open
+          by step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+        qed
+      next
+        case d_0_snd
+        step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+          case d_0_checksign
+          step( solve( (#vr.2, 0) ~~> (#i, 0) ) )
+            case d_0_open
+            by step( solve( (#vr.3, 0) ~~> (#i, 0) ) )
+          qed
+        qed
+      qed
+    next
+      case select_vote
+      by step( solve( (#vl, 0) ~~> (#i, 0) ) )
+    qed
+  next
+    case RHS
+    step( simplify )
+    step( solve( !KD( f(x, x.1, x.2, x.3) ) ▶₀ #i ) )
       case Register_Admin_pk
       by step( solve( (#vl, 0) ~~> (#i, 0) ) )
     next
@@ -4014,13 +4014,13 @@ next
                       by step( solve( !KU( ~b ) @ #vk.8 ) )
                     next
                       case V_1_case_3
-                      by step( solve( !KU( ~b ) @ #vk.9 ) )
+                      by step( solve( !KU( ~b ) @ #vk.8 ) )
                     next
                       case V_1_case_4
                       by step( solve( !KU( ~b ) @ #vk.9 ) )
                     next
                       case V_1_case_5
-                      by step( solve( !KU( ~b ) @ #vk.8 ) )
+                      by step( solve( !KU( ~b ) @ #vk.9 ) )
                     next
                       case V_3_case_1
                       step( solve( !KU( blind(tdcommit($vote, ~r, ~td), ~b) ) @ #vk.6 ) )
@@ -4160,13 +4160,13 @@ next
                       by step( solve( !KU( ~b.1 ) @ #vk.8 ) )
                     next
                       case V_1_case_3
-                      by step( solve( !KU( ~b.1 ) @ #vk.9 ) )
+                      by step( solve( !KU( ~b.1 ) @ #vk.8 ) )
                     next
                       case V_1_case_4
                       by step( solve( !KU( ~b.1 ) @ #vk.9 ) )
                     next
                       case V_1_case_5
-                      by step( solve( !KU( ~b.1 ) @ #vk.8 ) )
+                      by step( solve( !KU( ~b.1 ) @ #vk.9 ) )
                     next
                       case V_3_case_1
                       step( solve( !KU( blind(tdcommit($vote1, ~r1, ~td1), ~b) ) @ #vk.6 ) )
@@ -4334,13 +4334,13 @@ next
                           by step( solve( !KU( ~b ) @ #vk.9 ) )
                         next
                           case V_1_case_3
-                          by step( solve( !KU( ~b ) @ #vk.10 ) )
+                          by step( solve( !KU( ~b ) @ #vk.9 ) )
                         next
                           case V_1_case_4
                           by step( solve( !KU( ~b ) @ #vk.10 ) )
                         next
                           case V_1_case_5
-                          by step( solve( !KU( ~b ) @ #vk.9 ) )
+                          by step( solve( !KU( ~b ) @ #vk.10 ) )
                         next
                           case V_3_case_1
                           step( solve( !KU( blind(tdcommit($vote, ~r, ~td), ~b) ) @ #vk.7 ) )
@@ -4480,13 +4480,13 @@ next
                           by step( solve( !KU( ~b.1 ) @ #vk.9 ) )
                         next
                           case V_1_case_3
-                          by step( solve( !KU( ~b.1 ) @ #vk.10 ) )
+                          by step( solve( !KU( ~b.1 ) @ #vk.9 ) )
                         next
                           case V_1_case_4
                           by step( solve( !KU( ~b.1 ) @ #vk.10 ) )
                         next
                           case V_1_case_5
-                          by step( solve( !KU( ~b.1 ) @ #vk.9 ) )
+                          by step( solve( !KU( ~b.1 ) @ #vk.10 ) )
                         next
                           case V_3_case_1
                           step( solve( !KU( blind(tdcommit($vote1, ~r1, ~td1), ~b) ) @ #vk.7 ) )
@@ -4694,13 +4694,13 @@ next
                             by step( solve( !KU( ~b ) @ #vk.9 ) )
                           next
                             case V_1_case_3
-                            by step( solve( !KU( ~b ) @ #vk.10 ) )
+                            by step( solve( !KU( ~b ) @ #vk.9 ) )
                           next
                             case V_1_case_4
                             by step( solve( !KU( ~b ) @ #vk.10 ) )
                           next
                             case V_1_case_5
-                            by step( solve( !KU( ~b ) @ #vk.9 ) )
+                            by step( solve( !KU( ~b ) @ #vk.10 ) )
                           next
                             case V_3_case_1
                             MIRRORED
@@ -4724,13 +4724,13 @@ next
                             by step( solve( !KU( ~b ) @ #vk.10 ) )
                           next
                             case V_1_case_3
-                            by step( solve( !KU( ~b ) @ #vk.11 ) )
+                            by step( solve( !KU( ~b ) @ #vk.10 ) )
                           next
                             case V_1_case_4
                             by step( solve( !KU( ~b ) @ #vk.11 ) )
                           next
                             case V_1_case_5
-                            by step( solve( !KU( ~b ) @ #vk.10 ) )
+                            by step( solve( !KU( ~b ) @ #vk.11 ) )
                           next
                             case V_3_case_1
                             step( solve( !KU( pk(~ltkV.1) ) @ #vk.9 ) )
@@ -4957,13 +4957,13 @@ next
                             by step( solve( !KU( ~b.1 ) @ #vk.9 ) )
                           next
                             case V_1_case_3
-                            by step( solve( !KU( ~b.1 ) @ #vk.10 ) )
+                            by step( solve( !KU( ~b.1 ) @ #vk.9 ) )
                           next
                             case V_1_case_4
                             by step( solve( !KU( ~b.1 ) @ #vk.10 ) )
                           next
                             case V_1_case_5
-                            by step( solve( !KU( ~b.1 ) @ #vk.9 ) )
+                            by step( solve( !KU( ~b.1 ) @ #vk.10 ) )
                           next
                             case V_3_case_1
                             MIRRORED
@@ -5035,13 +5035,13 @@ next
                             by step( solve( !KU( ~b.1 ) @ #vk.10 ) )
                           next
                             case V_1_case_3
-                            by step( solve( !KU( ~b.1 ) @ #vk.11 ) )
+                            by step( solve( !KU( ~b.1 ) @ #vk.10 ) )
                           next
                             case V_1_case_4
                             by step( solve( !KU( ~b.1 ) @ #vk.11 ) )
                           next
                             case V_1_case_5
-                            by step( solve( !KU( ~b.1 ) @ #vk.10 ) )
+                            by step( solve( !KU( ~b.1 ) @ #vk.11 ) )
                           next
                             case V_3_case_1
                             step( solve( !KU( pk(~ltkV) ) @ #vk.9 ) )
@@ -5166,13 +5166,13 @@ next
                       by step( solve( !KU( ~b ) @ #vk.10 ) )
                     next
                       case V_1_case_3
-                      by step( solve( !KU( ~b ) @ #vk.11 ) )
+                      by step( solve( !KU( ~b ) @ #vk.10 ) )
                     next
                       case V_1_case_4
                       by step( solve( !KU( ~b ) @ #vk.11 ) )
                     next
                       case V_1_case_5
-                      by step( solve( !KU( ~b ) @ #vk.10 ) )
+                      by step( solve( !KU( ~b ) @ #vk.11 ) )
                     next
                       case V_3_case_1
                       step( solve( !KU( blind(tdcommit($vote, ~r, ~td), ~b) ) @ #vk.8 ) )
@@ -5298,13 +5298,13 @@ next
                       by step( solve( !KU( ~b ) @ #vk.10 ) )
                     next
                       case V_1_case_3
-                      by step( solve( !KU( ~b ) @ #vk.11 ) )
+                      by step( solve( !KU( ~b ) @ #vk.10 ) )
                     next
                       case V_1_case_4
                       by step( solve( !KU( ~b ) @ #vk.11 ) )
                     next
                       case V_1_case_5
-                      by step( solve( !KU( ~b ) @ #vk.10 ) )
+                      by step( solve( !KU( ~b ) @ #vk.11 ) )
                     next
                       case V_3_case_1
                       step( solve( !KU( blind(tdcommit($vote, ~r, ~td), ~b) ) @ #vk.8 ) )
@@ -5453,13 +5453,13 @@ next
                       by step( solve( !KU( ~b.1 ) @ #vk.10 ) )
                     next
                       case V_1_case_3
-                      by step( solve( !KU( ~b.1 ) @ #vk.11 ) )
+                      by step( solve( !KU( ~b.1 ) @ #vk.10 ) )
                     next
                       case V_1_case_4
                       by step( solve( !KU( ~b.1 ) @ #vk.11 ) )
                     next
                       case V_1_case_5
-                      by step( solve( !KU( ~b.1 ) @ #vk.10 ) )
+                      by step( solve( !KU( ~b.1 ) @ #vk.11 ) )
                     next
                       case V_3_case_1
                       step( solve( !KU( blind(tdcommit($vote1, ~r1, ~td1), ~b) ) @ #vk.8 ) )
@@ -5585,13 +5585,13 @@ next
                       by step( solve( !KU( ~b.1 ) @ #vk.10 ) )
                     next
                       case V_1_case_3
-                      by step( solve( !KU( ~b.1 ) @ #vk.11 ) )
+                      by step( solve( !KU( ~b.1 ) @ #vk.10 ) )
                     next
                       case V_1_case_4
                       by step( solve( !KU( ~b.1 ) @ #vk.11 ) )
                     next
                       case V_1_case_5
-                      by step( solve( !KU( ~b.1 ) @ #vk.10 ) )
+                      by step( solve( !KU( ~b.1 ) @ #vk.11 ) )
                     next
                       case V_3_case_1
                       step( solve( !KU( blind(tdcommit($vote1, ~r1, ~td1), ~b) ) @ #vk.8 ) )
@@ -6943,13 +6943,13 @@ next
                       by step( solve( !KU( ~b ) @ #vk.8 ) )
                     next
                       case V_1_case_3
-                      by step( solve( !KU( ~b ) @ #vk.9 ) )
+                      by step( solve( !KU( ~b ) @ #vk.8 ) )
                     next
                       case V_1_case_4
                       by step( solve( !KU( ~b ) @ #vk.9 ) )
                     next
                       case V_1_case_5
-                      by step( solve( !KU( ~b ) @ #vk.8 ) )
+                      by step( solve( !KU( ~b ) @ #vk.9 ) )
                     next
                       case V_3_case_1
                       step( solve( !KU( blind(tdcommit($vote, ~r, ~td), ~b) ) @ #vk.6 ) )
@@ -7089,13 +7089,13 @@ next
                       by step( solve( !KU( ~b.1 ) @ #vk.8 ) )
                     next
                       case V_1_case_3
-                      by step( solve( !KU( ~b.1 ) @ #vk.9 ) )
+                      by step( solve( !KU( ~b.1 ) @ #vk.8 ) )
                     next
                       case V_1_case_4
                       by step( solve( !KU( ~b.1 ) @ #vk.9 ) )
                     next
                       case V_1_case_5
-                      by step( solve( !KU( ~b.1 ) @ #vk.8 ) )
+                      by step( solve( !KU( ~b.1 ) @ #vk.9 ) )
                     next
                       case V_3_case_1
                       step( solve( !KU( blind(tdcommit($vote1, ~r1, ~td1), ~b) ) @ #vk.6 ) )
@@ -7263,13 +7263,13 @@ next
                           by step( solve( !KU( ~b ) @ #vk.9 ) )
                         next
                           case V_1_case_3
-                          by step( solve( !KU( ~b ) @ #vk.10 ) )
+                          by step( solve( !KU( ~b ) @ #vk.9 ) )
                         next
                           case V_1_case_4
                           by step( solve( !KU( ~b ) @ #vk.10 ) )
                         next
                           case V_1_case_5
-                          by step( solve( !KU( ~b ) @ #vk.9 ) )
+                          by step( solve( !KU( ~b ) @ #vk.10 ) )
                         next
                           case V_3_case_1
                           step( solve( !KU( blind(tdcommit($vote, ~r, ~td), ~b) ) @ #vk.7 ) )
@@ -7409,13 +7409,13 @@ next
                           by step( solve( !KU( ~b.1 ) @ #vk.9 ) )
                         next
                           case V_1_case_3
-                          by step( solve( !KU( ~b.1 ) @ #vk.10 ) )
+                          by step( solve( !KU( ~b.1 ) @ #vk.9 ) )
                         next
                           case V_1_case_4
                           by step( solve( !KU( ~b.1 ) @ #vk.10 ) )
                         next
                           case V_1_case_5
-                          by step( solve( !KU( ~b.1 ) @ #vk.9 ) )
+                          by step( solve( !KU( ~b.1 ) @ #vk.10 ) )
                         next
                           case V_3_case_1
                           step( solve( !KU( blind(tdcommit($vote1, ~r1, ~td1), ~b) ) @ #vk.7 ) )
@@ -7623,13 +7623,13 @@ next
                             by step( solve( !KU( ~b ) @ #vk.9 ) )
                           next
                             case V_1_case_3
-                            by step( solve( !KU( ~b ) @ #vk.10 ) )
+                            by step( solve( !KU( ~b ) @ #vk.9 ) )
                           next
                             case V_1_case_4
                             by step( solve( !KU( ~b ) @ #vk.10 ) )
                           next
                             case V_1_case_5
-                            by step( solve( !KU( ~b ) @ #vk.9 ) )
+                            by step( solve( !KU( ~b ) @ #vk.10 ) )
                           next
                             case V_3_case_1
                             MIRRORED
@@ -7653,13 +7653,13 @@ next
                             by step( solve( !KU( ~b ) @ #vk.10 ) )
                           next
                             case V_1_case_3
-                            by step( solve( !KU( ~b ) @ #vk.11 ) )
+                            by step( solve( !KU( ~b ) @ #vk.10 ) )
                           next
                             case V_1_case_4
                             by step( solve( !KU( ~b ) @ #vk.11 ) )
                           next
                             case V_1_case_5
-                            by step( solve( !KU( ~b ) @ #vk.10 ) )
+                            by step( solve( !KU( ~b ) @ #vk.11 ) )
                           next
                             case V_3_case_1
                             step( solve( !KU( pk(~ltkV.1) ) @ #vk.9 ) )
@@ -7886,13 +7886,13 @@ next
                             by step( solve( !KU( ~b.1 ) @ #vk.9 ) )
                           next
                             case V_1_case_3
-                            by step( solve( !KU( ~b.1 ) @ #vk.10 ) )
+                            by step( solve( !KU( ~b.1 ) @ #vk.9 ) )
                           next
                             case V_1_case_4
                             by step( solve( !KU( ~b.1 ) @ #vk.10 ) )
                           next
                             case V_1_case_5
-                            by step( solve( !KU( ~b.1 ) @ #vk.9 ) )
+                            by step( solve( !KU( ~b.1 ) @ #vk.10 ) )
                           next
                             case V_3_case_1
                             MIRRORED
@@ -7964,13 +7964,13 @@ next
                             by step( solve( !KU( ~b.1 ) @ #vk.10 ) )
                           next
                             case V_1_case_3
-                            by step( solve( !KU( ~b.1 ) @ #vk.11 ) )
+                            by step( solve( !KU( ~b.1 ) @ #vk.10 ) )
                           next
                             case V_1_case_4
                             by step( solve( !KU( ~b.1 ) @ #vk.11 ) )
                           next
                             case V_1_case_5
-                            by step( solve( !KU( ~b.1 ) @ #vk.10 ) )
+                            by step( solve( !KU( ~b.1 ) @ #vk.11 ) )
                           next
                             case V_3_case_1
                             step( solve( !KU( pk(~ltkV) ) @ #vk.9 ) )
@@ -8095,13 +8095,13 @@ next
                       by step( solve( !KU( ~b ) @ #vk.10 ) )
                     next
                       case V_1_case_3
-                      by step( solve( !KU( ~b ) @ #vk.11 ) )
+                      by step( solve( !KU( ~b ) @ #vk.10 ) )
                     next
                       case V_1_case_4
                       by step( solve( !KU( ~b ) @ #vk.11 ) )
                     next
                       case V_1_case_5
-                      by step( solve( !KU( ~b ) @ #vk.10 ) )
+                      by step( solve( !KU( ~b ) @ #vk.11 ) )
                     next
                       case V_3_case_1
                       step( solve( !KU( blind(tdcommit($vote, ~r, ~td), ~b) ) @ #vk.8 ) )
@@ -8227,13 +8227,13 @@ next
                       by step( solve( !KU( ~b ) @ #vk.10 ) )
                     next
                       case V_1_case_3
-                      by step( solve( !KU( ~b ) @ #vk.11 ) )
+                      by step( solve( !KU( ~b ) @ #vk.10 ) )
                     next
                       case V_1_case_4
                       by step( solve( !KU( ~b ) @ #vk.11 ) )
                     next
                       case V_1_case_5
-                      by step( solve( !KU( ~b ) @ #vk.10 ) )
+                      by step( solve( !KU( ~b ) @ #vk.11 ) )
                     next
                       case V_3_case_1
                       step( solve( !KU( blind(tdcommit($vote, ~r, ~td), ~b) ) @ #vk.8 ) )
@@ -8382,13 +8382,13 @@ next
                       by step( solve( !KU( ~b.1 ) @ #vk.10 ) )
                     next
                       case V_1_case_3
-                      by step( solve( !KU( ~b.1 ) @ #vk.11 ) )
+                      by step( solve( !KU( ~b.1 ) @ #vk.10 ) )
                     next
                       case V_1_case_4
                       by step( solve( !KU( ~b.1 ) @ #vk.11 ) )
                     next
                       case V_1_case_5
-                      by step( solve( !KU( ~b.1 ) @ #vk.10 ) )
+                      by step( solve( !KU( ~b.1 ) @ #vk.11 ) )
                     next
                       case V_3_case_1
                       step( solve( !KU( blind(tdcommit($vote1, ~r1, ~td1), ~b) ) @ #vk.8 ) )
@@ -8514,13 +8514,13 @@ next
                       by step( solve( !KU( ~b.1 ) @ #vk.10 ) )
                     next
                       case V_1_case_3
-                      by step( solve( !KU( ~b.1 ) @ #vk.11 ) )
+                      by step( solve( !KU( ~b.1 ) @ #vk.10 ) )
                     next
                       case V_1_case_4
                       by step( solve( !KU( ~b.1 ) @ #vk.11 ) )
                     next
                       case V_1_case_5
-                      by step( solve( !KU( ~b.1 ) @ #vk.10 ) )
+                      by step( solve( !KU( ~b.1 ) @ #vk.11 ) )
                     next
                       case V_3_case_1
                       step( solve( !KU( blind(tdcommit($vote1, ~r1, ~td1), ~b) ) @ #vk.8 ) )
@@ -11365,9 +11365,9 @@ qed
 /*
 Generated from:
 Tamarin version 1.13.0
-Maude version 3.4
-Git revision: 1deff12bd69c96308abb2463d4de5f2c7610c191 (with uncommited changes), branch: develop
-Compiled at: 2026-03-09 07:36:56.194364 UTC
+Maude version 3.5.1
+Git revision: 53c49a44efa784b133c907eedf84491d61a48803 (with uncommited changes), branch: AC-NDC-property
+Compiled at: 2026-07-09 13:42:51.535083 UTC
 */
 
 end
@@ -11379,7 +11379,7 @@ summary of summaries:
 analyzed: examples/post17/okamoto_vote_privacy.spthy
 
   output:          examples/post17/okamoto_vote_privacy.spthy.tmp
-  processing time: 18.57s
+  processing time: 16.35s
   
   RHS :  exec (exists-trace): verified (12 steps)
   LHS :  exec (exists-trace): verified (12 steps)

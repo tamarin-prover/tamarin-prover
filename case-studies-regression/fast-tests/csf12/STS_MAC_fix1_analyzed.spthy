@@ -876,9 +876,9 @@ qed
 /*
 Generated from:
 Tamarin version 1.13.0
-Maude version 3.4
-Git revision: 1deff12bd69c96308abb2463d4de5f2c7610c191 (with uncommited changes), branch: develop
-Compiled at: 2026-03-09 07:36:56.194364 UTC
+Maude version 3.5.1
+Git revision: 53c49a44efa784b133c907eedf84491d61a48803 (with uncommited changes), branch: AC-NDC-property
+Compiled at: 2026-07-09 13:42:51.535083 UTC
 */
 
 end
@@ -890,7 +890,7 @@ summary of summaries:
 analyzed: examples/csf12/STS_MAC_fix1.spthy
 
   output:          examples/csf12/STS_MAC_fix1.spthy.tmp
-  processing time: 1.71s
+  processing time: 1.30s
   
   KI_Perfect_Forward_Secrecy_I (all-traces): verified (81 steps)
   KI_Perfect_Forward_Secrecy_R (all-traces): verified (126 steps)

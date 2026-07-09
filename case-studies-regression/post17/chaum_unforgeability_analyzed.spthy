@@ -125,9 +125,9 @@ qed
 /*
 Generated from:
 Tamarin version 1.13.0
-Maude version 3.4
-Git revision: 1deff12bd69c96308abb2463d4de5f2c7610c191 (with uncommited changes), branch: develop
-Compiled at: 2026-03-09 07:36:56.194364 UTC
+Maude version 3.5.1
+Git revision: 53c49a44efa784b133c907eedf84491d61a48803 (with uncommited changes), branch: AC-NDC-property
+Compiled at: 2026-07-09 13:42:51.535083 UTC
 */
 
 end
@@ -139,7 +139,7 @@ summary of summaries:
 analyzed: examples/post17/chaum_unforgeability.spthy
 
   output:          examples/post17/chaum_unforgeability.spthy.tmp
-  processing time: 0.06s
+  processing time: 0.14s
   
   exec (exists-trace): verified (6 steps)
   unforgeability (all-traces): verified (10 steps)
