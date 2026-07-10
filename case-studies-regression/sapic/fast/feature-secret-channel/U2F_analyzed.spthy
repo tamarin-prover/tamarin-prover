@@ -3749,7 +3749,7 @@ rule (modulo E) p_0_111111111111[color=#ffffff, process="|", issapicrule,
   */
 
 rule (modulo E) Stlschannellogpasspkufkey_0_1111111111111[color=#ffffff,
-                                                          process="S(~tls.1:channel, log.1, pass.1, pk(u2fkey.1))",
+                                                          process="S(~tls.1:channel, log.1, pass.1, pk(u2fkey.1));",
                                                           issapicrule, role='Process']:
    [
    State_1111111111111( ~btn.1, ~kb.1, ~tls.1, ~u2f.1, log.1, pass.1,
@@ -3760,22 +3760,16 @@ rule (modulo E) Stlschannellogpasspkufkey_0_1111111111111[color=#ffffff,
    [
    State_11111111111111( ~btn.1, ~kb.1, ~tls.1, ~u2f.1, log.1, pass.1,
                          u2fkey.1
-   ),
-   State_11111111111112( ~btn.1, ~kb.1, ~tls.1, ~u2f.1, log.1, pass.1,
-                         u2fkey.1
    )
    ]
 
   /*
   rule (modulo AC) Stlschannellogpasspkufkey_0_1111111111111[color=#ffffff,
-                                                             process="S(~tls.1:channel, log.1, pass.1, pk(u2fkey.1))",
+                                                             process="S(~tls.1:channel, log.1, pass.1, pk(u2fkey.1));",
                                                              issapicrule, role='Process']:
      [ State_1111111111111( ~btn, ~kb, ~tls, ~u2f, log, pass, u2fkey ) ]
     -->
-     [
-     State_11111111111111( ~btn, ~kb, ~tls, ~u2f, log, pass, u2fkey ),
-     State_11111111111112( ~btn, ~kb, ~tls, ~u2f, log, pass, u2fkey )
-     ]
+     [ State_11111111111111( ~btn, ~kb, ~tls, ~u2f, log, pass, u2fkey ) ]
   */
 
 rule (modulo E) intlschannellogpass_0_11111111111111[color=#40805b,
@@ -4359,26 +4353,8 @@ rule (modulo E) p_0_1111111111111111112[color=#40805b, process="0",
      [ ]
   */
 
-rule (modulo E) p_0_11111111111112[color=#ffffff, process="0",
-                                   issapicrule, role='Process']:
-   [
-   State_11111111111112( ~btn.1, ~kb.1, ~tls.1, ~u2f.1, log.1, pass.1,
-                         u2fkey.1
-   )
-   ]
-  -->
-   [ ]
-
-  /*
-  rule (modulo AC) p_0_11111111111112[color=#ffffff, process="0",
-                                      issapicrule, role='Process']:
-     [ State_11111111111112( ~btn, ~kb, ~tls, ~u2f, log, pass, u2fkey ) ]
-    -->
-     [ ]
-  */
-
 rule (modulo E) Ptlschannelufchannelkbchannel_0_1111111111112[color=#ffffff,
-                                                              process="P(~tls.1:channel, ~u2f.1:channel, ~kb.1:channel)",
+                                                              process="P(~tls.1:channel, ~u2f.1:channel, ~kb.1:channel);",
                                                               issapicrule, role='Process']:
    [
    State_1111111111112( ~btn.1, ~kb.1, ~tls.1, ~u2f.1, log.1, pass.1,
@@ -4389,22 +4365,16 @@ rule (modulo E) Ptlschannelufchannelkbchannel_0_1111111111112[color=#ffffff,
    [
    State_11111111111121( ~btn.1, ~kb.1, ~tls.1, ~u2f.1, log.1, pass.1,
                          u2fkey.1
-   ),
-   State_11111111111122( ~btn.1, ~kb.1, ~tls.1, ~u2f.1, log.1, pass.1,
-                         u2fkey.1
    )
    ]
 
   /*
   rule (modulo AC) Ptlschannelufchannelkbchannel_0_1111111111112[color=#ffffff,
-                                                                 process="P(~tls.1:channel, ~u2f.1:channel, ~kb.1:channel)",
+                                                                 process="P(~tls.1:channel, ~u2f.1:channel, ~kb.1:channel);",
                                                                  issapicrule, role='Process']:
      [ State_1111111111112( ~btn, ~kb, ~tls, ~u2f, log, pass, u2fkey ) ]
     -->
-     [
-     State_11111111111121( ~btn, ~kb, ~tls, ~u2f, log, pass, u2fkey ),
-     State_11111111111122( ~btn, ~kb, ~tls, ~u2f, log, pass, u2fkey )
-     ]
+     [ State_11111111111121( ~btn, ~kb, ~tls, ~u2f, log, pass, u2fkey ) ]
   */
 
 rule (modulo E) inkbchannellgbitstringpssbitstring_0_11111111111121[color=#6c8040,
@@ -4840,26 +4810,8 @@ rule (modulo E) p_0_11111111111121111111[color=#6c8040, process="0",
      [ ]
   */
 
-rule (modulo E) p_0_11111111111122[color=#ffffff, process="0",
-                                   issapicrule, role='Process']:
-   [
-   State_11111111111122( ~btn.1, ~kb.1, ~tls.1, ~u2f.1, log.1, pass.1,
-                         u2fkey.1
-   )
-   ]
-  -->
-   [ ]
-
-  /*
-  rule (modulo AC) p_0_11111111111122[color=#ffffff, process="0",
-                                      issapicrule, role='Process']:
-     [ State_11111111111122( ~btn, ~kb, ~tls, ~u2f, log, pass, u2fkey ) ]
-    -->
-     [ ]
-  */
-
 rule (modulo E) Tufchannelbtnchannelufkey_0_111111111112[color=#ffffff,
-                                                         process="T(~u2f.1:channel, ~btn.1:channel, u2fkey.1)",
+                                                         process="T(~u2f.1:channel, ~btn.1:channel, u2fkey.1);",
                                                          issapicrule, role='Process']:
    [
    State_111111111112( ~btn.1, ~kb.1, ~tls.1, ~u2f.1, log.1, pass.1,
@@ -4870,22 +4822,16 @@ rule (modulo E) Tufchannelbtnchannelufkey_0_111111111112[color=#ffffff,
    [
    State_1111111111121( ~btn.1, ~kb.1, ~tls.1, ~u2f.1, log.1, pass.1,
                         u2fkey.1
-   ),
-   State_1111111111122( ~btn.1, ~kb.1, ~tls.1, ~u2f.1, log.1, pass.1,
-                        u2fkey.1
    )
    ]
 
   /*
   rule (modulo AC) Tufchannelbtnchannelufkey_0_111111111112[color=#ffffff,
-                                                            process="T(~u2f.1:channel, ~btn.1:channel, u2fkey.1)",
+                                                            process="T(~u2f.1:channel, ~btn.1:channel, u2fkey.1);",
                                                             issapicrule, role='Process']:
      [ State_111111111112( ~btn, ~kb, ~tls, ~u2f, log, pass, u2fkey ) ]
     -->
-     [
-     State_1111111111121( ~btn, ~kb, ~tls, ~u2f, log, pass, u2fkey ),
-     State_1111111111122( ~btn, ~kb, ~tls, ~u2f, log, pass, u2fkey )
-     ]
+     [ State_1111111111121( ~btn, ~kb, ~tls, ~u2f, log, pass, u2fkey ) ]
   */
 
 rule (modulo E) inufchannelpayloadbitstring_0_1111111111121[color=#405080,
@@ -5173,26 +5119,8 @@ rule (modulo E) p_0_11111111111211111[color=#405080, process="0",
      [ ]
   */
 
-rule (modulo E) p_0_1111111111122[color=#ffffff, process="0",
-                                  issapicrule, role='Process']:
-   [
-   State_1111111111122( ~btn.1, ~kb.1, ~tls.1, ~u2f.1, log.1, pass.1,
-                        u2fkey.1
-   )
-   ]
-  -->
-   [ ]
-
-  /*
-  rule (modulo AC) p_0_1111111111122[color=#ffffff, process="0",
-                                     issapicrule, role='Process']:
-     [ State_1111111111122( ~btn, ~kb, ~tls, ~u2f, log, pass, u2fkey ) ]
-    -->
-     [ ]
-  */
-
 rule (modulo E) Ukbchannelbtnchannellogpass_0_11111111112[color=#ffffff,
-                                                          process="U(~kb.1:channel, ~btn.1:channel, log.1, pass.1)",
+                                                          process="U(~kb.1:channel, ~btn.1:channel, log.1, pass.1);",
                                                           issapicrule, role='Process']:
    [
    State_11111111112( ~btn.1, ~kb.1, ~tls.1, ~u2f.1, log.1, pass.1, u2fkey.1
@@ -5202,22 +5130,16 @@ rule (modulo E) Ukbchannelbtnchannellogpass_0_11111111112[color=#ffffff,
    [
    State_111111111121( ~btn.1, ~kb.1, ~tls.1, ~u2f.1, log.1, pass.1,
                        u2fkey.1
-   ),
-   State_111111111122( ~btn.1, ~kb.1, ~tls.1, ~u2f.1, log.1, pass.1,
-                       u2fkey.1
    )
    ]
 
   /*
   rule (modulo AC) Ukbchannelbtnchannellogpass_0_11111111112[color=#ffffff,
-                                                             process="U(~kb.1:channel, ~btn.1:channel, log.1, pass.1)",
+                                                             process="U(~kb.1:channel, ~btn.1:channel, log.1, pass.1);",
                                                              issapicrule, role='Process']:
      [ State_11111111112( ~btn, ~kb, ~tls, ~u2f, log, pass, u2fkey ) ]
     -->
-     [
-     State_111111111121( ~btn, ~kb, ~tls, ~u2f, log, pass, u2fkey ),
-     State_111111111122( ~btn, ~kb, ~tls, ~u2f, log, pass, u2fkey )
-     ]
+     [ State_111111111121( ~btn, ~kb, ~tls, ~u2f, log, pass, u2fkey ) ]
   */
 
 rule (modulo E) lockEvToken_0_111111111121[color=#804067,
@@ -5640,24 +5562,6 @@ rule (modulo E) p_0_11111111112112[color=#804067, process="0",
      [ ]
   */
 
-rule (modulo E) p_0_111111111122[color=#ffffff, process="0", issapicrule,
-                                 role='Process']:
-   [
-   State_111111111122( ~btn.1, ~kb.1, ~tls.1, ~u2f.1, log.1, pass.1,
-                       u2fkey.1
-   )
-   ]
-  -->
-   [ ]
-
-  /*
-  rule (modulo AC) p_0_111111111122[color=#ffffff, process="0",
-                                    issapicrule, role='Process']:
-     [ State_111111111122( ~btn, ~kb, ~tls, ~u2f, log, pass, u2fkey ) ]
-    -->
-     [ ]
-  */
-
 restriction set_in:
   "∀ x y #t3.
     (IsIn( x, y ) @ #t3) ⇒
@@ -5801,7 +5705,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-secret-channel/U2F.spthy
 
   output:          examples/sapic/fast/feature-secret-channel/U2F.spthy.tmp
-  processing time: 113.36s
+  processing time: 111.81s
   
   auth (all-traces): verified (1097 steps)
 

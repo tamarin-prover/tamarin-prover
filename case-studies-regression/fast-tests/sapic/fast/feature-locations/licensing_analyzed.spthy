@@ -199,16 +199,14 @@ rule (modulo E) p_1_111[color=#ffffff, process="!", issapicrule,
      [ !Semistate_1111( prog ) ] --> [ State_1111( prog ) ]
   */
 
-rule (modulo E) p_0_1111[color=#ffffff, process="p()", issapicrule,
+rule (modulo E) p_0_1111[color=#ffffff, process="p();", issapicrule,
                          role='Process']:
-   [ State_1111( prog.1 ) ]
-  -->
-   [ State_11111( prog.1 ), State_11112( prog.1 ) ]
+   [ State_1111( prog.1 ) ] --> [ State_11111( prog.1 ) ]
 
   /*
-  rule (modulo AC) p_0_1111[color=#ffffff, process="p()", issapicrule,
+  rule (modulo AC) p_0_1111[color=#ffffff, process="p();", issapicrule,
                             role='Process']:
-     [ State_1111( prog ) ] --> [ State_11111( prog ), State_11112( prog ) ]
+     [ State_1111( prog ) ] --> [ State_11111( prog ) ]
   */
 
 rule (modulo E) inpkskV_0_11111[color=#804046, process="in(pk(skV.1));",
@@ -532,16 +530,6 @@ rule (modulo E) p_0_111111111111111111[color=#804046, process="0",
      [ ]
   */
 
-rule (modulo E) p_0_11112[color=#ffffff, process="0", issapicrule,
-                          role='Process']:
-   [ State_11112( prog.1 ) ] --> [ ]
-
-  /*
-  rule (modulo AC) p_0_11112[color=#ffffff, process="0", issapicrule,
-                             role='Process']:
-     [ State_11112( prog ) ] --> [ ]
-  */
-
 rule (modulo E) p_0_112[color=#ffffff, process="!", issapicrule,
                         role='Process']:
    [ State_112( prog.1 ) ] --> [ !Semistate_1121( prog.1 ) ]
@@ -563,15 +551,13 @@ rule (modulo E) p_1_112[color=#ffffff, process="!", issapicrule,
   */
 
 rule (modulo E) vendorprog_0_1121[color=#ffffff,
-                                  process="vendor(prog.1)", issapicrule, role='Process']:
-   [ State_1121( prog.1 ) ]
-  -->
-   [ State_11211( prog.1 ), State_11212( prog.1 ) ]
+                                  process="vendor(prog.1);", issapicrule, role='Process']:
+   [ State_1121( prog.1 ) ] --> [ State_11211( prog.1 ) ]
 
   /*
   rule (modulo AC) vendorprog_0_1121[color=#ffffff,
-                                     process="vendor(prog.1)", issapicrule, role='Process']:
-     [ State_1121( prog ) ] --> [ State_11211( prog ), State_11212( prog ) ]
+                                     process="vendor(prog.1);", issapicrule, role='Process']:
+     [ State_1121( prog ) ] --> [ State_11211( prog ) ]
   */
 
 rule (modulo E) newskV_0_11211[color=#406880, process="new skV.2;",
@@ -995,16 +981,6 @@ rule (modulo E) p_0_1121111112[color=#406880, process="0", issapicrule,
      [ State_1121111112( prog, signed, shared_key, skV ) ] --> [ ]
   */
 
-rule (modulo E) p_0_11212[color=#ffffff, process="0", issapicrule,
-                          role='Process']:
-   [ State_11212( prog.1 ) ] --> [ ]
-
-  /*
-  rule (modulo AC) p_0_11212[color=#ffffff, process="0", issapicrule,
-                             role='Process']:
-     [ State_11212( prog ) ] --> [ ]
-  */
-
 restriction predicate_eq:
   "∀ #i a b. (Pred_Eq( a, b ) @ #i) ⇒ (a = b)"
   // safety formula
@@ -1051,7 +1027,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-locations/licensing.spthy
 
   output:          examples/sapic/fast/feature-locations/licensing.spthy.tmp
-  processing time: 0.95s
+  processing time: 0.94s
   
   attested_comput (all-traces): verified (6 steps)
   unique (all-traces): verified (7 steps)

@@ -6147,7 +6147,7 @@ summary of summaries:
 analyzed: examples/related_work/TPM_DKRS_CSF11/Envelope.spthy
 
   output:          examples/related_work/TPM_DKRS_CSF11/Envelope.spthy.tmp
-  processing time: 8.58s
+  processing time: 8.41s
   
   types (all-traces): verified (12 steps)
   PCR_Write_charn (all-traces): verified (59 steps)

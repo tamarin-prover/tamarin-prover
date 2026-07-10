@@ -791,7 +791,7 @@ summary of summaries:
 analyzed: examples/features/auto-sources/spore/SpliceAS_2.spthy
 
   output:          examples/features/auto-sources/spore/SpliceAS_2.spthy.tmp
-  processing time: 2.79s
+  processing time: 2.91s
   
   executability (exists-trace): verified (21 steps)
   Secrecy (all-traces): falsified - found trace (16 steps)

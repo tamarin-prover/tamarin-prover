@@ -446,7 +446,7 @@ summary of summaries:
 analyzed: examples/ake/bilinear/Chen_Kudla_eCK.spthy
 
   output:          examples/ake/bilinear/Chen_Kudla_eCK.spthy.tmp
-  processing time: 9.38s
+  processing time: 9.63s
   
   key_secrecy_eCK_like (all-traces): falsified - found trace (24 steps)
 

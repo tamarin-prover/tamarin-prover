@@ -9412,6 +9412,20 @@ rule (modulo E) Init[color=#ffffff, process="!", issapicrule,
 
   /* has exactly the trivial AC variant */
 
+rule (modulo E) A_0_111111[color=#804046, process="!", issapicrule,
+                           role='A']:
+   [ State_111111( ~prog_1, a.1, b.1, kEnc.1, kSign.1 ) ]
+  --[ ProgressTo_1111111( ~prog_1 ) ]->
+   [ !Semistate_11111111( ~prog_1, a.1, b.1, kEnc.1, kSign.1 ) ]
+
+  /*
+  rule (modulo AC) A_0_111111[color=#804046, process="!", issapicrule,
+                              role='A']:
+     [ State_111111( ~prog_1, a, b, kEnc, kSign ) ]
+    --[ ProgressTo_1111111( ~prog_1 ) ]->
+     [ !Semistate_11111111( ~prog_1, a, b, kEnc, kSign ) ]
+  */
+
 rule (modulo E) p_1_1111111[color=#804046, process="!", issapicrule,
                             role='A']:
    [
@@ -9644,20 +9658,6 @@ rule (modulo E) unlockab_0_11111111111111[color=#804046, process="0",
      [ ]
   */
 
-rule (modulo E) A_0_111111[color=#ffffff, process="0", issapicrule,
-                           role='Process']:
-   [ State_111111( ~prog_1, a.1, b.1, kEnc.1, kSign.1 ) ]
-  --[ ProgressTo_1111111( ~prog_1 ) ]->
-   [ !Semistate_11111111( ~prog_1, a.1, b.1, kEnc.1, kSign.1 ) ]
-
-  /*
-  rule (modulo AC) A_0_111111[color=#ffffff, process="0", issapicrule,
-                              role='Process']:
-     [ State_111111( ~prog_1, a, b, kEnc, kSign ) ]
-    --[ ProgressTo_1111111( ~prog_1 ) ]->
-     [ !Semistate_11111111( ~prog_1, a, b, kEnc, kSign ) ]
-  */
-
 rule (modulo E) p_1_[color=#ffffff, process="|", issapicrule,
                      role='Process']:
    [
@@ -9681,6 +9681,20 @@ rule (modulo E) p_1_[color=#ffffff, process="|", issapicrule,
      State_111111( ~prog_1, a, b, kEnc, kSign ),
      State_111112( ~prog_1, a, b, kEnc, kSign )
      ]
+  */
+
+rule (modulo E) B_0_111112[color=#628040, process="!", issapicrule,
+                           role='B']:
+   [ State_111112( ~prog_1, a.1, b.1, kEnc.1, kSign.1 ) ]
+  --[ ProgressTo_1111121( ~prog_1 ) ]->
+   [ !Semistate_11111211( ~prog_1, a.1, b.1, kEnc.1, kSign.1 ) ]
+
+  /*
+  rule (modulo AC) B_0_111112[color=#628040, process="!", issapicrule,
+                              role='B']:
+     [ State_111112( ~prog_1, a, b, kEnc, kSign ) ]
+    --[ ProgressTo_1111121( ~prog_1 ) ]->
+     [ !Semistate_11111211( ~prog_1, a, b, kEnc, kSign ) ]
   */
 
 rule (modulo E) p_1_1111121[color=#628040, process="!", issapicrule,
@@ -9924,20 +9938,6 @@ rule (modulo E) ifxmacmacMHSHseqmpadkSign_1_1111121111[color=#628040,
      [ ]
   */
 
-rule (modulo E) B_0_111112[color=#ffffff, process="0", issapicrule,
-                           role='Process']:
-   [ State_111112( ~prog_1, a.1, b.1, kEnc.1, kSign.1 ) ]
-  --[ ProgressTo_1111121( ~prog_1 ) ]->
-   [ !Semistate_11111211( ~prog_1, a.1, b.1, kEnc.1, kSign.1 ) ]
-
-  /*
-  rule (modulo AC) B_0_111112[color=#ffffff, process="0", issapicrule,
-                              role='Process']:
-     [ State_111112( ~prog_1, a, b, kEnc, kSign ) ]
-    --[ ProgressTo_1111121( ~prog_1 ) ]->
-     [ !Semistate_11111211( ~prog_1, a, b, kEnc, kSign ) ]
-  */
-
 restriction predicate_eq:
   "∀ #i a b. (Pred_Eq( a, b ) @ #i) ⇒ (a = b)"
   // safety formula
@@ -10144,7 +10144,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/SCADA/opc_ua_secure_conversation.spthy
 
   output:          examples/sapic/fast/SCADA/opc_ua_secure_conversation.spthy.tmp
-  processing time: 37.37s
+  processing time: 37.22s
   
   Executable (exists-trace): verified (36 steps)
   all_received_were_sent (all-traces): verified (18 steps)

@@ -316,13 +316,17 @@ applyMacroInFormula macros fm = mapAtoms (const (fmap (applyMacros (lnMacrosToBN
 ------------
 
 instance HasFrees LNFormula where
+    {-# INLINABLE foldFrees #-}
     foldFrees  f = foldMap  (foldFrees  f)
     foldFreesOcc _ _ = const mempty -- we ignore occurences in Formulas for now
+    {-# INLINABLE mapFrees #-}
     mapFrees   f = traverseFormula (mapFrees   f)
 
 instance HasFrees SyntacticLNFormula where
+    {-# INLINABLE foldFrees #-}
     foldFrees  f = foldMap  (foldFrees  f)
     foldFreesOcc _ _ = const mempty -- we ignore occurences in Formulas for now
+    {-# INLINABLE mapFrees #-}
     mapFrees   f = traverseFormula (mapFrees   f)
 
 instance Apply LNSubst LNFormula where

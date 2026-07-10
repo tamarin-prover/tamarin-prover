@@ -137,7 +137,7 @@ executable tamarin-prover
       , exceptions
       , file-embed
       , filepath
-      , gitrev
+      , githash
       , http-types
       , mtl
       , parsec

@@ -286,7 +286,7 @@ summary of summaries:
 analyzed: examples/related_work/StatVerif_ARR_CSF11/StatVerif_Security_Device.spthy
 
   output:          examples/related_work/StatVerif_ARR_CSF11/StatVerif_Security_Device.spthy.tmp
-  processing time: 0.12s
+  processing time: 0.14s
   
   types (all-traces): verified (31 steps)
   reachability_left (exists-trace): verified (5 steps)

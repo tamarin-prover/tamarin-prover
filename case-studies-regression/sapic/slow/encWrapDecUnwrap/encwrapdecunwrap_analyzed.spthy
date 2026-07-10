@@ -16099,7 +16099,7 @@ summary of summaries:
 analyzed: examples/sapic/slow/encWrapDecUnwrap/encwrapdecunwrap.spthy
 
   output:          examples/sapic/slow/encWrapDecUnwrap/encwrapdecunwrap.spthy.tmp
-  processing time: 46.10s
+  processing time: 48.73s
   
   dec_limits (all-traces): verified (280 steps)
   wrap_key_origins (all-traces): verified (1109 steps)

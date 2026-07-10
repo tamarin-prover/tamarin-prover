@@ -153,9 +153,11 @@ instance Apply LNSubst SplitId where
     apply _ = id
 
 instance HasFrees EqStore where
+    {-# INLINABLE foldFrees #-}
     foldFrees f (EqStore subst substs nextSplitId) =
         foldFrees f subst <> foldFrees f substs <> foldFrees f nextSplitId
     foldFreesOcc  _ _ = const mempty
+    {-# INLINABLE mapFrees #-}
     mapFrees f (EqStore subst substs nextSplitId) =
         EqStore <$> mapFrees f subst
                 <*> mapFrees f substs

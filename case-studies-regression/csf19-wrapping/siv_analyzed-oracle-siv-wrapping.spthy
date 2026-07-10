@@ -13134,7 +13134,7 @@ summary of summaries:
 analyzed: examples/csf19-wrapping/siv.spthy
 
   output:          examples/csf19-wrapping/siv.spthy.tmp
-  processing time: 42.84s
+  processing time: 42.29s
   
   origin (all-traces): verified (2086 steps)
   Counter_Monotonicity (all-traces): verified (888 steps)

@@ -1,0 +1,8 @@
+theory FunctionRedefiningBuiltins
+begin
+
+functions: fst/1[private]
+// Should generate an error.
+// Hence why it is not added in the makefile.
+
+end

@@ -3772,7 +3772,7 @@ summary of summaries:
 analyzed: examples/related_work/YubiSecure_KS_STM12/Yubikey.spthy
 
   output:          examples/related_work/YubiSecure_KS_STM12/Yubikey.spthy.tmp
-  processing time: 3.31s
+  processing time: 3.25s
   
   Login_reachable (exists-trace): verified (12 steps)
   slightly_weaker_invariant (all-traces): verified (1135 steps)
