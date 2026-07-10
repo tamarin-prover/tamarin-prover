@@ -60,13 +60,13 @@ tactic: DRauth
 prio:
   regex "~~>"
 prio:
-  regex "!KU( ~sskD"
+  regex "!KU\( ~sskD"
 prio:
   regex " 'S', <'b'"
 prio:
-  regex " In_A( $BB, <'b'"
+  regex " In_A\( \$BB, <'b'"
 prio:
-  regex "!KU( sg(encp(v"
+  regex "!KU\( sg\(encp\(v"
 prio:
   regex "AgSt"
 prio:
@@ -76,27 +76,27 @@ prio:
 prio:
   regex "'pkD'"
 prio:
-  regex " !KU( sg(cp(v"
+  regex " !KU\( sg\(cp\(v"
 prio:
-  regex "In_A( $S"
+  regex "In_A\( \$S"
 prio:
-  regex " In_A( 'S', <'pkD'"
+  regex " In_A\( 'S', <'pkD'"
 prio:
   regex "AgSt_A0"
 prio:
   regex "'bs'"
 prio:
-  regex "!KU( ~skS"
+  regex "!KU\( ~skS"
 prio:
-  regex "!KU( ~skD"
+  regex "!KU\( ~skD"
 prio:
-  regex "In_A( $S, <'vs'"
+  regex "In_A\( \$S, <'vs'"
 
 tactic: secretSskD 
 prio:
   regex "~~>"
 prio:
-  regex "!KU( ~sskD"
+  regex "!KU\( ~sskD"
 prio:
   regex "'zkp'"
 prio:
@@ -104,21 +104,21 @@ prio:
 prio:
   regex "In_S"
 prio:
-  regex "!KU( ~sk"
+  regex "!KU\( ~sk"
 prio:
   regex "~sskD"
 prio:
   regex "AgSt"
 prio:
-  regex "!KU( ~skD"
+  regex "!KU\( ~skD"
 prio:
-  regex "!KU( sg(cp("
+  regex "!KU\( sg\(cp\("
 prio:
   regex "'pr'"
 prio:
   regex "'bs'"
 prio:
-  regex "sg(cp("
+  regex "sg\(cp\("
 prio:
   regex "In_A"
 prio:
@@ -126,7 +126,7 @@ prio:
 prio:
   regex "~~>"
 prio:
-  regex "cp("
+  regex "cp\("
 
 
 
