@@ -294,14 +294,10 @@ module.exports = grammar({
       ),
 
       predicate: $ => seq(
-          alias($.predicate_def, ''),
+          field('predicate_identifier', $.ident),
+          '(', optional($.arguments), ')',
           '<=>',
           field('formula', $._formula)
-      ),
-
-      predicate_def: $ => seq(
-          field('predicate_identifier', $.ident),
-          '(', optional($.arguments), ')'
       ),
 
       // Options:
