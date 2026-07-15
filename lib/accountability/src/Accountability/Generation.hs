@@ -301,8 +301,8 @@ mergeQuantifiers = mergeQuantifiers1 [All, Ex]
       Conn And p q -> pullQuantifiers quans $ mergeQuantifiers1 quans p .&&.  mergeQuantifiers1 quans q
       Conn Or  p q -> pullQuantifiers quans $ mergeQuantifiers1 quans p .||.  mergeQuantifiers1 quans q
       Conn Imp p q -> pullQuantifiers quans $ mergeQuantifiers1 quans p .==>. mergeQuantifiers1 quans q
-      Conn Iff p q -> pullQuantifiers quans $ mergeQuantifiers1 quans p .==>. mergeQuantifiers1 quans q .&&.
-                                              mergeQuantifiers1 quans q .==>. mergeQuantifiers1 quans p
+      Conn Iff p q -> pullQuantifiers quans $ (mergeQuantifiers1 quans p .==>. mergeQuantifiers1 quans q) .&&.
+                                              (mergeQuantifiers1 quans q .==>. mergeQuantifiers1 quans p)
       _            -> fm
 
 
