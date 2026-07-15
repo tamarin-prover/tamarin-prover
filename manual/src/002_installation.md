@@ -52,8 +52,8 @@ Alternatively, you can install them yourself:
     <http://www.graphviz.org/>
 
   - **Maude** You can install Maude using your package manager (make sure to have version 2.7.1. or
-    newer). You can also install Maude manually from the [Maude website]
-    (http://maude.cs.illinois.edu/w/index.php/Maude_download_and_installation).
+    newer). You can also install Maude manually from the
+    [Maude website](https://maude.cs.illinois.edu/get-maude).
     In this case, you should ensure that your `PATH`
     includes the install path, so that calling `maude` runs the right version. Note that even though
     the Maude executable is movable, the `prelude.maude` file must be in the same folder that you
