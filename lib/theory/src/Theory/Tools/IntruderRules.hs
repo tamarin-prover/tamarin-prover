@@ -45,8 +45,6 @@ import           Term.Positions
 
 import           Theory.Model
 
--- import           Debug.Trace
-
 -- Variants of intruder deduction rules
 ----------------------------------------------------------------------
 
@@ -130,6 +128,14 @@ destructionRules :: Bool -> CtxtStRule -> [IntrRuleAC]
 destructionRules bool (CtxtStRule lhs@(viewTerm -> FApp _ _) (StRhs (pos:[]) rhs)) | (bool || (frees rhs /= []) || (containsPrivate rhs)) =
     go [] lhs pos empty []
   where
+    -- In diff mode, avoid creating destruction rules for public constructor *constants*
+    -- when the equation itself produces a public constructor constant result.
+    -- This prevents spurious one-sided derivations in diff mode for constant public
+    -- terms like `c()` or `true`, while preserving destructor rules for non-constant
+    -- constructors such as `h(x)`.
+    isPublicConstrConstant (viewTerm -> FApp (NoEq (_,(_,Public,Constructor))) as) = null as
+    isPublicConstrConstant _                                                       = False
+    isPublicConstrRhs = isPublicConstrConstant rhs
     go _      _                       []     _ _                     = []
     -- term already in premises, but necessary for constant conclusions
     go _      (viewTerm -> FApp _ _)  (_:[]) _ _ | (frees rhs /= []) = []
@@ -138,17 +144,18 @@ destructionRules bool (CtxtStRule lhs@(viewTerm -> FApp _ _) (StRhs (pos:[]) rhs
       where
         uprems' = uprems++[ t | (j, t) <- zip [0..] as, i /= j ]
         t'      = as!!i
-        funs = append (append n (pack "_")) f
+        funs    = append (append n (pack "_")) f
         posname = "_" ++ show i ++ pd
         name    = append (pack posname) funs
-        irule = if {-trace (show lhs ++ " " ++ show pos ++ " " ++ show posname ++ " " ++ show rhs ++ " " ++ show (lhs `atPos` pos) ++ " " ++ show (frees rhs == []))-} (t' /= rhs && rhs `notElem` uprems')
-                then [ Rule (DestrRule name (-1) (rhs == lhs `atPos` pos) (frees rhs == []))
-                            ((kdFact  t'):(map kuFact uprems'))
-                            [kdFact rhs] [] [] ]
+        canGenerate = t' /= rhs && rhs `notElem` uprems' && not (bool && isPublicConstrConstant t' && isPublicConstrRhs)
+        irule = if canGenerate
+                then [Rule (DestrRule name (-1) (rhs == lhs `atPos` pos) (frees rhs == []))
+                            ((kdFact t'):(map kuFact uprems'))
+                            [kdFact rhs] [] []]
                 else []
     go _      (viewTerm -> FApp (NoEq (_,(_,Private,_))) _) _     _ _  = []
     go _      (viewTerm -> Lit _)                         (_:_) _ _  =
-        error "IntruderRules.destructionRules: impossible, position invalid"   
+        error "IntruderRules.destructionRules: impossible, position invalid"
      
 destructionRules bool (CtxtStRule lhs (StRhs (pos:posit) rhs)) 
     | (bool || (frees rhs /= []) || (containsPrivate rhs)) = 
@@ -185,8 +192,8 @@ privateConstructorRules rules = map createRule $ derivablePrivateConstants (priv
 
 -- | Simple removal of subsumed rules for auto-generated subterm intruder rules.
 minimizeIntruderRules :: Bool -> [IntrRuleAC] -> [IntrRuleAC]
-minimizeIntruderRules diff rules = 
-    filter (\x -> not $ isDoublePremiseRule x) 
+minimizeIntruderRules diff rules =
+    filter (\x -> not $ isDoublePremiseRule x)
       $ if diff then rules else go [] rules
   where
     go checked [] = reverse checked
@@ -210,7 +217,7 @@ minimizeIntruderRules diff rules =
 subtermIntruderRules :: Bool -> MaudeSig -> [IntrRuleAC]
 subtermIntruderRules diff maudeSig =
    minimizeIntruderRules diff $ concatMap (destructionRules diff) (S.toList $ stRules maudeSig)
-     ++ constructionRules (stFunSyms maudeSig) ++ privateConstructorRules (S.toList $ stRules maudeSig) 
+     ++ constructionRules (stFunSyms maudeSig) ++ privateConstructorRules (S.toList $ stRules maudeSig)
 
 -- | @constructionRules fSig@ returns the construction rules for the given
 -- function signature @fSig@

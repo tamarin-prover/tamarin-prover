@@ -1,0 +1,14 @@
+theory issue849_diffG begin
+
+builtins: multiset
+functions: f/2, g/1, c/0
+equations: f(g(x), g(x)) = c()
+
+rule Setup:
+  [ Fr(~x) ]
+--[ Setup() ]->
+  [ Out( diff( f(g(~x), g(~x)), c() ) )
+  , Out( diff( ~x, g(~x) ) )
+  ]
+
+end
