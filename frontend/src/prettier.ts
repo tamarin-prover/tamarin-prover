@@ -86,7 +86,6 @@ function fits(n: number, d: Doc): boolean {
 }
 
 // Render a Doc to a string using an explicit stack (no recursion).
-// Lines become `\l` + indent spaces — matching Haskell's `\n` → `\l` in showAttr.
 function renderDoc(width: number, d: Doc): string {
     type Frame = { indent: number; doc: Doc };
     const stack: Frame[] = [{ indent: 0, doc: d }];
@@ -137,7 +136,7 @@ function renderDocTerm(width: number, d: Doc): string {
                 break;
 
             case 'Line':
-                out.push("\n" + " ".repeat(indent));
+                out.push("\n" + " ".repeat(indent)); // replaced //l with \n for term rendering
                 col = indent;
                 break;
 
@@ -302,6 +301,7 @@ function prettyFact(f: JSONGraphNodeFact): Doc {
 // Public API
 // -----------------------------------------------------------------------------
 
+// Render Terms and Facts to correct Graphviz Syntax
 export function prettierJSONGraphNodeTerm(t: JSONGraphNodeTerm): string {
     return renderDocTerm(LINE_WIDTH, prettyTerm(t));
 }

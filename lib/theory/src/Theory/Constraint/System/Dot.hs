@@ -412,7 +412,8 @@ dotLessEdge (src, tgt, color) = do
   tgtId <- getState dsNodes tgt ("Target node of less edge not found: " ++ show src)
   liftDot $ D.edge srcId tgtId [("color",color),("style","dashed")]
 
--- | Function to order abbreviations for JSON output. Replicating the topological sort used in the legend generation to ensure consistent ordering.
+-- Function to order abbreviations for JSON output. Replicating the topological sort used in the legend generation to ensure consistent ordering.
+-- We need to preserve terms for the new JSON output, as the terms are later used for highlighting nodes in the graph.
 orderAbbreviationsForJSON :: Abbreviations -> [(LNTerm, (AbbreviationTerm, AbbreviationExpansion))]
 orderAbbreviationsForJSON abbrevs =
   topoSortAbbrevs $ zip [0..] $ sortOn( Data.Ord.Down . render . Sys.prettyLNTerm . fst . snd) (M.toList abbrevs)

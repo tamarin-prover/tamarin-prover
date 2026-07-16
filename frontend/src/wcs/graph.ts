@@ -146,16 +146,6 @@ export class DotGraphViz extends HTMLElement {
     super();
   }
 
-  // attributeChangedCallback(name: string, oldValue: string | null, newValue: string | null) {
-  // if (name === "dotsrc" && newValue !== oldValue) {
-  //   this.dotSrc = newValue;
-  //   console.debug(`Dot src changed from ${oldValue} to ${newValue}`);
-  //   this.renderSource();
-  //   // Notice the popup window that dotsrc has changed
-  //   this.postMessage({ type: "response-dotsrc", payload: this.dotSrc });
-  // }
-  // }
-
   connectedCallback() {
     this.jsonSrc = this.getAttribute("dotsrc");
     this.isAbbreviationEnabled = document.cookie.indexOf("abbreviate") !== -1;
@@ -196,15 +186,12 @@ export class DotGraphViz extends HTMLElement {
 
   // Render the graph using JSON string
   renderJson = (jsonGraphs: JSONGraphs) => {
-    console.debug("Received Json string: ");
-    console.debug(jsonGraphs);
 
     for (const jsonGraph of jsonGraphs.graphs) {
       const ctx = new TamarinGraphBuildContext(this.isAbbreviationEnabled ? jsonGraph.jgAbbrevs : []);
       const simplificationValue = getSimplificationFromCookie();
 
       const tgraph = new TamarinGraph(jsonGraph, ctx, simplificationValue === -1 ? 2 : simplificationValue);
-      console.debug(tgraph);
       this.render(tgraph.dot()).then(() => {
         if (this.isAbbreviationEnabled) {
           this.renderLegend(ctx);

@@ -378,6 +378,7 @@ getRelationType src tgt graph =
   in
     relationType
 
+-- | To determine the color of the edge based on Reason and Fact type.
 colorEdge :: Edge -> Graph -> String
 colorEdge edge graph = case edge of
     SystemEdge (src, tgt) -- -> "gray30"
@@ -399,6 +400,8 @@ colorEdge edge graph = case edge of
             InjectiveFacts -> "purple"
             NormalForm     -> "darkorange3"
 
+-- | Generate JSONGraphEdge from an edge of a abstract graph. 
+-- Added a new type to handle the color of the edge.
 graphEdgeToJSONGraphEdge :: Edge -> RJSON JSONGraphEdge
 graphEdgeToJSONGraphEdge (SystemEdge (src, tgt)) = do
   graph <- getGraph
@@ -428,34 +431,6 @@ graphEdgeToJSONGraphEdge (UnsolvedChain (src, tgt)) = do
                 where 
                   (sid, ConcIdx concIdx) = src
                   (tid, PremIdx premIdx) = tgt
-
--- | Generate JSONGraphEdge from an edge of a abstract graph.
--- graphEdgeToJSONGraphEdge :: Edge -> RJSON JSONGraphEdge
--- graphEdgeToJSONGraphEdge (SystemEdge (src, tgt)) = do
---   graph <- getGraph
---   return $ JSONGraphEdge { jgeSource = show sid ++ ":c" ++ show concIdx
---                 , jgeTarget = show tid ++ ":p" ++ show premIdx
---                 , jgeRelation = getRelationType src tgt graph
---                 , reason = Nothing
---                 }
---                 where 
---                   (sid, ConcIdx concIdx) = src
---                   (tid, PremIdx premIdx) = tgt
--- graphEdgeToJSONGraphEdge (LessEdge (LessAtom src tgt reason)) =
---   return $ JSONGraphEdge { jgeSource = show src
---                 , jgeRelation = "LessAtoms"
---                 , jgeTarget = show tgt
---                 , reason = Just reason
---                 }
--- graphEdgeToJSONGraphEdge (UnsolvedChain (src, tgt)) = 
---   return $ JSONGraphEdge { jgeSource = show sid ++ ":c" ++ show concIdx
---                 , jgeTarget = show tid ++ ":p" ++ show premIdx
---                 , jgeRelation = "unsolvedChain"
---                 , reason = Nothing
---                 }
---                 where 
---                   (sid, ConcIdx concIdx) = src
---                   (tid, PremIdx premIdx) = tgt
 
 -- | Generate JSONGraphCluster from a cluster of an abstract graph.
 graphClusterToJSONGraphCluster :: Cluster -> NodeColorMap -> RJSON JSONGraphCluster 
