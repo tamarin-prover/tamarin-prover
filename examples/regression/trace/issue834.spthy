@@ -1,0 +1,8 @@
+theory TestPairing
+
+begin
+builtins: dest-pairing
+
+process: 0
+
+end

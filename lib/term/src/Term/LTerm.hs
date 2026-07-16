@@ -296,6 +296,7 @@ freshLVar :: MonadFresh m => String -> LSort -> m LVar
 freshLVar n s = LVar n s <$> freshIdent n
 
 -- | Returns the most precise sort of an 'LTerm'.
+{-# INLINABLE sortOfLTerm #-}
 sortOfLTerm :: Show c => (c -> LSort) -> LTerm c -> LSort
 sortOfLTerm sortOfConst t = case viewTerm2 t of
     Lit2 (Con c)  -> sortOfConst c
@@ -568,19 +569,23 @@ class HasFrees t where
     mapFrees   :: Applicative f => MonotoneFunction f -> t -> f t
 
 -- | @v `occurs` t@ iff variable @v@ occurs as a free variable in @t@.
+{-# INLINABLE occurs #-}
 occurs :: HasFrees t => LVar -> t -> Bool
 occurs x = getAny . foldFrees (Any . (x ==))
 
 -- | @freesDList t@ is the difference list of all free variables of @t@.
+{-# INLINABLE freesDList #-}
 freesDList :: HasFrees t => t -> D.DList LVar
 freesDList = foldFrees pure
 
 -- | @freesList t@ is the list of all free variables of @t@.
+{-# INLINABLE freesList #-}
 freesList :: HasFrees t => t -> [LVar]
 freesList = D.toList . freesDList
 
 -- | @frees t@ is the sorted and duplicate-free list of all free variables in
 -- @t@.
+{-# INLINABLE frees #-}
 frees :: HasFrees t => t -> [LVar]
 frees = sortednub . freesList
 
@@ -598,12 +603,14 @@ varOccurences =
 -- | @someInst t@ returns an instance of @t@ where all free variables whose
 -- binding is not yet determined by the caller are replaced with fresh
 -- variables.
+{-# INLINABLE someInst #-}
 someInst :: (MonadFresh m, MonadBind LVar LVar m, HasFrees t) => t -> m t
 someInst = mapFrees (Arbitrary $ \x -> importBinding (`LVar` lvarSort x) x (lvarName x))
 
 -- | @rename t@ replaces all variables in @t@ with fresh variables.
 --   Note that the result is not guaranteed to be equal for terms that are
 --   equal modulo changing the indices of variables.
+{-# INLINABLE rename #-}
 rename :: (MonadFresh m, HasFrees a) => a -> m a
 rename x = case boundsVarIdx x of
     Nothing                     -> return x
@@ -639,11 +646,13 @@ eqModuloFreshnessNoAC t1 =
                   mapFrees (Arbitrary $ \x -> importBinding (`LVar` lvarSort x) x "")
 
 -- | The mininum and maximum index of all free variables.
+{-# INLINABLE boundsVarIdx #-}
 boundsVarIdx :: HasFrees t => t -> Maybe (Integer, Integer)
 boundsVarIdx = getMinMax . foldFrees (minMaxSingleton . lvarIdx)
 
 -- | @avoid t@ computes a 'FreshState' that avoids generating
 -- variables occurring in @t@.
+{-# INLINABLE avoid #-}
 avoid :: HasFrees t => t -> FreshState
 avoid = maybe 0 (succ . snd) . boundsVarIdx
 
@@ -676,6 +685,7 @@ avoidPreciseVars = foldl' ins M.empty
 
 -- | @avoidPrecise t@ computes a 'Precise.FreshState' that avoids generating
 -- variables occurring in @t@.
+{-# INLINABLE avoidPrecise #-}
 avoidPrecise :: HasFrees t => t -> Precise.FreshState
 avoidPrecise = avoidPreciseVars . frees
 
@@ -683,6 +693,7 @@ avoidPrecise = avoidPreciseVars . frees
 --   If 'Control.Monad.PreciseFresh' is used with non-AC terms and identical
 --   fresh state, the same result is returned for two terms that only differ
 --   in the indices of variables.
+{-# INLINABLE renamePrecise #-}
 renamePrecise :: (MonadFresh m, HasFrees a) => a -> m a
 renamePrecise x = evalBindT (someInst x) noBindings
 
@@ -696,32 +707,39 @@ renameDropNamehint =
 ------------
 
 instance HasFrees LVar where
+    {-# INLINABLE foldFrees #-}
     foldFrees = id
     foldFreesOcc f c v = f c v
+    {-# INLINABLE mapFrees #-}
     mapFrees (Arbitrary f) = f
     mapFrees (Monotone f)  = f
 
 instance HasFrees v => HasFrees (Lit c v) where
+    {-# INLINABLE foldFrees #-}
     foldFrees f (Var x) = foldFrees f x
     foldFrees _ _       = mempty
 
     foldFreesOcc f c (Var x) = foldFreesOcc f c x
     foldFreesOcc _ _ _       = mempty
 
+    {-# INLINABLE mapFrees #-}
     mapFrees f (Var x) = Var <$> mapFrees f x
     mapFrees _ l       = pure l
 
 instance HasFrees v => HasFrees (BVar v) where
+    {-# INLINABLE foldFrees #-}
     foldFrees _ (Bound _) = mempty
     foldFrees f (Free v)  = foldFrees f v
 
     foldFreesOcc _ _ (Bound _) = mempty
     foldFreesOcc f c (Free v)  = foldFreesOcc f c v
 
+    {-# INLINABLE mapFrees #-}
     mapFrees _ b@(Bound _) = pure b
     mapFrees f   (Free v)  = Free <$> mapFrees f v
 
 instance (HasFrees l, Ord l) => HasFrees (Term l) where
+    {-# INLINABLE foldFrees #-}
     foldFrees f = foldMap (foldFrees f)
 
     foldFreesOcc f c t = case viewTerm t of
@@ -730,24 +748,31 @@ instance (HasFrees l, Ord l) => HasFrees (Term l) where
         FApp o        as -> mconcat $ map (foldFreesOcc f (show o:c)) as
           -- AC or C symbols
 
+    {-# INLINABLE mapFrees #-}
     mapFrees f (viewTerm -> Lit l)                  = lit <$> mapFrees f l
     mapFrees f@(Arbitrary _) (viewTerm -> FApp o l) = fApp o <$> mapFrees f l
     mapFrees f@(Monotone _)  (viewTerm -> FApp o l) = unsafefApp o <$> mapFrees f l
 
 instance HasFrees a => HasFrees (Equal a) where
+    {-# INLINABLE foldFrees #-}
     foldFrees    f               = foldMap (foldFrees f)
     foldFreesOcc f p (Equal a b) = foldFreesOcc f p (a,b)
+    {-# INLINABLE mapFrees #-}
     mapFrees     f               = traverse (mapFrees f)
 
 instance HasFrees a => HasFrees (Match a) where
+    {-# INLINABLE foldFrees #-}
     foldFrees    f                       = foldMap (foldFrees f)
     foldFreesOcc _ _ NoMatch             = mempty
     foldFreesOcc f p (DelayedMatches ms) = foldFreesOcc f p ms
+    {-# INLINABLE mapFrees #-}
     mapFrees     f                       = traverse (mapFrees f)
 
 instance HasFrees a => HasFrees (RRule a) where
+    {-# INLINABLE foldFrees #-}
     foldFrees    f               = foldMap (foldFrees f)
     foldFreesOcc f p (RRule a b) = foldFreesOcc f p (a,b)
+    {-# INLINABLE mapFrees #-}
     mapFrees     f               = traverse (mapFrees f)
 
 instance HasFrees () where
@@ -776,19 +801,25 @@ instance HasFrees Char where
     mapFrees     _   = pure
 
 instance HasFrees a => HasFrees (Maybe a) where
+    {-# INLINABLE foldFrees #-}
     foldFrees    f            = foldMap (foldFrees f)
     foldFreesOcc _ _ Nothing  = mempty
     foldFreesOcc f p (Just x) = foldFreesOcc f p x
+    {-# INLINABLE mapFrees #-}
     mapFrees     f            = traverse (mapFrees f)
 
 instance (HasFrees a, HasFrees b) => HasFrees (Either a b) where
+    {-# INLINABLE foldFrees #-}
     foldFrees    f   = either (foldFrees f) (foldFrees f)
     foldFreesOcc f p = either (foldFreesOcc f ("0":p)) (foldFreesOcc f ("1":p))
+    {-# INLINABLE mapFrees #-}
     mapFrees     f   = either (fmap Left . mapFrees   f) (fmap Right . mapFrees   f)
 
 instance (HasFrees a, HasFrees b) => HasFrees (a, b) where
+    {-# INLINABLE foldFrees #-}
     foldFrees    f   (x, y) = foldFrees f x `mappend` foldFrees f y
     foldFreesOcc f p (x, y) = foldFreesOcc f ("0":p) x `mappend` foldFreesOcc f ("1":p) y
+    {-# INLINABLE mapFrees #-}
     mapFrees     f   (x, y) = (,) <$> mapFrees   f x <*> mapFrees   f y
 
 instance (HasFrees a, HasFrees b, HasFrees c) => HasFrees (a, b, c) where
@@ -807,32 +838,42 @@ instance (HasFrees a, HasFrees b, HasFrees c, HasFrees d) => HasFrees (a, b, c, 
         (\(x, (y, (z, a))) -> (x, y, z, a)) <$> mapFrees f (x0, (y0, (z0, a0)))
 
 instance HasFrees a => HasFrees [a] where
+    {-# INLINABLE foldFrees #-}
     foldFrees    f      = foldMap  (foldFrees f)
     foldFreesOcc f c xs = mconcat $ (map (\(i,x) -> foldFreesOcc f (show i:c) x)) $ zip [(0::Int)..] xs
+    {-# INLINABLE mapFrees #-}
     mapFrees     f      = traverse (mapFrees f)
 
 instance HasFrees a => HasFrees (Disj a) where
+    {-# INLINABLE foldFrees #-}
     foldFrees    f     = foldMap  (foldFrees f)
     foldFreesOcc f p d = foldFreesOcc f p (getDisj d)
+    {-# INLINABLE mapFrees #-}
     mapFrees     f     = traverse (mapFrees f)
 
 instance HasFrees a => HasFrees (Conj a) where
+    {-# INLINABLE foldFrees #-}
     foldFrees    f     = foldMap  (foldFrees f)
     foldFreesOcc f p c = foldFreesOcc f p (getConj c)
+    {-# INLINABLE mapFrees #-}
     mapFrees     f     = traverse (mapFrees f)
 
 instance (Ord a, HasFrees a) => HasFrees (S.Set a) where
+    {-# INLINABLE foldFrees #-}
     foldFrees   f    = foldMap  (foldFrees f)
     foldFreesOcc f p = foldMap (foldFreesOcc f ("0":p))
+    {-# INLINABLE mapFrees #-}
     mapFrees     f   = fmap S.fromList . mapFrees f . S.toList
 
 instance (Ord k, HasFrees k, HasFrees v) => HasFrees (M.Map k v) where
+    {-# INLINABLE foldFrees #-}
     foldFrees f = M.foldrWithKey combine mempty
       where
         combine k v m = foldFrees f k `mappend` (foldFrees f v `mappend` m)
     foldFreesOcc f p = M.foldrWithKey combine mempty
       where
         combine k v m = foldFreesOcc f p (k,v) `mappend` m
+    {-# INLINABLE mapFrees #-}
     mapFrees f = fmap M.fromList . mapFrees f . M.toList
 
 

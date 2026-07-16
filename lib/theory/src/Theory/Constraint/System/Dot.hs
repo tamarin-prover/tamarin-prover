@@ -22,7 +22,7 @@ module Theory.Constraint.System.Dot (
 import           Data.Ord
 import           Data.Char                (isSpace, ord)
 import           Data.Color
-import           Data.List                (find, isPrefixOf, intercalate, sortBy, intersperse)
+import           Data.List                (isPrefixOf, intercalate, sortBy, intersperse)
 import qualified Data.Map                 as M
 import           Data.Maybe
 import qualified Data.Set                 as S

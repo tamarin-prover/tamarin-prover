@@ -12,14 +12,6 @@ equations:
     fst(<x.1, x.2>) = x.1,
     snd(<x.1, x.2>) = x.2
 
-
-
-
-
-
-
-
-
 rule (modulo E) generate_ltk:
    [ Fr( ~ea ) ]
   --[ RegKey( $A ), Honest( $A ) ]->
@@ -1457,6 +1449,11 @@ rule (modulo E) Ephk_reveal:
 restriction RegKeyUnique:
   "∀ #i #j A. ((RegKey( A ) @ #i) ∧ (RegKey( A ) @ #j)) ⇒ (#i = #j)"
   // safety formula
+
+  /*
+  expanded formula:
+  "∀ #i #j A. ((RegKey( A ) @ #i) ∧ (RegKey( A ) @ #j)) ⇒ (#i = #j)"
+  */
 
 lemma execution_match_same_key_NAXOS:
   exists-trace
@@ -4476,32 +4473,14 @@ next
   qed
 qed
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 /* All wellformedness checks were successful. */
 
 /*
 Generated from:
-Tamarin version 1.11.0
-Maude version 3.5.1
-Git revision: d1fe8f7c328c32aac0588ab7e5a43be267577706 (with uncommited changes), branch: fix-remove-derivation-checks-regression-tests
-Compiled at: 2026-02-16 12:29:57.582345 UTC
+Tamarin version 1.13.0
+Maude version 3.4
+Git revision: 1deff12bd69c96308abb2463d4de5f2c7610c191 (with uncommited changes), branch: develop
+Compiled at: 2026-03-09 07:36:56.194364 UTC
 */
 
 end
@@ -4513,7 +4492,7 @@ summary of summaries:
 analyzed: examples/ake/dh/DHKEA_NAXOS_C_eCK_PFS_partially_matching.spthy
 
   output:          examples/ake/dh/DHKEA_NAXOS_C_eCK_PFS_partially_matching.spthy.tmp
-  processing time: 25.00s
+  processing time: 19.98s
   
   execution_match_same_key_NAXOS (exists-trace): verified (13 steps)
   eCK_key_secrecy (all-traces): verified (797 steps)

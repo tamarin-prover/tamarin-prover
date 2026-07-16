@@ -8,14 +8,6 @@ builtins: diffie-hellman
 functions: fst/1, h/1, pair/2, snd/1
 equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
 
-
-
-
-
-
-
-
-
 rule (modulo E) Register_key_honest:
    [ Fr( ~ea ) ]
   --[ KeyReg( $A ) ]->
@@ -156,9 +148,20 @@ restriction sid_unique:
     ((Activate( sid ) @ #i) ∧ (Activate( sid ) @ #j)) ⇒ (#i = #j)"
   // safety formula
 
+  /*
+  expanded formula:
+  "∀ #i #j sid.
+    ((Activate( sid ) @ #i) ∧ (Activate( sid ) @ #j)) ⇒ (#i = #j)"
+  */
+
 restriction keyreg_unique:
   "∀ #i #j A. ((KeyReg( A ) @ #i) ∧ (KeyReg( A ) @ #j)) ⇒ (#i = #j)"
   // safety formula
+
+  /*
+  expanded formula:
+  "∀ #i #j A. ((KeyReg( A ) @ #i) ∧ (KeyReg( A ) @ #j)) ⇒ (#i = #j)"
+  */
 
 restriction corrupt_and_reveal_not_too_early:
   "(∀ #i #j s role_ k_.
@@ -166,6 +169,14 @@ restriction corrupt_and_reveal_not_too_early:
      (#i < #j)) ∧
    (∀ #i #j s. ((BeforeExpire( s ) @ #i) ∧ (Expire( s ) @ #j)) ⇒ (#i < #j))"
   // safety formula
+
+  /*
+  expanded formula:
+  "(∀ #i #j s role_ k_.
+     ((BeforeComplete( s ) @ #i) ∧ (Complete( s, role_, k_ ) @ #j)) ⇒
+     (#i < #j)) ∧
+   (∀ #i #j s. ((BeforeExpire( s ) @ #i) ∧ (Expire( s ) @ #j)) ⇒ (#i < #j))"
+  */
 
 lemma key_agreement_reachable:
   exists-trace
@@ -330,22 +341,14 @@ solve( (¬(role = 'I'))  ∥
   qed
 qed
 
-
-
-
-
-
-
-
-
 /* All wellformedness checks were successful. */
 
 /*
 Generated from:
-Tamarin version 1.11.0
-Maude version 3.5.1
-Git revision: d1fe8f7c328c32aac0588ab7e5a43be267577706 (with uncommited changes), branch: fix-remove-derivation-checks-regression-tests
-Compiled at: 2026-02-16 12:29:57.582345 UTC
+Tamarin version 1.13.0
+Maude version 3.4
+Git revision: 1deff12bd69c96308abb2463d4de5f2c7610c191 (with uncommited changes), branch: develop
+Compiled at: 2026-03-09 07:36:56.194364 UTC
 */
 
 end
@@ -357,7 +360,7 @@ summary of summaries:
 analyzed: examples/ake/dh/UM_one_pass_attack.spthy
 
   output:          examples/ake/dh/UM_one_pass_attack.spthy.tmp
-  processing time: 1.15s
+  processing time: 0.91s
   
   key_agreement_reachable (exists-trace): verified (10 steps)
   CK_secure (all-traces): falsified - found trace (19 steps)

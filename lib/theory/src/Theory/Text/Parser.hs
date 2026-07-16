@@ -199,9 +199,13 @@ data FlagFormula =
    | FOr FlagFormula FlagFormula
    | FAnd FlagFormula FlagFormula
    | FNot FlagFormula
+   | FNested FlagFormula
 
 flagatom :: Parser FlagFormula
-flagatom = FAtom <$> try identifier
+flagatom = asum
+    [ FAtom <$> try identifier
+    , FNested <$> parens flagdisjuncts
+    ]
 
 -- | Parse a negation.
 flagnegation :: Parser FlagFormula
@@ -220,6 +224,7 @@ evalformula flags0 (FAtom t) = S.member t flags0
 evalformula flags0 (FNot t) = not (evalformula flags0 t)
 evalformula flags0 (FOr t1 t2) = (evalformula flags0 t1) || (evalformula flags0 t2)
 evalformula flags0 (FAnd t1 t2) = (evalformula flags0 t1) && (evalformula flags0 t2)
+evalformula flags0 (FNested t) = evalformula flags0 t
 
 -- | Parse a theory.
 theory :: Maybe FilePath

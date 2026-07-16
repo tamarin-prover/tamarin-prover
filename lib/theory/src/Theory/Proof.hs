@@ -989,6 +989,7 @@ cutAfterFirstSorry = snd . go False
   where
     go :: Bool -> Proof (Maybe a) -> (Bool, Proof (Maybe a))
     go _      n@(LNode (ProofStep (Sorry _) _) _)     = (True, n)
+    go _      n@(LNode (ProofStep (Finished Solved) _) _) = (True, n)
     go abort  n@(LNode (ProofStep (Finished _) _) _)  = (abort, n)
     go True     (LNode (ProofStep _ ann) _)           = (True, LNode (ProofStep (Sorry Nothing) ann) M.empty)
     go False    (LNode r cs) =

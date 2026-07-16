@@ -7,6 +7,7 @@ module Theory.Syntactic.Predicate
         Predicate(..)
       , pFact
       , pFormula
+      , mkPredicate
       , smallerFact
       , builtinPredicates
     ,lookupPredicate,expandFormula)
@@ -22,6 +23,7 @@ import GHC.Generics
 import Control.DeepSeq
 import Data.Binary
 import Data.List
+import Data.Char (toUpper)
 
 ------------------------------------------------------------------------------
 -- Predicates
@@ -33,6 +35,12 @@ data Predicate = Predicate
         }
         deriving( Eq, Ord, Show, Generic, NFData, Binary )
 
+-- | smart constructor for predicates. makes sure names are capitalized
+mkPredicate name formula = Predicate fact formula
+    where
+        fact = protoFact Linear (capitalize name) (frees formula)
+        capitalize (head:tail) = toUpper head : tail
+        capitalize [] = []
 
 -- generate accessors for Predicate data structure records
 

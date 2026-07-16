@@ -18,12 +18,6 @@ equations [convergent]:
     unblind(blind(m, b), b) = m,
     unblind(sign(blind(m, b), sk), b) = sign(m, sk)
 
-
-
-
-
-
-
 rule (modulo E) Register_Voter_pk1:
    [ Fr( ~ltkV ) ]
   -->
@@ -11370,10 +11364,10 @@ qed
 
 /*
 Generated from:
-Tamarin version 1.11.0
-Maude version 3.5.1
-Git revision: d1fe8f7c328c32aac0588ab7e5a43be267577706 (with uncommited changes), branch: fix-remove-derivation-checks-regression-tests
-Compiled at: 2026-02-16 12:29:57.582345 UTC
+Tamarin version 1.13.0
+Maude version 3.4
+Git revision: 1deff12bd69c96308abb2463d4de5f2c7610c191 (with uncommited changes), branch: develop
+Compiled at: 2026-03-09 07:36:56.194364 UTC
 */
 
 end
@@ -11385,7 +11379,7 @@ summary of summaries:
 analyzed: examples/post17/okamoto_vote_privacy.spthy
 
   output:          examples/post17/okamoto_vote_privacy.spthy.tmp
-  processing time: 24.45s
+  processing time: 18.57s
   
   RHS :  exec (exists-trace): verified (12 steps)
   LHS :  exec (exists-trace): verified (12 steps)

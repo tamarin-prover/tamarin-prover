@@ -13,8 +13,8 @@ endif
 # Try to install Tamarin
 default: tamarin
 
-FRONTEND = data/js/intdot-graph.es.js data/js/intdot-staticgraph.es.js data/js/intdot-dynamicgraph.es.js data/css/intdot-style.css
-$(FRONTEND):
+.PHONY: frontend
+frontend:
 	cd frontend && npm install && npm run build
 	cp frontend/dist/intdot-graph.es.js data/js/
 	cp frontend/dist/intdot-staticgraph.es.js data/js/
@@ -23,19 +23,67 @@ $(FRONTEND):
 
 # Default Tamarin installation via stack, multi-threaded
 .PHONY: tamarin
-tamarin: $(FRONTEND)
+tamarin: frontend
 	stack setup
 	stack install
 
+# Versioned Tamarin: `make git-version` installs as tamarin-prover-<git describe>.
+# If git describe fails, the name is tamarin-prover-unknown-git-version_sha256-<hash>.
+# If git describe reports broken, the name is tamarin-prover-broken-git-version_sha256-<hash>.
+# If git describe reports dirty, the name is tamarin-prover-<git describe>_sha256-<hash>.
+# In practice, this gives a unique name to each installation, so that multiple versions can be installed at the same time and not interfere with each other. 
+# The naming is also designed to be unique even if versions are compiled with uncommitted changes. Such versions are marked "dirty" or broken by git describe. To ensure we still get unique versions without knowing the specific edits, we append in such cases the sha256 hash of the binary to the name. This should also imply that the version name uniquely determines the binary, so that we can use the name for caching or reproduction.
+# Caveat: The sha256 hash depends on the platform-dependent build, so for reproducibility across platforms one should use non-dirty commits.
+.PHONY: git-version
+git-version: frontend
+	stack setup
+	stack build
+	@BINDIR=$$(stack path --local-bin); \
+	SRC=$$(stack path --local-install-root)/bin/tamarin-prover; \
+	GIT_DESC=$$(git describe --tags --dirty --broken 2>/dev/null); \
+	GIT_DESC_STATUS=$$?; \
+	BASE_NAME="tamarin-prover"; \
+	echo "git describe output: $${GIT_DESC}"; \
+	if [ $${GIT_DESC_STATUS} -ne 0 ]; then \
+	    echo "git describe failed with exit code: $${GIT_DESC_STATUS}"; \
+	fi; \
+	APPEND_HASH=1; \
+	if [ $${GIT_DESC_STATUS} -ne 0 ] || [ -z "$${GIT_DESC}" ]; then \
+	    NAME="$${BASE_NAME}-unknown-git-version"; \
+	else \
+	    case "$${GIT_DESC}" in \
+	        *broken*) \
+	            NAME="$${BASE_NAME}-broken-git-version" ;; \
+	        *dirty*) \
+	            NAME="$${BASE_NAME}-$${GIT_DESC}" ;; \
+	        *) \
+	            NAME="$${BASE_NAME}-$${GIT_DESC}"; \
+	            APPEND_HASH=0 ;; \
+	    esac; \
+	fi; \
+	if [ $${APPEND_HASH} -eq 1 ]; then \
+	    SHA_LINE=$$(if command -v shasum >/dev/null 2>&1; then \
+	        shasum -a 256 "$$SRC"; \
+	    elif command -v sha256sum >/dev/null 2>&1; then \
+	        sha256sum "$$SRC"; \
+	    else \
+	        openssl dgst -sha256 -r "$$SRC"; \
+	    fi); \
+	    SHA=$${SHA_LINE%% *}; \
+	    NAME="$${NAME}_sha256-$${SHA}"; \
+	fi; \
+	cp "$${SRC}" "$${BINDIR}/$${NAME}"; \
+	echo "Installed: $${BINDIR}/$${NAME}"
+
 # Single-threaded Tamarin
 .PHONY: single
-single: $(FRONTEND)
+single: frontend
 	stack setup
 	stack install --flag tamarin-prover:-threaded
 
 # Tamarin with profiling options, single-threaded
 .PHONY: profiling
-profiling: $(FRONTEND)
+profiling: frontend
 	stack setup
 	stack install --no-system-ghc --executable-profiling --library-profiling --ghc-options="-fprof-auto -rtsopts" --flag tamarin-prover:-threaded
 
@@ -48,16 +96,12 @@ tamarin-clean:
 .PHONY: clean
 clean:	tamarin-clean
 
-.PHONY: frontend
-frontend:
-	$(MAKE) $(FRONTEND)
-
 # ###########################################################################
 # NOTE the remainder makefile is FOR DEVELOPERS ONLY.
 # It is by no means official in any form and should be IGNORED :-)
 # ###########################################################################
 
-VERSION=1.11.0
+VERSION=1.13.0
 
 ###############################################################################
 ## Case Studies
@@ -444,7 +488,7 @@ accountability-case-studies:	$(ACCOUNTABILITY_CS_TARGETS)
 ## Regression (old issues)
 ##########################
 
-FAST_REGRESSION_CASE_STUDIES=issue446-1.spthy issue446-2.spthy issue753-4.spthy issue777.spthy
+FAST_REGRESSION_CASE_STUDIES=issue446-1.spthy issue446-2.spthy issue753-4.spthy issue753-5.spthy issue753-6.spthy issue834.spthy issue777.spthy
 FAST_REGRESSION_TARGETS=$(subst .spthy,_analyzed.spthy,$(addprefix case-studies$(SUBDIR)regression/trace/,$(FAST_REGRESSION_CASE_STUDIES)))
 
 
