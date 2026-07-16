@@ -1831,6 +1831,7 @@ instance HasFrees GoalStatus where
     mapFrees  = const pure
 
 instance HasFrees System where
+    {-# INLINABLE foldFrees #-}
     foldFrees fun (System a b c d e f g h i j k l m) =
         foldFrees fun a `mappend`
         foldFrees fun b `mappend`
@@ -1860,6 +1861,7 @@ instance HasFrees System where
         foldFreesCtx fun ("k":ctx') k -}
       where ctx' = "system":ctx
 
+    {-# INLINABLE mapFrees #-}
     mapFrees fun (System a b c d e f g h i j k l m) =
         System <$> mapFrees fun a
                <*> mapFrees fun b
@@ -1876,12 +1878,14 @@ instance HasFrees System where
                <*> mapFrees fun m
 
 instance HasFrees Source where
+    {-# INLINABLE foldFrees #-}
     foldFrees f th =
         foldFrees f (L.get cdGoal th)   `mappend`
         foldFrees f (L.get cdCases th)
 
     foldFreesOcc  _ _ = const mempty
 
+    {-# INLINABLE mapFrees #-}
     mapFrees f th = Source <$> mapFrees f (L.get cdGoal th)
                                     <*> mapFrees f (L.get cdCases th)
 

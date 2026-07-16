@@ -27,7 +27,10 @@ tamarin: frontend
 	stack setup
 	stack install
 
-# Versioned Tamarin: `make git-version` installs as tamarin-prover-<git describe>, appending _sha256-<hash> if dirty/broken
+# Versioned Tamarin: `make git-version` installs as tamarin-prover-<git describe>.
+# If git describe fails, the name is tamarin-prover-unknown-git-version_sha256-<hash>.
+# If git describe reports broken, the name is tamarin-prover-broken-git-version_sha256-<hash>.
+# If git describe reports dirty, the name is tamarin-prover-<git describe>_sha256-<hash>.
 # In practice, this gives a unique name to each installation, so that multiple versions can be installed at the same time and not interfere with each other. 
 # The naming is also designed to be unique even if versions are compiled with uncommitted changes. Such versions are marked "dirty" or broken by git describe. To ensure we still get unique versions without knowing the specific edits, we append in such cases the sha256 hash of the binary to the name. This should also imply that the version name uniquely determines the binary, so that we can use the name for caching or reproduction.
 # Caveat: The sha256 hash depends on the platform-dependent build, so for reproducibility across platforms one should use non-dirty commits.
@@ -35,22 +38,42 @@ tamarin: frontend
 git-version: frontend
 	stack setup
 	stack build
-	@GIT_DESC=$$(git describe --tags --dirty --broken 2>/dev/null || echo "broken"); \
-	BINDIR=$$(stack path --local-bin); \
+	@BINDIR=$$(stack path --local-bin); \
 	SRC=$$(stack path --local-install-root)/bin/tamarin-prover; \
-	NAME="tamarin-prover-$$GIT_DESC"; \
-	case "$$GIT_DESC" in *-dirty*|*broken*) \
-	    SHA=$$(if command -v shasum >/dev/null 2>&1; then \
+	GIT_DESC=$$(git describe --tags --dirty --broken 2>/dev/null); \
+	GIT_DESC_STATUS=$$?; \
+	BASE_NAME="tamarin-prover"; \
+	echo "git describe output: $${GIT_DESC}"; \
+	if [ $${GIT_DESC_STATUS} -ne 0 ]; then \
+	    echo "git describe failed with exit code: $${GIT_DESC_STATUS}"; \
+	fi; \
+	APPEND_HASH=1; \
+	if [ $${GIT_DESC_STATUS} -ne 0 ] || [ -z "$${GIT_DESC}" ]; then \
+	    NAME="$${BASE_NAME}-unknown-git-version"; \
+	else \
+	    case "$${GIT_DESC}" in \
+	        *broken*) \
+	            NAME="$${BASE_NAME}-broken-git-version" ;; \
+	        *dirty*) \
+	            NAME="$${BASE_NAME}-$${GIT_DESC}" ;; \
+	        *) \
+	            NAME="$${BASE_NAME}-$${GIT_DESC}"; \
+	            APPEND_HASH=0 ;; \
+	    esac; \
+	fi; \
+	if [ $${APPEND_HASH} -eq 1 ]; then \
+	    SHA_LINE=$$(if command -v shasum >/dev/null 2>&1; then \
 	        shasum -a 256 "$$SRC"; \
 	    elif command -v sha256sum >/dev/null 2>&1; then \
 	        sha256sum "$$SRC"; \
 	    else \
 	        openssl dgst -sha256 -r "$$SRC"; \
-	    fi | awk '{print $$1}'); \
-	    NAME="$${NAME}_sha256-$$SHA" ;; \
-	esac; \
-	cp "$$SRC" "$$BINDIR/$$NAME"; \
-	echo "Installed: $$BINDIR/$$NAME"
+	    fi); \
+	    SHA=$${SHA_LINE%% *}; \
+	    NAME="$${NAME}_sha256-$${SHA}"; \
+	fi; \
+	cp "$${SRC}" "$${BINDIR}/$${NAME}"; \
+	echo "Installed: $${BINDIR}/$${NAME}"
 
 # Single-threaded Tamarin
 .PHONY: single
