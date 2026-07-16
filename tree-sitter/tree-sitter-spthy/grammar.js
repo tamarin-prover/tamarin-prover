@@ -56,6 +56,7 @@ module.exports = grammar({
           'LOGICAL_OR',
           'LOGICAL_IMPLICATION',
           'LOGICAL_IFF',
+          'QUANTIFIER',
           'CHAIN_CONSTRAINT',
       ],
       // Diff
@@ -799,7 +800,8 @@ module.exports = grammar({
           repeat(seq(
               ',',
               choice($._fact, $.embedded_restriction)
-          ))
+          )),
+          optional(',')
       )),
 
       _facts: $ => prec.left(seq(
@@ -807,7 +809,8 @@ module.exports = grammar({
           repeat(seq(
               ',',
               $._fact
-          ))
+          )),
+          optional(',')
       )),
 
       _fact: $ => choice(
@@ -1417,7 +1420,7 @@ module.exports = grammar({
           field('right', $.mset_term)
       )),
 
-      quantified_formula: $ => prec('ATOM', seq(
+      quantified_formula: $ => prec('QUANTIFIER', seq(
           choice('Ex', '∃', 'All', '∀'),
           field('variable', repeat1($._lvar)),
           '.',

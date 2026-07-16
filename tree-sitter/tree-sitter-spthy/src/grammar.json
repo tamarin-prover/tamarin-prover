@@ -3467,6 +3467,18 @@
                 }
               ]
             }
+          },
+          {
+            "type": "CHOICE",
+            "members": [
+              {
+                "type": "STRING",
+                "value": ","
+              },
+              {
+                "type": "BLANK"
+              }
+            ]
           }
         ]
       }
@@ -3496,6 +3508,18 @@
                 }
               ]
             }
+          },
+          {
+            "type": "CHOICE",
+            "members": [
+              {
+                "type": "STRING",
+                "value": ","
+              },
+              {
+                "type": "BLANK"
+              }
+            ]
           }
         ]
       }
@@ -6249,7 +6273,7 @@
     },
     "quantified_formula": {
       "type": "PREC",
-      "value": "ATOM",
+      "value": "QUANTIFIER",
       "content": {
         "type": "SEQ",
         "members": [
@@ -6671,6 +6695,10 @@
       {
         "type": "STRING",
         "value": "LOGICAL_IFF"
+      },
+      {
+        "type": "STRING",
+        "value": "QUANTIFIER"
       },
       {
         "type": "STRING",
