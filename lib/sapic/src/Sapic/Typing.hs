@@ -56,7 +56,7 @@ data TypingEnvironment = TypingEnvironment {
         vars :: Map.Map LVar SapicType
     ,   funs :: Map.Map NoEqSym ([SapicType],SapicType)
     ,   events :: Map.Map FactTag [SapicType]
-}
+} deriving (Show, Eq)
 
 -- | Try to type term `t` with a type more specific than `tt`. Returns typed
 -- term and its type in a Throw-Monad that contains the TypingEnvironment state.

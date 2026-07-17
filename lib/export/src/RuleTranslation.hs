@@ -10,10 +10,12 @@
 -- Translation from multiset rewrite rules to ProVerif
 module RuleTranslation
   ( loadRules,
+    translateEmbeddedRuleAction,
     ppFunSym,
     sanitizeSymbol,
     replaceTrueFalse,
-    doubleFactInGuardsImpliesTmpEq,
+    makeEventHeaders,
+    multisetTheory
     -- , hasOnlyOnceFact
     -- , isOnlyOnceFact
   )
@@ -24,78 +26,165 @@ import Data.ByteString.Char8 qualified as BC
 import Data.Char
 import Data.List as List
 import Data.Map qualified as M
-import Data.Maybe (mapMaybe)
+import Data.Maybe (catMaybes, mapMaybe)
 import Data.Set qualified as S
--- import Debug.Trace (trace)
 import Extension.Data.Label qualified as L
 import ProVerifHeader
 import Sapic.Exceptions
 import Sapic.Facts
 import Theory
 import Theory.Module
+import Theory.Text.Parser
 import Theory.Text.Pretty
 import TheoryObject (theoryMacros)
 
-loadRules :: OpenTheory -> ModuleType -> ([Doc], Doc, S.Set ProVerifHeader)
-loadRules thy m = case theoryRules thy of
-  [] -> ([], emptyDoc, S.empty)
+loadRules :: S.Set String -> OpenTheory -> ModuleType -> ([Doc], Doc, S.Set ProVerifHeader)
+loadRules ruleIdEvents thy m = case theoryRules thy of
+  [] -> ([text ""], text "", S.empty)
   rules -> (ruleDocs, ruleComb, headers)
     where
       (ruleDocs, destructors) =
-        foldl' (\acc@(_, destrs) r -> acc `combine2` translateOpenProtoRule r thy destrs) ([], M.empty) rulesMod
+        foldl' (\acc@(_, destrs) r -> acc `accumulateResult` translateOpenProtoRule ruleIdEvents r thy destrs) ([], M.empty) rulesMod
       headers = S.fromList (baseHeaders : desHeaders) `S.union` ruleHeaders
       baseHeaders = Sym "free" "publicChannel" ":channel" []
       desHeaders = map makeDestructorHeader $ M.toList destructors
-      ruleHeaders = foldMap (`makeHeadersFromRule` thy) rulesMod
+      ruleHeaders = foldMap (\r -> makeHeadersFromRule ruleIdEvents r thy) rulesMod
       ruleNames = map (\(OpenProtoRule ruE _) -> showRuleName ruE._rInfo._preName) rulesMod
       ruleComb = text ("( " ++ intercalate " | " (map ((++ ")") . ("!(" ++)) ruleNames) ++ " )")
       -- want to export restrictions and reuse/src lemmas => need to introduce fresh stamps (as there no timepoints in such formulas)
-      rulesMod = map (\(OpenProtoRule ruE rusAC) -> OpenProtoRule (applyMacroInRule (theoryMacros thy) $ ruE) rusAC) $ case m of
-        ModuleProVerif -> addUniqueActsAndStamps (uniqueAndOnlyOnceRestrActions thy) rules
+      rulesMod = map (\(OpenProtoRule ruE rusAC) -> OpenProtoRule (applyMacroInRule (theoryMacros thy) ruE) rusAC) $ case m of
+        ModuleProVerif -> rules
         _ -> error "Incompatible module!"
 
-uniqueAndOnlyOnceRestrActions :: OpenTheory -> [String]
-uniqueAndOnlyOnceRestrActions thy =
-  map (factTagName . factTag) $
-    concatMap getGuardFacts $
-      filter doubleFactInGuardsImpliesTmpEq $
-        map (formulaToGuarded_ . _rstrFormula) $
-          theoryRestrictions thy
+translateEmbeddedRuleAction ::
+  (HighlightDocument d) =>
+  S.Set String ->
+  [LNFact] ->
+  [LNFact] ->
+  [LNFact] ->
+  (d, S.Set ProVerifHeader, Bool)
+translateEmbeddedRuleAction matchedVars rprems racts rconcls =
+  (ruleDoc, headers, hasTailDocs)
   where
-    getGuardFacts (GGuarded _ _ as _) = [f | Action _ f <- as]
-    getGuardFacts _ = []
+    (headDocs, tailDocs, destructors) = translateRuleDocs S.empty Nothing matchedVars rprems racts rconcls M.empty
+    hasTailDocs = not (null tailDocs)
+    ruleDoc =
+      if hasTailDocs
+        then combineActionDocs headDocs tailDocs
+        else vcat headDocs
+    freeHeaders = makeFreeHeadersFromFacts rprems racts rconcls
+    tableHeaders = makeTableHeaders rprems rconcls
+    eventHeaders = makeEventHeaders S.empty racts
+    destructorHeaders = S.fromList $ map makeDestructorHeader (M.toList destructors)
+    headers =
+      S.unions
+        [ S.singleton (Sym "free" "publicChannel" ":channel" []),
+          freeHeaders,
+          tableHeaders,
+          eventHeaders,
+          destructorHeaders
+        ]
 
-doubleFactInGuardsImpliesTmpEq :: (Eq c, Eq v) => Guarded s c v -> Bool
-doubleFactInGuardsImpliesTmpEq (GGuarded _ _ as gf) =
-  case as of
-    [Action tmp1 (Fact tag1 _ _), Action tmp2 (Fact tag2 _ _)] ->
-      factTagName tag1 == factTagName tag2 && gfIsTmpEq tmp1 tmp2 gf
-    _ -> False
-  where
-    gfIsTmpEq t1 t2 (GAto (EqE t1' t2')) = (t1 == t1' && t2 == t2') || (t1 == t2' && t2 == t1')
-    gfIsTmpEq _ _ _ = False
-doubleFactInGuardsImpliesTmpEq _ = False
+-- Multiset semantics
+-- Steps:
+-- 1. For each non-persistent and non-output fact, create a fresh varible.
+--    - Add to each fact in conclusion
+--    - Add fresh facts to premise
+-- 2. For each fact in the premise that is non-persistent, non-fresh, and not the input fact, add stamp values.
+--  - For each of these facts add a DistinctFact event with the same arguments ensuring that they are only used once.
+-- 3. Add static restriction to theory.
 
-addUniqueActsAndStamps :: [String] -> [OpenProtoRule] -> [OpenProtoRule]
-addUniqueActsAndStamps rstrActs = map (((`OpenProtoRule` []) . modifyRule) . _oprRuleE)
+-- | Apply multisetSemantics to all rules in an OpenTheory
+mapRulesWithMultisetSemantics :: OpenTheory -> OpenTheory
+mapRulesWithMultisetSemantics =
+  L.modify thyItems (map updateRule)
   where
-    modifyRule ru = L.set rPrems newPrems $ L.set rActs newActs ru
-      where
-        (newActs, newPrems) = addUActBeforeAct rstrActs (L.get rActs ru, L.get rPrems ru)
-    addUActBeforeAct rsActs (acts, prems) =
-      (\(_, facts, vars) -> (sortOnlyOnceFirst facts, map frFactsFromVar vars ++ prems)) . foldr addUAct (1, [], []) $ acts
-      where
-        addUAct f@(Fact (ProtoFact m name arr) ann ts) (n, accFacts, accVars)
-          | name == "OnlyOnce" = (n + 1, Fact (ProtoFact m name (arr + 1)) ann (varTerm newVar : ts) : accFacts, newVar : accVars)
-          | name `elem` rsActs = (n + 1, Fact (ProtoFact m ("U" ++ name) (arr + 1)) ann (varTerm newVar : ts) : f : accFacts, newVar : accVars)
-          where
-            newVar = stampLVar n
-        addUAct f (n, accFacts, accVars) = (n, f : accFacts, accVars)
-    frFactsFromVar var = Fact FreshFact S.empty [varTerm var]
-    sortOnlyOnceFirst fs =
-      let (onlyOnceFacts, otherFacts) = partition ((==) "OnlyOnce" . (factTagName . factTag)) fs
-       in onlyOnceFacts ++ otherFacts
-    stampLVar n = LVar ("st" ++ show n) LSortFresh n
+    updateRule (RuleItem (OpenProtoRule ruE ruAC)) =
+      RuleItem (OpenProtoRule (multisetSemantics ruE) ruAC)
+    updateRule item = item
+
+multisetTheory :: OpenTheory -> OpenTheory
+multisetTheory thy =
+  let thy' = mapRulesWithMultisetSemantics thy
+      hasDistinctFact =
+        any ruleHasDistinctFact
+          [ ruE
+          | RuleItem (OpenProtoRule ruE _) <- L.get thyItems thy'
+          ]
+   in if hasDistinctFact
+        then case addRestriction (parseAndConvertRestriction resDistinctFact) thy' of
+               Just thy'' -> thy''
+               Nothing    -> error "Could not add restriction to theory"
+        else thy'
+
+-- Helper to check if a rule has a DistinctFact action
+ruleHasDistinctFact :: Rule i -> Bool
+ruleHasDistinctFact ru =
+  any (\f -> factTagName (factTag f) == "DistinctFact") (ru._rActs)
+
+resDistinctFact :: String
+resDistinctFact =
+  unlines
+    [ "restriction DistinctFact:",
+      "\"All x #i #j. DistinctFact(x)@i & DistinctFact(x)@j ==> #i = #j\""
+    ]
+
+parseAndConvertRestriction :: String -> Restriction
+parseAndConvertRestriction s =
+  case parseRestriction s of
+    Right (Restriction name synFormula _) ->
+      case toLNFormula synFormula of
+        Just lnFormula -> Restriction name lnFormula Nothing
+        Nothing -> error "Could not convert SyntacticRestriction to Restriction"
+    _ -> error $ "Could not parse restriction: " ++ s
+
+multisetSemantics :: HasRuleName (Rule i) => Rule i -> Rule i
+multisetSemantics r = r
+  { _rPrems = freshFacts ++ statPrems
+  , _rActs = distinctActions ++ r._rActs
+  , _rConcs = statConcs
+  }
+  where
+    statifyConcs :: String -> [LNFact] -> ([LNFact], [(FactTag, LNTerm)])
+    statifyConcs prefix facts =
+      let (_, factsWithVars) = mapAccumL (statify prefix) M.empty facts
+          (facts', vars) = unzip factsWithVars
+      in (facts', catMaybes vars)
+
+    statifyPrems :: String -> [LNFact] -> ([LNFact], [(FactTag, LNTerm, [LNTerm])])
+    statifyPrems prefix facts =
+      let (_, factsWithVars) = mapAccumL (statify prefix) M.empty facts
+          facts' = map fst factsWithVars
+          distincts = [ (tag, fresh, factTerms fact)
+                      | (fact, Just (tag, fresh)) <- factsWithVars ]
+      in (facts', distincts)
+
+    statify :: String -> M.Map String Int -> LNFact -> (M.Map String Int, (LNFact, Maybe (FactTag, LNTerm)))
+    statify prefix counts f
+      | isFrFact f || isInFact f || isOutFact f || isPersistentFact f = (counts, (f, Nothing))
+      | Fact tag ann ts <- f =
+          let name = factTagName tag
+              idx  = M.findWithDefault 0 name counts
+              counts' = M.insert name (idx + 1) counts
+              fresh = mkFreshTerm prefix name (toInteger idx)
+          in (counts', (Fact tag ann (fresh : ts), Just (tag, fresh)))
+
+    (statConcs, freshVars) = statifyConcs "R" r._rConcs
+    (statPrems, distinctVars) = statifyPrems "L" r._rPrems
+
+    freshFacts = map (mkFreshFact . snd) freshVars
+
+    distinctActions = [ Fact (ProtoFact Linear "DistinctFact" 0) S.empty [termsToPair args]
+                      | (_, _, args) <- distinctVars ]
+
+    mkFreshTerm prefix n idx = LIT $ Var $ LVar ("st" ++ prefix ++ "_" ++ n) LSortFresh idx
+    mkFreshFact fv = Fact FreshFact S.empty [fv]
+
+    termsToPair :: [LNTerm] -> LNTerm
+    termsToPair []     = error "termsToNestedPair: empty list"
+    termsToPair [x]    = x
+    termsToPair (x:xs) = fAppPair (x, termsToPair xs)
+
 
 ------------------------------------------------------------------------------
 -- Header generation
@@ -106,8 +195,8 @@ makeDestructorHeader ((dDef, atom), dName) =
   let (s1, s2) = break (== '#') dDef
    in Eq "reduc" s1 (dName ++ "(" ++ tail s2 ++ ") = " ++ showAtom False atom) "[private]"
 
-makeHeadersFromRule :: OpenProtoRule -> OpenTheory -> S.Set ProVerifHeader
-makeHeadersFromRule (OpenProtoRule ruE _) = makeHeadersFromProtoRule ruE
+makeHeadersFromRule :: S.Set String -> OpenProtoRule -> OpenTheory -> S.Set ProVerifHeader
+makeHeadersFromRule ruleIdEvents (OpenProtoRule ruE _) = makeHeadersFromProtoRule ruleIdEvents ruE
 
 notDiffRuleActs :: Rule ProtoRuleEInfo -> [Fact LNTerm]
 notDiffRuleActs ru = filter isNotDiffAnnotation ru._rActs
@@ -120,22 +209,30 @@ notDiffRuleActs ru = filter isNotDiffAnnotation ru._rActs
             factTerms = []
           }
 
-makeHeadersFromProtoRule :: Rule ProtoRuleEInfo -> OpenTheory -> S.Set ProVerifHeader
-makeHeadersFromProtoRule ru thy = S.unions [freeHeaders, tables, events]
+makeHeadersFromProtoRule :: S.Set String -> Rule ProtoRuleEInfo -> OpenTheory -> S.Set ProVerifHeader
+makeHeadersFromProtoRule ruleIdEvents ru thy = S.unions [freeHeaders, tables, events]
   where
     freeHeaders = makeFreeHeaders ru._rPrems (notDiffRuleActs ru) ru._rConcs thy
     tables = makeTableHeaders ru._rPrems ru._rConcs
-    events = makeEventHeaders (notDiffRuleActs ru)
+    events = makeEventHeaders ruleIdEvents (notDiffRuleActs ru)
 
 makeFreeHeaders :: [LNFact] -> [LNFact] -> [LNFact] -> OpenTheory -> S.Set ProVerifHeader
 makeFreeHeaders rprems racts rconcls thy = headers
   where
-    allTerms = foldMap factTerms (rprems ++ racts ++ rconcls)
-    termBitstrings = foldMap searchTermForBitstrings allTerms
+    termBitstrings = freeBitstringsFromFacts rprems racts rconcls
     lemmas = (._lFormula) <$> theoryLemmas thy
     lemmaBitstrings = foldMap searchLemmaForBitstrings lemmas
     bitstrings = termBitstrings `S.union` lemmaBitstrings
     headers = S.map (\x -> Sym "free" x ":bitstring" []) bitstrings
+
+makeFreeHeadersFromFacts :: [LNFact] -> [LNFact] -> [LNFact] -> S.Set ProVerifHeader
+makeFreeHeadersFromFacts rprems racts rconcls =
+  S.map (\x -> Sym "free" x ":bitstring" []) (freeBitstringsFromFacts rprems racts rconcls)
+
+freeBitstringsFromFacts :: [LNFact] -> [LNFact] -> [LNFact] -> S.Set String
+freeBitstringsFromFacts rprems racts rconcls = foldMap searchTermForBitstrings allTerms
+  where
+    allTerms = foldMap factTerms (rprems ++ racts ++ rconcls)
 
 searchLemmaForBitstrings :: ProtoFormula Unit2 (String, LSort) Name LVar -> S.Set String
 searchLemmaForBitstrings =
@@ -165,14 +262,21 @@ makeTableHeaders rprems rconcls =
     stateFact (t, _) = t `notElem` ["Fr", "In", "Out"]
     toTable (t, n) = Table t ("(" ++ intercalate ", " (replicate n "bitstring") ++ ")")
 
-makeEventHeaders :: [LNFact] -> S.Set ProVerifHeader
-makeEventHeaders racts =
+makeEventHeaders :: Ord a => S.Set String -> [Fact a] -> S.Set ProVerifHeader
+makeEventHeaders ruleIdEvents racts =
   S.map toHEvent
     . S.map getFactInfo
     $ S.fromList racts
   where
-    getFactInfo (Fact tag _ ts) = (showEventName tag, length ts)
-    toHEvent (t, n) = HEvent t ("(" ++ intercalate ", " (replicate n "bitstring") ++ ")")
+    getFactInfo (Fact tag _ ts) = (factTagName tag, length ts)
+    toHEvent (name, n) =
+      let extra = if name `S.member` ruleIdEvents then 1 else 0
+          eventName = showEventNameFromName name
+          arity = n + extra
+      in HEvent eventName ("(" ++ intercalate ", " (replicate arity "bitstring") ++ ")")
+
+showEventNameFromName :: String -> String
+showEventNameFromName tag = 'e' : tag
 
 ------------------------------------------------------------------------------
 -- Rule translation
@@ -180,11 +284,13 @@ makeEventHeaders racts =
 
 translateOpenProtoRule ::
   (HighlightDocument d) =>
+  S.Set String ->
   OpenProtoRule ->
   OpenTheory ->
   M.Map (String, String) String ->
   (d, M.Map (String, String) String)
-translateOpenProtoRule (OpenProtoRule ruE _) thy = translateProtoRule (checkTypes ruE thy)
+translateOpenProtoRule ruleIdEvents (OpenProtoRule ruE _) thy =
+  translateProtoRule ruleIdEvents (checkTypes ruE thy)
 
 -- Functions with user-defined types cannot be used in rewrite rules, they
 -- are currently written such that everything is treated as a bitstring
@@ -213,14 +319,16 @@ incorrectTermTypes thy t = case viewTerm t of
 
 translateProtoRule ::
   (HighlightDocument d) =>
+  S.Set String ->
   Rule ProtoRuleEInfo ->
   M.Map (String, String) String ->
-  (d, M.Map (String, String) String)
-translateProtoRule ru de =
+  (d, M.Map (String,String) String)
+translateProtoRule ruleIdEvents ru de =
   (ruleDoc, destructors)
   where
-    (factsDoc, destructors) = translateRule ru._rPrems (notDiffRuleActs ru) ru._rConcs de
-    ruleDoc = text "let" <-> text (showRuleName ru._rInfo._preName) <-> text "=" $-$ nest 8 factsDoc
+    rname = showRuleName ru._rInfo._preName
+    (factsDoc, destructors) = translateRule ruleIdEvents rname ru._rPrems (notDiffRuleActs ru) ru._rConcs de
+    ruleDoc = text "let" <-> text rname <-> text "=" $-$ nest 8 factsDoc
 
 showRuleName :: ProtoRuleName -> String
 showRuleName FreshRule = "rFresh"
@@ -228,27 +336,79 @@ showRuleName (StandRule s) = 'r' : s
 
 translateRule ::
   (HighlightDocument d) =>
+  S.Set String ->
+  String ->
   [LNFact] ->
   [LNFact] ->
   [LNFact] ->
   M.Map (String, String) String ->
   (d, M.Map (String, String) String)
-translateRule rprems racts rconcls destrs =
+translateRule ruleIdEvents rname rprems racts rconcls destrs =
+  let (headDocs, tailDocs, newDestrs) = translateRuleDocs ruleIdEvents (Just rname) S.empty rprems racts rconcls destrs
+   in (combineRuleDocs headDocs tailDocs, newDestrs)
+
+translateRuleDocs ::
+  (HighlightDocument d) =>
+  S.Set String ->
+  Maybe String ->
+  S.Set String ->
+  [LNFact] ->
+  [LNFact] ->
+  [LNFact] ->
+  M.Map (String, String) String ->
+  ([d], [d], M.Map (String, String) String)
+translateRuleDocs ruleIdEvents maybeRname initialVars rprems racts rconcls destrs =
   -- docsX contains the expression resulting from the given translation (as an instance of Doc)
   -- varsX is a set of all variables that have appeared in the rule translation until that point
   -- varsX' is a map where the keys are the patterns, which have appeared in the rule translation until that point,
   -- and the values are their helper variables
   -- destrX is a map where the keys are terms a and t, where a given destructor extracts a from t
   -- and the values are the given destructors (which have appeared in the rule translation until that point)
-  let (docs1, vars1, vars1', destr1) = translatePatterns rprems GET patternGetsFilter S.empty M.empty destrs
+  let ruleIdName = maybe "" ("rid_" ++) maybeRname
+      ruleUsesRuleId = any (\fact -> factTagName (factTag fact) `S.member` ruleIdEvents) racts
+      ruleIdDoc = text "new" <-> text ruleIdName <> text ": bitstring"
+      (docs1, vars1, vars1', destr1) = translatePatterns rprems GET patternGetsFilter initialVars M.empty destrs
       (docs2, vars2) = translateNonPatterns rprems GET nonPatternGetsFilter vars1
       (docs3, vars3, _, destr3) = translatePatterns rprems IN patternInsFilter vars2 vars1' destr1
       (docs4, vars4) = translateNonPatterns rprems IN nonPatternInsFilter vars3
       (docs5, vars5) = translateNonPatterns rprems NEW isFrFact vars4
-      (docs6, vars6) = translateNonPatterns racts EVENT (const True) vars5
+      -- Actions from embedded restrictions (_restrict(...)) as well as Eq, Neq need to come before all other actions.
+      -- The restriction holds only for variables after the restriction action.
+      (docs6, vars6) =
+        if ruleUsesRuleId
+          then translateNonPatternsWithRuleId ruleIdEvents ruleIdName (sortActionsByPriority racts) EVENT (const True) vars5
+          else translateNonPatterns (sortActionsByPriority racts) EVENT (const True) vars5
       (docs7, vars7) = translateNonPatterns (rconcls \\ rprems) INSERT isStorage vars6
       (docs8, _) = translateNonPatterns rconcls OUT isOutFact vars7
-   in (combineRuleDocs (docs1 ++ docs2 ++ docs3) (docs4 ++ docs5 ++ docs6 ++ docs7 ++ docs8), destr3)
+      rulePrefixDocs = [ruleIdDoc | ruleUsesRuleId]
+      headDocs = docs1 ++ docs2 ++ docs3
+      tailDocs = rulePrefixDocs ++ docs4 ++ docs5 ++ docs6 ++ docs7 ++ docs8
+   in (headDocs, tailDocs, destr3)
+
+-- | Put embedded restrictions first, equality checks second, and all remaining
+-- actions last. 'partition' preserves the source order within each group.
+sortActionsByPriority :: [LNFact] -> [LNFact]
+sortActionsByPriority facts = restrictionFacts ++ eqNeqFacts ++ otherFacts
+  where
+    (restrictionFacts, nonRestrictionFacts) = partition (hasRstrPrefix restrPrefix) facts
+    (eqNeqFacts, otherFacts) = partition isEqOrNeqFact nonRestrictionFacts
+
+    hasRstrPrefix :: String -> LNFact -> Bool
+    hasRstrPrefix prefix fact = prefix `isPrefixOf` factTagName (factTag fact)
+
+    isEqOrNeqFact :: LNFact -> Bool
+    isEqOrNeqFact fact = factTagName (factTag fact) `elem` equalityActionNames
+
+    -- "Eq" is produced by SAPIC. Keep the corresponding negative name and
+    -- the long-form spellings for hand-written embedded MSR actions.
+    equalityActionNames = ["Eq", "Neq", "Equal", "Unequal"]
+
+combineActionDocs :: (HighlightDocument d) => [d] -> [d] -> d
+combineActionDocs rd1 rd2 = vcat rd1 $-$ separateActionDocs rd2
+  where
+    separateActionDocs [r] = r
+    separateActionDocs (r : rs) = r <> semi $-$ separateActionDocs rs
+    separateActionDocs [] = text ""
 
 combineRuleDocs :: (HighlightDocument d) => [d] -> [d] -> d
 combineRuleDocs rd1 rd2 = vcat rd1 $-$ separateRuleDocs rd2
@@ -288,7 +448,7 @@ translatePatterns facts factType filterFunction vars helperVars destructors =
   -- Translate all selected pattern facts, while keeping track of the variables that have already
   -- appeared and also continuously updating the maps with the helper vars and the destructors.
   foldl'
-    (\acc@(_, vs', hvs', destrs') f -> acc `combine4` translate f vs' hvs' destrs')
+    (\acc@(_, vs', hvs', destrs') f -> acc `accumulateWith4` translate f vs' hvs' destrs')
     ([], vars, helperVars, destructors)
     patternFacts
   where
@@ -321,7 +481,7 @@ translatePatterns facts factType filterFunction vars helperVars destructors =
         -- of destructors is also updated continiuously.
         (destrDocList, newVars, newDestructors) =
           foldl'
-            (\acc@(_, vset, des) t -> acc `combine3` makeDestructorExpressions vset newHelperVars des t)
+            (\acc@(_, vset, des) t -> acc `accumulateWith3` makeDestructorExpressions vset newHelperVars des t)
             ([], vs `S.union` literals, destrs)
             patternTerms
 
@@ -331,12 +491,37 @@ translatePatterns facts factType filterFunction vars helperVars destructors =
         patternTerms = filter isPattern ts
         literals = S.fromList $ foldMap (map show . lits) $ filter (not . isPattern) ts
 
-    combine4 (as, b, c, d) (a, b1, c1, d1) = (as ++ [a], b <> b1, c <> c1, d <> d1)
-    combine3 (as, b, c) (a, b1, c1) = (as ++ [a], b <> b1, c <> c1)
+    -- | Accumulate result with 4 semigroup values
+    accumulateWith4 (as, b, c, d) (a, b1, c1, d1) = (as ++ [a], b <> b1, c <> c1, d <> d1)
+    -- | Accumulate result with 3 semigroup values
+    accumulateWith3 (as, b, c) (a, b1, c1) = (as ++ [a], b <> b1, c <> c1)
+
+-- | Like translateNonPatterns but includes a rule ID as the first argument to EVENT facts
+translateNonPatternsWithRuleId :: (HighlightDocument d) => S.Set String -> String -> [LNFact] -> FactType -> (LNFact -> Bool) -> S.Set String -> ([d], S.Set String)
+translateNonPatternsWithRuleId ruleIdEvents ruleIdName facts factType filterFunction vars =
+  foldl' (\acc@(_, currVars) f -> acc `accumulateResult` translate f currVars) ([], vars) nonPatternFacts
+  where
+    nonPatternFacts = filter filterFunction facts
+    translate prem@(Fact tag _ ts) vs = (factDoc, atoms)
+      where
+        factName = factTagName tag
+        useRuleId = factType == EVENT && factName `S.member` ruleIdEvents
+        factDoc =
+          if factType `elem` [OUT, INSERT, EVENT] && checkForNewIDs
+            then idConstructor $-$ renderFact
+            else renderFact
+        renderFact =
+          if useRuleId
+            then translateFactWithRuleId prem factType vs ruleIdName
+            else translateFact prem factType vs
+        atoms = S.fromList $ foldMap (map show . lits) ts
+        checkForNewIDs = not (atoms `S.isSubsetOf` vs) && any (('$' ==) . head) (atoms `S.difference` vs)
+        idConstructor = idExp . S.toList $ atoms `S.difference` vs
+        idExp = vcat . map (\a -> text "in(publicChannel, " <> text (showAtom True a) <> text ": bitstring);") . filter (('$' ==) . head)
 
 translateNonPatterns :: (HighlightDocument d) => [LNFact] -> FactType -> (LNFact -> Bool) -> S.Set String -> ([d], S.Set String)
 translateNonPatterns facts factType filterFunction vars =
-  foldl' (\acc@(_, currVars) f -> acc `combine2` translate f currVars) ([], vars) nonPatternFacts
+  foldl' (\acc@(_, currVars) f -> acc `accumulateResult` translate f currVars) ([], vars) nonPatternFacts
   where
     nonPatternFacts = filter filterFunction facts
     translate prem@(Fact _ _ ts) vs = (factDoc, atoms)
@@ -349,6 +534,24 @@ translateNonPatterns facts factType filterFunction vars =
         checkForNewIDs = not (atoms `S.isSubsetOf` vs) && any (('$' ==) . head) (atoms `S.difference` vs)
         idConstructor = idExp . S.toList $ atoms `S.difference` vs
         idExp = vcat . map (\a -> text "in(publicChannel, " <> text (showAtom True a) <> text ": bitstring);") . filter (('$' ==) . head)
+
+-- | Like translateFact but includes rule ID as first argument for EVENT facts
+translateFactWithRuleId :: (Document d) => LNFact -> FactType -> S.Set String -> String -> d
+translateFactWithRuleId (Fact tag _ ts) factType vars ruleIdName = case factType of
+  GET -> text "get" <-> text (showFactName tag) <> translateTerms vars True <> text " in"
+  IN ->
+    text "in(publicChannel," <-> translateTerm vars True (head ts)
+      <> text (if head (printTerm True vars True (head ts)) == '=' then ")" else ": bitstring)")
+  NEW -> text "new" <-> translateTerm S.empty False (head ts) <> text ": bitstring"
+  INSERT -> text "insert" <-> text (showFactName tag) <> translateTerms S.empty False
+  OUT -> text "out(publicChannel," <-> translateTerm S.empty False (head ts) <> text ")"
+  EVENT -> text "event" <-> text (showEventName tag) <> translateTermsWithRuleId S.empty False ruleIdName
+  where
+    translateTerms varSet checkEq =
+      text "(" <> (fsep . punctuate comma $ map (translateTerm varSet checkEq) ts) <> text ")"
+    -- For events, prepend the rule ID to the term list
+    translateTermsWithRuleId varSet checkEq rid =
+      text "(" <> text rid <> (if null ts then text "" else comma <-> (fsep . punctuate comma $ map (translateTerm varSet checkEq) ts)) <> text ")"
 
 translateFact :: (Document d) => LNFact -> FactType -> S.Set String -> d
 translateFact (Fact tag _ ts) factType vars = case factType of
@@ -375,7 +578,7 @@ translatePatternFact (Fact tag _ ts) factType vars helperVars =
   (factDoc, newHelperVars)
   where
     (doclist, newHelperVars) =
-      foldl' (\acc@(_, helpers) t -> acc `combine2` translatePatternTerm vars helpers t) ([], helperVars) ts
+      foldl' (\acc@(_, helpers) t -> acc `accumulateResult` translatePatternTerm vars helpers t) ([], helperVars) ts
     factDoc = case factType of
       GET -> text "get" <-> text (showFactName tag) <> text "(" <> (fsep . punctuate comma $ doclist) <> text ") in"
       IN -> text "in(publicChannel," <-> head doclist <> text ": bitstring);"
@@ -442,6 +645,7 @@ reservedWords =
     "secret",
     "select",
     "set",
+    "sid",
     "suchthat",
     "sync",
     "table",
@@ -455,7 +659,8 @@ showAtom :: Bool -> String -> String
 showAtom sanitized a = case head a of
   '~' -> sanitize . replaceDots $ tail a
   '$' -> sanitize . replaceDots $ tail a
-  '\'' -> sanitizeName $ 's' : (replaceDots . init $ tail a)
+  -- Needs to match ppPubName in Export.hs
+  '\'' -> sanitizeName $ 'v' : (replaceDots . init $ tail a)
   _ -> sanitize $ replaceDots a
   where
     replaceDots = map (\c -> if c == '.' then '_' else c)
@@ -565,7 +770,7 @@ makeDestructorExpressions vars helperVars destructors t =
   where
     (doclist, newDestructors) =
       foldl'
-        (\acc@(_, destrs) a -> acc `combine2` makeDestructorExpression vars helperVars destrs t a)
+        (\acc@(_, destrs) a -> acc `accumulateResult` makeDestructorExpression vars helperVars destrs t a)
         ([], destructors)
         atoms
     atoms = nub $ map show $ lits t
@@ -599,5 +804,7 @@ makeDestructorExpression vars helperVars destructors t a =
         <> text var
         <> text ") in"
 
-combine2 :: (Semigroup b) => ([a], b) -> (a, b) -> ([a], b)
-combine2 (as, b) (a, b1) = (as ++ [a], b <> b1)
+-- | Accumulate a result into a list while combining semigroup values.
+-- Used for folding over facts during rule translation.
+accumulateResult :: (Semigroup b) => ([a], b) -> (a, b) -> ([a], b)
+accumulateResult (as, b) (a, b1) = (as ++ [a], b <> b1)

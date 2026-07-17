@@ -23,6 +23,7 @@ module Theory.Model.Restriction (
   , RestrictionAttribute(..)
   , rstrName
   , rstrFormula
+  , restrPrefix
   , varNow
   , fromRuleRestriction
   , applyMacroInRestriction
