@@ -77,16 +77,36 @@ rule (modulo E) V_3:
 
   /* has exactly the trivial AC variant */
 
+restriction Restr_C_2_1:
+  "∀ x #NOW x.1. (Restr_C_2_1( x, x.1 ) @ #NOW) ⇒ (x = x.1)"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ x #NOW x.1. (Restr_C_2_1( x, x.1 ) @ #NOW) ⇒ (x = x.1)"
+  */
+
 rule (modulo E) C_2:
-   [ In( r ), St_C_1( A, commit(open(x, r), r) ) ]
-  --[ VotePublished( open(x, r) ), Out_C_2( commit(open(x, r), r) ) ]->
+   [ In( r ), St_C_1( A, x ) ]
+  --[
+  VotePublished( open(x, r) ), Out_C_2( x ),
+  Restr_C_2_1( x, commit(open(x, r), r) )
+  ]->
    [ Out( open(x, r) ) ]
 
   /*
   rule (modulo AC) C_2:
-     [ In( r ), St_C_1( A, commit(z, r) ) ]
-    --[ VotePublished( z ), Out_C_2( commit(z, r) ) ]->
+     [ In( r ), St_C_1( A, x ) ]
+    --[ VotePublished( z ), Out_C_2( x ), Restr_C_2_1( x, commit(z, r) ) ]->
      [ Out( z ) ]
+    variants (modulo AC)
+    1. r     = r.5
+       x     = x.5
+       z     = open(x.5, r.5)
+    
+    2. r     = x.5
+       x     = commit(x.6, x.5)
+       z     = x.6
   */
 
 lemma types [sources]:
@@ -317,8 +337,8 @@ qed
 Generated from:
 Tamarin version 1.13.0
 Maude version 3.4
-Git revision: 1deff12bd69c96308abb2463d4de5f2c7610c191 (with uncommited changes), branch: develop
-Compiled at: 2026-03-09 07:36:56.194364 UTC
+Git revision: a31226029a4774beefcb53c81296ea289c8d91d0 (with uncommited changes), branch: feat/tamarin-to-pv-pr
+Compiled at: 2026-06-25 11:10:06.043274 UTC
 */
 
 end
@@ -330,7 +350,7 @@ summary of summaries:
 analyzed: examples/post17/foo_eligibility.spthy
 
   output:          examples/post17/foo_eligibility.spthy.tmp
-  processing time: 0.38s
+  processing time: 0.24s
   
   types (all-traces): verified (43 steps)
   exec (exists-trace): verified (9 steps)

@@ -14,7 +14,14 @@ jobs:
       - name: Installation of dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install graphviz tree-sitter-cli
+          sudo apt-get install graphviz
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: tree-sitter/tree-sitter-spthy/package-lock.json
 
       - name: Caching
         uses: actions/cache@v4
@@ -85,9 +92,14 @@ jobs:
 
       - name: Generate tree-sitter-spthy bindings
         working-directory: tree-sitter/tree-sitter-spthy
-        run: tree-sitter generate
+        run: |
+          npm ci
+          ./node_modules/.bin/tree-sitter generate
+          git diff --exit-code
 
       - name: Regression tests for tree-sitter-spthy
         working-directory: tree-sitter/tree-sitter-spthy
-        run: ./regressionParser.sh
+        run: |
+          ./node_modules/.bin/tree-sitter test
+          PATH="$PWD/node_modules/.bin:$PATH" ./regressionParser.sh
           

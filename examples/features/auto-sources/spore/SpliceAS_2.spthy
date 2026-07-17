@@ -205,9 +205,8 @@ rule C_from_S:
  // here to ensure a single key per user
  restriction OnlyOnce:
    "
-     All A B #i #j.
-       OnlyOnce(A)@#i & OnlyOnce(B)@#j
-       & A=B
+     All A #i #j.
+       OnlyOnce(A)@#i & OnlyOnce(A)@#j
      ==>
        #i = #j
    "
