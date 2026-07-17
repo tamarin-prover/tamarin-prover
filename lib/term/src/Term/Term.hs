@@ -245,6 +245,10 @@ allProtSubterms _                                     = []
 
 -- | Is term @inner@ in term @outer@ and not below a reducible function symbol?
 -- This is used for the Subterm relation
+-- INLINABLE so the call site (the subterm store, at the concrete 'LNTerm'
+-- type in another package) can specialise away the @Eq@/@Ord FunSym@
+-- dictionaries and the per-level @any@ closure.
+{-# INLINABLE elemNotBelowReducible #-}
 elemNotBelowReducible :: Eq a => FunSig -> Term a -> Term a -> Bool
 elemNotBelowReducible _ inner outer
                       | inner == outer = True

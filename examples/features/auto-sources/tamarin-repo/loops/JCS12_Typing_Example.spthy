@@ -58,11 +58,8 @@ rule Client_2:
 // A server thread answering in one-step to a session-key setup request from
 // some client.
 rule Serv_1:
-  let msg = adec(request, ~ltkS)
-      tag = fst(msg)
-      C   = fst(snd(msg))
-      k   = snd(snd(msg))
-  in
+  let tag = fst(adec(request, ~ltkS))
+      k   = snd(snd(adec(request, ~ltkS)))  in
     [ !Ltk($S, ~ltkS)
     , In( request )
     , !Pk(C, pkC)
@@ -74,6 +71,7 @@ rule Serv_1:
                     // the proof depth and use the GUI, then you can see that
                     // there is the option that, without this check, servers
                     // just forward messages to further servers.)
+    , _restrict( C   = fst(snd(adec(request, ~ltkS))) )
     , ReceivedKey(C, $S, k)
     , In_Serv_1(request, k)
     ]->
