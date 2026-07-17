@@ -39,54 +39,61 @@ rule (modulo E) Client_2:
 
   /* has exactly the trivial AC variant */
 
+restriction Restr_Serv_1_1:
+  "∀ x #NOW x.1. (Restr_Serv_1_1( x, x.1 ) @ #NOW) ⇒ (x = x.1)"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ x #NOW x.1. (Restr_Serv_1_1( x, x.1 ) @ #NOW) ⇒ (x = x.1)"
+  */
+
 rule (modulo E) Serv_1:
-   [
-   !Ltk( $S, ~ltkS ), In( request ),
-   !Pk( fst(snd(adec(request, ~ltkS))), pkC )
-   ]
+   [ !Ltk( $S, ~ltkS ), In( request ), !Pk( C, pkC ) ]
   --[
   Eq( fst(adec(request, ~ltkS)), '1' ),
-  ReceivedKey( fst(snd(adec(request, ~ltkS))), $S,
-               snd(snd(adec(request, ~ltkS)))
-  ),
-  In_Serv_1( request, snd(snd(adec(request, ~ltkS))) )
+  ReceivedKey( C, $S, snd(snd(adec(request, ~ltkS))) ),
+  In_Serv_1( request, snd(snd(adec(request, ~ltkS))) ),
+  Restr_Serv_1_1( C, fst(snd(adec(request, ~ltkS))) )
   ]->
    [ Out( aenc(<'2', snd(snd(adec(request, ~ltkS)))>, pkC) ) ]
 
   /*
   rule (modulo AC) Serv_1:
-     [ !Ltk( $S, ~ltkS ), In( request ), !Pk( z, pkC ) ]
-    --[ Eq( z.2, '1' ), ReceivedKey( z, $S, z.1 ), In_Serv_1( request, z.1 )
+     [ !Ltk( $S, ~ltkS ), In( request ), !Pk( C, pkC ) ]
+    --[
+    Eq( z.1, '1' ), ReceivedKey( C, $S, z ), In_Serv_1( request, z ),
+    Restr_Serv_1_1( C, z.2 )
     ]->
-     [ Out( aenc(<'2', z.1>, pkC) ) ]
+     [ Out( aenc(<'2', z>, pkC) ) ]
     variants (modulo AC)
-    1. ~ltkS = ~ltkS.12
+    1. ~ltkS = ~ltkS.15
        request
-             = request.14
-       z     = fst(snd(adec(request.14, ~ltkS.12)))
-       z.1   = snd(snd(adec(request.14, ~ltkS.12)))
-       z.2   = fst(adec(request.14, ~ltkS.12))
+             = request.18
+       z     = snd(snd(adec(request.18, ~ltkS.15)))
+       z.1   = fst(adec(request.18, ~ltkS.15))
+       z.2   = fst(snd(adec(request.18, ~ltkS.15)))
     
-    2. ~ltkS = ~ltkS.16
+    2. ~ltkS = ~ltkS.20
        request
-             = aenc(<z.22, z.19, z.21>, pk(~ltkS.16))
-       z     = z.19
-       z.1   = z.21
-       z.2   = z.22
+             = aenc(<z.26, z.28, z.25>, pk(~ltkS.20))
+       z     = z.25
+       z.1   = z.26
+       z.2   = z.28
     
-    3. ~ltkS = ~ltkS.20
+    3. ~ltkS = ~ltkS.24
        request
-             = aenc(x.37, pk(~ltkS.20))
-       z     = fst(snd(x.37))
-       z.1   = snd(snd(x.37))
-       z.2   = fst(x.37)
+             = aenc(x.45, pk(~ltkS.24))
+       z     = snd(snd(x.45))
+       z.1   = fst(x.45)
+       z.2   = fst(snd(x.45))
     
-    4. ~ltkS = ~ltkS.21
+    4. ~ltkS = ~ltkS.25
        request
-             = aenc(<z.27, x.39>, pk(~ltkS.21))
-       z     = fst(x.39)
-       z.1   = snd(x.39)
-       z.2   = z.27
+             = aenc(<z.31, x.47>, pk(~ltkS.25))
+       z     = snd(x.47)
+       z.1   = z.31
+       z.2   = fst(x.47)
   */
 
 lemma typing_assertion [sources]:
@@ -113,7 +120,7 @@ next
     case case_1
     solve( !Ltk( $S, ~ltkS ) ▶₀ #i )
       case Register_pk
-      solve( !Pk( z, pkC ) ▶₂ #i )
+      solve( !Pk( C, pkC ) ▶₂ #i )
         case Register_pk
         solve( !KU( aenc(<z, $A, v>, pk(~ltkS)) ) @ #vk )
           case Client_1
@@ -272,8 +279,8 @@ qed
 Generated from:
 Tamarin version 1.13.0
 Maude version 3.4
-Git revision: 1deff12bd69c96308abb2463d4de5f2c7610c191 (with uncommited changes), branch: develop
-Compiled at: 2026-03-09 07:36:56.194364 UTC
+Git revision: a31226029a4774beefcb53c81296ea289c8d91d0 (with uncommited changes), branch: feat/tamarin-to-pv-pr
+Compiled at: 2026-06-25 11:10:06.043274 UTC
 */
 
 end
@@ -285,7 +292,7 @@ summary of summaries:
 analyzed: examples/loops/JCS12_Typing_Example.spthy
 
   output:          examples/loops/JCS12_Typing_Example.spthy.tmp
-  processing time: 0.09s
+  processing time: 0.08s
   
   typing_assertion (all-traces): verified (15 steps)
   Client_session_key_secrecy_raw (all-traces): verified (8 steps)
