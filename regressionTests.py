@@ -590,7 +590,7 @@ def main():
 		
 		try:
 			testResult = subprocess.run(['./regressionParser.sh'], capture_output=True, text=True)
-			tree_sitter_generate = subprocess.run(["tree-sitter", "generate"], capture_output=True, text=True)
+			tree_sitter_generate = subprocess.run(["tree-sitter", "generate", "--abi", "14"], capture_output=True, text=True)
 			outputColor = colors.GREEN + colors.BOLD
 
 			if not "success percentage: 100.00%;" in testResult.stdout:
