@@ -1,0 +1,202 @@
+==================
+Quoted role labels
+==================
+
+theory Roles
+begin
+
+rule First [role="Alice Smith"]: [] --> []
+rule Second [role='server-1']: [] --> []
+rule Wildcard [role="*"]: [] --> []
+rule Empty [role='']: [] --> []
+
+end
+
+---
+
+(theory
+  theory_name: (ident)
+  (rule
+    (simple_rule
+      rule_identifier: (ident)
+      (rule_attrs
+        (rule_attr
+          (rule_role
+            role_identifier: (ident))))
+      (premise)
+      (conclusion)))
+  (rule
+    (simple_rule
+      rule_identifier: (ident)
+      (rule_attrs
+        (rule_attr
+          (rule_role
+            role_identifier: (ident))))
+      (premise)
+      (conclusion)))
+  (rule
+    (simple_rule
+      rule_identifier: (ident)
+      (rule_attrs
+        (rule_attr
+          (rule_role
+            role_identifier: (ident))))
+      (premise)
+      (conclusion)))
+  (rule
+    (simple_rule
+      rule_identifier: (ident)
+      (rule_attrs
+        (rule_attr
+          (rule_role)))
+      (premise)
+      (conclusion))))
+
+==================
+Empty tuple
+==================
+
+theory EmptyTuple
+begin
+
+rule Test: [] --> [Out(<>)]
+
+end
+
+---
+
+(theory
+  theory_name: (ident)
+  (rule
+    (simple_rule
+      rule_identifier: (ident)
+      (premise)
+      (conclusion
+        (linear_fact
+          fact_identifier: (ident)
+          (arguments
+            argument: (mset_term
+              left: (nat_term
+                left: (xor_term
+                  left: (mul_term
+                    left: (exp_term
+                      base: (tuple_term))))))))))))
+
+==================
+Preprocessor fields
+==================
+
+theory Conditional
+begin
+
+#ifdef FLAG
+rule Enabled: [] --> []
+#else
+rule Disabled: [] --> []
+#endif
+
+end
+
+---
+
+(theory
+  theory_name: (ident)
+  (preprocessor
+    (ifdef
+      condition: (ident)
+      consequence: (rule
+        (simple_rule
+          rule_identifier: (ident)
+          (premise)
+          (conclusion)))
+      alternative: (rule
+        (simple_rule
+          rule_identifier: (ident)
+          (premise)
+          (conclusion))))))
+
+==================
+Uppercase identifiers in terms
+==================
+
+theory UppercaseTerms
+begin
+
+functions: Upper/1
+rule Test: [In(Upper(x))] --> [Accepted(Upper(x))]
+
+end
+
+---
+
+(theory
+  theory_name: (ident)
+  (functions
+    (function_untyped
+      function_identifier: (ident)
+      arity: (natural)))
+  (rule
+    (simple_rule
+      rule_identifier: (ident)
+      (premise
+        (linear_fact
+          fact_identifier: (ident)
+          (arguments
+            argument: (mset_term
+              left: (nat_term
+                left: (xor_term
+                  left: (mul_term
+                    left: (exp_term
+                      base: (nary_app
+                        function_identifier: (ident)
+                        (arguments
+                          argument: (mset_term
+                            left: (nat_term
+                              left: (xor_term
+                                left: (mul_term
+                                  left: (exp_term
+                                    base: (msg_var_or_nullary_fun
+                                      variable_identifier: (ident)))))))))))))))))
+      (conclusion
+        (linear_fact
+          fact_identifier: (ident)
+          (arguments
+            argument: (mset_term
+              left: (nat_term
+                left: (xor_term
+                  left: (mul_term
+                    left: (exp_term
+                      base: (nary_app
+                        function_identifier: (ident)
+                        (arguments
+                          argument: (mset_term
+                            left: (nat_term
+                              left: (xor_term
+                                left: (mul_term
+                                  left: (exp_term
+                                    base: (msg_var_or_nullary_fun
+                                      variable_identifier: (ident))))))))))))))))))))
+
+==================
+Lowercase fact rejected
+==================
+
+theory LowercaseFact
+begin
+
+rule Test: [] --> [lowercase(x)]
+
+end
+
+---
+
+(theory
+  theory_name: (ident)
+  (rule
+    (simple_rule
+      rule_identifier: (ident)
+      (premise)
+      (conclusion
+        (ERROR
+          (ident)
+          (ident))))))
