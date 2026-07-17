@@ -182,8 +182,10 @@ instance Sized t => Sized (Fact t) where
   size (Fact _ _ args) = size args
 
 instance HasFrees t => HasFrees (Fact t) where
+    {-# INLINABLE foldFrees #-}
     foldFrees  f = foldMap  (foldFrees f)
     foldFreesOcc f c fa = foldFreesOcc f (show (factTag fa):c) (factTerms fa)
+    {-# INLINABLE mapFrees #-}
     mapFrees   f = traverse (mapFrees f)
 
 instance Apply s t => Apply s (Fact t) where
@@ -540,7 +542,7 @@ prettyFact ppTerm (Fact tag an ts)
   | otherwise                     = ppFact (showFactTag tag) ts <> ppAnn an
   where
     ppFact n t = nestShort' (n ++ "(") ")" . fsep . punctuate comma $ map ppTerm t
-    ppAnn ann = if S.null ann then text "" else
+    ppAnn ann = if S.null ann then emptyDoc else
         brackets . fsep . punctuate comma $ map (text . showFactAnnotation) $ S.toList ann
 
 -- | Pretty print a 'NFact'.

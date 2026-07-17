@@ -21,47 +21,62 @@ prio: {id}
   regex"=" | regex"<" | regex"last\(" | regex"DCtrIs\(d,C"
 prio: {id}
   regex"DCtr"
-
-
 tactic: IV_Uniqueness
 presort: C
 prio: {id}
   regex"=" | regex"<" | regex"last\("
 prio: {id}
   regex"IV\("
-
-
 tactic: Key_IntegrityAndConfidentiality
 presort: C
 prio: {id}
   regex"CreateKey\(ek,"
 
-
-
-
-
 /* looping facts with injective instances: DCtr/2 */
-
-
 
 restriction UniqueInteger:
   "∀ n #i #j. ((IsInteger( n ) @ #i) ∧ (IsInteger( n ) @ #j)) ⇒ (#i = #j)"
   // safety formula
 
+  /*
+  expanded formula:
+  "∀ n #i #j. ((IsInteger( n ) @ #i) ∧ (IsInteger( n ) @ #j)) ⇒ (#i = #j)"
+  */
+
 restriction Lesser:
   "∀ x y #i. (LessThan( x, y ) @ #i) ⇒ (∃ z. (x++z) = y)"
+
+  /*
+  expanded formula:
+  "∀ x y #i. (LessThan( x, y ) @ #i) ⇒ (∃ z. (x++z) = y)"
+  */
 
 restriction TrueIsTrue:
   "∀ x #i. (IsTrue( x ) @ #i) ⇒ (x = true)"
   // safety formula
 
+  /*
+  expanded formula:
+  "∀ x #i. (IsTrue( x ) @ #i) ⇒ (x = true)"
+  */
+
 restriction Equality:
   "∀ x y #i. (Eq( x, y ) @ #i) ⇒ (x = y)"
   // safety formula
 
+  /*
+  expanded formula:
+  "∀ x y #i. (Eq( x, y ) @ #i) ⇒ (x = y)"
+  */
+
 restriction Inequality:
   "∀ x #i. (Neq( x, x ) @ #i) ⇒ (⊥)"
   // safety formula
+
+  /*
+  expanded formula:
+  "∀ x #i. (Neq( x, x ) @ #i) ⇒ (⊥)"
+  */
 
 rule (modulo E) One[color=#aaaaee]:
    [ ] --[ IsInteger( '1' ) ]-> [ !Integer( '1' ) ]
@@ -13100,36 +13115,14 @@ next
   qed
 qed
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 /* All wellformedness checks were successful. */
 
 /*
 Generated from:
-Tamarin version 1.11.0
-Maude version 3.5.1
-Git revision: d1fe8f7c328c32aac0588ab7e5a43be267577706 (with uncommited changes), branch: fix-remove-derivation-checks-regression-tests
-Compiled at: 2026-02-16 12:29:57.582345 UTC
+Tamarin version 1.13.0
+Maude version 3.4
+Git revision: 1deff12bd69c96308abb2463d4de5f2c7610c191 (with uncommited changes), branch: develop
+Compiled at: 2026-03-09 07:36:56.194364 UTC
 */
 
 end
@@ -13141,7 +13134,7 @@ summary of summaries:
 analyzed: examples/csf19-wrapping/siv.spthy
 
   output:          examples/csf19-wrapping/siv.spthy.tmp
-  processing time: 54.69s
+  processing time: 42.29s
   
   origin (all-traces): verified (2086 steps)
   Counter_Monotonicity (all-traces): verified (888 steps)

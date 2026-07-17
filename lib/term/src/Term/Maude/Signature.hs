@@ -131,14 +131,15 @@ instance Semigroup MaudeSig where
                            ,macroNames=macroNames1 `S.union` macroNames2})
           -- an exception to merging is the destructor variants for pair, which is exclusive
           -- in general, it might make sense to not merge fun syms with same identifier
-      where unionExceptPairSym st1 st2 = if pairFunDestSig `S.isSubsetOf` st2 then
-                                             S.union (st1 `S.difference` pairFunSig) st2
-                                           else
-                                             S.union st1 st2
-            unionExceptPairRules st1 st2 = if pairDestRules `S.isSubsetOf` st2 then
-                                         S.union (st1 `S.difference` pairRules) st2
+      where unionExceptPairSym st1 st2 = removeIfNecessary (removeIfNecessary st1 st2 fstSym fstDestSym) st2 sndSym sndDestSym
+            unionExceptPairRules st1 st2 = removeIfNecessary (removeIfNecessary st1 st2 fstDestRule fstRule) st2 sndRule sndDestRule
+            -- removes y from st1 if x is in st2, and then adds st2 to st1, and vice versa
+            removeIfNecessary st1 st2 x y = removeIfNecessary' (removeIfNecessary' st1 st2 x y) st2 y x
+            removeIfNecessary' st1 st2 toAdd toRemove = if toAdd `S.member` st2 then
+                                         S.union (S.delete toRemove st1) st2
                                        else
                                          S.union st1 st2
+
                   
 instance Monoid MaudeSig where
   mempty = MaudeSig False False False False False False S.empty S.empty S.empty False S.empty S.empty S.empty

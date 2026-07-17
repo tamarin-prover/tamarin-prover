@@ -13,10 +13,6 @@ equations:
     snd(<x.1, x.2>) = x.2,
     verify(sig(m, sk(i)), m, pk(sk(i))) = true
 
-
-
-
-
 rule (modulo E) Init:
    [ ]
   --[ Responder( $rs ), CA( $ca ) ]->
@@ -249,6 +245,11 @@ restriction isTrue:
   "∀ #i t. (IsTrue( t ) @ #i) ⇒ (t = true)"
   // safety formula
 
+  /*
+  expanded formula:
+  "∀ #i t. (IsTrue( t ) @ #i) ⇒ (t = true)"
+  */
+
 restriction clockGuideTime:
   "∀ ts #t1 #t3.
     (((Time( ts ) @ #t1) ∧ (Time( ts ) @ #t3)) ∧ (#t1 < #t3)) ⇒
@@ -256,43 +257,44 @@ restriction clockGuideTime:
       (((Time( ts2 ) @ #t2) ∧ (#t1 < #t2)) ∧ (#t2 < #t3)) ⇒ (ts2 = ts))"
   // safety formula
 
+  /*
+  expanded formula:
+  "∀ ts #t1 #t3.
+    (((Time( ts ) @ #t1) ∧ (Time( ts ) @ #t3)) ∧ (#t1 < #t3)) ⇒
+    (∀ ts2 #t2.
+      (((Time( ts2 ) @ #t2) ∧ (#t1 < #t2)) ∧ (#t2 < #t3)) ⇒ (ts2 = ts))"
+  */
+
 restriction NewTime:
   "∀ ts #i #j.
     ((NewTime( ts ) @ #i) ∧ (Time( ts ) @ #j)) ⇒ ((#i < #j) ∨ (#i = #j))"
   // safety formula
+
+  /*
+  expanded formula:
+  "∀ ts #i #j.
+    ((NewTime( ts ) @ #i) ∧ (Time( ts ) @ #j)) ⇒ ((#i < #j) ∨ (#i = #j))"
+  */
 
 restriction CA_single_registration:
   "∀ c cp skS #i #j.
     ((Secret( c, skS ) @ #i) ∧ (Secret( cp, skS ) @ #j)) ⇒ (#i = #j)"
   // safety formula
 
+  /*
+  expanded formula:
+  "∀ c cp skS #i #j.
+    ((Secret( c, skS ) @ #i) ∧ (Secret( cp, skS ) @ #j)) ⇒ (#i = #j)"
+  */
+
 restriction one_role:
   "¬(∃ x #i #j. (Responder( x ) @ #i) ∧ (Server( x ) @ #j))"
   // safety formula
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+  /*
+  expanded formula:
+  "¬(∃ x #i #j. (Responder( x ) @ #i) ∧ (Server( x ) @ #j))"
+  */
 
 lemma acc_blamed_suff:
   exists-trace
@@ -525,7 +527,7 @@ solve( C( ts, cert, 'revoked' ) ▶₀ #i )
   qed
 qed
 
-predicate: blamed( x )<=>∃ #i. Blame( x ) @ #i
+predicate: Blamed( x )<=>∃ #i. Blame( x ) @ #i
 
 /*
 WARNING: the following wellformedness checks failed!
@@ -546,10 +548,10 @@ Accountability (RP check)
 
 /*
 Generated from:
-Tamarin version 1.11.0
-Maude version 3.5.1
-Git revision: d1fe8f7c328c32aac0588ab7e5a43be267577706 (with uncommited changes), branch: fix-remove-derivation-checks-regression-tests
-Compiled at: 2026-02-16 12:29:57.582345 UTC
+Tamarin version 1.13.0
+Maude version 3.4
+Git revision: 1deff12bd69c96308abb2463d4de5f2c7610c191 (with uncommited changes), branch: develop
+Compiled at: 2026-03-09 07:36:56.194364 UTC
 */
 
 end
@@ -561,7 +563,7 @@ summary of summaries:
 analyzed: examples/accountability/csf21-acc-unbounded/previous/ocsps-msr-untrusted.spthy
 
   output:          examples/accountability/csf21-acc-unbounded/previous/ocsps-msr-untrusted.spthy.tmp
-  processing time: 0.33s
+  processing time: 0.26s
   
   WARNING: 1 wellformedness check failed!
            The analysis results might be wrong!

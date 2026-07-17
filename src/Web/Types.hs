@@ -586,10 +586,11 @@ mkYesodData "WebUI" [parseRoutes|
 /thy/trace/#Int/prev/#String/*TheoryPath      PrevTheoryPathR         GET
 -- /thy/trace/#Int/save                             SaveTheoryR             GET
 /thy/trace/#Int/download/#String                 DownloadTheoryR         GET
-/thy/trace/#Int/get_and_append/#String           AppendNewLemmasR         GET
+/thy/trace/#Int/get_and_append/#String           AppendNewLemmasR         POST
 -- /thy/trace/#Int/edit/source                      EditTheoryR             GET POST
 -- /thy/trace/#Int/edit/path/*TheoryPath         EditPathR               GET POST
 /thy/trace/#Int/del/path/*TheoryPath          DeleteStepR             GET
+/thy/trace/#Int/reload                           ReloadTheoryR           POST
 /thy/trace/#Int/unload                           UnloadTheoryR           GET
 /thy/equiv/#Int/overview/*DiffTheoryPath      InteractiveOverviewDiffR               GET
 /thy/equiv/#Int/source                           TheorySourceDiffR           GET
@@ -612,6 +613,7 @@ mkYesodData "WebUI" [parseRoutes|
 -- /thy/equiv/#Int/edit/source                      EditTheoryR             GET POST
 -- /thy/equiv/#Int/edit/path/*DiffTheoryPath         EditPathDiffR               GET POST
 /thy/equiv/#Int/del/path/*DiffTheoryPath      DeleteStepDiffR             GET
+/thy/equiv/#Int/reload                           ReloadTheoryDiffR           POST
 /thy/equiv/#Int/unload                           UnloadTheoryDiffR           GET
 /kill                                      KillThreadR             GET
 -- /threads                                   ThreadsR                GET
@@ -626,11 +628,13 @@ instance PathPiece SolutionExtractor where
   toPathPiece CutDFS             = "idfs"
   toPathPiece CutBFS             = "bfs"
   toPathPiece CutSingleThreadDFS = "seqdfs"
+  toPathPiece CutAfterSorry      = "sorry"
 
   fromPathPiece "characterize" = Just CutNothing
   fromPathPiece "idfs"         = Just CutDFS
   fromPathPiece "bfs"          = Just CutBFS
   fromPathPiece "seqdfs"       = Just CutSingleThreadDFS
+  fromPathPiece "sorry"        = Just CutAfterSorry
   fromPathPiece _              = Nothing
 
 instance PathPiece Side where
@@ -708,10 +712,11 @@ defaultLayout' w = do
         $maybe msg <- message
           <p.message>#{msg}
         <p.loading>
-          Loading, please wait...
+          Analyzing, please wait...
           \  <a id=cancel href='#'>Cancel</a>
         ^{pageBody page}
         <div#dialog>
+        <div#confirm-dialog>
         <ul#contextMenu>
           <li.autoprove>
             <a href="#autoprove">Autoprove</a>

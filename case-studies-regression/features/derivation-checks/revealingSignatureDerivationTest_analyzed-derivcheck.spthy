@@ -12,12 +12,6 @@ equations:
     revealVerify(revealSign(x.1, x.2), x.1, pk(x.2)) = true,
     snd(<x.1, x.2>) = x.2
 
-
-
-
-
-
-
 rule (modulo E) Generate_Signing_Keypair:
    [ Fr( ~sk ) ]
   -->
@@ -130,22 +124,6 @@ rule (modulo E) RevealSign_With_Compromised_Key:
 
   /* has exactly the trivial AC variant */
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 /*
 WARNING: the following wellformedness checks failed!
 
@@ -163,16 +141,16 @@ Failed to derive Variable(s): sk
 
 /*
 Generated from:
-Tamarin version 1.11.0
-Maude version 3.5.1
-Git revision: d1fe8f7c328c32aac0588ab7e5a43be267577706 (with uncommited changes), branch: fix-remove-derivation-checks-regression-tests
-Compiled at: 2026-02-16 12:29:57.582345 UTC
+Tamarin version 1.13.0
+Maude version 3.4
+Git revision: 1deff12bd69c96308abb2463d4de5f2c7610c191 (with uncommited changes), branch: develop
+Compiled at: 2026-03-09 07:36:56.194364 UTC
 */
 
 end
 /* Output
 maude tool: 'maude'
- checking version: 3.5.1. OK.
+ checking version: 3.4. OK.
  checking installation: OK.
 [Theory RevealSignatureDerivationTests] Theory loaded
 [Theory RevealSignatureDerivationTests] Theory translated

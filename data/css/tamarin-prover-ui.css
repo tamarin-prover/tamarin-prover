@@ -10,8 +10,8 @@ html, body {
         sans-serif;         /* Fallback */
     background: #fff;
     font-size: 0.95em;
-    padding: 0px;
-    margin: 0px;
+    padding: 0;
+    margin: 0;
 }
 
 a {
@@ -20,7 +20,7 @@ a {
 }
 
 a:hover {
-    color: #000000;
+    color: #000;
 }
 
 a.active-link {
@@ -90,8 +90,8 @@ div.warning {
     font-weight: bold;
     text-align: center;
     font-size: large;
+    text-wrap:wrap;
 }
-
 div.wf-warning {
     margin: 1em;
     padding: 2em;
@@ -99,6 +99,7 @@ div.wf-warning {
     border: solid 2px #ff8080;
     font-weight: bold;
     font-size: large;
+    text-wrap: wrap;
 }
 
 
@@ -161,6 +162,19 @@ div#dialog {
     display: none;
 }
 
+/* Special formatting for error messages in dialog */
+div#dialog.error-message {
+    white-space: pre-wrap;
+    max-height: 500px;
+    overflow-y: auto;
+}
+
+div#dialog.error-message br {
+    display: block;
+    content: "";
+    margin: 0.5em 0;
+}
+
 span#err {
     color: #800000;
     font-weight: bold;
@@ -185,6 +199,11 @@ div#help {
     padding: 0.5em;
     margin: 0px;
     margin-bottom: 0.5em;
+    text-wrap: wrap;
+}
+
+div#shortcuts {
+    text-wrap: wrap;
 }
 
 /* Forms
@@ -230,22 +249,24 @@ form.root-form div.required label {
 /* Navigation
  ************/
 
+/* Navigation option icons - shared background properties */
+a.active-option,
+a.inactive-option,
+a.disabled-option {
+    background-repeat: no-repeat !important;
+    background-position: 15.2em center !important;
+}
+
 a.active-option {
     background-image: url(/static/img/option-light.png) !important;
-    background-repeat: no-repeat !important;
-    background-position: 14.1em center !important;
 }
 
 a.inactive-option {
     background-image: url(/static/img/option-dark.png) !important;
-    background-repeat: no-repeat !important;
-    background-position: 14.1em center !important;
 }
 
 a.disabled-option {
     background-image: url(/static/img/option-off.png) !important;
-    background-repeat: no-repeat !important;
-    background-position: 14.1em center !important;
 }
 
 a.remove-step {
@@ -255,9 +276,7 @@ a.remove-step {
     background-repeat: no-repeat !important;
     background-position: center !important;
     background-size: 1em;
-    /* Standard */
     opacity: 0;
-    /* Trident */
     filter: alpha(opacity=0);
 }
 
@@ -266,95 +285,75 @@ a.edit-link:hover, a.delete-link:hover {
 }
 
 a.proof-step:hover + a.remove-step {
-    /* Standard */
     opacity: 0.5;
-    /* Trident */
     filter: alpha(opacity=50);
 }
 
 a.remove-step:hover {
-    /* Standard */
     opacity: 1;
-    /* Trident */
     filter: alpha(opacity=100);
 }
 
 ul#navigation {
     list-style: none;
     float: right;
-    margin: 0em;
-    padding: 0em;
-    margin-right: 0.3em;
+    margin: 0 0.3em 0 0;
+    padding: 0;
 }
 
 ul#navigation li {
     float: left;
-    width: 11em;
     display: inline;
     margin-right: 0.8em;
     position: relative;
     z-index: 999;
-    padding-left: 0.5em;
+    width: 8em;
 }
 
-ul#navigation li a {
+/* Shared navigation button styles */
+ul#navigation li a,
+button.nav-button {
     display: block;
     color: #000;
-    width: 100%;
-    margin-top: 0em;
+    margin-top: 0;
     border-radius: 0.3em;
     padding: 0.3em;
     border: solid 1px #3a6c78;
-    /* Gecko */
-    background:
-      -moz-linear-gradient(
-        top,
-        #dfeff1 0%,
-        #7dc0cd 100%);
-    /* Presto */
-    background:
-      -o-linear-gradient(
-        top,
-        #dfeff1 0%,
-        #7dc0cd 100%);
-    /* Webkit */
-    background:
-      -webkit-linear-gradient(
-        top,
-        #dfeff1 0%,
-        #7dc0cd 100%);
-    /* Trident */
-    filter:
-      progid:DXImageTransform.Microsoft.gradient(
-        startColorstr='#dfeff1',
-        endColorstr='#7dc0cd',
-        GradientType=0 );
+    font: inherit;
+    cursor: pointer;
+    text-align: left;
+    background: linear-gradient(to bottom, #dfeff1 0%, #7dc0cd 100%);
+    /* Legacy browser fallbacks */
+    background: -moz-linear-gradient(top, #dfeff1 0%, #7dc0cd 100%);
+    background: -webkit-linear-gradient(top, #dfeff1 0%, #7dc0cd 100%);
 }
 
-ul#navigation li a:hover {
+/* The button needs a max fit for size, the a does not (CSS weirdness) */
+button.nav-button {
+    width: 100%;
+}
+
+ul#navigation li a:hover,
+button.nav-button:hover {
     background: #ccc;
-    /* Standard */
     opacity: 0.8;
-    /* Trident */
     filter: alpha(opacity=80);
 }
 
 ul#navigation li ul {
-    width: 13em;
+    width: 22em;
     display: none;
     list-style: none;
-    margin-left: -0.8em;
+    margin-left: -4em;
     padding: 0.3em 0 0 0;
-    /* Standard */
     opacity: 0.8;
-    /* Trident */
     filter: alpha(opacity=80);
 }
 
 ul#navigation li ul li {
-    width: 100%;
-    margin: 0em;
-    padding: 0em;
+    width: 16em;
+    margin: 0;
+    padding: 0;
     background: #000;
     font-size: 0.8em;
     border-bottom: solid 1px #666;
@@ -369,7 +368,9 @@ ul#navigation li ul li:last-child {
     border-bottom: none;
 }
 
-ul#navigation li ul li a {
+/* Dropdown menu items */
+ul#navigation li ul li a,
+ul#navigation li ul li button.link-button {
     display: block;
     width: 100%;
     height: 100%;
@@ -377,14 +378,28 @@ ul#navigation li ul li a {
     padding: 0.5em;
     background: none;
     border: none;
+    text-align: left;
+    font: inherit;
+    cursor: pointer;
 }
 
-ul#navigation li ul li a:hover {
+ul#navigation li ul li a:hover,
+ul#navigation li ul li button.link-button:hover {
     background: none;
 }
 
 ul#navigation li ul li:hover {
     background: #666;
+}
+
+/* need to override the ID selector for the class. Normally more specific selectors (e.g., ID) have precedence over more generic ones (class). */
+ul#navigation li ul.list-with-toggles {
+    margin-left: -6em;
+}
+
+/* need to override the ID selector for the class. Normally more specific selectors (e.g., ID) have precedence over more generic ones (class). */
+ul#navigation li ul.list-with-toggles li {
+    padding-right: 2em;
 }
 
 /* Tables
@@ -424,39 +439,15 @@ h1.pane-head {
     font-size: 1.1em;
     font-weight: bold;
     position: relative;
-    margin: 0em;
-    padding: 25px;
-    padding-top: 0.7em;
-    padding-bottom: 0.5em;
-    background: #dfeff1;
+    margin: 0;
+    padding: 0.7em 25px 0.5em 25px;
+    background: linear-gradient(to bottom, #3a6c78 0%, #dfeff1 20%);
     border-bottom: solid 1px #eff7f8;
     border-top: solid 1px #3a6c78;
-    /* border-top: solid 5px #3a6c78; */
     width: 100%;
-    /* Gecko */
-    background:
-      -moz-linear-gradient(
-        top,
-        #3a6c78 0%,
-        #dfeff1 20%);
-    /* Presto */
-    background:
-      -o-linear-gradient(
-        top,
-        #3a6c78 0%,
-        #dfeff1 20%);
-    /* Webkit */
-    background:
-      -webkit-linear-gradient(
-        top,
-        #3a6c78 0%,
-        #dfeff1 20%);
-    /* Trident */
-    filter:
-      progid:DXImageTransform.Microsoft.gradient(
-        startColorstr='#66b9cd',
-        endColorstr='#dfeff1',
-        GradientType=0 );
+    /* Legacy browser fallbacks */
+    background: -moz-linear-gradient(top, #3a6c78 0%, #dfeff1 20%);
+    background: -webkit-linear-gradient(top, #3a6c78 0%, #dfeff1 20%);
 }
 
 h1 {
@@ -464,22 +455,14 @@ h1 {
     z-index: inherit;
 }
 
+h2, h3, h4 {
+    margin-top: 0;
+    margin-bottom: 0;
+    font-size: 1em;
+}
+
 h2 {
-    margin-top: 0em;
-    margin-bottom: 0em;
     font-size: 1.2em;
-}
-
-h3 {
-    margin-top: 0em;
-    margin-bottom: 0em;
-    font-size: 1em;
-}
-
-h4 {
-    margin-top: 0em;
-    margin-bottom: 0em;
-    font-size: 1em;
 }
 
 /* Layout
@@ -491,8 +474,8 @@ h4 {
 
 .ui-layout-east, .ui-layout-west, .ui-layout-center {
     z-index: 1;
-    padding: 0em;
-    margin: 0em;
+    padding: 0;
+    margin: 0;
     border: none;
     overflow: hidden;
 }
@@ -500,21 +483,18 @@ h4 {
 .scroll-wrapper {
     position: absolute;
     top: 2.4em;
-    bottom: 0em;
-    left: 0em;
-    right: 0em;
-    padding: 0em;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 0;
     overflow: auto;
     white-space: nowrap;
 }
 
 #ui-main-display, #ui-debug-display, #proof {
     z-index: inherit;
-    padding: 0.8em;
-    padding-top: 25px;
-    padding-left: 25px;		/* propagate to ui-layout-pane-north and pane-head */
-    padding-right: 25px;		/* propagate to ui-layout-pane-north and pane-head */
-    margin: 0em;
+    padding: 25px 25px 0.8em 25px;
+    margin: 0;
     height: 90%;
 }
 
@@ -528,42 +508,19 @@ h4 {
 
 .ui-layout-pane-north {
     font-size: 0.8em;
-    padding-left: 25px;
-    padding-right: 25px;
-    background: #dfeff1;
+    padding: 0 25px;
+    background: linear-gradient(to bottom, #dfeff1 0%, #66b9cd 100%);
     border-bottom: solid 1px #7dc0cd;
-    /* Gecko */
-    background:
-      -moz-linear-gradient(
-        top,
-        #dfeff1 0%,
-        #66b9cd 100%);
-    /* Presto */
-    background:
-      -o-linear-gradient(
-        top,
-        #dfeff1 0%,
-        #66b9cd 100%);
-    /* Webkit */
-    background:
-      -webkit-linear-gradient(
-        top,
-        #dfeff1 0%,
-        #66b9cd 100%);
-    /* Trident */
-    filter:
-      progid:DXImageTransform.Microsoft.gradient(
-        startColorstr='#dfeff1',
-        endColorstr='#66b9cd',
-        GradientType=0 );
+    /* Legacy browser fallbacks */
+    background: -moz-linear-gradient(top, #dfeff1 0%, #66b9cd 100%);
+    background: -webkit-linear-gradient(top, #dfeff1 0%, #66b9cd 100%);
 }
 
 div#header-info {
     float: left;
     font-weight: bold;
-    padding-top: 0.85em;
-    padding-bottom: 0.85em;
-    border: 0px;
+    padding: 0.85em 0;
+    border: 0;
 }
 
 div#header-links {
@@ -574,9 +531,8 @@ div#header-links {
 
 div#header-links a.plain-link,
 div#header-links a.save-link {
-    margin: 0em;
-    padding: 1em;
-    padding-bottom: 0;
+    margin: 0;
+    padding: 1em 1em 0 1em;
     line-height: 2em;
 }
 
@@ -586,7 +542,7 @@ div#header-links a.save-link {
 }
 
 .ui-layout-toggler {
-    background-color: #666666;
+    background-color: #666;
     border-radius: 1em;
 }
 
@@ -594,27 +550,24 @@ div#header-links a.save-link {
  ********/
 
 div#introbar {
-  height: 3em;
+    height: 3em;
 }
 
 div#logo p {
     height: 124px;
-	left: 0px;
-	right: 0px;
-	background-color: #c3ea71;
-	padding: 0px;
-	margin: 0px;
-/*
-	background-image: url('file:///home/cas/src/tamarin-prover/images/tamarin-logo-3-1-0.png');
-*/
+    left: 0;
+    right: 0;
+    background-color: #c3ea71;
+    padding: 0;
+    margin: 0;
     background-image: url('/static/img/tamarin-logo-3-1-0.png');
     background-repeat: repeat-x;
 }
 
 div#logo img {
     position: relative;
-    top: 0px;
-	left: 0px;
-	display: inline;
+    top: 0;
+    left: 0;
+    display: inline;
 }
 

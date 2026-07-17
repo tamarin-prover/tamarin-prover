@@ -100,7 +100,7 @@ theoryLoadFlags =
       "dfs"
       ["stop-on-trace"]
       (updateArg "stop-on-trace")
-      "DFS|BFS|SEQDFS|NONE"
+      "DFS|BFS|SEQDFS|SORRY|NONE"
       "How to search for traces (default DFS)",
     flagOpt
       "5"
@@ -145,6 +145,10 @@ theoryLoadFlags =
       "FILE"
       ("Path to the oracle heuristic (default '" ++ "./theory_filename.oracle" ++ "', fallback '" ++ "./oracle" ++ "')"),
     flagNone
+      ["oracle-only"]
+      (addEmptyArg "oracle-only")
+      "When set, the oracle heuristic will stop proof search if the oracle does not rank any proof goals.",
+    flagNone
       ["quiet"]
       (addEmptyArg "quiet")
       "Do not display computation steps of oracle or tactic.",
@@ -173,13 +177,25 @@ theoryLoadFlags =
       --  , flagOpt "" ["diff"] (updateArg "diff") "OFF|ON"
       --      "Turn on observational equivalence (default OFF).",
     flagNone
-      ["no-reuse"]
-      (addEmptyArg "no-reuse")
-      "Do not export reuse or source lemmas",
+      ["proverif-no-reuse-lemmas"]
+      (addEmptyArg "proverif-no-reuse-lemmas")
+      "Do not export reuse lemmas as ProVerif axioms",
     flagNone
-      ["no-restrictions"]
-      (addEmptyArg "no-restrictions")
-      "Do not export restrictions",
+      ["proverif-no-source-lemmas"]
+      (addEmptyArg "proverif-no-source-lemmas")
+      "Do not export source lemmas as ProVerif axioms",
+    flagNone
+      ["proverif-no-restrictions"]
+      (addEmptyArg "proverif-no-restrictions")
+      "Do not export restrictions to ProVerif",
+    flagNone
+      ["proverif-no-multiset"]
+      (addEmptyArg "proverif-no-multiset")
+      "Do not export multiset semantics to ProVerif (DistinctFact events and restriction)",
+    flagNone
+      ["proverif-no-precise"]
+      (addEmptyArg "proverif-no-precise")
+      "Do not set preciseActions in ProVerif output",
     flagOpt
       "3"
       ["replication-bound"]
@@ -198,6 +214,7 @@ data TheoryLoadOptions = TheoryLoadOptions
     stopOnTrace :: Maybe SolutionExtractor,
     proofBound :: Maybe Int,
     heuristic :: Maybe (Heuristic ProofContext),
+    oracleOnly :: Bool,
     partialEvaluation :: Maybe EvaluationStyle,
     defines :: [String],
     diffMode :: Bool,
@@ -211,8 +228,11 @@ data TheoryLoadOptions = TheoryLoadOptions
     openChain :: Integer,
     saturation :: Integer,
     derivationChecks :: Int,
-    noReuse :: Bool,
+    noReuseLemmas :: Bool,
+    noSourceLemmas :: Bool,
     noRestrictions :: Bool,
+    noMultiset :: Bool,
+    noPrecise :: Bool,
     replicationBound :: Int
   }
   deriving (Show)
@@ -225,6 +245,7 @@ defaultTheoryLoadOptions =
       stopOnTrace = Nothing,
       proofBound = Nothing,
       heuristic = Nothing,
+      oracleOnly = False,
       partialEvaluation = Nothing,
       defines = [],
       diffMode = False,
@@ -238,8 +259,11 @@ defaultTheoryLoadOptions =
       openChain = 10,
       saturation = 5,
       derivationChecks = 5,
-      noReuse = False,
+      noReuseLemmas = False,
+      noSourceLemmas = False,
       noRestrictions = False,
+      noMultiset = False,
+      noPrecise = False,
       replicationBound = 3
     }
 
@@ -261,6 +285,7 @@ mkTheoryLoadOptions as =
     <*> stopOnTrace as
     <*> proofBound
     <*> heuristic
+    <*> oracleOnly
     <*> partialEvaluation
     <*> defines
     <*> diffMode
@@ -274,8 +299,11 @@ mkTheoryLoadOptions as =
     <*> openchain
     <*> saturation
     <*> deriv
-    <*> noReuse
+    <*> noReuseLemmas
+    <*> noSourceLemmas
     <*> noRestrictions
+    <*> noMultiset
+    <*> noPrecise
     <*> replicationBound
   where
     proveMode = pure $ argExists "prove" as
@@ -305,6 +333,7 @@ mkTheoryLoadOptions as =
       name -> name
     -- toGoalRanking | argExists "diff" as = stringToGoalRankingDiff
     --              | otherwise           = stringToGoalRanking
+    oracleOnly = pure $ argExists "oracle-only" as
 
     partialEvaluation = case map toLower <$> findArg "partial-evaluation" as of
       Just "summary" -> pure $ Just Summary
@@ -317,8 +346,11 @@ mkTheoryLoadOptions as =
     verboseMode = pure $ argExists "verbose" as
     quitOnWarning = pure $ argExists "quit-on-warning" as
     autoSources = pure $ argExists "auto-sources" as
-    noReuse = pure $ argExists "no-reuse" as
-    noRestrictions = pure $ argExists "no-restrictions" as
+    noReuseLemmas = pure $ argExists "proverif-no-reuse-lemmas" as
+    noSourceLemmas = pure $ argExists "proverif-no-source-lemmas" as
+    noRestrictions = pure $ argExists "proverif-no-restrictions" as
+    noMultiset = pure $ argExists "proverif-no-multiset" as
+    noPrecise = pure $ argExists "proverif-no-precise" as
 
     outputModule = case findArg "outModule" as of
       Just str -> case find ((str ==) . show) [minBound ..] of
@@ -350,6 +382,7 @@ stopOnTrace as = case map toLower <$> findArg "stop-on-trace" as of
   Just "none" -> pure $ Just CutNothing
   Just "bfs" -> pure $ Just CutBFS
   Just "seqdfs" -> pure $ Just CutSingleThreadDFS
+  Just "sorry" -> pure $ Just CutAfterSorry
   Just unknown -> throwError $ ArgumentError ("unknown stop-on-trace method: " ++ unknown)
   Nothing -> pure Nothing
 
@@ -460,7 +493,7 @@ checkTranslatedTheory ::
 checkTranslatedTheory thyOpts sign thy = do
   let transReport =
         either
-          (\thy -> checkWellformedness incompleteMSRs thy sign)
+          (\openThy -> checkWellformedness incompleteMSRs openThy sign)
           (`checkWellformednessDiff` sign)
           thy
 
@@ -678,12 +711,16 @@ prettyOpenTheoryByModule thyOpts = case  thyOpts.outputModule of
   Just ModuleSpthyTyped -> pure . prettyOpenTheory
   Just ModuleMsr -> pure . prettyOpenTranslatedTheory . removeTranslationItems
   Just ModuleProVerifEquivalence -> Export.prettyProVerifEquivTheory <=< Sapic.typeTheoryEnv
-  Just ModuleProVerif -> Export.prettyProVerifTheory ModuleProVerif noReuse noRestrictions lemmas <=< Sapic.typeTheoryEnv
+  Just ModuleProVerif -> Export.prettyProVerifTheory ModuleProVerif noReuseLemmas noSourceLemmas noRestrictions noMultiset noPrecise hasSpecificLemmas lemmas <=< Sapic.typeTheoryEnv
   Just ModuleDeepSec -> Export.prettyDeepSecTheory replicationBound
   where
     lemmas = lemmaSelector thyOpts
-    noReuse = thyOpts.noReuse
+    hasSpecificLemmas = not (null thyOpts.lemmaNames || thyOpts.lemmaNames == [""] || thyOpts.lemmaNames == ["", ""])
+    noReuseLemmas = thyOpts.noReuseLemmas
+    noSourceLemmas = thyOpts.noSourceLemmas
     noRestrictions = thyOpts.noRestrictions
+    noMultiset = thyOpts.noMultiset
+    noPrecise = thyOpts.noPrecise
     replicationBound = thyOpts.replicationBound
 
 -- | Construct an 'AutoProver' from the given arguments (--bound, --stop-on-trace).
@@ -694,7 +731,7 @@ constructAutoProver thyOpts =
     Nothing
     thyOpts.proofBound
     (fromMaybe CutDFS thyOpts.stopOnTrace)
-    False
+    thyOpts.oracleOnly
 
 -----------------------------------------------
 -- Add Options parameters in an OpenTheory

@@ -618,7 +618,7 @@ oracleRanking preSort oracle quitOnEmpty ctxt _sys ags0 = unsafePerformIO $ do
   guard $ trace logMsg True
 
   return (Ranking (ranked ++ remaining)
-                  (guard (quitOnEmpty && null ranked) *> Just ApplySorry))
+                  (guard (quitOnEmpty && not (null inp) && null ranked) *> Just ApplySorry))
   where
     pgoal (g,(_nr,_usefulness)) = prettyGoal g
 
