@@ -116,14 +116,12 @@ rule (modulo E) C_from_S:
   /* has exactly the trivial AC variant */
 
 restriction OnlyOnce:
-  "∀ A B #i #j.
-    (((OnlyOnce( A ) @ #i) ∧ (OnlyOnce( B ) @ #j)) ∧ (A = B)) ⇒ (#i = #j)"
+  "∀ A #i #j. ((OnlyOnce( A ) @ #i) ∧ (OnlyOnce( A ) @ #j)) ⇒ (#i = #j)"
   // safety formula
 
   /*
   expanded formula:
-  "∀ A B #i #j.
-    (((OnlyOnce( A ) @ #i) ∧ (OnlyOnce( B ) @ #j)) ∧ (A = B)) ⇒ (#i = #j)"
+  "∀ A #i #j. ((OnlyOnce( A ) @ #i) ∧ (OnlyOnce( A ) @ #j)) ⇒ (#i = #j)"
   */
 
 lemma executability:
@@ -731,8 +729,8 @@ qed
 Generated from:
 Tamarin version 1.13.0
 Maude version 3.4
-Git revision: 1deff12bd69c96308abb2463d4de5f2c7610c191 (with uncommited changes), branch: develop
-Compiled at: 2026-03-09 07:36:56.194364 UTC
+Git revision: a31226029a4774beefcb53c81296ea289c8d91d0 (with uncommited changes), branch: feat/tamarin-to-pv-pr
+Compiled at: 2026-06-25 11:10:06.043274 UTC
 */
 
 end
@@ -744,7 +742,7 @@ summary of summaries:
 analyzed: examples/features/auto-sources/spore/SpliceAS.spthy
 
   output:          examples/features/auto-sources/spore/SpliceAS.spthy.tmp
-  processing time: 2.33s
+  processing time: 1.21s
   
   executability (exists-trace): verified (21 steps)
   Secrecy (all-traces): falsified - found trace (11 steps)
