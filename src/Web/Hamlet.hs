@@ -191,6 +191,7 @@ headerTpl info = [whamlet|
             <li><a id=abbrv-toggle href="#">Abbreviate terms</a>
             <li><a id=agent-toggle href="#">Clustering by role</a>
             <li><a id=auto-toggle href="#">Show annotation auto-sources</a>
+            <li><a id=abstr-toggle href="#">Abstract node content</a>
             <li><a id=lvl0-toggle href="#">Graph simplification off</a>
             <li><a id=lvl1-toggle href="#">Graph simplification L1</a>
             <li><a id=lvl2-toggle href="#">Graph simplification L2</a>

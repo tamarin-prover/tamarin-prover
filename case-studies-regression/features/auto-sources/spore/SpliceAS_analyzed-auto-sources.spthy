@@ -116,14 +116,12 @@ rule (modulo E) C_from_S:
   /* has exactly the trivial AC variant */
 
 restriction OnlyOnce:
-  "∀ A B #i #j.
-    (((OnlyOnce( A ) @ #i) ∧ (OnlyOnce( B ) @ #j)) ∧ (A = B)) ⇒ (#i = #j)"
+  "∀ A #i #j. ((OnlyOnce( A ) @ #i) ∧ (OnlyOnce( A ) @ #j)) ⇒ (#i = #j)"
   // safety formula
 
   /*
   expanded formula:
-  "∀ A B #i #j.
-    (((OnlyOnce( A ) @ #i) ∧ (OnlyOnce( B ) @ #j)) ∧ (A = B)) ⇒ (#i = #j)"
+  "∀ A #i #j. ((OnlyOnce( A ) @ #i) ∧ (OnlyOnce( A ) @ #j)) ⇒ (#i = #j)"
   */
 
 lemma executability:

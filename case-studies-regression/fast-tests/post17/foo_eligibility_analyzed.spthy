@@ -77,16 +77,36 @@ rule (modulo E) V_3:
 
   /* has exactly the trivial AC variant */
 
+restriction Restr_C_2_1:
+  "∀ x #NOW x.1. (Restr_C_2_1( x, x.1 ) @ #NOW) ⇒ (x = x.1)"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ x #NOW x.1. (Restr_C_2_1( x, x.1 ) @ #NOW) ⇒ (x = x.1)"
+  */
+
 rule (modulo E) C_2:
-   [ In( r ), St_C_1( A, commit(open(x, r), r) ) ]
-  --[ VotePublished( open(x, r) ), Out_C_2( commit(open(x, r), r) ) ]->
+   [ In( r ), St_C_1( A, x ) ]
+  --[
+  VotePublished( open(x, r) ), Out_C_2( x ),
+  Restr_C_2_1( x, commit(open(x, r), r) )
+  ]->
    [ Out( open(x, r) ) ]
 
   /*
   rule (modulo AC) C_2:
-     [ In( r ), St_C_1( A, commit(z, r) ) ]
-    --[ VotePublished( z ), Out_C_2( commit(z, r) ) ]->
+     [ In( r ), St_C_1( A, x ) ]
+    --[ VotePublished( z ), Out_C_2( x ), Restr_C_2_1( x, commit(z, r) ) ]->
      [ Out( z ) ]
+    variants (modulo AC)
+    1. r     = r.5
+       x     = x.5
+       z     = open(x.5, r.5)
+    
+    2. r     = x.5
+       x     = commit(x.6, x.5)
+       z     = x.6
   */
 
 lemma types [sources]:

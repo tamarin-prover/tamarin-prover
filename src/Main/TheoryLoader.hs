@@ -186,13 +186,25 @@ theoryLoadFlags =
       --  , flagOpt "" ["diff"] (updateArg "diff") "OFF|ON"
       --      "Turn on observational equivalence (default OFF).",
     flagNone
-      ["no-reuse"]
-      (addEmptyArg "no-reuse")
-      "Do not export reuse or source lemmas",
+      ["proverif-no-reuse-lemmas"]
+      (addEmptyArg "proverif-no-reuse-lemmas")
+      "Do not export reuse lemmas as ProVerif axioms",
     flagNone
-      ["no-restrictions"]
-      (addEmptyArg "no-restrictions")
-      "Do not export restrictions",
+      ["proverif-no-source-lemmas"]
+      (addEmptyArg "proverif-no-source-lemmas")
+      "Do not export source lemmas as ProVerif axioms",
+    flagNone
+      ["proverif-no-restrictions"]
+      (addEmptyArg "proverif-no-restrictions")
+      "Do not export restrictions to ProVerif",
+    flagNone
+      ["proverif-no-multiset"]
+      (addEmptyArg "proverif-no-multiset")
+      "Do not export multiset semantics to ProVerif (DistinctFact events and restriction)",
+    flagNone
+      ["proverif-no-precise"]
+      (addEmptyArg "proverif-no-precise")
+      "Do not set preciseActions in ProVerif output",
     flagOpt
       "3"
       ["replication-bound"]
@@ -229,10 +241,13 @@ data TheoryLoadOptions = TheoryLoadOptions
     openChain :: Integer,
     saturation :: Integer,
     derivationChecks :: Int,
-    noReuse :: Bool,
+    noReuseLemmas :: Bool,
+    noSourceLemmas :: Bool,
     noRestrictions :: Bool,
-    replicationBound :: Int,
-    ndcCheck :: Bool -- ^ Whether to run the no deconstruction chain (NDC) check (enabled by default).
+    ndcCheck :: Bool, -- ^ Whether to run the no deconstruction chain (NDC) check (enabled by default).
+    noMultiset :: Bool,
+    noPrecise :: Bool,
+    replicationBound :: Int
   }
   deriving (Show)
 
@@ -258,10 +273,13 @@ defaultTheoryLoadOptions =
       openChain = 10,
       saturation = 5,
       derivationChecks = 5,
-      noReuse = False,
+      noReuseLemmas = False,
+      noSourceLemmas = False,
       noRestrictions = False,
-      replicationBound = 3,
-      ndcCheck = True
+      ndcCheck = True,
+      noMultiset = False,
+      noPrecise = False,
+      replicationBound = 3
     }
 
 toParserFlags :: TheoryLoadOptions -> [String]
@@ -296,10 +314,13 @@ mkTheoryLoadOptions as =
     <*> openchain
     <*> saturation
     <*> deriv
-    <*> noReuse
+    <*> noReuseLemmas
+    <*> noSourceLemmas
     <*> noRestrictions
-    <*> replicationBound
     <*> ndcCheck
+    <*> noMultiset
+    <*> noPrecise
+    <*> replicationBound
   where
     proveMode = pure $ argExists "prove" as
     lemmaNames = pure $ findArg "prove" as ++ findArg "lemma" as
@@ -341,10 +362,13 @@ mkTheoryLoadOptions as =
     verboseMode = pure $ argExists "verbose" as
     quitOnWarning = pure $ argExists "quit-on-warning" as
     autoSources = pure $ argExists "auto-sources" as
-    noReuse = pure $ argExists "no-reuse" as
-    noRestrictions = pure $ argExists "no-restrictions" as
     -- The NDC check is enabled by default; --no-ndc deactivates it.
     ndcCheck = pure $ not $ argExists "no-ndc" as
+    noReuseLemmas = pure $ argExists "proverif-no-reuse-lemmas" as
+    noSourceLemmas = pure $ argExists "proverif-no-source-lemmas" as
+    noRestrictions = pure $ argExists "proverif-no-restrictions" as
+    noMultiset = pure $ argExists "proverif-no-multiset" as
+    noPrecise = pure $ argExists "proverif-no-precise" as
 
     outputModule = case findArg "outModule" as of
       Just str -> case find ((str ==) . show) [minBound ..] of
@@ -535,7 +559,7 @@ checkTranslatedTheory ::
 checkTranslatedTheory thyOpts sign thy = do
   let transReport =
         either
-          (\thy -> checkWellformedness incompleteMSRs thy sign)
+          (\openThy -> checkWellformedness incompleteMSRs openThy sign)
           (`checkWellformednessDiff` sign)
           thy
 
@@ -763,12 +787,16 @@ prettyOpenTheoryByModule thyOpts = case  thyOpts.outputModule of
   Just ModuleSpthyTyped -> pure . prettyOpenTheory
   Just ModuleMsr -> pure . prettyOpenTranslatedTheory . removeTranslationItems
   Just ModuleProVerifEquivalence -> Export.prettyProVerifEquivTheory <=< Sapic.typeTheoryEnv
-  Just ModuleProVerif -> Export.prettyProVerifTheory ModuleProVerif noReuse noRestrictions lemmas <=< Sapic.typeTheoryEnv
+  Just ModuleProVerif -> Export.prettyProVerifTheory ModuleProVerif noReuseLemmas noSourceLemmas noRestrictions noMultiset noPrecise hasSpecificLemmas lemmas <=< Sapic.typeTheoryEnv
   Just ModuleDeepSec -> Export.prettyDeepSecTheory replicationBound
   where
     lemmas = lemmaSelector thyOpts
-    noReuse = thyOpts.noReuse
+    hasSpecificLemmas = not (null thyOpts.lemmaNames || thyOpts.lemmaNames == [""] || thyOpts.lemmaNames == ["", ""])
+    noReuseLemmas = thyOpts.noReuseLemmas
+    noSourceLemmas = thyOpts.noSourceLemmas
     noRestrictions = thyOpts.noRestrictions
+    noMultiset = thyOpts.noMultiset
+    noPrecise = thyOpts.noPrecise
     replicationBound = thyOpts.replicationBound
 
 -- | Construct an 'AutoProver' from the given arguments (--bound, --stop-on-trace).
