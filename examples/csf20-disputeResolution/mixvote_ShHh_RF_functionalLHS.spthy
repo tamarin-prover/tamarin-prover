@@ -24,39 +24,39 @@ prio:
 prio:
   regex "'pkD'"
 prio:
-  regex " !KU( sg(encp(v"
+  regex " !KU\( sg\(encp\(v"
 prio:
-  regex "In_A( $S"
+  regex "In_A\( \$S"
 prio:
-  regex " In_A( 'S', <'pkD'"
+  regex " In_A\( 'S', <'pkD'"
 prio:
   regex "AgSt_A0"
 prio:
   regex "'bs'"
 prio:
-  regex "!KU( ~skS"
+  regex "!KU\( ~skS"
 prio:
-  regex "!KU( ~skD"
+  regex "!KU\( ~skD"
 prio:
-  regex "In_A( $S, <'vs'"
+  regex "In_A\( \$S, <'vs'"
 
 tactic: VoterC 
 prio:
   regex "~~>"
 prio:
-  regex "($H = 'H1')"
+  regex "\(\$H = 'H1'\)"
 prio:
-  regex "($H.1 = 'H1')"
+  regex "\(\$H\.1 = 'H1'\)"
 prio:
-  regex "!KU( ~sskD"
+  regex "!KU\( ~sskD"
 prio:
   regex "AgSt_H"
 prio:
   regex " 'S', <'b'"
 prio:
-  regex " In_A( $BB, <'b'"
+  regex " In_A\( \$BB, <'b'"
 prio:
-  regex "!KU( sg(encp(v"
+  regex "!KU\( sg\(encp\(v"
 prio:
   regex "AgSt"
 prio:
@@ -66,39 +66,39 @@ prio:
 prio:
   regex "'pkD'"
 prio:
-  regex " !KU( sg(cp(v"
+  regex " !KU\( sg\(cp\(v"
 prio:
-  regex "In_A( $S"
+  regex "In_A\( \$S"
 prio:
-  regex " In_A( 'S', <'pkD'"
+  regex " In_A\( 'S', <'pkD'"
 prio:
   regex "AgSt_A0"
 prio:
   regex "'bs'"
 prio:
-  regex "!KU( ~skS"
+  regex "!KU\( ~skS"
 prio:
-  regex "!KU( ~skD"
+  regex "!KU\( ~skD"
 prio:
-  regex "In_A( $S, <'vs'"
+  regex "In_A\( \$S, <'vs'"
 
 tactic: TimelyP 
 prio:
   regex "~~>"
 prio:
-  regex "($H = 'H1')"
+  regex "\(\$H = 'H1'\)"
 prio:
-  regex "($H.1 = 'H1')"
+  regex "\(\$H\.1 = 'H1'\)"
 prio:
-  regex "!KU( ~sskD"
+  regex "!KU\( ~sskD"
 prio:
   regex "AgSt_H"
 prio:
   regex " 'S', <'b'"
 prio:
-  regex " In_A( $BB, <'b'"
+  regex " In_A\( \$BB, <'b'"
 prio:
-  regex "!KU( sg(encp(v"
+  regex "!KU\( sg\(encp\(v"
 prio:
   regex "AgSt"
 prio:
@@ -108,39 +108,39 @@ prio:
 prio:
   regex "'pkD'"
 prio:
-  regex " !KU( sg(cp(v"
+  regex " !KU\( sg\(cp\(v"
 prio:
-  regex "In_A( $S"
+  regex "In_A\( \$S"
 prio:
-  regex " In_A( 'S', <'pkD'"
+  regex " In_A\( 'S', <'pkD'"
 prio:
   regex "AgSt_A0"
 prio:
   regex "'bs'"
 prio:
-  regex "!KU( ~skS"
+  regex "!KU\( ~skS"
 prio:
-  regex "!KU( ~skD"
+  regex "!KU\( ~skD"
 prio:
-  regex "In_A( $S, <'vs'"
+  regex "In_A\( \$S, <'vs'"
 
 tactic: AuthP 
 prio:
   regex "~~>"
 prio:
-  regex "($H = 'H1')"
+  regex "\(\$H = 'H1'\)"
 prio:
-  regex "($H.1 = 'H1')"
+  regex "\(\$H\.1 = 'H1'\)"
 prio:
-  regex "!KU( ~sskD"
+  regex "!KU\( ~sskD"
 prio:
   regex "AgSt_H"
 prio:
   regex " 'S', <'b'"
 prio:
-  regex " In_A( $BB, <'b'"
+  regex " In_A\( \$BB, <'b'"
 prio:
-  regex "!KU( sg(encp(v"
+  regex "!KU\( sg\(encp\(v"
 prio:
   regex "AgSt"
 prio:
@@ -150,39 +150,39 @@ prio:
 prio:
   regex "'pkD'"
 prio:
-  regex " !KU( sg(cp(v"
+  regex " !KU\( sg\(cp\(v"
 prio:
-  regex "In_A( $S"
+  regex "In_A\( \$S"
 prio:
-  regex " In_A( 'S', <'pkD'"
+  regex " In_A\( 'S', <'pkD'"
 prio:
   regex "AgSt_A0"
 prio:
   regex "'bs'"
 prio:
-  regex "!KU( ~skS"
+  regex "!KU\( ~skS"
 prio:
-  regex "!KU( ~skD"
+  regex "!KU\( ~skD"
 prio:
-  regex "In_A( $S, <'vs'"
+  regex "In_A\( \$S, <'vs'"
 
 tactic: Uniqueness 
 prio:
   regex "~~>"
 prio:
-  regex "($H = 'H1')"
+  regex "\(\$H = 'H1'\)"
 prio:
-  regex "($H.1 = 'H1')"
+  regex "\(\$H\.1 = 'H1'\)"
 prio:
-  regex "!KU( ~sskD"
+  regex "!KU\( ~sskD"
 prio:
   regex "AgSt_H"
 prio:
   regex " 'S', <'b'"
 prio:
-  regex " In_A( $BB, <'b'"
+  regex " In_A\( \$BB, <'b'"
 prio:
-  regex "!KU( sg(encp(v"
+  regex "!KU\( sg\(encp\(v"
 prio:
   regex "AgSt"
 prio:
@@ -192,49 +192,49 @@ prio:
 prio:
   regex "'pkD'"
 prio:
-  regex " !KU( sg(cp(v"
+  regex " !KU\( sg\(cp\(v"
 prio:
-  regex "In_A( $S"
+  regex "In_A\( \$S"
 prio:
-  regex " In_A( 'S', <'pkD'"
+  regex " In_A\( 'S', <'pkD'"
 prio:
   regex "AgSt_A0"
 prio:
   regex "'bs'"
 prio:
-  regex "!KU( ~skS"
+  regex "!KU\( ~skS"
 prio:
-  regex "!KU( ~skD"
+  regex "!KU\( ~skD"
 prio:
-  regex "In_A( $S, <'vs'"
+  regex "In_A\( \$S, <'vs'"
 
 tactic: Observational_equivalence 
 prio:
-  regex "!KU( ~sk"
+  regex "!KU\( ~sk"
 prio:
-  regex "!KU( ~ssk"
+  regex "!KU\( ~ssk"
 prio:
   regex "Out_IR"
 prio:
-  regex "Out_A("
+  regex "Out_A\("
 prio:
   regex "~~>"
 prio:
   regex "In_S"
 prio:
-  regex "!KD( "
+  regex "!KD\( "
 prio:
   regex "AgSt"
 prio:
-  regex "!KU( ~sskD"
+  regex "!KU\( ~sskD"
 prio:
-  regex "!KU( sg(encp("
+  regex "!KU\( sg\(encp\("
 prio:
   regex "'pr'"
 prio:
   regex "'bs'"
 prio:
-  regex "sg(cp("
+  regex "sg\(cp\("
 prio:
   regex "In_A"
 prio:
@@ -242,7 +242,7 @@ prio:
 prio:
   regex "~~>"
 prio:
-  regex "cp("
+  regex "cp\("
 
 rule (modulo E) ChanOut_S:
    [ Out_S( $A, $B, x ) ]
