@@ -23,6 +23,9 @@ module.exports = grammar({
       // Conflict since both look alike, but they don't appear in the same scenarios.
       [$.nary_app, $.predicate_ref],
 
+      // Conflict between fact identifiers (uppercase) and general identifiers
+      [$.fact, $._term_ident],
+
       // Conflict since parser cannot decide how to parse ident
       [$.nullary_fun, $.nary_app, $.msg_var_or_nullary_fun]
   ],
@@ -128,11 +131,11 @@ module.exports = grammar({
 
       ifdef: $ => seq(
           '#ifdef',
-          $._ifdef_formula,
-          repeat($._body_item),
+          field('condition', $._ifdef_formula),
+          field('consequence', repeat($._body_item)),
           optional(seq(
               '#else',
-              repeat($._body_item)
+              field('alternative', repeat($._body_item))
           )),
           '#endif'
       ),
@@ -716,7 +719,18 @@ module.exports = grammar({
       rule_role: $ => seq(
           'role',
           '=',
-          "'", field('role_identifier', $.ident),"'"
+          choice(
+              seq(
+                  '"',
+                  optional(field('role_identifier', alias(token.immediate(/[^"\r\n]+/), $.ident))),
+                  '"'
+              ),
+              seq(
+                  "'",
+                  optional(field('role_identifier', alias(token.immediate(/[^'\r\n]+/), $.ident))),
+                  "'"
+              )
+          )
       ),
 
       rule_process: $ => seq(
@@ -819,7 +833,7 @@ module.exports = grammar({
       ),
 
       fact: $ => prec.left(seq(
-          field('fact_identifier', $.ident),
+          field('fact_identifier', alias($.fact_identifier, $.ident)),
           '(',
           optional($.arguments),
           ')',
@@ -1091,10 +1105,12 @@ module.exports = grammar({
 
       tuple_term: $ => prec('TUPLE', seq(
           '<',
-          field('left', $.mset_term),
-          repeat(seq(
-            ',',
-            field('right', $.mset_term)
+          optional(seq(
+              field('left', $.mset_term),
+              repeat(seq(
+                ',',
+                field('right', $.mset_term)
+              ))
           )),
           '>'
       )),
@@ -1144,14 +1160,14 @@ module.exports = grammar({
       )),
 
       nullary_fun: $ => prec('NULLARY_FUN', choice(
-          field('function_identifier', $.ident),
+          field('function_identifier', $._term_ident),
           seq(
-              field('function_identifier', $.ident), '(', ')'
+              field('function_identifier', $._term_ident), '(', ')'
           )
       )),
 
       binary_app: $ => prec('FUNCTION', seq(
-          field('function_identifier', $.ident),
+          field('function_identifier', $._term_ident),
           '{',
           field('argument', $.arguments),
           '}',
@@ -1159,7 +1175,7 @@ module.exports = grammar({
       )),
 
       nary_app: $ => prec('FUNCTION', seq(
-          field('function_identifier', $.ident),
+          field('function_identifier', $._term_ident),
           '(', $.arguments, ')'
       )),
 
@@ -1192,13 +1208,13 @@ module.exports = grammar({
       pub_var: $ => prec('VARIABLE', choice(
           seq( //'pub' sort prefix
               '$',
-              field('variable_identifier', $.ident),
+              field('variable_identifier', $._term_ident),
               optional(seq(
                   '.', $.natural
               ))
           ),
           seq( //'pub' sort suffix
-              field('variable_identifier', $.ident),
+              field('variable_identifier', $._term_ident),
               optional(seq(
                   '.', $.natural
               )),
@@ -1209,13 +1225,13 @@ module.exports = grammar({
       fresh_var: $ => prec('VARIABLE', choice(
           seq( //'fresh' sort prefix
               '~',
-              field('variable_identifier', $.ident),
+              field('variable_identifier', $._term_ident),
               optional(seq(
                   '.', $.natural
               ))
           ),
           seq( //'fresh' sort suffix
-              field('variable_identifier', $.ident),
+              field('variable_identifier', $._term_ident),
               optional(seq(
                   '.', $.natural
               )),
@@ -1224,7 +1240,7 @@ module.exports = grammar({
       )),
 
       msg_var_or_nullary_fun: $ => prec('VARIABLE' ,seq(
-          field('variable_identifier', $.ident), // 'msg' sort prefix
+          field('variable_identifier', $._term_ident), // 'msg' sort prefix
           optional(seq(
               '.',
               $.natural
@@ -1238,13 +1254,13 @@ module.exports = grammar({
       temporal_var: $ => choice(
           seq( // 'temporal' sort prefix
               '#',
-              field('variable_identifier', $.ident),
+              field('variable_identifier', $._term_ident),
               optional(seq(
                   '.', $.natural
               ))
           ),
           seq( // 'temporal' sort suffix
-              field('variable_identifier', $.ident),
+              field('variable_identifier', $._term_ident),
               optional(seq(
                   '.', $.natural
               )),
@@ -1255,7 +1271,7 @@ module.exports = grammar({
       nat_var: $ => choice(
           seq( // 'natural' sort prefix
               '%',
-              field('variable_identifier', $.ident),
+              field('variable_identifier', $._term_ident),
               optional(seq(
                   '.', $.natural
               )),
@@ -1264,7 +1280,7 @@ module.exports = grammar({
               ))
           ),
           seq( // 'natural' sort suffix
-              field('variable_identifier', $.ident),
+              field('variable_identifier', $._term_ident),
               optional(seq(
                   '.', $.natural
               )),
@@ -1297,13 +1313,13 @@ module.exports = grammar({
       temporal_var_optional_prefix: $ => prec('NULLARY_FUN', choice(
           seq(
               optional('#'),
-              field('variable_identifier', $.ident),
+              field('variable_identifier', $._term_ident),
               optional(seq(
                   '.', $.natural
               ))
           ),
           seq(
-              field('variable_identifier', $.ident),
+              field('variable_identifier', $._term_ident),
               optional(seq(
                   '.', $.natural
               )),
@@ -1435,12 +1451,17 @@ module.exports = grammar({
 
       // predicate reference that is substituted with the predicate by Tamarin
       predicate_ref: $ => prec('FUNCTION', seq(
-          field('predicate_identifier', $.ident),
+          field('predicate_identifier', $._term_ident),
           '(', optional($.arguments), ')'
       )),
 
       // some predefined function, let_block, ...
-      pre_defined: $ => prec('NULLARY_FUN', $.ident),
+      pre_defined: $ => prec('NULLARY_FUN', $._term_ident),
+
+      _term_ident: $ => choice(
+          $.ident,
+          alias($.fact_identifier, $.ident)
+      ),
 
 
       /*
@@ -1457,6 +1478,8 @@ module.exports = grammar({
               token(/[0-9a-fA-F]{1,6}/)
           )
       ),
+
+      fact_identifier: $ => token(prec(1, /[A-Z][A-Za-z0-9_]*/)),
 
       ident: $ => /[A-Za-z0-9]\w*/,
 

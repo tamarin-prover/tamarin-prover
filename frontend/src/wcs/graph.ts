@@ -124,6 +124,8 @@ export class DotGraphViz extends HTMLElement {
   initTransform?: string;
   zoomLevel: ZoomLevel = "ZoomIn"; // the graph always starts with most detailed zoom
 
+  isAbstractEnabled: boolean = false; // Abstract node content toggle
+
   // here stores nodes and edges that should be rendered based on current zoom level
   minimizableObjects: {
     edges: { [key: string]: MinimizableObject },
@@ -147,6 +149,7 @@ export class DotGraphViz extends HTMLElement {
   }
 
   connectedCallback() {
+    this.isAbstractEnabled = document.cookie.indexOf('abstract') !== -1;
     this.jsonSrc = this.getAttribute("dotsrc");
     this.isAbbreviationEnabled = document.cookie.indexOf("abbreviate") !== -1;
 
@@ -607,7 +610,7 @@ export class DotGraphViz extends HTMLElement {
   };
 
   handleAbstractionLevel = () => {
-    if (!this.svgg || !this.svgg.getCTM())
+    if (!this.isAbstractEnabled || !this.svgg || !this.svgg.getCTM())
       return;
 
     // screen_font_size = scale_zoom * scale_viewport * svg_font_size (default = 8px)

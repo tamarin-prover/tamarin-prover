@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "tree-sitter-spthy"
 description = "Spthy grammar for tree-sitter"
-version = "0.0.1"
+version = "0.1.1"
 keywords = ["incremental", "parsing", "tree-sitter", "spthy"]
 classifiers = [
   "Intended Audience :: Developers",
@@ -19,10 +19,10 @@ license.text = "MIT"
 readme = "README.md"
 
 [project.urls]
-Homepage = "https://github.com/tamarin-prover/tamarin-prover/tree-siter/tree-sitter-spthy"
+Homepage = "https://github.com/tamarin-prover/tamarin-prover/tree/develop/tree-sitter/tree-sitter-spthy"
 
 [project.optional-dependencies]
-core = ["tree-sitter~=0.21"]
+core = ["tree-sitter>=0.23,<0.27"]
 
 [tool.cibuildwheel]
 build = "cp38-*"
