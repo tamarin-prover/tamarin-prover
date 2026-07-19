@@ -285,13 +285,14 @@ module.exports = grammar({
       ),
 
       // Predicates:
-      predicates: $ => seq(
+      predicates: $ => prec.right(seq(
           choice('predicate', 'predicates'), ':',
           $.predicate,
           repeat(seq(
               ',', $.predicate
-          ))
-      ),
+          )),
+          optional(',')
+      )),
 
       predicate: $ => seq(
           field('predicate_identifier', $.ident),
@@ -768,15 +769,16 @@ module.exports = grammar({
           field('right', $.mset_term)
       ),
 
-      macros: $ => seq(
+      macros: $ => prec.right(seq(
           'macros',
           ':',
           $.macro,
           repeat(seq(
               ',',
               $.macro
-          ))
-      ),
+          )),
+          optional(',')
+      )),
 
       macro: $ => seq(
           field('macro_identifier', $.ident),
