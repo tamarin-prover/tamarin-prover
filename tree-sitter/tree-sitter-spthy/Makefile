@@ -84,7 +84,7 @@ $(LANGUAGE_NAME).pc: bindings/c/$(LANGUAGE_NAME).pc.in
 		-e 's|@PREFIX@|$(PREFIX)|' $< > $@
 
 $(PARSER): $(SRC_DIR)/grammar.json
-	$(TS) generate --no-bindings $^
+	$(TS) generate --abi 14 --no-bindings $^
 
 install: all
 	install -d '$(DESTDIR)$(INCLUDEDIR)'/tree_sitter '$(DESTDIR)$(PCLIBDIR)' '$(DESTDIR)$(LIBDIR)'
