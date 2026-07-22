@@ -3,6 +3,7 @@
 
 module Prover (
     module Prover
+    , mkSystem
 ) where
 
 import           Prelude                             hiding (id, (.))
@@ -30,6 +31,8 @@ import           Lemma
 import           ClosedTheory
 import           TheoryObject
 import           OpenTheory
+
+import           CloseRule
 
 import           Theory.Constraint.Solver.Sources     as Sources (IntegerParameters(..))
 
@@ -69,10 +72,10 @@ closeDiffTheoryWithMaude :: SignatureWithMaude -> OpenDiffTheory -> Bool -> Clos
 closeDiffTheoryWithMaude sig thy0 autoSources =
   if autoSources && (containsPartialDeconstructions (cacheLeft items) || containsPartialDeconstructions (cacheRight items))
     then
-      proveDiffTheory (const True) checkProof checkDiffProof
+      proveDiffTheory (const True) checkProofM checkDiffProof
         (DiffTheory (L.get diffThyName thy0) (L.get diffThyInFile thy0) h t sig (cacheLeft items') (cacheRight items') (diffCacheLeft items') (diffCacheRight items') items' (L.get diffThyOptions thy0) (_diffThyIsSapic thy0))
     else
-      proveDiffTheory (const True) checkProof checkDiffProof
+      proveDiffTheory (const True) checkProofM checkDiffProof
         (DiffTheory (L.get diffThyName thy0) (L.get diffThyInFile thy0) h t sig (cacheLeft items) (cacheRight items) (diffCacheLeft items) (diffCacheRight items) items (L.get diffThyOptions thy0) (_diffThyIsSapic thy0))
 
   where
@@ -84,7 +87,7 @@ closeDiffTheoryWithMaude sig thy0 autoSources =
     cacheLeft  its = closeRuleCache parameters restrictionsLeft  (typAsms its) S.empty sig (leftClosedRules its)  (L.get diffThyCacheLeft  thy0) (L.get (verboseOption . diffThyOptions) thy0) False (L.get diffThyIsSapic thy0)
     cacheRight its = closeRuleCache parameters restrictionsRight (typAsms its) S.empty sig (rightClosedRules its) (L.get diffThyCacheRight thy0) (L.get (verboseOption . diffThyOptions) thy0) False (L.get diffThyIsSapic thy0)
 
-    checkProof = checkAndExtendProver (sorryProver Nothing)
+    checkProofM = checkAndExtendProver (sorryProver Nothing)
     checkDiffProof = checkAndExtendDiffProver (sorryDiffProver Nothing)
     diffRules  = map (applyMacroInDiffProtoRule (diffTheoryMacros thy0)) $ diffTheoryDiffRules thy0
     leftOpenRules  = map (addProtoRuleLabel . getLeftProtoRule)  diffRules
@@ -163,121 +166,6 @@ closeDiffTheoryWithMaude sig thy0 autoSources =
             EitherRuleItem (s, L.set (pracLoopBreakers . rInfo . cprRuleAC) bs ru)
         addBreakers _  item              = item
 
-
-
--- | Close a theory given a maude signature. This signature must be valid for
--- the given theory.
-closeTheoryWithMaude :: SignatureWithMaude -> OpenTranslatedTheory -> Bool -> Bool -> ClosedTheory
-closeTheoryWithMaude sig thy0 autoSources showSaturation =
-  if autoSources && containsPartialDeconstructions (cache items)
-    then
-        proveTheory (const True) checkProof
-      $ Theory (L.get thyName thy0) (L.get thyInFile thy0) h t sig (cache items') items' (L.get thyOptions thy0) (L.get thyIsSapic thy0)
-    else
-        proveTheory (const True) checkProof
-      $ Theory (L.get thyName thy0) (L.get thyInFile thy0) h t sig (cache items) items (L.get thyOptions thy0) (L.get thyIsSapic thy0)
-  where
-    parameters = Sources.IntegerParameters (L.get (openChainsLimit . thyOptions) thy0) (L.get (saturationLimit . thyOptions) thy0) showSaturation
-    h          = L.get thyHeuristic thy0
-    t          = L.get thyTactic thy0
-    forcedInjFacts = L.get forcedInjectiveFacts $ L.get thyOptions thy0
-    cache its = closeRuleCache parameters restrictions (typAsms its) forcedInjFacts sig (rules its) (L.get thyCache thy0) (L.get (verboseOption . thyOptions) thy0) False (L.get thyIsSapic thy0)
-    checkProof = checkAndExtendProver (sorryProver Nothing)
-
-    -- Maude / Signature handle
-    hnd = L.get sigmMaudeHandle sig
-
-    -- Close all theory items: in parallel (especially useful for variants)
-    --
-    -- NOTE that 'rdeepseq' is OK here, as the proof has not yet been checked
-    -- and therefore no constraint systems will be unnecessarily cached.
-    (items, _solveRel, _breakers) = (`runReader` hnd) $ addSolvingLoopBreakers $ unfoldClosedRules
-       ((closeTheoryItem <$> L.get thyItems thy0) `using` parList rdeepseq)
-    closeTheoryItem = foldTheoryItem
-       (RuleItem . closeProtoRule hnd (theoryMacros thy0))
-       (RestrictionItem . applyMacroInRestriction (theoryMacros thy0))
-       (LemmaItem . fmap skeletonToIncrementalProof . applyMacroInLemma (theoryMacros thy0))
-       TextItem
-       ConfigBlockItem
-       PredicateItem
-       MacroItem
-       TranslationItem
-
-    unfoldClosedRules :: [TheoryItem [ClosedProtoRule] IncrementalProof s] -> [TheoryItem ClosedProtoRule IncrementalProof s]
-    unfoldClosedRules        (RuleItem r:is) = map RuleItem r ++ unfoldClosedRules is
-    unfoldClosedRules (RestrictionItem i:is) = RestrictionItem i:unfoldClosedRules is
-    unfoldClosedRules       (LemmaItem i:is) = LemmaItem i:unfoldClosedRules is
-    unfoldClosedRules        (TextItem i:is) = TextItem i:unfoldClosedRules is
-    unfoldClosedRules (ConfigBlockItem i:is) = ConfigBlockItem i:unfoldClosedRules is
-    unfoldClosedRules   (PredicateItem i:is) = PredicateItem i:unfoldClosedRules is
-    unfoldClosedRules       (MacroItem i:is) = MacroItem i:unfoldClosedRules is
-    unfoldClosedRules       (TranslationItem i:is) = TranslationItem i:unfoldClosedRules is
-    unfoldClosedRules                     [] = []
-
-    -- Name of the auto-generated lemma
-    lemmaName = "AUTO_typing"
-
-    itemsModAC = unfoldRules items
-
-    unfoldRules (RuleItem r:is) = map RuleItem (unfoldRuleVariants r) ++ unfoldRules is
-    unfoldRules          (i:is) = i:unfoldRules is
-    unfoldRules              [] = []
-
-    items' = addAutoSourcesLemma hnd lemmaName (cache itemsModAC) itemsModAC
-
-    -- extract source restrictions and lemmas
-    restrictions = do RestrictionItem rstr <- items
-                      return $ formulaToGuarded_ $ L.get rstrFormula rstr
-    typAsms its  = do LemmaItem lem <- its
-                      guard (isSourceLemma lem)
-                      return $ formulaToGuarded_ $ L.get lFormula lem
-
-    -- extract protocol rules
-    rules :: [TheoryItem ClosedProtoRule IncrementalProof s] -> [ClosedProtoRule]
-    rules its = theoryRules (Theory errClose errClose errClose errClose errClose errClose its errClose False)
-    errClose = error "closeTheory"
-
-    addSolvingLoopBreakers = useAutoLoopBreakersAC
-        (liftToItem $ enumPrems . L.get cprRuleAC)
-        (liftToItem $ enumConcs . L.get cprRuleAC)
-        (liftToItem $ getDisj . L.get (pracVariants . rInfo . cprRuleAC))
-        addBreakers
-      where
-        liftToItem f (RuleItem ru) = f ru
-        liftToItem _ _             = []
-
-        addBreakers bs (RuleItem ru) =
-            RuleItem (L.set (pracLoopBreakers . rInfo . cprRuleAC) bs ru)
-        addBreakers _  item = item
-
-
-
--- Applying provers
--------------------
-
--- | Prove both the assertion soundness as well as all lemmas of the theory. If
--- the prover fails on a lemma, then its proof remains unchanged.
-proveTheory :: (Lemma IncrementalProof -> Bool)   -- ^ Lemma selector.
-            -> Prover
-            -> ClosedTheory
-            -> ClosedTheory
-proveTheory selector prover thy =
-    modify thyItems ((`MS.evalState` []) . mapM prove) thy
-  where
-    prove item = case item of
-      LemmaItem l0 -> do l <- MS.gets (LemmaItem . proveLemma l0)
-                         MS.modify (l :)
-                         return l
-      _            -> do return item
-
-    proveLemma lem preItems
-      | selector lem = modify lProof add lem
-      | otherwise    = lem
-      where
-        ctxt    = getProofContext lem thy
-        sys     = mkSystem ctxt (theoryRestrictions thy) preItems $ L.get lFormula lem
-        add prf = fromMaybe prf $ runProver prover ctxt 0 sys prf
-
 -- | Prove both the assertion soundness as well as all lemmas of the theory. If
 -- the prover fails on a lemma, then its proof remains unchanged.
 proveDiffTheory :: (forall l. (HasLemmaName l, HasLemmaAttributes l) => l -> Bool)       -- ^ Lemma selector.
@@ -313,29 +201,6 @@ proveDiffTheory selector prover diffprover thy =
         sys     = mkDiffSystem ctxt (diffTheoryRestrictions thy) preItems
         add prf = fromMaybe prf $ runDiffProver diffprover ctxt 0 sys prf
 
--- | Construct a constraint system for verifying the given formula.
-mkSystem :: ProofContext -> [Restriction] -> [TheoryItem r p s]
-         -> LNFormula -> System
-mkSystem ctxt restrictions previousItems =
-    -- Note that it is OK to add reusable lemmas directly to the system, as
-    -- they do not change the considered set of traces. This is the key
-    -- difference between lemmas and restrictions.
-    addLemmas
-  . formulaToSystem (map (formulaToGuarded_ . L.get rstrFormula) restrictions)
-                    (L.get pcSourceKind ctxt)
-                    (L.get pcTraceQuantifier ctxt) False
-  where
-    addLemmas sys =
-        insertLemmas (gatherReusableLemmas $ L.get sSourceKind sys) sys
-
-    gatherReusableLemmas kind = do
-        LemmaItem lem <- previousItems
-        guard $    lemmaSourceKind lem <= kind
-                && ReuseLemma `elem` L.get lAttributes lem
-                && AllTraces == L.get lTraceQuantifier lem
-                && (L.get lName lem) `notElem` (L.get pcHiddenLemmas ctxt)
-                && "ALL" `notElem` (L.get pcHiddenLemmas ctxt)
-        return $ formulaToGuarded_ $ L.get lFormula lem
 
 -- | Construct a constraint system for verifying the given formula.
 mkSystemDiff :: Side -> ProofContext -> [(Side, Restriction)] -> [DiffTheoryItem r r2 p p2]
@@ -344,13 +209,13 @@ mkSystemDiff s ctxt restrictions previousItems =
     -- Note that it is OK to add reusable lemmas directly to the system, as
     -- they do not change the considered set of traces. This is the key
     -- difference between lemmas and restrictions.
-    addLemmas
+    addLemmasLocal
   . formulaToSystem (map (formulaToGuarded_ . L.get rstrFormula) restrictions')
                     (L.get pcSourceKind ctxt)
                     (L.get pcTraceQuantifier ctxt) False
   where
     restrictions' = foldr (\(s', a) l -> if s == s' then l ++ [a] else l) [] restrictions
-    addLemmas sys =
+    addLemmasLocal sys =
         insertLemmas (gatherReusableLemmas $ L.get sSourceKind sys) sys
 
     gatherReusableLemmas kind = do

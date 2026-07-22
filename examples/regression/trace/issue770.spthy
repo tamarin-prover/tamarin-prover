@@ -1,0 +1,26 @@
+theory Issue770
+begin
+
+// inspired by an example by Stéphanie Delaune
+
+builtins:  xor, hashing
+
+rule (modulo E) rule0:
+   [ Fr(~n0), Fr( ~n1 ), Fr(~n2), Fr(~n3) ]
+  --[OnlyOnce()]->
+   [ Name(~n0,~n1,~n2,~n3), Out(~n0 XOR ~n2), Out(~n1 XOR ~n3), Out(h(~n2 XOR ~n3))]
+
+rule (modulo E) rule1:
+   [ Name(~n0,~n1,~n2,~n3), In(~n0 XOR ~n1 XOR x), In(h(x)) ]
+  --[Secret()]->
+   [ ]
+
+restriction unique:
+  "∀ #i #j. ((OnlyOnce( ) @ #i) ∧ (OnlyOnce( ) @ #j)) ⇒ (#i = #j)"
+
+// Must be false.
+lemma alive:
+  all-traces
+  "∀ #i. (Secret() @ #i) ⇒ F"
+
+end
