@@ -1,0 +1,27 @@
+theory exponentialMixnet
+begin
+
+builtins: multiset
+
+functions: expo/2, m/2 [AC], zkp/3, verify/3, true/0
+
+equations: expo(expo(g,x),y) = expo(g,m(x,y)),
+           verify(zkp(expo(g,x), x, g), expo(g, x), g) = true
+
+rule genKey:
+  let fstK = diff(expo('g',~skA),expo('g',~skB))
+      sndK = diff(expo('g',~skB),expo('g',~skA))
+  in 
+  [Fr(~skA), Fr(~skB)]
+--[OnlyOnce( )]->
+  [FstKey(fstK), SndKey(sndK), Out(<'A',expo('g',~skA)>), Out(<'B',expo('g',~skB)>)]
+
+rule mixnet:
+  [FstKey(n1), SndKey(n2), In(n3), Fr(~r)]
+--[]->
+  [Out(<expo(n1,~r),expo(n2,~r),expo(n3,~r)>), Out(expo('g',~r))]
+
+restriction OnlyOnce:
+  "All #j #i. ((OnlyOnce() @ #i) & (OnlyOnce() @ #j)) ==> (#i = #j)"
+
+end

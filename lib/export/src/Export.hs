@@ -526,6 +526,7 @@ renderTermWithHeaders ppLit t = (ppTerm t, getHdTerm t)
   where
     ppTerm tm = case viewTerm tm of
       Lit v -> ppLit v
+      FApp (AC (ACfct (f, _))) _ -> translationFail $ "User defined AC function " ++ show f ++ " not supported."
       FApp (AC Xor) ts -> ppXor ts
       FApp (AC o) ts -> ppTerms (ppACOp o) 1 "(" ")" ts
       FApp (NoEq s) [] | s == natOneSym -> text "1"
@@ -2696,11 +2697,12 @@ headersOfType types =
       types
 
 headerOfFunSym :: SapicFunSym -> S.Set ProVerifHeader
-headerOfFunSym ((f, (k, pub, Constructor)), inTypes, outType) =
+headerOfFunSym ((NoEqUser (f, (k, pub, Constructor, _))), inTypes, outType) =
   Fun "fun" (ppFunSym f) k ("(" ++ makeArgtypes inTypes ++ "):" ++ ppType outType) (priv_or_pub pub) `S.insert` headersOfType (outType : inTypes)
   where
     priv_or_pub Public = []
     priv_or_pub Private = ["private"]
+headerOfFunSym ((ACfctUser f), _, _) = translationFail $ "User defined AC function " ++ show f ++ "not supported."-- "AC function not supported"
 headerOfFunSym _ = S.empty
 
 -- | Load headers from an OpenTheory into a set of ProVerif Headers
@@ -2766,10 +2768,10 @@ headersOfRule tc typeEnv r | (lhs `RRule` rhs) <- ctxtStRuleToRRule r = do
   let (plhs, lsh) = ppLNTerm tc lhs
       (prhs, rsh) = ppLNTerm tc rhs
       prefix = case viewTerm lhs of
-        FApp (NoEq (_, (_, _, Destructor))) _ -> "reduc"
+        FApp (NoEq (_, (_, _, Destructor, _))) _ -> "reduc"
         _ -> "equation"
       suffix = case viewTerm lhs of
-        FApp (NoEq (_, (_, Private, Destructor))) _ -> " [private]"
+        FApp (NoEq (_, (_, Private, Destructor, _))) _ -> " [private]"
         _ -> ""
       freesr = frees lhs `union` frees rhs
       freesrTyped = map (\v -> (v, M.lookup v tye.vars)) freesr

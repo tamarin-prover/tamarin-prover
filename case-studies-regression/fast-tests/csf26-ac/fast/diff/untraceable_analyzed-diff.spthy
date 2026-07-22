@@ -1,0 +1,987 @@
+theory untraceable
+
+begin
+
+// Function signature and definition of the equational theory E
+
+functions: fst/1, h/1, pair/2, snd/1, unionUD/1 [destructor], add/2 [AC]
+equations:
+    fst(<x.1, x.2>) = x.1,
+    snd(<x.1, x.2>) = x.2,
+    unionUD((x add y)) = x
+
+rule (modulo E) setup:
+   [ Fr( key1 ), Fr( key2 ) ]
+  --[ Setup( ) ]->
+   [
+   Reader( ('1' add diff((key1 add key2), (key1 add key1))) ),
+   Tag( ('1' add diff((key1 add key2), (key1 add key1))) )
+   ]
+
+rule (modulo E) select_tag:
+   [ Tag( (~k add z) ) ]
+  --[ Tag( (~k add z) ) ]->
+   [ TagRun( ~k ), Tag( z ) ]
+
+rule (modulo E) select_reader:
+   [ Reader( (~k add z) ) ]
+  --[ Reader( (~k add z) ) ]->
+   [ ReaderRun( ~k ), Reader( z ) ]
+
+rule (modulo E) reader1:
+   [ Fr( ~nr ) ] --> [ Reader1( ~nr ), Out( ~nr ) ]
+
+rule (modulo E) tag1:
+   [ In( x ), TagRun( k ), Fr( ~nt ) ]
+  --[ TagRun( k ) ]->
+   [ Out( <~nt, h(<x, k, ~nt>)> ) ]
+
+rule (modulo E) reader2:
+   [ Reader1( ~nr ), ReaderRun( k ), In( <nt, h(<~nr, k, nt>)> ) ]
+  --[ Finished( ) ]->
+   [ ]
+
+restriction max_number_of_tags_tag [right]:
+  "∀ a b c d #i. (Tag( (a add b add c add d) ) @ #i) ⇒ (⊥)"
+  // safety formula
+
+restriction max_number_of_tags_tag [left]:
+  "∀ a b c d #i. (Tag( (a add b add c add d) ) @ #i) ⇒ (⊥)"
+  // safety formula
+
+restriction max_number_of_tags_tag_reader [right]:
+  "∀ a b c d #i. (Reader( (a add b add c add d) ) @ #i) ⇒ (⊥)"
+  // safety formula
+
+restriction max_number_of_tags_tag_reader [left]:
+  "∀ a b c d #i. (Reader( (a add b add c add d) ) @ #i) ⇒ (⊥)"
+  // safety formula
+
+lemma executable [right]:
+  exists-trace "∃ #i. Finished( ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #i. (Finished( ) @ #i)"
+*/
+simplify
+solve( Reader1( ~nr ) ▶₀ #i )
+  case reader1
+  solve( ReaderRun( k ) ▶₁ #i )
+    case select_reader
+    solve( !KU( h(<~nr, ~k, nt>) ) @ #vk.2 )
+      case tag1
+      solve( Reader( (~k add z) ) ▶₀ #vr.1 )
+        case select_reader
+        solve( Tag( (~k add z.1) ) ▶₀ #vr.4 )
+          case select_tag
+          solve( Reader( (~k add z add ~k.1) ) ▶₀ #vr.5 )
+            case setup
+            solve( Tag( (~k add z add ~k.1) ) ▶₀ #vr.6 )
+              case setup
+              solve( !KU( ~nr ) @ #vk.3 )
+                case reader1
+                solve( !KU( ~nt ) @ #vk.3 )
+                  case tag1
+                  SOLVED // trace found
+                qed
+              qed
+            qed
+          qed
+        qed
+      qed
+    qed
+  qed
+qed
+
+lemma executable [left]:
+  exists-trace "∃ #i. Finished( ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #i. (Finished( ) @ #i)"
+*/
+simplify
+solve( Reader1( ~nr ) ▶₀ #i )
+  case reader1
+  solve( ReaderRun( k ) ▶₁ #i )
+    case select_reader
+    solve( !KU( h(<~nr, ~k, nt>) ) @ #vk.2 )
+      case tag1
+      solve( Reader( (~k add z) ) ▶₀ #vr.1 )
+        case select_reader
+        solve( Tag( (~k add z.1) ) ▶₀ #vr.4 )
+          case select_tag
+          solve( Reader( (~k add z add ~k.1) ) ▶₀ #vr.5 )
+            case setup_case_1
+            solve( Tag( (~k add z add ~k.2) ) ▶₀ #vr.6 )
+              case setup
+              solve( !KU( ~nr ) @ #vk.3 )
+                case reader1
+                solve( !KU( ~nt ) @ #vk.3 )
+                  case tag1
+                  SOLVED // trace found
+                qed
+              qed
+            qed
+          qed
+        qed
+      qed
+    qed
+  qed
+qed
+
+diffLemma Observational_equivalence:
+rule-equivalence
+  case Rule_Destrd_0_fst
+  backward-search
+    case LHS
+    step( simplify )
+    step( solve( !KD( <x, x.1> ) ▶₀ #i ) )
+      case reader1
+      by step( contradiction /* impossible chain */ )
+    next
+      case tag1
+      step( solve( (#vl, 0) ~~> (#i, 0) ) )
+        case d_0_fst
+        by step( contradiction /* impossible chain */ )
+      next
+        case d_0_snd
+        by step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+      next
+        case pair
+        MIRRORED
+      qed
+    qed
+  next
+    case RHS
+    step( simplify )
+    step( solve( !KD( <x, x.1> ) ▶₀ #i ) )
+      case reader1
+      by step( contradiction /* impossible chain */ )
+    next
+      case tag1
+      step( solve( (#vl, 0) ~~> (#i, 0) ) )
+        case d_0_fst
+        by step( contradiction /* impossible chain */ )
+      next
+        case d_0_snd
+        by step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+      next
+        case pair
+        MIRRORED
+      qed
+    qed
+  qed
+next
+  case Rule_Destrd_0_snd
+  backward-search
+    case LHS
+    step( simplify )
+    step( solve( !KD( <x, x.1> ) ▶₀ #i ) )
+      case reader1
+      by step( contradiction /* impossible chain */ )
+    next
+      case tag1
+      step( solve( (#vl, 0) ~~> (#i, 0) ) )
+        case d_0_fst
+        by step( contradiction /* impossible chain */ )
+      next
+        case d_0_snd
+        by step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+      next
+        case pair
+        MIRRORED
+      qed
+    qed
+  next
+    case RHS
+    step( simplify )
+    step( solve( !KD( <x, x.1> ) ▶₀ #i ) )
+      case reader1
+      by step( contradiction /* impossible chain */ )
+    next
+      case tag1
+      step( solve( (#vl, 0) ~~> (#i, 0) ) )
+        case d_0_fst
+        by step( contradiction /* impossible chain */ )
+      next
+        case d_0_snd
+        by step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+      next
+        case pair
+        MIRRORED
+      qed
+    qed
+  qed
+next
+  case Rule_Destrd_0_unionUD
+  backward-search
+    case LHS
+    step( simplify )
+    step( solve( !KD( (x add x.1) ) ▶₀ #i ) )
+      case reader1
+      by step( contradiction /* impossible chain */ )
+    next
+      case tag1
+      step( solve( (#vl, 0) ~~> (#i, 0) ) )
+        case d_0_fst
+        by step( contradiction /* impossible chain */ )
+      next
+        case d_0_snd
+        by step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+      qed
+    qed
+  next
+    case RHS
+    step( simplify )
+    step( solve( !KD( (x add x.1) ) ▶₀ #i ) )
+      case reader1
+      by step( contradiction /* impossible chain */ )
+    next
+      case tag1
+      step( solve( (#vl, 0) ~~> (#i, 0) ) )
+        case d_0_fst
+        by step( contradiction /* impossible chain */ )
+      next
+        case d_0_snd
+        by step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+      qed
+    qed
+  qed
+next
+  case Rule_Equality
+  backward-search
+    case LHS
+    step( simplify )
+    step( solve( !KD( x ) ▶₁ #i ) )
+      case reader1
+      step( solve( (#vl, 0) ~~> (#i, 1) ) )
+        case Var_fresh_nr
+        step( solve( !KU( ~nr ) @ #vk ) )
+          case reader1
+          MIRRORED
+        qed
+      qed
+    next
+      case tag1
+      step( solve( (#vl, 0) ~~> (#i, 1) ) )
+        case d_0_fst
+        step( solve( (#vr.1, 0) ~~> (#i, 1) ) )
+          case Var_fresh_nt
+          step( solve( TagRun( k ) ▶₁ #vr ) )
+            case select_tag
+            step( solve( Tag( (~k add z) ) ▶₀ #vr.2 ) )
+              case select_tag
+              step( solve( Tag( (~k add z add ~k.1) ) ▶₀ #vr.3 ) )
+                case select_tag
+                by step( contradiction /* from formulas */ )
+              next
+                case setup_case_1
+                step( solve( !KU( ~nt ) @ #vk ) )
+                  case tag1
+                  MIRRORED
+                qed
+              next
+                case setup_case_2
+                step( solve( !KU( ~nt ) @ #vk ) )
+                  case tag1
+                  MIRRORED
+                qed
+              qed
+            next
+              case setup_case_1
+              step( solve( !KU( ~nt ) @ #vk ) )
+                case tag1
+                MIRRORED
+              qed
+            next
+              case setup_case_2
+              step( solve( !KU( ~nt ) @ #vk ) )
+                case tag1
+                MIRRORED
+              qed
+            qed
+          qed
+        qed
+      next
+        case d_0_snd
+        step( solve( (#vr.1, 0) ~~> (#i, 1) ) )
+          case h
+          step( solve( TagRun( k ) ▶₁ #vr ) )
+            case select_tag
+            step( solve( Tag( (~k add z) ) ▶₀ #vr.2 ) )
+              case select_tag
+              step( solve( Tag( (~k add z add ~k.1) ) ▶₀ #vr.3 ) )
+                case select_tag
+                by step( contradiction /* from formulas */ )
+              next
+                case setup_case_1
+                step( solve( !KU( h(<x, ~k, ~nt>) ) @ #vk ) )
+                  case c_h
+                  by step( solve( !KU( ~k ) @ #vk.4 ) )
+                next
+                  case tag1
+                  MIRRORED
+                qed
+              next
+                case setup_case_2
+                step( solve( !KU( h(<x, ~k, ~nt>) ) @ #vk ) )
+                  case c_h
+                  by step( solve( !KU( ~k ) @ #vk.4 ) )
+                next
+                  case tag1
+                  MIRRORED
+                qed
+              qed
+            next
+              case setup_case_1
+              step( solve( !KU( h(<x, ~k, ~nt>) ) @ #vk ) )
+                case c_h
+                by step( solve( !KU( ~k ) @ #vk.4 ) )
+              next
+                case tag1
+                MIRRORED
+              qed
+            next
+              case setup_case_2
+              step( solve( !KU( h(<x, ~k, ~nt>) ) @ #vk ) )
+                case c_h
+                by step( solve( !KU( ~k ) @ #vk.4 ) )
+              next
+                case tag1
+                MIRRORED
+              qed
+            qed
+          qed
+        qed
+      next
+        case pair
+        step( solve( TagRun( k ) ▶₁ #vr ) )
+          case select_tag
+          step( solve( Tag( (~k add z) ) ▶₀ #vr.1 ) )
+            case select_tag
+            step( solve( Tag( (~k add z add ~k.1) ) ▶₀ #vr.2 ) )
+              case select_tag
+              by step( contradiction /* from formulas */ )
+            next
+              case setup_case_1
+              step( solve( !KU( ~nt ) @ #vk.2 ) )
+                case tag1
+                step( solve( !KU( h(<x, ~k, ~nt>) ) @ #vk.3 ) )
+                  case c_h
+                  by step( solve( !KU( ~k ) @ #vk.6 ) )
+                next
+                  case tag1
+                  MIRRORED
+                qed
+              qed
+            next
+              case setup_case_2
+              step( solve( !KU( ~nt ) @ #vk.2 ) )
+                case tag1
+                step( solve( !KU( h(<x, ~k, ~nt>) ) @ #vk.3 ) )
+                  case c_h
+                  by step( solve( !KU( ~k ) @ #vk.6 ) )
+                next
+                  case tag1
+                  MIRRORED
+                qed
+              qed
+            qed
+          next
+            case setup_case_1
+            step( solve( !KU( ~nt ) @ #vk.2 ) )
+              case tag1
+              step( solve( !KU( h(<x, ~k, ~nt>) ) @ #vk.3 ) )
+                case c_h
+                by step( solve( !KU( ~k ) @ #vk.6 ) )
+              next
+                case tag1
+                MIRRORED
+              qed
+            qed
+          next
+            case setup_case_2
+            step( solve( !KU( ~nt ) @ #vk.2 ) )
+              case tag1
+              step( solve( !KU( h(<x, ~k, ~nt>) ) @ #vk.3 ) )
+                case c_h
+                by step( solve( !KU( ~k ) @ #vk.6 ) )
+              next
+                case tag1
+                MIRRORED
+              qed
+            qed
+          qed
+        qed
+      qed
+    qed
+  next
+    case RHS
+    step( simplify )
+    step( solve( !KD( x ) ▶₁ #i ) )
+      case reader1
+      step( solve( (#vl, 0) ~~> (#i, 1) ) )
+        case Var_fresh_nr
+        step( solve( !KU( ~nr ) @ #vk ) )
+          case reader1
+          MIRRORED
+        qed
+      qed
+    next
+      case tag1
+      step( solve( (#vl, 0) ~~> (#i, 1) ) )
+        case d_0_fst
+        step( solve( (#vr.1, 0) ~~> (#i, 1) ) )
+          case Var_fresh_nt
+          step( solve( TagRun( k ) ▶₁ #vr ) )
+            case select_tag
+            step( solve( Tag( (~k add z) ) ▶₀ #vr.2 ) )
+              case select_tag
+              step( solve( Tag( (~k add z add ~k.1) ) ▶₀ #vr.3 ) )
+                case select_tag
+                by step( contradiction /* from formulas */ )
+              next
+                case setup
+                step( solve( !KU( ~nt ) @ #vk ) )
+                  case tag1
+                  MIRRORED
+                qed
+              qed
+            next
+              case setup
+              step( solve( !KU( ~nt ) @ #vk ) )
+                case tag1
+                MIRRORED
+              qed
+            qed
+          qed
+        qed
+      next
+        case d_0_snd
+        step( solve( (#vr.1, 0) ~~> (#i, 1) ) )
+          case h
+          step( solve( TagRun( k ) ▶₁ #vr ) )
+            case select_tag
+            step( solve( Tag( (~k add z) ) ▶₀ #vr.2 ) )
+              case select_tag
+              step( solve( Tag( (~k add z add ~k.1) ) ▶₀ #vr.3 ) )
+                case select_tag
+                by step( contradiction /* from formulas */ )
+              next
+                case setup
+                step( solve( !KU( h(<x, ~k, ~nt>) ) @ #vk ) )
+                  case c_h
+                  by step( solve( !KU( ~k ) @ #vk.4 ) )
+                next
+                  case tag1
+                  MIRRORED
+                qed
+              qed
+            next
+              case setup
+              step( solve( !KU( h(<x, ~k, ~nt>) ) @ #vk ) )
+                case c_h
+                by step( solve( !KU( ~k ) @ #vk.4 ) )
+              next
+                case tag1
+                MIRRORED
+              qed
+            qed
+          qed
+        qed
+      next
+        case pair
+        step( solve( TagRun( k ) ▶₁ #vr ) )
+          case select_tag
+          step( solve( Tag( (~k add z) ) ▶₀ #vr.1 ) )
+            case select_tag
+            step( solve( Tag( (~k add z add ~k.1) ) ▶₀ #vr.2 ) )
+              case select_tag
+              by step( contradiction /* from formulas */ )
+            next
+              case setup
+              step( solve( !KU( ~nt ) @ #vk.2 ) )
+                case tag1
+                step( solve( !KU( h(<x, ~k, ~nt>) ) @ #vk.3 ) )
+                  case c_h
+                  by step( solve( !KU( ~k ) @ #vk.6 ) )
+                next
+                  case tag1
+                  MIRRORED
+                qed
+              qed
+            qed
+          next
+            case setup
+            step( solve( !KU( ~nt ) @ #vk.2 ) )
+              case tag1
+              step( solve( !KU( h(<x, ~k, ~nt>) ) @ #vk.3 ) )
+                case c_h
+                by step( solve( !KU( ~k ) @ #vk.6 ) )
+              next
+                case tag1
+                MIRRORED
+              qed
+            qed
+          qed
+        qed
+      qed
+    qed
+  qed
+next
+  case Rule_Send
+  backward-search
+    case LHS
+    step( simplify )
+    MIRRORED
+  next
+    case RHS
+    step( simplify )
+    MIRRORED
+  qed
+next
+  case Rule_reader1
+  backward-search
+    case LHS
+    step( simplify )
+    MIRRORED
+  next
+    case RHS
+    step( simplify )
+    MIRRORED
+  qed
+next
+  case Rule_reader2
+  backward-search
+    case LHS
+    step( simplify )
+    step( solve( Reader1( ~nr ) ▶₀ #i ) )
+      case reader1
+      step( solve( ReaderRun( k ) ▶₁ #i ) )
+        case select_reader
+        step( solve( !KU( h(<~nr, ~k, nt>) ) @ #vk.2 ) )
+          case c_h
+          step( solve( !KU( ~k ) @ #vk.6 ) )
+            case fresh
+            step( solve( Reader( (~k add z) ) ▶₀ #vr.1 ) )
+              case select_reader
+              step( solve( Reader( (~k add z add ~k.1) ) ▶₀ #vr.2 ) )
+                case select_reader
+                by step( contradiction /* from formulas */ )
+              qed
+            qed
+          next
+            case reader1
+            step( solve( Reader( (~k add z) ) ▶₀ #vr.1 ) )
+              case select_reader
+              step( solve( Reader( (~k add z add ~k.1) ) ▶₀ #vr.3 ) )
+                case select_reader
+                by step( contradiction /* from formulas */ )
+              qed
+            qed
+          next
+            case tag1
+            step( solve( Reader( (~k add z) ) ▶₀ #vr.1 ) )
+              case select_reader
+              step( solve( Tag( (~k.1 add z.1) ) ▶₀ #vr.4 ) )
+                case select_tag
+                step( solve( Reader( (~k add z add ~k.2) ) ▶₀ #vr.5 ) )
+                  case select_reader
+                  by step( contradiction /* from formulas */ )
+                qed
+              next
+                case setup_case_1
+                step( solve( Reader( (~k add z add ~k.2) ) ▶₀ #vr.5 ) )
+                  case select_reader
+                  by step( contradiction /* from formulas */ )
+                qed
+              next
+                case setup_case_2
+                step( solve( Reader( (~k add z add ~k.2) ) ▶₀ #vr.5 ) )
+                  case select_reader
+                  by step( contradiction /* from formulas */ )
+                qed
+              qed
+            qed
+          qed
+        next
+          case tag1
+          step( solve( Reader( (~k add z) ) ▶₀ #vr.1 ) )
+            case select_reader
+            step( solve( Tag( (~k add z.1) ) ▶₀ #vr.4 ) )
+              case select_tag
+              step( solve( Reader( (~k add z add ~k.1) ) ▶₀ #vr.5 ) )
+                case select_reader
+                by step( contradiction /* from formulas */ )
+              next
+                case setup_case_1
+                step( solve( Tag( (~k add z add ~k.2) ) ▶₀ #vr.6 ) )
+                  case select_tag
+                  by step( contradiction /* from formulas */ )
+                next
+                  case setup
+                  step( solve( !KU( ~nr ) @ #vk.3 ) )
+                    case reader1
+                    step( solve( !KU( ~nt ) @ #vk.3 ) )
+                      case tag1
+                      MIRRORED
+                    qed
+                  qed
+                qed
+              next
+                case setup_case_2
+                step( solve( Tag( (~k add z add ~k.2) ) ▶₀ #vr.6 ) )
+                  case select_tag
+                  by step( contradiction /* from formulas */ )
+                next
+                  case setup
+                  step( solve( !KU( ~nr ) @ #vk.3 ) )
+                    case reader1
+                    step( solve( !KU( ~nt ) @ #vk.3 ) )
+                      case tag1
+                      MIRRORED
+                    qed
+                  qed
+                qed
+              qed
+            next
+              case setup_case_1
+              step( solve( Reader( (~k add z add ~k.1) ) ▶₀ #vr.5 ) )
+                case select_reader
+                by step( contradiction /* from formulas */ )
+              next
+                case setup
+                step( solve( !KU( ~nr ) @ #vk.3 ) )
+                  case reader1
+                  step( solve( !KU( ~nt ) @ #vk.3 ) )
+                    case tag1
+                    MIRRORED
+                  qed
+                qed
+              qed
+            next
+              case setup_case_2
+              step( solve( Reader( (~k add z add ~k.1) ) ▶₀ #vr.5 ) )
+                case select_reader
+                by step( contradiction /* from formulas */ )
+              next
+                case setup
+                step( solve( !KU( ~nr ) @ #vk.3 ) )
+                  case reader1
+                  step( solve( !KU( ~nt ) @ #vk.3 ) )
+                    case tag1
+                    MIRRORED
+                  qed
+                qed
+              qed
+            qed
+          next
+            case setup_case_1
+            step( solve( Tag( (~k add z) ) ▶₀ #vr.4 ) )
+              case select_tag
+              step( solve( Tag( (~k add z add ~k.1) ) ▶₀ #vr.6 ) )
+                case select_tag
+                by step( contradiction /* from formulas */ )
+              next
+                case setup
+                step( solve( !KU( ~nr ) @ #vk.3 ) )
+                  case reader1
+                  step( solve( !KU( ~nt ) @ #vk.3 ) )
+                    case tag1
+                    MIRRORED
+                  qed
+                qed
+              qed
+            next
+              case setup
+              step( solve( !KU( ~nr ) @ #vk.3 ) )
+                case reader1
+                step( solve( !KU( ~nt ) @ #vk.3 ) )
+                  case tag1
+                  MIRRORED
+                qed
+              qed
+            qed
+          next
+            case setup_case_2
+            step( solve( Tag( (~k add z) ) ▶₀ #vr.4 ) )
+              case select_tag
+              step( solve( Tag( (~k add z add ~k.1) ) ▶₀ #vr.6 ) )
+                case select_tag
+                by step( contradiction /* from formulas */ )
+              next
+                case setup
+                step( solve( !KU( ~nr ) @ #vk.3 ) )
+                  case reader1
+                  step( solve( !KU( ~nt ) @ #vk.3 ) )
+                    case tag1
+                    MIRRORED
+                  qed
+                qed
+              qed
+            next
+              case setup
+              step( solve( !KU( ~nr ) @ #vk.3 ) )
+                case reader1
+                step( solve( !KU( ~nt ) @ #vk.3 ) )
+                  case tag1
+                  MIRRORED
+                qed
+              qed
+            qed
+          qed
+        qed
+      qed
+    qed
+  next
+    case RHS
+    step( simplify )
+    step( solve( Reader1( ~nr ) ▶₀ #i ) )
+      case reader1
+      step( solve( ReaderRun( k ) ▶₁ #i ) )
+        case select_reader
+        step( solve( !KU( h(<~nr, ~k, nt>) ) @ #vk.2 ) )
+          case c_h
+          step( solve( !KU( ~k ) @ #vk.6 ) )
+            case fresh
+            step( solve( Reader( (~k add z) ) ▶₀ #vr.1 ) )
+              case select_reader
+              step( solve( Reader( (~k add z add ~k.1) ) ▶₀ #vr.2 ) )
+                case select_reader
+                by step( contradiction /* from formulas */ )
+              qed
+            qed
+          next
+            case reader1
+            step( solve( Reader( (~k add z) ) ▶₀ #vr.1 ) )
+              case select_reader
+              step( solve( Reader( (~k add z add ~k.1) ) ▶₀ #vr.3 ) )
+                case select_reader
+                by step( contradiction /* from formulas */ )
+              qed
+            qed
+          next
+            case tag1
+            step( solve( Reader( (~k add z) ) ▶₀ #vr.1 ) )
+              case select_reader
+              step( solve( Tag( (~k.1 add z.1) ) ▶₀ #vr.4 ) )
+                case select_tag
+                step( solve( Reader( (~k add z add ~k.2) ) ▶₀ #vr.5 ) )
+                  case select_reader
+                  by step( contradiction /* from formulas */ )
+                qed
+              next
+                case setup
+                step( solve( Reader( (~k add z add ~k.2) ) ▶₀ #vr.5 ) )
+                  case select_reader
+                  by step( contradiction /* from formulas */ )
+                qed
+              qed
+            qed
+          qed
+        next
+          case tag1
+          step( solve( Reader( (~k add z) ) ▶₀ #vr.1 ) )
+            case select_reader
+            step( solve( Tag( (~k add z.1) ) ▶₀ #vr.4 ) )
+              case select_tag
+              step( solve( Reader( (~k add z add ~k.1) ) ▶₀ #vr.5 ) )
+                case select_reader
+                by step( contradiction /* from formulas */ )
+              next
+                case setup
+                step( solve( Tag( (~k add z add ~k.1) ) ▶₀ #vr.6 ) )
+                  case select_tag
+                  by step( contradiction /* from formulas */ )
+                next
+                  case setup
+                  step( solve( !KU( ~nr ) @ #vk.3 ) )
+                    case reader1
+                    step( solve( !KU( ~nt ) @ #vk.3 ) )
+                      case tag1
+                      MIRRORED
+                    qed
+                  qed
+                qed
+              qed
+            next
+              case setup
+              step( solve( Reader( (~k add z add ~k.1) ) ▶₀ #vr.5 ) )
+                case select_reader
+                by step( contradiction /* from formulas */ )
+              next
+                case setup
+                step( solve( !KU( ~nr ) @ #vk.3 ) )
+                  case reader1
+                  step( solve( !KU( ~nt ) @ #vk.3 ) )
+                    case tag1
+                    MIRRORED
+                  qed
+                qed
+              qed
+            qed
+          next
+            case setup
+            step( solve( Tag( (~k add z) ) ▶₀ #vr.4 ) )
+              case select_tag
+              step( solve( Tag( (~k add z add ~k.1) ) ▶₀ #vr.6 ) )
+                case select_tag
+                by step( contradiction /* from formulas */ )
+              next
+                case setup
+                step( solve( !KU( ~nr ) @ #vk.3 ) )
+                  case reader1
+                  step( solve( !KU( ~nt ) @ #vk.3 ) )
+                    case tag1
+                    MIRRORED
+                  qed
+                qed
+              qed
+            next
+              case setup
+              step( solve( !KU( ~nr ) @ #vk.3 ) )
+                case reader1
+                step( solve( !KU( ~nt ) @ #vk.3 ) )
+                  case tag1
+                  MIRRORED
+                qed
+              qed
+            qed
+          qed
+        qed
+      qed
+    qed
+  qed
+next
+  case Rule_select_reader
+  backward-search
+    case LHS
+    step( simplify )
+    step( solve( Reader( (~k add z) ) ▶₀ #i ) )
+      case select_reader
+      step( solve( Reader( (~k add z add ~k.1) ) ▶₀ #vr ) )
+        case select_reader
+        by step( contradiction /* from formulas */ )
+      next
+        case setup_case_1
+        MIRRORED
+      next
+        case setup_case_2
+        MIRRORED
+      qed
+    next
+      case setup_case_1
+      MIRRORED
+    next
+      case setup_case_2
+      MIRRORED
+    qed
+  next
+    case RHS
+    step( simplify )
+    step( solve( Reader( (~k add z) ) ▶₀ #i ) )
+      case select_reader
+      step( solve( Reader( (~k add z add ~k.1) ) ▶₀ #vr ) )
+        case select_reader
+        by step( contradiction /* from formulas */ )
+      next
+        case setup
+        MIRRORED
+      qed
+    next
+      case setup
+      MIRRORED
+    qed
+  qed
+next
+  case Rule_select_tag
+  backward-search
+    case LHS
+    step( simplify )
+    step( solve( Tag( (~k add z) ) ▶₀ #i ) )
+      case select_tag
+      step( solve( Tag( (~k add z add ~k.1) ) ▶₀ #vr ) )
+        case select_tag
+        by step( contradiction /* from formulas */ )
+      next
+        case setup_case_1
+        MIRRORED
+      next
+        case setup_case_2
+        MIRRORED
+      qed
+    next
+      case setup_case_1
+      MIRRORED
+    next
+      case setup_case_2
+      MIRRORED
+    qed
+  next
+    case RHS
+    step( simplify )
+    step( solve( Tag( (~k add z) ) ▶₀ #i ) )
+      case select_tag
+      step( solve( Tag( (~k add z add ~k.1) ) ▶₀ #vr ) )
+        case select_tag
+        by step( contradiction /* from formulas */ )
+      next
+        case setup
+        MIRRORED
+      qed
+    next
+      case setup
+      MIRRORED
+    qed
+  qed
+next
+  case Rule_setup
+  backward-search
+    case LHS
+    step( simplify )
+    MIRRORED
+  next
+    case RHS
+    step( simplify )
+    MIRRORED
+  qed
+next
+  case Rule_tag1
+  backward-search
+    case LHS
+    step( simplify )
+    MIRRORED
+  next
+    case RHS
+    step( simplify )
+    MIRRORED
+  qed
+qed
+
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.13.0
+Maude version 3.5.1
+Git revision: 53c49a44efa784b133c907eedf84491d61a48803 (with uncommited changes), branch: AC-NDC-property
+Compiled at: 2026-07-09 13:42:51.535083 UTC
+*/
+
+end
+/* Output
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/csf26-ac/fast/diff/untraceable.spthy
+
+  output:          examples/csf26-ac/fast/diff/untraceable.spthy.tmp
+  processing time: 0.46s
+  
+  RHS :  executable (exists-trace): verified (11 steps)
+  LHS :  executable (exists-trace): verified (11 steps)
+  DiffLemma:  Observational_equivalence : verified (291 steps)
+
+==============================================================================
+*/

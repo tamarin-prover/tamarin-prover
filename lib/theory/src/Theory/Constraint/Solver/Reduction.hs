@@ -26,6 +26,8 @@ module Theory.Constraint.Solver.Reduction (
   , applyChangeList
   , whileChanging
 
+  , IsACConstructor(..)
+  
   -- ** Accessing the 'ProofContext'
   , getProofContext
   , getMaudeHandle
@@ -104,6 +106,7 @@ import           Logic.Connectives
 import           Theory.Constraint.Solver.Contradictions
 import           Theory.Constraint.System
 import           Theory.Model
+import Control.Applicative.Lift (Lift(Other))
 
 ------------------------------------------------------------------------------
 -- The constraint reduction monad
@@ -254,7 +257,7 @@ labelNodeId = \i rules parent -> do
             unless (isFreshVar m) $ do
                 -- 'm' must be of sort fresh ==> enforce via unification
                 n <- varTerm <$> freshLVar "n" LSortFresh
-                void (solveTermEqs SplitNow [Equal m n])
+                void (solveTermEqs SplitNow OtherRule [Equal m n])
             modM sEdges (S.insert $ Edge (j, ConcIdx 0) (i,v))
 
           -- CR-rule *DG2_{2,u}*: solve a KU-premise by inserting the
@@ -277,7 +280,7 @@ insertChain c p = insertGoal (ChainG c p) False
 -- i.e., the fact equalities are enforced.
 insertEdges :: [(NodeConc, LNFact, LNFact, NodePrem)] -> Reduction ()
 insertEdges edges = do
-    void (solveFactEqs SplitNow [ Equal fa1 fa2 | (_, fa1, fa2, _) <- edges ])
+    void (solveFactEqs SplitNow OtherRule [ Equal fa1 fa2 | (_, fa1, fa2, _) <- edges ])
     modM sEdges (\es -> foldr S.insert es [ Edge c p | (c,_,_,p) <- edges])
 
 -- | Insert an 'Action' atom. Ensures that (almost all) trivial *KU* actions
@@ -302,7 +305,7 @@ insertAction i fa@(Fact _ ann _) = do
                           -- if the node is already present in the graph, do not insert it again. (This can be caused by substitutions applying and changing a goal.)
                           if not nodePresent
                              then do
-                               modM sNodes (M.insert i (Rule (IntrInfo (ConstrRule $ BC.pack "_pair")) ([(kuFactAnn ann m1),(kuFactAnn ann m2)]) ([fa]) ([fa]) []))
+                               modM sNodes (M.insert i (Rule (IntrInfo (ConstrRule (BC.pack "_pair") (NoEq pairSym))) ([(kuFactAnn ann m1),(kuFactAnn ann m2)]) ([fa]) ([fa]) []))
                                insertGoal goal False
                                markGoalAsSolved "pair" goal
                                requiresKU m1 *> requiresKU m2 *> return Changed
@@ -321,7 +324,7 @@ insertAction i fa@(Fact _ ann _) = do
                           -- if the node is already present in the graph, do not insert it again. (This can be caused by substitutions applying and changing a goal.)
                           if not nodePresent
                              then do
-                               modM sNodes (M.insert i (Rule (IntrInfo (ConstrRule $ BC.pack "_inv")) ([(kuFactAnn ann m)]) ([fa]) ([fa]) []))
+                               modM sNodes (M.insert i (Rule (IntrInfo (ConstrRule (BC.pack "_inv") (NoEq invSym))) ([(kuFactAnn ann m)]) ([fa]) ([fa]) []))
                                insertGoal goal False
                                markGoalAsSolved "inv" goal
                                requiresKU m *> return Changed
@@ -340,7 +343,7 @@ insertAction i fa@(Fact _ ann _) = do
                           -- if the node is already present in the graph, do not insert it again. (This can be caused by substitutions applying and changing a goal.)
                           if not nodePresent
                              then do
-                               modM sNodes (M.insert i (Rule (IntrInfo (ConstrRule $ BC.pack "_mult")) (map (\x -> kuFactAnn ann x) ms) ([fa]) ([fa]) []))
+                               modM sNodes (M.insert i (Rule (IntrInfo (ConstrRule (BC.pack "_mult") (AC Mult))) (map (\x -> kuFactAnn ann x) ms) ([fa]) ([fa]) []))
                                insertGoal goal False
                                markGoalAsSolved "mult" goal
                                mapM_ requiresKU ms *> return Changed
@@ -360,7 +363,7 @@ insertAction i fa@(Fact _ ann _) = do
                           -- if the node is already present in the graph, do not insert it again. (This can be caused by substitutions applying and changing a goal.)
                           if not nodePresent
                              then do
-                               modM sNodes (M.insert i (Rule (IntrInfo (ConstrRule $ BC.pack "_union")) (map (\x -> kuFactAnn ann x) ms) ([fa]) ([fa]) []))
+                               modM sNodes (M.insert i (Rule (IntrInfo (ConstrRule (BC.pack "_union") (AC Union))) (map (\x -> kuFactAnn ann x) ms) ([fa]) ([fa]) []))
                                insertGoal goal False
                                markGoalAsSolved "union" goal
                                mapM_ requiresKU ms *> return Changed
@@ -410,7 +413,7 @@ insertLast i = do
 -- system than the set of actions was changed.
 insertAtom :: LNAtom -> Reduction ()
 insertAtom ato = case ato of
-    EqE x y       -> void $ solveTermEqs SplitNow [Equal x y]
+    EqE x y       -> void $ solveTermEqs SplitNow OtherRule [Equal x y]
     Subterm x y   -> insertSubterm x y
     Action i fa   -> void $ insertAction (ltermNodeId' i) fa
     Less i j      -> insertLess (LessAtom (ltermNodeId' i) (ltermNodeId' j) Formula)
@@ -704,6 +707,13 @@ conjoinSystem sys = do
 -- multiple equation stores.
 data SplitStrategy = SplitNow | SplitLater
 
+-- | 'IsACConstructor' indicates whether the equality to be solved is
+-- involves an AC-constructor (giving the two variables in the premises
+-- of the constructor) or not. This is used to avoid unnecessary
+-- AC unifiers.
+data IsACConstructor = ACConstructor LVar LVar  | OtherRule
+  deriving (Eq, Show)
+
 -- The 'ChangeIndicator' indicates whether at least one non-trivial equality
 -- was solved.
 
@@ -718,8 +728,8 @@ noContradictoryEqStore = (contradictoryIf . eqsIsFalse) =<< getM sEqStore
 --
 -- Note that updating the remaining parts of the constraint system with the
 -- substitution has to be performed using a separate call to 'substSystem'.
-solveTermEqs :: SplitStrategy -> [Equal LNTerm] -> Reduction ChangeIndicator
-solveTermEqs splitStrat eqs0 =
+solveTermEqs :: SplitStrategy -> IsACConstructor -> [Equal LNTerm] -> Reduction ChangeIndicator
+solveTermEqs splitStrat isAC eqs0 =
     case filter (not . evalEqual) eqs0 of
       []  -> do return Unchanged
       eqs1 -> do
@@ -731,34 +741,38 @@ solveTermEqs splitStrat eqs0 =
             =<< case (maySplitId, splitStrat) of
                   (Just splitId, SplitNow) -> disjunctionOfList
                                                 $ fromJustNote "solveTermEqs"
-                                                $ performSplit eqs2 splitId
+                                                $ performSplit 
+                                                  (case isAC of
+                                                    ACConstructor v1 v2 -> removePermutations hnd eqs2 splitId v1 v2
+                                                    OtherRule -> eqs2)
+                                                  splitId
                   (Just splitId, SplitLater) -> do
                       insertGoal (SplitG splitId) False
                       return eqs2
                   _                        -> return eqs2
         noContradictoryEqStore
-        return Changed
+        return Changed   
 
 -- | Add a list of equalities in substitution form to the equation store
 solveSubstEqs :: SplitStrategy -> LNSubst -> Reduction ChangeIndicator
 solveSubstEqs split subst =
-    solveTermEqs split [Equal (varTerm v) t | (v, t) <- substToList subst]
+    solveTermEqs split OtherRule [Equal (varTerm v) t | (v, t) <- substToList subst]
 
 -- | Add a list of node equalities to the equation store.
 solveNodeIdEqs :: [Equal NodeId] -> Reduction ChangeIndicator
-solveNodeIdEqs = solveTermEqs SplitNow . map (fmap varTerm)
+solveNodeIdEqs = solveTermEqs SplitNow OtherRule . map (fmap varTerm)
 
 -- | Add a list of fact equalities to the equation store, if possible.
-solveFactEqs :: SplitStrategy -> [Equal LNFact] -> Reduction ChangeIndicator
-solveFactEqs split eqs = do
+solveFactEqs :: SplitStrategy -> IsACConstructor -> [Equal LNFact] -> Reduction ChangeIndicator
+solveFactEqs split isAC eqs = do
     contradictoryIf (not $ all evalEqual $ map (fmap factTag) eqs)
-    solveListEqs (solveTermEqs split) $ map (fmap factTerms) eqs
+    solveListEqs (solveTermEqs split isAC) $ map (fmap factTerms) eqs
 
 -- | Add a list of rule equalities to the equation store, if possible.
 solveRuleEqs :: SplitStrategy -> [Equal RuleACInst] -> Reduction ChangeIndicator
 solveRuleEqs split eqs = do
     contradictoryIf (not $ all evalEqual $ map (fmap (get rInfo)) eqs)
-    solveListEqs (solveFactEqs split) $
+    solveListEqs (solveFactEqs split OtherRule) $
         map (fmap (get rConcs)) eqs ++ map (fmap (get rPrems)) eqs
         ++ map (fmap (get rActs)) eqs
 

@@ -142,154 +142,158 @@ next
           by solve( Mint( blind(x, ~r), ~y.1, ~r.1 ) @ #j )
         next
           case C_2_case_05
-          solve( Mint( x.1, ~y.1, ~r.1 ) @ #j )
-            case C_1_case_1
-            solve( (#vr.5, 0) ~~> (#vk, 0) )
-              case d_xor_case_1
-              by solve( (#vr.7, 0) ~~> (#vk, 0) )
-            next
-              case d_xor_case_2
-              by solve( (#vr.7, 0) ~~> (#vk, 0) )
-            next
-              case d_xor_case_3
-              by solve( (#vr.7, 0) ~~> (#vk, 0) )
-            next
-              case d_xor_case_4
-              by solve( (#vr.7, 0) ~~> (#vk, 0) )
-            qed
-          next
-            case C_1_case_2
-            by solve( (#vr.5, 0) ~~> (#vk, 0) )
-          qed
+          by solve( Mint( blind(blind(x, ~r), x.1), ~y.1, ~r.1 ) @ #j )
         next
           case C_2_case_06
-          solve( Mint( x.1, ~y.1, ~r.1 ) @ #j )
-            case C_1_case_1
-            solve( (#vr.5, 0) ~~> (#vk, 0) )
-              case d_xor_case_1
-              by solve( (#vr.7, 0) ~~> (#vk, 0) )
-            next
-              case d_xor_case_2
-              by solve( (#vr.7, 0) ~~> (#vk, 0) )
-            next
-              case d_xor_case_3
-              by solve( (#vr.7, 0) ~~> (#vk, 0) )
-            next
-              case d_xor_case_4
-              by solve( (#vr.7, 0) ~~> (#vk, 0) )
-            qed
-          next
-            case C_1_case_2
-            by solve( (#vr.5, 0) ~~> (#vk, 0) )
-          qed
+          by solve( Mint( blind(blind(blind(x, ~r), x.1), x.2), ~y.1, ~r.1 ) @ #j )
         next
           case C_2_case_07
-          by solve( Mint( blind(blind(x, ~r), r.1), ~y.1, ~r.2 ) @ #j )
+          by solve( Mint( blind(blind(blind(blind(x, ~r), x.1), x.2), x.3), ~y.1,
+                          ~r.1
+                    ) @ #j )
         next
           case C_2_case_08
-          by solve( Mint( blind(m, r.1), ~y.1, ~r.2 ) @ #j )
+          by solve( Mint( blind(blind(blind(blind(blind(x, ~r), x.1), x.2), x.3),
+                                x.4),
+                          ~y.1, ~r.1
+                    ) @ #j )
         next
           case C_2_case_09
-          by solve( Mint( blind(blind(blind(x, ~r), r.1), r.2), ~y.1, ~r.3 ) @ #j )
+          by solve( Mint( blind(blind(blind(blind(blind(blind(x, ~r), x.1), x.2),
+                                            x.3),
+                                      x.4),
+                                x.5),
+                          ~y.1, ~r.1
+                    ) @ #j )
         next
           case C_2_case_10
-          by solve( Mint( blind(blind(m, r.1), r.2), ~y.1, ~r.3 ) @ #j )
+          by solve( Mint( blind(blind(blind(blind(blind(blind(x.1, x.2), x.3),
+                                                  x.4),
+                                            x.5),
+                                      x.6),
+                                x.7),
+                          ~y.1, ~r.1
+                    ) @ #j )
         next
           case C_2_case_11
-          by solve( Mint( blind(blind(blind(blind(x, ~r), r.1), r.2), r.3), ~y.1,
-                          ~r.4
+          by solve( Mint( blind(blind(blind(blind(blind(x.1, x.2), x.3), x.4),
+                                      x.5),
+                                x.6),
+                          ~y.1, ~r.1
                     ) @ #j )
         next
           case C_2_case_12
-          by solve( Mint( blind(blind(blind(m, r.1), r.2), r.3), ~y.1, ~r.4
+          by solve( Mint( blind(blind(blind(blind(x.1, x.2), x.3), x.4), x.5),
+                          ~y.1, ~r.1
                     ) @ #j )
         next
           case C_2_case_13
-          by solve( Mint( blind(blind(blind(blind(blind(x, ~r), r.1), r.2), r.3),
-                                r.4),
-                          ~y.1, ~r.5
+          by solve( Mint( blind(blind(blind(x.1, x.2), x.3), x.4), ~y.1, ~r.1
                     ) @ #j )
         next
           case C_2_case_14
-          by solve( Mint( blind(blind(blind(blind(m, r.1), r.2), r.3), r.4), ~y.1,
-                          ~r.5
-                    ) @ #j )
+          by solve( Mint( blind(blind(x.1, x.2), x.3), ~y.1, ~r.1 ) @ #j )
         next
           case C_2_case_15
-          by solve( Mint( blind(blind(blind(blind(blind(blind(x, ~r), r.1), r.2),
-                                            r.3),
-                                      r.4),
-                                r.5),
-                          ~y.1, ~r.6
-                    ) @ #j )
+          by solve( Mint( blind(x.1, x.2), ~y.1, ~r.1 ) @ #j )
         next
           case C_2_case_16
-          by solve( Mint( blind(blind(blind(blind(blind(m, r.1), r.2), r.3), r.4),
-                                r.5),
-                          ~y.1, ~r.6
-                    ) @ #j )
+          by solve( Mint( blind(blind(x, ~r), x.1), ~y.1, ~r.1 ) @ #j )
         next
           case C_2_case_17
-          by solve( Mint( blind(blind(blind(blind(blind(blind(m, r.1), r.2), r.3),
-                                            r.4),
-                                      r.5),
-                                r.6),
-                          ~y.1, ~r.7
-                    ) @ #j )
+          by solve( Mint( blind(blind(blind(x, ~r), x.1), x.2), ~y.1, ~r.1 ) @ #j )
         next
           case C_2_case_18
-          by solve( Mint( blind(blind(x, ~r), r.1), ~y.1, ~r.2 ) @ #j )
+          by solve( Mint( blind(blind(blind(blind(x, ~r), x.1), x.2), x.3), ~y.1,
+                          ~r.1
+                    ) @ #j )
         next
           case C_2_case_19
-          by solve( Mint( blind(m, r.1), ~y.1, ~r.2 ) @ #j )
+          by solve( Mint( blind(blind(blind(blind(blind(x, ~r), x.1), x.2), x.3),
+                                x.4),
+                          ~y.1, ~r.1
+                    ) @ #j )
         next
           case C_2_case_20
-          by solve( Mint( blind(blind(blind(x, ~r), r.1), r.2), ~y.1, ~r.3 ) @ #j )
+          by solve( Mint( blind(blind(blind(blind(blind(blind(x, ~r), x.1), x.2),
+                                            x.3),
+                                      x.4),
+                                x.5),
+                          ~y.1, ~r.1
+                    ) @ #j )
         next
           case C_2_case_21
-          by solve( Mint( blind(blind(m, r.1), r.2), ~y.1, ~r.3 ) @ #j )
+          by solve( Mint( blind(blind(blind(blind(blind(blind(x.1, x.2), x.3),
+                                                  x.4),
+                                            x.5),
+                                      x.6),
+                                x.7),
+                          ~y.1, ~r.1
+                    ) @ #j )
         next
           case C_2_case_22
-          by solve( Mint( blind(blind(blind(blind(x, ~r), r.1), r.2), r.3), ~y.1,
-                          ~r.4
+          by solve( Mint( blind(blind(blind(blind(blind(x.1, x.2), x.3), x.4),
+                                      x.5),
+                                x.6),
+                          ~y.1, ~r.1
                     ) @ #j )
         next
           case C_2_case_23
-          by solve( Mint( blind(blind(blind(m, r.1), r.2), r.3), ~y.1, ~r.4
+          by solve( Mint( blind(blind(blind(blind(x.1, x.2), x.3), x.4), x.5),
+                          ~y.1, ~r.1
                     ) @ #j )
         next
           case C_2_case_24
-          by solve( Mint( blind(blind(blind(blind(blind(x, ~r), r.1), r.2), r.3),
-                                r.4),
-                          ~y.1, ~r.5
+          by solve( Mint( blind(blind(blind(x.1, x.2), x.3), x.4), ~y.1, ~r.1
                     ) @ #j )
         next
           case C_2_case_25
-          by solve( Mint( blind(blind(blind(blind(m, r.1), r.2), r.3), r.4), ~y.1,
-                          ~r.5
-                    ) @ #j )
+          by solve( Mint( blind(blind(x.1, x.2), x.3), ~y.1, ~r.1 ) @ #j )
         next
           case C_2_case_26
-          by solve( Mint( blind(blind(blind(blind(blind(blind(x, ~r), r.1), r.2),
-                                            r.3),
-                                      r.4),
-                                r.5),
-                          ~y.1, ~r.6
-                    ) @ #j )
+          by solve( Mint( blind(x.1, x.2), ~y.1, ~r.1 ) @ #j )
         next
           case C_2_case_27
-          by solve( Mint( blind(blind(blind(blind(blind(m, r.1), r.2), r.3), r.4),
-                                r.5),
-                          ~y.1, ~r.6
-                    ) @ #j )
+          solve( Mint( x.1, ~y.1, ~r.1 ) @ #j )
+            case C_1_case_1
+            solve( (#vr.5, 0) ~~> (#vk, 0) )
+              case d_xor_case_1
+              by solve( (#vr.7, 0) ~~> (#vk, 0) )
+            next
+              case d_xor_case_2
+              by solve( (#vr.7, 0) ~~> (#vk, 0) )
+            next
+              case d_xor_case_3
+              by solve( (#vr.7, 0) ~~> (#vk, 0) )
+            next
+              case d_xor_case_4
+              by solve( (#vr.7, 0) ~~> (#vk, 0) )
+            qed
+          next
+            case C_1_case_2
+            by solve( (#vr.5, 0) ~~> (#vk, 0) )
+          qed
         next
           case C_2_case_28
-          by solve( Mint( blind(blind(blind(blind(blind(blind(m, r.1), r.2), r.3),
-                                            r.4),
-                                      r.5),
-                                r.6),
-                          ~y.1, ~r.7
-                    ) @ #j )
+          solve( Mint( x.1, ~y.1, ~r.1 ) @ #j )
+            case C_1_case_1
+            solve( (#vr.5, 0) ~~> (#vk, 0) )
+              case d_xor_case_1
+              by solve( (#vr.7, 0) ~~> (#vk, 0) )
+            next
+              case d_xor_case_2
+              by solve( (#vr.7, 0) ~~> (#vk, 0) )
+            next
+              case d_xor_case_3
+              by solve( (#vr.7, 0) ~~> (#vk, 0) )
+            next
+              case d_xor_case_4
+              by solve( (#vr.7, 0) ~~> (#vk, 0) )
+            qed
+          next
+            case C_1_case_2
+            by solve( (#vr.5, 0) ~~> (#vk, 0) )
+          qed
         next
           case c_sign
           solve( !KU( blind(x, ~r) ) @ #vk.1 )
@@ -342,104 +346,108 @@ next
             qed
           next
             case C_2_case_03
-            solve( Mint( x.1, ~y.1, ~r.1 ) @ #j )
-              case C_1_case_1
-              solve( (#vr.5, 0) ~~> (#vk.1, 0) )
-                case d_xor_case_1
-                by solve( (#vr.7, 0) ~~> (#vk.1, 0) )
-              next
-                case d_xor_case_2
-                by solve( (#vr.7, 0) ~~> (#vk.1, 0) )
-              next
-                case d_xor_case_3
-                by solve( (#vr.7, 0) ~~> (#vk.1, 0) )
-              next
-                case d_xor_case_4
-                by solve( (#vr.7, 0) ~~> (#vk.1, 0) )
-              qed
-            next
-              case C_1_case_2
-              by solve( (#vr.5, 0) ~~> (#vk.1, 0) )
-            qed
+            by solve( Mint( blind(blind(blind(blind(blind(blind(x.1, x.2), x.3),
+                                                    x.4),
+                                              x.5),
+                                        x.6),
+                                  x.7),
+                            ~y.1, ~r.1
+                      ) @ #j )
           next
             case C_2_case_04
-            solve( Mint( x.1, ~y.1, ~r.1 ) @ #j )
-              case C_1_case_1
-              solve( (#vr.5, 0) ~~> (#vk.1, 0) )
-                case d_xor_case_1
-                by solve( (#vr.7, 0) ~~> (#vk.1, 0) )
-              next
-                case d_xor_case_2
-                by solve( (#vr.7, 0) ~~> (#vk.1, 0) )
-              next
-                case d_xor_case_3
-                by solve( (#vr.7, 0) ~~> (#vk.1, 0) )
-              next
-                case d_xor_case_4
-                by solve( (#vr.7, 0) ~~> (#vk.1, 0) )
-              qed
-            next
-              case C_1_case_2
-              by solve( (#vr.5, 0) ~~> (#vk.1, 0) )
-            qed
+            by solve( Mint( blind(blind(blind(blind(blind(x.1, x.2), x.3), x.4),
+                                        x.5),
+                                  x.6),
+                            ~y.1, ~r.1
+                      ) @ #j )
           next
             case C_2_case_05
-            by solve( Mint( blind(m, r.1), ~y.1, ~r.2 ) @ #j )
+            by solve( Mint( blind(blind(blind(blind(x.1, x.2), x.3), x.4), x.5),
+                            ~y.1, ~r.1
+                      ) @ #j )
           next
             case C_2_case_06
-            by solve( Mint( blind(blind(m, r.1), r.2), ~y.1, ~r.3 ) @ #j )
+            by solve( Mint( blind(blind(blind(x.1, x.2), x.3), x.4), ~y.1, ~r.1
+                      ) @ #j )
           next
             case C_2_case_07
-            by solve( Mint( blind(blind(blind(m, r.1), r.2), r.3), ~y.1, ~r.4
-                      ) @ #j )
+            by solve( Mint( blind(blind(x.1, x.2), x.3), ~y.1, ~r.1 ) @ #j )
           next
             case C_2_case_08
-            by solve( Mint( blind(blind(blind(blind(m, r.1), r.2), r.3), r.4), ~y.1,
-                            ~r.5
-                      ) @ #j )
+            by solve( Mint( blind(x.1, x.2), ~y.1, ~r.1 ) @ #j )
           next
             case C_2_case_09
-            by solve( Mint( blind(blind(blind(blind(blind(m, r.1), r.2), r.3), r.4),
-                                  r.5),
-                            ~y.1, ~r.6
+            by solve( Mint( blind(blind(blind(blind(blind(blind(x.1, x.2), x.3),
+                                                    x.4),
+                                              x.5),
+                                        x.6),
+                                  x.7),
+                            ~y.1, ~r.1
                       ) @ #j )
           next
             case C_2_case_10
-            by solve( Mint( blind(blind(blind(blind(blind(blind(m, r.1), r.2), r.3),
-                                              r.4),
-                                        r.5),
-                                  r.6),
-                            ~y.1, ~r.7
+            by solve( Mint( blind(blind(blind(blind(blind(x.1, x.2), x.3), x.4),
+                                        x.5),
+                                  x.6),
+                            ~y.1, ~r.1
                       ) @ #j )
           next
             case C_2_case_11
-            by solve( Mint( blind(m, r.1), ~y.1, ~r.2 ) @ #j )
+            by solve( Mint( blind(blind(blind(blind(x.1, x.2), x.3), x.4), x.5),
+                            ~y.1, ~r.1
+                      ) @ #j )
           next
             case C_2_case_12
-            by solve( Mint( blind(blind(m, r.1), r.2), ~y.1, ~r.3 ) @ #j )
+            by solve( Mint( blind(blind(blind(x.1, x.2), x.3), x.4), ~y.1, ~r.1
+                      ) @ #j )
           next
             case C_2_case_13
-            by solve( Mint( blind(blind(blind(m, r.1), r.2), r.3), ~y.1, ~r.4
-                      ) @ #j )
+            by solve( Mint( blind(blind(x.1, x.2), x.3), ~y.1, ~r.1 ) @ #j )
           next
             case C_2_case_14
-            by solve( Mint( blind(blind(blind(blind(m, r.1), r.2), r.3), r.4), ~y.1,
-                            ~r.5
-                      ) @ #j )
+            by solve( Mint( blind(x.1, x.2), ~y.1, ~r.1 ) @ #j )
           next
             case C_2_case_15
-            by solve( Mint( blind(blind(blind(blind(blind(m, r.1), r.2), r.3), r.4),
-                                  r.5),
-                            ~y.1, ~r.6
-                      ) @ #j )
+            solve( Mint( x.1, ~y.1, ~r.1 ) @ #j )
+              case C_1_case_1
+              solve( (#vr.5, 0) ~~> (#vk.1, 0) )
+                case d_xor_case_1
+                by solve( (#vr.7, 0) ~~> (#vk.1, 0) )
+              next
+                case d_xor_case_2
+                by solve( (#vr.7, 0) ~~> (#vk.1, 0) )
+              next
+                case d_xor_case_3
+                by solve( (#vr.7, 0) ~~> (#vk.1, 0) )
+              next
+                case d_xor_case_4
+                by solve( (#vr.7, 0) ~~> (#vk.1, 0) )
+              qed
+            next
+              case C_1_case_2
+              by solve( (#vr.5, 0) ~~> (#vk.1, 0) )
+            qed
           next
             case C_2_case_16
-            by solve( Mint( blind(blind(blind(blind(blind(blind(m, r.1), r.2), r.3),
-                                              r.4),
-                                        r.5),
-                                  r.6),
-                            ~y.1, ~r.7
-                      ) @ #j )
+            solve( Mint( x.1, ~y.1, ~r.1 ) @ #j )
+              case C_1_case_1
+              solve( (#vr.5, 0) ~~> (#vk.1, 0) )
+                case d_xor_case_1
+                by solve( (#vr.7, 0) ~~> (#vk.1, 0) )
+              next
+                case d_xor_case_2
+                by solve( (#vr.7, 0) ~~> (#vk.1, 0) )
+              next
+                case d_xor_case_3
+                by solve( (#vr.7, 0) ~~> (#vk.1, 0) )
+              next
+                case d_xor_case_4
+                by solve( (#vr.7, 0) ~~> (#vk.1, 0) )
+              qed
+            next
+              case C_1_case_2
+              by solve( (#vr.5, 0) ~~> (#vk.1, 0) )
+            qed
           next
             case c_blind
             solve( !KU( ~r ) @ #vk.4 )
@@ -486,104 +494,108 @@ next
               qed
             next
               case C_2_case_03
-              solve( Mint( x.1, ~y.1, ~r.1 ) @ #j )
-                case C_1_case_1
-                solve( (#vr.5, 0) ~~> (#vk.2, 0) )
-                  case d_xor_case_1
-                  by solve( (#vr.7, 0) ~~> (#vk.2, 0) )
-                next
-                  case d_xor_case_2
-                  by solve( (#vr.7, 0) ~~> (#vk.2, 0) )
-                next
-                  case d_xor_case_3
-                  by solve( (#vr.7, 0) ~~> (#vk.2, 0) )
-                next
-                  case d_xor_case_4
-                  by solve( (#vr.7, 0) ~~> (#vk.2, 0) )
-                qed
-              next
-                case C_1_case_2
-                by solve( (#vr.5, 0) ~~> (#vk.2, 0) )
-              qed
+              by solve( Mint( blind(blind(blind(blind(blind(blind(x.1, x.2), x.3),
+                                                      x.4),
+                                                x.5),
+                                          x.6),
+                                    x.7),
+                              ~y.1, ~r.1
+                        ) @ #j )
             next
               case C_2_case_04
-              solve( Mint( x.1, ~y.1, ~r.1 ) @ #j )
-                case C_1_case_1
-                solve( (#vr.5, 0) ~~> (#vk.2, 0) )
-                  case d_xor_case_1
-                  by solve( (#vr.7, 0) ~~> (#vk.2, 0) )
-                next
-                  case d_xor_case_2
-                  by solve( (#vr.7, 0) ~~> (#vk.2, 0) )
-                next
-                  case d_xor_case_3
-                  by solve( (#vr.7, 0) ~~> (#vk.2, 0) )
-                next
-                  case d_xor_case_4
-                  by solve( (#vr.7, 0) ~~> (#vk.2, 0) )
-                qed
-              next
-                case C_1_case_2
-                by solve( (#vr.5, 0) ~~> (#vk.2, 0) )
-              qed
+              by solve( Mint( blind(blind(blind(blind(blind(x.1, x.2), x.3), x.4),
+                                          x.5),
+                                    x.6),
+                              ~y.1, ~r.1
+                        ) @ #j )
             next
               case C_2_case_05
-              by solve( Mint( blind(m, r.1), ~y.1, ~r.2 ) @ #j )
+              by solve( Mint( blind(blind(blind(blind(x.1, x.2), x.3), x.4), x.5),
+                              ~y.1, ~r.1
+                        ) @ #j )
             next
               case C_2_case_06
-              by solve( Mint( blind(blind(m, r.1), r.2), ~y.1, ~r.3 ) @ #j )
+              by solve( Mint( blind(blind(blind(x.1, x.2), x.3), x.4), ~y.1, ~r.1
+                        ) @ #j )
             next
               case C_2_case_07
-              by solve( Mint( blind(blind(blind(m, r.1), r.2), r.3), ~y.1, ~r.4
-                        ) @ #j )
+              by solve( Mint( blind(blind(x.1, x.2), x.3), ~y.1, ~r.1 ) @ #j )
             next
               case C_2_case_08
-              by solve( Mint( blind(blind(blind(blind(m, r.1), r.2), r.3), r.4), ~y.1,
-                              ~r.5
-                        ) @ #j )
+              by solve( Mint( blind(x.1, x.2), ~y.1, ~r.1 ) @ #j )
             next
               case C_2_case_09
-              by solve( Mint( blind(blind(blind(blind(blind(m, r.1), r.2), r.3), r.4),
-                                    r.5),
-                              ~y.1, ~r.6
+              by solve( Mint( blind(blind(blind(blind(blind(blind(x.1, x.2), x.3),
+                                                      x.4),
+                                                x.5),
+                                          x.6),
+                                    x.7),
+                              ~y.1, ~r.1
                         ) @ #j )
             next
               case C_2_case_10
-              by solve( Mint( blind(blind(blind(blind(blind(blind(m, r.1), r.2), r.3),
-                                                r.4),
-                                          r.5),
-                                    r.6),
-                              ~y.1, ~r.7
+              by solve( Mint( blind(blind(blind(blind(blind(x.1, x.2), x.3), x.4),
+                                          x.5),
+                                    x.6),
+                              ~y.1, ~r.1
                         ) @ #j )
             next
               case C_2_case_11
-              by solve( Mint( blind(m, r.1), ~y.1, ~r.2 ) @ #j )
+              by solve( Mint( blind(blind(blind(blind(x.1, x.2), x.3), x.4), x.5),
+                              ~y.1, ~r.1
+                        ) @ #j )
             next
               case C_2_case_12
-              by solve( Mint( blind(blind(m, r.1), r.2), ~y.1, ~r.3 ) @ #j )
+              by solve( Mint( blind(blind(blind(x.1, x.2), x.3), x.4), ~y.1, ~r.1
+                        ) @ #j )
             next
               case C_2_case_13
-              by solve( Mint( blind(blind(blind(m, r.1), r.2), r.3), ~y.1, ~r.4
-                        ) @ #j )
+              by solve( Mint( blind(blind(x.1, x.2), x.3), ~y.1, ~r.1 ) @ #j )
             next
               case C_2_case_14
-              by solve( Mint( blind(blind(blind(blind(m, r.1), r.2), r.3), r.4), ~y.1,
-                              ~r.5
-                        ) @ #j )
+              by solve( Mint( blind(x.1, x.2), ~y.1, ~r.1 ) @ #j )
             next
               case C_2_case_15
-              by solve( Mint( blind(blind(blind(blind(blind(m, r.1), r.2), r.3), r.4),
-                                    r.5),
-                              ~y.1, ~r.6
-                        ) @ #j )
+              solve( Mint( x.1, ~y.1, ~r.1 ) @ #j )
+                case C_1_case_1
+                solve( (#vr.5, 0) ~~> (#vk.2, 0) )
+                  case d_xor_case_1
+                  by solve( (#vr.7, 0) ~~> (#vk.2, 0) )
+                next
+                  case d_xor_case_2
+                  by solve( (#vr.7, 0) ~~> (#vk.2, 0) )
+                next
+                  case d_xor_case_3
+                  by solve( (#vr.7, 0) ~~> (#vk.2, 0) )
+                next
+                  case d_xor_case_4
+                  by solve( (#vr.7, 0) ~~> (#vk.2, 0) )
+                qed
+              next
+                case C_1_case_2
+                by solve( (#vr.5, 0) ~~> (#vk.2, 0) )
+              qed
             next
               case C_2_case_16
-              by solve( Mint( blind(blind(blind(blind(blind(blind(m, r.1), r.2), r.3),
-                                                r.4),
-                                          r.5),
-                                    r.6),
-                              ~y.1, ~r.7
-                        ) @ #j )
+              solve( Mint( x.1, ~y.1, ~r.1 ) @ #j )
+                case C_1_case_1
+                solve( (#vr.5, 0) ~~> (#vk.2, 0) )
+                  case d_xor_case_1
+                  by solve( (#vr.7, 0) ~~> (#vk.2, 0) )
+                next
+                  case d_xor_case_2
+                  by solve( (#vr.7, 0) ~~> (#vk.2, 0) )
+                next
+                  case d_xor_case_3
+                  by solve( (#vr.7, 0) ~~> (#vk.2, 0) )
+                next
+                  case d_xor_case_4
+                  by solve( (#vr.7, 0) ~~> (#vk.2, 0) )
+                qed
+              next
+                case C_1_case_2
+                by solve( (#vr.5, 0) ~~> (#vk.2, 0) )
+              qed
             qed
           qed
         qed
@@ -648,154 +660,158 @@ next
           by solve( Mint( blind(x, ~r), ~y.1, ~r.1 ) @ #j )
         next
           case C_2_case_05
-          solve( Mint( x.1, ~y.1, ~r.1 ) @ #j )
-            case C_1_case_1
-            solve( (#vr.5, 0) ~~> (#vk, 0) )
-              case d_xor_case_1
-              by solve( (#vr.7, 0) ~~> (#vk, 0) )
-            next
-              case d_xor_case_2
-              by solve( (#vr.7, 0) ~~> (#vk, 0) )
-            next
-              case d_xor_case_3
-              by solve( (#vr.7, 0) ~~> (#vk, 0) )
-            next
-              case d_xor_case_4
-              by solve( (#vr.7, 0) ~~> (#vk, 0) )
-            qed
-          next
-            case C_1_case_2
-            by solve( (#vr.5, 0) ~~> (#vk, 0) )
-          qed
+          by solve( Mint( blind(blind(x, ~r), x.1), ~y.1, ~r.1 ) @ #j )
         next
           case C_2_case_06
-          solve( Mint( x.1, ~y.1, ~r.1 ) @ #j )
-            case C_1_case_1
-            solve( (#vr.5, 0) ~~> (#vk, 0) )
-              case d_xor_case_1
-              by solve( (#vr.7, 0) ~~> (#vk, 0) )
-            next
-              case d_xor_case_2
-              by solve( (#vr.7, 0) ~~> (#vk, 0) )
-            next
-              case d_xor_case_3
-              by solve( (#vr.7, 0) ~~> (#vk, 0) )
-            next
-              case d_xor_case_4
-              by solve( (#vr.7, 0) ~~> (#vk, 0) )
-            qed
-          next
-            case C_1_case_2
-            by solve( (#vr.5, 0) ~~> (#vk, 0) )
-          qed
+          by solve( Mint( blind(blind(blind(x, ~r), x.1), x.2), ~y.1, ~r.1 ) @ #j )
         next
           case C_2_case_07
-          by solve( Mint( blind(blind(x, ~r), r.1), ~y.1, ~r.2 ) @ #j )
+          by solve( Mint( blind(blind(blind(blind(x, ~r), x.1), x.2), x.3), ~y.1,
+                          ~r.1
+                    ) @ #j )
         next
           case C_2_case_08
-          by solve( Mint( blind(m, r.1), ~y.1, ~r.2 ) @ #j )
+          by solve( Mint( blind(blind(blind(blind(blind(x, ~r), x.1), x.2), x.3),
+                                x.4),
+                          ~y.1, ~r.1
+                    ) @ #j )
         next
           case C_2_case_09
-          by solve( Mint( blind(blind(blind(x, ~r), r.1), r.2), ~y.1, ~r.3 ) @ #j )
+          by solve( Mint( blind(blind(blind(blind(blind(blind(x, ~r), x.1), x.2),
+                                            x.3),
+                                      x.4),
+                                x.5),
+                          ~y.1, ~r.1
+                    ) @ #j )
         next
           case C_2_case_10
-          by solve( Mint( blind(blind(m, r.1), r.2), ~y.1, ~r.3 ) @ #j )
+          by solve( Mint( blind(blind(blind(blind(blind(blind(x.1, x.2), x.3),
+                                                  x.4),
+                                            x.5),
+                                      x.6),
+                                x.7),
+                          ~y.1, ~r.1
+                    ) @ #j )
         next
           case C_2_case_11
-          by solve( Mint( blind(blind(blind(blind(x, ~r), r.1), r.2), r.3), ~y.1,
-                          ~r.4
+          by solve( Mint( blind(blind(blind(blind(blind(x.1, x.2), x.3), x.4),
+                                      x.5),
+                                x.6),
+                          ~y.1, ~r.1
                     ) @ #j )
         next
           case C_2_case_12
-          by solve( Mint( blind(blind(blind(m, r.1), r.2), r.3), ~y.1, ~r.4
+          by solve( Mint( blind(blind(blind(blind(x.1, x.2), x.3), x.4), x.5),
+                          ~y.1, ~r.1
                     ) @ #j )
         next
           case C_2_case_13
-          by solve( Mint( blind(blind(blind(blind(blind(x, ~r), r.1), r.2), r.3),
-                                r.4),
-                          ~y.1, ~r.5
+          by solve( Mint( blind(blind(blind(x.1, x.2), x.3), x.4), ~y.1, ~r.1
                     ) @ #j )
         next
           case C_2_case_14
-          by solve( Mint( blind(blind(blind(blind(m, r.1), r.2), r.3), r.4), ~y.1,
-                          ~r.5
-                    ) @ #j )
+          by solve( Mint( blind(blind(x.1, x.2), x.3), ~y.1, ~r.1 ) @ #j )
         next
           case C_2_case_15
-          by solve( Mint( blind(blind(blind(blind(blind(blind(x, ~r), r.1), r.2),
-                                            r.3),
-                                      r.4),
-                                r.5),
-                          ~y.1, ~r.6
-                    ) @ #j )
+          by solve( Mint( blind(x.1, x.2), ~y.1, ~r.1 ) @ #j )
         next
           case C_2_case_16
-          by solve( Mint( blind(blind(blind(blind(blind(m, r.1), r.2), r.3), r.4),
-                                r.5),
-                          ~y.1, ~r.6
-                    ) @ #j )
+          by solve( Mint( blind(blind(x, ~r), x.1), ~y.1, ~r.1 ) @ #j )
         next
           case C_2_case_17
-          by solve( Mint( blind(blind(blind(blind(blind(blind(m, r.1), r.2), r.3),
-                                            r.4),
-                                      r.5),
-                                r.6),
-                          ~y.1, ~r.7
-                    ) @ #j )
+          by solve( Mint( blind(blind(blind(x, ~r), x.1), x.2), ~y.1, ~r.1 ) @ #j )
         next
           case C_2_case_18
-          by solve( Mint( blind(blind(x, ~r), r.1), ~y.1, ~r.2 ) @ #j )
+          by solve( Mint( blind(blind(blind(blind(x, ~r), x.1), x.2), x.3), ~y.1,
+                          ~r.1
+                    ) @ #j )
         next
           case C_2_case_19
-          by solve( Mint( blind(m, r.1), ~y.1, ~r.2 ) @ #j )
+          by solve( Mint( blind(blind(blind(blind(blind(x, ~r), x.1), x.2), x.3),
+                                x.4),
+                          ~y.1, ~r.1
+                    ) @ #j )
         next
           case C_2_case_20
-          by solve( Mint( blind(blind(blind(x, ~r), r.1), r.2), ~y.1, ~r.3 ) @ #j )
+          by solve( Mint( blind(blind(blind(blind(blind(blind(x, ~r), x.1), x.2),
+                                            x.3),
+                                      x.4),
+                                x.5),
+                          ~y.1, ~r.1
+                    ) @ #j )
         next
           case C_2_case_21
-          by solve( Mint( blind(blind(m, r.1), r.2), ~y.1, ~r.3 ) @ #j )
+          by solve( Mint( blind(blind(blind(blind(blind(blind(x.1, x.2), x.3),
+                                                  x.4),
+                                            x.5),
+                                      x.6),
+                                x.7),
+                          ~y.1, ~r.1
+                    ) @ #j )
         next
           case C_2_case_22
-          by solve( Mint( blind(blind(blind(blind(x, ~r), r.1), r.2), r.3), ~y.1,
-                          ~r.4
+          by solve( Mint( blind(blind(blind(blind(blind(x.1, x.2), x.3), x.4),
+                                      x.5),
+                                x.6),
+                          ~y.1, ~r.1
                     ) @ #j )
         next
           case C_2_case_23
-          by solve( Mint( blind(blind(blind(m, r.1), r.2), r.3), ~y.1, ~r.4
+          by solve( Mint( blind(blind(blind(blind(x.1, x.2), x.3), x.4), x.5),
+                          ~y.1, ~r.1
                     ) @ #j )
         next
           case C_2_case_24
-          by solve( Mint( blind(blind(blind(blind(blind(x, ~r), r.1), r.2), r.3),
-                                r.4),
-                          ~y.1, ~r.5
+          by solve( Mint( blind(blind(blind(x.1, x.2), x.3), x.4), ~y.1, ~r.1
                     ) @ #j )
         next
           case C_2_case_25
-          by solve( Mint( blind(blind(blind(blind(m, r.1), r.2), r.3), r.4), ~y.1,
-                          ~r.5
-                    ) @ #j )
+          by solve( Mint( blind(blind(x.1, x.2), x.3), ~y.1, ~r.1 ) @ #j )
         next
           case C_2_case_26
-          by solve( Mint( blind(blind(blind(blind(blind(blind(x, ~r), r.1), r.2),
-                                            r.3),
-                                      r.4),
-                                r.5),
-                          ~y.1, ~r.6
-                    ) @ #j )
+          by solve( Mint( blind(x.1, x.2), ~y.1, ~r.1 ) @ #j )
         next
           case C_2_case_27
-          by solve( Mint( blind(blind(blind(blind(blind(m, r.1), r.2), r.3), r.4),
-                                r.5),
-                          ~y.1, ~r.6
-                    ) @ #j )
+          solve( Mint( x.1, ~y.1, ~r.1 ) @ #j )
+            case C_1_case_1
+            solve( (#vr.5, 0) ~~> (#vk, 0) )
+              case d_xor_case_1
+              by solve( (#vr.7, 0) ~~> (#vk, 0) )
+            next
+              case d_xor_case_2
+              by solve( (#vr.7, 0) ~~> (#vk, 0) )
+            next
+              case d_xor_case_3
+              by solve( (#vr.7, 0) ~~> (#vk, 0) )
+            next
+              case d_xor_case_4
+              by solve( (#vr.7, 0) ~~> (#vk, 0) )
+            qed
+          next
+            case C_1_case_2
+            by solve( (#vr.5, 0) ~~> (#vk, 0) )
+          qed
         next
           case C_2_case_28
-          by solve( Mint( blind(blind(blind(blind(blind(blind(m, r.1), r.2), r.3),
-                                            r.4),
-                                      r.5),
-                                r.6),
-                          ~y.1, ~r.7
-                    ) @ #j )
+          solve( Mint( x.1, ~y.1, ~r.1 ) @ #j )
+            case C_1_case_1
+            solve( (#vr.5, 0) ~~> (#vk, 0) )
+              case d_xor_case_1
+              by solve( (#vr.7, 0) ~~> (#vk, 0) )
+            next
+              case d_xor_case_2
+              by solve( (#vr.7, 0) ~~> (#vk, 0) )
+            next
+              case d_xor_case_3
+              by solve( (#vr.7, 0) ~~> (#vk, 0) )
+            next
+              case d_xor_case_4
+              by solve( (#vr.7, 0) ~~> (#vk, 0) )
+            qed
+          next
+            case C_1_case_2
+            by solve( (#vr.5, 0) ~~> (#vk, 0) )
+          qed
         next
           case c_sign
           solve( !KU( blind(x, ~r) ) @ #vk.1 )
@@ -848,104 +864,108 @@ next
             qed
           next
             case C_2_case_03
-            solve( Mint( x.1, ~y.1, ~r.1 ) @ #j )
-              case C_1_case_1
-              solve( (#vr.5, 0) ~~> (#vk.1, 0) )
-                case d_xor_case_1
-                by solve( (#vr.7, 0) ~~> (#vk.1, 0) )
-              next
-                case d_xor_case_2
-                by solve( (#vr.7, 0) ~~> (#vk.1, 0) )
-              next
-                case d_xor_case_3
-                by solve( (#vr.7, 0) ~~> (#vk.1, 0) )
-              next
-                case d_xor_case_4
-                by solve( (#vr.7, 0) ~~> (#vk.1, 0) )
-              qed
-            next
-              case C_1_case_2
-              by solve( (#vr.5, 0) ~~> (#vk.1, 0) )
-            qed
+            by solve( Mint( blind(blind(blind(blind(blind(blind(x.1, x.2), x.3),
+                                                    x.4),
+                                              x.5),
+                                        x.6),
+                                  x.7),
+                            ~y.1, ~r.1
+                      ) @ #j )
           next
             case C_2_case_04
-            solve( Mint( x.1, ~y.1, ~r.1 ) @ #j )
-              case C_1_case_1
-              solve( (#vr.5, 0) ~~> (#vk.1, 0) )
-                case d_xor_case_1
-                by solve( (#vr.7, 0) ~~> (#vk.1, 0) )
-              next
-                case d_xor_case_2
-                by solve( (#vr.7, 0) ~~> (#vk.1, 0) )
-              next
-                case d_xor_case_3
-                by solve( (#vr.7, 0) ~~> (#vk.1, 0) )
-              next
-                case d_xor_case_4
-                by solve( (#vr.7, 0) ~~> (#vk.1, 0) )
-              qed
-            next
-              case C_1_case_2
-              by solve( (#vr.5, 0) ~~> (#vk.1, 0) )
-            qed
+            by solve( Mint( blind(blind(blind(blind(blind(x.1, x.2), x.3), x.4),
+                                        x.5),
+                                  x.6),
+                            ~y.1, ~r.1
+                      ) @ #j )
           next
             case C_2_case_05
-            by solve( Mint( blind(m, r.1), ~y.1, ~r.2 ) @ #j )
+            by solve( Mint( blind(blind(blind(blind(x.1, x.2), x.3), x.4), x.5),
+                            ~y.1, ~r.1
+                      ) @ #j )
           next
             case C_2_case_06
-            by solve( Mint( blind(blind(m, r.1), r.2), ~y.1, ~r.3 ) @ #j )
+            by solve( Mint( blind(blind(blind(x.1, x.2), x.3), x.4), ~y.1, ~r.1
+                      ) @ #j )
           next
             case C_2_case_07
-            by solve( Mint( blind(blind(blind(m, r.1), r.2), r.3), ~y.1, ~r.4
-                      ) @ #j )
+            by solve( Mint( blind(blind(x.1, x.2), x.3), ~y.1, ~r.1 ) @ #j )
           next
             case C_2_case_08
-            by solve( Mint( blind(blind(blind(blind(m, r.1), r.2), r.3), r.4), ~y.1,
-                            ~r.5
-                      ) @ #j )
+            by solve( Mint( blind(x.1, x.2), ~y.1, ~r.1 ) @ #j )
           next
             case C_2_case_09
-            by solve( Mint( blind(blind(blind(blind(blind(m, r.1), r.2), r.3), r.4),
-                                  r.5),
-                            ~y.1, ~r.6
+            by solve( Mint( blind(blind(blind(blind(blind(blind(x.1, x.2), x.3),
+                                                    x.4),
+                                              x.5),
+                                        x.6),
+                                  x.7),
+                            ~y.1, ~r.1
                       ) @ #j )
           next
             case C_2_case_10
-            by solve( Mint( blind(blind(blind(blind(blind(blind(m, r.1), r.2), r.3),
-                                              r.4),
-                                        r.5),
-                                  r.6),
-                            ~y.1, ~r.7
+            by solve( Mint( blind(blind(blind(blind(blind(x.1, x.2), x.3), x.4),
+                                        x.5),
+                                  x.6),
+                            ~y.1, ~r.1
                       ) @ #j )
           next
             case C_2_case_11
-            by solve( Mint( blind(m, r.1), ~y.1, ~r.2 ) @ #j )
+            by solve( Mint( blind(blind(blind(blind(x.1, x.2), x.3), x.4), x.5),
+                            ~y.1, ~r.1
+                      ) @ #j )
           next
             case C_2_case_12
-            by solve( Mint( blind(blind(m, r.1), r.2), ~y.1, ~r.3 ) @ #j )
+            by solve( Mint( blind(blind(blind(x.1, x.2), x.3), x.4), ~y.1, ~r.1
+                      ) @ #j )
           next
             case C_2_case_13
-            by solve( Mint( blind(blind(blind(m, r.1), r.2), r.3), ~y.1, ~r.4
-                      ) @ #j )
+            by solve( Mint( blind(blind(x.1, x.2), x.3), ~y.1, ~r.1 ) @ #j )
           next
             case C_2_case_14
-            by solve( Mint( blind(blind(blind(blind(m, r.1), r.2), r.3), r.4), ~y.1,
-                            ~r.5
-                      ) @ #j )
+            by solve( Mint( blind(x.1, x.2), ~y.1, ~r.1 ) @ #j )
           next
             case C_2_case_15
-            by solve( Mint( blind(blind(blind(blind(blind(m, r.1), r.2), r.3), r.4),
-                                  r.5),
-                            ~y.1, ~r.6
-                      ) @ #j )
+            solve( Mint( x.1, ~y.1, ~r.1 ) @ #j )
+              case C_1_case_1
+              solve( (#vr.5, 0) ~~> (#vk.1, 0) )
+                case d_xor_case_1
+                by solve( (#vr.7, 0) ~~> (#vk.1, 0) )
+              next
+                case d_xor_case_2
+                by solve( (#vr.7, 0) ~~> (#vk.1, 0) )
+              next
+                case d_xor_case_3
+                by solve( (#vr.7, 0) ~~> (#vk.1, 0) )
+              next
+                case d_xor_case_4
+                by solve( (#vr.7, 0) ~~> (#vk.1, 0) )
+              qed
+            next
+              case C_1_case_2
+              by solve( (#vr.5, 0) ~~> (#vk.1, 0) )
+            qed
           next
             case C_2_case_16
-            by solve( Mint( blind(blind(blind(blind(blind(blind(m, r.1), r.2), r.3),
-                                              r.4),
-                                        r.5),
-                                  r.6),
-                            ~y.1, ~r.7
-                      ) @ #j )
+            solve( Mint( x.1, ~y.1, ~r.1 ) @ #j )
+              case C_1_case_1
+              solve( (#vr.5, 0) ~~> (#vk.1, 0) )
+                case d_xor_case_1
+                by solve( (#vr.7, 0) ~~> (#vk.1, 0) )
+              next
+                case d_xor_case_2
+                by solve( (#vr.7, 0) ~~> (#vk.1, 0) )
+              next
+                case d_xor_case_3
+                by solve( (#vr.7, 0) ~~> (#vk.1, 0) )
+              next
+                case d_xor_case_4
+                by solve( (#vr.7, 0) ~~> (#vk.1, 0) )
+              qed
+            next
+              case C_1_case_2
+              by solve( (#vr.5, 0) ~~> (#vk.1, 0) )
+            qed
           next
             case c_blind
             solve( !KU( ~r ) @ #vk.4 )
@@ -992,104 +1012,108 @@ next
               qed
             next
               case C_2_case_03
-              solve( Mint( x.1, ~y.1, ~r.1 ) @ #j )
-                case C_1_case_1
-                solve( (#vr.5, 0) ~~> (#vk.2, 0) )
-                  case d_xor_case_1
-                  by solve( (#vr.7, 0) ~~> (#vk.2, 0) )
-                next
-                  case d_xor_case_2
-                  by solve( (#vr.7, 0) ~~> (#vk.2, 0) )
-                next
-                  case d_xor_case_3
-                  by solve( (#vr.7, 0) ~~> (#vk.2, 0) )
-                next
-                  case d_xor_case_4
-                  by solve( (#vr.7, 0) ~~> (#vk.2, 0) )
-                qed
-              next
-                case C_1_case_2
-                by solve( (#vr.5, 0) ~~> (#vk.2, 0) )
-              qed
+              by solve( Mint( blind(blind(blind(blind(blind(blind(x.1, x.2), x.3),
+                                                      x.4),
+                                                x.5),
+                                          x.6),
+                                    x.7),
+                              ~y.1, ~r.1
+                        ) @ #j )
             next
               case C_2_case_04
-              solve( Mint( x.1, ~y.1, ~r.1 ) @ #j )
-                case C_1_case_1
-                solve( (#vr.5, 0) ~~> (#vk.2, 0) )
-                  case d_xor_case_1
-                  by solve( (#vr.7, 0) ~~> (#vk.2, 0) )
-                next
-                  case d_xor_case_2
-                  by solve( (#vr.7, 0) ~~> (#vk.2, 0) )
-                next
-                  case d_xor_case_3
-                  by solve( (#vr.7, 0) ~~> (#vk.2, 0) )
-                next
-                  case d_xor_case_4
-                  by solve( (#vr.7, 0) ~~> (#vk.2, 0) )
-                qed
-              next
-                case C_1_case_2
-                by solve( (#vr.5, 0) ~~> (#vk.2, 0) )
-              qed
+              by solve( Mint( blind(blind(blind(blind(blind(x.1, x.2), x.3), x.4),
+                                          x.5),
+                                    x.6),
+                              ~y.1, ~r.1
+                        ) @ #j )
             next
               case C_2_case_05
-              by solve( Mint( blind(m, r.1), ~y.1, ~r.2 ) @ #j )
+              by solve( Mint( blind(blind(blind(blind(x.1, x.2), x.3), x.4), x.5),
+                              ~y.1, ~r.1
+                        ) @ #j )
             next
               case C_2_case_06
-              by solve( Mint( blind(blind(m, r.1), r.2), ~y.1, ~r.3 ) @ #j )
+              by solve( Mint( blind(blind(blind(x.1, x.2), x.3), x.4), ~y.1, ~r.1
+                        ) @ #j )
             next
               case C_2_case_07
-              by solve( Mint( blind(blind(blind(m, r.1), r.2), r.3), ~y.1, ~r.4
-                        ) @ #j )
+              by solve( Mint( blind(blind(x.1, x.2), x.3), ~y.1, ~r.1 ) @ #j )
             next
               case C_2_case_08
-              by solve( Mint( blind(blind(blind(blind(m, r.1), r.2), r.3), r.4), ~y.1,
-                              ~r.5
-                        ) @ #j )
+              by solve( Mint( blind(x.1, x.2), ~y.1, ~r.1 ) @ #j )
             next
               case C_2_case_09
-              by solve( Mint( blind(blind(blind(blind(blind(m, r.1), r.2), r.3), r.4),
-                                    r.5),
-                              ~y.1, ~r.6
+              by solve( Mint( blind(blind(blind(blind(blind(blind(x.1, x.2), x.3),
+                                                      x.4),
+                                                x.5),
+                                          x.6),
+                                    x.7),
+                              ~y.1, ~r.1
                         ) @ #j )
             next
               case C_2_case_10
-              by solve( Mint( blind(blind(blind(blind(blind(blind(m, r.1), r.2), r.3),
-                                                r.4),
-                                          r.5),
-                                    r.6),
-                              ~y.1, ~r.7
+              by solve( Mint( blind(blind(blind(blind(blind(x.1, x.2), x.3), x.4),
+                                          x.5),
+                                    x.6),
+                              ~y.1, ~r.1
                         ) @ #j )
             next
               case C_2_case_11
-              by solve( Mint( blind(m, r.1), ~y.1, ~r.2 ) @ #j )
+              by solve( Mint( blind(blind(blind(blind(x.1, x.2), x.3), x.4), x.5),
+                              ~y.1, ~r.1
+                        ) @ #j )
             next
               case C_2_case_12
-              by solve( Mint( blind(blind(m, r.1), r.2), ~y.1, ~r.3 ) @ #j )
+              by solve( Mint( blind(blind(blind(x.1, x.2), x.3), x.4), ~y.1, ~r.1
+                        ) @ #j )
             next
               case C_2_case_13
-              by solve( Mint( blind(blind(blind(m, r.1), r.2), r.3), ~y.1, ~r.4
-                        ) @ #j )
+              by solve( Mint( blind(blind(x.1, x.2), x.3), ~y.1, ~r.1 ) @ #j )
             next
               case C_2_case_14
-              by solve( Mint( blind(blind(blind(blind(m, r.1), r.2), r.3), r.4), ~y.1,
-                              ~r.5
-                        ) @ #j )
+              by solve( Mint( blind(x.1, x.2), ~y.1, ~r.1 ) @ #j )
             next
               case C_2_case_15
-              by solve( Mint( blind(blind(blind(blind(blind(m, r.1), r.2), r.3), r.4),
-                                    r.5),
-                              ~y.1, ~r.6
-                        ) @ #j )
+              solve( Mint( x.1, ~y.1, ~r.1 ) @ #j )
+                case C_1_case_1
+                solve( (#vr.5, 0) ~~> (#vk.2, 0) )
+                  case d_xor_case_1
+                  by solve( (#vr.7, 0) ~~> (#vk.2, 0) )
+                next
+                  case d_xor_case_2
+                  by solve( (#vr.7, 0) ~~> (#vk.2, 0) )
+                next
+                  case d_xor_case_3
+                  by solve( (#vr.7, 0) ~~> (#vk.2, 0) )
+                next
+                  case d_xor_case_4
+                  by solve( (#vr.7, 0) ~~> (#vk.2, 0) )
+                qed
+              next
+                case C_1_case_2
+                by solve( (#vr.5, 0) ~~> (#vk.2, 0) )
+              qed
             next
               case C_2_case_16
-              by solve( Mint( blind(blind(blind(blind(blind(blind(m, r.1), r.2), r.3),
-                                                r.4),
-                                          r.5),
-                                    r.6),
-                              ~y.1, ~r.7
-                        ) @ #j )
+              solve( Mint( x.1, ~y.1, ~r.1 ) @ #j )
+                case C_1_case_1
+                solve( (#vr.5, 0) ~~> (#vk.2, 0) )
+                  case d_xor_case_1
+                  by solve( (#vr.7, 0) ~~> (#vk.2, 0) )
+                next
+                  case d_xor_case_2
+                  by solve( (#vr.7, 0) ~~> (#vk.2, 0) )
+                next
+                  case d_xor_case_3
+                  by solve( (#vr.7, 0) ~~> (#vk.2, 0) )
+                next
+                  case d_xor_case_4
+                  by solve( (#vr.7, 0) ~~> (#vk.2, 0) )
+                qed
+              next
+                case C_1_case_2
+                by solve( (#vr.5, 0) ~~> (#vk.2, 0) )
+              qed
             qed
           qed
         qed
@@ -1247,9 +1271,9 @@ qed
 /*
 Generated from:
 Tamarin version 1.13.0
-Maude version 3.4
-Git revision: 1deff12bd69c96308abb2463d4de5f2c7610c191 (with uncommited changes), branch: develop
-Compiled at: 2026-03-09 07:36:56.194364 UTC
+Maude version 3.5.1
+Git revision: 53c49a44efa784b133c907eedf84491d61a48803 (with uncommited changes), branch: AC-NDC-property
+Compiled at: 2026-07-09 13:42:51.535083 UTC
 */
 
 end
@@ -1261,7 +1285,7 @@ summary of summaries:
 analyzed: examples/csf18-xor/chaum_offline_anonymity.spthy
 
   output:          examples/csf18-xor/chaum_offline_anonymity.spthy.tmp
-  processing time: 6.44s
+  processing time: 4.06s
   
   coins (all-traces): verified (283 steps)
   exec (exists-trace): verified (7 steps)

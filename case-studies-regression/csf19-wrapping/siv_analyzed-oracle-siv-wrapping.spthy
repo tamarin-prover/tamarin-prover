@@ -13120,9 +13120,9 @@ qed
 /*
 Generated from:
 Tamarin version 1.13.0
-Maude version 3.4
-Git revision: 1deff12bd69c96308abb2463d4de5f2c7610c191 (with uncommited changes), branch: develop
-Compiled at: 2026-03-09 07:36:56.194364 UTC
+Maude version 3.5.1
+Git revision: 53c49a44efa784b133c907eedf84491d61a48803 (with uncommited changes), branch: AC-NDC-property
+Compiled at: 2026-07-09 13:42:51.535083 UTC
 */
 
 end
@@ -13134,7 +13134,7 @@ summary of summaries:
 analyzed: examples/csf19-wrapping/siv.spthy
 
   output:          examples/csf19-wrapping/siv.spthy.tmp
-  processing time: 42.29s
+  processing time: 41.72s
   
   origin (all-traces): verified (2086 steps)
   Counter_Monotonicity (all-traces): verified (888 steps)

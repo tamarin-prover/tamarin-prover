@@ -1,0 +1,151 @@
+theory traceable
+
+begin
+
+// Function signature and definition of the equational theory E
+
+functions: fst/1, h/1, pair/2, snd/1, unionUD/1 [destructor], add/2 [AC]
+equations:
+    fst(<x.1, x.2>) = x.1,
+    snd(<x.1, x.2>) = x.2,
+    unionUD((x add y)) = x
+
+rule (modulo E) setup:
+   [ Fr( key1 ), Fr( key2 ) ]
+  --[ Setup( ) ]->
+   [
+   Reader( ('1' add diff((key1 add key2), (key1 add key1))) ),
+   Tag( ('1' add diff((key1 add key2), (key1 add key1))) )
+   ]
+
+rule (modulo E) select_tag:
+   [ Tag( (~k add z) ) ] --> [ TagRun( ~k ), Tag( z ) ]
+
+rule (modulo E) select_reader:
+   [ Reader( (~k add z) ) ] --> [ ReaderRun( ~k ), Reader( z ) ]
+
+rule (modulo E) reader1:
+   [ Fr( ~nr ) ] --> [ Reader1( ~nr ), Out( ~nr ) ]
+
+rule (modulo E) tag1:
+   [ In( x ), TagRun( k ), Fr( ~nt ) ]
+  --[ TagRun( k ) ]->
+   [ Out( h(<x, k>) ) ]
+
+rule (modulo E) reader2:
+   [ Reader1( ~nr ), ReaderRun( k ), In( h(<~nr, k>) ) ]
+  --[ Finished( ) ]->
+   [ ]
+
+lemma executable [right]:
+  exists-trace "∃ #i. Finished( ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #i. (Finished( ) @ #i)"
+*/
+simplify
+solve( Reader1( ~nr ) ▶₀ #i )
+  case reader1
+  solve( ReaderRun( k ) ▶₁ #i )
+    case select_reader
+    solve( !KU( h(<~nr, ~k>) ) @ #vk )
+      case tag1
+      solve( Reader( (~k add z) ) ▶₀ #vr.1 )
+        case setup
+        solve( Tag( (~k add z) ) ▶₀ #vr.3 )
+          case setup
+          solve( !KU( ~nr ) @ #vk.1 )
+            case reader1
+            SOLVED // trace found
+          qed
+        qed
+      qed
+    qed
+  qed
+qed
+
+lemma executable [left]:
+  exists-trace "∃ #i. Finished( ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #i. (Finished( ) @ #i)"
+*/
+simplify
+solve( Reader1( ~nr ) ▶₀ #i )
+  case reader1
+  solve( ReaderRun( k ) ▶₁ #i )
+    case select_reader
+    solve( !KU( h(<~nr, ~k>) ) @ #vk )
+      case tag1
+      solve( Reader( (~k add z) ) ▶₀ #vr.1 )
+        case setup_case_1
+        solve( Tag( (~k add z) ) ▶₀ #vr.3 )
+          case setup
+          solve( !KU( ~nr ) @ #vk.1 )
+            case reader1
+            SOLVED // trace found
+          qed
+        qed
+      qed
+    qed
+  qed
+qed
+
+diffLemma Observational_equivalence:
+rule-equivalence
+  case Rule_Equality
+  backward-search
+    case RHS
+    step( simplify )
+    step( solve( !KD( x ) ▶₁ #i ) )
+      case tag1
+      step( solve( (#vl, 0) ~~> (#i, 1) ) )
+        case h
+        step( solve( TagRun( k ) ▶₁ #vr ) )
+          case select_tag
+          step( solve( Tag( (~k add z) ) ▶₀ #vr.1 ) )
+            case select_tag
+            step( solve( Tag( (~k add z add ~k.1) ) ▶₀ #vr.2 ) )
+              case setup
+              step( solve( !KU( h(<x, ~k>) ) @ #vk ) )
+                case tag1
+                step( solve( Tag( (~k add z) ) ▶₀ #vr.5 ) )
+                  case setup
+                  by ATTACK // trace found
+                qed
+              qed
+            qed
+          qed
+        qed
+      qed
+    qed
+  qed
+qed
+
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.13.0
+Maude version 3.5.1
+Git revision: 53c49a44efa784b133c907eedf84491d61a48803 (with uncommited changes), branch: AC-NDC-property
+Compiled at: 2026-07-09 13:42:51.535083 UTC
+*/
+
+end
+/* Output
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/csf26-ac/fast/diff/traceable.spthy
+
+  output:          examples/csf26-ac/fast/diff/traceable.spthy.tmp
+  processing time: 0.27s
+  
+  RHS :  executable (exists-trace): verified (8 steps)
+  LHS :  executable (exists-trace): verified (8 steps)
+  DiffLemma:  Observational_equivalence : falsified - found trace (11 steps)
+
+==============================================================================
+*/

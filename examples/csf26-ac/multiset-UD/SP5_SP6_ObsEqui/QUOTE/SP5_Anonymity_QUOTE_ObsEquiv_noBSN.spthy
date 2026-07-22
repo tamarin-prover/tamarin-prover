@@ -1,0 +1,225 @@
+theory SP5_Anonymity_QUOTE_ObsEqui_noBSN begin
+
+// Function signature and definition of the equational theory E
+
+functions: BSN/1, E/2, E_S/2, F1/1, F2/1, H_6/1, H_SHA256/1,
+           H_k_1/1, H_k_2/2, H_k_6/6, H_n_2/2, H_n_4/4, H_p/1, KDF_AES/1,
+           KDF_EK/1, KDF_a/3, L_J/2, MAC/2, Nonce/1, Pcr_Set/1, PkX/2, PkY/2,
+           PointG1/2, RB/2, RD/2, accept/0, adec/2, aenc/2, calcE/1,
+           calcE_S/1, calcL_J/1, calcRB/1, calcRD/1, curlyK/1, fst/1, len16/1,
+           minus/2, multp/2, pair/2, pk/1, plus/2, quotePCR/2, sdec/2, senc/2,
+           snd/1, verifyCre1/4, verifyCre2/5, verifyCre3/4, verifyCre4/5,
+           add/2 [AC], unionUD/1 [destructor]
+equations:
+    adec(aenc(x.1, pk(x.2)), x.2) = x.1,
+    fst(<x.1, x.2>) = x.1,
+    sdec(senc(x.1, x.2), x.2) = x.1,
+    snd(<x.1, x.2>) = x.2,
+    unionUD(add(x, y)) = x
+
+tactic: diff_signatures_no_verify
+presort: C
+prio: {id}
+  regex"!Pk\("
+  regex"!Ltk\("
+  regex"Correct"
+  regex"Shuffle"
+  regex"TPM_Public"
+  regex"TPM_EK_QPD"
+prio: {id}
+  regex"~~>"
+
+
+
+
+
+
+
+restriction single_issuer_single_init [right]:
+  "∀ #i #j.
+    ((Issuer_Init( ) @ #i) ∧ (Issuer_Init( ) @ #j)) ⇒ (#i = #j)"
+  // safety formula
+
+restriction single_issuer_single_init [left]:
+  "∀ #i #j.
+    ((Issuer_Init( ) @ #i) ∧ (Issuer_Init( ) @ #j)) ⇒ (#i = #j)"
+  // safety formula
+
+rule (modulo E) Issuer_Init:
+   [ Fr( ~x ), Fr( ~y ) ]
+  --[ Issuer_Init( ), OnlyOnce( 'Issuer_Init' ) ]->
+   [
+   !Ltk( 'Issuer', ~x, ~y ),
+   !Pk( 'Issuer', PkX(~x, 'P2'), PkY(~y, 'P2') ),
+   Out( <PkX(~x, 'P2'), PkY(~y, 'P2')> )
+   ]
+
+rule (modulo E) Issuer_KeyReveal:
+   [ !Ltk( I, x, y ) ]
+  --[ KeyReveal( 'Issuer_KeyReveal', I ) ]->
+   [ Out( <x, y> ) ]
+
+rule (modulo E) Generate_TPM_DAA_PCR_Quote:
+   [
+   !Pk( I, PkX(x, 'P2'), PkY(y, 'P2') ), !Ltk( I, x, y ), Fr( ~r1 ),
+   Fr( ~r2 ), Fr( ~pcr_set1 ), Fr( ~pcr_set2 ), Fr( ~pcrset_values1 ),
+   Fr( ~pcrset_values2 ), Fr( ~TPM_EK_Seed1 ), Fr( ~f1 ), Fr( ~sl_1 ),
+   Fr( ~cv1_1 ), Fr( ~r_cv1_1 ), Fr( ~rnd_n_Q1 ), Fr( ~TPM_EK_Seed2 ),
+   Fr( ~f2 ), Fr( ~sl_2 ), Fr( ~cv1_2 ), Fr( ~r_cv1_2 ),
+   Fr( ~rnd_n_Q2 )
+   ]
+  --[ CreateSigmas( ), OnlyOnce( 'SIGN' ) ]->
+   [
+   Shuffle_Sigmas( add(<
+                        E_S(~r_cv1_1, multp(~sl_1, multp(y, multp(~r1, 'P1')))), 
+                        Pcr_Set(~pcr_set1), BSN('bottom'), multp(~sl_1, multp(~r1, 'P1')), 
+                        multp(~sl_1, multp(y, multp(~r1, 'P1'))), 
+                        multp(~sl_1,
+                              plus(multp(x, multp(~r1, 'P1')),
+                                   multp(multp(multp(~r1, x), y), multp(~f1, 'P1')))), 
+                        multp(~sl_1, multp(multp(~r1, y), multp(~f1, 'P1'))), 
+                        quotePCR(Pcr_Set(~pcr_set1), ~pcrset_values1), 
+                        H_n_2(Nonce(~rnd_n_Q1),
+                              H_k_2(H_k_6('pcr_data', multp(~sl_1, multp(~r1, 'P1')),
+                                          multp(~sl_1, multp(y, multp(~r1, 'P1'))),
+                                          multp(~sl_1,
+                                                plus(multp(x, multp(~r1, 'P1')),
+                                                     multp(multp(multp(~r1, x), y),
+                                                           multp(~f1, 'P1')))),
+                                          multp(~sl_1, multp(multp(~r1, y), multp(~f1, 'P1'))),
+                                          E_S(~r_cv1_1, multp(~sl_1, multp(y, multp(~r1, 'P1'))))),
+                                    H_6(quotePCR(Pcr_Set(~pcr_set1), ~pcrset_values1)))), 
+                        plus(~r_cv1_1,
+                             multp(H_n_2(Nonce(~rnd_n_Q1),
+                                         H_k_2(H_k_6('pcr_data', multp(~sl_1, multp(~r1, 'P1')),
+                                                     multp(~sl_1, multp(y, multp(~r1, 'P1'))),
+                                                     multp(~sl_1,
+                                                           plus(multp(x, multp(~r1, 'P1')),
+                                                                multp(multp(multp(~r1, x), y),
+                                                                      multp(~f1, 'P1')))),
+                                                     multp(~sl_1,
+                                                           multp(multp(~r1, y), multp(~f1, 'P1'))),
+                                                     E_S(~r_cv1_1,
+                                                         multp(~sl_1, multp(y, multp(~r1, 'P1'))))),
+                                               H_6(quotePCR(Pcr_Set(~pcr_set1), ~pcrset_values1)))),
+                                   ~f1)), 
+                        Nonce(~rnd_n_Q1), 'pcr_data'>,
+                       <E_S(~r_cv1_2, multp(~sl_2, multp(y, multp(~r2, 'P1')))), 
+                        Pcr_Set(~pcr_set2), BSN('bottom'), multp(~sl_2, multp(~r2, 'P1')), 
+                        multp(~sl_2, multp(y, multp(~r2, 'P1'))), 
+                        multp(~sl_2,
+                              plus(multp(x, multp(~r2, 'P1')),
+                                   multp(multp(multp(~r2, x), y), multp(~f2, 'P1')))), 
+                        multp(~sl_2, multp(multp(~r2, y), multp(~f2, 'P1'))), 
+                        quotePCR(Pcr_Set(~pcr_set2), ~pcrset_values2), 
+                        H_n_2(Nonce(~rnd_n_Q2),
+                              H_k_2(H_k_6('pcr_data', multp(~sl_2, multp(~r2, 'P1')),
+                                          multp(~sl_2, multp(y, multp(~r2, 'P1'))),
+                                          multp(~sl_2,
+                                                plus(multp(x, multp(~r2, 'P1')),
+                                                     multp(multp(multp(~r2, x), y),
+                                                           multp(~f2, 'P1')))),
+                                          multp(~sl_2, multp(multp(~r2, y), multp(~f2, 'P1'))),
+                                          E_S(~r_cv1_2, multp(~sl_2, multp(y, multp(~r2, 'P1'))))),
+                                    H_6(quotePCR(Pcr_Set(~pcr_set2), ~pcrset_values2)))), 
+                        plus(~r_cv1_2,
+                             multp(H_n_2(Nonce(~rnd_n_Q2),
+                                         H_k_2(H_k_6('pcr_data', multp(~sl_2, multp(~r2, 'P1')),
+                                                     multp(~sl_2, multp(y, multp(~r2, 'P1'))),
+                                                     multp(~sl_2,
+                                                           plus(multp(x, multp(~r2, 'P1')),
+                                                                multp(multp(multp(~r2, x), y),
+                                                                      multp(~f2, 'P1')))),
+                                                     multp(~sl_2,
+                                                           multp(multp(~r2, y), multp(~f2, 'P1'))),
+                                                     E_S(~r_cv1_2,
+                                                         multp(~sl_2, multp(y, multp(~r2, 'P1'))))),
+                                               H_6(quotePCR(Pcr_Set(~pcr_set2), ~pcrset_values2)))),
+                                   ~f2)), 
+                        Nonce(~rnd_n_Q2), 'pcr_data'>)
+   ),
+   TPM_EK_QPD1( <pk(KDF_EK(~TPM_EK_Seed1)), 'DAA_public_data', 
+                 multp(~f1, 'P1')>
+   ),
+   TPM_EK_QPD2( <pk(KDF_EK(~TPM_EK_Seed2)), 'DAA_public_data', 
+                 multp(~f2, 'P1')>
+   )
+   ]
+
+rule (modulo E) Diff_DAA_QUOTE_no_verify:
+   [
+   Shuffle_Sigmas( add(<E_S(r_cv1_1, S1), pcrset1, bsn1, R1, S1, T1, 
+                        W1, curlyP1, h2_host1, small_s1, n_Q1, pcrData>,
+                       <E_S(r_cv1_2, S2), pcrset2, bsn2, R2, S2, T2, W2, curlyP2, 
+                        h2_host2, small_s2, n_Q2, pcrData>)
+   ),
+   TPM_EK_QPD1( <pk(e1), Q_PD1> ), TPM_EK_QPD2( <pk(e2), Q_PD2> )
+   ]
+  --[ Diff_Sigs( ), OnlyOnce( 'Diff_DAA_QUOTE' ) ]->
+   [
+   Out( <'FirstTPM', pk(e1), Q_PD1> ),
+   Out( <'SecondTPM', pk(e2), Q_PD2> ),
+   Out( diff(<E_S(r_cv1_1, S1), pcrset1, bsn1, R1, S1, T1, W1, 
+              curlyP1, h2_host1, small_s1, n_Q1, pcrData>, <E_S(r_cv1_2, S2), 
+                                                            pcrset2, bsn2, R2, S2, T2, W2, curlyP2, 
+                                                            h2_host2, small_s2, n_Q2, pcrData>)
+   )
+   ]
+
+lemma diff_signatures_no_verify [right,
+                                 heuristic={diff_signatures_no_verify}]:
+  exists-trace
+  "∃ #t1 #t2 #t3.
+    ((((((Issuer_Init( ) @ #t1) ∧ (CreateSigmas( ) @ #t2)) ∧
+        (Diff_Sigs( ) @ #t3)) ∧
+       (#t1 < #t2)) ∧
+      (#t2 < #t3)) ∧
+     (¬(∃ RevealEvent ENTITY #k1.
+         KeyReveal( RevealEvent, ENTITY ) @ #k1))) ∧
+    (∀ event #i #j.
+      ((OnlyOnce( event ) @ #i) ∧ (OnlyOnce( event ) @ #j)) ⇒ (#i = #j))"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #t1 #t2 #t3.
+  (Issuer_Init( ) @ #t1) ∧
+  (CreateSigmas( ) @ #t2) ∧
+  (Diff_Sigs( ) @ #t3)
+ ∧
+  (#t1 < #t2) ∧
+  (#t2 < #t3) ∧
+  (∀ RevealEvent ENTITY #k1.
+    (KeyReveal( RevealEvent, ENTITY ) @ #k1) ⇒ ⊥) ∧
+  (∀ event #i #j.
+    (OnlyOnce( event ) @ #i) ∧ (OnlyOnce( event ) @ #j) ⇒ #i = #j)"
+*/
+by sorry
+
+lemma diff_signatures_no_verify [left,
+                                 heuristic={diff_signatures_no_verify}]:
+  exists-trace
+  "∃ #t1 #t2 #t3.
+    ((((((Issuer_Init( ) @ #t1) ∧ (CreateSigmas( ) @ #t2)) ∧
+        (Diff_Sigs( ) @ #t3)) ∧
+       (#t1 < #t2)) ∧
+      (#t2 < #t3)) ∧
+     (¬(∃ RevealEvent ENTITY #k1.
+         KeyReveal( RevealEvent, ENTITY ) @ #k1))) ∧
+    (∀ event #i #j.
+      ((OnlyOnce( event ) @ #i) ∧ (OnlyOnce( event ) @ #j)) ⇒ (#i = #j))"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #t1 #t2 #t3.
+  (Issuer_Init( ) @ #t1) ∧
+  (CreateSigmas( ) @ #t2) ∧
+  (Diff_Sigs( ) @ #t3)
+ ∧
+  (#t1 < #t2) ∧
+  (#t2 < #t3) ∧
+  (∀ RevealEvent ENTITY #k1.
+    (KeyReveal( RevealEvent, ENTITY ) @ #k1) ⇒ ⊥) ∧
+  (∀ event #i #j.
+    (OnlyOnce( event ) @ #i) ∧ (OnlyOnce( event ) @ #j) ⇒ #i = #j)"
+*/
+by sorry
+
+end

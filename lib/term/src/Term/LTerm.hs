@@ -54,6 +54,8 @@ module Term.LTerm (
   , isNatVar
   , isPubConst
   , isSimpleTerm
+  , isTrivialFunSymTerm
+  , isTrivialACFunSymTerm
   , getVar
   , getMsgVar
   , freshToConst
@@ -62,6 +64,7 @@ module Term.LTerm (
   , niFactors
   , flattenedACTerms
   , containsPrivate
+  , containsOnlyNoEq
   , containsNoPrivateExcept
   , neverContainsFreshPriv
 
@@ -367,15 +370,22 @@ flattenedACTerms _ term = [term]
 containsPrivate :: Term t -> Bool
 containsPrivate t = case viewTerm t of
     Lit _                          -> False
-    FApp (NoEq (_,(_,Private,_))) _  -> True
+    FApp (NoEq (_,(_,Private,_,_))) _  -> True
     FApp _                      as -> any containsPrivate as
 
+-- | @containsOnlyNoEq t@ returns @True@ if @t@ contains only NoEq function symbols (no AC function or C function)
+containsOnlyNoEq :: Term t -> Bool
+containsOnlyNoEq t = case viewTerm t of
+    Lit _            -> True
+    FApp (NoEq _) as -> foldr (\x -> (&& containsOnlyNoEq x)) True as
+    FApp _ _         -> False
+
 -- | containsNoPrivateExcept t t2@ returns @True@ if @t2@ contains private function symbols other than @t@.
-containsNoPrivateExcept :: [BC.ByteString] -> Term t -> Bool
+containsNoPrivateExcept :: [FunSym] -> Term t -> Bool
 containsNoPrivateExcept funs t = case viewTerm t of
-    Lit _                          -> True
-    FApp (NoEq (f,(_,Private,_))) as -> (elem f funs) && (all (containsNoPrivateExcept funs) as)
-    FApp _                      as -> all (containsNoPrivateExcept funs) as
+    Lit _                                -> True
+    FApp f@(NoEq (_,(_,Private,_,_))) as -> elem f funs && all (containsNoPrivateExcept funs) as
+    FApp _                            as -> all (containsNoPrivateExcept funs) as
 
 
 -- | A term is *simple* iff there is an instance of this term that can be
@@ -385,6 +395,17 @@ isSimpleTerm :: LNTerm -> Bool
 isSimpleTerm t =
     not (containsPrivate t) &&
     (getAll . foldMap (All . (LSortFresh /=) . sortOfLit) $ t)
+
+-- | True if the term is a given function term with only message variables as arguments
+isTrivialFunSymTerm :: LNTerm -> FunSym -> Bool
+isTrivialFunSymTerm (viewTerm -> FApp f t) sym = f == sym && all isMsgVar t
+isTrivialFunSymTerm _                      _   = False
+
+-- | True if the term is a given function term with only message variables as arguments
+isTrivialACFunSymTerm :: LNTerm -> Bool
+isTrivialACFunSymTerm (viewTerm -> FApp (AC _) t) = all isMsgVar t
+isTrivialACFunSymTerm _                           = False
+
 
 -- | 'True' iff no instance of this term contains fresh names or private function symbols.
 neverContainsFreshPriv :: LNTerm -> Bool
@@ -620,7 +641,7 @@ rename x = case boundsVarIdx x of
   where
     incVar shift (LVar n so i) = pure $ LVar n so (i+shift)
 
--- | @renameIgnoring t vars@ replaces all variables in @t@ with fresh variables, excpet for the variables in @vars@.
+-- | @renameIgnoring t vars@ replaces all variables in @t@ with fresh variables, except for the variables in @vars@.
 --   Note that the result is not guaranteed to be equal for terms that are
 --   equal modulo changing the indices of variables.
 renameIgnoring :: (MonadFresh m, HasFrees a) => [LVar] -> a -> m a
@@ -672,8 +693,9 @@ evalFreshTAvoiding m = evalFreshT m . avoid
 renameAvoiding :: (HasFrees s, HasFrees t) => s -> t -> s
 renameAvoiding s t = evalFreshAvoiding (rename s) t
 
--- | @s `renameAvoiding` t@ replaces all free variables in @s@ by
---   fresh variables avoiding variables in @t@.
+-- | @s `renameAvoidingIgnoring` t@ replaces all free variables in @s@, 
+--   except for the variables in @vars@ by fresh variables avoiding 
+--   variables in @t@.
 renameAvoidingIgnoring :: (HasFrees s, HasFrees t) => s -> t -> [LVar] -> s
 renameAvoidingIgnoring s t vars = renameIgnoring vars s `evalFreshAvoiding` t
 

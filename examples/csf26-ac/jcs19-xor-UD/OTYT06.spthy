@@ -1,0 +1,350 @@
+theory OTYT06 begin
+
+// Function signature and definition of the equational theory E
+
+functions: fst/1, h/1, pair/2, snd/1, xorr/2 [AC], zeroo/0
+equations:
+    fst(<x.1, x.2>) = x.1,
+    snd(<x.1, x.2>) = x.2,
+    xorr(xorr(x, y), x) = y,
+    xorr(x, x) = zeroo,
+    xorr(x, zeroo) = x
+
+tactic: t1
+presort: s
+prio: {id}
+  regex"induction"
+prio: {id}
+  regex"~~>"
+prio: {id}
+  regex"!K.\(~k"
+  regex"!K.\(\(~k"
+  regex"Setup\("
+  regex"Reader\(~k,~kp\)"
+prio: {id}
+  regex"Challenge\("
+  regex"TagRunning\("
+  regex"Response\("
+  regex"Initiated"
+prio: {id}
+  regex"!K.\(h\(~k"
+  regex"!K.\(\(h\(~k"
+  regex"!K.\(h\(\(~k"
+  regex"!K.\(.*~k"
+prio: {id}
+  regex"!K.\(h\(k"
+prio: {id}
+  regex"splitEqs\(0"
+prio: {id}
+  regex"!K.\(~r"
+prio: {id}
+  regex"!K.\(h\("
+prio: {id}
+  regex"Update.*\(~"
+prio: {id}
+  regex"splitEqs\(2"
+prio: {id}
+  regex"splitEqs\(3"
+deprio: {id}
+  regex"Update.*\("
+
+
+tactic: t2
+presort: s
+prio: {id}
+  regex"induction"
+  regex"Reader\(."
+prio: {id}
+  regex"Tag\("
+  regex"~~>"
+prio: {id}
+  regex"!K.\(~k"
+  regex"!K.\(\(~k"
+  regex"Setup\("
+prio: {id}
+  regex"!K.\(h\(~k"
+  regex"!K.\(\(h\(~k"
+  regex"!K.\(h\(\(~k"
+  regex"!K.\(.*~k"
+
+
+tactic: helping_keys_disjoint_OutX
+presort: s
+prio: {id}
+  regex"induction"
+  regex"Reader\(~k,~kp\)"
+prio: {id}
+  regex"~~>"
+prio: {id}
+  regex"!K.\(~k"
+  regex"!K.\(\(~k"
+  regex"Setup\("
+prio: {id}
+  regex"!K.\(h\(~k"
+  regex"!K.\(\(h\(~k"
+  regex"K.\(h\(\(~k"
+  regex"!K.\(.*~k"
+
+
+tactic: alive_reader
+presort: s
+prio: {id}
+  regex"Tag\("
+
+
+tactic: desynch_impossible
+presort: s
+prio: {id}
+  regex"Tag\("
+
+
+
+
+
+
+
+
+
+rule (modulo E) Setup:
+   [ Fr( ~k ) ]
+  --[ Setup( ~k ), KeyS( ~k ), OnlyOnce( ) ]->
+   [ Reader( ~k, ~k ), Tag( ~k, ~k ) ]
+
+rule (modulo E) reader1:
+   [ Fr( ~r1 ) ]
+  --[ ChallengeReader( ~r1 ), Ch( ~r1 ) ]->
+   [ Out( ~r1 ), Initiated( ~r1 ) ]
+
+rule (modulo E) tag1:
+   [ In( r1 ), Tag( ~k, x ) ]
+  --[
+  ResponseTag( ~k, x, r1 ), TagKey( ~k, x ), Response( ~k, 'Tag' ),
+  ChallengeTag( x ), Tag( ~k, x ), Running( ~k, 'Tag', x ),
+  KeyTag( x ), Tag1rule( )
+  ]->
+   [ Out( h(xorr(r1, x)) ), Tag( ~k, x ), TagRunning( ~k, x ) ]
+
+rule (modulo E) reader2:
+   [ Initiated( ~r1 ), Reader( ~k, ~kp ), In( xoredhash ), Fr( ~k1 ) ]
+  --[
+  Reader( ~k, ~kp ), AliveTag( ~k, ~kp, ~r1, xorr(~kp, ~r1) ),
+  Commit( ~k, 'Reader', ~kp ), Response( ~k, 'Reader' ),
+  Eq( xoredhash, h(xorr(~kp, ~r1)) ), KeyS( ~k ), KeyS( ~k1 ),
+  KeyS( ~kp ), KeyD( ~kp ), KeyX( xorr(~kp, ~r1) ),
+  OutK( xorr(~k1, ~kp) ), Ch( ~r1 ), Reader2rule( )
+  ]->
+   [ Out( xorr(~k1, ~kp) ), Reader( ~k, ~k1 ) ]
+
+rule (modulo E) tag2:
+   [ In( newkey ), Tag( ~k, x ), TagRunning( ~k, x ) ]
+  --[
+  Update( x, xorr(newkey, x), 'Tag' ), AliveReader( ~k ),
+  KeyTag( xorr(newkey, x) )
+  ]->
+   [ Tag( ~k, xorr(newkey, x) ) ]
+
+rule (modulo E) desynchronized:
+   [ Reader( ~k, x ), Tag( ~k, y ) ]
+  --[ InEq( x, y ), Desynch( ~k ) ]->
+   [ ]
+
+restriction equality:
+  "∀ x y #i. (Eq( x, y ) @ #i) ⇒ (x = y)"
+  // safety formula
+
+restriction inequality:
+  "∀ x #i. (InEq( x, x ) @ #i) ⇒ (⊥)"
+  // safety formula
+
+restriction unique:
+  "∀ #i #j. ((OnlyOnce( ) @ #i) ∧ (OnlyOnce( ) @ #j)) ⇒ (#i = #j)"
+  // safety formula
+
+lemma helping_reader_start [reuse, use_induction, heuristic={t2}]:
+  all-traces
+  "∀ x y #k.
+    (Reader( x, y ) @ #k) ⇒ (∃ #i. (Setup( x ) @ #i) ∧ (#i < #k))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ x y #k.
+  (Reader( x, y ) @ #k) ∧ ∀ #i. (Setup( x ) @ #i) ⇒ ¬(#i < #k)"
+*/
+by sorry
+
+lemma helping_tag_start [reuse, use_induction, heuristic={t2}]:
+  all-traces
+  "∀ x y #k.
+    (Tag( x, y ) @ #k) ⇒ (∃ #i. (Setup( x ) @ #i) ∧ (#i < #k))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ x y #k.
+  (Tag( x, y ) @ #k) ∧ ∀ #i. (Setup( x ) @ #i) ⇒ ¬(#i < #k)"
+*/
+by sorry
+
+lemma helping_keys_reader_are_secret [reuse, use_induction,
+                                      heuristic={t1}]:
+  all-traces "∀ x #i. (KeyS( x ) @ #i) ⇒ (¬(∃ #j. !KU( x ) @ #j))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ x #i. (KeyS( x ) @ #i) ∧ ∃ #j. (!KU( x ) @ #j)"
+*/
+by sorry
+
+lemma helping_keys_disjoint_challenge [reuse, use_induction,
+                                       heuristic={t1}]:
+  all-traces
+  "∀ x ch #i #j. ((KeyS( x ) @ #i) ∧ (Ch( ch ) @ #j)) ⇒ (¬(x = ch))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ x ch #i #j. (KeyS( x ) @ #i) ∧ (Ch( ch ) @ #j) ∧ x = ch"
+*/
+by sorry
+
+lemma helping_keys_disjoint_XX [reuse, use_induction]:
+  all-traces
+  "∀ x y #i #j.
+    ((KeyX( x ) @ #i) ∧ (KeyX( y ) @ #j)) ⇒ ((#i = #j) ∨ (¬(x = y)))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ x y #i #j.
+  (KeyX( x ) @ #i) ∧ (KeyX( y ) @ #j) ∧ (¬(#i = #j)) ∧ (x = y)"
+*/
+by sorry
+
+lemma helping_keys_disjoint_XS [reuse, use_induction]:
+  all-traces
+  "∀ x y #i #j. ((KeyX( x ) @ #i) ∧ (KeyS( y ) @ #j)) ⇒ (¬(x = y))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ x y #i #j. (KeyX( x ) @ #i) ∧ (KeyS( y ) @ #j) ∧ x = y"
+*/
+by sorry
+
+lemma helping_keys_disjoint_DD [reuse, use_induction,
+                                heuristic={t2}]:
+  all-traces
+  "∀ x y #i #j.
+    ((KeyD( x ) @ #i) ∧ (KeyD( y ) @ #j)) ⇒ ((#i = #j) ∨ (¬(x = y)))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ x y #i #j.
+  (KeyD( x ) @ #i) ∧ (KeyD( y ) @ #j) ∧ (¬(#i = #j)) ∧ (x = y)"
+*/
+by sorry
+
+lemma helping_keys_disjoint_OutX [reuse, use_induction,
+                                  heuristic={helping_keys_disjoint_OutX}]:
+  all-traces
+  "∀ x y #i #j.
+    ((OutK( x ) @ #i) ∧ (KeyX( y ) @ #j)) ⇒ ((#i = #j) ∨ (¬(x = y)))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ x y #i #j.
+  (OutK( x ) @ #i) ∧ (KeyX( y ) @ #j) ∧ (¬(#i = #j)) ∧ (x = y)"
+*/
+by sorry
+
+lemma alive_tag [use_induction]:
+  all-traces
+  "∀ k1 kp r kpr #i.
+    (AliveTag( k1, kp, r, kpr ) @ #i) ⇒
+    (∃ #j. Response( k1, 'Tag' ) @ #j)"
+/*
+guarded formula characterizing all counter-examples:
+"∃ k1 kp r kpr #i.
+  (AliveTag( k1, kp, r, kpr ) @ #i)
+ ∧
+  ∀ #j. (Response( k1, 'Tag' ) @ #j) ⇒ ⊥"
+*/
+by sorry
+
+lemma recentalive_tag_bounded [use_induction]:
+  all-traces
+  "((∀ #t1 #t2 #t3.
+      (((Tag1rule( ) @ #t1) ∧ (Tag1rule( ) @ #t2)) ∧
+       (Tag1rule( ) @ #t3)) ⇒
+      (((#t1 = #t2) ∨ (#t1 = #t3)) ∨ (#t2 = #t3))) ∧
+    (∀ #t1 #t2 #t3.
+      (((Reader2rule( ) @ #t1) ∧ (Reader2rule( ) @ #t2)) ∧
+       (Reader2rule( ) @ #t3)) ⇒
+      (((#t1 = #t2) ∨ (#t1 = #t3)) ∨ (#t2 = #t3)))) ⇒
+   (∀ k1 kp r kpr #i.
+     (AliveTag( k1, kp, r, kpr ) @ #i) ⇒
+     (∃ #j #k.
+       (((ChallengeReader( r ) @ #k) ∧ (Response( k1, 'Tag' ) @ #j)) ∧
+        (#k < #j)) ∧
+       (#j < #i)))"
+/*
+guarded formula characterizing all counter-examples:
+"(∀ #t1 #t2 #t3.
+   (Tag1rule( ) @ #t1) ∧ (Tag1rule( ) @ #t2) ∧ (Tag1rule( ) @ #t3)
+  ⇒
+   ((#t1 = #t2) ∨ (#t1 = #t3) ∨ (#t2 = #t3))) ∧
+ (∀ #t1 #t2 #t3.
+   (Reader2rule( ) @ #t1) ∧
+   (Reader2rule( ) @ #t2) ∧
+   (Reader2rule( ) @ #t3)
+  ⇒
+   ((#t1 = #t2) ∨ (#t1 = #t3) ∨ (#t2 = #t3))) ∧
+ (∃ k1 kp r kpr #i.
+   (AliveTag( k1, kp, r, kpr ) @ #i)
+  ∧
+   ∀ #j #k.
+    (ChallengeReader( r ) @ #k) ∧ (Response( k1, 'Tag' ) @ #j)
+   ⇒
+    ((¬(#k < #j)) ∨ (¬(#j < #i))))"
+*/
+by sorry
+
+lemma WA_tag:
+  all-traces
+  "∀ k1 kp r kpr #i.
+    (AliveTag( k1, kp, r, kpr ) @ #i) ⇒
+    (∃ #j. ResponseTag( k1, kp, r ) @ #j)"
+/*
+guarded formula characterizing all counter-examples:
+"∃ k1 kp r kpr #i.
+  (AliveTag( k1, kp, r, kpr ) @ #i)
+ ∧
+  ∀ #j. (ResponseTag( k1, kp, r ) @ #j) ⇒ ⊥"
+*/
+by sorry
+
+lemma alive_reader [heuristic={alive_reader}]:
+  all-traces
+  "∀ x #i.
+    (AliveReader( x ) @ #i) ⇒ (∃ #j. Response( x, 'Reader' ) @ #j)"
+/*
+guarded formula characterizing all counter-examples:
+"∃ x #i.
+  (AliveReader( x ) @ #i) ∧ ∀ #j. (Response( x, 'Reader' ) @ #j) ⇒ ⊥"
+*/
+by sorry
+
+lemma desynch_impossible [heuristic={desynch_impossible}]:
+  all-traces "¬(∃ k #i. Desynch( k ) @ #i)"
+/*
+guarded formula characterizing all counter-examples:
+"∃ k #i. (Desynch( k ) @ #i)"
+*/
+by sorry
+
+lemma executable:
+  exists-trace
+  "∃ x k r kr y #i #j #k.1.
+    (((AliveTag( x, k, r, kr ) @ #i) ∧ (Response( x, 'Tag' ) @ #j)) ∧
+     (Update( x, y, 'Tag' ) @ #k.1)) ∧
+    (¬(∃ #l. (Response( x, 'Tag' ) @ #l) ∧ (¬(#j = #l))))"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ x k r kr y #i #j #k.1.
+  (AliveTag( x, k, r, kr ) @ #i) ∧
+  (Response( x, 'Tag' ) @ #j) ∧
+  (Update( x, y, 'Tag' ) @ #k.1)
+ ∧
+  ∀ #l. (Response( x, 'Tag' ) @ #l) ⇒ #j = #l"
+*/
+by sorry
+
+end
