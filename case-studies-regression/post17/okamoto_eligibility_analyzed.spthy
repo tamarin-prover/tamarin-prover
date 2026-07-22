@@ -4,7 +4,7 @@ begin
 
 // Function signature and definition of the equational theory E
 
-functions: blind/2, checksign/2, f/4, fst/1, open/2, pair/2, pk/1,
+functions: blind/2, checksign/2, f/4 [NDC], fst/1, open/2, pair/2, pk/1,
            sign/2, snd/1, tdcommit/3, unblind/2
 equations [convergent]:
     checksign(sign(m, sk), pk(sk)) = m,
@@ -118,18 +118,18 @@ next
           by contradiction /* from formulas */
         next
           case V_1_case_3
-          solve( !KU( ~b ) @ #vk.4 )
+          solve( !KU( ~b ) @ #vk.3 )
             case A_1
-            solve( (#vr.12, 0) ~~> (#vk.1, 0) )
+            solve( (#vr.10, 0) ~~> (#vk.1, 0) )
               case d_0_open
               by contradiction /* forbidden KD-fact */
             qed
           qed
         next
           case V_1_case_4
-          solve( !KU( ~b ) @ #vk.3 )
+          solve( !KU( ~b ) @ #vk.4 )
             case A_1
-            solve( (#vr.10, 0) ~~> (#vk.1, 0) )
+            solve( (#vr.12, 0) ~~> (#vk.1, 0) )
               case d_0_open
               by contradiction /* forbidden KD-fact */
             qed
@@ -203,9 +203,9 @@ qed
 /*
 Generated from:
 Tamarin version 1.13.0
-Maude version 3.4
-Git revision: 1deff12bd69c96308abb2463d4de5f2c7610c191 (with uncommited changes), branch: develop
-Compiled at: 2026-03-09 07:36:56.194364 UTC
+Maude version 3.5.1
+Git revision: 53c49a44efa784b133c907eedf84491d61a48803 (with uncommited changes), branch: AC-NDC-property
+Compiled at: 2026-07-09 13:42:51.535083 UTC
 */
 
 end
@@ -217,7 +217,7 @@ summary of summaries:
 analyzed: examples/post17/okamoto_eligibility.spthy
 
   output:          examples/post17/okamoto_eligibility.spthy.tmp
-  processing time: 0.28s
+  processing time: 0.29s
   
   types (all-traces): verified (22 steps)
   exec (exists-trace): verified (6 steps)

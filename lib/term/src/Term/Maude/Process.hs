@@ -58,8 +58,6 @@ import System.IO
 import Utils.Misc
 -- import Extension.Data.Monoid
 
--- import Debug.Trace
-
 import Control.Concurrent.STM
 import Control.Concurrent.Async
 import qualified Data.Sequence as Seq

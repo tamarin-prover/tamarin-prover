@@ -1,0 +1,48 @@
+theory OTYT06_UK3 begin
+
+// Function signature and definition of the equational theory E
+
+builtins: multiset
+functions: fst/1, h/1, pair/2, snd/1, xorr/2 [AC], zeroo/0
+equations:
+    fst(<x.1, x.2>) = x.1,
+    snd(<x.1, x.2>) = x.2,
+    xorr(xorr(x, y), x) = y,
+    xorr(x, x) = zeroo,
+    xorr(x, zeroo) = x
+
+
+
+
+
+
+
+rule (modulo E) Setup:
+   [ Fr( ~k ) ]
+  --[ Setup( ~k ), OnlyOnce( 'setup' ) ]->
+   [ Tag( ~k, ~k ) ]
+
+rule (modulo E) tag1:
+   [ In( r1 ), Tag( ~k, x ) ]
+  --[
+  Response( ~k, 'Tag' ), Challenge( x, 'Tag' ), Tag( ~k, x ),
+  Running( ~k, 'Tag', x )
+  ]->
+   [ Out( h(xorr(r1, x)) ), Tag( ~k, x ) ]
+
+rule (modulo E) tag2:
+   [ Fr( ~k2 ), In( newKey ), Tag( ~k, x ) ]
+  -->
+   [ Tag( diff(~k, ~k2), diff(xorr(newKey, x), ~k2) ) ]
+
+restriction unique [right]:
+  "∀ x #i #j.
+    ((OnlyOnce( x ) @ #i) ∧ (OnlyOnce( x ) @ #j)) ⇒ (#i = #j)"
+  // safety formula
+
+restriction unique [left]:
+  "∀ x #i #j.
+    ((OnlyOnce( x ) @ #i) ∧ (OnlyOnce( x ) @ #j)) ⇒ (#i = #j)"
+  // safety formula
+
+end

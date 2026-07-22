@@ -1,12 +1,12 @@
 [package]
 name = "tree-sitter-spthy"
 description = "Spthy grammar for tree-sitter"
-version = "0.0.1"
+version = "0.1.1"
 license = "MIT"
 readme = "README.md"
 keywords = ["incremental", "parsing", "tree-sitter", "spthy"]
 categories = ["parsing", "text-editors"]
-repository = "https://github.com/tamarin-prover/tamarin-prover/tree-siter/tree-sitter-spthy"
+repository = "https://github.com/tamarin-prover/tamarin-prover"
 edition = "2021"
 autoexamples = false
 
@@ -21,3 +21,6 @@ tree-sitter-language = "0.1.0"
 
 [build-dependencies]
 cc = "1.0.87"
+
+[dev-dependencies]
+tree-sitter = "0.23"

@@ -18,4 +18,4 @@ install:
 
 # Generate tree-sitter grammar
 generate:
-	cd $(TREE_SITTER_DIR) && tree-sitter generate
+	cd $(TREE_SITTER_DIR) && tree-sitter generate --abi 14

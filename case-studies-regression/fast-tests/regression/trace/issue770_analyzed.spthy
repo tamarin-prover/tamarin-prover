@@ -1,0 +1,220 @@
+theory Issue770
+
+begin
+
+// Function signature and definition of the equational theory E
+
+builtins: xor
+functions: fst/1, h/1, pair/2, snd/1
+equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
+
+rule (modulo E) rule0:
+   [ Fr( ~n0 ), Fr( ~n1 ), Fr( ~n2 ), Fr( ~n3 ) ]
+  --[ OnlyOnce( ) ]->
+   [
+   Name( ~n0, ~n1, ~n2, ~n3 ), Out( (~n0⊕~n2) ), Out( (~n1⊕~n3) ),
+   Out( h((~n2⊕~n3)) )
+   ]
+
+  /*
+  rule (modulo AC) rule0:
+     [ Fr( ~n0 ), Fr( ~n1 ), Fr( ~n2 ), Fr( ~n3 ) ]
+    --[ OnlyOnce( ) ]->
+     [ Name( ~n0, ~n1, ~n2, ~n3 ), Out( z ), Out( z.1 ), Out( h(z.2) ) ]
+    variants (modulo AC)
+    1. ~n0   = ~n0.8
+       ~n1   = ~n1.8
+       ~n2   = ~n2.8
+       ~n3   = ~n3.8
+       z     = (~n0.8⊕~n2.8)
+       z.1   = (~n1.8⊕~n3.8)
+       z.2   = (~n2.8⊕~n3.8)
+    
+    2. ~n0   = ~x.8
+       ~n1   = ~x.8
+       ~n2   = ~x.8
+       ~n3   = ~x.8
+       z     = zero
+       z.1   = zero
+       z.2   = zero
+    
+    3. ~n0   = ~x.8
+       ~n1   = ~n1.9
+       ~n2   = ~x.8
+       ~n3   = ~x.8
+       z     = zero
+       z.1   = (~x.8⊕~n1.9)
+       z.2   = zero
+    
+    4. ~n0   = ~x.8
+       ~n1   = ~n1.9
+       ~n2   = ~x.8
+       ~n3   = ~n3.9
+       z     = zero
+       z.1   = (~n1.9⊕~n3.9)
+       z.2   = (~x.8⊕~n3.9)
+    
+    5. ~n0   = ~x.8
+       ~n1   = ~x.9
+       ~n2   = ~x.8
+       ~n3   = ~x.9
+       z     = zero
+       z.1   = zero
+       z.2   = (~x.8⊕~x.9)
+    
+    6. ~n0   = ~n0.9
+       ~n1   = ~x.8
+       ~n2   = ~x.8
+       ~n3   = ~x.8
+       z     = (~x.8⊕~n0.9)
+       z.1   = zero
+       z.2   = zero
+    
+    7. ~n0   = ~n0.9
+       ~n1   = ~x.8
+       ~n2   = ~n2.9
+       ~n3   = ~x.8
+       z     = (~n0.9⊕~n2.9)
+       z.1   = zero
+       z.2   = (~x.8⊕~n2.9)
+    
+    8. ~n0   = ~n0.9
+       ~n1   = ~n1.9
+       ~n2   = ~x.8
+       ~n3   = ~x.8
+       z     = (~x.8⊕~n0.9)
+       z.1   = (~x.8⊕~n1.9)
+       z.2   = zero
+  */
+
+rule (modulo E) rule1:
+   [ Name( ~n0, ~n1, ~n2, ~n3 ), In( (~n0⊕~n1⊕x) ), In( h(x) ) ]
+  --[ Secret( ) ]->
+   [ ]
+
+  /*
+  rule (modulo AC) rule1:
+     [ Name( ~n0, ~n1, ~n2, ~n3 ), In( z ), In( h(x) ) ] --[ Secret( ) ]-> [ ]
+    variants (modulo AC)
+    1. ~n0   = ~n0.7
+       ~n1   = ~n1.7
+       x     = x.7
+       z     = (~n0.7⊕~n1.7⊕x.7)
+    
+    2. ~n0   = ~n0.7
+       ~n1   = ~n1.7
+       x     = zero
+       z     = (~n0.7⊕~n1.7)
+    
+    3. ~n0   = ~x.7
+       ~n1   = ~x.7
+       x     = x.8
+       z     = x.8
+    
+    4. ~n0   = ~x.7
+       ~n1   = ~n1.8
+       x     = ~x.7
+       z     = ~n1.8
+    
+    5. ~n0   = ~x.7
+       ~n1   = ~x.8
+       x     = (~x.7⊕~x.8)
+       z     = zero
+    
+    6. ~n0   = ~x.7
+       ~n1   = ~x.8
+       x     = (~x.7⊕~x.8⊕x.11)
+       z     = x.11
+    
+    7. ~n0   = ~x.7
+       ~n1   = ~n1.12
+       x     = (~x.7⊕x.11)
+       z     = (x.11⊕~n1.12)
+    
+    8. ~n0   = ~n0.8
+       ~n1   = ~x.7
+       x     = ~x.7
+       z     = ~n0.8
+    
+    9. ~n0   = ~n0.11
+       ~n1   = ~x.7
+       x     = (~x.7⊕x.10)
+       z     = (x.10⊕~n0.11)
+  */
+
+restriction unique:
+  "∀ #i #j. ((OnlyOnce( ) @ #i) ∧ (OnlyOnce( ) @ #j)) ⇒ (#i = #j)"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ #i #j. ((OnlyOnce( ) @ #i) ∧ (OnlyOnce( ) @ #j)) ⇒ (#i = #j)"
+  */
+
+lemma alive:
+  all-traces "∀ #i. (Secret( ) @ #i) ⇒ (⊥)"
+/*
+guarded formula characterizing all counter-examples:
+"∃ #i. (Secret( ) @ #i)"
+*/
+simplify
+solve( Name( ~n0, ~n1, ~n2, ~n3 ) ▶₀ #i )
+  case rule0
+  solve( splitEqs(0) )
+    case split_case_1
+    solve( !KU( (~n0⊕~n1⊕x) ) @ #vk )
+      case c_xor_case_5
+      solve( !KU( (~n0⊕x) ) @ #vk.2 )
+        case coerce
+        solve( !KD( (~n0⊕x) ) ▶₀ #vk.1 )
+          case rule0_case_1
+          solve( !KU( (~n1⊕x.1) ) @ #vk.3 )
+            case coerce
+            solve( !KD( (~n1⊕x.1) ) ▶₀ #vk.2 )
+              case rule0_case_2
+              solve( splitEqs(1) )
+                case split
+                solve( (#vl, 0) ~~> (#vk.1, 0) )
+                  case xor
+                  solve( (#vl.1, 0) ~~> (#vk.2, 0) )
+                    case xor
+                    solve( !KU( h((~n2⊕~n3)) ) @ #vk.3 )
+                      case rule0
+                      SOLVED // trace found
+                    qed
+                  qed
+                qed
+              qed
+            qed
+          qed
+        qed
+      qed
+    qed
+  qed
+qed
+
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.13.0
+Maude version 3.5.1
+Git revision: 53c49a44efa784b133c907eedf84491d61a48803 (with uncommited changes), branch: AC-NDC-property
+Compiled at: 2026-07-09 13:42:51.535083 UTC
+*/
+
+end
+/* Output
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/regression/trace/issue770.spthy
+
+  output:          examples/regression/trace/issue770.spthy.tmp
+  processing time: 5.48s
+  
+  alive (all-traces): falsified - found trace (13 steps)
+
+==============================================================================
+*/

@@ -1,0 +1,314 @@
+theory OTYT06_UK2
+
+begin
+
+// Function signature and definition of the equational theory E
+
+builtins: multiset
+functions: fst/1, h/1, pair/2, snd/1, zeroo/0, xorr/2 [AC,NDC,NDC-diff]
+equations:
+    fst(<x.1, x.2>) = x.1,
+    snd(<x.1, x.2>) = x.2,
+    (x xorr x) = zeroo,
+    (x xorr x xorr y) = y,
+    (x xorr zeroo) = x
+
+rule (modulo E) Setup:
+   [ Fr( ~k1 ), Fr( ~k2 ), Fr( ~r ), Fr( ~newKey1 ), Fr( ~newKey2 ) ]
+  --[ Setup( ~k1 ), Setup( ~k2 ), OnlyOnce( 'setup' ) ]->
+   [
+   Out( <~r, h((~k1 xorr ~r)), (~k1 xorr ~newKey1)> ),
+   Tag( diff(~k1, ~k2), diff(~newKey1, ~newKey2) )
+   ]
+
+rule (modulo E) tag1:
+   [ In( r1 ), Tag( ~k, x ) ]
+  --[
+  Response( ~k, 'Tag' ), Challenge( x, 'Tag' ), Tag( ~k, x ),
+  Running( ~k, 'Tag', x ), OnlyOnce( 'tag1' )
+  ]->
+   [ Out( h((r1 xorr x)) ), Tag( ~k, x ), TagRunning( ~k, x ) ]
+
+rule (modulo E) tag2:
+   [ Fr( ~k2 ), In( newkey ), TagRunning( ~k, x ) ]
+  --[
+  Update( x, (newkey xorr x), 'Tag' ), Alive( ~k, 'Reader' ),
+  OnlyOnce( 'tag2' )
+  ]->
+   [ Tag( ~k, (newkey xorr x) ) ]
+
+restriction unique [right]:
+  "∀ x #i #j. ((OnlyOnce( x ) @ #i) ∧ (OnlyOnce( x ) @ #j)) ⇒ (#i = #j)"
+  // safety formula
+
+restriction unique [left]:
+  "∀ x #i #j. ((OnlyOnce( x ) @ #i) ∧ (OnlyOnce( x ) @ #j)) ⇒ (#i = #j)"
+  // safety formula
+
+lemma tag_start [right, reuse, use_induction]:
+  all-traces
+  "∀ x y #k. (Tag( x, y ) @ #k) ⇒ (∃ #i. (Setup( x ) @ #i) ∧ (#i < #k))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ x y #k. (Tag( x, y ) @ #k) ∧ ∀ #i. (Setup( x ) @ #i) ⇒ ¬(#i < #k)"
+*/
+induction
+  case empty_trace
+  by contradiction /* from formulas */
+next
+  case non_empty_trace
+  solve( (last(#k))  ∥
+         (∃ #i. (Setup( ~k.1 ) @ #i) ∧ (¬(last(#i))) ∧ (#i < #k)) )
+    case case_1
+    solve( splitEqs(0) )
+      case split_case_1
+      solve( Tag( ~k.1, zeroo ) ▶₁ #k )
+        case tag1
+        by contradiction /* cyclic */
+      next
+        case tag2
+        by contradiction /* cyclic */
+      qed
+    next
+      case split_case_2
+      solve( Tag( ~k.1, r1 ) ▶₁ #k )
+        case Setup
+        by contradiction /* from formulas */
+      next
+        case tag1
+        by contradiction /* cyclic */
+      next
+        case tag2
+        by contradiction /* cyclic */
+      qed
+    next
+      case split_case_3
+      solve( Tag( ~k.1, (r1 xorr z) ) ▶₁ #k )
+        case tag1
+        by contradiction /* cyclic */
+      next
+        case tag2
+        by contradiction /* cyclic */
+      qed
+    next
+      case split_case_4
+      solve( Tag( ~k.1, y ) ▶₁ #k )
+        case Setup
+        by contradiction /* from formulas */
+      next
+        case tag1
+        by contradiction /* cyclic */
+      next
+        case tag2
+        by contradiction /* cyclic */
+      qed
+    next
+      case split_case_5
+      solve( Tag( ~k.1, y ) ▶₁ #k )
+        case Setup
+        by contradiction /* from formulas */
+      next
+        case tag1
+        by contradiction /* cyclic */
+      next
+        case tag2
+        by contradiction /* cyclic */
+      qed
+    next
+      case split_case_6
+      solve( Tag( ~k.1, y ) ▶₁ #k )
+        case Setup
+        by contradiction /* from formulas */
+      next
+        case tag1
+        by contradiction /* cyclic */
+      next
+        case tag2
+        by contradiction /* cyclic */
+      qed
+    next
+      case split_case_7
+      solve( Tag( ~k.1, (x xorr x.2) ) ▶₁ #k )
+        case tag1
+        by contradiction /* cyclic */
+      next
+        case tag2
+        by contradiction /* cyclic */
+      qed
+    qed
+  next
+    case case_2
+    by contradiction /* from formulas */
+  qed
+qed
+
+lemma tag_start [left, reuse, use_induction]:
+  all-traces
+  "∀ x y #k. (Tag( x, y ) @ #k) ⇒ (∃ #i. (Setup( x ) @ #i) ∧ (#i < #k))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ x y #k. (Tag( x, y ) @ #k) ∧ ∀ #i. (Setup( x ) @ #i) ⇒ ¬(#i < #k)"
+*/
+induction
+  case empty_trace
+  by contradiction /* from formulas */
+next
+  case non_empty_trace
+  solve( (last(#k))  ∥
+         (∃ #i. (Setup( ~k.1 ) @ #i) ∧ (¬(last(#i))) ∧ (#i < #k)) )
+    case case_1
+    solve( splitEqs(0) )
+      case split_case_1
+      solve( Tag( ~k.1, zeroo ) ▶₁ #k )
+        case tag1
+        by contradiction /* cyclic */
+      next
+        case tag2
+        by contradiction /* cyclic */
+      qed
+    next
+      case split_case_2
+      solve( Tag( ~k.1, r1 ) ▶₁ #k )
+        case Setup
+        by contradiction /* from formulas */
+      next
+        case tag1
+        by contradiction /* cyclic */
+      next
+        case tag2
+        by contradiction /* cyclic */
+      qed
+    next
+      case split_case_3
+      solve( Tag( ~k.1, (r1 xorr z) ) ▶₁ #k )
+        case tag1
+        by contradiction /* cyclic */
+      next
+        case tag2
+        by contradiction /* cyclic */
+      qed
+    next
+      case split_case_4
+      solve( Tag( ~k.1, y ) ▶₁ #k )
+        case Setup
+        by contradiction /* from formulas */
+      next
+        case tag1
+        by contradiction /* cyclic */
+      next
+        case tag2
+        by contradiction /* cyclic */
+      qed
+    next
+      case split_case_5
+      solve( Tag( ~k.1, y ) ▶₁ #k )
+        case Setup
+        by contradiction /* from formulas */
+      next
+        case tag1
+        by contradiction /* cyclic */
+      next
+        case tag2
+        by contradiction /* cyclic */
+      qed
+    next
+      case split_case_6
+      solve( Tag( ~k.1, y ) ▶₁ #k )
+        case Setup
+        by contradiction /* from formulas */
+      next
+        case tag1
+        by contradiction /* cyclic */
+      next
+        case tag2
+        by contradiction /* cyclic */
+      qed
+    next
+      case split_case_7
+      solve( Tag( ~k.1, (x xorr x.2) ) ▶₁ #k )
+        case tag1
+        by contradiction /* cyclic */
+      next
+        case tag2
+        by contradiction /* cyclic */
+      qed
+    qed
+  next
+    case case_2
+    by contradiction /* from formulas */
+  qed
+qed
+
+diffLemma Observational_equivalence:
+rule-equivalence
+  case Rule_Equality
+  backward-search
+    case LHS
+    step( simplify )
+    step( solve( !KD( x ) ▶₁ #i ) )
+      case tag1
+      step( solve( (#vl, 0) ~~> (#i, 1) ) )
+        case h
+        step( solve( Tag( ~k, x ) ▶₁ #vr ) )
+          case Setup
+          step( solve( !KU( h(z) ) @ #vk ) )
+            case Setup
+            step( solve( splitEqs(0) ) )
+              case split_case_2
+              step( solve( !KU( (~k xorr ~newKey1 xorr ~r) ) @ #vk.1 ) )
+                case c_xorr_case_3
+                step( solve( !KU( ~r ) @ #vk.2 ) )
+                  case Setup
+                  step( solve( !KU( (~k xorr ~newKey1) ) @ #vk.3 ) )
+                    case coerce
+                    step( solve( !KD( (~k xorr ~newKey1) ) ▶₀ #vk.3 ) )
+                      case Setup
+                      step( solve( (#vl.1, 0) ~~> (#vk.3, 0) ) )
+                        case d_0_snd
+                        step( solve( (#vr.5, 0) ~~> (#vk.3, 0) ) )
+                          case d_0_snd
+                          step( solve( (#vr.6, 0) ~~> (#vk.3, 0) ) )
+                            case xorr
+                            by ATTACK // trace found
+                          qed
+                        qed
+                      qed
+                    qed
+                  qed
+                qed
+              qed
+            qed
+          qed
+        qed
+      qed
+    qed
+  qed
+qed
+
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.13.0
+Maude version 3.5.1
+Git revision: 53c49a44efa784b133c907eedf84491d61a48803 (with uncommited changes), branch: AC-NDC-property
+Compiled at: 2026-07-09 13:42:51.535083 UTC
+*/
+
+end
+/* Output
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/csf26-ac/fast/diff/OTYT06_UK2.spthy
+
+  output:          examples/csf26-ac/fast/diff/OTYT06_UK2.spthy.tmp
+  processing time: 142.40s
+  
+  RHS :  tag_start (all-traces): verified (30 steps)
+  LHS :  tag_start (all-traces): verified (30 steps)
+  DiffLemma:  Observational_equivalence : falsified - found trace (16 steps)
+
+==============================================================================
+*/

@@ -225,7 +225,7 @@ rule-equivalence
                                   case split
                                   step( solve( !KU( (~r1⊕~r2⊕~r1.1) ) @ #vk.6 ) )
                                     case c_xor_case_1
-                                    step( solve( !KU( (~r1⊕~r1.1) ) @ #vk.7 ) )
+                                    step( solve( !KU( (~r2⊕~r1.1) ) @ #vk.7 ) )
                                       case c_xor
                                       step( solve( !KU( ~r1.1 ) @ #vk.8 ) )
                                         case reader1
@@ -263,9 +263,9 @@ Check presence of the --prove/--lemma arguments in theory
 /*
 Generated from:
 Tamarin version 1.13.0
-Maude version 3.4
-Git revision: 1deff12bd69c96308abb2463d4de5f2c7610c191 (with uncommited changes), branch: develop
-Compiled at: 2026-03-09 07:36:56.194364 UTC
+Maude version 3.5.1
+Git revision: 53c49a44efa784b133c907eedf84491d61a48803 (with uncommited changes), branch: AC-NDC-property
+Compiled at: 2026-07-09 13:42:51.535083 UTC
 */
 
 end
@@ -277,7 +277,7 @@ summary of summaries:
 analyzed: examples/csf18-xor/diff-models/CH07-UK3.spthy
 
   output:          examples/csf18-xor/diff-models/CH07-UK3.spthy.tmp
-  processing time: 32.01s
+  processing time: 67.59s
   
   WARNING: 1 wellformedness check failed!
            The analysis results might be wrong!
