@@ -16,6 +16,7 @@ module Utils.Misc (
 
   -- * Control
   , whileTrue
+  , fixpoint
 
   -- * Hashing
   , stringSHA256
@@ -36,6 +37,9 @@ module Utils.Misc (
   , fst3
   , snd3
   , thd3
+
+  -- list operations
+  , mapHead
 ) where
 
 import Data.List
@@ -168,3 +172,14 @@ editDistance s t =
                              , d!!(i-1)!!(j-1) + (if s!!(i-1)==t!!(j-1) 
                                                   then 0 else 1) 
                              ]
+
+fixpoint :: Eq a => (a -> a) -> a -> a
+fixpoint f x
+    | x' == x = x'
+    | otherwise = fixpoint f x'
+  where x' = f x
+
+-- map a function to the head of a list
+mapHead :: (a -> a) -> [a] -> [a]
+mapHead _ []     = []
+mapHead f (x:xs) = f x : xs

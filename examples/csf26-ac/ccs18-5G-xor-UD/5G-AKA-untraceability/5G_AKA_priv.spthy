@@ -1,0 +1,767 @@
+theory 5G_AKA_priv begin
+
+// Function signature and definition of the equational theory E
+
+builtins: multiset
+functions: KDF/2, SHA256/2, adec/2, aenc/2, f1/2, f1_star/2, f2/2,
+           f3/2, f4/2, f5/2, f5_star/2, fst/1, pair/2, pk/1, snd/1,
+           xorr/2 [AC], zeroo/0
+equations:
+    adec(aenc(x.1, pk(x.2)), x.2) = x.1,
+    fst(<x.1, x.2>) = x.1,
+    snd(<x.1, x.2>) = x.2,
+    xorr(xorr(x, y), x) = y,
+    xorr(x, x) = zeroo,
+    xorr(x, zeroo) = x
+
+tactic: sqn_ue_invariance
+presort: C
+prio: {id}
+  regex".*SUPI\(.*"
+  regex".*Sqn_UE\(.*"
+
+
+tactic: sqn_ue_nodecrease
+presort: C
+prio: {id}
+  regex".*last\(.*"
+prio: {id}
+  regex".*Sqn_UE_Change\(.*"
+prio: {id}
+  regex".*SUPI\(.*"
+prio: {id}
+  regex".*Sqn_UE\(.*"
+
+
+tactic: sqn_hss_invariance
+presort: C
+prio: {id}
+  regex".*last\(.*"
+prio: {id}
+  regex".*Sqn_UE_Change\(.*"
+prio: {id}
+  regex".*SUPI\(.*"
+prio: {id}
+  regex".*Sqn_UE\(.*"
+  regex".*Sqn_HSS\(.*"
+
+
+tactic: sqn_ue_unique
+presort: C
+prio: {id}
+  regex".*SUPI\(.*"
+prio: {id}
+  regex".*Sqn_UE\(.*"
+
+
+
+
+
+
+
+rule (modulo E) send_secure:
+   [ SndS( A, B, m ) ] --> [ Sec( A, B, m ) ]
+
+rule (modulo E) receive_secure:
+   [ Sec( A, B, m ) ] --> [ RcvS( A, B, m ) ]
+
+rule (modulo E) init_servNet:
+   [ Fr( ~idSN ) ]
+  --[ ServNet( ~idSN ) ]->
+   [ !SEAF( ~idSN, <'5G', ~idSN> ), Out( <'5G', ~idSN> ) ]
+
+rule (modulo E) init_homeNet:
+   [ Fr( ~sk_HN ), Fr( ~idHN ) ]
+  --[ HomeNet( ~idHN ) ]->
+   [
+   !HSS( ~idHN, ~sk_HN ), !Pk( ~idHN, pk(~sk_HN) ),
+   Out( <~idHN, pk(~sk_HN)> )
+   ]
+
+rule (modulo E) supi_supply:
+   [ Fr( ~a ), Fr( ~b ) ]
+  --[ Once( ) ]->
+   [ !SUPI_Init( (~a++~b) ), SUPI( ~a ), SUPI( diff(~a, ~b) ) ]
+
+rule (modulo E) add_subscription:
+   [
+   !SUPI_Init( (~supi++z) ), Fr( ~k ), Fr( ~sqn_root ),
+   !HSS( ~idHN, ~sk_HN )
+   ]
+  --[
+  Subscribe( ~supi, ~idHN ), Sqn_Create( ~supi, ~idHN, ~sqn_root )
+  ]->
+   [
+   !Ltk_Sym( ~supi, ~idHN, ~k, ~sqn_root ),
+   Sqn_UE( ~supi, ~idHN, ('1'++~sqn_root), ~sqn_root, '1' ),
+   Sqn_HSS( ~supi, ~idHN, ('1'++~sqn_root), ~sqn_root, '1' )
+   ]
+
+rule (modulo E) ue_send_attachReq:
+   [
+   !Ltk_Sym( ~supi, ~idHN, ~k, ~sqn_root ), !Pk( ~idHN, pk_HN ),
+   Fr( ~R ), Fr( ~tid )
+   ]
+  --[ Start_UE_Session( ~supi ) ]->
+   [
+   St_1_UE( ~tid, ~supi, ~idHN, ~k, ~sqn_root ),
+   Out( <aenc(<~supi, ~R>, pk_HN), ~idHN> )
+   ]
+
+rule (modulo E) seaf_receive_attachReq_send_air:
+   [ !SEAF( ~idSN, SNID ), Fr( ~tid ), In( <conc_supi, idHN> ) ]
+  --[ Start_SEAF_Session( ~idSN ) ]->
+   [
+   St_1_SEAF( ~tid, ~idSN, SNID, conc_supi, idHN ),
+   SndS( ~idSN, idHN, <'air', <conc_supi, idHN>, SNID> )
+   ]
+
+rule (modulo E) hss_receive_air_send_aia:
+   [
+   !HSS( ~idHN, ~sk_HN ),
+   RcvS( idSN, ~idHN,
+         <'air', <aenc(<~supi, ~R>, pk(~sk_HN)), ~idHN>, '5G', idSN>
+   ),
+   !Ltk_Sym( ~supi, ~idHN, ~k, ~sqn_root ),
+   Sqn_HSS( ~supi, ~idHN, SqnHSS, ~sqn_root, count ), Fr( ~RAND ),
+   Fr( ~tid ), In( count )
+   ]
+  --[
+  Sqn_HSS_Invariance( ~idHN, ~supi, ('1'++SqnHSS), ~sqn_root,
+                      ('1'++count)
+  ),
+  Src( ~RAND,
+       <xorr(f5(~k, ~RAND), ('1'++SqnHSS)), f1(~k, <('1'++SqnHSS), ~RAND>)
+       >
+  ),
+  Start_HSS_Session( ~idHN ), HSS_Send_Aia( )
+  ]->
+   [
+   St_1_HSS( ~tid, ~idHN, ~supi,
+             <aenc(<~supi, ~R>, pk(~sk_HN)), ~idHN>, idSN, <'5G', idSN>, ~k,
+             ('1'++SqnHSS),
+             KDF(<f3(~k, ~RAND), f4(~k, ~RAND)>,
+                 <<'5G', idSN>, f2(~k, ~RAND), ~RAND>),
+             ~RAND, ~sqn_root, ~sk_HN
+   ),
+   Sqn_HSS( ~supi, ~idHN, ('1'++SqnHSS), ~sqn_root, ('1'++count) ),
+   SndS( ~idHN, idSN,
+         <'aia', ~RAND, 
+          SHA256(KDF(<f3(~k, ~RAND), f4(~k, ~RAND)>,
+                     <<'5G', idSN>, f2(~k, ~RAND), ~RAND>),
+                 ~RAND), 
+          KDF(KDF(<f3(~k, ~RAND), f4(~k, ~RAND)>,
+                  <<'5G', idSN>, xorr(f5(~k, ~RAND), ('1'++SqnHSS))>),
+              <'5G', idSN>), 
+          xorr(f5(~k, ~RAND), ('1'++SqnHSS)), f1(~k, <('1'++SqnHSS), ~RAND>)>
+   )
+   ]
+
+rule (modulo E) seaf_receive_aia_send_authReq:
+   [
+   St_1_SEAF( ~tid, ~idSN, SNID, conc_supi, idHN ),
+   RcvS( idHN, ~idSN, <'aia', RAND, HXRES_star, K_seaf, AUTN> )
+   ]
+  --[ Out_Src( RAND, AUTN ) ]->
+   [
+   St_2_SEAF( ~tid, ~idSN, SNID, conc_supi, idHN, RAND, HXRES_star,
+              K_seaf
+   ),
+   Out( <RAND, AUTN, SNID> )
+   ]
+
+rule (modulo E) ue_receive_authReq_freshness_success_send_authResp:
+   [
+   St_1_UE( ~tid, ~supi, ~idHN, ~k, ~sqn_root ),
+   Sqn_UE( ~supi, ~idHN, SqnUE, ~sqn_root, count ), SUPI( ~supi ),
+   In( <RAND, 
+        <xorr(f5(~k, RAND), (SqnUE++dif)), f1(~k, <(SqnUE++dif), RAND>)>, 
+        '5G', idSN>
+   )
+   ]
+  --[
+  Original( <xorr(f5(~k, RAND), (SqnUE++dif)), 
+             f1(~k, <(SqnUE++dif), RAND>)>
+  ),
+  Sqn_UE_Invariance( ~supi, ~idHN, (SqnUE++dif), ~sqn_root,
+                     (count++dif)
+  ),
+  Sqn_UE_Change( ~supi, ~idHN, (SqnUE++dif) ),
+  Sqn_UE_Use( ~supi, ~idHN, (SqnUE++dif) )
+  ]->
+   [
+   St_2_UE( ~tid, ~supi, ~idHN, ~k, ~sqn_root, idSN,
+            KDF(KDF(<f3(~k, RAND), f4(~k, RAND)>,
+                    <<'5G', idSN>, xorr(f5(~k, RAND), (SqnUE++dif))>),
+                <'5G', idSN>)
+   ),
+   Out( KDF(<f3(~k, RAND), f4(~k, RAND)>,
+            <<'5G', idSN>, f2(~k, RAND), RAND>)
+   ),
+   Sqn_UE( ~supi, ~idHN, (SqnUE++dif), ~sqn_root, (count++dif) )
+   ]
+
+rule (modulo E) ue_receive_authReq_fail_freshness_send_sync_failure:
+   [
+   St_1_UE( ~tid, ~supi, ~idHN, ~k, ~sqn_root ),
+   Sqn_UE( ~supi, ~idHN, SqnUE, ~sqn_root, count ), SUPI( ~supi ),
+   In( <RAND, <xorr(SqnHSS, f5(~k, RAND)), f1(~k, <SqnHSS, RAND>)>, 
+        '5G', idSN>
+   ),
+   In( count )
+   ]
+  --[
+  UE_Sync_Failure( ),
+  Replayed( <xorr(SqnHSS, f5(~k, RAND)), f1(~k, <SqnHSS, RAND>)> ),
+  Greater_Or_Equal_Than( SqnUE, SqnHSS ),
+  Sqn_UE_Invariance( ~supi, ~idHN, SqnUE, ~sqn_root, count ),
+  Sqn_UE_Nochange( ~supi, ~idHN, SqnUE )
+  ]->
+   [
+   Out( <xorr(SqnUE, f5_star(~k, RAND)), f1_star(~k, <SqnUE, RAND>)>
+   ),
+   Sqn_UE( ~supi, ~idHN, SqnUE, ~sqn_root, count )
+   ]
+
+rule (modulo E) seaf_receive_authResp_send_ac:
+   [
+   St_2_SEAF( ~tid, ~idSN, SNID, conc_supi, idHN, RAND,
+              SHA256(RES_star, RAND), K_seaf
+   ),
+   In( RES_star )
+   ]
+  --[ Running( ~idSN, idHN, <'HSS', 'SEAF', 'RES_star', RES_star> )
+  ]->
+   [
+   St_3_SEAF( ~tid, ~idSN, SNID, conc_supi, idHN, RAND, RES_star,
+              K_seaf
+   ),
+   SndS( ~idSN, idHN, <'ac', RES_star, <conc_supi, idHN>, SNID> )
+   ]
+
+rule (modulo E) seaf_receive_syncFailure_send_authSync:
+   [
+   St_2_SEAF( ~tid, ~idSN, SNID, conc_supi, idHN, RAND, HXRES_star,
+              K_seaf
+   ),
+   In( <SqnUEXorAKS, MACS> )
+   ]
+  -->
+   [ SndS( ~idSN, idHN, <'resync', RAND, SqnUEXorAKS, MACS> ) ]
+
+rule (modulo E) hss_receive_ac_send_aca:
+   [
+   St_1_HSS( ~tid, ~idHN, ~supi, suci, idSN, <'5G', idSN>, ~k, Sqn,
+             XRES_star, ~RAND, ~sqn_root, ~sk_HN
+   ),
+   RcvS( idSN, ~idHN, <'ac', XRES_star, suci, '5G', idSN> )
+   ]
+  --[
+  HSS_End( ),
+  Secret( <'HSS', ~idHN>, 'key',
+          KDF(KDF(<f3(~k, ~RAND), f4(~k, ~RAND)>,
+                  <<'5G', idSN>, xorr(Sqn, f5(~k, ~RAND))>),
+              <'5G', idSN>)
+  ),
+  Commit( ~idHN, idSN,
+          <'HSS', 'SEAF', 'K_seaf', 
+           KDF(KDF(<f3(~k, ~RAND), f4(~k, ~RAND)>,
+                   <<'5G', idSN>, xorr(Sqn, f5(~k, ~RAND))>),
+               <'5G', idSN>)
+          >
+  ),
+  Commit( ~idHN, idSN, <'HSS', 'SEAF', 'RES_star', XRES_star> ),
+  Commit( ~idHN, ~supi,
+          <'HSS', 'UE', 'K_seaf', 
+           KDF(KDF(<f3(~k, ~RAND), f4(~k, ~RAND)>,
+                   <<'5G', idSN>, xorr(Sqn, f5(~k, ~RAND))>),
+               <'5G', idSN>)
+          >
+  ),
+  Commit( ~idHN, ~supi, <'HSS', 'UE', 'RAND', ~RAND> ),
+  Honest( ~idHN ), Honest( ~supi ), Honest( idSN )
+  ]->
+   [ SndS( ~idHN, idSN, <'aca', 'confirm', ~supi> ) ]
+
+rule (modulo E) seaf_receive_aca:
+   [
+   St_3_SEAF( ~tid, ~idSN, <'5G', ~idSN>, conc_supi, idHN, ~RAND,
+              RES_star, K_seaf
+   ),
+   RcvS( idHN, ~idSN, <'aca', 'confirm', supi> )
+   ]
+  --[ SEAF_End( ) ]->
+   [
+   St_4_SEAF( ~tid, ~idSN, <'5G', ~idSN>, conc_supi, idHN, ~RAND,
+              RES_star, K_seaf, supi
+   ),
+   Out( f1(K_seaf, 'SEAF') )
+   ]
+
+rule (modulo E) hss_receive_authSync:
+   [
+   St_1_HSS( ~tid, ~idHN, ~supi, suci, idSN, SNID, ~k, SqnHSS,
+             XRES_star, ~RAND, ~sqn_root, ~sk_HN
+   ),
+   Sqn_HSS( ~supi, ~idHN, SqnHSS, ~sqn_root, count ),
+   RcvS( idSN, ~idHN,
+         <'resync', ~RAND, xorr(f5_star(~k, ~RAND), (SqnHSS++dif)), 
+          f1_star(~k, <(SqnHSS++dif), ~RAND>)>
+   ),
+   In( (count++dif) )
+   ]
+  --[
+  Sqn_HSS_Invariance( ~idHN, ~supi, (SqnHSS++dif), ~sqn_root,
+                      (count++dif)
+  ),
+  HSS_Resync_End( (count++dif) )
+  ]->
+   [ Sqn_HSS( ~supi, ~idHN, (SqnHSS++dif), ~sqn_root, (count++dif) ) ]
+
+restriction subscribe_once [right]:
+  "∀ HN1 HN2 supi #i #j.
+    ((Subscribe( supi, HN1 ) @ #i) ∧ (Subscribe( supi, HN2 ) @ #j)) ⇒
+    ((#i = #j) ∧ (HN1 = HN2))"
+  // safety formula
+
+restriction subscribe_once [left]:
+  "∀ HN1 HN2 supi #i #j.
+    ((Subscribe( supi, HN1 ) @ #i) ∧ (Subscribe( supi, HN2 ) @ #j)) ⇒
+    ((#i = #j) ∧ (HN1 = HN2))"
+  // safety formula
+
+restriction greater_or_equal_than [right]:
+  "∀ x y #i.
+    (Greater_Or_Equal_Than( x, y ) @ #i) ⇒ (¬(∃ z. (x++z) = y))"
+  // safety formula
+
+restriction greater_or_equal_than [left]:
+  "∀ x y #i.
+    (Greater_Or_Equal_Than( x, y ) @ #i) ⇒ (¬(∃ z. (x++z) = y))"
+  // safety formula
+
+restriction once [right]:
+  "∀ #i #j. ((Once( ) @ #i) ∧ (Once( ) @ #j)) ⇒ (#i = #j)"
+  // safety formula
+
+restriction once [left]:
+  "∀ #i #j. ((Once( ) @ #i) ∧ (Once( ) @ #j)) ⇒ (#i = #j)"
+  // safety formula
+
+lemma dummy [right]:
+  all-traces "¬(⊥)"
+/*
+guarded formula characterizing all counter-examples:
+"⊥"
+*/
+by sorry
+
+lemma dummy [left]:
+  all-traces "¬(⊥)"
+/*
+guarded formula characterizing all counter-examples:
+"⊥"
+*/
+by sorry
+
+lemma rand_autn_src [right, sources]:
+  all-traces
+  "∀ RAND AUTN #i.
+    (Out_Src( RAND, AUTN ) @ #i) ⇒
+    (∃ #j. (Src( RAND, AUTN ) @ #j) ∧ (#j < #i))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ RAND AUTN #i.
+  (Out_Src( RAND, AUTN ) @ #i)
+ ∧
+  ∀ #j. (Src( RAND, AUTN ) @ #j) ⇒ ¬(#j < #i)"
+*/
+by sorry
+
+lemma rand_autn_src [left, sources]:
+  all-traces
+  "∀ RAND AUTN #i.
+    (Out_Src( RAND, AUTN ) @ #i) ⇒
+    (∃ #j. (Src( RAND, AUTN ) @ #j) ∧ (#j < #i))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ RAND AUTN #i.
+  (Out_Src( RAND, AUTN ) @ #i)
+ ∧
+  ∀ #j. (Src( RAND, AUTN ) @ #j) ⇒ ¬(#j < #i)"
+*/
+by sorry
+
+lemma sqn_ue_invariance [right, heuristic={sqn_ue_invariance},
+                         use_induction, sources]:
+  all-traces
+  "∀ supi HN Sqn sqn_root count #i.
+    (Sqn_UE_Invariance( supi, HN, Sqn, sqn_root, count ) @ #i) ⇒
+    ((count++sqn_root) = Sqn)"
+/*
+guarded formula characterizing all counter-examples:
+"∃ supi HN Sqn sqn_root count #i.
+  (Sqn_UE_Invariance( supi, HN, Sqn, sqn_root, count ) @ #i)
+ ∧
+  ¬((count++sqn_root) = Sqn)"
+*/
+by sorry
+
+lemma sqn_ue_invariance [left, heuristic={sqn_ue_invariance},
+                         use_induction, sources]:
+  all-traces
+  "∀ supi HN Sqn sqn_root count #i.
+    (Sqn_UE_Invariance( supi, HN, Sqn, sqn_root, count ) @ #i) ⇒
+    ((count++sqn_root) = Sqn)"
+/*
+guarded formula characterizing all counter-examples:
+"∃ supi HN Sqn sqn_root count #i.
+  (Sqn_UE_Invariance( supi, HN, Sqn, sqn_root, count ) @ #i)
+ ∧
+  ¬((count++sqn_root) = Sqn)"
+*/
+by sorry
+
+lemma sqn_hss_invariance [right, heuristic={sqn_hss_invariance},
+                          use_induction, sources]:
+  all-traces
+  "∀ HN supi Sqn sqn_root count #i.
+    (Sqn_HSS_Invariance( HN, supi, Sqn, sqn_root, count ) @ #i) ⇒
+    ((count++sqn_root) = Sqn)"
+/*
+guarded formula characterizing all counter-examples:
+"∃ HN supi Sqn sqn_root count #i.
+  (Sqn_HSS_Invariance( HN, supi, Sqn, sqn_root, count ) @ #i)
+ ∧
+  ¬((count++sqn_root) = Sqn)"
+*/
+by sorry
+
+lemma sqn_hss_invariance [left, heuristic={sqn_hss_invariance},
+                          use_induction, sources]:
+  all-traces
+  "∀ HN supi Sqn sqn_root count #i.
+    (Sqn_HSS_Invariance( HN, supi, Sqn, sqn_root, count ) @ #i) ⇒
+    ((count++sqn_root) = Sqn)"
+/*
+guarded formula characterizing all counter-examples:
+"∃ HN supi Sqn sqn_root count #i.
+  (Sqn_HSS_Invariance( HN, supi, Sqn, sqn_root, count ) @ #i)
+ ∧
+  ¬((count++sqn_root) = Sqn)"
+*/
+by sorry
+
+lemma sqn_ue_src [right, use_induction, reuse]:
+  all-traces
+  "∀ supi HN Sqn sqn_root count #i.
+    (Sqn_UE_Invariance( supi, HN, Sqn, sqn_root, count ) @ #i) ⇒
+    (∃ #j. (Sqn_Create( supi, HN, sqn_root ) @ #j) ∧ (#j < #i))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ supi HN Sqn sqn_root count #i.
+  (Sqn_UE_Invariance( supi, HN, Sqn, sqn_root, count ) @ #i)
+ ∧
+  ∀ #j. (Sqn_Create( supi, HN, sqn_root ) @ #j) ⇒ ¬(#j < #i)"
+*/
+by sorry
+
+lemma sqn_ue_src [left, use_induction, reuse]:
+  all-traces
+  "∀ supi HN Sqn sqn_root count #i.
+    (Sqn_UE_Invariance( supi, HN, Sqn, sqn_root, count ) @ #i) ⇒
+    (∃ #j. (Sqn_Create( supi, HN, sqn_root ) @ #j) ∧ (#j < #i))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ supi HN Sqn sqn_root count #i.
+  (Sqn_UE_Invariance( supi, HN, Sqn, sqn_root, count ) @ #i)
+ ∧
+  ∀ #j. (Sqn_Create( supi, HN, sqn_root ) @ #j) ⇒ ¬(#j < #i)"
+*/
+by sorry
+
+lemma sqn_hss_src [right, reuse]:
+  all-traces
+  "∀ HN supi Sqn sqn_root count #i.
+    (Sqn_HSS_Invariance( HN, supi, Sqn, sqn_root, count ) @ #i) ⇒
+    (∃ #j. (Sqn_Create( supi, HN, sqn_root ) @ #j) ∧ (#j < #i))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ HN supi Sqn sqn_root count #i.
+  (Sqn_HSS_Invariance( HN, supi, Sqn, sqn_root, count ) @ #i)
+ ∧
+  ∀ #j. (Sqn_Create( supi, HN, sqn_root ) @ #j) ⇒ ¬(#j < #i)"
+*/
+by sorry
+
+lemma sqn_hss_src [left, reuse]:
+  all-traces
+  "∀ HN supi Sqn sqn_root count #i.
+    (Sqn_HSS_Invariance( HN, supi, Sqn, sqn_root, count ) @ #i) ⇒
+    (∃ #j. (Sqn_Create( supi, HN, sqn_root ) @ #j) ∧ (#j < #i))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ HN supi Sqn sqn_root count #i.
+  (Sqn_HSS_Invariance( HN, supi, Sqn, sqn_root, count ) @ #i)
+ ∧
+  ∀ #j. (Sqn_Create( supi, HN, sqn_root ) @ #j) ⇒ ¬(#j < #i)"
+*/
+by sorry
+
+lemma sqn_ue_nodecrease [right, heuristic={sqn_ue_nodecrease},
+                         use_induction, reuse]:
+  all-traces
+  "(((∀ supi HN Sqni Sqnj #i #j.
+       (((Sqn_UE_Change( supi, HN, Sqnj ) @ #j) ∧
+         (Sqn_UE_Change( supi, HN, Sqni ) @ #i)) ∧
+        (#i < #j)) ⇒
+       (∃ dif. Sqnj = (Sqni++dif))) ∧
+     (∀ supi HN Sqni Sqnj #i #j.
+       (((Sqn_UE_Change( supi, HN, Sqnj ) @ #j) ∧
+         (Sqn_UE_Nochange( supi, HN, Sqni ) @ #i)) ∧
+        (#i < #j)) ⇒
+       (∃ dif. Sqnj = (Sqni++dif)))) ∧
+    (∀ supi HN Sqni Sqnj #i #j.
+      (((Sqn_UE_Nochange( supi, HN, Sqnj ) @ #j) ∧
+        (Sqn_UE_Change( supi, HN, Sqni ) @ #i)) ∧
+       (#i < #j)) ⇒
+      ((Sqnj = Sqni) ∨ (∃ dif. Sqnj = (Sqni++dif))))) ∧
+   (∀ supi HN Sqni Sqnj #i #j.
+     (((Sqn_UE_Nochange( supi, HN, Sqnj ) @ #j) ∧
+       (Sqn_UE_Nochange( supi, HN, Sqni ) @ #i)) ∧
+      (#i < #j)) ⇒
+     ((Sqnj = Sqni) ∨ (∃ dif. Sqnj = (Sqni++dif))))"
+/*
+guarded formula characterizing all counter-examples:
+"((∃ supi HN Sqni Sqnj #i #j.
+    (Sqn_UE_Change( supi, HN, Sqnj ) @ #j) ∧
+    (Sqn_UE_Change( supi, HN, Sqni ) @ #i)
+   ∧
+    (#i < #j) ∧ (∀ dif. (Sqnj = (Sqni++dif)) ⇒ ⊥)) ∨
+  (∃ supi HN Sqni Sqnj #i #j.
+    (Sqn_UE_Change( supi, HN, Sqnj ) @ #j) ∧
+    (Sqn_UE_Nochange( supi, HN, Sqni ) @ #i)
+   ∧
+    (#i < #j) ∧ (∀ dif. (Sqnj = (Sqni++dif)) ⇒ ⊥)) ∨
+  (∃ supi HN Sqni Sqnj #i #j.
+    (Sqn_UE_Nochange( supi, HN, Sqnj ) @ #j) ∧
+    (Sqn_UE_Change( supi, HN, Sqni ) @ #i)
+   ∧
+    (#i < #j) ∧ (¬(Sqnj = Sqni)) ∧ (∀ dif. (Sqnj = (Sqni++dif)) ⇒ ⊥)) ∨
+  (∃ supi HN Sqni Sqnj #i #j.
+    (Sqn_UE_Nochange( supi, HN, Sqnj ) @ #j) ∧
+    (Sqn_UE_Nochange( supi, HN, Sqni ) @ #i)
+   ∧
+    (#i < #j) ∧ (¬(Sqnj = Sqni)) ∧ (∀ dif. (Sqnj = (Sqni++dif)) ⇒ ⊥)))"
+*/
+by sorry
+
+lemma sqn_ue_nodecrease [left, heuristic={sqn_ue_nodecrease},
+                         use_induction, reuse]:
+  all-traces
+  "(((∀ supi HN Sqni Sqnj #i #j.
+       (((Sqn_UE_Change( supi, HN, Sqnj ) @ #j) ∧
+         (Sqn_UE_Change( supi, HN, Sqni ) @ #i)) ∧
+        (#i < #j)) ⇒
+       (∃ dif. Sqnj = (Sqni++dif))) ∧
+     (∀ supi HN Sqni Sqnj #i #j.
+       (((Sqn_UE_Change( supi, HN, Sqnj ) @ #j) ∧
+         (Sqn_UE_Nochange( supi, HN, Sqni ) @ #i)) ∧
+        (#i < #j)) ⇒
+       (∃ dif. Sqnj = (Sqni++dif)))) ∧
+    (∀ supi HN Sqni Sqnj #i #j.
+      (((Sqn_UE_Nochange( supi, HN, Sqnj ) @ #j) ∧
+        (Sqn_UE_Change( supi, HN, Sqni ) @ #i)) ∧
+       (#i < #j)) ⇒
+      ((Sqnj = Sqni) ∨ (∃ dif. Sqnj = (Sqni++dif))))) ∧
+   (∀ supi HN Sqni Sqnj #i #j.
+     (((Sqn_UE_Nochange( supi, HN, Sqnj ) @ #j) ∧
+       (Sqn_UE_Nochange( supi, HN, Sqni ) @ #i)) ∧
+      (#i < #j)) ⇒
+     ((Sqnj = Sqni) ∨ (∃ dif. Sqnj = (Sqni++dif))))"
+/*
+guarded formula characterizing all counter-examples:
+"((∃ supi HN Sqni Sqnj #i #j.
+    (Sqn_UE_Change( supi, HN, Sqnj ) @ #j) ∧
+    (Sqn_UE_Change( supi, HN, Sqni ) @ #i)
+   ∧
+    (#i < #j) ∧ (∀ dif. (Sqnj = (Sqni++dif)) ⇒ ⊥)) ∨
+  (∃ supi HN Sqni Sqnj #i #j.
+    (Sqn_UE_Change( supi, HN, Sqnj ) @ #j) ∧
+    (Sqn_UE_Nochange( supi, HN, Sqni ) @ #i)
+   ∧
+    (#i < #j) ∧ (∀ dif. (Sqnj = (Sqni++dif)) ⇒ ⊥)) ∨
+  (∃ supi HN Sqni Sqnj #i #j.
+    (Sqn_UE_Nochange( supi, HN, Sqnj ) @ #j) ∧
+    (Sqn_UE_Change( supi, HN, Sqni ) @ #i)
+   ∧
+    (#i < #j) ∧ (¬(Sqnj = Sqni)) ∧ (∀ dif. (Sqnj = (Sqni++dif)) ⇒ ⊥)) ∨
+  (∃ supi HN Sqni Sqnj #i #j.
+    (Sqn_UE_Nochange( supi, HN, Sqnj ) @ #j) ∧
+    (Sqn_UE_Nochange( supi, HN, Sqni ) @ #i)
+   ∧
+    (#i < #j) ∧ (¬(Sqnj = Sqni)) ∧ (∀ dif. (Sqnj = (Sqni++dif)) ⇒ ⊥)))"
+*/
+by sorry
+
+lemma sqn_ue_unique [right, heuristic={sqn_ue_unique}, reuse,
+                     hide_lemma=sqn_ue_src, hide_lemma=sqn_hss_src]:
+  all-traces
+  "∀ supi HN Sqn #i #j.
+    ((Sqn_UE_Use( supi, HN, Sqn ) @ #i) ∧
+     (Sqn_UE_Use( supi, HN, Sqn ) @ #j)) ⇒
+    (#i = #j)"
+/*
+guarded formula characterizing all counter-examples:
+"∃ supi HN Sqn #i #j.
+  (Sqn_UE_Use( supi, HN, Sqn ) @ #i) ∧
+  (Sqn_UE_Use( supi, HN, Sqn ) @ #j)
+ ∧
+  ¬(#i = #j)"
+*/
+by sorry
+
+lemma sqn_ue_unique [left, heuristic={sqn_ue_unique}, reuse,
+                     hide_lemma=sqn_ue_src, hide_lemma=sqn_hss_src]:
+  all-traces
+  "∀ supi HN Sqn #i #j.
+    ((Sqn_UE_Use( supi, HN, Sqn ) @ #i) ∧
+     (Sqn_UE_Use( supi, HN, Sqn ) @ #j)) ⇒
+    (#i = #j)"
+/*
+guarded formula characterizing all counter-examples:
+"∃ supi HN Sqn #i #j.
+  (Sqn_UE_Use( supi, HN, Sqn ) @ #i) ∧
+  (Sqn_UE_Use( supi, HN, Sqn ) @ #j)
+ ∧
+  ¬(#i = #j)"
+*/
+by sorry
+
+lemma original_replayed_autn [right]:
+  exists-trace
+  "∃ #i #j autn. (Original( autn ) @ #i) ∧ (Replayed( autn ) @ #j)"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #i #j autn. (Original( autn ) @ #i) ∧ (Replayed( autn ) @ #j)"
+*/
+by sorry
+
+lemma original_replayed_autn [left]:
+  exists-trace
+  "∃ #i #j autn. (Original( autn ) @ #i) ∧ (Replayed( autn ) @ #j)"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #i #j autn. (Original( autn ) @ #i) ∧ (Replayed( autn ) @ #j)"
+*/
+by sorry
+
+lemma executability_honest [right]:
+  exists-trace
+  "∃ #i.
+    ((((((SEAF_End( ) @ #i) ∧
+         (∀ supi HN sqn_root #i.1.
+           (Sqn_Create( supi, HN, sqn_root ) @ #i.1) ⇒
+           (¬(∃ #j. K( sqn_root ) @ #j)))) ∧
+        (∀ HN1 HN2 #j #k.
+          ((HomeNet( HN1 ) @ #j) ∧ (HomeNet( HN2 ) @ #k)) ⇒ (#j = #k))) ∧
+       (∀ S1 S2 HN1 HN2 #j #k.
+         ((Subscribe( S1, HN1 ) @ #j) ∧ (Subscribe( S2, HN2 ) @ #k)) ⇒
+         (#j = #k))) ∧
+      (∀ SNID1 SNID2 #j #k.
+        ((Start_SEAF_Session( SNID1 ) @ #j) ∧
+         (Start_SEAF_Session( SNID2 ) @ #k)) ⇒
+        (#j = #k))) ∧
+     (∀ UE1 UE2 #j #k.
+       ((Start_UE_Session( UE1 ) @ #j) ∧ (Start_UE_Session( UE2 ) @ #k)) ⇒
+       (#j = #k))) ∧
+    (∀ HN1 HN2 #j #k.
+      ((Start_HSS_Session( HN1 ) @ #j) ∧
+       (Start_HSS_Session( HN2 ) @ #k)) ⇒
+      (#j = #k))"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #i.
+  (SEAF_End( ) @ #i)
+ ∧
+  (∀ supi HN sqn_root #i.1.
+    (Sqn_Create( supi, HN, sqn_root ) @ #i.1)
+   ⇒
+    ∀ #j. (K( sqn_root ) @ #j) ⇒ ⊥) ∧
+  (∀ HN1 HN2 #j #k.
+    (HomeNet( HN1 ) @ #j) ∧ (HomeNet( HN2 ) @ #k) ⇒ #j = #k) ∧
+  (∀ S1 S2 HN1 HN2 #j #k.
+    (Subscribe( S1, HN1 ) @ #j) ∧ (Subscribe( S2, HN2 ) @ #k)
+   ⇒
+    #j = #k) ∧
+  (∀ SNID1 SNID2 #j #k.
+    (Start_SEAF_Session( SNID1 ) @ #j) ∧
+    (Start_SEAF_Session( SNID2 ) @ #k)
+   ⇒
+    #j = #k) ∧
+  (∀ UE1 UE2 #j #k.
+    (Start_UE_Session( UE1 ) @ #j) ∧ (Start_UE_Session( UE2 ) @ #k)
+   ⇒
+    #j = #k) ∧
+  (∀ HN1 HN2 #j #k.
+    (Start_HSS_Session( HN1 ) @ #j) ∧ (Start_HSS_Session( HN2 ) @ #k)
+   ⇒
+    #j = #k)"
+*/
+by sorry
+
+lemma executability_honest [left]:
+  exists-trace
+  "∃ #i.
+    ((((((SEAF_End( ) @ #i) ∧
+         (∀ supi HN sqn_root #i.1.
+           (Sqn_Create( supi, HN, sqn_root ) @ #i.1) ⇒
+           (¬(∃ #j. K( sqn_root ) @ #j)))) ∧
+        (∀ HN1 HN2 #j #k.
+          ((HomeNet( HN1 ) @ #j) ∧ (HomeNet( HN2 ) @ #k)) ⇒ (#j = #k))) ∧
+       (∀ S1 S2 HN1 HN2 #j #k.
+         ((Subscribe( S1, HN1 ) @ #j) ∧ (Subscribe( S2, HN2 ) @ #k)) ⇒
+         (#j = #k))) ∧
+      (∀ SNID1 SNID2 #j #k.
+        ((Start_SEAF_Session( SNID1 ) @ #j) ∧
+         (Start_SEAF_Session( SNID2 ) @ #k)) ⇒
+        (#j = #k))) ∧
+     (∀ UE1 UE2 #j #k.
+       ((Start_UE_Session( UE1 ) @ #j) ∧ (Start_UE_Session( UE2 ) @ #k)) ⇒
+       (#j = #k))) ∧
+    (∀ HN1 HN2 #j #k.
+      ((Start_HSS_Session( HN1 ) @ #j) ∧
+       (Start_HSS_Session( HN2 ) @ #k)) ⇒
+      (#j = #k))"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #i.
+  (SEAF_End( ) @ #i)
+ ∧
+  (∀ supi HN sqn_root #i.1.
+    (Sqn_Create( supi, HN, sqn_root ) @ #i.1)
+   ⇒
+    ∀ #j. (K( sqn_root ) @ #j) ⇒ ⊥) ∧
+  (∀ HN1 HN2 #j #k.
+    (HomeNet( HN1 ) @ #j) ∧ (HomeNet( HN2 ) @ #k) ⇒ #j = #k) ∧
+  (∀ S1 S2 HN1 HN2 #j #k.
+    (Subscribe( S1, HN1 ) @ #j) ∧ (Subscribe( S2, HN2 ) @ #k)
+   ⇒
+    #j = #k) ∧
+  (∀ SNID1 SNID2 #j #k.
+    (Start_SEAF_Session( SNID1 ) @ #j) ∧
+    (Start_SEAF_Session( SNID2 ) @ #k)
+   ⇒
+    #j = #k) ∧
+  (∀ UE1 UE2 #j #k.
+    (Start_UE_Session( UE1 ) @ #j) ∧ (Start_UE_Session( UE2 ) @ #k)
+   ⇒
+    #j = #k) ∧
+  (∀ HN1 HN2 #j #k.
+    (Start_HSS_Session( HN1 ) @ #j) ∧ (Start_HSS_Session( HN2 ) @ #k)
+   ⇒
+    #j = #k)"
+*/
+by sorry
+
+end

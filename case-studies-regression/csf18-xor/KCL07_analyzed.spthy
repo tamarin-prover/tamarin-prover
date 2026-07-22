@@ -79,7 +79,7 @@ solve( Initiated( ~r1 ) ▶₀ #i )
     case Setup
     solve( !KU( (~id⊕h(<~r1, ~k>)) ) @ #vk )
       case c_xor
-      solve( !KU( ~id ) @ #vk.2 )
+      solve( !KU( ~id ) @ #vk.1 )
         case tag1
         solve( !KU( ~r2 ) @ #vk.4 )
           case tag1_case_1
@@ -99,7 +99,7 @@ solve( Initiated( ~r1 ) ▶₀ #i )
       case coerce
       solve( !KD( (~id⊕h(<~r1, ~k>)) ) ▶₀ #vk )
         case reader1
-        by contradiction /* impossible chain */
+        by solve( (#vl, 0) ~~> (#vk, 0) )
       next
         case tag1
         solve( (#vl, 0) ~~> (#vk, 0) )
@@ -110,12 +110,12 @@ solve( Initiated( ~r1 ) ▶₀ #i )
           next
             case d_xor_case_2
             solve( (#vr.4, 0) ~~> (#vk, 0) )
-              case Xor
+              case xor
               solve( !Tag( ~k.1, ~id ) ▶₂ #vr.2 )
                 case Setup
                 solve( !KU( (~r2⊕h(<~r1, ~k>)) ) @ #vk.2 )
                   case c_xor
-                  solve( !KU( ~r2 ) @ #vk.4 )
+                  solve( !KU( ~r2 ) @ #vk.3 )
                     case tag1_case_1
                     solve( !KU( ~id ) @ #vk.5 )
                       case tag1
@@ -147,7 +147,7 @@ solve( Initiated( ~r1 ) ▶₀ #i )
                   case coerce
                   solve( !KD( (~r2⊕h(<~r1, ~k>)) ) ▶₀ #vk.1 )
                     case reader1
-                    by contradiction /* impossible chain */
+                    by solve( (#vl.1, 0) ~~> (#vk.1, 0) )
                   next
                     case tag1
                     solve( (#vl.1, 0) ~~> (#vk.1, 0) )
@@ -155,31 +155,28 @@ solve( Initiated( ~r1 ) ▶₀ #i )
                       solve( (#vr.6, 0) ~~> (#vk.1, 0) )
                         case d_xor_case_1
                         solve( (#vr.7, 0) ~~> (#vk.1, 0) )
-                          case Xor
+                          case xor
                           by solve( !Tag( ~k.1, ~r2 ) ▶₂ #vr.5 )
                         qed
                       next
                         case d_xor_case_2
                         solve( (#vr.7, 0) ~~> (#vk.1, 0) )
-                          case Xor
+                          case xor
                           by contradiction /* cyclic */
                         qed
                       next
                         case d_xor_case_3
-                        by contradiction /* impossible chain */
+                        by solve( (#vr.7, 0) ~~> (#vk.1, 0) )
                       next
                         case d_xor_case_4
-                        by contradiction /* impossible chain */
+                        by solve( (#vr.7, 0) ~~> (#vk.1, 0) )
                       qed
                     next
                       case d_0_snd
                       solve( (#vr.6, 0) ~~> (#vk.1, 0) )
-                        case Xor
-                        by contradiction /* cyclic */
-                      next
                         case d_xor_case_1
                         solve( (#vr.7, 0) ~~> (#vk.1, 0) )
-                          case Xor
+                          case xor
                           solve( !KU( (h(<~r1, ~k>)⊕h(<r1.1, ~k>)) ) @ #vk.3 )
                             case c_xor
                             solve( !KU( h(<r1.1, ~k>) ) @ #vk.4 )
@@ -214,7 +211,7 @@ solve( Initiated( ~r1 ) ▶₀ #i )
                             case coerce
                             solve( !KD( (h(<~r1, ~k>)⊕h(<r1.1, ~k>)) ) ▶₀ #vk.2 )
                               case reader1
-                              by contradiction /* impossible chain */
+                              by solve( (#vl.1, 0) ~~> (#vk.2, 0) )
                             next
                               case tag1
                               solve( (#vl.1, 0) ~~> (#vk.2, 0) )
@@ -227,10 +224,10 @@ solve( Initiated( ~r1 ) ▶₀ #i )
                                   by solve( (#vr.9, 0) ~~> (#vk.2, 0) )
                                 next
                                   case d_xor_case_3
-                                  by contradiction /* impossible chain */
+                                  by solve( (#vr.9, 0) ~~> (#vk.2, 0) )
                                 next
                                   case d_xor_case_4
-                                  by contradiction /* impossible chain */
+                                  by solve( (#vr.9, 0) ~~> (#vk.2, 0) )
                                 qed
                               next
                                 case d_0_snd
@@ -240,12 +237,12 @@ solve( Initiated( ~r1 ) ▶₀ #i )
                                 next
                                   case d_xor_case_2
                                   solve( (#vr.9, 0) ~~> (#vk.2, 0) )
-                                    case Xor_case_1
+                                    case xor_case_1
                                     solve( !Tag( ~k, ~id.1 ) ▶₂ #vr.7 )
                                       case Setup
                                       solve( !KU( (~r2.1⊕h(<~r1, ~k>)) ) @ #vk.4 )
                                         case c_xor
-                                        solve( !KU( ~r2.1 ) @ #vk.6 )
+                                        solve( !KU( ~r2.1 ) @ #vk.5 )
                                           case tag1_case_1
                                           solve( !KU( ~id ) @ #vk.7 )
                                             case tag1
@@ -277,7 +274,7 @@ solve( Initiated( ~r1 ) ▶₀ #i )
                                         case coerce
                                         solve( !KD( (~r2.1⊕h(<~r1, ~k>)) ) ▶₀ #vk.3 )
                                           case reader1
-                                          by contradiction /* impossible chain */
+                                          by solve( (#vl.2, 0) ~~> (#vk.3, 0) )
                                         next
                                           case tag1
                                           solve( (#vl.2, 0) ~~> (#vk.3, 0) )
@@ -285,39 +282,39 @@ solve( Initiated( ~r1 ) ▶₀ #i )
                                             solve( (#vr.11, 0) ~~> (#vk.3, 0) )
                                               case d_xor_case_1
                                               solve( (#vr.12, 0) ~~> (#vk.3, 0) )
-                                                case Xor
+                                                case xor
                                                 by solve( !Tag( ~k.1, ~id.1 ) ▶₂ #vr.10 )
                                               qed
                                             next
                                               case d_xor_case_2
                                               solve( (#vr.12, 0) ~~> (#vk.3, 0) )
-                                                case Xor
+                                                case xor
                                                 by contradiction /* cyclic */
                                               qed
                                             next
                                               case d_xor_case_3
-                                              by contradiction /* impossible chain */
+                                              by solve( (#vr.12, 0) ~~> (#vk.3, 0) )
                                             next
                                               case d_xor_case_4
-                                              by contradiction /* impossible chain */
+                                              by solve( (#vr.12, 0) ~~> (#vk.3, 0) )
                                             qed
                                           next
                                             case d_0_snd
                                             solve( (#vr.11, 0) ~~> (#vk.3, 0) )
                                               case d_xor_case_1
                                               solve( (#vr.12, 0) ~~> (#vk.3, 0) )
-                                                case Xor
+                                                case xor
                                                 by contradiction /* cyclic */
                                               qed
                                             next
                                               case d_xor_case_2
                                               solve( (#vr.12, 0) ~~> (#vk.3, 0) )
-                                                case Xor
+                                                case xor
                                                 by contradiction /* from formulas */
                                               qed
                                             next
                                               case d_xor_case_3
-                                              by contradiction /* impossible chain */
+                                              by solve( (#vr.12, 0) ~~> (#vk.3, 0) )
                                             next
                                               case d_xor_case_4
                                               by solve( (#vr.12, 0) ~~> (#vk.3, 0) )
@@ -327,12 +324,12 @@ solve( Initiated( ~r1 ) ▶₀ #i )
                                       qed
                                     qed
                                   next
-                                    case Xor_case_2
+                                    case xor_case_2
                                     by contradiction /* from formulas */
                                   qed
                                 next
                                   case d_xor_case_3
-                                  by contradiction /* impossible chain */
+                                  by solve( (#vr.9, 0) ~~> (#vk.2, 0) )
                                 next
                                   case d_xor_case_4
                                   by solve( (#vr.9, 0) ~~> (#vk.2, 0) )
@@ -344,15 +341,18 @@ solve( Initiated( ~r1 ) ▶₀ #i )
                       next
                         case d_xor_case_2
                         solve( (#vr.7, 0) ~~> (#vk.1, 0) )
-                          case Xor
+                          case xor
                           by contradiction /* from formulas */
                         qed
                       next
                         case d_xor_case_3
-                        by contradiction /* impossible chain */
+                        by solve( (#vr.7, 0) ~~> (#vk.1, 0) )
                       next
                         case d_xor_case_4
                         by solve( (#vr.7, 0) ~~> (#vk.1, 0) )
+                      next
+                        case xor
+                        by contradiction /* cyclic */
                       qed
                     qed
                   qed
@@ -361,10 +361,10 @@ solve( Initiated( ~r1 ) ▶₀ #i )
             qed
           next
             case d_xor_case_3
-            by contradiction /* impossible chain */
+            by solve( (#vr.4, 0) ~~> (#vk, 0) )
           next
             case d_xor_case_4
-            by contradiction /* impossible chain */
+            by solve( (#vr.4, 0) ~~> (#vk, 0) )
           qed
         next
           case d_0_snd
@@ -374,12 +374,12 @@ solve( Initiated( ~r1 ) ▶₀ #i )
           next
             case d_xor_case_2
             solve( (#vr.4, 0) ~~> (#vk, 0) )
-              case Xor
+              case xor
               by contradiction /* from formulas */
             qed
           next
             case d_xor_case_3
-            by contradiction /* impossible chain */
+            by solve( (#vr.4, 0) ~~> (#vk, 0) )
           next
             case d_xor_case_4
             by solve( (#vr.4, 0) ~~> (#vk, 0) )
@@ -418,7 +418,7 @@ solve( Initiated( ~r1 ) ▶₀ #i )
             solve( (#vr.3, 0) ~~> (#vk, 0) )
               case d_xor_case_1
               solve( (#vr.4, 0) ~~> (#vk, 0) )
-                case Xor
+                case xor
                 solve( !Tag( ~k.1, ~id ) ▶₂ #vr.2 )
                   case Setup
                   solve( !KU( (~r2⊕h(<~r1, ~k>)) ) @ #vk.2 )
@@ -428,7 +428,7 @@ solve( Initiated( ~r1 ) ▶₀ #i )
                       solve( (#vl.1, 0) ~~> (#vk.1, 0) )
                         case d_0_snd
                         solve( (#vr.5, 0) ~~> (#vk.1, 0) )
-                          case Xor
+                          case xor
                           solve( !KU( ~r1 ) @ #vk.2 )
                             case reader1
                             SOLVED // trace found
@@ -452,9 +452,9 @@ qed
 /*
 Generated from:
 Tamarin version 1.13.0
-Maude version 3.4
-Git revision: 1deff12bd69c96308abb2463d4de5f2c7610c191 (with uncommited changes), branch: develop
-Compiled at: 2026-03-09 07:36:56.194364 UTC
+Maude version 3.5.1
+Git revision: 53c49a44efa784b133c907eedf84491d61a48803 (with uncommited changes), branch: AC-NDC-property
+Compiled at: 2026-07-09 13:42:51.535083 UTC
 */
 
 end
@@ -466,7 +466,7 @@ summary of summaries:
 analyzed: examples/csf18-xor/KCL07.spthy
 
   output:          examples/csf18-xor/KCL07.spthy.tmp
-  processing time: 0.43s
+  processing time: 0.37s
   
   recentalive_tag (all-traces): verified (107 steps)
   executable (exists-trace): verified (16 steps)
