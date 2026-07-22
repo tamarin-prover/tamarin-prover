@@ -1,0 +1,110 @@
+theory LD07_UK1 begin
+
+// Function signature and definition of the equational theory E
+
+builtins: multiset
+functions: fst/1, h/1, pair/2, snd/1, xorr/2 [AC], zeroo/0
+equations:
+    fst(<x.1, x.2>) = x.1,
+    snd(<x.1, x.2>) = x.2,
+    xorr(xorr(x, y), x) = y,
+    xorr(x, x) = zeroo,
+    xorr(x, zeroo) = x
+
+
+
+
+
+
+
+rule (modulo E) SetupLearning:
+   [ Fr( ~k1 ), Fr( ~k2 ), Fr( ~k ) ]
+  --[ Setup( ~k1 ), Setup( ~k2 ), OnlyOnce( 'setupLearning' ) ]->
+   [
+   Tag( ~k1, xorr(~k, ~k1) ), Tag( ~k2, xorr(~k, ~k2) ),
+   SetupKeys( ~k1, ~k2 )
+   ]
+
+rule (modulo E) SetupGuessing:
+   [ SetupKeys( ~k1, ~k2 ), Tag( ~k1, x1 ), Tag( ~k2, x2 ) ]
+  --[ OnlyOnce( 'setupGuessing' ) ]->
+   [ Tag( diff(~k1, ~k2), diff(x1, x2) ) ]
+
+rule (modulo E) tag1:
+   [ In( r1 ), Tag( ~k, x ) ]
+  --[
+  Response( ~k, 'Tag' ), Challenge( x, 'Tag' ), Tag( ~k, x ),
+  Running( ~k, 'Tag', x ), OnlyTwice( 'tag1' )
+  ]->
+   [ Out( h(xorr(r1, x)) ), Tag( ~k, x ), TagRunning( ~k, x ) ]
+
+rule (modulo E) tag2:
+   [ Fr( ~k2 ), In( <newkey, newhash> ), TagRunning( ~k, x ) ]
+  --[
+  Update( ~k, xorr(newkey, x), 'Tag' ),
+  Eq( h(xorr(newkey, x)), newhash ), Alive( ~k, 'Reader' ),
+  OnlyTwice( 'tag2' )
+  ]->
+   [ Tag( ~k, xorr(newkey, x) ) ]
+
+restriction equality [right]:
+  "∀ x y #i. (Eq( x, y ) @ #i) ⇒ (x = y)"
+  // safety formula
+
+restriction equality [left]:
+  "∀ x y #i. (Eq( x, y ) @ #i) ⇒ (x = y)"
+  // safety formula
+
+restriction unique [right]:
+  "∀ x #i #j.
+    ((OnlyOnce( x ) @ #i) ∧ (OnlyOnce( x ) @ #j)) ⇒ (#i = #j)"
+  // safety formula
+
+restriction unique [left]:
+  "∀ x #i #j.
+    ((OnlyOnce( x ) @ #i) ∧ (OnlyOnce( x ) @ #j)) ⇒ (#i = #j)"
+  // safety formula
+
+restriction uniqueTwice [right]:
+  "∀ x #i #j #k.
+    (((OnlyTwice( x ) @ #i) ∧ (OnlyTwice( x ) @ #j)) ∧
+     (OnlyTwice( x ) @ #k)) ⇒
+    (((#i = #j) ∨ (#i = #k)) ∨ (#j = #k))"
+  // safety formula
+
+restriction uniqueTwice [left]:
+  "∀ x #i #j #k.
+    (((OnlyTwice( x ) @ #i) ∧ (OnlyTwice( x ) @ #j)) ∧
+     (OnlyTwice( x ) @ #k)) ⇒
+    (((#i = #j) ∨ (#i = #k)) ∨ (#j = #k))"
+  // safety formula
+
+lemma executable [right]:
+  exists-trace
+  "∃ x y #i #j.
+    ((Response( x, 'Tag' ) @ #i) ∧ (Update( x, y, 'Tag' ) @ #j)) ∧
+    (¬(∃ #l. (Response( x, 'Tag' ) @ #l) ∧ (¬(#i = #l))))"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ x y #i #j.
+  (Response( x, 'Tag' ) @ #i) ∧ (Update( x, y, 'Tag' ) @ #j)
+ ∧
+  ∀ #l. (Response( x, 'Tag' ) @ #l) ⇒ #i = #l"
+*/
+by sorry
+
+lemma executable [left]:
+  exists-trace
+  "∃ x y #i #j.
+    ((Response( x, 'Tag' ) @ #i) ∧ (Update( x, y, 'Tag' ) @ #j)) ∧
+    (¬(∃ #l. (Response( x, 'Tag' ) @ #l) ∧ (¬(#i = #l))))"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ x y #i #j.
+  (Response( x, 'Tag' ) @ #i) ∧ (Update( x, y, 'Tag' ) @ #j)
+ ∧
+  ∀ #l. (Response( x, 'Tag' ) @ #l) ⇒ #i = #l"
+*/
+by sorry
+
+end

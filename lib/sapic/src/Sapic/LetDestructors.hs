@@ -32,7 +32,7 @@ mapProc rules (ProcessAction ac ann p') = do
 
 mapProc rules (ProcessComb c@(Let t1 t2 mv) _ pl pr) =
   case (t1, viewTerm t1', viewTerm t2') of
-    (LIT (Var _) ,Lit (Var _), FApp funsym@(NoEq (_, (_,_,Destructor))) rightterms) ->
+    (LIT (Var _) ,Lit (Var _), FApp funsym@(NoEq (_, (_,_,Destructor,_))) rightterms) ->
       -- we are in the case where the let binding is of the form let invar = dest(rightTerms) in
       (case  L.foldl (findRule funsym) Nothing rules of
         -- if the desrtructor does not have any associated rule, it never succeed, and we thus always go in the else branch we simply substitute in the process, to optimize
