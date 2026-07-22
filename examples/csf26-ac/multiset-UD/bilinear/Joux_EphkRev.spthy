@@ -1,0 +1,106 @@
+theory Joux_EphkRev begin
+
+// Function signature and definition of the equational theory E
+
+builtins: diffie-hellman, bilinear-pairing
+functions: fst/1, pair/2, pk/1, sign/2, snd/1, true/0, verify/3,
+           add/2 [AC], unionUD/1 [destructor]
+equations:
+    fst(<x.1, x.2>) = x.1,
+    snd(<x.1, x.2>) = x.2,
+    verify(sign(x.1, x.2), x.1, pk(x.2)) = true,
+    unionUD(add(x, y)) = x
+
+
+
+
+
+section{* The Joux Protocol using Signatures*}
+
+
+
+
+
+
+
+rule (modulo E) Register_pk:
+   [ Fr( ~ltk ) ]
+  -->
+   [ !Ltk( $A, ~ltk ), !Pk( $A, pk(~ltk) ), Out( pk(~ltk) ) ]
+
+rule (modulo E) Reveal_ltk:
+   [ !Ltk( A, ltk ) ] --[ LtkReveal( A ) ]-> [ Out( ltk ) ]
+
+rule (modulo E) Proto1:
+   [ Fr( ~ekA ), !Ltk( $A, ltkA ) ]
+  -->
+   [
+   PState( $A, add($B, $C), ~ekA ),
+   Out( <pmult(~ekA, 'P'), 
+         sign(<$A, add($B, $C), pmult(~ekA, 'P')>, ltkA)>
+   ),
+   !Ephk( ~ekA )
+   ]
+
+rule (modulo E) Proto2:
+   [
+   PState( $A, add($B, $C), ~ekA ), !Pk( $B, pk(ltkB) ),
+   !Pk( $C, pk(ltkC) ), In( <XB, sign(<$B, add($A, $C), XB>, ltkB)> ),
+   In( <XC, sign(<$C, add($A, $B), XC>, ltkC)> )
+   ]
+  --[ SessionKey( $A, add($B, $C), em(XB, XC)^~ekA ) ]->
+   [ ]
+
+rule (modulo E) EphkRev:
+   [ !Ephk( x ) ] --[ EphkReveal( x ) ]-> [ Out( x ) ]
+
+lemma session_key_establish:
+  exists-trace
+  "∃ A B C #ia #ib #ic k.
+    ((((((((SessionKey( A, add(B, C), k ) @ #ia) ∧
+           (SessionKey( B, add(A, C), k ) @ #ib)) ∧
+          (SessionKey( C, add(A, B), k ) @ #ic)) ∧
+         (¬(A = B))) ∧
+        (¬(B = C))) ∧
+       (¬(A = C))) ∧
+      (¬(∃ #j. LtkReveal( A ) @ #j))) ∧
+     (¬(∃ #j. LtkReveal( B ) @ #j))) ∧
+    (¬(∃ #j. LtkReveal( C ) @ #j))"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ A B C #ia #ib #ic k.
+  (SessionKey( A, add(B, C), k ) @ #ia) ∧
+  (SessionKey( B, add(A, C), k ) @ #ib) ∧
+  (SessionKey( C, add(A, B), k ) @ #ic)
+ ∧
+  (¬(A = B)) ∧
+  (¬(B = C)) ∧
+  (¬(A = C)) ∧
+  (∀ #j. (LtkReveal( A ) @ #j) ⇒ ⊥) ∧
+  (∀ #j. (LtkReveal( B ) @ #j) ⇒ ⊥) ∧
+  (∀ #j. (LtkReveal( C ) @ #j) ⇒ ⊥)"
+*/
+by sorry
+
+lemma Session_Key_Secrecy_PFS:
+  all-traces
+  "∀ A B C sessKey #i #k.
+    ((SessionKey( A, add(B, C), sessKey ) @ #i) ∧
+     (K( sessKey ) @ #k)) ⇒
+    ((((∃ #l. (LtkReveal( A ) @ #l) ∧ (#l < #i)) ∨
+       (∃ #l. (LtkReveal( B ) @ #l) ∧ (#l < #i))) ∨
+      (∃ #l. (LtkReveal( C ) @ #l) ∧ (#l < #i))) ∨
+     (∃ #l x. (EphkReveal( x ) @ #l) ∧ (#l < #i)))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ A B C sessKey #i #k.
+  (SessionKey( A, add(B, C), sessKey ) @ #i) ∧ (K( sessKey ) @ #k)
+ ∧
+  (∀ #l. (LtkReveal( A ) @ #l) ⇒ ¬(#l < #i)) ∧
+  (∀ #l. (LtkReveal( B ) @ #l) ⇒ ¬(#l < #i)) ∧
+  (∀ #l. (LtkReveal( C ) @ #l) ⇒ ¬(#l < #i)) ∧
+  (∀ #l x. (EphkReveal( x ) @ #l) ⇒ ¬(#l < #i))"
+*/
+by sorry
+
+end

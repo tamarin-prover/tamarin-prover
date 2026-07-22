@@ -79,6 +79,7 @@ module Theory.Model.Rule (
   , isDestrRule
   , isIEqualityRule
   , isConstrRule
+  , isACConstrRule
   , isPubConstrRule
   , isNatConstrRule
   , isFreshRule
@@ -88,11 +89,19 @@ module Theory.Model.Rule (
   , isProtocolRule
   , isConstantRule
   , isSubtermRule
+  , isBuiltInIntruderRule
+  , builtInDestrRule
+  , builtInDestrRuleInclPair
   , containsNewVars
   , getRuleName
   , getRuleNameDiff
+  , getDestrRuleFunction
   , getRemainingRuleApplications
   , setRemainingRuleApplications
+  , replaceMatchingRule
+  , getDeconstrRuleKDPrem
+  , getDeconstrRulePremsTail
+  , getConcFact
   , nfRule
   , normRule
   , isTrivialProtoVariantAC
@@ -129,6 +138,8 @@ module Theory.Model.Rule (
   , unifyRuleACInstEqs
   , unifiableRuleACInsts
   , equalRuleUpToRenaming
+  , equalDuplicateRuleUpToRenaming
+  , equalSubsetRuleUpToRenaming
   , equalRuleUpToAnnotations
   , equalRuleUpToDiffAnnotation
   , equalRuleUpToDiffAnnotationSym
@@ -148,6 +159,7 @@ module Theory.Model.Rule (
   , prettyProtoRuleACasE
   , prettyIntrRuleAC
   , prettyIntrRuleACInfo
+  , prettyIntrRuleACWithLimitAndNDC
   , prettyRuleAC
   , prettyLoopBreakers
   , prettyRuleACInst
@@ -177,6 +189,7 @@ import           Control.Category
 import           Control.DeepSeq
 import           Control.Monad.Bind
 import           Control.Monad.Reader
+import           Text.Read (readMaybe)
 
 import           Extension.Data.Label hiding (get)
 import qualified Extension.Data.Label as L
@@ -194,8 +207,7 @@ import           Theory.Text.Pretty
 import           Theory.Sapic
 import Data.Char (chr, isDigit)
 import Data.List.Split (splitOn)
-
--- import           Debug.Trace
+import           Utils.Misc
 
 ------------------------------------------------------------------------------
 -- General Rule
@@ -525,11 +537,12 @@ instance HasFrees ProtoRuleACInstInfo where
 
 -- | An intruder rule modulo AC is described by its name.
 data IntrRuleACInfo =
-    ConstrRule BC.ByteString
-  | DestrRule BC.ByteString Int Bool Bool
+    ConstrRule BC.ByteString FunSym
+  | DestrRule BC.ByteString Int Bool Bool [FunSym]
   -- the number of remaining consecutive applications of this destruction rule, 0 means unbounded, -1 means not yet determined
   -- true if the RHS is a true subterm of the LHS
   -- true if the RHS is a constant
+  -- list of function symbols occuring in the rule
   | CoerceRule
   | IRecvRule
   | ISendRule
@@ -559,23 +572,23 @@ ruleACIntrToRuleACInst (Rule ri ps cs as nvs) = Rule (IntrInfo ri) ps cs as nvs
 
 -- | Converts between constructor and destructor rules.
 constrRuleToDestrRule :: RuleAC -> Int -> Bool -> Bool -> [RuleAC]
-constrRuleToDestrRule (Rule (IntrInfo (ConstrRule name)) ps' cs _ _) i s c
+constrRuleToDestrRule (Rule (IntrInfo (ConstrRule name fun)) ps' cs _ _) i s c
     -- we remove the actions and new variables as destructors do not have actions or new variables
     = map toRule $ permutations ps'
     where
         toRule :: [LNFact] -> RuleAC
         toRule []     = error "Bug in constrRuleToDestrRule. Please report."
-        toRule (p:ps) = Rule (IntrInfo (DestrRule name i s c)) ((convertKUtoKD p):ps) (map convertKUtoKD cs) [] []
+        toRule (p:ps) = Rule (IntrInfo (DestrRule name i s c [fun])) ((convertKUtoKD p):ps) (map convertKUtoKD cs) [] []
 constrRuleToDestrRule _ _ _ _ = error "Not a destructor rule."
 
 -- | Converts between destructor and constructor rules.
 destrRuleToConstrRule :: FunSym -> Int -> RuleAC -> [RuleAC]
-destrRuleToConstrRule f l (Rule (IntrInfo (DestrRule name _ _ _)) ps cs _ _)
+destrRuleToConstrRule f l (Rule (IntrInfo (DestrRule name _ _ _ (fun:_))) ps cs _ _)
     = map (\x -> toRule x (conclusions cs)) (permutations (map convertKDtoKU ps ++ kuFacts))
     where
         -- we add the conclusion as an action as constructors have this action
         toRule :: [LNFact] -> [LNFact] -> RuleAC
-        toRule ps' cs' = Rule (IntrInfo (ConstrRule name)) ps' cs' cs' []
+        toRule ps' cs' = Rule (IntrInfo (ConstrRule name fun)) ps' cs' cs' []
 
         conclusions [] = []
         -- KD and KU facts only have one term
@@ -592,11 +605,11 @@ destrRuleToConstrRule _ _ _ = error "Not a constructor rule."
 
 -- | Creates variants of a destructor rule, where KD and KU facts are permuted.
 destrRuleToDestrRule :: RuleAC -> [RuleAC]
-destrRuleToDestrRule (Rule (IntrInfo (DestrRule name i s c)) ps' cs as nv)
+destrRuleToDestrRule (Rule (IntrInfo (DestrRule name i s c funs)) ps' cs as nv)
     = map toRule $ permutations (map convertKDtoKU ps')
     where
         toRule []     = error "Bug in destrRuleToDestrRule. Please report."
-        toRule (p:ps) = Rule (IntrInfo (DestrRule name i s c)) ((convertKUtoKD p):ps) cs as nv
+        toRule (p:ps) = Rule (IntrInfo (DestrRule name i s c funs)) ((convertKUtoKD p):ps) cs as nv
 destrRuleToDestrRule _ = error "Not a destructor rule."
 
 
@@ -680,7 +693,7 @@ instance HasRuleAttributes RuleACInst where
 -- | True iff the rule is a destruction rule.
 isDestrRule :: HasRuleName r => r -> Bool
 isDestrRule ru = case ruleName ru of
-  IntrInfo (DestrRule _ _ _ _) -> True
+  IntrInfo (DestrRule _ _ _ _ _) -> True
   IntrInfo IEqualityRule   -> True
   _                        -> False
 
@@ -693,12 +706,18 @@ isIEqualityRule ru = case ruleName ru of
 -- | True iff the rule is a construction rule.
 isConstrRule :: HasRuleName r => r -> Bool
 isConstrRule ru = case ruleName ru of
-  IntrInfo (ConstrRule _)  -> True
-  IntrInfo FreshConstrRule -> True
-  IntrInfo PubConstrRule   -> True
-  IntrInfo NatConstrRule   -> True
-  IntrInfo CoerceRule      -> True
-  _                        -> False
+  IntrInfo (ConstrRule _ _) -> True
+  IntrInfo FreshConstrRule  -> True
+  IntrInfo PubConstrRule    -> True
+  IntrInfo NatConstrRule    -> True
+  IntrInfo CoerceRule       -> True
+  _                         -> False
+
+-- | Returns the function iff the rule is a construction rule for an AC symbol, Nothing otherwise.
+isACConstrRule :: HasRuleName r => r -> Maybe FunSym
+isACConstrRule ru = case ruleName ru of
+  IntrInfo (ConstrRule _ f@(AC _)) -> Just f
+  _                                -> Nothing
 
 -- | True iff the rule is a construction rule.
 isPubConstrRule :: HasRuleName r => r -> Bool
@@ -731,16 +750,16 @@ isCoerceRule = (IntrInfo CoerceRule ==) . ruleName
 -- | True iff the rule is a destruction rule with constant RHS.
 isConstantRule :: HasRuleName r => r -> Bool
 isConstantRule ru = case ruleName ru of
-  IntrInfo (DestrRule _ _ _ constant) -> constant
-  _                                   -> False
+  IntrInfo (DestrRule _ _ _ constant _) -> constant
+  _                                     -> False
 
 -- | True iff the rule is a destruction rule where the RHS is a true subterm of the LHS.
 isSubtermRule :: HasRuleName r => r -> Bool
 isSubtermRule ru = case ruleName ru of
-  IntrInfo (DestrRule _ _ subterm _) -> subterm
-  IntrInfo IEqualityRule             -> True
+  IntrInfo (DestrRule _ _ subterm _ _) -> subterm
+  IntrInfo IEqualityRule               -> True
   -- the equality rule is considered a subterm rule, as it has no RHS.
-  _                                  -> False
+  _                                    -> False
 
 -- | True if the messages in premises and conclusions are in normal form
 nfRule :: Rule i -> WithMaude Bool
@@ -777,8 +796,8 @@ isTrivialProtoVariantAC (Rule info ps as cs nvs) (Rule _ ps' as' cs' nvs') =
 getRuleName :: HasRuleName (Rule i) => Rule i -> String
 getRuleName ru = case ruleName ru of
                       IntrInfo i  -> case i of
-                                      ConstrRule x      -> "Constr" ++ (prefixIfReserved ('c' : BC.unpack x))
-                                      DestrRule x _ _ _ -> "Destr" ++ (prefixIfReserved ('d' : BC.unpack x))
+                                      ConstrRule x _    -> "Constr" ++ (prefixIfReserved ('c' : BC.unpack x))
+                                      DestrRule x _ _ _ _ -> "Destr" ++ (prefixIfReserved ('d' : BC.unpack x))
                                       CoerceRule        -> "Coerce"
                                       IRecvRule         -> "Recv"
                                       ISendRule         -> "Send"
@@ -794,8 +813,8 @@ getRuleName ru = case ruleName ru of
 getRuleNameDiff :: HasRuleName (Rule i) => Rule i -> String
 getRuleNameDiff ru = case ruleName ru of
                       IntrInfo i  -> "Intr" ++ case i of
-                                      ConstrRule x      -> "Constr" ++ (prefixIfReserved ('c' : BC.unpack x))
-                                      DestrRule x _ _ _ -> "Destr" ++ (prefixIfReserved ('d' : BC.unpack x))
+                                      ConstrRule x _    -> "Constr" ++ (prefixIfReserved ('c' : BC.unpack x))
+                                      DestrRule x _ _ _ _ -> "Destr" ++ (prefixIfReserved ('d' : BC.unpack x))
                                       CoerceRule        -> "Coerce"
                                       IRecvRule         -> "Recv"
                                       ISendRule         -> "Send"
@@ -807,18 +826,72 @@ getRuleNameDiff ru = case ruleName ru of
                                       FreshRule   -> "FreshRule"
                                       StandRule s -> s
 
+-- | Returns the name of the function at the root of a deconstruction rule if possible, Nothing otherwise.
+getDestrRuleFunction :: HasRuleName r => r -> Maybe FunSym
+getDestrRuleFunction ru = case ruleName ru of
+  IntrInfo (DestrRule _ _ _ _ funs) -> headMay funs
+  _                                 -> Nothing
+
+-- list of built-in deconstruction rules, used to identify them
+builtInDestrRule :: [BC.ByteString]
+builtInDestrRule = [expSymString, invSymString, unionSymString, xorSymString, pmultSymString, emapSymString]
+
+builtInDestrRuleInclPair :: [BC.ByteString]
+builtInDestrRuleInclPair = builtInDestrRule ++ [fstSymString, sndSymString]
+
+-- | Returns an intruder rule's name
+isBuiltInIntruderRule :: IntrRuleAC -> Bool
+isBuiltInIntruderRule (Rule i _ _ _ _) =
+  case i of
+    ConstrRule x _      -> any (`BC.isSuffixOf` x) builtInDestrRuleInclPair
+    DestrRule x _ _ _ _ -> any (`BC.isSuffixOf` x) builtInDestrRuleInclPair
+    CoerceRule          -> True
+    IRecvRule           -> True
+    ISendRule           -> True
+    PubConstrRule       -> True
+    NatConstrRule       -> True
+    FreshConstrRule     -> True
+    IEqualityRule       -> True
+
+
+
 -- | Returns the remaining rule applications within the deconstruction chain if possible, 0 otherwise
 getRemainingRuleApplications :: RuleACInst -> Int
 getRemainingRuleApplications ru = case ruleName ru of
-  IntrInfo (DestrRule _ i _ _) -> i
+  IntrInfo (DestrRule _ i _ _ _) -> i
   _                            -> 0
 
 -- | Sets the remaining rule applications within the deconstruction chain if possible
 setRemainingRuleApplications :: RuleACInst -> Int -> RuleACInst
-setRemainingRuleApplications (Rule (IntrInfo (DestrRule name _ subterm constant)) prems concs acts nvs) i
-    = Rule (IntrInfo (DestrRule name i subterm constant)) prems concs acts nvs
+setRemainingRuleApplications (Rule (IntrInfo (DestrRule name _ subterm constant funs)) prems concs acts nvs) i
+    = Rule (IntrInfo (DestrRule name i subterm constant funs)) prems concs acts nvs
 setRemainingRuleApplications rule _
     = rule
+
+-- | Replace a deconstructor rule by the version from a list of rules if they have the same name, premises and conclusions,
+--   otherwise return the rule unchanged. Used to Copy the chain limit of a deconstructor rule.
+replaceMatchingRule :: [IntrRuleAC] -> IntrRuleAC -> IntrRuleAC
+replaceMatchingRule d rule@(Rule (DestrRule _ _ _ _ _) _ _ _ _) = updateLimit d rule
+  where
+    updateLimit (d1:dq) r = if (getRuleName r == getRuleName d1) && (enumPrems d1 == enumPrems r) && (enumConcs d1 == enumConcs r) then d1 else updateLimit dq r
+    updateLimit [] r = r
+replaceMatchingRule _ rule = rule
+
+
+-- | Returns the first premise fact of an intruder rule. Should be the KD fact in case of a deconstruction rule.
+getDeconstrRuleKDPrem :: IntrRuleAC -> LNFact
+getDeconstrRuleKDPrem (Rule _ (fact:_) _ _ _) = fact
+getDeconstrRuleKDPrem _                       = error "getDeconstrRuleKDPrem: This case should not happen as deconstructor rules have at least one premise, please report it on the github page." 
+
+-- | Returns the tail of the premises of a deconstruction rule, i.e., all premises except the first KD fact
+getDeconstrRulePremsTail :: IntrRuleAC -> [LNFact]
+getDeconstrRulePremsTail (Rule _ ((Fact KDFact _ _):tls) _ _ _) = tls
+getDeconstrRulePremsTail _                                      = error "getDeconstrRulePremsTail: This case should not happen as deconstruction rules have at least one KD premise, please report it on the github page" 
+
+-- | Returns the conclusion of an intruder rule
+getConcFact :: IntrRuleAC -> LNFact
+getConcFact (Rule _ _ [fact] _ _) = fact
+getConcFact _                     = error "getConcFact: This case should not happen as intruder rules have only one conclusion, please report it on the github page" 
 
 -- | Converts a protocol rule to its "left" variant
 getLeftRule :: Rule i ->  Rule i
@@ -899,7 +972,7 @@ equalUpToTerms ruAC@(Rule _ ps cs as _) ruE@(Rule _ ps' cs' as' _) =
 
 -- | Returns a multiplication rule instance of the given size.
 multRuleInstance :: Int -> RuleAC
-multRuleInstance n = (Rule (IntrInfo (ConstrRule $ BC.pack "_mult")) (map xifact [1..n]) [prod] [prod] [])
+multRuleInstance n = (Rule (IntrInfo (ConstrRule (BC.pack "_mult") (AC Mult))) (map xifact [1..n]) [prod] [prod] [])
   where
     prod = kuFact (FAPP (AC Mult) (map xi [1..n]))
 
@@ -911,7 +984,7 @@ multRuleInstance n = (Rule (IntrInfo (ConstrRule $ BC.pack "_mult")) (map xifact
 
 -- | Returns a union rule instance of the given size.
 unionRuleInstance :: Int -> RuleAC
-unionRuleInstance n = (Rule (IntrInfo (ConstrRule $ BC.pack "_union")) (map xifact [1..n]) [prod] [prod] [])
+unionRuleInstance n = (Rule (IntrInfo (ConstrRule (BC.pack "_union") (AC Union))) (map xifact [1..n]) [prod] [prod] [])
   where
     prod = kuFact (FAPP (AC Union) (map xi [1..n]))
 
@@ -923,7 +996,7 @@ unionRuleInstance n = (Rule (IntrInfo (ConstrRule $ BC.pack "_union")) (map xifa
 
 -- | Returns a xor rule instance of the given size.
 xorRuleInstance :: Int -> RuleAC
-xorRuleInstance n = (Rule (IntrInfo (ConstrRule $ BC.pack "_xor")) (map xifact [1..n]) [prod] [prod] [])
+xorRuleInstance n = (Rule (IntrInfo (ConstrRule (BC.pack "_xor") (AC Xor))) (map xifact [1..n]) [prod] [prod] [])
   where
     prod = Fact KUFact S.empty [(FAPP (AC Xor) (map xi [1..n]))]
 
@@ -1069,22 +1142,53 @@ unifyRuleACInstEqs eqs
 -- | Are these two rule instances unifiable?
 unifiableRuleACInsts :: RuleACInst -> RuleACInst -> WithMaude Bool
 unifiableRuleACInsts ru1 ru2 =
-    (not . null) <$> unifyRuleACInstEqs [Equal ru1 ru2]
+    not . null <$> unifyRuleACInstEqs [Equal ru1 ru2]
 
--- | Are these two rule instances equal up to renaming of variables?
-equalRuleUpToRenaming :: (Show a, Eq a, HasFrees a) => Rule a -> Rule a -> WithMaude Bool
-equalRuleUpToRenaming r1@(Rule rn1 pr1 co1 ac1 nvs1) r2@(Rule rn2 pr2 co2 ac2 nvs2) = reader $ \hnd ->
+-- | Are these two rule instances equal up to renaming of variables, and ignoring their names ?
+equalRuleUpToRenamingIgnoringNames :: (Show a, Eq a, HasFrees a) => Rule a -> Rule a -> WithMaude Bool
+equalRuleUpToRenamingIgnoringNames r1@(Rule _ pr1 co1 ac1 nvs1) r2@(Rule _ pr2 co2 ac2 nvs2) = reader $ \hnd ->
   case eqs of
        Nothing   -> False
-       Just eqs' -> (rn1 == rn2) && (any isRenamingPerRule $ unifs eqs' hnd)
+       Just eqs' -> any isRenamingPerRule (unifs eqs' hnd)
     where
        isRenamingPerRule subst = isRenaming (restrictVFresh (vars r1) subst) && isRenaming (restrictVFresh (vars r2) subst)
        vars ru = map fst $ varOccurences ru
        unifs eq hnd = unifyLNTerm eq `runReader` hnd
        eqs = foldl matchFacts (Just $ zipWith Equal nvs1 nvs2) $ zip (pr1++co1++ac1) (pr2++co2++ac2)
-       matchFacts Nothing  _                                    = Nothing
-       matchFacts (Just l) (Fact f1 _ t1, Fact f2 _ t2) | f1 == f2  = Just ((zipWith Equal t1 t2)++l)
-                                                    | otherwise = Nothing
+       matchFacts Nothing  _                                   = Nothing
+       matchFacts (Just l) (Fact f1 _ t1, Fact f2 _ t2) | f1 == f2  = Just (zipWith Equal t1 t2 ++ l)
+                                                        | otherwise = Nothing
+
+-- | Are these two rule instances equal up to renaming of variables?
+equalRuleUpToRenaming :: (Show a, Eq a, HasFrees a) => Rule a -> Rule a -> WithMaude Bool
+equalRuleUpToRenaming r1@(Rule rn1 _ _ _ _) r2@(Rule rn2 _ _ _ _) = if rn1 == rn2
+  then equalRuleUpToRenamingIgnoringNames r1 r2
+  else return False
+
+-- | Are these two rules equal up to renaming of variables?
+equalDuplicateRuleUpToRenaming :: (Show a, Eq a, HasFrees a) => Rule a -> Rule a -> WithMaude Bool
+equalDuplicateRuleUpToRenaming r1 r2 = equalRuleUpToRenamingIgnoringNames r1 (r2 `renameAvoiding` r1)
+
+-- | Are the premisses of the first rule subset of those of the second rule up to renaming of variables?
+equalSubsetRuleUpToRenaming :: (Show a, Eq a, HasFrees a, Apply LNSubst a) => Rule a -> Rule a -> WithMaude Bool
+equalSubsetRuleUpToRenaming r1@(Rule _ _ co1 _ _) r2@(Rule _ _ co2 _ _) = reader $ \hnd ->
+  case unifyLNFactEqs [Equal (head co2) (head co1)] `runReader` hnd of
+      [] -> False
+      subst -> any (\x -> isRenamingPerRule x && premSubst x) subst
+    where
+      isRenamingPerRule sub = isRenaming (restrictVFresh (vars r1) sub) && isRenaming (restrictVFresh (vars r2) sub)
+      vars ru = map fst $ varOccurences ru
+
+      premSubst :: LNSubstVFresh -> Bool
+      premSubst sub = srpr2 `subsetOf` spr1
+
+        where
+          (Rule _ spr1 _ _ _,Rule _ srpr2 _ _ _) = evalFreshAvoiding (appSubst sub r1 r2) (r1, r2)
+
+          appSubst x inst0 inst1 = do
+            s <- freshToFree x
+            let (instt0,instt1) = apply s (inst0,inst1)
+            return (instt0,instt1)
 
 -- | Are these two rule instances equal up to added annotations in @ac2@?
 equalRuleUpToAnnotations :: (Eq a) => Rule a -> Rule a -> Bool
@@ -1098,7 +1202,7 @@ equalRuleUpToDiffAnnotation ru1@(Rule rn1 pr1 co1 ac1 nvs1) (Rule rn2 pr2 co2 ac
   rn1 == rn2 && pr1 == pr2 && co1 == co2 && nvs1 == nvs2 &&
   ac1 == filter isNotDiffAnnotation ac2
   where
-    isNotDiffAnnotation fa = (fa /= Fact {factTag = ProtoFact Linear ("Diff" ++ getRuleNameDiff ru1) 0, factAnnotations = S.empty, factTerms = []})
+    isNotDiffAnnotation fa = fa /= Fact {factTag = ProtoFact Linear ("Diff" ++ getRuleNameDiff ru1) 0, factAnnotations = S.empty, factTerms = []}
 
 -- | Are these two rule instances equal up to an added diff annotation in @ac2@ or @ac1@?
 equalRuleUpToDiffAnnotationSym :: (HasRuleName (Rule a), Eq a) => Rule a -> Rule a -> Bool
@@ -1240,8 +1344,8 @@ prettyIntrRuleACInfo rn = text $ case rn of
     PubConstrRule        -> "pub"
     NatConstrRule        -> "nat"
     IEqualityRule        -> "iequality"
-    ConstrRule name      -> prefixIfReserved ('c' : BC.unpack name)
-    DestrRule name _ _ _ -> prefixIfReserved ('d' : BC.unpack name)
+    ConstrRule name _    -> prefixIfReserved ('c' : BC.unpack name)
+    DestrRule name _ _ _ _ -> prefixIfReserved ('d' : BC.unpack name)
 --     DestrRule name i -> prefixIfReserved ('d' : BC.unpack name ++ "_" ++ show i)
 
 
@@ -1332,6 +1436,15 @@ prettyProtoRuleACasE =
 
 prettyIntrRuleAC :: HighlightDocument d => IntrRuleAC -> d
 prettyIntrRuleAC = prettyNamedRule (kwRuleModulo "AC") (const emptyDoc)
+
+prettyIntrRuleACWithLimitAndNDC :: HighlightDocument d => IntrRuleAC -> d
+prettyIntrRuleACWithLimitAndNDC r@(Rule (DestrRule _ i _ _ funs) _ _ _ _) =
+  vcat [prettyNamedRule (kwRuleModulo "AC") (const emptyDoc) r,
+        text ("Remaining consecutive applications : " ++ show i ++ "\n"),
+        text ("NDC property : " ++ show (fromMaybe False (isNDCFunSym <$> headMay funs)) ++ "\n"),
+        text ("NDC property in diff mode : " ++ show (fromMaybe False (isNDCDiffFunSym <$> headMay funs)) ++ "\n"),
+        text ("Functions : " ++ show (map showFunSymName funs) ++ "\n")]
+prettyIntrRuleACWithLimitAndNDC r = prettyNamedRule (kwRuleModulo "AC") (const emptyDoc) r
 
 prettyProtoRuleAC :: HighlightDocument d => ProtoRuleAC -> d
 prettyProtoRuleAC = prettyNamedRule (kwRuleModulo "AC") prettyProtoRuleACInfo

@@ -168,9 +168,9 @@ next
             by contradiction /* from formulas */
           next
             case V_1_case_3
-            solve( !KU( ~b ) @ #vk.4 )
+            solve( !KU( ~b ) @ #vk.3 )
               case A_1
-              solve( (#vr.12, 0) ~~> (#vk.1, 0) )
+              solve( (#vr.10, 0) ~~> (#vk.1, 0) )
                 case d_0_open
                 by contradiction /* forbidden KD-fact */
               qed
@@ -180,9 +180,9 @@ next
             qed
           next
             case V_1_case_4
-            solve( !KU( ~b ) @ #vk.3 )
+            solve( !KU( ~b ) @ #vk.4 )
               case A_1
-              solve( (#vr.10, 0) ~~> (#vk.1, 0) )
+              solve( (#vr.12, 0) ~~> (#vk.1, 0) )
                 case d_0_open
                 by contradiction /* forbidden KD-fact */
               qed
@@ -336,9 +336,9 @@ qed
 /*
 Generated from:
 Tamarin version 1.13.0
-Maude version 3.4
-Git revision: a31226029a4774beefcb53c81296ea289c8d91d0 (with uncommited changes), branch: feat/tamarin-to-pv-pr
-Compiled at: 2026-06-25 11:10:06.043274 UTC
+Maude version 3.5.1
+Git revision: 53c49a44efa784b133c907eedf84491d61a48803 (with uncommited changes), branch: AC-NDC-property
+Compiled at: 2026-07-09 13:42:51.535083 UTC
 */
 
 end
@@ -350,7 +350,7 @@ summary of summaries:
 analyzed: examples/post17/foo_eligibility.spthy
 
   output:          examples/post17/foo_eligibility.spthy.tmp
-  processing time: 0.22s
+  processing time: 0.29s
   
   types (all-traces): verified (43 steps)
   exec (exists-trace): verified (9 steps)

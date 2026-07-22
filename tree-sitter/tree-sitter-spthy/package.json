@@ -1,8 +1,12 @@
 {
   "name": "tree-sitter-spthy",
-  "version": "0.0.1",
+  "version": "0.1.1",
   "description": "Spthy grammar for tree-sitter",
-  "repository": "github:tamarin-prover/tamarin-prover/tree-sitter/tree-sitter-spthy",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tamarin-prover/tamarin-prover.git",
+    "directory": "tree-sitter/tree-sitter-spthy"
+  },
   "license": "MIT",
   "main": "bindings/node",
   "types": "bindings/node",
@@ -37,6 +41,7 @@
     }
   },
   "scripts": {
+    "generate": "tree-sitter generate --abi 14",
     "install": "node-gyp-build",
     "prestart": "tree-sitter build --wasm",
     "start": "tree-sitter playground",

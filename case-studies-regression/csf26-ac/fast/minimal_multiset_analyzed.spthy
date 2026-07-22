@@ -1,0 +1,62 @@
+theory minimal_multiset
+
+begin
+
+// Function signature and definition of the equational theory E
+
+functions: fst/1, pair/2, snd/1, unionUD/1 [destructor], add/2 [AC]
+equations:
+    fst(<x.1, x.2>) = x.1,
+    snd(<x.1, x.2>) = x.2,
+    unionUD((x add y)) = x
+
+rule (modulo E) A:
+   [ Fr( ~x ) ] --> [ Out( ($A add ~x) ), S( ~x ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) B:
+   [ S( ~x ), In( ~x ) ] --[ Reach( ) ]-> [ ]
+
+  /* has exactly the trivial AC variant */
+
+lemma Reachable:
+  exists-trace "∃ #i. Reach( ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #i. (Reach( ) @ #i)"
+*/
+simplify
+solve( S( ~x ) ▶₀ #i )
+  case A
+  solve( !KU( ~x ) @ #vk )
+    case A
+    SOLVED // trace found
+  qed
+qed
+
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.13.0
+Maude version 3.5.1
+Git revision: 53c49a44efa784b133c907eedf84491d61a48803 (with uncommited changes), branch: AC-NDC-property
+Compiled at: 2026-07-09 13:42:51.535083 UTC
+*/
+
+end
+/* Output
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/csf26-ac/fast/minimal_multiset.spthy
+
+  output:          examples/csf26-ac/fast/minimal_multiset.spthy.tmp
+  processing time: 0.03s
+  
+  Reachable (exists-trace): verified (4 steps)
+
+==============================================================================
+*/
