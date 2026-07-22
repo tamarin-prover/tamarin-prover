@@ -4,8 +4,8 @@ begin
 
 // Function signature and definition of the equational theory E
 
-functions: check_rep/2[destructor], fst/1, get_rep/1[destructor], list/2,
-           pair/2, prog/3, rep/2[private,constructor], report/1, snd/1
+functions: check_rep/2 [destructor], fst/1, get_rep/1 [destructor],
+           list/2, pair/2, prog/3, rep/2 [private,constructor], report/1, snd/1
 equations:
     check_rep(rep(x.1, x.2), x.2) = x.1,
     fst(<x.1, x.2>) = x.1,
@@ -832,9 +832,9 @@ Facts occur in the left-hand-side but not in any right-hand-side
 /*
 Generated from:
 Tamarin version 1.13.0
-Maude version 3.4
-Git revision: 1deff12bd69c96308abb2463d4de5f2c7610c191 (with uncommited changes), branch: develop
-Compiled at: 2026-03-09 07:36:56.194364 UTC
+Maude version 3.5.1
+Git revision: 53c49a44efa784b133c907eedf84491d61a48803 (with uncommited changes), branch: AC-NDC-property
+Compiled at: 2026-07-09 13:42:51.535083 UTC
 */
 
 end
@@ -846,7 +846,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-locations/AC.spthy
 
   output:          examples/sapic/fast/feature-locations/AC.spthy.tmp
-  processing time: 0.58s
+  processing time: 0.32s
   
   WARNING: 1 wellformedness check failed!
            The analysis results might be wrong!

@@ -1,0 +1,368 @@
+theory alethea_selectionphase_anonymity begin
+
+// Function signature and definition of the equational theory E
+
+functions: adec/2, aenc/2, fst/1, h/1, pair/2, pk/1, sdec/2,
+           senc/2, sign/2, snd/1, true/0, verify/3, add/2 [AC],
+           unionUD/1 [destructor]
+equations:
+    adec(aenc(x.1, pk(x.2)), x.2) = x.1,
+    fst(<x.1, x.2>) = x.1,
+    sdec(senc(x.1, x.2), x.2) = x.1,
+    snd(<x.1, x.2>) = x.2,
+    verify(sign(x.1, x.2), x.1, pk(x.2)) = true,
+    unionUD(add(x, y)) = x
+
+
+
+
+
+
+
+rule (modulo E) ChanOut_S:
+   [ Out_S( $A, $B, x ) ]
+  --[ ChanOut_S( $A, $B, x ) ]->
+   [ !Sec( $A, $B, x ) ]
+
+rule (modulo E) ChanIn_S:
+   [ !Sec( $A, $B, x ) ]
+  --[ ChanIn_S( $A, $B, x ) ]->
+   [ In_S( $A, $B, x ) ]
+
+rule (modulo E) ChanOut_A:
+   [ Out_A( $A, x ) ]
+  --[ ChanOut_A( $A, x ) ]->
+   [ !Auth( $A, x ), Out( <$A, x> ) ]
+
+rule (modulo E) ChanIn_A:
+   [ !Auth( $A, x ) ] --[ ChanIn_A( $A, x ) ]-> [ In_A( $A, x ) ]
+
+rule (modulo E) publickeyinfrastructure:
+   [ Fr( ~skX ) ]
+  --[ LongtermKey( $X, ~skX ) ]->
+   [ !Ltk( $X, ~skX ), !Pk( $X, pk(~skX) ), Out( pk(~skX) ) ]
+
+rule (modulo E) Setup:
+   [
+   Fr( ~x1 ), Fr( ~x2 ), !Ltk( 'S', ~skS ), !Ltk( 'D1', ~skD1 ),
+   !Ltk( 'D2', ~skD2 )
+   ]
+  --[
+  Setup( ),
+  Comm_S_Ys( 'S',
+             <'ys', 
+              add(diff(h(<'H1', ~x1>), h(<'H2', ~x2>)),
+                  diff(h(<'H2', ~x2>), h(<'H1', ~x1>)))
+             >
+  ),
+  Running( 'S', 'D1', <pk(~skD1), 'H1', ~x1> ),
+  Running( 'S', 'D2', <pk(~skD2), 'H2', ~x2> ),
+  BB_Ys( 'BB', 'ys',
+         add(diff(h(<'H1', ~x1>), h(<'H2', ~x2>)),
+             diff(h(<'H2', ~x2>), h(<'H1', ~x1>)))
+  )
+  ]->
+   [
+   AgSt_D0( diff(<'D1', ~skD1, 'S', pk(~skS), 'H1'>, <'D2', ~skD2, 
+                                                      'S', pk(~skS), 'H2'>)
+   ),
+   AgSt_D0( diff(<'D2', ~skD2, 'S', pk(~skS), 'H2'>, <'D1', ~skD1, 
+                                                      'S', pk(~skS), 'H1'>)
+   ),
+   AgSt_S0( 'S', 'BB', ~skS,
+            diff(<'H1', 'D1', pk(~skD1), ~x1>, <'H2', 'D2', pk(~skD2), ~x2>),
+            diff(<'H2', 'D2', pk(~skD2), ~x2>, <'H1', 'D1', pk(~skD1), ~x1>)
+   ),
+   AgSt_H0( diff(<'H1', 'D1', 'S', 'BB'>, <'H2', 'D2', 'S', 'BB'>) ),
+   AgSt_H0( diff(<'H2', 'D2', 'S', 'BB'>, <'H1', 'D1', 'S', 'BB'>) ),
+   Out_A( 'S', diff(aenc(~x1, pk(~skD1)), aenc(~x2, pk(~skD2))) ),
+   Out_A( 'S', diff(aenc(~x2, pk(~skD2)), aenc(~x1, pk(~skD1))) ),
+   Out_A( $BB,
+          <'ys', 
+           add(diff(h(<'H1', ~x1>), h(<'H2', ~x2>)),
+               diff(h(<'H2', ~x2>), h(<'H1', ~x1>)))
+          >
+   )
+   ]
+
+rule (modulo E) D_4:
+   [ AgSt_D0( <$D, ~skD, $S, pkS, $H> ), In_A( $S, aenc(x, pk(~skD)) )
+   ]
+  --[
+  Commit( $D, $S, <pk(~skD), $H, x> ), Comm_D_Y( $D, h(<$H, x>) ),
+  Secret( $D, x )
+  ]->
+   [ Out_S( $D, $H, h(<$H, x>) ) ]
+
+rule (modulo E) H_5:
+   [
+   AgSt_H0( <$H, $D, $S, $BB> ), In_S( $D, $H, yD ),
+   In_A( $BB, <'ys', add(y1, y2)> )
+   ]
+  --[
+  Learn_H_yD( $H, $D, yD ), Learn_H_Ys( $H, $S, <'ys', add(y1, y2)> )
+  ]->
+   [ AgSt_H5( $H, <$D, $S, $BB, yD, y1, y2> ) ]
+
+rule (modulo E) S_7:
+   [
+   AgSt_S0( $S, $BB, ~skS, <$HSel, $DSel, pkDSel, ~xSel>,
+            <$HNotsel, $DNotsel, pkDNotsel, ~xNotsel>
+   )
+   ]
+  --[
+  Comm_S_ySG( $S, <'ySG', h(<$HSel, ~xSel>)> ),
+  BB_ySG( $BB, <'ySG', h(<$HSel, ~xSel>)> )
+  ]->
+   [ Out_A( $BB, <'ySG', h(<$HSel, ~xSel>)> ) ]
+
+rule (modulo E) H_9:
+   [
+   AgSt_H5( $H, <$D, $S, $BB, yD, y1, y2> ), In_A( $BB, <'ySG', ySG> )
+   ]
+  --[ Learn_H_ySG( $H, $S, <'ySG', ySG> ) ]->
+   [ ]
+
+restriction OneSetup [right]:
+  "∀ #i #j. ((Setup( ) @ #i) ∧ (Setup( ) @ #j)) ⇒ (#i = #j)"
+  // safety formula
+
+restriction OneSetup [left]:
+  "∀ #i #j. ((Setup( ) @ #i) ∧ (Setup( ) @ #j)) ⇒ (#i = #j)"
+  // safety formula
+
+lemma functional [right]:
+  exists-trace
+  "(∀ #s1 #s2. ((Setup( ) @ #s1) ∧ (Setup( ) @ #s2)) ⇒ (#s1 = #s2)) ∧
+   (∃ #i #j1 #j2 #k1 #k2 #l #m1 #m2 S H1 H2 D1 D2 x1 x2 ySG.
+     ((((((((((¬(H1 = H2)) ∧
+              (Comm_S_Ys( S, <'ys', add(h(<H1, x1>), h(<H2, x2>))> ) @ #i)) ∧
+             (Comm_D_Y( D1, h(<H1, x1>) ) @ #j1)) ∧
+            (Comm_D_Y( D2, h(<H2, x2>) ) @ #j2)) ∧
+           (Learn_H_yD( H1, D1, h(<H1, x1>) ) @ #k1)) ∧
+          (Learn_H_yD( H2, D2, h(<H2, x2>) ) @ #k2)) ∧
+         (Learn_H_Ys( H1, S, <'ys', add(h(<H1, x1>), h(<H2, x2>))>
+          ) @ #k1)) ∧
+        (Learn_H_Ys( H2, S, <'ys', add(h(<H1, x1>), h(<H2, x2>))>
+         ) @ #k2)) ∧
+       (Comm_S_ySG( S, <'ySG', ySG> ) @ #l)) ∧
+      (Learn_H_ySG( H1, S, <'ySG', ySG> ) @ #m1)) ∧
+     (Learn_H_ySG( H2, S, <'ySG', ySG> ) @ #m2))"
+/*
+guarded formula characterizing all satisfying traces:
+"(∀ #s1 #s2. (Setup( ) @ #s1) ∧ (Setup( ) @ #s2) ⇒ #s1 = #s2) ∧
+ (∃ #i #j1 #j2 #k1 #k2 #l #m1 #m2 S H1 H2 D1 D2 x1 x2 ySG.
+   (Comm_S_Ys( S, <'ys', add(h(<H1, x1>), h(<H2, x2>))> ) @ #i) ∧
+   (Comm_D_Y( D1, h(<H1, x1>) ) @ #j1) ∧
+   (Comm_D_Y( D2, h(<H2, x2>) ) @ #j2) ∧
+   (Learn_H_yD( H1, D1, h(<H1, x1>) ) @ #k1) ∧
+   (Learn_H_yD( H2, D2, h(<H2, x2>) ) @ #k2) ∧
+   (Learn_H_Ys( H1, S, <'ys', add(h(<H1, x1>), h(<H2, x2>))>
+    ) @ #k1) ∧
+   (Learn_H_Ys( H2, S, <'ys', add(h(<H1, x1>), h(<H2, x2>))>
+    ) @ #k2) ∧
+   (Comm_S_ySG( S, <'ySG', ySG> ) @ #l) ∧
+   (Learn_H_ySG( H1, S, <'ySG', ySG> ) @ #m1) ∧
+   (Learn_H_ySG( H2, S, <'ySG', ySG> ) @ #m2)
+  ∧
+   ¬(H1 = H2))"
+*/
+by sorry
+
+lemma functional [left]:
+  exists-trace
+  "(∀ #s1 #s2. ((Setup( ) @ #s1) ∧ (Setup( ) @ #s2)) ⇒ (#s1 = #s2)) ∧
+   (∃ #i #j1 #j2 #k1 #k2 #l #m1 #m2 S H1 H2 D1 D2 x1 x2 ySG.
+     ((((((((((¬(H1 = H2)) ∧
+              (Comm_S_Ys( S, <'ys', add(h(<H1, x1>), h(<H2, x2>))> ) @ #i)) ∧
+             (Comm_D_Y( D1, h(<H1, x1>) ) @ #j1)) ∧
+            (Comm_D_Y( D2, h(<H2, x2>) ) @ #j2)) ∧
+           (Learn_H_yD( H1, D1, h(<H1, x1>) ) @ #k1)) ∧
+          (Learn_H_yD( H2, D2, h(<H2, x2>) ) @ #k2)) ∧
+         (Learn_H_Ys( H1, S, <'ys', add(h(<H1, x1>), h(<H2, x2>))>
+          ) @ #k1)) ∧
+        (Learn_H_Ys( H2, S, <'ys', add(h(<H1, x1>), h(<H2, x2>))>
+         ) @ #k2)) ∧
+       (Comm_S_ySG( S, <'ySG', ySG> ) @ #l)) ∧
+      (Learn_H_ySG( H1, S, <'ySG', ySG> ) @ #m1)) ∧
+     (Learn_H_ySG( H2, S, <'ySG', ySG> ) @ #m2))"
+/*
+guarded formula characterizing all satisfying traces:
+"(∀ #s1 #s2. (Setup( ) @ #s1) ∧ (Setup( ) @ #s2) ⇒ #s1 = #s2) ∧
+ (∃ #i #j1 #j2 #k1 #k2 #l #m1 #m2 S H1 H2 D1 D2 x1 x2 ySG.
+   (Comm_S_Ys( S, <'ys', add(h(<H1, x1>), h(<H2, x2>))> ) @ #i) ∧
+   (Comm_D_Y( D1, h(<H1, x1>) ) @ #j1) ∧
+   (Comm_D_Y( D2, h(<H2, x2>) ) @ #j2) ∧
+   (Learn_H_yD( H1, D1, h(<H1, x1>) ) @ #k1) ∧
+   (Learn_H_yD( H2, D2, h(<H2, x2>) ) @ #k2) ∧
+   (Learn_H_Ys( H1, S, <'ys', add(h(<H1, x1>), h(<H2, x2>))>
+    ) @ #k1) ∧
+   (Learn_H_Ys( H2, S, <'ys', add(h(<H1, x1>), h(<H2, x2>))>
+    ) @ #k2) ∧
+   (Comm_S_ySG( S, <'ySG', ySG> ) @ #l) ∧
+   (Learn_H_ySG( H1, S, <'ySG', ySG> ) @ #m1) ∧
+   (Learn_H_ySG( H2, S, <'ySG', ySG> ) @ #m2)
+  ∧
+   ¬(H1 = H2))"
+*/
+by sorry
+
+lemma individualVerifiability_votercode [right]:
+  all-traces
+  "∀ H D yD #h1 S yOther #h2.
+    ((Learn_H_yD( H, D, yD ) @ #h1) ∧
+     (Learn_H_Ys( H, S, <'ys', add(yD, yOther)> ) @ #h2)) ⇒
+    (∃ x BB y2 #b1.
+      (BB_Ys( BB, 'ys', add(y2, yD) ) @ #b1) ∧ (yD = h(<H, x>)))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ H D yD #h1 S yOther #h2.
+  (Learn_H_yD( H, D, yD ) @ #h1) ∧
+  (Learn_H_Ys( H, S, <'ys', add(yD, yOther)> ) @ #h2)
+ ∧
+  ∀ x BB y2 #b1.
+   (BB_Ys( BB, 'ys', add(y2, yD) ) @ #b1) ∧ (yD = h(<H, x>)) ⇒ ⊥"
+*/
+by sorry
+
+lemma individualVerifiability_votercode [left]:
+  all-traces
+  "∀ H D yD #h1 S yOther #h2.
+    ((Learn_H_yD( H, D, yD ) @ #h1) ∧
+     (Learn_H_Ys( H, S, <'ys', add(yD, yOther)> ) @ #h2)) ⇒
+    (∃ x BB y2 #b1.
+      (BB_Ys( BB, 'ys', add(y2, yD) ) @ #b1) ∧ (yD = h(<H, x>)))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ H D yD #h1 S yOther #h2.
+  (Learn_H_yD( H, D, yD ) @ #h1) ∧
+  (Learn_H_Ys( H, S, <'ys', add(yD, yOther)> ) @ #h2)
+ ∧
+  ∀ x BB y2 #b1.
+   (BB_Ys( BB, 'ys', add(y2, yD) ) @ #b1) ∧ (yD = h(<H, x>)) ⇒ ⊥"
+*/
+by sorry
+
+lemma individualVerifiability_sel [right]:
+  all-traces
+  "∀ H D yD #h1 S #h2.
+    ((Learn_H_yD( H, D, yD ) @ #h1) ∧
+     (Learn_H_ySG( H, S, <'ySG', yD> ) @ #h2)) ⇒
+    (∃ x BB #b1. (BB_ySG( BB, <'ySG', yD> ) @ #b1) ∧ (yD = h(<H, x>)))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ H D yD #h1 S #h2.
+  (Learn_H_yD( H, D, yD ) @ #h1) ∧
+  (Learn_H_ySG( H, S, <'ySG', yD> ) @ #h2)
+ ∧
+  ∀ x BB #b1.
+   (BB_ySG( BB, <'ySG', yD> ) @ #b1) ∧ (yD = h(<H, x>)) ⇒ ⊥"
+*/
+by sorry
+
+lemma individualVerifiability_sel [left]:
+  all-traces
+  "∀ H D yD #h1 S #h2.
+    ((Learn_H_yD( H, D, yD ) @ #h1) ∧
+     (Learn_H_ySG( H, S, <'ySG', yD> ) @ #h2)) ⇒
+    (∃ x BB #b1. (BB_ySG( BB, <'ySG', yD> ) @ #b1) ∧ (yD = h(<H, x>)))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ H D yD #h1 S #h2.
+  (Learn_H_yD( H, D, yD ) @ #h1) ∧
+  (Learn_H_ySG( H, S, <'ySG', yD> ) @ #h2)
+ ∧
+  ∀ x BB #b1.
+   (BB_ySG( BB, <'ySG', yD> ) @ #b1) ∧ (yD = h(<H, x>)) ⇒ ⊥"
+*/
+by sorry
+
+lemma secret_x [right]:
+  all-traces
+  "∀ D x #i. (Secret( D, x ) @ #i) ⇒ (¬(∃ #j. K( x ) @ #j))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ D x #i. (Secret( D, x ) @ #i) ∧ ∃ #j. (K( x ) @ #j)"
+*/
+by sorry
+
+lemma secret_x [left]:
+  all-traces
+  "∀ D x #i. (Secret( D, x ) @ #i) ⇒ (¬(∃ #j. K( x ) @ #j))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ D x #i. (Secret( D, x ) @ #i) ∧ ∃ #j. (K( x ) @ #j)"
+*/
+by sorry
+
+lemma agreementHwrtS [right]:
+  all-traces
+  "(∀ H S x #i.
+     (Learn_H_Ys( H, S, x ) @ #i) ⇒
+     (∃ #j. (Comm_S_Ys( S, x ) @ #j) ∧ (#j < #i))) ∧
+   (∀ H S x #i.
+     (Learn_H_ySG( H, S, x ) @ #i) ⇒
+     (∃ #j. (Comm_S_ySG( S, x ) @ #j) ∧ (#j < #i)))"
+/*
+guarded formula characterizing all counter-examples:
+"((∃ H S x #i.
+    (Learn_H_Ys( H, S, x ) @ #i)
+   ∧
+    ∀ #j. (Comm_S_Ys( S, x ) @ #j) ⇒ ¬(#j < #i)) ∨
+  (∃ H S x #i.
+    (Learn_H_ySG( H, S, x ) @ #i)
+   ∧
+    ∀ #j. (Comm_S_ySG( S, x ) @ #j) ⇒ ¬(#j < #i)))"
+*/
+by sorry
+
+lemma agreementHwrtS [left]:
+  all-traces
+  "(∀ H S x #i.
+     (Learn_H_Ys( H, S, x ) @ #i) ⇒
+     (∃ #j. (Comm_S_Ys( S, x ) @ #j) ∧ (#j < #i))) ∧
+   (∀ H S x #i.
+     (Learn_H_ySG( H, S, x ) @ #i) ⇒
+     (∃ #j. (Comm_S_ySG( S, x ) @ #j) ∧ (#j < #i)))"
+/*
+guarded formula characterizing all counter-examples:
+"((∃ H S x #i.
+    (Learn_H_Ys( H, S, x ) @ #i)
+   ∧
+    ∀ #j. (Comm_S_Ys( S, x ) @ #j) ⇒ ¬(#j < #i)) ∨
+  (∃ H S x #i.
+    (Learn_H_ySG( H, S, x ) @ #i)
+   ∧
+    ∀ #j. (Comm_S_ySG( S, x ) @ #j) ⇒ ¬(#j < #i)))"
+*/
+by sorry
+
+lemma agreementDwrtS [right]:
+  all-traces
+  "∀ D S data #i.
+    (Commit( D, S, data ) @ #i) ⇒
+    (∃ #j. (Running( S, D, data ) @ #j) ∧ (#j < #i))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ D S data #i.
+  (Commit( D, S, data ) @ #i)
+ ∧
+  ∀ #j. (Running( S, D, data ) @ #j) ⇒ ¬(#j < #i)"
+*/
+by sorry
+
+lemma agreementDwrtS [left]:
+  all-traces
+  "∀ D S data #i.
+    (Commit( D, S, data ) @ #i) ⇒
+    (∃ #j. (Running( S, D, data ) @ #j) ∧ (#j < #i))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ D S data #i.
+  (Commit( D, S, data ) @ #i)
+ ∧
+  ∀ #j. (Running( S, D, data ) @ #j) ⇒ ¬(#j < #i)"
+*/
+by sorry
+
+end

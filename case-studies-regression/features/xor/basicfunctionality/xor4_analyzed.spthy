@@ -213,7 +213,7 @@ solve( !KU( ~a ) @ #vk )
               solve( (#vr.5, 0) ~~> (#vk.3, 0) )
                 case d_0_snd
                 solve( (#vr.8, 0) ~~> (#vk.3, 0) )
-                  case Xor
+                  case xor
                   SOLVED // trace found
                 qed
               qed
@@ -230,9 +230,9 @@ qed
 /*
 Generated from:
 Tamarin version 1.13.0
-Maude version 3.4
-Git revision: 1deff12bd69c96308abb2463d4de5f2c7610c191 (with uncommited changes), branch: develop
-Compiled at: 2026-03-09 07:36:56.194364 UTC
+Maude version 3.5.1
+Git revision: 53c49a44efa784b133c907eedf84491d61a48803 (with uncommited changes), branch: AC-NDC-property
+Compiled at: 2026-07-09 13:42:51.535083 UTC
 */
 
 end
@@ -244,7 +244,7 @@ summary of summaries:
 analyzed: examples/features/xor/basicfunctionality/xor4.spthy
 
   output:          examples/features/xor/basicfunctionality/xor4.spthy.tmp
-  processing time: 0.65s
+  processing time: 0.66s
   
   secrecybroken (all-traces): falsified - found trace (11 steps)
 

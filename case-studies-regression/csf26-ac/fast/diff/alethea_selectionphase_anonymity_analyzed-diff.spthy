@@ -1,0 +1,3617 @@
+theory alethea_selectionphase_anonymity
+
+begin
+
+// Function signature and definition of the equational theory E
+
+functions: adec/2, aenc/2, fst/1, h/1, pair/2, pk/1, sdec/2, senc/2,
+           sign/2, snd/1, true/0, unionUD/1 [destructor], verify/3, add/2 [AC]
+equations:
+    adec(aenc(x.1, pk(x.2)), x.2) = x.1,
+    fst(<x.1, x.2>) = x.1,
+    sdec(senc(x.1, x.2), x.2) = x.1,
+    snd(<x.1, x.2>) = x.2,
+    unionUD((x add y)) = x,
+    verify(sign(x.1, x.2), x.1, pk(x.2)) = true
+
+rule (modulo E) ChanOut_S:
+   [ Out_S( $A, $B, x ) ]
+  --[ ChanOut_S( $A, $B, x ) ]->
+   [ !Sec( $A, $B, x ) ]
+
+rule (modulo E) ChanIn_S:
+   [ !Sec( $A, $B, x ) ] --[ ChanIn_S( $A, $B, x ) ]-> [ In_S( $A, $B, x ) ]
+
+rule (modulo E) ChanOut_A:
+   [ Out_A( $A, x ) ]
+  --[ ChanOut_A( $A, x ) ]->
+   [ !Auth( $A, x ), Out( <$A, x> ) ]
+
+rule (modulo E) ChanIn_A:
+   [ !Auth( $A, x ) ] --[ ChanIn_A( $A, x ) ]-> [ In_A( $A, x ) ]
+
+rule (modulo E) publickeyinfrastructure:
+   [ Fr( ~skX ) ]
+  --[ LongtermKey( $X, ~skX ) ]->
+   [ !Ltk( $X, ~skX ), !Pk( $X, pk(~skX) ), Out( pk(~skX) ) ]
+
+rule (modulo E) Setup:
+   [
+   Fr( ~x1 ), Fr( ~x2 ), !Ltk( 'S', ~skS ), !Ltk( 'D1', ~skD1 ),
+   !Ltk( 'D2', ~skD2 )
+   ]
+  --[
+  Setup( ),
+  Comm_S_Ys( 'S',
+             <'ys', 
+              (diff(h(<'H1', ~x1>), h(<'H2', ~x2>)) add 
+               diff(h(<'H2', ~x2>), h(<'H1', ~x1>)))
+             >
+  ),
+  Running( 'S', 'D1', <pk(~skD1), 'H1', ~x1> ),
+  Running( 'S', 'D2', <pk(~skD2), 'H2', ~x2> ),
+  BB_Ys( 'BB', 'ys',
+         (diff(h(<'H1', ~x1>), h(<'H2', ~x2>)) add 
+          diff(h(<'H2', ~x2>), h(<'H1', ~x1>)))
+  )
+  ]->
+   [
+   AgSt_D0( diff(<'D1', ~skD1, 'S', pk(~skS), 'H1'>, <'D2', ~skD2, 'S', 
+                                                      pk(~skS), 'H2'>)
+   ),
+   AgSt_D0( diff(<'D2', ~skD2, 'S', pk(~skS), 'H2'>, <'D1', ~skD1, 'S', 
+                                                      pk(~skS), 'H1'>)
+   ),
+   AgSt_S0( 'S', 'BB', ~skS,
+            diff(<'H1', 'D1', pk(~skD1), ~x1>, <'H2', 'D2', pk(~skD2), ~x2>),
+            diff(<'H2', 'D2', pk(~skD2), ~x2>, <'H1', 'D1', pk(~skD1), ~x1>)
+   ),
+   AgSt_H0( diff(<'H1', 'D1', 'S', 'BB'>, <'H2', 'D2', 'S', 'BB'>) ),
+   AgSt_H0( diff(<'H2', 'D2', 'S', 'BB'>, <'H1', 'D1', 'S', 'BB'>) ),
+   Out_A( 'S', diff(aenc(~x1, pk(~skD1)), aenc(~x2, pk(~skD2))) ),
+   Out_A( 'S', diff(aenc(~x2, pk(~skD2)), aenc(~x1, pk(~skD1))) ),
+   Out_A( $BB,
+          <'ys', 
+           (diff(h(<'H1', ~x1>), h(<'H2', ~x2>)) add 
+            diff(h(<'H2', ~x2>), h(<'H1', ~x1>)))
+          >
+   )
+   ]
+
+rule (modulo E) D_4:
+   [ AgSt_D0( <$D, ~skD, $S, pkS, $H> ), In_A( $S, aenc(x, pk(~skD)) ) ]
+  --[
+  Commit( $D, $S, <pk(~skD), $H, x> ), Comm_D_Y( $D, h(<$H, x>) ),
+  Secret( $D, x )
+  ]->
+   [ Out_S( $D, $H, h(<$H, x>) ) ]
+
+rule (modulo E) H_5:
+   [
+   AgSt_H0( <$H, $D, $S, $BB> ), In_S( $D, $H, yD ),
+   In_A( $BB, <'ys', (y1 add y2)> )
+   ]
+  --[ Learn_H_yD( $H, $D, yD ), Learn_H_Ys( $H, $S, <'ys', (y1 add y2)> )
+  ]->
+   [ AgSt_H5( $H, <$D, $S, $BB, yD, y1, y2> ) ]
+
+rule (modulo E) S_7:
+   [
+   AgSt_S0( $S, $BB, ~skS, <$HSel, $DSel, pkDSel, ~xSel>,
+            <$HNotsel, $DNotsel, pkDNotsel, ~xNotsel>
+   )
+   ]
+  --[
+  Comm_S_ySG( $S, <'ySG', h(<$HSel, ~xSel>)> ),
+  BB_ySG( $BB, <'ySG', h(<$HSel, ~xSel>)> )
+  ]->
+   [ Out_A( $BB, <'ySG', h(<$HSel, ~xSel>)> ) ]
+
+rule (modulo E) H_9:
+   [ AgSt_H5( $H, <$D, $S, $BB, yD, y1, y2> ), In_A( $BB, <'ySG', ySG> ) ]
+  --[ Learn_H_ySG( $H, $S, <'ySG', ySG> ) ]->
+   [ ]
+
+restriction OneSetup [right]:
+  "∀ #i #j. ((Setup( ) @ #i) ∧ (Setup( ) @ #j)) ⇒ (#i = #j)"
+  // safety formula
+
+restriction OneSetup [left]:
+  "∀ #i #j. ((Setup( ) @ #i) ∧ (Setup( ) @ #j)) ⇒ (#i = #j)"
+  // safety formula
+
+lemma functional [right]:
+  exists-trace
+  "(∀ #s1 #s2. ((Setup( ) @ #s1) ∧ (Setup( ) @ #s2)) ⇒ (#s1 = #s2)) ∧
+   (∃ #i #j1 #j2 #k1 #k2 #l #m1 #m2 S H1 H2 D1 D2 x1 x2 ySG.
+     ((((((((((¬(H1 = H2)) ∧
+              (Comm_S_Ys( S, <'ys', (h(<H1, x1>) add h(<H2, x2>))> ) @ #i)) ∧
+             (Comm_D_Y( D1, h(<H1, x1>) ) @ #j1)) ∧
+            (Comm_D_Y( D2, h(<H2, x2>) ) @ #j2)) ∧
+           (Learn_H_yD( H1, D1, h(<H1, x1>) ) @ #k1)) ∧
+          (Learn_H_yD( H2, D2, h(<H2, x2>) ) @ #k2)) ∧
+         (Learn_H_Ys( H1, S, <'ys', (h(<H1, x1>) add h(<H2, x2>))> ) @ #k1)) ∧
+        (Learn_H_Ys( H2, S, <'ys', (h(<H1, x1>) add h(<H2, x2>))> ) @ #k2)) ∧
+       (Comm_S_ySG( S, <'ySG', ySG> ) @ #l)) ∧
+      (Learn_H_ySG( H1, S, <'ySG', ySG> ) @ #m1)) ∧
+     (Learn_H_ySG( H2, S, <'ySG', ySG> ) @ #m2))"
+/*
+guarded formula characterizing all satisfying traces:
+"(∀ #s1 #s2. (Setup( ) @ #s1) ∧ (Setup( ) @ #s2) ⇒ #s1 = #s2) ∧
+ (∃ #i #j1 #j2 #k1 #k2 #l #m1 #m2 S H1 H2 D1 D2 x1 x2 ySG.
+   (Comm_S_Ys( S, <'ys', (h(<H1, x1>) add h(<H2, x2>))> ) @ #i) ∧
+   (Comm_D_Y( D1, h(<H1, x1>) ) @ #j1) ∧
+   (Comm_D_Y( D2, h(<H2, x2>) ) @ #j2) ∧
+   (Learn_H_yD( H1, D1, h(<H1, x1>) ) @ #k1) ∧
+   (Learn_H_yD( H2, D2, h(<H2, x2>) ) @ #k2) ∧
+   (Learn_H_Ys( H1, S, <'ys', (h(<H1, x1>) add h(<H2, x2>))> ) @ #k1) ∧
+   (Learn_H_Ys( H2, S, <'ys', (h(<H1, x1>) add h(<H2, x2>))> ) @ #k2) ∧
+   (Comm_S_ySG( S, <'ySG', ySG> ) @ #l) ∧
+   (Learn_H_ySG( H1, S, <'ySG', ySG> ) @ #m1) ∧
+   (Learn_H_ySG( H2, S, <'ySG', ySG> ) @ #m2)
+  ∧
+   ¬(H1 = H2))"
+*/
+simplify
+  case 1
+  solve( !Ltk( 'S', ~skS ) ▶₂ #i )
+    case publickeyinfrastructure
+    solve( !Ltk( 'D1', ~skD1 ) ▶₃ #i )
+      case publickeyinfrastructure
+      solve( !Ltk( 'D2', ~skD2 ) ▶₄ #i )
+        case publickeyinfrastructure
+        solve( AgSt_D0( <$D, ~skD, $S, pkS, 'H1'> ) ▶₀ #j1 )
+          case Setup
+          solve( In_A( 'S', aenc(~x1, pk(~skD)) ) ▶₁ #j1 )
+            case ChanIn_A
+            solve( AgSt_D0( <$D, ~skD.1, $S, pkS, 'H2'> ) ▶₀ #j2 )
+              case Setup
+              solve( In_A( 'S', aenc(~x2, pk(~skD2)) ) ▶₁ #j2 )
+                case ChanIn_A
+                solve( AgSt_H0( <'H1', 'D1', 'S', $BB.1> ) ▶₀ #k1 )
+                  case Setup
+                  solve( In_S( 'D1', 'H1', h(<'H1', ~x1>) ) ▶₁ #k1 )
+                    case ChanIn_S
+                    solve( In_A( 'BB', <'ys', (h(<'H1', ~x1>) add h(<'H2', ~x2>))> ) ▶₂ #k1 )
+                      case ChanIn_A
+                      solve( AgSt_H0( <'H2', 'D2', 'S', $BB> ) ▶₀ #k2 )
+                        case Setup
+                        solve( In_S( 'D2', 'H2', h(<'H2', ~x2>) ) ▶₁ #k2 )
+                          case ChanIn_S
+                          solve( In_A( 'BB', <'ys', (h(<'H1', ~x1>) add h(<'H2', ~x2>))> ) ▶₂ #k2 )
+                            case ChanIn_A
+                            solve( AgSt_S0( 'S', $BB, ~skS.1, <$HSel, $DSel, pkDSel, ~xSel>,
+                                            <$HNotsel, $DNotsel, pkDNotsel, ~xNotsel>
+                                   ) ▶₀ #l )
+                              case Setup
+                              solve( AgSt_H5( 'H1', <$D, 'S', $BB, yD, y1, y2> ) ▶₀ #m1 )
+                                case H_5
+                                solve( In_A( 'BB', <'ySG', h(<'H2', ~x2>)> ) ▶₁ #m1 )
+                                  case ChanIn_A
+                                  solve( AgSt_H5( 'H2', <$D, 'S', $BB, yD, y1, y2> ) ▶₀ #m2 )
+                                    case H_5
+                                    solve( In_A( 'BB', <'ySG', h(<'H2', ~x2>)> ) ▶₁ #m2 )
+                                      case ChanIn_A
+                                      SOLVED // trace found
+                                    qed
+                                  qed
+                                qed
+                              qed
+                            qed
+                          qed
+                        qed
+                      qed
+                    qed
+                  qed
+                qed
+              qed
+            qed
+          qed
+        qed
+      qed
+    qed
+  qed
+qed
+
+lemma functional [left]:
+  exists-trace
+  "(∀ #s1 #s2. ((Setup( ) @ #s1) ∧ (Setup( ) @ #s2)) ⇒ (#s1 = #s2)) ∧
+   (∃ #i #j1 #j2 #k1 #k2 #l #m1 #m2 S H1 H2 D1 D2 x1 x2 ySG.
+     ((((((((((¬(H1 = H2)) ∧
+              (Comm_S_Ys( S, <'ys', (h(<H1, x1>) add h(<H2, x2>))> ) @ #i)) ∧
+             (Comm_D_Y( D1, h(<H1, x1>) ) @ #j1)) ∧
+            (Comm_D_Y( D2, h(<H2, x2>) ) @ #j2)) ∧
+           (Learn_H_yD( H1, D1, h(<H1, x1>) ) @ #k1)) ∧
+          (Learn_H_yD( H2, D2, h(<H2, x2>) ) @ #k2)) ∧
+         (Learn_H_Ys( H1, S, <'ys', (h(<H1, x1>) add h(<H2, x2>))> ) @ #k1)) ∧
+        (Learn_H_Ys( H2, S, <'ys', (h(<H1, x1>) add h(<H2, x2>))> ) @ #k2)) ∧
+       (Comm_S_ySG( S, <'ySG', ySG> ) @ #l)) ∧
+      (Learn_H_ySG( H1, S, <'ySG', ySG> ) @ #m1)) ∧
+     (Learn_H_ySG( H2, S, <'ySG', ySG> ) @ #m2))"
+/*
+guarded formula characterizing all satisfying traces:
+"(∀ #s1 #s2. (Setup( ) @ #s1) ∧ (Setup( ) @ #s2) ⇒ #s1 = #s2) ∧
+ (∃ #i #j1 #j2 #k1 #k2 #l #m1 #m2 S H1 H2 D1 D2 x1 x2 ySG.
+   (Comm_S_Ys( S, <'ys', (h(<H1, x1>) add h(<H2, x2>))> ) @ #i) ∧
+   (Comm_D_Y( D1, h(<H1, x1>) ) @ #j1) ∧
+   (Comm_D_Y( D2, h(<H2, x2>) ) @ #j2) ∧
+   (Learn_H_yD( H1, D1, h(<H1, x1>) ) @ #k1) ∧
+   (Learn_H_yD( H2, D2, h(<H2, x2>) ) @ #k2) ∧
+   (Learn_H_Ys( H1, S, <'ys', (h(<H1, x1>) add h(<H2, x2>))> ) @ #k1) ∧
+   (Learn_H_Ys( H2, S, <'ys', (h(<H1, x1>) add h(<H2, x2>))> ) @ #k2) ∧
+   (Comm_S_ySG( S, <'ySG', ySG> ) @ #l) ∧
+   (Learn_H_ySG( H1, S, <'ySG', ySG> ) @ #m1) ∧
+   (Learn_H_ySG( H2, S, <'ySG', ySG> ) @ #m2)
+  ∧
+   ¬(H1 = H2))"
+*/
+simplify
+  case 1
+  solve( !Ltk( 'S', ~skS ) ▶₂ #i )
+    case publickeyinfrastructure
+    solve( !Ltk( 'D1', ~skD1 ) ▶₃ #i )
+      case publickeyinfrastructure
+      solve( !Ltk( 'D2', ~skD2 ) ▶₄ #i )
+        case publickeyinfrastructure
+        solve( AgSt_D0( <$D, ~skD, $S, pkS, 'H1'> ) ▶₀ #j1 )
+          case Setup
+          solve( In_A( 'S', aenc(~x1, pk(~skD)) ) ▶₁ #j1 )
+            case ChanIn_A
+            solve( AgSt_D0( <$D, ~skD.1, $S, pkS, 'H2'> ) ▶₀ #j2 )
+              case Setup
+              solve( In_A( 'S', aenc(~x2, pk(~skD2)) ) ▶₁ #j2 )
+                case ChanIn_A
+                solve( AgSt_H0( <'H1', 'D1', 'S', $BB.1> ) ▶₀ #k1 )
+                  case Setup
+                  solve( In_S( 'D1', 'H1', h(<'H1', ~x1>) ) ▶₁ #k1 )
+                    case ChanIn_S
+                    solve( In_A( 'BB', <'ys', (h(<'H1', ~x1>) add h(<'H2', ~x2>))> ) ▶₂ #k1 )
+                      case ChanIn_A
+                      solve( AgSt_H0( <'H2', 'D2', 'S', $BB> ) ▶₀ #k2 )
+                        case Setup
+                        solve( In_S( 'D2', 'H2', h(<'H2', ~x2>) ) ▶₁ #k2 )
+                          case ChanIn_S
+                          solve( In_A( 'BB', <'ys', (h(<'H1', ~x1>) add h(<'H2', ~x2>))> ) ▶₂ #k2 )
+                            case ChanIn_A
+                            solve( AgSt_S0( 'S', $BB, ~skS.1, <$HSel, $DSel, pkDSel, ~xSel>,
+                                            <$HNotsel, $DNotsel, pkDNotsel, ~xNotsel>
+                                   ) ▶₀ #l )
+                              case Setup
+                              solve( AgSt_H5( 'H1', <$D, 'S', $BB, yD, y1, y2> ) ▶₀ #m1 )
+                                case H_5
+                                solve( In_A( 'BB', <'ySG', h(<'H1', ~x1>)> ) ▶₁ #m1 )
+                                  case ChanIn_A
+                                  solve( AgSt_H5( 'H2', <$D, 'S', $BB, yD, y1, y2> ) ▶₀ #m2 )
+                                    case H_5
+                                    solve( In_A( 'BB', <'ySG', h(<'H1', ~x1>)> ) ▶₁ #m2 )
+                                      case ChanIn_A
+                                      SOLVED // trace found
+                                    qed
+                                  qed
+                                qed
+                              qed
+                            qed
+                          qed
+                        qed
+                      qed
+                    qed
+                  qed
+                qed
+              qed
+            qed
+          qed
+        qed
+      qed
+    qed
+  qed
+qed
+
+lemma individualVerifiability_votercode [right]:
+  all-traces
+  "∀ H D yD #h1 S yOther #h2.
+    ((Learn_H_yD( H, D, yD ) @ #h1) ∧
+     (Learn_H_Ys( H, S, <'ys', (yD add yOther)> ) @ #h2)) ⇒
+    (∃ x BB y2 #b1.
+      (BB_Ys( BB, 'ys', (y2 add yD) ) @ #b1) ∧ (yD = h(<H, x>)))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ H D yD #h1 S yOther #h2.
+  (Learn_H_yD( H, D, yD ) @ #h1) ∧
+  (Learn_H_Ys( H, S, <'ys', (yD add yOther)> ) @ #h2)
+ ∧
+  ∀ x BB y2 #b1.
+   (BB_Ys( BB, 'ys', (y2 add yD) ) @ #b1) ∧ (yD = h(<H, x>)) ⇒ ⊥"
+*/
+simplify
+  case 1
+  solve( AgSt_H0( <$H, $D, $S, $BB> ) ▶₀ #h1 )
+    case Setup_case_1
+    solve( In_S( 'D2', 'H2', yD ) ▶₁ #h1 )
+      case ChanIn_S
+      by contradiction /* from formulas */
+    qed
+  next
+    case Setup_case_2
+    solve( In_S( 'D1', 'H1', yD ) ▶₁ #h1 )
+      case ChanIn_S
+      by contradiction /* from formulas */
+    qed
+  qed
+next
+  case 2
+  solve( AgSt_H0( <$H, $D, $S, $BB> ) ▶₀ #h1 )
+    case Setup_case_1
+    solve( In_S( 'D2', 'H2', yD ) ▶₁ #h1 )
+      case ChanIn_S
+      by contradiction /* from formulas */
+    qed
+  next
+    case Setup_case_2
+    solve( In_S( 'D1', 'H1', yD ) ▶₁ #h1 )
+      case ChanIn_S
+      by contradiction /* from formulas */
+    qed
+  qed
+next
+  case 3
+  solve( AgSt_H0( <$H, $D, $S, $BB> ) ▶₀ #h1 )
+    case Setup_case_1
+    solve( In_S( 'D2', 'H2', yD ) ▶₁ #h1 )
+      case ChanIn_S
+      by contradiction /* from formulas */
+    qed
+  next
+    case Setup_case_2
+    solve( In_S( 'D1', 'H1', yD ) ▶₁ #h1 )
+      case ChanIn_S
+      by contradiction /* from formulas */
+    qed
+  qed
+next
+  case 4
+  solve( AgSt_H0( <$H, $D, $S, $BB> ) ▶₀ #h1 )
+    case Setup_case_1
+    solve( In_S( 'D2', 'H2', yD ) ▶₁ #h1 )
+      case ChanIn_S
+      by contradiction /* from formulas */
+    qed
+  next
+    case Setup_case_2
+    solve( In_S( 'D1', 'H1', yD ) ▶₁ #h1 )
+      case ChanIn_S
+      by contradiction /* from formulas */
+    qed
+  qed
+next
+  case 5
+  solve( AgSt_H0( <$H, $D, $S, $BB> ) ▶₀ #h1 )
+    case Setup_case_1
+    by solve( In_S( 'D2', 'H2', (x add y1) ) ▶₁ #h1 )
+  next
+    case Setup_case_2
+    by solve( In_S( 'D1', 'H1', (x add y1) ) ▶₁ #h1 )
+  qed
+next
+  case 6
+  solve( AgSt_H0( <$H, $D, $S, $BB> ) ▶₀ #h1 )
+    case Setup_case_1
+    by solve( In_S( 'D2', 'H2', (x add y2) ) ▶₁ #h1 )
+  next
+    case Setup_case_2
+    by solve( In_S( 'D1', 'H1', (x add y2) ) ▶₁ #h1 )
+  qed
+next
+  case 7
+  solve( AgSt_H0( <$H, $D, $S, $BB> ) ▶₀ #h1 )
+    case Setup_case_1
+    by solve( In_S( 'D2', 'H2', (x add x.1) ) ▶₁ #h1 )
+  next
+    case Setup_case_2
+    by solve( In_S( 'D1', 'H1', (x add x.1) ) ▶₁ #h1 )
+  qed
+qed
+
+lemma individualVerifiability_votercode [left]:
+  all-traces
+  "∀ H D yD #h1 S yOther #h2.
+    ((Learn_H_yD( H, D, yD ) @ #h1) ∧
+     (Learn_H_Ys( H, S, <'ys', (yD add yOther)> ) @ #h2)) ⇒
+    (∃ x BB y2 #b1.
+      (BB_Ys( BB, 'ys', (y2 add yD) ) @ #b1) ∧ (yD = h(<H, x>)))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ H D yD #h1 S yOther #h2.
+  (Learn_H_yD( H, D, yD ) @ #h1) ∧
+  (Learn_H_Ys( H, S, <'ys', (yD add yOther)> ) @ #h2)
+ ∧
+  ∀ x BB y2 #b1.
+   (BB_Ys( BB, 'ys', (y2 add yD) ) @ #b1) ∧ (yD = h(<H, x>)) ⇒ ⊥"
+*/
+simplify
+  case 1
+  solve( AgSt_H0( <$H, $D, $S, $BB> ) ▶₀ #h1 )
+    case Setup_case_1
+    solve( In_S( 'D1', 'H1', yD ) ▶₁ #h1 )
+      case ChanIn_S
+      by contradiction /* from formulas */
+    qed
+  next
+    case Setup_case_2
+    solve( In_S( 'D2', 'H2', yD ) ▶₁ #h1 )
+      case ChanIn_S
+      by contradiction /* from formulas */
+    qed
+  qed
+next
+  case 2
+  solve( AgSt_H0( <$H, $D, $S, $BB> ) ▶₀ #h1 )
+    case Setup_case_1
+    solve( In_S( 'D1', 'H1', yD ) ▶₁ #h1 )
+      case ChanIn_S
+      by contradiction /* from formulas */
+    qed
+  next
+    case Setup_case_2
+    solve( In_S( 'D2', 'H2', yD ) ▶₁ #h1 )
+      case ChanIn_S
+      by contradiction /* from formulas */
+    qed
+  qed
+next
+  case 3
+  solve( AgSt_H0( <$H, $D, $S, $BB> ) ▶₀ #h1 )
+    case Setup_case_1
+    solve( In_S( 'D1', 'H1', yD ) ▶₁ #h1 )
+      case ChanIn_S
+      by contradiction /* from formulas */
+    qed
+  next
+    case Setup_case_2
+    solve( In_S( 'D2', 'H2', yD ) ▶₁ #h1 )
+      case ChanIn_S
+      by contradiction /* from formulas */
+    qed
+  qed
+next
+  case 4
+  solve( AgSt_H0( <$H, $D, $S, $BB> ) ▶₀ #h1 )
+    case Setup_case_1
+    solve( In_S( 'D1', 'H1', yD ) ▶₁ #h1 )
+      case ChanIn_S
+      by contradiction /* from formulas */
+    qed
+  next
+    case Setup_case_2
+    solve( In_S( 'D2', 'H2', yD ) ▶₁ #h1 )
+      case ChanIn_S
+      by contradiction /* from formulas */
+    qed
+  qed
+next
+  case 5
+  solve( AgSt_H0( <$H, $D, $S, $BB> ) ▶₀ #h1 )
+    case Setup_case_1
+    by solve( In_S( 'D1', 'H1', (x add y1) ) ▶₁ #h1 )
+  next
+    case Setup_case_2
+    by solve( In_S( 'D2', 'H2', (x add y1) ) ▶₁ #h1 )
+  qed
+next
+  case 6
+  solve( AgSt_H0( <$H, $D, $S, $BB> ) ▶₀ #h1 )
+    case Setup_case_1
+    by solve( In_S( 'D1', 'H1', (x add y2) ) ▶₁ #h1 )
+  next
+    case Setup_case_2
+    by solve( In_S( 'D2', 'H2', (x add y2) ) ▶₁ #h1 )
+  qed
+next
+  case 7
+  solve( AgSt_H0( <$H, $D, $S, $BB> ) ▶₀ #h1 )
+    case Setup_case_1
+    by solve( In_S( 'D1', 'H1', (x add x.1) ) ▶₁ #h1 )
+  next
+    case Setup_case_2
+    by solve( In_S( 'D2', 'H2', (x add x.1) ) ▶₁ #h1 )
+  qed
+qed
+
+lemma individualVerifiability_sel [right]:
+  all-traces
+  "∀ H D yD #h1 S #h2.
+    ((Learn_H_yD( H, D, yD ) @ #h1) ∧
+     (Learn_H_ySG( H, S, <'ySG', yD> ) @ #h2)) ⇒
+    (∃ x BB #b1. (BB_ySG( BB, <'ySG', yD> ) @ #b1) ∧ (yD = h(<H, x>)))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ H D yD #h1 S #h2.
+  (Learn_H_yD( H, D, yD ) @ #h1) ∧ (Learn_H_ySG( H, S, <'ySG', yD> ) @ #h2)
+ ∧
+  ∀ x BB #b1. (BB_ySG( BB, <'ySG', yD> ) @ #b1) ∧ (yD = h(<H, x>)) ⇒ ⊥"
+*/
+simplify
+solve( AgSt_H0( <$H, $D, $S, $BB> ) ▶₀ #h1 )
+  case Setup_case_1
+  solve( In_S( 'D2', 'H2', yD ) ▶₁ #h1 )
+    case ChanIn_S
+    solve( In_A( 'BB', <'ys', (y1 add y2)> ) ▶₂ #h1 )
+      case ChanIn_A_case_1
+      solve( AgSt_H5( 'H2', <$D, $S, $BB, yD, y1, y2> ) ▶₀ #h2 )
+        case H_5
+        solve( In_A( 'BB', <'ySG', h(<'H2', ~x2>)> ) ▶₁ #h2 )
+          case ChanIn_A
+          by contradiction /* from formulas */
+        qed
+      qed
+    next
+      case ChanIn_A_case_2
+      solve( AgSt_H5( 'H2', <$D, $S, $BB, yD, y1, y2> ) ▶₀ #h2 )
+        case H_5
+        solve( In_A( 'BB', <'ySG', h(<'H2', ~x2>)> ) ▶₁ #h2 )
+          case ChanIn_A
+          by contradiction /* from formulas */
+        qed
+      qed
+    qed
+  qed
+next
+  case Setup_case_2
+  solve( In_S( 'D1', 'H1', yD ) ▶₁ #h1 )
+    case ChanIn_S
+    solve( In_A( 'BB', <'ys', (y1 add y2)> ) ▶₂ #h1 )
+      case ChanIn_A_case_1
+      solve( AgSt_H5( 'H1', <$D, $S, $BB, yD, y1, y2> ) ▶₀ #h2 )
+        case H_5
+        by solve( In_A( 'BB', <'ySG', h(<'H1', ~x1>)> ) ▶₁ #h2 )
+      qed
+    next
+      case ChanIn_A_case_2
+      solve( AgSt_H5( 'H1', <$D, $S, $BB, yD, y1, y2> ) ▶₀ #h2 )
+        case H_5
+        by solve( In_A( 'BB', <'ySG', h(<'H1', ~x1>)> ) ▶₁ #h2 )
+      qed
+    qed
+  qed
+qed
+
+lemma individualVerifiability_sel [left]:
+  all-traces
+  "∀ H D yD #h1 S #h2.
+    ((Learn_H_yD( H, D, yD ) @ #h1) ∧
+     (Learn_H_ySG( H, S, <'ySG', yD> ) @ #h2)) ⇒
+    (∃ x BB #b1. (BB_ySG( BB, <'ySG', yD> ) @ #b1) ∧ (yD = h(<H, x>)))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ H D yD #h1 S #h2.
+  (Learn_H_yD( H, D, yD ) @ #h1) ∧ (Learn_H_ySG( H, S, <'ySG', yD> ) @ #h2)
+ ∧
+  ∀ x BB #b1. (BB_ySG( BB, <'ySG', yD> ) @ #b1) ∧ (yD = h(<H, x>)) ⇒ ⊥"
+*/
+simplify
+solve( AgSt_H0( <$H, $D, $S, $BB> ) ▶₀ #h1 )
+  case Setup_case_1
+  solve( In_S( 'D1', 'H1', yD ) ▶₁ #h1 )
+    case ChanIn_S
+    solve( In_A( 'BB', <'ys', (y1 add y2)> ) ▶₂ #h1 )
+      case ChanIn_A_case_1
+      solve( AgSt_H5( 'H1', <$D, $S, $BB, yD, y1, y2> ) ▶₀ #h2 )
+        case H_5
+        solve( In_A( 'BB', <'ySG', h(<'H1', ~x1>)> ) ▶₁ #h2 )
+          case ChanIn_A
+          by contradiction /* from formulas */
+        qed
+      qed
+    next
+      case ChanIn_A_case_2
+      solve( AgSt_H5( 'H1', <$D, $S, $BB, yD, y1, y2> ) ▶₀ #h2 )
+        case H_5
+        solve( In_A( 'BB', <'ySG', h(<'H1', ~x1>)> ) ▶₁ #h2 )
+          case ChanIn_A
+          by contradiction /* from formulas */
+        qed
+      qed
+    qed
+  qed
+next
+  case Setup_case_2
+  solve( In_S( 'D2', 'H2', yD ) ▶₁ #h1 )
+    case ChanIn_S
+    solve( In_A( 'BB', <'ys', (y1 add y2)> ) ▶₂ #h1 )
+      case ChanIn_A_case_1
+      solve( AgSt_H5( 'H2', <$D, $S, $BB, yD, y1, y2> ) ▶₀ #h2 )
+        case H_5
+        by solve( In_A( 'BB', <'ySG', h(<'H2', ~x2>)> ) ▶₁ #h2 )
+      qed
+    next
+      case ChanIn_A_case_2
+      solve( AgSt_H5( 'H2', <$D, $S, $BB, yD, y1, y2> ) ▶₀ #h2 )
+        case H_5
+        by solve( In_A( 'BB', <'ySG', h(<'H2', ~x2>)> ) ▶₁ #h2 )
+      qed
+    qed
+  qed
+qed
+
+lemma secret_x [right]:
+  all-traces "∀ D x #i. (Secret( D, x ) @ #i) ⇒ (¬(∃ #j. K( x ) @ #j))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ D x #i. (Secret( D, x ) @ #i) ∧ ∃ #j. (K( x ) @ #j)"
+*/
+simplify
+solve( AgSt_D0( <$D, ~skD, $S, pkS, $H> ) ▶₀ #i )
+  case Setup_case_1
+  solve( In_A( 'S', aenc(x, pk(~skD)) ) ▶₁ #i )
+    case ChanIn_A
+    solve( !KU( ~x2 ) @ #vk )
+      case ChanOut_A
+      by solve( !KU( ~skD ) @ #vk.1 )
+    qed
+  qed
+next
+  case Setup_case_2
+  solve( In_A( 'S', aenc(x, pk(~skD)) ) ▶₁ #i )
+    case ChanIn_A
+    solve( !KU( ~x1 ) @ #vk )
+      case ChanOut_A
+      by solve( !KU( ~skD ) @ #vk.1 )
+    qed
+  qed
+qed
+
+lemma secret_x [left]:
+  all-traces "∀ D x #i. (Secret( D, x ) @ #i) ⇒ (¬(∃ #j. K( x ) @ #j))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ D x #i. (Secret( D, x ) @ #i) ∧ ∃ #j. (K( x ) @ #j)"
+*/
+simplify
+solve( AgSt_D0( <$D, ~skD, $S, pkS, $H> ) ▶₀ #i )
+  case Setup_case_1
+  solve( In_A( 'S', aenc(x, pk(~skD)) ) ▶₁ #i )
+    case ChanIn_A
+    solve( !KU( ~x1 ) @ #vk )
+      case ChanOut_A
+      by solve( !KU( ~skD ) @ #vk.1 )
+    qed
+  qed
+next
+  case Setup_case_2
+  solve( In_A( 'S', aenc(x, pk(~skD)) ) ▶₁ #i )
+    case ChanIn_A
+    solve( !KU( ~x2 ) @ #vk )
+      case ChanOut_A
+      by solve( !KU( ~skD ) @ #vk.1 )
+    qed
+  qed
+qed
+
+lemma agreementHwrtS [right]:
+  all-traces
+  "(∀ H S x #i.
+     (Learn_H_Ys( H, S, x ) @ #i) ⇒
+     (∃ #j. (Comm_S_Ys( S, x ) @ #j) ∧ (#j < #i))) ∧
+   (∀ H S x #i.
+     (Learn_H_ySG( H, S, x ) @ #i) ⇒
+     (∃ #j. (Comm_S_ySG( S, x ) @ #j) ∧ (#j < #i)))"
+/*
+guarded formula characterizing all counter-examples:
+"((∃ H S x #i.
+    (Learn_H_Ys( H, S, x ) @ #i)
+   ∧
+    ∀ #j. (Comm_S_Ys( S, x ) @ #j) ⇒ ¬(#j < #i)) ∨
+  (∃ H S x #i.
+    (Learn_H_ySG( H, S, x ) @ #i)
+   ∧
+    ∀ #j. (Comm_S_ySG( S, x ) @ #j) ⇒ ¬(#j < #i)))"
+*/
+induction
+  case empty_trace
+  by contradiction /* from formulas */
+next
+  case non_empty_trace
+  solve( (∃ H S x #i.
+           (Learn_H_Ys( H, S, x ) @ #i)
+          ∧
+           ∀ #j. (Comm_S_Ys( S, x ) @ #j) ⇒ ¬(#j < #i))  ∥
+         (∃ H S x #i.
+           (Learn_H_ySG( H, S, x ) @ #i)
+          ∧
+           ∀ #j. (Comm_S_ySG( S, x ) @ #j) ⇒ ¬(#j < #i)) )
+    case case_1
+    solve( (last(#i))  ∥
+           (∃ #j.
+             (Comm_S_Ys( $S, <'ys', (y1 add y2)> ) @ #j)
+            ∧
+             (¬(last(#j))) ∧ (#j < #i)) )
+      case case_1
+      solve( AgSt_H0( <$H, $D, $S, $BB> ) ▶₀ #i )
+        case Setup_case_1
+        solve( In_S( 'D2', 'H2', yD ) ▶₁ #i )
+          case ChanIn_S
+          solve( In_A( 'BB', <'ys', (y1 add y2)> ) ▶₂ #i )
+            case ChanIn_A_case_1
+            by contradiction /* from formulas */
+          next
+            case ChanIn_A_case_2
+            by contradiction /* from formulas */
+          qed
+        qed
+      next
+        case Setup_case_2
+        solve( In_S( 'D1', 'H1', yD ) ▶₁ #i )
+          case ChanIn_S
+          solve( In_A( 'BB', <'ys', (y1 add y2)> ) ▶₂ #i )
+            case ChanIn_A_case_1
+            by contradiction /* from formulas */
+          next
+            case ChanIn_A_case_2
+            by contradiction /* from formulas */
+          qed
+        qed
+      qed
+    next
+      case case_2_case_1
+      by contradiction /* from formulas */
+    next
+      case case_2_case_2
+      by contradiction /* from formulas */
+    qed
+  next
+    case case_2
+    solve( (last(#i))  ∥
+           (∃ #j.
+             (Comm_S_ySG( $S, <'ySG', ySG> ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #i)) )
+      case case_1
+      solve( AgSt_H5( $H, <$D, $S, $BB, yD, y1, y2> ) ▶₀ #i )
+        case H_5_case_1
+        solve( In_A( 'BB', <'ySG', ySG> ) ▶₁ #i )
+          case ChanIn_A
+          by contradiction /* from formulas */
+        qed
+      next
+        case H_5_case_2
+        solve( In_A( 'BB', <'ySG', ySG> ) ▶₁ #i )
+          case ChanIn_A
+          by contradiction /* from formulas */
+        qed
+      next
+        case H_5_case_3
+        solve( In_A( 'BB', <'ySG', ySG> ) ▶₁ #i )
+          case ChanIn_A
+          by contradiction /* from formulas */
+        qed
+      next
+        case H_5_case_4
+        solve( In_A( 'BB', <'ySG', ySG> ) ▶₁ #i )
+          case ChanIn_A
+          by contradiction /* from formulas */
+        qed
+      qed
+    next
+      case case_2
+      by contradiction /* from formulas */
+    qed
+  qed
+qed
+
+lemma agreementHwrtS [left]:
+  all-traces
+  "(∀ H S x #i.
+     (Learn_H_Ys( H, S, x ) @ #i) ⇒
+     (∃ #j. (Comm_S_Ys( S, x ) @ #j) ∧ (#j < #i))) ∧
+   (∀ H S x #i.
+     (Learn_H_ySG( H, S, x ) @ #i) ⇒
+     (∃ #j. (Comm_S_ySG( S, x ) @ #j) ∧ (#j < #i)))"
+/*
+guarded formula characterizing all counter-examples:
+"((∃ H S x #i.
+    (Learn_H_Ys( H, S, x ) @ #i)
+   ∧
+    ∀ #j. (Comm_S_Ys( S, x ) @ #j) ⇒ ¬(#j < #i)) ∨
+  (∃ H S x #i.
+    (Learn_H_ySG( H, S, x ) @ #i)
+   ∧
+    ∀ #j. (Comm_S_ySG( S, x ) @ #j) ⇒ ¬(#j < #i)))"
+*/
+induction
+  case empty_trace
+  by contradiction /* from formulas */
+next
+  case non_empty_trace
+  solve( (∃ H S x #i.
+           (Learn_H_Ys( H, S, x ) @ #i)
+          ∧
+           ∀ #j. (Comm_S_Ys( S, x ) @ #j) ⇒ ¬(#j < #i))  ∥
+         (∃ H S x #i.
+           (Learn_H_ySG( H, S, x ) @ #i)
+          ∧
+           ∀ #j. (Comm_S_ySG( S, x ) @ #j) ⇒ ¬(#j < #i)) )
+    case case_1
+    solve( (last(#i))  ∥
+           (∃ #j.
+             (Comm_S_Ys( $S, <'ys', (y1 add y2)> ) @ #j)
+            ∧
+             (¬(last(#j))) ∧ (#j < #i)) )
+      case case_1
+      solve( AgSt_H0( <$H, $D, $S, $BB> ) ▶₀ #i )
+        case Setup_case_1
+        solve( In_S( 'D1', 'H1', yD ) ▶₁ #i )
+          case ChanIn_S
+          solve( In_A( 'BB', <'ys', (y1 add y2)> ) ▶₂ #i )
+            case ChanIn_A_case_1
+            by contradiction /* from formulas */
+          next
+            case ChanIn_A_case_2
+            by contradiction /* from formulas */
+          qed
+        qed
+      next
+        case Setup_case_2
+        solve( In_S( 'D2', 'H2', yD ) ▶₁ #i )
+          case ChanIn_S
+          solve( In_A( 'BB', <'ys', (y1 add y2)> ) ▶₂ #i )
+            case ChanIn_A_case_1
+            by contradiction /* from formulas */
+          next
+            case ChanIn_A_case_2
+            by contradiction /* from formulas */
+          qed
+        qed
+      qed
+    next
+      case case_2_case_1
+      by contradiction /* from formulas */
+    next
+      case case_2_case_2
+      by contradiction /* from formulas */
+    qed
+  next
+    case case_2
+    solve( (last(#i))  ∥
+           (∃ #j.
+             (Comm_S_ySG( $S, <'ySG', ySG> ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #i)) )
+      case case_1
+      solve( AgSt_H5( $H, <$D, $S, $BB, yD, y1, y2> ) ▶₀ #i )
+        case H_5_case_1
+        solve( In_A( 'BB', <'ySG', ySG> ) ▶₁ #i )
+          case ChanIn_A
+          by contradiction /* from formulas */
+        qed
+      next
+        case H_5_case_2
+        solve( In_A( 'BB', <'ySG', ySG> ) ▶₁ #i )
+          case ChanIn_A
+          by contradiction /* from formulas */
+        qed
+      next
+        case H_5_case_3
+        solve( In_A( 'BB', <'ySG', ySG> ) ▶₁ #i )
+          case ChanIn_A
+          by contradiction /* from formulas */
+        qed
+      next
+        case H_5_case_4
+        solve( In_A( 'BB', <'ySG', ySG> ) ▶₁ #i )
+          case ChanIn_A
+          by contradiction /* from formulas */
+        qed
+      qed
+    next
+      case case_2
+      by contradiction /* from formulas */
+    qed
+  qed
+qed
+
+lemma agreementDwrtS [right]:
+  all-traces
+  "∀ D S data #i.
+    (Commit( D, S, data ) @ #i) ⇒
+    (∃ #j. (Running( S, D, data ) @ #j) ∧ (#j < #i))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ D S data #i.
+  (Commit( D, S, data ) @ #i)
+ ∧
+  ∀ #j. (Running( S, D, data ) @ #j) ⇒ ¬(#j < #i)"
+*/
+simplify
+solve( AgSt_D0( <$D, ~skD, $S, pkS, $H> ) ▶₀ #i )
+  case Setup_case_1
+  solve( In_A( 'S', aenc(x, pk(~skD)) ) ▶₁ #i )
+    case ChanIn_A
+    by contradiction /* from formulas */
+  qed
+next
+  case Setup_case_2
+  solve( In_A( 'S', aenc(x, pk(~skD)) ) ▶₁ #i )
+    case ChanIn_A
+    by contradiction /* from formulas */
+  qed
+qed
+
+lemma agreementDwrtS [left]:
+  all-traces
+  "∀ D S data #i.
+    (Commit( D, S, data ) @ #i) ⇒
+    (∃ #j. (Running( S, D, data ) @ #j) ∧ (#j < #i))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ D S data #i.
+  (Commit( D, S, data ) @ #i)
+ ∧
+  ∀ #j. (Running( S, D, data ) @ #j) ⇒ ¬(#j < #i)"
+*/
+simplify
+solve( AgSt_D0( <$D, ~skD, $S, pkS, $H> ) ▶₀ #i )
+  case Setup_case_1
+  solve( In_A( 'S', aenc(x, pk(~skD)) ) ▶₁ #i )
+    case ChanIn_A
+    by contradiction /* from formulas */
+  qed
+next
+  case Setup_case_2
+  solve( In_A( 'S', aenc(x, pk(~skD)) ) ▶₁ #i )
+    case ChanIn_A
+    by contradiction /* from formulas */
+  qed
+qed
+
+diffLemma Observational_equivalence:
+rule-equivalence
+  case Rule_ChanIn_A
+  backward-search
+    case LHS
+    step( simplify )
+    step( solve( !Auth( $A, x ) ▶₀ #i ) )
+      case ChanOut_A_case_1
+      MIRRORED
+    next
+      case ChanOut_A_case_2
+      MIRRORED
+    next
+      case ChanOut_A_case_3
+      MIRRORED
+    next
+      case ChanOut_A_case_4
+      MIRRORED
+    qed
+  next
+    case RHS
+    step( simplify )
+    step( solve( !Auth( $A, x ) ▶₀ #i ) )
+      case ChanOut_A_case_1
+      MIRRORED
+    next
+      case ChanOut_A_case_2
+      MIRRORED
+    next
+      case ChanOut_A_case_3
+      MIRRORED
+    next
+      case ChanOut_A_case_4
+      MIRRORED
+    qed
+  qed
+next
+  case Rule_ChanIn_S
+  backward-search
+    case LHS
+    step( simplify )
+    step( solve( !Sec( $A, $B, x ) ▶₀ #i ) )
+      case ChanOut_S_case_1
+      MIRRORED
+    next
+      case ChanOut_S_case_2
+      MIRRORED
+    qed
+  next
+    case RHS
+    step( simplify )
+    step( solve( !Sec( $A, $B, x ) ▶₀ #i ) )
+      case ChanOut_S_case_1
+      MIRRORED
+    next
+      case ChanOut_S_case_2
+      MIRRORED
+    qed
+  qed
+next
+  case Rule_ChanOut_A
+  backward-search
+    case LHS
+    step( simplify )
+    step( solve( Out_A( $A, x ) ▶₀ #i ) )
+      case S_7
+      MIRRORED
+    next
+      case Setup_case_1
+      MIRRORED
+    next
+      case Setup_case_2
+      MIRRORED
+    next
+      case Setup_case_3
+      MIRRORED
+    qed
+  next
+    case RHS
+    step( simplify )
+    step( solve( Out_A( $A, x ) ▶₀ #i ) )
+      case S_7
+      MIRRORED
+    next
+      case Setup_case_1
+      MIRRORED
+    next
+      case Setup_case_2
+      MIRRORED
+    next
+      case Setup_case_3
+      MIRRORED
+    qed
+  qed
+next
+  case Rule_ChanOut_S
+  backward-search
+    case LHS
+    step( simplify )
+    step( solve( Out_S( $A, $B, x ) ▶₀ #i ) )
+      case D_4_case_1
+      MIRRORED
+    next
+      case D_4_case_2
+      MIRRORED
+    qed
+  next
+    case RHS
+    step( simplify )
+    step( solve( Out_S( $A, $B, x ) ▶₀ #i ) )
+      case D_4_case_1
+      MIRRORED
+    next
+      case D_4_case_2
+      MIRRORED
+    qed
+  qed
+next
+  case Rule_D_4
+  backward-search
+    case LHS
+    step( simplify )
+    step( solve( AgSt_D0( <$D, ~skD, $S, pkS, $H> ) ▶₀ #i ) )
+      case Setup_case_1
+      step( solve( In_A( 'S', aenc(x, pk(~skD)) ) ▶₁ #i ) )
+        case ChanIn_A
+        MIRRORED
+      qed
+    next
+      case Setup_case_2
+      step( solve( In_A( 'S', aenc(x, pk(~skD)) ) ▶₁ #i ) )
+        case ChanIn_A
+        MIRRORED
+      qed
+    qed
+  next
+    case RHS
+    step( simplify )
+    step( solve( AgSt_D0( <$D, ~skD, $S, pkS, $H> ) ▶₀ #i ) )
+      case Setup_case_1
+      step( solve( In_A( 'S', aenc(x, pk(~skD)) ) ▶₁ #i ) )
+        case ChanIn_A
+        MIRRORED
+      qed
+    next
+      case Setup_case_2
+      step( solve( In_A( 'S', aenc(x, pk(~skD)) ) ▶₁ #i ) )
+        case ChanIn_A
+        MIRRORED
+      qed
+    qed
+  qed
+next
+  case Rule_Destrd_0_adec
+  backward-search
+    case LHS
+    step( simplify )
+    step( solve( !KD( aenc(x, pk(x.1)) ) ▶₀ #i ) )
+      case ChanOut_A
+      step( solve( (#vl, 0) ~~> (#i, 0) ) )
+        case d_0_fst
+        by step( contradiction /* impossible chain */ )
+      next
+        case d_0_snd
+        step( solve( Out_A( $A, x.2 ) ▶₀ #vr ) )
+          case S_7
+          by step( contradiction /* impossible chain */ )
+        next
+          case Setup_case_1
+          step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+            case aenc
+            by step( solve( !KU( ~skD1 ) @ #vk ) )
+          next
+            case d_0_adec
+            by step( contradiction /* impossible chain */ )
+          qed
+        next
+          case Setup_case_2
+          step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+            case aenc
+            by step( solve( !KU( ~skD2 ) @ #vk ) )
+          next
+            case d_0_adec
+            by step( contradiction /* impossible chain */ )
+          qed
+        next
+          case Setup_case_3
+          by step( contradiction /* impossible chain */ )
+        qed
+      qed
+    next
+      case publickeyinfrastructure
+      by step( contradiction /* impossible chain */ )
+    qed
+  next
+    case RHS
+    step( simplify )
+    step( solve( !KD( aenc(x, pk(x.1)) ) ▶₀ #i ) )
+      case ChanOut_A
+      step( solve( (#vl, 0) ~~> (#i, 0) ) )
+        case d_0_fst
+        by step( contradiction /* impossible chain */ )
+      next
+        case d_0_snd
+        step( solve( Out_A( $A, x.2 ) ▶₀ #vr ) )
+          case S_7
+          by step( contradiction /* impossible chain */ )
+        next
+          case Setup_case_1
+          step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+            case aenc
+            by step( solve( !KU( ~skD2 ) @ #vk ) )
+          next
+            case d_0_adec
+            by step( contradiction /* impossible chain */ )
+          qed
+        next
+          case Setup_case_2
+          step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+            case aenc
+            by step( solve( !KU( ~skD1 ) @ #vk ) )
+          next
+            case d_0_adec
+            by step( contradiction /* impossible chain */ )
+          qed
+        next
+          case Setup_case_3
+          by step( contradiction /* impossible chain */ )
+        qed
+      qed
+    next
+      case publickeyinfrastructure
+      by step( contradiction /* impossible chain */ )
+    qed
+  qed
+next
+  case Rule_Destrd_0_fst
+  backward-search
+    case LHS
+    step( simplify )
+    step( solve( !KD( <x, x.1> ) ▶₀ #i ) )
+      case ChanOut_A
+      step( solve( (#vl, 0) ~~> (#i, 0) ) )
+        case d_0_fst
+        by step( contradiction /* impossible chain */ )
+      next
+        case d_0_snd
+        step( solve( Out_A( $A, x.2 ) ▶₀ #vr ) )
+          case S_7
+          step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+            case d_0_fst
+            by step( contradiction /* impossible chain */ )
+          next
+            case d_0_snd
+            by step( solve( (#vr.7, 0) ~~> (#i, 0) ) )
+          next
+            case pair
+            MIRRORED
+          qed
+        next
+          case Setup_case_1
+          by step( contradiction /* impossible chain */ )
+        next
+          case Setup_case_2
+          by step( contradiction /* impossible chain */ )
+        next
+          case Setup_case_3
+          step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+            case d_0_fst
+            by step( contradiction /* impossible chain */ )
+          next
+            case d_0_snd
+            step( solve( (#vr.6, 0) ~~> (#i, 0) ) )
+              case d_0_unionUD_case_1
+              by step( solve( (#vr.7, 0) ~~> (#i, 0) ) )
+            next
+              case d_0_unionUD_case_2
+              by step( solve( (#vr.7, 0) ~~> (#i, 0) ) )
+            qed
+          next
+            case pair
+            MIRRORED
+          qed
+        qed
+      next
+        case pair
+        step( solve( Out_A( $A, x ) ▶₀ #vr ) )
+          case S_7
+          MIRRORED
+        next
+          case Setup_case_1
+          MIRRORED
+        next
+          case Setup_case_2
+          MIRRORED
+        next
+          case Setup_case_3
+          MIRRORED
+        qed
+      qed
+    next
+      case publickeyinfrastructure
+      by step( contradiction /* impossible chain */ )
+    qed
+  next
+    case RHS
+    step( simplify )
+    step( solve( !KD( <x, x.1> ) ▶₀ #i ) )
+      case ChanOut_A
+      step( solve( (#vl, 0) ~~> (#i, 0) ) )
+        case d_0_fst
+        by step( contradiction /* impossible chain */ )
+      next
+        case d_0_snd
+        step( solve( Out_A( $A, x.2 ) ▶₀ #vr ) )
+          case S_7
+          step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+            case d_0_fst
+            by step( contradiction /* impossible chain */ )
+          next
+            case d_0_snd
+            by step( solve( (#vr.7, 0) ~~> (#i, 0) ) )
+          next
+            case pair
+            MIRRORED
+          qed
+        next
+          case Setup_case_1
+          by step( contradiction /* impossible chain */ )
+        next
+          case Setup_case_2
+          by step( contradiction /* impossible chain */ )
+        next
+          case Setup_case_3
+          step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+            case d_0_fst
+            by step( contradiction /* impossible chain */ )
+          next
+            case d_0_snd
+            step( solve( (#vr.6, 0) ~~> (#i, 0) ) )
+              case d_0_unionUD_case_1
+              by step( solve( (#vr.7, 0) ~~> (#i, 0) ) )
+            next
+              case d_0_unionUD_case_2
+              by step( solve( (#vr.7, 0) ~~> (#i, 0) ) )
+            qed
+          next
+            case pair
+            MIRRORED
+          qed
+        qed
+      next
+        case pair
+        step( solve( Out_A( $A, x ) ▶₀ #vr ) )
+          case S_7
+          MIRRORED
+        next
+          case Setup_case_1
+          MIRRORED
+        next
+          case Setup_case_2
+          MIRRORED
+        next
+          case Setup_case_3
+          MIRRORED
+        qed
+      qed
+    next
+      case publickeyinfrastructure
+      by step( contradiction /* impossible chain */ )
+    qed
+  qed
+next
+  case Rule_Destrd_0_sdec
+  backward-search
+    case LHS
+    step( simplify )
+    step( solve( !KD( senc(x, x.1) ) ▶₀ #i ) )
+      case ChanOut_A
+      step( solve( (#vl, 0) ~~> (#i, 0) ) )
+        case d_0_fst
+        by step( contradiction /* impossible chain */ )
+      next
+        case d_0_snd
+        step( solve( Out_A( $A, x.2 ) ▶₀ #vr ) )
+          case S_7
+          by step( contradiction /* impossible chain */ )
+        next
+          case Setup_case_1
+          by step( contradiction /* impossible chain */ )
+        next
+          case Setup_case_2
+          by step( contradiction /* impossible chain */ )
+        next
+          case Setup_case_3
+          by step( contradiction /* impossible chain */ )
+        qed
+      qed
+    next
+      case publickeyinfrastructure
+      by step( contradiction /* impossible chain */ )
+    qed
+  next
+    case RHS
+    step( simplify )
+    step( solve( !KD( senc(x, x.1) ) ▶₀ #i ) )
+      case ChanOut_A
+      step( solve( (#vl, 0) ~~> (#i, 0) ) )
+        case d_0_fst
+        by step( contradiction /* impossible chain */ )
+      next
+        case d_0_snd
+        step( solve( Out_A( $A, x.2 ) ▶₀ #vr ) )
+          case S_7
+          by step( contradiction /* impossible chain */ )
+        next
+          case Setup_case_1
+          by step( contradiction /* impossible chain */ )
+        next
+          case Setup_case_2
+          by step( contradiction /* impossible chain */ )
+        next
+          case Setup_case_3
+          by step( contradiction /* impossible chain */ )
+        qed
+      qed
+    next
+      case publickeyinfrastructure
+      by step( contradiction /* impossible chain */ )
+    qed
+  qed
+next
+  case Rule_Destrd_0_snd
+  backward-search
+    case LHS
+    step( simplify )
+    step( solve( !KD( <x, x.1> ) ▶₀ #i ) )
+      case ChanOut_A
+      step( solve( (#vl, 0) ~~> (#i, 0) ) )
+        case d_0_fst
+        by step( contradiction /* impossible chain */ )
+      next
+        case d_0_snd
+        step( solve( Out_A( $A, x.2 ) ▶₀ #vr ) )
+          case S_7
+          step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+            case d_0_fst
+            by step( contradiction /* impossible chain */ )
+          next
+            case d_0_snd
+            by step( solve( (#vr.7, 0) ~~> (#i, 0) ) )
+          next
+            case pair
+            MIRRORED
+          qed
+        next
+          case Setup_case_1
+          by step( contradiction /* impossible chain */ )
+        next
+          case Setup_case_2
+          by step( contradiction /* impossible chain */ )
+        next
+          case Setup_case_3
+          step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+            case d_0_fst
+            by step( contradiction /* impossible chain */ )
+          next
+            case d_0_snd
+            step( solve( (#vr.6, 0) ~~> (#i, 0) ) )
+              case d_0_unionUD_case_1
+              by step( solve( (#vr.7, 0) ~~> (#i, 0) ) )
+            next
+              case d_0_unionUD_case_2
+              by step( solve( (#vr.7, 0) ~~> (#i, 0) ) )
+            qed
+          next
+            case pair
+            MIRRORED
+          qed
+        qed
+      next
+        case pair
+        step( solve( Out_A( $A, x ) ▶₀ #vr ) )
+          case S_7
+          MIRRORED
+        next
+          case Setup_case_1
+          MIRRORED
+        next
+          case Setup_case_2
+          MIRRORED
+        next
+          case Setup_case_3
+          MIRRORED
+        qed
+      qed
+    next
+      case publickeyinfrastructure
+      by step( contradiction /* impossible chain */ )
+    qed
+  next
+    case RHS
+    step( simplify )
+    step( solve( !KD( <x, x.1> ) ▶₀ #i ) )
+      case ChanOut_A
+      step( solve( (#vl, 0) ~~> (#i, 0) ) )
+        case d_0_fst
+        by step( contradiction /* impossible chain */ )
+      next
+        case d_0_snd
+        step( solve( Out_A( $A, x.2 ) ▶₀ #vr ) )
+          case S_7
+          step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+            case d_0_fst
+            by step( contradiction /* impossible chain */ )
+          next
+            case d_0_snd
+            by step( solve( (#vr.7, 0) ~~> (#i, 0) ) )
+          next
+            case pair
+            MIRRORED
+          qed
+        next
+          case Setup_case_1
+          by step( contradiction /* impossible chain */ )
+        next
+          case Setup_case_2
+          by step( contradiction /* impossible chain */ )
+        next
+          case Setup_case_3
+          step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+            case d_0_fst
+            by step( contradiction /* impossible chain */ )
+          next
+            case d_0_snd
+            step( solve( (#vr.6, 0) ~~> (#i, 0) ) )
+              case d_0_unionUD_case_1
+              by step( solve( (#vr.7, 0) ~~> (#i, 0) ) )
+            next
+              case d_0_unionUD_case_2
+              by step( solve( (#vr.7, 0) ~~> (#i, 0) ) )
+            qed
+          next
+            case pair
+            MIRRORED
+          qed
+        qed
+      next
+        case pair
+        step( solve( Out_A( $A, x ) ▶₀ #vr ) )
+          case S_7
+          MIRRORED
+        next
+          case Setup_case_1
+          MIRRORED
+        next
+          case Setup_case_2
+          MIRRORED
+        next
+          case Setup_case_3
+          MIRRORED
+        qed
+      qed
+    next
+      case publickeyinfrastructure
+      by step( contradiction /* impossible chain */ )
+    qed
+  qed
+next
+  case Rule_Destrd_0_unionUD
+  backward-search
+    case LHS
+    step( simplify )
+    step( solve( !KD( (x add x.1) ) ▶₀ #i ) )
+      case ChanOut_A
+      step( solve( (#vl, 0) ~~> (#i, 0) ) )
+        case d_0_fst
+        by step( contradiction /* impossible chain */ )
+      next
+        case d_0_snd
+        step( solve( Out_A( $A, x.2 ) ▶₀ #vr ) )
+          case S_7
+          by step( contradiction /* impossible chain */ )
+        next
+          case Setup_case_1
+          by step( contradiction /* impossible chain */ )
+        next
+          case Setup_case_2
+          by step( contradiction /* impossible chain */ )
+        next
+          case Setup_case_3
+          step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+            case d_0_fst
+            by step( contradiction /* impossible chain */ )
+          next
+            case d_0_snd
+            step( solve( (#vr.6, 0) ~~> (#i, 0) ) )
+              case add_case_1
+              MIRRORED
+            next
+              case add_case_2
+              MIRRORED
+            next
+              case d_0_unionUD_case_1
+              by step( contradiction /* impossible chain */ )
+            next
+              case d_0_unionUD_case_2
+              by step( contradiction /* impossible chain */ )
+            qed
+          qed
+        qed
+      qed
+    next
+      case publickeyinfrastructure
+      by step( contradiction /* impossible chain */ )
+    qed
+  next
+    case RHS
+    step( simplify )
+    step( solve( !KD( (x add x.1) ) ▶₀ #i ) )
+      case ChanOut_A
+      step( solve( (#vl, 0) ~~> (#i, 0) ) )
+        case d_0_fst
+        by step( contradiction /* impossible chain */ )
+      next
+        case d_0_snd
+        step( solve( Out_A( $A, x.2 ) ▶₀ #vr ) )
+          case S_7
+          by step( contradiction /* impossible chain */ )
+        next
+          case Setup_case_1
+          by step( contradiction /* impossible chain */ )
+        next
+          case Setup_case_2
+          by step( contradiction /* impossible chain */ )
+        next
+          case Setup_case_3
+          step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+            case d_0_fst
+            by step( contradiction /* impossible chain */ )
+          next
+            case d_0_snd
+            step( solve( (#vr.6, 0) ~~> (#i, 0) ) )
+              case add_case_1
+              MIRRORED
+            next
+              case add_case_2
+              MIRRORED
+            next
+              case d_0_unionUD_case_1
+              by step( contradiction /* impossible chain */ )
+            next
+              case d_0_unionUD_case_2
+              by step( contradiction /* impossible chain */ )
+            qed
+          qed
+        qed
+      qed
+    next
+      case publickeyinfrastructure
+      by step( contradiction /* impossible chain */ )
+    qed
+  qed
+next
+  case Rule_Destrd_0_verify
+  backward-search
+    case LHS
+    step( simplify )
+    step( solve( !KD( sign(x, x.1) ) ▶₀ #i ) )
+      case ChanOut_A
+      step( solve( (#vl, 0) ~~> (#i, 0) ) )
+        case d_0_fst
+        by step( contradiction /* impossible chain */ )
+      next
+        case d_0_snd
+        step( solve( Out_A( $A, x.2 ) ▶₀ #vr ) )
+          case S_7
+          by step( contradiction /* impossible chain */ )
+        next
+          case Setup_case_1
+          by step( contradiction /* impossible chain */ )
+        next
+          case Setup_case_2
+          by step( contradiction /* impossible chain */ )
+        next
+          case Setup_case_3
+          by step( contradiction /* impossible chain */ )
+        qed
+      qed
+    next
+      case publickeyinfrastructure
+      by step( contradiction /* impossible chain */ )
+    qed
+  next
+    case RHS
+    step( simplify )
+    step( solve( !KD( sign(x, x.1) ) ▶₀ #i ) )
+      case ChanOut_A
+      step( solve( (#vl, 0) ~~> (#i, 0) ) )
+        case d_0_fst
+        by step( contradiction /* impossible chain */ )
+      next
+        case d_0_snd
+        step( solve( Out_A( $A, x.2 ) ▶₀ #vr ) )
+          case S_7
+          by step( contradiction /* impossible chain */ )
+        next
+          case Setup_case_1
+          by step( contradiction /* impossible chain */ )
+        next
+          case Setup_case_2
+          by step( contradiction /* impossible chain */ )
+        next
+          case Setup_case_3
+          by step( contradiction /* impossible chain */ )
+        qed
+      qed
+    next
+      case publickeyinfrastructure
+      by step( contradiction /* impossible chain */ )
+    qed
+  qed
+next
+  case Rule_Equality
+  backward-search
+    case LHS
+    step( simplify )
+    step( solve( !KD( x ) ▶₁ #i ) )
+      case ChanOut_A
+      step( solve( (#vl, 0) ~~> (#i, 1) ) )
+        case d_0_fst
+        step( solve( (#vr.1, 0) ~~> (#i, 1) ) )
+          case Var_pub_A
+          step( solve( Out_A( $A, x ) ▶₀ #vr ) )
+            case S_7
+            step( solve( !KU( 'BB' ) @ #vk ) )
+              case coerce
+              step( solve( !KD( 'BB' ) ▶₀ #vk ) )
+                case ChanOut_A
+                step( solve( (#vl.1, 0) ~~> (#vk, 0) ) )
+                  case d_0_fst
+                  by step( contradiction /* impossible chain */ )
+                next
+                  case d_0_snd
+                  step( solve( Out_A( $A, x ) ▶₀ #vr.7 ) )
+                    case S_7
+                    by step( contradiction /* impossible chain */ )
+                  next
+                    case Setup_case_1
+                    by step( contradiction /* impossible chain */ )
+                  next
+                    case Setup_case_2
+                    by step( contradiction /* impossible chain */ )
+                  next
+                    case Setup_case_3
+                    by step( contradiction /* impossible chain */ )
+                  qed
+                qed
+              next
+                case publickeyinfrastructure
+                by step( contradiction /* impossible chain */ )
+              qed
+            next
+              case pub
+              MIRRORED
+            qed
+          next
+            case Setup_case_1
+            step( solve( !KU( 'S' ) @ #vk ) )
+              case coerce
+              step( solve( !KD( 'S' ) ▶₀ #vk ) )
+                case ChanOut_A
+                step( solve( (#vl.1, 0) ~~> (#vk, 0) ) )
+                  case d_0_fst
+                  by step( contradiction /* impossible chain */ )
+                next
+                  case d_0_snd
+                  step( solve( Out_A( $A, x ) ▶₀ #vr.6 ) )
+                    case S_7
+                    by step( contradiction /* impossible chain */ )
+                  next
+                    case Setup_case_1
+                    by step( contradiction /* impossible chain */ )
+                  next
+                    case Setup_case_2
+                    by step( contradiction /* impossible chain */ )
+                  next
+                    case Setup_case_3
+                    by step( contradiction /* impossible chain */ )
+                  qed
+                qed
+              next
+                case publickeyinfrastructure
+                by step( contradiction /* impossible chain */ )
+              qed
+            next
+              case pub
+              MIRRORED
+            qed
+          next
+            case Setup_case_2
+            step( solve( !KU( 'S' ) @ #vk ) )
+              case coerce
+              step( solve( !KD( 'S' ) ▶₀ #vk ) )
+                case ChanOut_A
+                step( solve( (#vl.1, 0) ~~> (#vk, 0) ) )
+                  case d_0_fst
+                  by step( contradiction /* impossible chain */ )
+                next
+                  case d_0_snd
+                  step( solve( Out_A( $A, x ) ▶₀ #vr.6 ) )
+                    case S_7
+                    by step( contradiction /* impossible chain */ )
+                  next
+                    case Setup_case_1
+                    by step( contradiction /* impossible chain */ )
+                  next
+                    case Setup_case_2
+                    by step( contradiction /* impossible chain */ )
+                  next
+                    case Setup_case_3
+                    by step( contradiction /* impossible chain */ )
+                  qed
+                qed
+              next
+                case publickeyinfrastructure
+                by step( contradiction /* impossible chain */ )
+              qed
+            next
+              case pub
+              MIRRORED
+            qed
+          next
+            case Setup_case_3
+            step( solve( !KU( $A ) @ #vk ) )
+              case coerce
+              step( solve( !KD( $A ) ▶₀ #vk ) )
+                case ChanOut_A
+                step( solve( (#vl.1, 0) ~~> (#vk, 0) ) )
+                  case d_0_fst
+                  by step( contradiction /* impossible chain */ )
+                next
+                  case d_0_snd
+                  step( solve( Out_A( $A.1, x ) ▶₀ #vr.6 ) )
+                    case S_7
+                    by step( contradiction /* impossible chain */ )
+                  next
+                    case Setup_case_1
+                    by step( contradiction /* impossible chain */ )
+                  next
+                    case Setup_case_2
+                    by step( contradiction /* impossible chain */ )
+                  next
+                    case Setup_case_3
+                    by step( contradiction /* impossible chain */ )
+                  qed
+                qed
+              next
+                case publickeyinfrastructure
+                by step( contradiction /* impossible chain */ )
+              qed
+            next
+              case pub
+              MIRRORED
+            qed
+          qed
+        qed
+      next
+        case d_0_snd
+        step( solve( Out_A( $A, x.1 ) ▶₀ #vr ) )
+          case S_7
+          step( solve( (#vr.1, 0) ~~> (#i, 1) ) )
+            case d_0_fst
+            step( solve( (#vr.7, 0) ~~> (#i, 1) ) )
+              case Const_pub_ySG
+              step( solve( !KU( 'ySG' ) @ #vk ) )
+                case coerce
+                step( solve( !KD( 'ySG' ) ▶₀ #vk ) )
+                  case ChanOut_A
+                  step( solve( (#vl.1, 0) ~~> (#vk, 0) ) )
+                    case d_0_fst
+                    by step( contradiction /* impossible chain */ )
+                  next
+                    case d_0_snd
+                    step( solve( Out_A( $A, x ) ▶₀ #vr.8 ) )
+                      case S_7
+                      by step( contradiction /* impossible chain */ )
+                    next
+                      case Setup_case_1
+                      by step( contradiction /* impossible chain */ )
+                    next
+                      case Setup_case_2
+                      by step( contradiction /* impossible chain */ )
+                    next
+                      case Setup_case_3
+                      by step( contradiction /* impossible chain */ )
+                    qed
+                  qed
+                next
+                  case publickeyinfrastructure
+                  by step( contradiction /* impossible chain */ )
+                qed
+              next
+                case pub
+                MIRRORED
+              qed
+            qed
+          next
+            case d_0_snd
+            step( solve( (#vr.7, 0) ~~> (#i, 1) ) )
+              case h
+              step( solve( !KU( h(<'H1', ~xSel>) ) @ #vk ) )
+                case ChanOut_A_case_1
+                MIRRORED
+              next
+                case ChanOut_A_case_2
+                MIRRORED
+              next
+                case c_h
+                step( solve( !KU( ~xSel ) @ #vk.3 ) )
+                  case ChanOut_A
+                  by step( solve( !KU( ~skD1 ) @ #vk.4 ) )
+                qed
+              qed
+            qed
+          next
+            case pair
+            step( solve( !KU( 'ySG' ) @ #vk.1 ) )
+              case coerce
+              step( solve( !KD( 'ySG' ) ▶₀ #vk.1 ) )
+                case ChanOut_A
+                step( solve( (#vl.1, 0) ~~> (#vk.1, 0) ) )
+                  case d_0_fst
+                  by step( contradiction /* impossible chain */ )
+                next
+                  case d_0_snd
+                  step( solve( Out_A( $A, x ) ▶₀ #vr.7 ) )
+                    case S_7
+                    by step( contradiction /* impossible chain */ )
+                  next
+                    case Setup_case_1
+                    by step( contradiction /* impossible chain */ )
+                  next
+                    case Setup_case_2
+                    by step( contradiction /* impossible chain */ )
+                  next
+                    case Setup_case_3
+                    by step( contradiction /* impossible chain */ )
+                  qed
+                qed
+              next
+                case publickeyinfrastructure
+                by step( contradiction /* impossible chain */ )
+              qed
+            next
+              case pub
+              step( solve( !KU( h(<'H1', ~xSel>) ) @ #vk.2 ) )
+                case ChanOut_A_case_1
+                MIRRORED
+              next
+                case ChanOut_A_case_2
+                MIRRORED
+              next
+                case c_h
+                step( solve( !KU( ~xSel ) @ #vk.5 ) )
+                  case ChanOut_A
+                  by step( solve( !KU( ~skD1 ) @ #vk.6 ) )
+                qed
+              qed
+            qed
+          qed
+        next
+          case Setup_case_1
+          step( solve( (#vr.1, 0) ~~> (#i, 1) ) )
+            case aenc
+            step( solve( !KU( aenc(~x1, pk(~skD1)) ) @ #vk ) )
+              case ChanOut_A
+              MIRRORED
+            next
+              case c_aenc
+              step( solve( !KU( ~x1 ) @ #vk.1 ) )
+                case ChanOut_A
+                by step( solve( !KU( ~skD1 ) @ #vk.3 ) )
+              qed
+            qed
+          next
+            case d_0_adec
+            step( solve( (#vr.6, 0) ~~> (#i, 1) ) )
+              case Var_fresh_x1
+              by step( solve( !KU( ~skD1 ) @ #vk.1 ) )
+            qed
+          qed
+        next
+          case Setup_case_2
+          step( solve( (#vr.1, 0) ~~> (#i, 1) ) )
+            case aenc
+            step( solve( !KU( aenc(~x2, pk(~skD2)) ) @ #vk ) )
+              case ChanOut_A
+              MIRRORED
+            next
+              case c_aenc
+              step( solve( !KU( ~x2 ) @ #vk.1 ) )
+                case ChanOut_A
+                by step( solve( !KU( ~skD2 ) @ #vk.3 ) )
+              qed
+            qed
+          next
+            case d_0_adec
+            step( solve( (#vr.6, 0) ~~> (#i, 1) ) )
+              case Var_fresh_x2
+              by step( solve( !KU( ~skD2 ) @ #vk.1 ) )
+            qed
+          qed
+        next
+          case Setup_case_3
+          step( solve( (#vr.1, 0) ~~> (#i, 1) ) )
+            case d_0_fst
+            step( solve( (#vr.6, 0) ~~> (#i, 1) ) )
+              case Const_pub_ys
+              step( solve( !KU( 'ys' ) @ #vk ) )
+                case coerce
+                step( solve( !KD( 'ys' ) ▶₀ #vk ) )
+                  case ChanOut_A
+                  step( solve( (#vl.1, 0) ~~> (#vk, 0) ) )
+                    case d_0_fst
+                    by step( contradiction /* impossible chain */ )
+                  next
+                    case d_0_snd
+                    step( solve( Out_A( $A.1, x ) ▶₀ #vr.7 ) )
+                      case S_7
+                      by step( contradiction /* impossible chain */ )
+                    next
+                      case Setup_case_1
+                      by step( contradiction /* impossible chain */ )
+                    next
+                      case Setup_case_2
+                      by step( contradiction /* impossible chain */ )
+                    next
+                      case Setup_case_3
+                      by step( contradiction /* impossible chain */ )
+                    qed
+                  qed
+                next
+                  case publickeyinfrastructure
+                  by step( contradiction /* impossible chain */ )
+                qed
+              next
+                case pub
+                MIRRORED
+              qed
+            qed
+          next
+            case d_0_snd
+            step( solve( (#vr.6, 0) ~~> (#i, 1) ) )
+              case add
+              step( solve( !KU( (h(<'H1', ~x1>) add h(<'H2', ~x2>)) ) @ #vk ) )
+                case c_add
+                step( solve( !KU( h(<'H1', ~x1>) ) @ #vk.1 ) )
+                  case ChanOut_A_case_1
+                  step( solve( !KU( h(<'H2', ~x2>) ) @ #vk.2 ) )
+                    case ChanOut_A
+                    MIRRORED
+                  next
+                    case c_h
+                    step( solve( !KU( ~x2 ) @ #vk.5 ) )
+                      case ChanOut_A
+                      by step( solve( !KU( ~skD2 ) @ #vk.6 ) )
+                    qed
+                  qed
+                next
+                  case ChanOut_A_case_2
+                  step( solve( !KU( h(<'H2', ~x2>) ) @ #vk.2 ) )
+                    case ChanOut_A
+                    MIRRORED
+                  next
+                    case c_h
+                    step( solve( !KU( ~x2 ) @ #vk.5 ) )
+                      case ChanOut_A
+                      by step( solve( !KU( ~skD2 ) @ #vk.6 ) )
+                    qed
+                  qed
+                next
+                  case c_h
+                  step( solve( !KU( ~x1 ) @ #vk.5 ) )
+                    case ChanOut_A
+                    by step( solve( !KU( ~skD1 ) @ #vk.6 ) )
+                  qed
+                qed
+              next
+                case coerce
+                step( solve( !KD( (h(<'H1', ~x1>) add h(<'H2', ~x2>)) ) ▶₀ #vk ) )
+                  case ChanOut_A
+                  step( solve( (#vl.1, 0) ~~> (#vk, 0) ) )
+                    case d_0_fst
+                    by step( contradiction /* impossible chain */ )
+                  next
+                    case d_0_snd
+                    step( solve( Out_A( $A.1, x ) ▶₀ #vr.7 ) )
+                      case S_7
+                      by step( contradiction /* impossible chain */ )
+                    next
+                      case Setup_case_1
+                      by step( contradiction /* impossible chain */ )
+                    next
+                      case Setup_case_2
+                      by step( contradiction /* impossible chain */ )
+                    next
+                      case Setup_case_3
+                      step( solve( (#vr.7, 0) ~~> (#vk, 0) ) )
+                        case d_0_fst
+                        by step( contradiction /* impossible chain */ )
+                      next
+                        case d_0_snd
+                        step( solve( (#vr.8, 0) ~~> (#vk, 0) ) )
+                          case add
+                          MIRRORED
+                        next
+                          case d_0_unionUD_case_1
+                          by step( contradiction /* impossible chain */ )
+                        next
+                          case d_0_unionUD_case_2
+                          by step( contradiction /* impossible chain */ )
+                        qed
+                      qed
+                    qed
+                  qed
+                next
+                  case publickeyinfrastructure
+                  by step( contradiction /* impossible chain */ )
+                qed
+              qed
+            next
+              case d_0_unionUD_case_1
+              step( solve( (#vr.7, 0) ~~> (#i, 1) ) )
+                case h
+                step( solve( !KU( h(<'H2', ~x2>) ) @ #vk ) )
+                  case ChanOut_A
+                  MIRRORED
+                next
+                  case c_h
+                  step( solve( !KU( ~x2 ) @ #vk.3 ) )
+                    case ChanOut_A
+                    by step( solve( !KU( ~skD2 ) @ #vk.4 ) )
+                  qed
+                qed
+              qed
+            next
+              case d_0_unionUD_case_2
+              step( solve( (#vr.7, 0) ~~> (#i, 1) ) )
+                case h
+                step( solve( !KU( h(<'H1', ~x1>) ) @ #vk ) )
+                  case ChanOut_A_case_1
+                  MIRRORED
+                next
+                  case ChanOut_A_case_2
+                  MIRRORED
+                next
+                  case c_h
+                  step( solve( !KU( ~x1 ) @ #vk.3 ) )
+                    case ChanOut_A
+                    by step( solve( !KU( ~skD1 ) @ #vk.4 ) )
+                  qed
+                qed
+              qed
+            qed
+          next
+            case pair
+            step( solve( !KU( 'ys' ) @ #vk.1 ) )
+              case coerce
+              step( solve( !KD( 'ys' ) ▶₀ #vk.1 ) )
+                case ChanOut_A
+                step( solve( (#vl.1, 0) ~~> (#vk.1, 0) ) )
+                  case d_0_fst
+                  by step( contradiction /* impossible chain */ )
+                next
+                  case d_0_snd
+                  step( solve( Out_A( $A.1, x ) ▶₀ #vr.6 ) )
+                    case S_7
+                    by step( contradiction /* impossible chain */ )
+                  next
+                    case Setup_case_1
+                    by step( contradiction /* impossible chain */ )
+                  next
+                    case Setup_case_2
+                    by step( contradiction /* impossible chain */ )
+                  next
+                    case Setup_case_3
+                    by step( contradiction /* impossible chain */ )
+                  qed
+                qed
+              next
+                case publickeyinfrastructure
+                by step( contradiction /* impossible chain */ )
+              qed
+            next
+              case pub
+              step( solve( !KU( (h(<'H1', ~x1>) add h(<'H2', ~x2>)) ) @ #vk.2 ) )
+                case c_add
+                step( solve( !KU( h(<'H1', ~x1>) ) @ #vk.3 ) )
+                  case ChanOut_A_case_1
+                  step( solve( !KU( h(<'H2', ~x2>) ) @ #vk.4 ) )
+                    case ChanOut_A
+                    MIRRORED
+                  next
+                    case c_h
+                    step( solve( !KU( ~x2 ) @ #vk.7 ) )
+                      case ChanOut_A
+                      by step( solve( !KU( ~skD2 ) @ #vk.8 ) )
+                    qed
+                  qed
+                next
+                  case ChanOut_A_case_2
+                  step( solve( !KU( h(<'H2', ~x2>) ) @ #vk.4 ) )
+                    case ChanOut_A
+                    MIRRORED
+                  next
+                    case c_h
+                    step( solve( !KU( ~x2 ) @ #vk.7 ) )
+                      case ChanOut_A
+                      by step( solve( !KU( ~skD2 ) @ #vk.8 ) )
+                    qed
+                  qed
+                next
+                  case c_h
+                  step( solve( !KU( ~x1 ) @ #vk.7 ) )
+                    case ChanOut_A
+                    by step( solve( !KU( ~skD1 ) @ #vk.8 ) )
+                  qed
+                qed
+              next
+                case coerce
+                step( solve( !KD( (h(<'H1', ~x1>) add h(<'H2', ~x2>)) ) ▶₀ #vk.2 ) )
+                  case ChanOut_A
+                  step( solve( (#vl.1, 0) ~~> (#vk.2, 0) ) )
+                    case d_0_fst
+                    by step( contradiction /* impossible chain */ )
+                  next
+                    case d_0_snd
+                    step( solve( Out_A( $A.1, x ) ▶₀ #vr.6 ) )
+                      case S_7
+                      by step( contradiction /* impossible chain */ )
+                    next
+                      case Setup_case_1
+                      by step( contradiction /* impossible chain */ )
+                    next
+                      case Setup_case_2
+                      by step( contradiction /* impossible chain */ )
+                    next
+                      case Setup_case_3
+                      step( solve( (#vr.6, 0) ~~> (#vk.2, 0) ) )
+                        case d_0_fst
+                        by step( contradiction /* impossible chain */ )
+                      next
+                        case d_0_snd
+                        step( solve( (#vr.7, 0) ~~> (#vk.2, 0) ) )
+                          case add
+                          MIRRORED
+                        next
+                          case d_0_unionUD_case_1
+                          by step( contradiction /* impossible chain */ )
+                        next
+                          case d_0_unionUD_case_2
+                          by step( contradiction /* impossible chain */ )
+                        qed
+                      qed
+                    qed
+                  qed
+                next
+                  case publickeyinfrastructure
+                  by step( contradiction /* impossible chain */ )
+                qed
+              qed
+            qed
+          qed
+        qed
+      next
+        case pair
+        step( solve( Out_A( $A, x ) ▶₀ #vr ) )
+          case S_7
+          step( solve( !KU( 'BB' ) @ #vk.2 ) )
+            case coerce
+            step( solve( !KD( 'BB' ) ▶₀ #vk.2 ) )
+              case ChanOut_A
+              step( solve( (#vl.1, 0) ~~> (#vk.2, 0) ) )
+                case d_0_fst
+                by step( contradiction /* impossible chain */ )
+              next
+                case d_0_snd
+                step( solve( Out_A( $A, x ) ▶₀ #vr.6 ) )
+                  case S_7
+                  by step( contradiction /* impossible chain */ )
+                next
+                  case Setup_case_1
+                  by step( contradiction /* impossible chain */ )
+                next
+                  case Setup_case_2
+                  by step( contradiction /* impossible chain */ )
+                next
+                  case Setup_case_3
+                  by step( contradiction /* impossible chain */ )
+                qed
+              qed
+            next
+              case publickeyinfrastructure
+              by step( contradiction /* impossible chain */ )
+            qed
+          next
+            case pub
+            step( solve( !KU( 'ySG' ) @ #vk.3 ) )
+              case coerce
+              step( solve( !KD( 'ySG' ) ▶₀ #vk.3 ) )
+                case ChanOut_A
+                step( solve( (#vl.1, 0) ~~> (#vk.3, 0) ) )
+                  case d_0_fst
+                  by step( contradiction /* impossible chain */ )
+                next
+                  case d_0_snd
+                  step( solve( Out_A( $A, x ) ▶₀ #vr.6 ) )
+                    case S_7
+                    by step( contradiction /* impossible chain */ )
+                  next
+                    case Setup_case_1
+                    by step( contradiction /* impossible chain */ )
+                  next
+                    case Setup_case_2
+                    by step( contradiction /* impossible chain */ )
+                  next
+                    case Setup_case_3
+                    by step( contradiction /* impossible chain */ )
+                  qed
+                qed
+              next
+                case publickeyinfrastructure
+                by step( contradiction /* impossible chain */ )
+              qed
+            next
+              case pub
+              step( solve( !KU( h(<'H1', ~xSel>) ) @ #vk.4 ) )
+                case ChanOut_A_case_1
+                MIRRORED
+              next
+                case ChanOut_A_case_2
+                MIRRORED
+              next
+                case c_h
+                step( solve( !KU( ~xSel ) @ #vk.7 ) )
+                  case ChanOut_A
+                  by step( solve( !KU( ~skD1 ) @ #vk.8 ) )
+                qed
+              qed
+            qed
+          qed
+        next
+          case Setup_case_1
+          step( solve( !KU( 'S' ) @ #vk.1 ) )
+            case coerce
+            step( solve( !KD( 'S' ) ▶₀ #vk.1 ) )
+              case ChanOut_A
+              step( solve( (#vl.1, 0) ~~> (#vk.1, 0) ) )
+                case d_0_fst
+                by step( contradiction /* impossible chain */ )
+              next
+                case d_0_snd
+                step( solve( Out_A( $A, x ) ▶₀ #vr.5 ) )
+                  case S_7
+                  by step( contradiction /* impossible chain */ )
+                next
+                  case Setup_case_1
+                  by step( contradiction /* impossible chain */ )
+                next
+                  case Setup_case_2
+                  by step( contradiction /* impossible chain */ )
+                next
+                  case Setup_case_3
+                  by step( contradiction /* impossible chain */ )
+                qed
+              qed
+            next
+              case publickeyinfrastructure
+              by step( contradiction /* impossible chain */ )
+            qed
+          next
+            case pub
+            step( solve( !KU( aenc(~x1, pk(~skD1)) ) @ #vk.2 ) )
+              case ChanOut_A
+              MIRRORED
+            next
+              case c_aenc
+              step( solve( !KU( ~x1 ) @ #vk.3 ) )
+                case ChanOut_A
+                by step( solve( !KU( ~skD1 ) @ #vk.5 ) )
+              qed
+            qed
+          qed
+        next
+          case Setup_case_2
+          step( solve( !KU( 'S' ) @ #vk.1 ) )
+            case coerce
+            step( solve( !KD( 'S' ) ▶₀ #vk.1 ) )
+              case ChanOut_A
+              step( solve( (#vl.1, 0) ~~> (#vk.1, 0) ) )
+                case d_0_fst
+                by step( contradiction /* impossible chain */ )
+              next
+                case d_0_snd
+                step( solve( Out_A( $A, x ) ▶₀ #vr.5 ) )
+                  case S_7
+                  by step( contradiction /* impossible chain */ )
+                next
+                  case Setup_case_1
+                  by step( contradiction /* impossible chain */ )
+                next
+                  case Setup_case_2
+                  by step( contradiction /* impossible chain */ )
+                next
+                  case Setup_case_3
+                  by step( contradiction /* impossible chain */ )
+                qed
+              qed
+            next
+              case publickeyinfrastructure
+              by step( contradiction /* impossible chain */ )
+            qed
+          next
+            case pub
+            step( solve( !KU( aenc(~x2, pk(~skD2)) ) @ #vk.2 ) )
+              case ChanOut_A
+              MIRRORED
+            next
+              case c_aenc
+              step( solve( !KU( ~x2 ) @ #vk.3 ) )
+                case ChanOut_A
+                by step( solve( !KU( ~skD2 ) @ #vk.5 ) )
+              qed
+            qed
+          qed
+        next
+          case Setup_case_3
+          step( solve( !KU( $A ) @ #vk.2 ) )
+            case coerce
+            step( solve( !KD( $A ) ▶₀ #vk.2 ) )
+              case ChanOut_A
+              step( solve( (#vl.1, 0) ~~> (#vk.2, 0) ) )
+                case d_0_fst
+                by step( contradiction /* impossible chain */ )
+              next
+                case d_0_snd
+                step( solve( Out_A( $A.1, x ) ▶₀ #vr.5 ) )
+                  case S_7
+                  by step( contradiction /* impossible chain */ )
+                next
+                  case Setup_case_1
+                  by step( contradiction /* impossible chain */ )
+                next
+                  case Setup_case_2
+                  by step( contradiction /* impossible chain */ )
+                next
+                  case Setup_case_3
+                  by step( contradiction /* impossible chain */ )
+                qed
+              qed
+            next
+              case publickeyinfrastructure
+              by step( contradiction /* impossible chain */ )
+            qed
+          next
+            case pub
+            step( solve( !KU( 'ys' ) @ #vk.3 ) )
+              case coerce
+              step( solve( !KD( 'ys' ) ▶₀ #vk.3 ) )
+                case ChanOut_A
+                step( solve( (#vl.1, 0) ~~> (#vk.3, 0) ) )
+                  case d_0_fst
+                  by step( contradiction /* impossible chain */ )
+                next
+                  case d_0_snd
+                  step( solve( Out_A( $A.1, x ) ▶₀ #vr.5 ) )
+                    case S_7
+                    by step( contradiction /* impossible chain */ )
+                  next
+                    case Setup_case_1
+                    by step( contradiction /* impossible chain */ )
+                  next
+                    case Setup_case_2
+                    by step( contradiction /* impossible chain */ )
+                  next
+                    case Setup_case_3
+                    by step( contradiction /* impossible chain */ )
+                  qed
+                qed
+              next
+                case publickeyinfrastructure
+                by step( contradiction /* impossible chain */ )
+              qed
+            next
+              case pub
+              step( solve( !KU( (h(<'H1', ~x1>) add h(<'H2', ~x2>)) ) @ #vk.4 ) )
+                case c_add
+                step( solve( !KU( h(<'H1', ~x1>) ) @ #vk.5 ) )
+                  case ChanOut_A_case_1
+                  step( solve( !KU( h(<'H2', ~x2>) ) @ #vk.6 ) )
+                    case ChanOut_A
+                    MIRRORED
+                  next
+                    case c_h
+                    step( solve( !KU( ~x2 ) @ #vk.9 ) )
+                      case ChanOut_A
+                      by step( solve( !KU( ~skD2 ) @ #vk.10 ) )
+                    qed
+                  qed
+                next
+                  case ChanOut_A_case_2
+                  step( solve( !KU( h(<'H2', ~x2>) ) @ #vk.6 ) )
+                    case ChanOut_A
+                    MIRRORED
+                  next
+                    case c_h
+                    step( solve( !KU( ~x2 ) @ #vk.9 ) )
+                      case ChanOut_A
+                      by step( solve( !KU( ~skD2 ) @ #vk.10 ) )
+                    qed
+                  qed
+                next
+                  case c_h
+                  step( solve( !KU( ~x1 ) @ #vk.9 ) )
+                    case ChanOut_A
+                    by step( solve( !KU( ~skD1 ) @ #vk.10 ) )
+                  qed
+                qed
+              next
+                case coerce
+                step( solve( !KD( (h(<'H1', ~x1>) add h(<'H2', ~x2>)) ) ▶₀ #vk.4 ) )
+                  case ChanOut_A
+                  step( solve( (#vl.1, 0) ~~> (#vk.4, 0) ) )
+                    case d_0_fst
+                    by step( contradiction /* impossible chain */ )
+                  next
+                    case d_0_snd
+                    step( solve( Out_A( $A.1, x ) ▶₀ #vr.5 ) )
+                      case S_7
+                      by step( contradiction /* impossible chain */ )
+                    next
+                      case Setup_case_1
+                      by step( contradiction /* impossible chain */ )
+                    next
+                      case Setup_case_2
+                      by step( contradiction /* impossible chain */ )
+                    next
+                      case Setup_case_3
+                      step( solve( (#vr.5, 0) ~~> (#vk.4, 0) ) )
+                        case d_0_fst
+                        by step( contradiction /* impossible chain */ )
+                      next
+                        case d_0_snd
+                        step( solve( (#vr.6, 0) ~~> (#vk.4, 0) ) )
+                          case add
+                          MIRRORED
+                        next
+                          case d_0_unionUD_case_1
+                          by step( contradiction /* impossible chain */ )
+                        next
+                          case d_0_unionUD_case_2
+                          by step( contradiction /* impossible chain */ )
+                        qed
+                      qed
+                    qed
+                  qed
+                next
+                  case publickeyinfrastructure
+                  by step( contradiction /* impossible chain */ )
+                qed
+              qed
+            qed
+          qed
+        qed
+      qed
+    next
+      case publickeyinfrastructure
+      step( solve( (#vl, 0) ~~> (#i, 1) ) )
+        case pk
+        step( solve( !KU( pk(~skX) ) @ #vk ) )
+          case c_pk
+          by step( solve( !KU( ~skX ) @ #vk.1 ) )
+        next
+          case publickeyinfrastructure
+          MIRRORED
+        qed
+      qed
+    qed
+  next
+    case RHS
+    step( simplify )
+    step( solve( !KD( x ) ▶₁ #i ) )
+      case ChanOut_A
+      step( solve( (#vl, 0) ~~> (#i, 1) ) )
+        case d_0_fst
+        step( solve( (#vr.1, 0) ~~> (#i, 1) ) )
+          case Var_pub_A
+          step( solve( Out_A( $A, x ) ▶₀ #vr ) )
+            case S_7
+            step( solve( !KU( 'BB' ) @ #vk ) )
+              case coerce
+              step( solve( !KD( 'BB' ) ▶₀ #vk ) )
+                case ChanOut_A
+                step( solve( (#vl.1, 0) ~~> (#vk, 0) ) )
+                  case d_0_fst
+                  by step( contradiction /* impossible chain */ )
+                next
+                  case d_0_snd
+                  step( solve( Out_A( $A, x ) ▶₀ #vr.7 ) )
+                    case S_7
+                    by step( contradiction /* impossible chain */ )
+                  next
+                    case Setup_case_1
+                    by step( contradiction /* impossible chain */ )
+                  next
+                    case Setup_case_2
+                    by step( contradiction /* impossible chain */ )
+                  next
+                    case Setup_case_3
+                    by step( contradiction /* impossible chain */ )
+                  qed
+                qed
+              next
+                case publickeyinfrastructure
+                by step( contradiction /* impossible chain */ )
+              qed
+            next
+              case pub
+              MIRRORED
+            qed
+          next
+            case Setup_case_1
+            step( solve( !KU( 'S' ) @ #vk ) )
+              case coerce
+              step( solve( !KD( 'S' ) ▶₀ #vk ) )
+                case ChanOut_A
+                step( solve( (#vl.1, 0) ~~> (#vk, 0) ) )
+                  case d_0_fst
+                  by step( contradiction /* impossible chain */ )
+                next
+                  case d_0_snd
+                  step( solve( Out_A( $A, x ) ▶₀ #vr.6 ) )
+                    case S_7
+                    by step( contradiction /* impossible chain */ )
+                  next
+                    case Setup_case_1
+                    by step( contradiction /* impossible chain */ )
+                  next
+                    case Setup_case_2
+                    by step( contradiction /* impossible chain */ )
+                  next
+                    case Setup_case_3
+                    by step( contradiction /* impossible chain */ )
+                  qed
+                qed
+              next
+                case publickeyinfrastructure
+                by step( contradiction /* impossible chain */ )
+              qed
+            next
+              case pub
+              MIRRORED
+            qed
+          next
+            case Setup_case_2
+            step( solve( !KU( 'S' ) @ #vk ) )
+              case coerce
+              step( solve( !KD( 'S' ) ▶₀ #vk ) )
+                case ChanOut_A
+                step( solve( (#vl.1, 0) ~~> (#vk, 0) ) )
+                  case d_0_fst
+                  by step( contradiction /* impossible chain */ )
+                next
+                  case d_0_snd
+                  step( solve( Out_A( $A, x ) ▶₀ #vr.6 ) )
+                    case S_7
+                    by step( contradiction /* impossible chain */ )
+                  next
+                    case Setup_case_1
+                    by step( contradiction /* impossible chain */ )
+                  next
+                    case Setup_case_2
+                    by step( contradiction /* impossible chain */ )
+                  next
+                    case Setup_case_3
+                    by step( contradiction /* impossible chain */ )
+                  qed
+                qed
+              next
+                case publickeyinfrastructure
+                by step( contradiction /* impossible chain */ )
+              qed
+            next
+              case pub
+              MIRRORED
+            qed
+          next
+            case Setup_case_3
+            step( solve( !KU( $A ) @ #vk ) )
+              case coerce
+              step( solve( !KD( $A ) ▶₀ #vk ) )
+                case ChanOut_A
+                step( solve( (#vl.1, 0) ~~> (#vk, 0) ) )
+                  case d_0_fst
+                  by step( contradiction /* impossible chain */ )
+                next
+                  case d_0_snd
+                  step( solve( Out_A( $A.1, x ) ▶₀ #vr.6 ) )
+                    case S_7
+                    by step( contradiction /* impossible chain */ )
+                  next
+                    case Setup_case_1
+                    by step( contradiction /* impossible chain */ )
+                  next
+                    case Setup_case_2
+                    by step( contradiction /* impossible chain */ )
+                  next
+                    case Setup_case_3
+                    by step( contradiction /* impossible chain */ )
+                  qed
+                qed
+              next
+                case publickeyinfrastructure
+                by step( contradiction /* impossible chain */ )
+              qed
+            next
+              case pub
+              MIRRORED
+            qed
+          qed
+        qed
+      next
+        case d_0_snd
+        step( solve( Out_A( $A, x.1 ) ▶₀ #vr ) )
+          case S_7
+          step( solve( (#vr.1, 0) ~~> (#i, 1) ) )
+            case d_0_fst
+            step( solve( (#vr.7, 0) ~~> (#i, 1) ) )
+              case Const_pub_ySG
+              step( solve( !KU( 'ySG' ) @ #vk ) )
+                case coerce
+                step( solve( !KD( 'ySG' ) ▶₀ #vk ) )
+                  case ChanOut_A
+                  step( solve( (#vl.1, 0) ~~> (#vk, 0) ) )
+                    case d_0_fst
+                    by step( contradiction /* impossible chain */ )
+                  next
+                    case d_0_snd
+                    step( solve( Out_A( $A, x ) ▶₀ #vr.8 ) )
+                      case S_7
+                      by step( contradiction /* impossible chain */ )
+                    next
+                      case Setup_case_1
+                      by step( contradiction /* impossible chain */ )
+                    next
+                      case Setup_case_2
+                      by step( contradiction /* impossible chain */ )
+                    next
+                      case Setup_case_3
+                      by step( contradiction /* impossible chain */ )
+                    qed
+                  qed
+                next
+                  case publickeyinfrastructure
+                  by step( contradiction /* impossible chain */ )
+                qed
+              next
+                case pub
+                MIRRORED
+              qed
+            qed
+          next
+            case d_0_snd
+            step( solve( (#vr.7, 0) ~~> (#i, 1) ) )
+              case h
+              step( solve( !KU( h(<'H2', ~xSel>) ) @ #vk ) )
+                case ChanOut_A_case_1
+                MIRRORED
+              next
+                case ChanOut_A_case_2
+                MIRRORED
+              next
+                case c_h
+                step( solve( !KU( ~xSel ) @ #vk.3 ) )
+                  case ChanOut_A
+                  by step( solve( !KU( ~skD2 ) @ #vk.4 ) )
+                qed
+              qed
+            qed
+          next
+            case pair
+            step( solve( !KU( 'ySG' ) @ #vk.1 ) )
+              case coerce
+              step( solve( !KD( 'ySG' ) ▶₀ #vk.1 ) )
+                case ChanOut_A
+                step( solve( (#vl.1, 0) ~~> (#vk.1, 0) ) )
+                  case d_0_fst
+                  by step( contradiction /* impossible chain */ )
+                next
+                  case d_0_snd
+                  step( solve( Out_A( $A, x ) ▶₀ #vr.7 ) )
+                    case S_7
+                    by step( contradiction /* impossible chain */ )
+                  next
+                    case Setup_case_1
+                    by step( contradiction /* impossible chain */ )
+                  next
+                    case Setup_case_2
+                    by step( contradiction /* impossible chain */ )
+                  next
+                    case Setup_case_3
+                    by step( contradiction /* impossible chain */ )
+                  qed
+                qed
+              next
+                case publickeyinfrastructure
+                by step( contradiction /* impossible chain */ )
+              qed
+            next
+              case pub
+              step( solve( !KU( h(<'H2', ~xSel>) ) @ #vk.2 ) )
+                case ChanOut_A_case_1
+                MIRRORED
+              next
+                case ChanOut_A_case_2
+                MIRRORED
+              next
+                case c_h
+                step( solve( !KU( ~xSel ) @ #vk.5 ) )
+                  case ChanOut_A
+                  by step( solve( !KU( ~skD2 ) @ #vk.6 ) )
+                qed
+              qed
+            qed
+          qed
+        next
+          case Setup_case_1
+          step( solve( (#vr.1, 0) ~~> (#i, 1) ) )
+            case aenc
+            step( solve( !KU( aenc(~x2, pk(~skD2)) ) @ #vk ) )
+              case ChanOut_A
+              MIRRORED
+            next
+              case c_aenc
+              step( solve( !KU( ~x2 ) @ #vk.1 ) )
+                case ChanOut_A
+                by step( solve( !KU( ~skD2 ) @ #vk.3 ) )
+              qed
+            qed
+          next
+            case d_0_adec
+            step( solve( (#vr.6, 0) ~~> (#i, 1) ) )
+              case Var_fresh_x2
+              by step( solve( !KU( ~skD2 ) @ #vk.1 ) )
+            qed
+          qed
+        next
+          case Setup_case_2
+          step( solve( (#vr.1, 0) ~~> (#i, 1) ) )
+            case aenc
+            step( solve( !KU( aenc(~x1, pk(~skD1)) ) @ #vk ) )
+              case ChanOut_A
+              MIRRORED
+            next
+              case c_aenc
+              step( solve( !KU( ~x1 ) @ #vk.1 ) )
+                case ChanOut_A
+                by step( solve( !KU( ~skD1 ) @ #vk.3 ) )
+              qed
+            qed
+          next
+            case d_0_adec
+            step( solve( (#vr.6, 0) ~~> (#i, 1) ) )
+              case Var_fresh_x1
+              by step( solve( !KU( ~skD1 ) @ #vk.1 ) )
+            qed
+          qed
+        next
+          case Setup_case_3
+          step( solve( (#vr.1, 0) ~~> (#i, 1) ) )
+            case d_0_fst
+            step( solve( (#vr.6, 0) ~~> (#i, 1) ) )
+              case Const_pub_ys
+              step( solve( !KU( 'ys' ) @ #vk ) )
+                case coerce
+                step( solve( !KD( 'ys' ) ▶₀ #vk ) )
+                  case ChanOut_A
+                  step( solve( (#vl.1, 0) ~~> (#vk, 0) ) )
+                    case d_0_fst
+                    by step( contradiction /* impossible chain */ )
+                  next
+                    case d_0_snd
+                    step( solve( Out_A( $A.1, x ) ▶₀ #vr.7 ) )
+                      case S_7
+                      by step( contradiction /* impossible chain */ )
+                    next
+                      case Setup_case_1
+                      by step( contradiction /* impossible chain */ )
+                    next
+                      case Setup_case_2
+                      by step( contradiction /* impossible chain */ )
+                    next
+                      case Setup_case_3
+                      by step( contradiction /* impossible chain */ )
+                    qed
+                  qed
+                next
+                  case publickeyinfrastructure
+                  by step( contradiction /* impossible chain */ )
+                qed
+              next
+                case pub
+                MIRRORED
+              qed
+            qed
+          next
+            case d_0_snd
+            step( solve( (#vr.6, 0) ~~> (#i, 1) ) )
+              case add
+              step( solve( !KU( (h(<'H1', ~x1>) add h(<'H2', ~x2>)) ) @ #vk ) )
+                case c_add
+                step( solve( !KU( h(<'H1', ~x1>) ) @ #vk.1 ) )
+                  case ChanOut_A
+                  step( solve( !KU( h(<'H2', ~x2>) ) @ #vk.2 ) )
+                    case ChanOut_A_case_1
+                    MIRRORED
+                  next
+                    case ChanOut_A_case_2
+                    MIRRORED
+                  next
+                    case c_h
+                    step( solve( !KU( ~x2 ) @ #vk.5 ) )
+                      case ChanOut_A
+                      by step( solve( !KU( ~skD2 ) @ #vk.6 ) )
+                    qed
+                  qed
+                next
+                  case c_h
+                  step( solve( !KU( ~x1 ) @ #vk.5 ) )
+                    case ChanOut_A
+                    by step( solve( !KU( ~skD1 ) @ #vk.6 ) )
+                  qed
+                qed
+              next
+                case coerce
+                step( solve( !KD( (h(<'H1', ~x1>) add h(<'H2', ~x2>)) ) ▶₀ #vk ) )
+                  case ChanOut_A
+                  step( solve( (#vl.1, 0) ~~> (#vk, 0) ) )
+                    case d_0_fst
+                    by step( contradiction /* impossible chain */ )
+                  next
+                    case d_0_snd
+                    step( solve( Out_A( $A.1, x ) ▶₀ #vr.7 ) )
+                      case S_7
+                      by step( contradiction /* impossible chain */ )
+                    next
+                      case Setup_case_1
+                      by step( contradiction /* impossible chain */ )
+                    next
+                      case Setup_case_2
+                      by step( contradiction /* impossible chain */ )
+                    next
+                      case Setup_case_3
+                      step( solve( (#vr.7, 0) ~~> (#vk, 0) ) )
+                        case d_0_fst
+                        by step( contradiction /* impossible chain */ )
+                      next
+                        case d_0_snd
+                        step( solve( (#vr.8, 0) ~~> (#vk, 0) ) )
+                          case add
+                          MIRRORED
+                        next
+                          case d_0_unionUD_case_1
+                          by step( contradiction /* impossible chain */ )
+                        next
+                          case d_0_unionUD_case_2
+                          by step( contradiction /* impossible chain */ )
+                        qed
+                      qed
+                    qed
+                  qed
+                next
+                  case publickeyinfrastructure
+                  by step( contradiction /* impossible chain */ )
+                qed
+              qed
+            next
+              case d_0_unionUD_case_1
+              step( solve( (#vr.7, 0) ~~> (#i, 1) ) )
+                case h
+                step( solve( !KU( h(<'H2', ~x2>) ) @ #vk ) )
+                  case ChanOut_A_case_1
+                  MIRRORED
+                next
+                  case ChanOut_A_case_2
+                  MIRRORED
+                next
+                  case c_h
+                  step( solve( !KU( ~x2 ) @ #vk.3 ) )
+                    case ChanOut_A
+                    by step( solve( !KU( ~skD2 ) @ #vk.4 ) )
+                  qed
+                qed
+              qed
+            next
+              case d_0_unionUD_case_2
+              step( solve( (#vr.7, 0) ~~> (#i, 1) ) )
+                case h
+                step( solve( !KU( h(<'H1', ~x1>) ) @ #vk ) )
+                  case ChanOut_A
+                  MIRRORED
+                next
+                  case c_h
+                  step( solve( !KU( ~x1 ) @ #vk.3 ) )
+                    case ChanOut_A
+                    by step( solve( !KU( ~skD1 ) @ #vk.4 ) )
+                  qed
+                qed
+              qed
+            qed
+          next
+            case pair
+            step( solve( !KU( 'ys' ) @ #vk.1 ) )
+              case coerce
+              step( solve( !KD( 'ys' ) ▶₀ #vk.1 ) )
+                case ChanOut_A
+                step( solve( (#vl.1, 0) ~~> (#vk.1, 0) ) )
+                  case d_0_fst
+                  by step( contradiction /* impossible chain */ )
+                next
+                  case d_0_snd
+                  step( solve( Out_A( $A.1, x ) ▶₀ #vr.6 ) )
+                    case S_7
+                    by step( contradiction /* impossible chain */ )
+                  next
+                    case Setup_case_1
+                    by step( contradiction /* impossible chain */ )
+                  next
+                    case Setup_case_2
+                    by step( contradiction /* impossible chain */ )
+                  next
+                    case Setup_case_3
+                    by step( contradiction /* impossible chain */ )
+                  qed
+                qed
+              next
+                case publickeyinfrastructure
+                by step( contradiction /* impossible chain */ )
+              qed
+            next
+              case pub
+              step( solve( !KU( (h(<'H1', ~x1>) add h(<'H2', ~x2>)) ) @ #vk.2 ) )
+                case c_add
+                step( solve( !KU( h(<'H1', ~x1>) ) @ #vk.3 ) )
+                  case ChanOut_A
+                  step( solve( !KU( h(<'H2', ~x2>) ) @ #vk.4 ) )
+                    case ChanOut_A_case_1
+                    MIRRORED
+                  next
+                    case ChanOut_A_case_2
+                    MIRRORED
+                  next
+                    case c_h
+                    step( solve( !KU( ~x2 ) @ #vk.7 ) )
+                      case ChanOut_A
+                      by step( solve( !KU( ~skD2 ) @ #vk.8 ) )
+                    qed
+                  qed
+                next
+                  case c_h
+                  step( solve( !KU( ~x1 ) @ #vk.7 ) )
+                    case ChanOut_A
+                    by step( solve( !KU( ~skD1 ) @ #vk.8 ) )
+                  qed
+                qed
+              next
+                case coerce
+                step( solve( !KD( (h(<'H1', ~x1>) add h(<'H2', ~x2>)) ) ▶₀ #vk.2 ) )
+                  case ChanOut_A
+                  step( solve( (#vl.1, 0) ~~> (#vk.2, 0) ) )
+                    case d_0_fst
+                    by step( contradiction /* impossible chain */ )
+                  next
+                    case d_0_snd
+                    step( solve( Out_A( $A.1, x ) ▶₀ #vr.6 ) )
+                      case S_7
+                      by step( contradiction /* impossible chain */ )
+                    next
+                      case Setup_case_1
+                      by step( contradiction /* impossible chain */ )
+                    next
+                      case Setup_case_2
+                      by step( contradiction /* impossible chain */ )
+                    next
+                      case Setup_case_3
+                      step( solve( (#vr.6, 0) ~~> (#vk.2, 0) ) )
+                        case d_0_fst
+                        by step( contradiction /* impossible chain */ )
+                      next
+                        case d_0_snd
+                        step( solve( (#vr.7, 0) ~~> (#vk.2, 0) ) )
+                          case add
+                          MIRRORED
+                        next
+                          case d_0_unionUD_case_1
+                          by step( contradiction /* impossible chain */ )
+                        next
+                          case d_0_unionUD_case_2
+                          by step( contradiction /* impossible chain */ )
+                        qed
+                      qed
+                    qed
+                  qed
+                next
+                  case publickeyinfrastructure
+                  by step( contradiction /* impossible chain */ )
+                qed
+              qed
+            qed
+          qed
+        qed
+      next
+        case pair
+        step( solve( Out_A( $A, x ) ▶₀ #vr ) )
+          case S_7
+          step( solve( !KU( 'BB' ) @ #vk.2 ) )
+            case coerce
+            step( solve( !KD( 'BB' ) ▶₀ #vk.2 ) )
+              case ChanOut_A
+              step( solve( (#vl.1, 0) ~~> (#vk.2, 0) ) )
+                case d_0_fst
+                by step( contradiction /* impossible chain */ )
+              next
+                case d_0_snd
+                step( solve( Out_A( $A, x ) ▶₀ #vr.6 ) )
+                  case S_7
+                  by step( contradiction /* impossible chain */ )
+                next
+                  case Setup_case_1
+                  by step( contradiction /* impossible chain */ )
+                next
+                  case Setup_case_2
+                  by step( contradiction /* impossible chain */ )
+                next
+                  case Setup_case_3
+                  by step( contradiction /* impossible chain */ )
+                qed
+              qed
+            next
+              case publickeyinfrastructure
+              by step( contradiction /* impossible chain */ )
+            qed
+          next
+            case pub
+            step( solve( !KU( 'ySG' ) @ #vk.3 ) )
+              case coerce
+              step( solve( !KD( 'ySG' ) ▶₀ #vk.3 ) )
+                case ChanOut_A
+                step( solve( (#vl.1, 0) ~~> (#vk.3, 0) ) )
+                  case d_0_fst
+                  by step( contradiction /* impossible chain */ )
+                next
+                  case d_0_snd
+                  step( solve( Out_A( $A, x ) ▶₀ #vr.6 ) )
+                    case S_7
+                    by step( contradiction /* impossible chain */ )
+                  next
+                    case Setup_case_1
+                    by step( contradiction /* impossible chain */ )
+                  next
+                    case Setup_case_2
+                    by step( contradiction /* impossible chain */ )
+                  next
+                    case Setup_case_3
+                    by step( contradiction /* impossible chain */ )
+                  qed
+                qed
+              next
+                case publickeyinfrastructure
+                by step( contradiction /* impossible chain */ )
+              qed
+            next
+              case pub
+              step( solve( !KU( h(<'H2', ~xSel>) ) @ #vk.4 ) )
+                case ChanOut_A_case_1
+                MIRRORED
+              next
+                case ChanOut_A_case_2
+                MIRRORED
+              next
+                case c_h
+                step( solve( !KU( ~xSel ) @ #vk.7 ) )
+                  case ChanOut_A
+                  by step( solve( !KU( ~skD2 ) @ #vk.8 ) )
+                qed
+              qed
+            qed
+          qed
+        next
+          case Setup_case_1
+          step( solve( !KU( 'S' ) @ #vk.1 ) )
+            case coerce
+            step( solve( !KD( 'S' ) ▶₀ #vk.1 ) )
+              case ChanOut_A
+              step( solve( (#vl.1, 0) ~~> (#vk.1, 0) ) )
+                case d_0_fst
+                by step( contradiction /* impossible chain */ )
+              next
+                case d_0_snd
+                step( solve( Out_A( $A, x ) ▶₀ #vr.5 ) )
+                  case S_7
+                  by step( contradiction /* impossible chain */ )
+                next
+                  case Setup_case_1
+                  by step( contradiction /* impossible chain */ )
+                next
+                  case Setup_case_2
+                  by step( contradiction /* impossible chain */ )
+                next
+                  case Setup_case_3
+                  by step( contradiction /* impossible chain */ )
+                qed
+              qed
+            next
+              case publickeyinfrastructure
+              by step( contradiction /* impossible chain */ )
+            qed
+          next
+            case pub
+            step( solve( !KU( aenc(~x2, pk(~skD2)) ) @ #vk.2 ) )
+              case ChanOut_A
+              MIRRORED
+            next
+              case c_aenc
+              step( solve( !KU( ~x2 ) @ #vk.3 ) )
+                case ChanOut_A
+                by step( solve( !KU( ~skD2 ) @ #vk.5 ) )
+              qed
+            qed
+          qed
+        next
+          case Setup_case_2
+          step( solve( !KU( 'S' ) @ #vk.1 ) )
+            case coerce
+            step( solve( !KD( 'S' ) ▶₀ #vk.1 ) )
+              case ChanOut_A
+              step( solve( (#vl.1, 0) ~~> (#vk.1, 0) ) )
+                case d_0_fst
+                by step( contradiction /* impossible chain */ )
+              next
+                case d_0_snd
+                step( solve( Out_A( $A, x ) ▶₀ #vr.5 ) )
+                  case S_7
+                  by step( contradiction /* impossible chain */ )
+                next
+                  case Setup_case_1
+                  by step( contradiction /* impossible chain */ )
+                next
+                  case Setup_case_2
+                  by step( contradiction /* impossible chain */ )
+                next
+                  case Setup_case_3
+                  by step( contradiction /* impossible chain */ )
+                qed
+              qed
+            next
+              case publickeyinfrastructure
+              by step( contradiction /* impossible chain */ )
+            qed
+          next
+            case pub
+            step( solve( !KU( aenc(~x1, pk(~skD1)) ) @ #vk.2 ) )
+              case ChanOut_A
+              MIRRORED
+            next
+              case c_aenc
+              step( solve( !KU( ~x1 ) @ #vk.3 ) )
+                case ChanOut_A
+                by step( solve( !KU( ~skD1 ) @ #vk.5 ) )
+              qed
+            qed
+          qed
+        next
+          case Setup_case_3
+          step( solve( !KU( $A ) @ #vk.2 ) )
+            case coerce
+            step( solve( !KD( $A ) ▶₀ #vk.2 ) )
+              case ChanOut_A
+              step( solve( (#vl.1, 0) ~~> (#vk.2, 0) ) )
+                case d_0_fst
+                by step( contradiction /* impossible chain */ )
+              next
+                case d_0_snd
+                step( solve( Out_A( $A.1, x ) ▶₀ #vr.5 ) )
+                  case S_7
+                  by step( contradiction /* impossible chain */ )
+                next
+                  case Setup_case_1
+                  by step( contradiction /* impossible chain */ )
+                next
+                  case Setup_case_2
+                  by step( contradiction /* impossible chain */ )
+                next
+                  case Setup_case_3
+                  by step( contradiction /* impossible chain */ )
+                qed
+              qed
+            next
+              case publickeyinfrastructure
+              by step( contradiction /* impossible chain */ )
+            qed
+          next
+            case pub
+            step( solve( !KU( 'ys' ) @ #vk.3 ) )
+              case coerce
+              step( solve( !KD( 'ys' ) ▶₀ #vk.3 ) )
+                case ChanOut_A
+                step( solve( (#vl.1, 0) ~~> (#vk.3, 0) ) )
+                  case d_0_fst
+                  by step( contradiction /* impossible chain */ )
+                next
+                  case d_0_snd
+                  step( solve( Out_A( $A.1, x ) ▶₀ #vr.5 ) )
+                    case S_7
+                    by step( contradiction /* impossible chain */ )
+                  next
+                    case Setup_case_1
+                    by step( contradiction /* impossible chain */ )
+                  next
+                    case Setup_case_2
+                    by step( contradiction /* impossible chain */ )
+                  next
+                    case Setup_case_3
+                    by step( contradiction /* impossible chain */ )
+                  qed
+                qed
+              next
+                case publickeyinfrastructure
+                by step( contradiction /* impossible chain */ )
+              qed
+            next
+              case pub
+              step( solve( !KU( (h(<'H1', ~x1>) add h(<'H2', ~x2>)) ) @ #vk.4 ) )
+                case c_add
+                step( solve( !KU( h(<'H1', ~x1>) ) @ #vk.5 ) )
+                  case ChanOut_A
+                  step( solve( !KU( h(<'H2', ~x2>) ) @ #vk.6 ) )
+                    case ChanOut_A_case_1
+                    MIRRORED
+                  next
+                    case ChanOut_A_case_2
+                    MIRRORED
+                  next
+                    case c_h
+                    step( solve( !KU( ~x2 ) @ #vk.9 ) )
+                      case ChanOut_A
+                      by step( solve( !KU( ~skD2 ) @ #vk.10 ) )
+                    qed
+                  qed
+                next
+                  case c_h
+                  step( solve( !KU( ~x1 ) @ #vk.9 ) )
+                    case ChanOut_A
+                    by step( solve( !KU( ~skD1 ) @ #vk.10 ) )
+                  qed
+                qed
+              next
+                case coerce
+                step( solve( !KD( (h(<'H1', ~x1>) add h(<'H2', ~x2>)) ) ▶₀ #vk.4 ) )
+                  case ChanOut_A
+                  step( solve( (#vl.1, 0) ~~> (#vk.4, 0) ) )
+                    case d_0_fst
+                    by step( contradiction /* impossible chain */ )
+                  next
+                    case d_0_snd
+                    step( solve( Out_A( $A.1, x ) ▶₀ #vr.5 ) )
+                      case S_7
+                      by step( contradiction /* impossible chain */ )
+                    next
+                      case Setup_case_1
+                      by step( contradiction /* impossible chain */ )
+                    next
+                      case Setup_case_2
+                      by step( contradiction /* impossible chain */ )
+                    next
+                      case Setup_case_3
+                      step( solve( (#vr.5, 0) ~~> (#vk.4, 0) ) )
+                        case d_0_fst
+                        by step( contradiction /* impossible chain */ )
+                      next
+                        case d_0_snd
+                        step( solve( (#vr.6, 0) ~~> (#vk.4, 0) ) )
+                          case add
+                          MIRRORED
+                        next
+                          case d_0_unionUD_case_1
+                          by step( contradiction /* impossible chain */ )
+                        next
+                          case d_0_unionUD_case_2
+                          by step( contradiction /* impossible chain */ )
+                        qed
+                      qed
+                    qed
+                  qed
+                next
+                  case publickeyinfrastructure
+                  by step( contradiction /* impossible chain */ )
+                qed
+              qed
+            qed
+          qed
+        qed
+      qed
+    next
+      case publickeyinfrastructure
+      step( solve( (#vl, 0) ~~> (#i, 1) ) )
+        case pk
+        step( solve( !KU( pk(~skX) ) @ #vk ) )
+          case c_pk
+          by step( solve( !KU( ~skX ) @ #vk.1 ) )
+        next
+          case publickeyinfrastructure
+          MIRRORED
+        qed
+      qed
+    qed
+  qed
+next
+  case Rule_H_5
+  backward-search
+    case LHS
+    step( simplify )
+    step( solve( AgSt_H0( <$H, $D, $S, $BB> ) ▶₀ #i ) )
+      case Setup_case_1
+      step( solve( In_S( 'D1', 'H1', yD ) ▶₁ #i ) )
+        case ChanIn_S
+        step( solve( In_A( 'BB', <'ys', (y1 add y2)> ) ▶₂ #i ) )
+          case ChanIn_A_case_1
+          MIRRORED
+        next
+          case ChanIn_A_case_2
+          MIRRORED
+        qed
+      qed
+    next
+      case Setup_case_2
+      step( solve( In_S( 'D2', 'H2', yD ) ▶₁ #i ) )
+        case ChanIn_S
+        step( solve( In_A( 'BB', <'ys', (y1 add y2)> ) ▶₂ #i ) )
+          case ChanIn_A_case_1
+          MIRRORED
+        next
+          case ChanIn_A_case_2
+          MIRRORED
+        qed
+      qed
+    qed
+  next
+    case RHS
+    step( simplify )
+    step( solve( AgSt_H0( <$H, $D, $S, $BB> ) ▶₀ #i ) )
+      case Setup_case_1
+      step( solve( In_S( 'D2', 'H2', yD ) ▶₁ #i ) )
+        case ChanIn_S
+        step( solve( In_A( 'BB', <'ys', (y1 add y2)> ) ▶₂ #i ) )
+          case ChanIn_A_case_1
+          MIRRORED
+        next
+          case ChanIn_A_case_2
+          MIRRORED
+        qed
+      qed
+    next
+      case Setup_case_2
+      step( solve( In_S( 'D1', 'H1', yD ) ▶₁ #i ) )
+        case ChanIn_S
+        step( solve( In_A( 'BB', <'ys', (y1 add y2)> ) ▶₂ #i ) )
+          case ChanIn_A_case_1
+          MIRRORED
+        next
+          case ChanIn_A_case_2
+          MIRRORED
+        qed
+      qed
+    qed
+  qed
+next
+  case Rule_H_9
+  backward-search
+    case LHS
+    step( simplify )
+    step( solve( AgSt_H5( $H, <$D, $S, $BB, yD, y1, y2> ) ▶₀ #i ) )
+      case H_5_case_1
+      step( solve( In_A( 'BB', <'ySG', ySG> ) ▶₁ #i ) )
+        case ChanIn_A
+        MIRRORED
+      qed
+    next
+      case H_5_case_2
+      step( solve( In_A( 'BB', <'ySG', ySG> ) ▶₁ #i ) )
+        case ChanIn_A
+        MIRRORED
+      qed
+    next
+      case H_5_case_3
+      step( solve( In_A( 'BB', <'ySG', ySG> ) ▶₁ #i ) )
+        case ChanIn_A
+        MIRRORED
+      qed
+    next
+      case H_5_case_4
+      step( solve( In_A( 'BB', <'ySG', ySG> ) ▶₁ #i ) )
+        case ChanIn_A
+        MIRRORED
+      qed
+    qed
+  next
+    case RHS
+    step( simplify )
+    step( solve( AgSt_H5( $H, <$D, $S, $BB, yD, y1, y2> ) ▶₀ #i ) )
+      case H_5_case_1
+      step( solve( In_A( 'BB', <'ySG', ySG> ) ▶₁ #i ) )
+        case ChanIn_A
+        MIRRORED
+      qed
+    next
+      case H_5_case_2
+      step( solve( In_A( 'BB', <'ySG', ySG> ) ▶₁ #i ) )
+        case ChanIn_A
+        MIRRORED
+      qed
+    next
+      case H_5_case_3
+      step( solve( In_A( 'BB', <'ySG', ySG> ) ▶₁ #i ) )
+        case ChanIn_A
+        MIRRORED
+      qed
+    next
+      case H_5_case_4
+      step( solve( In_A( 'BB', <'ySG', ySG> ) ▶₁ #i ) )
+        case ChanIn_A
+        MIRRORED
+      qed
+    qed
+  qed
+next
+  case Rule_S_7
+  backward-search
+    case LHS
+    step( simplify )
+    step( solve( AgSt_S0( $S, $BB, ~skS, <$HSel, $DSel, pkDSel, ~xSel>,
+                          <$HNotsel, $DNotsel, pkDNotsel, ~xNotsel>
+                 ) ▶₀ #i ) )
+      case Setup
+      MIRRORED
+    qed
+  next
+    case RHS
+    step( simplify )
+    step( solve( AgSt_S0( $S, $BB, ~skS, <$HSel, $DSel, pkDSel, ~xSel>,
+                          <$HNotsel, $DNotsel, pkDNotsel, ~xNotsel>
+                 ) ▶₀ #i ) )
+      case Setup
+      MIRRORED
+    qed
+  qed
+next
+  case Rule_Send
+  backward-search
+    case LHS
+    step( simplify )
+    MIRRORED
+  next
+    case RHS
+    step( simplify )
+    MIRRORED
+  qed
+next
+  case Rule_Setup
+  backward-search
+    case LHS
+    step( simplify )
+    step( solve( !Ltk( 'S', ~skS ) ▶₂ #i ) )
+      case publickeyinfrastructure
+      step( solve( !Ltk( 'D1', ~skD1 ) ▶₃ #i ) )
+        case publickeyinfrastructure
+        step( solve( !Ltk( 'D2', ~skD2 ) ▶₄ #i ) )
+          case publickeyinfrastructure
+          MIRRORED
+        qed
+      qed
+    qed
+  next
+    case RHS
+    step( simplify )
+    step( solve( !Ltk( 'S', ~skS ) ▶₂ #i ) )
+      case publickeyinfrastructure
+      step( solve( !Ltk( 'D1', ~skD1 ) ▶₃ #i ) )
+        case publickeyinfrastructure
+        step( solve( !Ltk( 'D2', ~skD2 ) ▶₄ #i ) )
+          case publickeyinfrastructure
+          MIRRORED
+        qed
+      qed
+    qed
+  qed
+next
+  case Rule_publickeyinfrastructure
+  backward-search
+    case LHS
+    step( simplify )
+    MIRRORED
+  next
+    case RHS
+    step( simplify )
+    MIRRORED
+  qed
+qed
+
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.13.0
+Maude version 3.5.1
+Git revision: 53c49a44efa784b133c907eedf84491d61a48803 (with uncommited changes), branch: AC-NDC-property
+Compiled at: 2026-07-09 13:42:51.535083 UTC
+*/
+
+end
+/* Output
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/csf26-ac/fast/diff/alethea_selectionphase_anonymity.spthy
+
+  output:          examples/csf26-ac/fast/diff/alethea_selectionphase_anonymity.spthy.tmp
+  processing time: 2.53s
+  
+  RHS :  functional (exists-trace): verified (20 steps)
+  LHS :  functional (exists-trace): verified (20 steps)
+  RHS :  individualVerifiability_votercode (all-traces): verified (30 steps)
+  LHS :  individualVerifiability_votercode (all-traces): verified (30 steps)
+  RHS :  individualVerifiability_sel (all-traces): verified (16 steps)
+  LHS :  individualVerifiability_sel (all-traces): verified (16 steps)
+  RHS :  secret_x (all-traces): verified (8 steps)
+  LHS :  secret_x (all-traces): verified (8 steps)
+  RHS :  agreementHwrtS (all-traces): verified (26 steps)
+  LHS :  agreementHwrtS (all-traces): verified (26 steps)
+  RHS :  agreementDwrtS (all-traces): verified (6 steps)
+  LHS :  agreementDwrtS (all-traces): verified (6 steps)
+  DiffLemma:  Observational_equivalence : verified (896 steps)
+
+==============================================================================
+*/
