@@ -176,7 +176,7 @@ solveAllSafeGoals ths' openChainsLimit =
         simplifySystem
         ctxt <- ask
         contradictoryIf =<< (gets (contradictorySystem ctxt))
-        goals  <- gets openGoals
+        goals  <- gets (openGoals ctxt)
         chains <- gets unsolvedChains
         -- Filter out chain goals where the term in the conclusion is identical to one we just solved,
         -- as this indicates our chain can loop
@@ -441,7 +441,7 @@ precomputeSources parameters ctxt restrictions =
           , fAppAC NatPlus [varTerm (LVar "t" LSortNat 1), varTerm (LVar "t" LSortNat 2)] ]
           else []
       , [ fAppNoEq o $ nMsgVars k
-        | o@(_,(k,priv,_)) <- S.toList . noEqFunSyms  $ msig
+        | o@(_,(k,priv,_,_)) <- S.toList . noEqFunSyms  $ msig
         , NoEq o `S.notMember` implicitFunSig, k > 0 || priv==Private]
       ]
 

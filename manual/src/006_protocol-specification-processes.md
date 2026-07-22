@@ -334,7 +334,7 @@ these results. The correctness of the translation is proven in [@sapicplus].
 
 The `-m` flag selects an output module:
 ```
- -m --output-module[=spthy|spthytyped|msr|proverif|deepsec]
+ -m --output-module[=spthy|spthytyped|msr|proverif|proverifequiv|deepsec]
 ``` 
 
 The following outputs are supported:
@@ -344,6 +344,9 @@ The following outputs are supported:
 - *msr* - parse and type .spthy file and translate processes to multiset-rewrite rules
 - *proverif*: - translate to the
   [ProVerif](https://bblanche.gitlabpages.inria.fr/proverif/) input format. 
+  The export supports SAPIC processes and multiset rewrite rules. It also
+  translates supported Tamarin restrictions, selected lemmas as ProVerif
+  queries, and `reuse` or `sources` lemmas as ProVerif axioms.
   The translation of lookups/inserts relies on features that are not yet
   available in ProVerif (at the time of writing) and require preprocessing 
   with [GSVerif's protocol platform branch](https://gitlab.inria.fr/chevalvi/gsverif/-/tree/protocol_platform?ref_type=heads).
@@ -360,6 +363,25 @@ lemma secrecy[reuse, output=[proverif,msr]]:
 ```
 Lemmas are omitted when the currently selected output module is not in that
 list.
+
+For `-m=proverif`, regular lemmas are exported as ProVerif queries. Lemmas
+annotated with `reuse` or `sources` are instead exported as ProVerif axioms, so
+that they can be used as assumptions for the exported queries. If `--lemma` is
+used to select a specific lemma, the selected lemma is exported as a query;
+other `reuse` and `sources` lemmas may still be exported as supporting axioms
+unless this is disabled with the flags below.
+
+The ProVerif export has additional control flags:
+
+- `--proverif-no-reuse-lemmas`: do not export `reuse` lemmas as ProVerif
+  axioms.
+- `--proverif-no-source-lemmas`: do not export `sources` lemmas as ProVerif
+  axioms.
+- `--proverif-no-restrictions`: do not export restrictions.
+- `--proverif-no-multiset`: do not add the encoding that enforces Tamarin's
+  linear multiset semantics in ProVerif.
+- `--proverif-no-precise`: do not emit `set preciseActions = true.` in the
+  generated ProVerif file.
 
 ## Exporting queries
 

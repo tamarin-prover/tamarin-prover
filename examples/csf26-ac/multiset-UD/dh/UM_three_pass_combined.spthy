@@ -1,0 +1,418 @@
+theory UM_three_pass_combined begin
+
+// Function signature and definition of the equational theory E
+
+builtins: diffie-hellman
+functions: MAC/2, concat/2, first/1, fst/1, h/1, pair/2, second/1,
+           snd/1, add/2 [AC], unionUD/1 [destructor]
+equations:
+    concat(first(x), second(x)) = x,
+    fst(<x.1, x.2>) = x.1,
+    snd(<x.1, x.2>) = x.2,
+    unionUD(add(x, y)) = x
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+rule (modulo E) Register_key_honest:
+   [ Fr( ~ea ) ]
+  --[ KeyReg( $A ) ]->
+   [ !Ltk( $A, ~ea ), !Pk( $A, 'g'^~ea ), Out( 'g'^~ea ) ]
+
+rule (modulo E) I_Activate:
+   [ Fr( ~ex ) ]
+  --[
+  Activate( <'UM3', $A, $B, 'g'^~ex> ),
+  Sid( <'UM3', $A, $B, 'g'^~ex> ), Agents( $A, $B )
+  ]->
+   [
+   I_Act( ~ex, $A, $B ),
+   !SessionState( <'UM3', $A, $B, 'g'^~ex>, $A, ~ex ), Out( 'g'^~ex )
+   ]
+
+rule (modulo E) I_Complete:
+   [
+   I_Act( ~ex, $A, $B ),
+   In( <Y, 
+        MAC(first(h(<Y^~ex, 'g'^~eb^~ea, $A, $B, 'g'^~ex, Y>)),
+            <'I', $A, $B, 'g'^~ex, Y>)
+       >
+   ),
+   !Ltk( $A, ~ea ), !Pk( $B, 'g'^~eb )
+   ]
+  --[
+  Complete( <'UM3', $A, $B, 
+             add(<'1', 'g'^~ex>,
+                 <'2', Y, 
+                  MAC(first(h(<Y^~ex, 'g'^~eb^~ea, $A, $B, 'g'^~ex, Y>)),
+                      <'I', $A, $B, 'g'^~ex, Y>)
+                 >,
+                 <'3', 
+                  MAC(first(h(<Y^~ex, 'g'^~eb^~ea, $A, $B, 'g'^~ex, Y>)),
+                      <'R', $B, $A, Y, 'g'^~ex>)
+                 >)
+            >,
+            'I', second(h(<Y^~ex, 'g'^~eb^~ea, $A, $B, 'g'^~ex, Y>))
+  ),
+  SidUpdated( <'UM3', $A, $B, '1', 'g'^~ex> ),
+  Sid( <'UM3', $A, $B, 
+        add(<'1', 'g'^~ex>,
+            <'2', Y, 
+             MAC(first(h(<Y^~ex, 'g'^~eb^~ea, $A, $B, 'g'^~ex, Y>)),
+                 <'I', $A, $B, 'g'^~ex, Y>)
+            >,
+            <'3', 
+             MAC(first(h(<Y^~ex, 'g'^~eb^~ea, $A, $B, 'g'^~ex, Y>)),
+                 <'R', $B, $A, Y, 'g'^~ex>)
+            >)
+       >
+  )
+  ]->
+   [
+   I_Comp( <'UM3', $A, $B, 
+            add(<'1', 'g'^~ex>,
+                <'2', Y, 
+                 MAC(first(h(<Y^~ex, 'g'^~eb^~ea, $A, $B, 'g'^~ex, Y>)),
+                     <'I', $A, $B, 'g'^~ex, Y>)
+                >,
+                <'3', 
+                 MAC(first(h(<Y^~ex, 'g'^~eb^~ea, $A, $B, 'g'^~ex, Y>)),
+                     <'R', $B, $A, Y, 'g'^~ex>)
+                >)
+           >
+   ),
+   Out( MAC(first(h(<Y^~ex, 'g'^~eb^~ea, $A, $B, 'g'^~ex, Y>)),
+            <'R', $B, $A, Y, 'g'^~ex>)
+   ),
+   !SessionKey( <'UM3', $A, $B, 
+                 add(<'1', 'g'^~ex>,
+                     <'2', Y, 
+                      MAC(first(h(<Y^~ex, 'g'^~eb^~ea, $A, $B, 'g'^~ex, Y>)),
+                          <'I', $A, $B, 'g'^~ex, Y>)
+                     >,
+                     <'3', 
+                      MAC(first(h(<Y^~ex, 'g'^~eb^~ea, $A, $B, 'g'^~ex, Y>)),
+                          <'R', $B, $A, Y, 'g'^~ex>)
+                     >)
+                >,
+                $A, second(h(<Y^~ex, 'g'^~eb^~ea, $A, $B, 'g'^~ex, Y>))
+   )
+   ]
+
+rule (modulo E) I_Expire:
+   [ I_Comp( sid ) ] --[ Expire( sid ) ]-> [ ]
+
+rule (modulo E) R_Activate:
+   [ Fr( ~ey ), In( X ), !Ltk( $B, ~eb ), !Pk( $A, 'g'^~ea ) ]
+  --[
+  Activate( <'UM3', $B, $A, 
+             add(<'1', X>,
+                 <'2', 'g'^~ey, 
+                  MAC(first(h(<X^~ey, 'g'^~ea^~eb, $A, $B, X, 'g'^~ey>)),
+                      <'I', $A, $B, X, 'g'^~ey>)
+                 >)
+            >
+  ),
+  Sid( <'UM3', $B, $A, 
+        add(<'1', X>,
+            <'2', 'g'^~ey, 
+             MAC(first(h(<X^~ey, 'g'^~ea^~eb, $A, $B, X, 'g'^~ey>)),
+                 <'I', $A, $B, X, 'g'^~ey>)
+            >)
+       >
+  ),
+  Agents( $A, $B )
+  ]->
+   [
+   Out( <'g'^~ey, 
+         MAC(first(h(<X^~ey, 'g'^~ea^~eb, $A, $B, X, 'g'^~ey>)),
+             <'I', $A, $B, X, 'g'^~ey>)
+        >
+   ),
+   R_Act( ~ey, $B, $A, X ),
+   !SessionState( <'UM3', $B, $A, 
+                   add(<'1', X>,
+                       <'2', 'g'^~ey, 
+                        MAC(first(h(<X^~ey, 'g'^~ea^~eb, $A, $B, X, 'g'^~ey>)),
+                            <'I', $A, $B, X, 'g'^~ey>)
+                       >)
+                  >,
+                  $A, ~ey
+   )
+   ]
+
+rule (modulo E) R_Complete:
+   [
+   R_Act( ~ey, $B, $A, X ),
+   In( MAC(first(h(<X^~ey, 'g'^~ea^~eb, $A, $B, X, 'g'^~ey>)),
+           <'R', $B, $A, 'g'^~ey, X>)
+   ),
+   !Ltk( $B, ~eb ), !Pk( $A, 'g'^~ea )
+   ]
+  --[
+  Complete( <'UM3', $B, $A, 
+             add(<'1', X>,
+                 <'2', 'g'^~ey, 
+                  MAC(first(h(<X^~ey, 'g'^~ea^~eb, $A, $B, X, 'g'^~ey>)),
+                      <'I', $A, $B, X, 'g'^~ey>)
+                 >,
+                 <'3', 
+                  MAC(first(h(<X^~ey, 'g'^~ea^~eb, $A, $B, X, 'g'^~ey>)),
+                      <'R', $B, $A, 'g'^~ey, X>)
+                 >)
+            >,
+            'R', second(h(<X^~ey, 'g'^~ea^~eb, $A, $B, X, 'g'^~ey>))
+  ),
+  SidUpdated( <'UM3', $B, $A, 
+               add(<'1', X>,
+                   <'2', 'g'^~ey, 
+                    MAC(first(h(<X^~ey, 'g'^~ea^~eb, $A, $B, X, 'g'^~ey>)),
+                        <'I', $A, $B, X, 'g'^~ey>)
+                   >)
+              >
+  ),
+  Sid( <'UM3', $B, $A, 
+        add(<'1', X>,
+            <'2', 'g'^~ey, 
+             MAC(first(h(<X^~ey, 'g'^~ea^~eb, $A, $B, X, 'g'^~ey>)),
+                 <'I', $A, $B, X, 'g'^~ey>)
+            >,
+            <'3', 
+             MAC(first(h(<X^~ey, 'g'^~ea^~eb, $A, $B, X, 'g'^~ey>)),
+                 <'R', $B, $A, 'g'^~ey, X>)
+            >)
+       >
+  )
+  ]->
+   [
+   R_Comp( <'UM3', $B, $A, 
+            add(<'1', X>,
+                <'2', 'g'^~ey, 
+                 MAC(first(h(<X^~ey, 'g'^~ea^~eb, $A, $B, X, 'g'^~ey>)),
+                     <'I', $A, $B, X, 'g'^~ey>)
+                >,
+                <'3', 
+                 MAC(first(h(<X^~ey, 'g'^~ea^~eb, $A, $B, X, 'g'^~ey>)),
+                     <'R', $B, $A, 'g'^~ey, X>)
+                >)
+           >
+   ),
+   !SessionKey( <'UM3', $B, $A, 
+                 add(<'1', X>,
+                     <'2', 'g'^~ey, 
+                      MAC(first(h(<X^~ey, 'g'^~ea^~eb, $A, $B, X, 'g'^~ey>)),
+                          <'I', $A, $B, X, 'g'^~ey>)
+                     >,
+                     <'3', 
+                      MAC(first(h(<X^~ey, 'g'^~ea^~eb, $A, $B, X, 'g'^~ey>)),
+                          <'R', $B, $A, 'g'^~ey, X>)
+                     >)
+                >,
+                $B, second(h(<X^~ey, 'g'^~ea^~eb, $A, $B, X, 'g'^~ey>))
+   )
+   ]
+
+rule (modulo E) R_Expire:
+   [ R_Comp( sid ) ] --[ Expire( sid ) ]-> [ ]
+
+rule (modulo E) UM1_I_Activate:
+   [ Fr( ~ex ) ]
+  --[ UM1_Activate( <$A, $B, 'g'^~ex> ) ]->
+   [
+   UM1_I_Act( ~ex, $A, $B ),
+   !SessionState( <$A, $B, 'g'^~ex>, $A, ~ex )
+   ]
+
+rule (modulo E) UM1_I_Complete:
+   [ UM1_I_Act( ~ex, $A, $B ), !Ltk( $A, ~ea ), !Pk( $B, 'g'^~eb ) ]
+  --[
+  UM1_Complete( <$A, $B, 'g'^~ex>, 'I',
+                h(<'g'^~eb^~ex, 'g'^~eb^~ea, $A, $B, 'g'^~ex, 'g'^~eb>)
+  )
+  ]->
+   [
+   UM1_I_Comp( <$A, $B, 'g'^~ex> ), Out( <$B, $A, 'g'^~ex> ),
+   !SessionKey( <$A, $B, 'g'^~ex>, $A,
+                h(<'g'^~eb^~ex, 'g'^~eb^~ea, $A, $B, 'g'^~ex, 'g'^~eb>)
+   )
+   ]
+
+rule (modulo E) UM1_I_Expire:
+   [ UM1_I_Comp( sid ) ] --[ UM1_Expire( sid ) ]-> [ ]
+
+rule (modulo E) UM1_R_Complete:
+   [ In( X ), !Ltk( $B, ~eb ), !Pk( $A, 'g'^~ea ) ]
+  --[
+  UM1_Activate( <$B, $A, X> ),
+  UM1_Complete( <$B, $A, X>, 'R',
+                h(<X^~eb, 'g'^~ea^~eb, $A, $B, X, 'g'^~eb>)
+  )
+  ]->
+   [
+   UM1_R_Comp( <$B, $A, X> ),
+   !SessionKey( <$B, $A, X>, $B,
+                h(<X^~eb, 'g'^~ea^~eb, $A, $B, X, 'g'^~eb>)
+   )
+   ]
+
+rule (modulo E) UM1_R_Expire:
+   [ UM1_R_Comp( sid ) ] --[ UM1_Expire( sid ) ]-> [ ]
+
+rule (modulo E) Corrupt_Ltk:
+   [ !Ltk( $A, ~ea ) ] --[ Corrupt( $A ) ]-> [ Out( ~ea ) ]
+
+rule (modulo E) Corrupt_SessionState:
+   [ !SessionState( sid, ~x, $A ) ]
+  --[ Corrupt( $A ), BeforeComplete( sid ) ]->
+   [ Out( ~x ) ]
+
+rule (modulo E) Corrupt_SessionKey:
+   [ !SessionKey( sid, $A, k ) ]
+  --[ Corrupt( $A ), BeforeExpire( sid ) ]->
+   [ Out( k ) ]
+
+rule (modulo E) Reveal_SessionState:
+   [ !SessionState( sid, ~x, $A ) ]
+  --[ SessionStateReveal( sid ), BeforeComplete( sid ) ]->
+   [ Out( ~x ) ]
+
+rule (modulo E) Reveal_SessionKey:
+   [ !SessionKey( sid, $A, k ) ]
+  --[ SessionKeyReveal( sid ), BeforeExpire( sid ) ]->
+   [ Out( k ) ]
+
+restriction sid_unique:
+  "∀ #i #j sid.
+    ((UM1_Activate( sid ) @ #i) ∧ (UM1_Activate( sid ) @ #j)) ⇒
+    (#i = #j)"
+  // safety formula
+
+restriction keyreg_unique:
+  "∀ #i #j A. ((KeyReg( A ) @ #i) ∧ (KeyReg( A ) @ #j)) ⇒ (#i = #j)"
+  // safety formula
+
+restriction actor_ineq_peer:
+  "¬(∃ #i A. Agents( A, A ) @ #i)"
+  // safety formula
+
+restriction corrupt_and_reveal_not_too_early:
+  "(∀ #i #j s role_ k_.
+     ((BeforeComplete( s ) @ #i) ∧ (Complete( s, role_, k_ ) @ #j)) ⇒
+     (#i < #j)) ∧
+   (∀ #i #j s.
+     ((BeforeExpire( s ) @ #i) ∧ (Expire( s ) @ #j)) ⇒ (#i < #j))"
+  // safety formula
+
+lemma key_agreement_reachable:
+  exists-trace
+  "∃ #i #j sid sidm k.
+    ((((Complete( sid, 'I', k ) @ #i) ∧
+       (Complete( sidm, 'R', k ) @ #j)) ∧
+      (¬(∃ #j.1 C. Corrupt( C ) @ #j.1))) ∧
+     (¬(∃ #j.1 s. SessionKeyReveal( s ) @ #j.1))) ∧
+    (¬(∃ #j.1 s. SessionStateReveal( s ) @ #j.1))"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #i #j sid sidm k.
+  (Complete( sid, 'I', k ) @ #i) ∧ (Complete( sidm, 'R', k ) @ #j)
+ ∧
+  (∀ #j.1 C. (Corrupt( C ) @ #j.1) ⇒ ⊥) ∧
+  (∀ #j.1 s. (SessionKeyReveal( s ) @ #j.1) ⇒ ⊥) ∧
+  (∀ #j.1 s. (SessionStateReveal( s ) @ #j.1) ⇒ ⊥)"
+*/
+by sorry
+
+lemma CK_secure_UM3:
+  all-traces
+  "∀ #i #j role A B k s comm.
+    (((Complete( <'UM3', A, B, comm>, role, k ) @ #i) ∧
+      (K( k ) @ #j)) ∧
+     (s = <'UM3', A, B, comm>)) ⇒
+    (((((∃ #k.1. SessionKeyReveal( s ) @ #k.1) ∨
+        (∃ #k.1.
+          (Corrupt( A ) @ #k.1) ∧
+          (¬(∃ #l. (Expire( s ) @ #l) ∧ (#l < #k.1))))) ∨
+       (∃ #k.1.
+         (SessionStateReveal( s ) @ #k.1) ∧
+         ((∃ #l. Corrupt( A ) @ #l) ∨ (∃ #l. Corrupt( B ) @ #l)))) ∨
+      (∃ #l ms matchingComm.
+        ((((Sid( <'UM3', B, A, matchingComm> ) @ #l) ∧
+           (ms = <'UM3', B, A, matchingComm>)) ∧
+          ((∃ rest. add(matchingComm, rest) = comm) ∨
+           (matchingComm = comm))) ∧
+         (¬(∃ #v. SidUpdated( ms ) @ #v))) ∧
+        (((∃ #k.1. SessionKeyReveal( ms ) @ #k.1) ∨
+          (∃ #k.1.
+            (Corrupt( B ) @ #k.1) ∧
+            (¬(∃ #l.1. (Expire( ms ) @ #l.1) ∧ (#l.1 < #k.1))))) ∨
+         (∃ #k.1.
+           (SessionStateReveal( ms ) @ #k.1) ∧
+           ((∃ #l.1. Corrupt( A ) @ #l.1) ∨
+            (∃ #l.1. Corrupt( B ) @ #l.1)))))) ∨
+     ((¬(∃ #l matchingComm.
+          ((Sid( <'UM3', B, A, matchingComm> ) @ #l) ∧
+           ((∃ rest. add(matchingComm, rest) = comm) ∨
+            (matchingComm = comm))) ∧
+          (¬(∃ #v. SidUpdated( <'UM3', B, A, matchingComm> ) @ #v)))) ∧
+      (∃ #k.1.
+        (Corrupt( B ) @ #k.1) ∧
+        (¬(∃ #l. (Expire( s ) @ #l) ∧ (#l < #k.1))))))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ #i #j role A B k s comm.
+  (Complete( <'UM3', A, B, comm>, role, k ) @ #i) ∧
+  (K( k ) @ #j) ∧
+  (s = <'UM3', A, B, comm>)
+ ∧
+  (∀ #k.1. (SessionKeyReveal( s ) @ #k.1) ⇒ ⊥) ∧
+  (∀ #k.1.
+    (Corrupt( A ) @ #k.1) ⇒ ∃ #l. (Expire( s ) @ #l) ∧ #l < #k.1) ∧
+  (∀ #k.1.
+    (SessionStateReveal( s ) @ #k.1)
+   ⇒
+    (∀ #l. (Corrupt( A ) @ #l) ⇒ ⊥) ∧
+    (∀ #l. (Corrupt( B ) @ #l) ⇒ ⊥)) ∧
+  (∀ #l ms matchingComm.
+    (Sid( <'UM3', B, A, matchingComm> ) @ #l) ∧
+    (ms = <'UM3', B, A, matchingComm>)
+   ⇒
+    (((∀ rest. (add(matchingComm, rest) = comm) ⇒ ⊥) ∧
+      (¬(matchingComm = comm))) ∨
+     (∃ #v. (SidUpdated( ms ) @ #v)) ∨
+     ((∀ #k.1. (SessionKeyReveal( ms ) @ #k.1) ⇒ ⊥) ∧
+      (∀ #k.1.
+        (Corrupt( B ) @ #k.1)
+       ⇒
+        ∃ #l.1. (Expire( ms ) @ #l.1) ∧ #l.1 < #k.1) ∧
+      (∀ #k.1.
+        (SessionStateReveal( ms ) @ #k.1)
+       ⇒
+        (∀ #l.1. (Corrupt( A ) @ #l.1) ⇒ ⊥) ∧
+        (∀ #l.1. (Corrupt( B ) @ #l.1) ⇒ ⊥))))) ∧
+  (((∃ #l matchingComm.
+      (Sid( <'UM3', B, A, matchingComm> ) @ #l)
+     ∧
+      (((∃ rest. (add(matchingComm, rest) = comm)) ∨
+        (matchingComm = comm))) ∧
+      (∀ #v. (SidUpdated( <'UM3', B, A, matchingComm> ) @ #v) ⇒ ⊥)) ∨
+    (∀ #k.1.
+      (Corrupt( B ) @ #k.1) ⇒ ∃ #l. (Expire( s ) @ #l) ∧ #l < #k.1)))"
+*/
+by sorry
+
+end

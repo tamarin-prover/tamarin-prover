@@ -511,7 +511,7 @@ isFinished ctxt sys
   | otherwise = Nothing
   where
     cs = contradictions ctxt sys
-    ogs = openGoals sys
+    ogs = openGoals ctxt sys
     stFinished = finishedSubterms ctxt sys
 
 -- | Use a 'GoalRanking' to generate the ranked, list of possible
@@ -520,7 +520,7 @@ isFinished ctxt sys
 rankProofMethods :: GoalRanking ProofContext -> [Tactic ProofContext] -> ProofContext -> System
                  -> [(ProofMethod, (M.Map CaseName System, String))]
 rankProofMethods ranking tactics ctxt sys =
-  let Ranking (map solveGoalMethod -> goals) instr = rankGoals ctxt ranking tactics sys (openGoals sys)
+  let Ranking (map solveGoalMethod -> goals) instr = rankGoals ctxt ranking tactics sys (openGoals ctxt sys)
       insertInduction (simplify NE.:| gs) = case L.get pcUseInduction ctxt of
         AvoidInduction -> simplify : (Induction, "") : gs
         UseInduction   -> (Induction, "") : simplify : gs

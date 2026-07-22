@@ -1,0 +1,76 @@
+theory OTYT06_UK2 begin
+
+// Function signature and definition of the equational theory E
+
+builtins: multiset
+functions: fst/1, h/1, pair/2, snd/1, xorr/2 [AC], zeroo/0
+equations:
+    fst(<x.1, x.2>) = x.1,
+    snd(<x.1, x.2>) = x.2,
+    xorr(xorr(x, y), x) = y,
+    xorr(x, x) = zeroo,
+    xorr(x, zeroo) = x
+
+
+
+
+
+
+
+rule (modulo E) Setup:
+   [ Fr( ~k1 ), Fr( ~k2 ), Fr( ~r ), Fr( ~newKey1 ), Fr( ~newKey2 ) ]
+  --[ Setup( ~k1 ), Setup( ~k2 ), OnlyOnce( 'setup' ) ]->
+   [
+   Out( <~r, h(xorr(~k1, ~r)), xorr(~k1, ~newKey1)> ),
+   Tag( diff(~k1, ~k2), diff(~newKey1, ~newKey2) )
+   ]
+
+rule (modulo E) tag1:
+   [ In( r1 ), Tag( ~k, x ) ]
+  --[
+  Response( ~k, 'Tag' ), Challenge( x, 'Tag' ), Tag( ~k, x ),
+  Running( ~k, 'Tag', x ), OnlyOnce( 'tag1' )
+  ]->
+   [ Out( h(xorr(r1, x)) ), Tag( ~k, x ), TagRunning( ~k, x ) ]
+
+rule (modulo E) tag2:
+   [ Fr( ~k2 ), In( newkey ), TagRunning( ~k, x ) ]
+  --[
+  Update( x, xorr(newkey, x), 'Tag' ), Alive( ~k, 'Reader' ),
+  OnlyOnce( 'tag2' )
+  ]->
+   [ Tag( ~k, xorr(newkey, x) ) ]
+
+restriction unique [right]:
+  "∀ x #i #j.
+    ((OnlyOnce( x ) @ #i) ∧ (OnlyOnce( x ) @ #j)) ⇒ (#i = #j)"
+  // safety formula
+
+restriction unique [left]:
+  "∀ x #i #j.
+    ((OnlyOnce( x ) @ #i) ∧ (OnlyOnce( x ) @ #j)) ⇒ (#i = #j)"
+  // safety formula
+
+lemma tag_start [right, reuse, use_induction]:
+  all-traces
+  "∀ x y #k.
+    (Tag( x, y ) @ #k) ⇒ (∃ #i. (Setup( x ) @ #i) ∧ (#i < #k))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ x y #k.
+  (Tag( x, y ) @ #k) ∧ ∀ #i. (Setup( x ) @ #i) ⇒ ¬(#i < #k)"
+*/
+by sorry
+
+lemma tag_start [left, reuse, use_induction]:
+  all-traces
+  "∀ x y #k.
+    (Tag( x, y ) @ #k) ⇒ (∃ #i. (Setup( x ) @ #i) ∧ (#i < #k))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ x y #k.
+  (Tag( x, y ) @ #k) ∧ ∀ #i. (Setup( x ) @ #i) ⇒ ¬(#i < #k)"
+*/
+by sorry
+
+end

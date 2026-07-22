@@ -357,7 +357,7 @@ next
   backward-search
     case LHS
     step( simplify )
-    step( solve( !KD( blind(m, r) ) ▶₀ #i ) )
+    step( solve( !KD( blind(x, x.1) ) ▶₀ #i ) )
       case C_1_1
       step( solve( (#vl, 0) ~~> (#i, 0) ) )
         case blind
@@ -412,7 +412,7 @@ next
   next
     case RHS
     step( simplify )
-    step( solve( !KD( blind(m, r) ) ▶₀ #i ) )
+    step( solve( !KD( blind(x, x.1) ) ▶₀ #i ) )
       case C_1_1
       step( solve( (#vl, 0) ~~> (#i, 0) ) )
         case blind
@@ -476,7 +476,7 @@ next
   backward-search
     case LHS
     step( simplify )
-    step( solve( !KD( sign(m, k) ) ▶₀ #i ) )
+    step( solve( !KD( sign(x, x.1) ) ▶₀ #i ) )
       case C_1_1
       step( solve( (#vl, 0) ~~> (#i, 0) ) )
         case d_0_0_unblind_sign
@@ -579,7 +579,7 @@ next
   next
     case RHS
     step( simplify )
-    step( solve( !KD( sign(m, k) ) ▶₀ #i ) )
+    step( solve( !KD( sign(x, x.1) ) ▶₀ #i ) )
       case C_1_1
       step( solve( (#vl, 0) ~~> (#i, 0) ) )
         case d_0_0_unblind_sign
@@ -1096,7 +1096,7 @@ next
     step( simplify )
     step( solve( DiffIntrDestrd_0_unblind( ) @ #i ) )
       case d_0_unblind_case_1
-      step( solve( !KD( blind(m, r) ) ▶₀ #i ) )
+      step( solve( !KD( blind(x, x.1) ) ▶₀ #i ) )
         case C_1_1
         step( solve( (#vl, 0) ~~> (#i, 0) ) )
           case blind
@@ -1150,7 +1150,7 @@ next
       qed
     next
       case d_0_unblind_case_2
-      step( solve( !KD( sign(blind(m, r), k) ) ▶₀ #i ) )
+      step( solve( !KD( sign(blind(x, x.1), x.2) ) ▶₀ #i ) )
         case C_1_1
         step( solve( (#vl, 0) ~~> (#i, 0) ) )
           case d_0_0_unblind_sign
@@ -1202,7 +1202,7 @@ next
     step( simplify )
     step( solve( DiffIntrDestrd_0_unblind( ) @ #i ) )
       case d_0_unblind_case_1
-      step( solve( !KD( blind(m, r) ) ▶₀ #i ) )
+      step( solve( !KD( blind(x, x.1) ) ▶₀ #i ) )
         case C_1_1
         step( solve( (#vl, 0) ~~> (#i, 0) ) )
           case blind
@@ -1262,7 +1262,7 @@ next
       qed
     next
       case d_0_unblind_case_2
-      step( solve( !KD( sign(blind(m, r), k) ) ▶₀ #i ) )
+      step( solve( !KD( sign(blind(x, x.1), x.2) ) ▶₀ #i ) )
         case C_1_1
         step( solve( (#vl, 0) ~~> (#i, 0) ) )
           case d_0_0_unblind_sign
@@ -2283,9 +2283,9 @@ qed
 /*
 Generated from:
 Tamarin version 1.13.0
-Maude version 3.4
-Git revision: 1deff12bd69c96308abb2463d4de5f2c7610c191 (with uncommited changes), branch: develop
-Compiled at: 2026-03-09 07:36:56.194364 UTC
+Maude version 3.5.1
+Git revision: 53c49a44efa784b133c907eedf84491d61a48803 (with uncommited changes), branch: AC-NDC-property
+Compiled at: 2026-07-09 13:42:51.535083 UTC
 */
 
 end
@@ -2297,7 +2297,7 @@ summary of summaries:
 analyzed: examples/post17/chaum_anonymity.spthy
 
   output:          examples/post17/chaum_anonymity.spthy.tmp
-  processing time: 2.34s
+  processing time: 1.40s
   
   RHS :  exec (exists-trace): verified (9 steps)
   LHS :  exec (exists-trace): verified (9 steps)

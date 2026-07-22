@@ -85,12 +85,10 @@ rule V_3:
 
 rule C_2:
   let v = open(x, r)
-      x = commit(open(x,r),r)
   in
     [ In( r ), St_C_1( A, x ) ]
-  --[ VotePublished( v ), Out_C_2(x) ]->
+  --[ VotePublished( v ), Out_C_2(x), _restrict(x = commit(open(x,r),r)) ]->
     [ Out( v ) ]
-
 
 
 // sources lemma
