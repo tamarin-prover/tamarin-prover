@@ -102,7 +102,7 @@ solve( ResponderWaitConfirm( $B, $A, ~k, ~nb ) ▶₀ #i )
     solve( !KU( enc(succ(~nb), ~k) ) @ #vk.1 )
       case c_enc
       solve( !KU( enc(<~k, $A>, ~k.1) ) @ #vk.2 )
-        case Server_case_5
+        case Server_case_1
         solve( !KU( succ(~nb) ) @ #vk.4 )
           case c_succ
           solve( !KU( ~nb ) @ #vk.8 )
@@ -120,9 +120,9 @@ qed
 /*
 Generated from:
 Tamarin version 1.13.0
-Maude version 3.4
-Git revision: 1deff12bd69c96308abb2463d4de5f2c7610c191 (with uncommited changes), branch: develop
-Compiled at: 2026-03-09 07:36:56.194364 UTC
+Maude version 3.5.1
+Git revision: 53c49a44efa784b133c907eedf84491d61a48803 (with uncommited changes), branch: AC-NDC-property
+Compiled at: 2026-07-09 13:42:51.535083 UTC
 */
 
 end
@@ -134,7 +134,7 @@ summary of summaries:
 analyzed: examples/post17/needham_schroeder_symmetric_cbc.spthy
 
   output:          examples/post17/needham_schroeder_symmetric_cbc.spthy.tmp
-  processing time: 4.68s
+  processing time: 1.56s
   
   secrecy (all-traces): falsified - found trace (8 steps)
 

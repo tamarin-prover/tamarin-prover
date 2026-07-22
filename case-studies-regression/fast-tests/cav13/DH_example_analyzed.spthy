@@ -5,7 +5,7 @@ begin
 // Function signature and definition of the equational theory E
 
 builtins: diffie-hellman
-functions: fst/1, g/0, mac/2, pair/2, shk/0[private,constructor], snd/1
+functions: fst/1, g/0, mac/2, pair/2, shk/0 [private,constructor], snd/1
 equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
 
 rule (modulo E) Step1:
@@ -125,9 +125,9 @@ qed
 /*
 Generated from:
 Tamarin version 1.13.0
-Maude version 3.4
-Git revision: 1deff12bd69c96308abb2463d4de5f2c7610c191 (with uncommited changes), branch: develop
-Compiled at: 2026-03-09 07:36:56.194364 UTC
+Maude version 3.5.1
+Git revision: 53c49a44efa784b133c907eedf84491d61a48803 (with uncommited changes), branch: AC-NDC-property
+Compiled at: 2026-07-09 13:42:51.535083 UTC
 */
 
 end
@@ -139,7 +139,7 @@ summary of summaries:
 analyzed: examples/cav13/DH_example.spthy
 
   output:          examples/cav13/DH_example.spthy.tmp
-  processing time: 0.07s
+  processing time: 0.05s
   
   Accept_Secret (all-traces): verified (9 steps)
   Accept_Secret_Counter (all-traces): falsified - found trace (7 steps)

@@ -427,10 +427,10 @@ solve( Alive( x, 'Tag' ) @ #i )
             case split_case_1
             solve( !KU( (~r1⊕~r2) ) @ #vk.2 )
               case c_xor
-              solve( !KU( ~r2 ) @ #vk.4 )
-                case tag1
-                solve( !KU( ~r1 ) @ #vk.5 )
-                  case reader1
+              solve( !KU( ~r1 ) @ #vk.4 )
+                case reader1
+                solve( !KU( ~r2 ) @ #vk.5 )
+                  case tag1
                   SOLVED // trace found
                 qed
               qed
@@ -471,7 +471,7 @@ solve( Alive( x, 'Reader' ) @ #i )
         case c_rh
         solve( !KU( (h(z)⊕rot(~id, h(z))) ) @ #vk.2 )
           case c_xor
-          solve( !KU( rot(~id, h(z)) ) @ #vk.3 )
+          solve( !KU( rot(~id, h(z)) ) @ #vk.4 )
             case c_rot
             by solve( !KU( ~id ) @ #vk.5 )
           qed
@@ -479,7 +479,7 @@ solve( Alive( x, 'Reader' ) @ #i )
           case coerce
           solve( !KD( (h(z)⊕rot(~id, h(z))) ) ▶₀ #vk.1 )
             case reader1
-            by contradiction /* impossible chain */
+            by solve( (#vl, 0) ~~> (#vk.1, 0) )
           next
             case reader2
             by solve( (#vl, 0) ~~> (#vk.1, 0) )
@@ -487,7 +487,7 @@ solve( Alive( x, 'Reader' ) @ #i )
             case tag1
             solve( (#vl, 0) ~~> (#vk.1, 0) )
               case d_0_fst
-              by contradiction /* impossible chain */
+              by solve( (#vr.3, 0) ~~> (#vk.1, 0) )
             next
               case d_0_snd
               by solve( (#vr.3, 0) ~~> (#vk.1, 0) )
@@ -500,7 +500,7 @@ solve( Alive( x, 'Reader' ) @ #i )
           case c_lh
           solve( !KU( (h(z)⊕rot(~id, h(z))) ) @ #vk.5 )
             case c_xor
-            solve( !KU( rot(~id, h(z)) ) @ #vk.6 )
+            solve( !KU( rot(~id, h(z)) ) @ #vk.7 )
               case c_rot
               by solve( !KU( ~id ) @ #vk.8 )
             qed
@@ -508,7 +508,7 @@ solve( Alive( x, 'Reader' ) @ #i )
             case coerce
             solve( !KD( (h(z)⊕rot(~id, h(z))) ) ▶₀ #vk.2 )
               case reader1
-              by contradiction /* impossible chain */
+              by solve( (#vl.1, 0) ~~> (#vk.2, 0) )
             next
               case reader2
               by solve( (#vl.1, 0) ~~> (#vk.2, 0) )
@@ -548,7 +548,7 @@ solve( Commit( <'T', 'R', t> ) @ #i )
         case c_rh
         solve( !KU( (h(z)⊕rot(~id, h(z))) ) @ #vk.2 )
           case c_xor
-          solve( !KU( rot(~id, h(z)) ) @ #vk.3 )
+          solve( !KU( rot(~id, h(z)) ) @ #vk.4 )
             case c_rot
             by solve( !KU( ~id ) @ #vk.5 )
           qed
@@ -556,7 +556,7 @@ solve( Commit( <'T', 'R', t> ) @ #i )
           case coerce
           solve( !KD( (h(z)⊕rot(~id, h(z))) ) ▶₀ #vk.1 )
             case reader1
-            by contradiction /* impossible chain */
+            by solve( (#vl, 0) ~~> (#vk.1, 0) )
           next
             case reader2
             by solve( (#vl, 0) ~~> (#vk.1, 0) )
@@ -564,7 +564,7 @@ solve( Commit( <'T', 'R', t> ) @ #i )
             case tag1
             solve( (#vl, 0) ~~> (#vk.1, 0) )
               case d_0_fst
-              by contradiction /* impossible chain */
+              by solve( (#vr.3, 0) ~~> (#vk.1, 0) )
             next
               case d_0_snd
               by solve( (#vr.3, 0) ~~> (#vk.1, 0) )
@@ -613,7 +613,7 @@ solve( Commit( <'R', 'T', t> ) @ #i )
         case c_lh
         solve( !KU( (h(t)⊕rot(~id, h(t))) ) @ #vk.3 )
           case c_xor
-          solve( !KU( rot(~id, h(t)) ) @ #vk.4 )
+          solve( !KU( rot(~id, h(t)) ) @ #vk.5 )
             case c_rot
             by solve( !KU( ~id ) @ #vk.6 )
           qed
@@ -621,7 +621,7 @@ solve( Commit( <'R', 'T', t> ) @ #i )
           case coerce
           solve( !KD( (h(t)⊕rot(~id, h(t))) ) ▶₀ #vk.1 )
             case reader1
-            by contradiction /* impossible chain */
+            by solve( (#vl, 0) ~~> (#vk.1, 0) )
           next
             case reader2
             by solve( (#vl, 0) ~~> (#vk.1, 0) )
@@ -629,7 +629,7 @@ solve( Commit( <'R', 'T', t> ) @ #i )
             case tag1
             solve( (#vl, 0) ~~> (#vk.1, 0) )
               case d_0_fst
-              by contradiction /* impossible chain */
+              by solve( (#vr.3, 0) ~~> (#vk.1, 0) )
             next
               case d_0_snd
               by solve( (#vr.3, 0) ~~> (#vk.1, 0) )
@@ -694,9 +694,9 @@ qed
 /*
 Generated from:
 Tamarin version 1.13.0
-Maude version 3.4
-Git revision: 1deff12bd69c96308abb2463d4de5f2c7610c191 (with uncommited changes), branch: develop
-Compiled at: 2026-03-09 07:36:56.194364 UTC
+Maude version 3.5.1
+Git revision: 53c49a44efa784b133c907eedf84491d61a48803 (with uncommited changes), branch: AC-NDC-property
+Compiled at: 2026-07-09 13:42:51.535083 UTC
 */
 
 end
@@ -708,7 +708,7 @@ summary of summaries:
 analyzed: examples/csf18-xor/CH07.spthy
 
   output:          examples/csf18-xor/CH07.spthy.tmp
-  processing time: 0.52s
+  processing time: 38.05s
   
   recentalive_tag (all-traces): falsified - found trace (11 steps)
   recentalive_reader (all-traces): verified (23 steps)
