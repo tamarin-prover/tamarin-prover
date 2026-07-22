@@ -250,7 +250,8 @@ def testOutputFileParsing(path):
 		is_diff_file = any(pattern in path for pattern in [
 			"_analyzed-diff.spthy", 
 			"_analyzed-diff-noprove.spthy",
-			"_analyzed-diff-obseqonly.spthy"
+			"_analyzed-diff-obseqonly.spthy",
+			"_analyzed-diff-bfs.spthy"
 		])
 
 		is_sapic_or_accountability_file = any(pattern in path for pattern in [
@@ -590,7 +591,7 @@ def main():
 		
 		try:
 			testResult = subprocess.run(['./regressionParser.sh'], capture_output=True, text=True)
-			tree_sitter_generate = subprocess.run(["tree-sitter", "generate"], capture_output=True, text=True)
+			tree_sitter_generate = subprocess.run(["tree-sitter", "generate", "--abi", "14"], capture_output=True, text=True)
 			outputColor = colors.GREEN + colors.BOLD
 
 			if not "success percentage: 100.00%;" in testResult.stdout:

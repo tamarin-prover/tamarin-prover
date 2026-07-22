@@ -54,7 +54,7 @@ defaultFunctionType n =  (replicate n Nothing ,Nothing) -- if no type defined, a
 
 data TypingEnvironment = TypingEnvironment {
         vars :: Map.Map LVar SapicType
-    ,   funs :: Map.Map NoEqSym ([SapicType],SapicType)
+    ,   funs :: Map.Map UserDefinedSym ([SapicType],SapicType)
     ,   events :: Map.Map FactTag [SapicType]
 } deriving (Show, Eq)
 
@@ -80,24 +80,24 @@ typeWith t tt
         te <- get
         modify' (\s -> s { vars = Map.insert (slvar v) t' te.vars })
         return (termViewToTerm $ Lit (Var (SapicLVar lvar' t')), t')
-    | FAppNoEq fs@(_,(n,_,_)) ts   <- viewTerm2 t -- CASE: standard function application
+    | FAppNoEq fs@(_,(n,_,_,_)) ts   <- viewTerm2 t -- CASE: standard function application
     = do
         -- First determine output type of function from target constraint and update FunctionTypingEnvironment
-        (intypes1,outtype1) <- getFun n fs
+        (intypes1,outtype1) <- getFun n (NoEqUser fs)
         mintype1 <- catch (sqcap outtype1 tt) (sqHandler t)
-        insertFun fs (intypes1, mintype1)
+        insertFun (NoEqUser fs) (intypes1, mintype1)
         -- Then try to type arguments
         (_,ptypes) <- unzip <$> zipWithM typeWith ts intypes1
         -- From typing our arguments, we might have learned a more precise
         -- output type, e.g., for t=h(h(x:lol)) we learn that h must have output
         -- lol.
         -- So we recompute the output type ...
-        (intypes2,outtype2) <- getFun n fs
+        (intypes2,outtype2) <- getFun n (NoEqUser fs)
         mintype2 <- catch (sqcap outtype2 tt) (sqHandler t)
-        insertFun fs (ptypes, mintype2)
+        insertFun (NoEqUser fs) (ptypes, mintype2)
         -- ... and now type the arguments for real.
         (ts',ptypes') <- unzip <$> zipWithM typeWith ts intypes2
-        insertFun fs (ptypes', outtype2)
+        insertFun (NoEqUser fs) (ptypes', outtype2)
         return (termViewToTerm $ FApp (NoEq fs) ts', outtype2)
     | FApp fs ts <- viewTerm t = do  -- list, AC or C symbol: ignore, i.e., assume polymorphic
         ts' <- mapM (\t' -> fst <$> typeWith t' Nothing) ts
@@ -187,9 +187,12 @@ initTEFromSig th = do
     -- we load all funs and add default type
     sig = th._thySignature._sigMaudeInfo
     funSet = stFunSyms sig
-    funTyped = foldMap (\fs@(_,(n,_,_)) -> Map.singleton fs (defaultFunctionType n)) funSet
+    funACSet = stACFunSyms sig
+    funTyped = foldMap (\fs@(_,(n,_,_,_)) -> Map.singleton (NoEqUser fs) (defaultFunctionType n)) funSet
+    funACTyped = foldMap (\fs@(_,(_,_,_)) -> Map.singleton (ACfctUser fs) (defaultFunctionType 2)) funACSet
+    funAll = Map.union funTyped funACTyped
     -- we then also add the custom used defined types
-    withUserDefinedFuns = foldr (\(s,inp,out) acc -> Map.insert s (inp,out) acc) funTyped (theoryFunctionTypingInfos th)
+    withUserDefinedFuns = foldr (\(s,inp,out) acc -> Map.insert s (inp,out) acc) funAll (theoryFunctionTypingInfos th)
     initTE = TypingEnvironment{
                 vars = Map.empty,
                 funs =  withUserDefinedFuns,

@@ -1,0 +1,81 @@
+theory untraceable begin
+
+// Function signature and definition of the equational theory E
+
+functions: fst/1, h/1, pair/2, snd/1, add/2 [AC],
+           unionUD/1 [destructor]
+equations:
+    fst(<x.1, x.2>) = x.1,
+    snd(<x.1, x.2>) = x.2,
+    unionUD(add(x, y)) = x
+
+
+
+
+
+
+
+rule (modulo E) setup:
+   [ Fr( key1 ), Fr( key2 ) ]
+  --[ Setup( ) ]->
+   [
+   Reader( add('1', diff(add(key1, key2), add(key1, key1))) ),
+   Tag( add('1', diff(add(key1, key2), add(key1, key1))) )
+   ]
+
+rule (modulo E) select_tag:
+   [ Tag( add(~k, z) ) ]
+  --[ Tag( add(~k, z) ) ]->
+   [ TagRun( ~k ), Tag( z ) ]
+
+rule (modulo E) select_reader:
+   [ Reader( add(~k, z) ) ]
+  --[ Reader( add(~k, z) ) ]->
+   [ ReaderRun( ~k ), Reader( z ) ]
+
+rule (modulo E) reader1:
+   [ Fr( ~nr ) ] --> [ Reader1( ~nr ), Out( ~nr ) ]
+
+rule (modulo E) tag1:
+   [ In( x ), TagRun( k ), Fr( ~nt ) ]
+  --[ TagRun( k ) ]->
+   [ Out( <~nt, h(<x, k, ~nt>)> ) ]
+
+rule (modulo E) reader2:
+   [ Reader1( ~nr ), ReaderRun( k ), In( <nt, h(<~nr, k, nt>)> ) ]
+  --[ Finished( ) ]->
+   [ ]
+
+restriction max_number_of_tags_tag [right]:
+  "∀ a b c d #i. (Tag( add(a, b, c, d) ) @ #i) ⇒ (⊥)"
+  // safety formula
+
+restriction max_number_of_tags_tag [left]:
+  "∀ a b c d #i. (Tag( add(a, b, c, d) ) @ #i) ⇒ (⊥)"
+  // safety formula
+
+restriction max_number_of_tags_tag_reader [right]:
+  "∀ a b c d #i. (Reader( add(a, b, c, d) ) @ #i) ⇒ (⊥)"
+  // safety formula
+
+restriction max_number_of_tags_tag_reader [left]:
+  "∀ a b c d #i. (Reader( add(a, b, c, d) ) @ #i) ⇒ (⊥)"
+  // safety formula
+
+lemma executable [right]:
+  exists-trace "∃ #i. Finished( ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #i. (Finished( ) @ #i)"
+*/
+by sorry
+
+lemma executable [left]:
+  exists-trace "∃ #i. Finished( ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #i. (Finished( ) @ #i)"
+*/
+by sorry
+
+end

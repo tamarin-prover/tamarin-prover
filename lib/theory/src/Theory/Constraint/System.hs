@@ -293,7 +293,6 @@ import           Theory.Tools.InjectiveFactInstances
 import           System.Directory                     (doesFileExist)
 import           System.FilePath
 import           Text.Show.Functions()
-import           Utils.Misc
 
 ----------------------------------------------------------------------
 -- ClassifiedRules
@@ -992,8 +991,8 @@ protocolRuleWithName rules name = filter (\(Rule x _ _ _ _) -> case x of
 --   This respects the number of remaining consecutive rule applications.
 intruderRuleWithName :: [RuleAC] -> IntrRuleACInfo -> [RuleAC]
 intruderRuleWithName rules name = filter (\(Rule x _ _ _ _) -> case x of
-                                             IntrInfo  (DestrRule i _ _ _) -> case name of
-                                                                                 (DestrRule j _ _ _) -> i == j
+                                             IntrInfo  (DestrRule i _ _ _ _) -> case name of
+                                                                                 (DestrRule j _ _ _ _) -> i == j
                                                                                  _                   -> False
                                              IntrInfo  i -> i == name
                                              ProtoInfo _ -> False) rules
@@ -1005,11 +1004,11 @@ getOppositeRules ctxt side (Rule rule prem _ _ _) = case rule of
         [] -> error $ "No other rule found for protocol rule " ++ show (L.get praciName p) ++ show (getAllRulesOnOtherSide ctxt side)
         x  -> x
     IntrInfo  i -> case i of
-        (ConstrRule x) | x == BC.pack "_mult"     -> [(multRuleInstance (length prem))]
-        (ConstrRule x) | x == BC.pack "_union"    -> [(unionRuleInstance (length prem))]
-        (ConstrRule x) | x == BC.pack "_xor"      -> (xorRuleInstance (length prem)):
-                                                            (concat $ map (destrRuleToConstrRule (AC Xor) (length prem)) (intruderRuleWithName (getAllRulesOnOtherSide ctxt side) (DestrRule x 0 False False)))
-        (DestrRule x l s c) | x == BC.pack "_xor" -> (constrRuleToDestrRule (xorRuleInstance (length prem)) l s c)++(concat $ map destrRuleToDestrRule (intruderRuleWithName (getAllRulesOnOtherSide ctxt side) i))
+        (ConstrRule _ x) | x == AC Mult     -> [(multRuleInstance (length prem))]
+        (ConstrRule _ x) | x == AC Union    -> [(unionRuleInstance (length prem))]
+        (ConstrRule n x) | x == AC Xor      -> (xorRuleInstance (length prem)):
+                                                            (concat $ map (destrRuleToConstrRule (AC Xor) (length prem)) (intruderRuleWithName (getAllRulesOnOtherSide ctxt side) (DestrRule n 0 False False [x])))
+        (DestrRule n l s c (x:_)) | x == AC Xor -> (constrRuleToDestrRule (xorRuleInstance (length prem)) l s c)++(concat $ map destrRuleToDestrRule (intruderRuleWithName (getAllRulesOnOtherSide ctxt side) i))
         _                                         -> case intruderRuleWithName (getAllRulesOnOtherSide ctxt side) i of
                                                             [] -> error $ "No other rule found for intruder rule " ++ show i ++ show (getAllRulesOnOtherSide ctxt side)
                                                             x  -> x

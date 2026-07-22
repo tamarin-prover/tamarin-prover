@@ -5,7 +5,7 @@ begin
 // Function signature and definition of the equational theory E
 
 functions: extract/1, fst/1, pair/2, pk/1, sig/2,
-           sk/1[private,constructor], snd/1, true/0, verify/3
+           sk/1 [private,constructor], snd/1, true/0, verify/3
 equations:
     extract(sig(m, sk(i))) = m,
     fst(<x.1, x.2>) = x.1,
@@ -47766,9 +47766,9 @@ Accountability (RP check)
 /*
 Generated from:
 Tamarin version 1.13.0
-Maude version 3.4
-Git revision: 1deff12bd69c96308abb2463d4de5f2c7610c191 (with uncommited changes), branch: develop
-Compiled at: 2026-03-09 07:36:56.194364 UTC
+Maude version 3.5.1
+Git revision: 53c49a44efa784b133c907eedf84491d61a48803 (with uncommited changes), branch: AC-NDC-property
+Compiled at: 2026-07-09 13:42:51.535083 UTC
 */
 
 end
@@ -47780,7 +47780,7 @@ summary of summaries:
 analyzed: examples/accountability/csf21-acc-unbounded/previous/whodunit.spthy
 
   output:          examples/accountability/csf21-acc-unbounded/previous/whodunit.spthy.tmp
-  processing time: 870.62s
+  processing time: 618.29s
   
   WARNING: 1 wellformedness check failed!
            The analysis results might be wrong!
