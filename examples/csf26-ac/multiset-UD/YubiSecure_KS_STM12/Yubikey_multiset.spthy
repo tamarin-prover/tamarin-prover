@@ -1,0 +1,161 @@
+theory YubikeyMultisets begin
+
+// Function signature and definition of the equational theory E
+
+functions: fst/1, pair/2, sdec/2, senc/2, snd/1, add/2 [AC],
+           unionUD/1 [destructor]
+equations:
+    fst(<x.1, x.2>) = x.1,
+    sdec(senc(x.1, x.2), x.2) = x.1,
+    snd(<x.1, x.2>) = x.2,
+    unionUD(add(x, y)) = x
+
+
+
+
+
+section{* The Yubikey-Protocol *}
+
+
+
+
+
+rule (modulo E) BuyANewYubikey:
+   [ Fr( ~k ), Fr( ~pid ), Fr( ~sid ) ]
+  --[ Protocol( ), Init( ~pid, ~k ), ExtendedInit( ~pid, ~sid, ~k )
+  ]->
+   [
+   !Y( ~pid, ~sid ), Y_counter( ~pid, '1' ),
+   Server( ~pid, ~sid, '1' ), !SharedKey( ~pid, ~k ), Out( ~pid )
+   ]
+
+rule (modulo E) Yubikey_Plugin:
+   [ Y_counter( pid, sc ), In( sc ) ]
+  --[ Yubi( pid, add('1', sc) ) ]->
+   [ Y_counter( pid, add('1', sc) ) ]
+
+rule (modulo E) Yubikey_PressButton:
+   [
+   !Y( pid, sid ), Y_counter( pid, tc ), !SharedKey( pid, k ),
+   In( tc ), Fr( ~npr ), Fr( ~nonce )
+   ]
+  --[
+  YubiPress( pid, tc ), YubiOTP( pid, senc(<sid, tc, ~npr>, k) ),
+  YubiSid( pid, sid, k )
+  ]->
+   [
+   Y_counter( pid, add('1', tc) ),
+   Out( <pid, ~nonce, senc(<sid, tc, ~npr>, k)> )
+   ]
+
+rule (modulo E) Server_ReceiveOTP_NewSession:
+   [
+   Server( pid, sid, otc ),
+   In( <pid, nonce, senc(<sid, tc, ~pr>, k)> ), !SharedKey( pid, k ),
+   In( otc )
+   ]
+  --[
+  Login( pid, sid, tc, senc(<sid, tc, ~pr>, k) ),
+  LoginCounter( pid, otc, tc ), Smaller( otc, tc )
+  ]->
+   [ Server( pid, sid, tc ) ]
+
+restriction smaller:
+  "∀ #i a b. (Smaller( a, b ) @ #i) ⇒ (∃ z. add(a, z) = b)"
+
+lemma transitivity:
+  all-traces
+  "∀ #t1 #t2 a b c.
+    ((Smaller( a, b ) @ #t1) ∧ (Smaller( b, c ) @ #t2)) ⇒
+    (∃ z. add(a, z) = c)"
+/*
+guarded formula characterizing all counter-examples:
+"∃ #t1 #t2 a b c.
+  (Smaller( a, b ) @ #t1) ∧ (Smaller( b, c ) @ #t2)
+ ∧
+  ∀ z. (add(a, z) = c) ⇒ ⊥"
+*/
+by sorry
+
+lemma Login_reachable:
+  exists-trace "∃ #i pid sid x otp1. Login( pid, sid, x, otp1 ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #i pid sid x otp1. (Login( pid, sid, x, otp1 ) @ #i)"
+*/
+by sorry
+
+lemma slightly_weaker_invariant [reuse, use_induction]:
+  all-traces
+  "∀ pid otc1 tc1 otc2 tc2 #t1 #t2.
+    ((LoginCounter( pid, otc1, tc1 ) @ #t1) ∧
+     (LoginCounter( pid, otc2, tc2 ) @ #t2)) ⇒
+    ((((#t1 < #t2) ∧ (∃ z. add(tc1, z) = tc2)) ∨ (#t2 < #t1)) ∨
+     (#t1 = #t2))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ pid otc1 tc1 otc2 tc2 #t1 #t2.
+  (LoginCounter( pid, otc1, tc1 ) @ #t1) ∧
+  (LoginCounter( pid, otc2, tc2 ) @ #t2)
+ ∧
+  (((¬(#t1 < #t2)) ∨ (∀ z. (add(tc1, z) = tc2) ⇒ ⊥))) ∧
+  (¬(#t2 < #t1)) ∧
+  (¬(#t1 = #t2))"
+*/
+by sorry
+
+lemma no_replay:
+  all-traces
+  "¬(∃ #i #j pid sid x otp1 otp2.
+      ((Login( pid, sid, x, otp1 ) @ #i) ∧
+       (Login( pid, sid, x, otp2 ) @ #j)) ∧
+      (¬(#i = #j)))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ #i #j pid sid x otp1 otp2.
+  (Login( pid, sid, x, otp1 ) @ #i) ∧
+  (Login( pid, sid, x, otp2 ) @ #j)
+ ∧
+  ¬(#i = #j)"
+*/
+by sorry
+
+lemma injective_correspondance:
+  all-traces
+  "∀ pid sid x otp #t2.
+    (Login( pid, sid, x, otp ) @ #t2) ⇒
+    (∃ #t1.
+      ((YubiPress( pid, x ) @ #t1) ∧ (#t1 < #t2)) ∧
+      (∀ otp2 #t3. (Login( pid, sid, x, otp2 ) @ #t3) ⇒ (#t3 = #t2)))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ pid sid x otp #t2.
+  (Login( pid, sid, x, otp ) @ #t2)
+ ∧
+  ∀ #t1.
+   (YubiPress( pid, x ) @ #t1)
+  ⇒
+   ((¬(#t1 < #t2)) ∨
+    (∃ otp2 #t3. (Login( pid, sid, x, otp2 ) @ #t3) ∧ ¬(#t3 = #t2)))"
+*/
+by sorry
+
+lemma Login_invalidates_smaller_counters:
+  all-traces
+  "∀ pid otc1 tc1 otc2 tc2 #t1 #t2 #t3.
+    (((LoginCounter( pid, otc1, tc1 ) @ #t1) ∧
+      (LoginCounter( pid, otc2, tc2 ) @ #t2)) ∧
+     (Smaller( tc1, tc2 ) @ #t3)) ⇒
+    (#t1 < #t2)"
+/*
+guarded formula characterizing all counter-examples:
+"∃ pid otc1 tc1 otc2 tc2 #t1 #t2 #t3.
+  (LoginCounter( pid, otc1, tc1 ) @ #t1) ∧
+  (LoginCounter( pid, otc2, tc2 ) @ #t2) ∧
+  (Smaller( tc1, tc2 ) @ #t3)
+ ∧
+  ¬(#t1 < #t2)"
+*/
+by sorry
+
+end

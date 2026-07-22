@@ -68,22 +68,28 @@ rule-equivalence
       step( solve( (#vl, 0) ~~> (#i, 1) ) )
         case d_0_fst
         step( solve( (#vr.1, 0) ~~> (#i, 1) ) )
-          case Xor
-          step( solve( TagRun( <~k, ~id> ) ▶₂ #vr ) )
-            case setup
-            step( solve( !KU( (~id⊕~r2) ) @ #vk ) )
-              case c_xor
-              step( solve( !KU( ~r2 ) @ #vk.2 ) )
-                case tag1_case_2
-                step( solve( !KU( ~id ) @ #vk.3 ) )
-                  case transcript
-                  step( solve( !KU( h(<r1, ~k>) ) @ #vk.4 ) )
+          case d_xor_case_1
+          step( solve( (#vr.2, 0) ~~> (#i, 1) ) )
+            case xor
+            step( solve( TagRun( <~k, ~id> ) ▶₂ #vr ) )
+              case setup
+              step( solve( !KU( (~r2⊕z) ) @ #vk.2 ) )
+                case c_xor_case_1
+                step( solve( !KU( ~r2 ) @ #vk.4 ) )
+                  case tag1_case_2
+                  step( solve( !KU( h(<r1, ~k>) ) @ #vk.5 ) )
                     case transcript
-                    step( solve( !KU( ~r2.1 ) @ #vk.5 ) )
+                    step( solve( !KU( ~r2.1 ) @ #vk.6 ) )
                       case transcript_case_1
                       step( solve( !KU( ~r1 ) @ #vk.5 ) )
                         case transcript
-                        by ATTACK // trace found
+                        step( solve( !KU( (~id⊕z) ) @ #vk.5 ) )
+                          case c_xor_case_1
+                          step( solve( !KU( ~id ) @ #vk.7 ) )
+                            case transcript
+                            by ATTACK // trace found
+                          qed
+                        qed
                       qed
                     qed
                   qed
@@ -102,9 +108,9 @@ qed
 /*
 Generated from:
 Tamarin version 1.13.0
-Maude version 3.4
-Git revision: 1deff12bd69c96308abb2463d4de5f2c7610c191 (with uncommited changes), branch: develop
-Compiled at: 2026-03-09 07:36:56.194364 UTC
+Maude version 3.5.1
+Git revision: 53c49a44efa784b133c907eedf84491d61a48803 (with uncommited changes), branch: AC-NDC-property
+Compiled at: 2026-07-09 13:42:51.535083 UTC
 */
 
 end
@@ -116,9 +122,9 @@ summary of summaries:
 analyzed: examples/csf18-xor/diff-models/KCL07-UK2.spthy
 
   output:          examples/csf18-xor/diff-models/KCL07-UK2.spthy.tmp
-  processing time: 19.08s
+  processing time: 24.22s
   
-  DiffLemma:  Observational_equivalence : falsified - found trace (14 steps)
+  DiffLemma:  Observational_equivalence : falsified - found trace (16 steps)
 
 ==============================================================================
 */

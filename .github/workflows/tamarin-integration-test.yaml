@@ -16,13 +16,6 @@ jobs:
           sudo apt-get update
           sudo apt-get install graphviz
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: npm
-          cache-dependency-path: tree-sitter/tree-sitter-spthy/package-lock.json
-
       - name: Caching
         uses: actions/cache@v4
         with:
@@ -90,16 +83,55 @@ jobs:
           name: case-studies
           path: case-studies
 
-      - name: Generate tree-sitter-spthy bindings
+  Tree-Sitter-Bindings:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
         working-directory: tree-sitter/tree-sitter-spthy
+
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: tree-sitter/tree-sitter-spthy/package-lock.json
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: tree-sitter/tree-sitter-spthy/go.mod
+          cache-dependency-path: tree-sitter/tree-sitter-spthy/go.sum
+
+      - name: Set up Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Generate tree-sitter-spthy parser
         run: |
           npm ci
-          ./node_modules/.bin/tree-sitter generate
+          npm run generate
           git diff --exit-code
 
-      - name: Regression tests for tree-sitter-spthy
-        working-directory: tree-sitter/tree-sitter-spthy
+      - name: Test tree-sitter-spthy grammar
         run: |
           ./node_modules/.bin/tree-sitter test
           PATH="$PWD/node_modules/.bin:$PATH" ./regressionParser.sh
-          
+
+      - name: Test Go binding
+        run: go test ./...
+
+      - name: Test Rust binding
+        run: cargo test
+
+      - name: Test Python binding
+        run: |
+          python -m pip install ".[core]"
+          python -m unittest discover -s bindings/python/tests
