@@ -13,8 +13,8 @@ equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
 Generated from:
 Tamarin version 1.13.0
 Maude version 3.5.1
-Git revision: 4be571f9d2b4fc31ac730003e11f29fcd3c023d5 (with uncommited changes), branch: fix-builtin
-Compiled at: 2026-03-26 09:56:07.964215 UTC
+Git revision: 53c49a44efa784b133c907eedf84491d61a48803 (with uncommited changes), branch: AC-NDC-property
+Compiled at: 2026-07-09 13:42:51.535083 UTC
 */
 
 end

@@ -1,0 +1,276 @@
+theory Yubikey_and_YubiHSM_multiset begin
+
+// Function signature and definition of the equational theory E
+
+functions: demac/2, dexor1/2, dexor2/2, fst/1, keystream/2,
+           keystream_kh/1, keystream_n/1, mac/2, pair/2, sdec/2, senc/2,
+           snd/1, xorc/2, add/2 [AC], unionUD/1 [destructor]
+equations:
+    demac(mac(m, k), k) = m,
+    dexor1(xorc(a, b), a) = b,
+    dexor2(xorc(a, b), b) = a,
+    fst(<x.1, x.2>) = x.1,
+    keystream_kh(keystream(kh, n)) = kh,
+    keystream_n(keystream(n, n)) = n,
+    sdec(senc(x.1, x.2), x.2) = x.1,
+    snd(<x.1, x.2>) = x.2,
+    unionUD(add(x, y)) = x
+
+
+
+
+
+section{* The Yubikey-Protocol with a YubiHSM *}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+rule (modulo E) isendHSM:
+   [ In( x ) ] --[ HSMWrite( x ) ]-> [ InHSM( x ) ]
+
+rule (modulo E) irecvHSM:
+   [ OutHSM( x ) ] --[ HSMRead( x ) ]-> [ Out( x ) ]
+
+rule (modulo E) read_AEAD:
+   [ !S_AEAD( pid, aead ) ]
+  --[ AEADRead( aead ), HSMRead( aead ) ]->
+   [ Out( aead ) ]
+
+rule (modulo E) write_AEAD:
+   [ In( aead ), In( pid ) ]
+  --[ AEADWrite( aead ), HSMWrite( aead ) ]->
+   [ !S_AEAD( pid, aead ) ]
+
+rule (modulo E) HSMInit:
+   [ Fr( ~k ), Fr( ~kh ) ]
+  --[ Protocol( ), GenerateRole1( ~k ), MasterKey( ~k ), OneTime( )
+  ]->
+   [ !HSM( ~kh, ~k ), Out( ~kh ), !YSM_AEAD_YUBIKEY_OTP_DECODE( ~kh )
+   ]
+
+rule (modulo E) YSM_AEAD_RANDOM_GENERATE:
+   [
+   Fr( ~data ), InHSM( <N, kh> ), !HSM( kh, k ),
+   !YSM_AEAD_RANDOM_GENERATE( kh )
+   ]
+  --[ GenerateRandomAEAD( ~data ) ]->
+   [ OutHSM( <xorc(senc(keystream(kh, N), k), ~data), mac(~data, k)> )
+   ]
+
+rule (modulo E) YSM_AEAD_GENERATE:
+   [ InHSM( <N, kh, data> ), !HSM( kh, k ), !YSM_AEAD_GENERATE( kh ) ]
+  --[
+  GenerateAEAD( data,
+                <xorc(senc(keystream(kh, N), k), data), mac(data, k)>
+  )
+  ]->
+   [ OutHSM( <xorc(senc(keystream(kh, N), k), data), mac(data, k)> ) ]
+
+rule (modulo E) YSM_AES_ESC_BLOCK_ENCRYPT:
+   [
+   InHSM( <kh, data> ), !HSM( kh, k ),
+   !YSM_AES_ESC_BLOCK_ENCRYPT( kh )
+   ]
+  -->
+   [ OutHSM( senc(data, k) ) ]
+
+rule (modulo E) YSM_AEAD_YUBIKEY_OTP_DECODE:
+   [
+   InHSM( <did, kh, 
+           <xorc(senc(keystream(kh, N), k), <k2, did>), mac(<k2, did>, k)>, 
+           senc(<did, sc, rand>, k2)>
+   ),
+   !HSM( kh, k ), !YSM_AEAD_YUBIKEY_OTP_DECODE( kh )
+   ]
+  --[
+  OtpDecode( k2, k, <did, sc, rand>, sc,
+             xorc(senc(keystream(kh, N), k), <k2, did>), mac(<k2, did>, k)
+  ),
+  OtpDecodeMaster( k2, k )
+  ]->
+   [ OutHSM( sc ) ]
+
+rule (modulo E) BuyANewYubikey:
+   [ Fr( ~k2 ), Fr( ~pid ), Fr( ~sid ), !HSM( kh, ~k ), In( '1' ) ]
+  --[ Init( ~pid, ~k2 ) ]->
+   [
+   Y_counter( ~pid, '1' ), !Y_Key( ~pid, ~k2 ), !Y_sid( ~pid, ~sid ),
+   S_Counter( ~pid, '1' ),
+   !S_AEAD( ~pid,
+            <xorc(senc(keystream(kh, ~pid), ~k), <~k2, ~sid>), 
+             mac(<~k2, ~sid>, ~k)>
+   ),
+   !S_sid( ~pid, ~sid ), Out( ~pid )
+   ]
+
+rule (modulo E) Yubikey_Plugin:
+   [ Y_counter( pid, sc ), In( Ssc ) ]
+  --[ Yubi( pid, Ssc ), Smaller( sc, Ssc ) ]->
+   [ Y_counter( pid, Ssc ) ]
+
+rule (modulo E) Yubikey_PressButton:
+   [
+   Y_counter( pid, tc ), !Y_Key( pid, k2 ), !Y_sid( pid, sid ),
+   Fr( ~pr ), Fr( ~nonce ), In( add('1', tc) )
+   ]
+  --[
+  YubiPress( pid, tc ), YubiPressOtp( pid, <sid, tc, ~pr>, tc, k2 )
+  ]->
+   [
+   Y_counter( pid, add('1', tc) ),
+   Out( <pid, ~nonce, senc(<sid, tc, ~pr>, k2)> )
+   ]
+
+rule (modulo E) Server_ReceiveOTP_NewSession:
+   [
+   In( <pid, nonce, senc(<sid, tc, ~pr>, k2)> ), !HSM( kh, k ),
+   !S_AEAD( pid,
+            <xorc(senc(keystream(kh, pid), k), <k2, sid>), mac(<k2, sid>, k)>
+   ),
+   S_Counter( pid, otc ), !S_sid( pid, sid )
+   ]
+  --[
+  Login( pid, sid, tc, senc(<sid, tc, ~pr>, k2) ),
+  LoginCounter( pid, otc, tc ), Smaller( otc, tc )
+  ]->
+   [ S_Counter( pid, tc ) ]
+
+restriction smaller:
+  "∀ #i a b. (Smaller( a, b ) @ #i) ⇒ (∃ z. add(a, z) = b)"
+
+lemma transitivity:
+  all-traces
+  "∀ #t1 #t2 a b c.
+    ((Smaller( a, b ) @ #t1) ∧ (Smaller( b, c ) @ #t2)) ⇒
+    (∃ z. add(a, z) = c)"
+/*
+guarded formula characterizing all counter-examples:
+"∃ #t1 #t2 a b c.
+  (Smaller( a, b ) @ #t1) ∧ (Smaller( b, c ) @ #t2)
+ ∧
+  ∀ z. (add(a, z) = c) ⇒ ⊥"
+*/
+by sorry
+
+restriction onetime:
+  "∀ #t3 #t4.
+    ((OneTime( ) @ #t3) ∧ (OneTime( ) @ #t4)) ⇒ (#t3 = #t4)"
+  // safety formula
+
+lemma otp_decode_does_not_help_adv_use_induction [reuse,
+                                                  use_induction]:
+  all-traces
+  "∀ #t3 k2 k m sc enc mac.
+    (OtpDecode( k2, k, m, sc, enc, mac ) @ #t3) ⇒
+    (∃ #t1 pid. (YubiPress( pid, sc ) @ #t1) ∧ (#t1 < #t3))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ #t3 k2 k m sc enc mac.
+  (OtpDecode( k2, k, m, sc, enc, mac ) @ #t3)
+ ∧
+  ∀ #t1 pid. (YubiPress( pid, sc ) @ #t1) ⇒ ¬(#t1 < #t3)"
+*/
+by sorry
+
+lemma neither_k_nor_k2_are_ever_leaked_inv [use_induction, reuse]:
+  all-traces
+  "(¬(∃ #t1 #t2 k. (MasterKey( k ) @ #t1) ∧ (!KU( k ) @ #t2))) ∧
+   (¬(∃ #t5 #t6 k6 pid. (Init( pid, k6 ) @ #t5) ∧ (!KU( k6 ) @ #t6)))"
+/*
+guarded formula characterizing all counter-examples:
+"((∃ #t1 #t2 k. (MasterKey( k ) @ #t1) ∧ (!KU( k ) @ #t2)) ∨
+  (∃ #t5 #t6 k6 pid. (Init( pid, k6 ) @ #t5) ∧ (!KU( k6 ) @ #t6)))"
+*/
+by sorry
+
+lemma slightly_weaker_invariant [reuse, use_induction]:
+  all-traces
+  "∀ pid otc1 tc1 otc2 tc2 #t1 #t2.
+    ((LoginCounter( pid, otc1, tc1 ) @ #t1) ∧
+     (LoginCounter( pid, otc2, tc2 ) @ #t2)) ⇒
+    ((((#t1 < #t2) ∧ (∃ z. tc2 = add(tc1, z))) ∨ (#t2 < #t1)) ∨
+     (#t1 = #t2))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ pid otc1 tc1 otc2 tc2 #t1 #t2.
+  (LoginCounter( pid, otc1, tc1 ) @ #t1) ∧
+  (LoginCounter( pid, otc2, tc2 ) @ #t2)
+ ∧
+  (((¬(#t1 < #t2)) ∨ (∀ z. (tc2 = add(tc1, z)) ⇒ ⊥))) ∧
+  (¬(#t2 < #t1)) ∧
+  (¬(#t1 = #t2))"
+*/
+by sorry
+
+lemma no_replay:
+  all-traces
+  "¬(∃ #i #j pid sid x otp1 otp2.
+      ((Login( pid, sid, x, otp1 ) @ #i) ∧
+       (Login( pid, sid, x, otp2 ) @ #j)) ∧
+      (¬(#i = #j)))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ #i #j pid sid x otp1 otp2.
+  (Login( pid, sid, x, otp1 ) @ #i) ∧
+  (Login( pid, sid, x, otp2 ) @ #j)
+ ∧
+  ¬(#i = #j)"
+*/
+by sorry
+
+lemma injective_correspondance:
+  all-traces
+  "∀ pid sid x otp #t2.
+    (Login( pid, sid, x, otp ) @ #t2) ⇒
+    (∃ #t1.
+      ((YubiPress( pid, x ) @ #t1) ∧ (#t1 < #t2)) ∧
+      (∀ otp2 #t3. (Login( pid, sid, x, otp2 ) @ #t3) ⇒ (#t3 = #t2)))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ pid sid x otp #t2.
+  (Login( pid, sid, x, otp ) @ #t2)
+ ∧
+  ∀ #t1.
+   (YubiPress( pid, x ) @ #t1)
+  ⇒
+   ((¬(#t1 < #t2)) ∨
+    (∃ otp2 #t3. (Login( pid, sid, x, otp2 ) @ #t3) ∧ ¬(#t3 = #t2)))"
+*/
+by sorry
+
+lemma Login_invalidates_smaller_counters:
+  all-traces
+  "∀ pid otc1 tc1 otc2 tc2 #t1 #t2 z.
+    (((LoginCounter( pid, otc1, tc1 ) @ #t1) ∧
+      (LoginCounter( pid, otc2, tc2 ) @ #t2)) ∧
+     (tc2 = add(tc1, z))) ⇒
+    (#t1 < #t2)"
+/*
+guarded formula characterizing all counter-examples:
+"∃ pid otc1 tc1 otc2 tc2 #t1 #t2 z.
+  (LoginCounter( pid, otc1, tc1 ) @ #t1) ∧
+  (LoginCounter( pid, otc2, tc2 ) @ #t2) ∧
+  (tc2 = add(tc1, z))
+ ∧
+  ¬(#t1 < #t2)"
+*/
+by sorry
+
+end

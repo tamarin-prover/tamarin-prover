@@ -72,7 +72,11 @@ module TheoryObject
     expandRestriction,
     expandLemma,
     addRestriction,
+    addRestrictions,
+    addRules,
     addLemma,
+    addLemmas,
+    addDiffLemmas,
     addLemmaAtIndex,
     modifyLemma,
     addProcess,
@@ -451,12 +455,20 @@ addRestriction l thy = do
   guard (isNothing $ lookupRestriction (L.get rstrName l) thy)
   return $ modify thyItems (++ [RestrictionItem l]) thy
 
+addRestrictions :: [Restriction] -> Theory sig c r p s -> Theory sig c r p s
+addRestrictions rts thy = fromMaybe thy $ foldl ( \fm rest -> addRestriction rest (fromJust fm)) (Just thy) rts
+
 -- | Add a new lemma. Fails, if a lemma with the same name exists.
 addLemma :: Lemma p -> Theory sig c r p s -> Maybe (Theory sig c r p s)
 addLemma l thy = do
   guard (isNothing $ lookupLemma (L.get lName l) thy)
   return $ modify thyItems (++ [LemmaItem l]) thy
 
+addLemmas :: Foldable t =>t (Lemma p) -> Theory sig c r p s -> Theory sig c r p s
+addLemmas lemmas thy = fromMaybe thy $ foldl ( \fm lemma -> addLemma lemma (fromJust fm)) (Just thy) lemmas
+
+addRules :: [r] -> Theory sig c r p s -> Theory sig c r p s
+addRules rules = L.modify thyItems (++ map RuleItem rules)
 -- | Add a new lemma at a specific index. Fails, if a lemma with the same name exists.
 addLemmaAtIndex :: Lemma p -> Int -> Theory sig c r p s -> Maybe (Theory sig c r p s)
 addLemmaAtIndex l i thy = do
@@ -579,6 +591,9 @@ addDiffLemma l thy = do
   guard (isNothing $ lookupDiffLemma (L.get lDiffName l) thy)
   return $ modify diffThyItems (++ [DiffLemmaItem l]) thy
 
+addDiffLemmas :: Foldable t =>t (Lemma p2)-> DiffTheory sig c r r2 p p2 -> DiffTheory sig c r r2 p p2
+addDiffLemmas lemmas thy = fromMaybe thy $ foldl ( \fm lemma ->  addLemmaDiff LHS lemma (fromJust fm)) (Just thy) lemmas
+
 -- | Add a new default heuristic. Fails if a heuristic is already defined.
 addHeuristic :: [GoalRanking ProofContext] -> Theory sig c r p s -> Maybe (Theory sig c r p s)
 addHeuristic h (Theory n f [] t sig c i o sapic) = Just (Theory n f h t sig c i o sapic)
@@ -679,8 +694,8 @@ lookupProcessDef :: String -> Theory sig c r p TranslationElement -> Maybe (Proc
 lookupProcessDef name = find ((name ==) . L.get pName) . theoryProcessDefs
 
 -- | Find the function typing info for a given function symbol.
-lookupFunctionTypingInfo :: NoEqSym -> Theory sig c r p TranslationElement -> Maybe SapicFunSym
-lookupFunctionTypingInfo tag = find (\(fs, _, _) -> tag == fs) . theoryFunctionTypingInfos
+lookupFunctionTypingInfo :: UserDefinedSym -> Theory sig c r p TranslationElement -> Maybe SapicFunSym
+lookupFunctionTypingInfo tag = find (\(fs,_,_) -> tag == fs) . theoryFunctionTypingInfos
 
 -- | Find the export info for the given tag.
 lookupExportInfo :: String -> Theory sig c r p TranslationElement -> [ExportInfo]
@@ -782,17 +797,45 @@ prettyTranslationElement (ProcessDefItem p) =
         )
     <-> (text "=")
     <-> nest 2 (prettyProcess $ L.get pBody p)
-prettyTranslationElement (FunctionTypingInfo ((fsn, (_, priv, _)), intypes, outtype)) =
+prettyTranslationElement (FunctionTypingInfo (ACfctUser (fsn,(priv,constr,ndc)), intypes, outtype)) =
+  (text "function:")
+    <-> text (unpack fsn)
+    <-> parens (fsep $ punctuate comma $ map printType intypes)
+    <-> text ":"
+    <-> printType outtype
+    <-> text " [AC]"
+    <-> text (showPriv priv)
+    <-> text (showConst constr)
+    <-> text (showNDC ndc)
+  where
+    printType = maybe (text defaultSapicTypeS) text
+    showPriv Private = " [private]"
+    showPriv Public = ""
+    showConst Constructor = ""
+    showConst Destructor = " [destructor]"
+    showNDC NotNDC = ""
+    showNDC IsNDC = " [NDC]"
+    showNDC IsNDCDiff = " [NDC-Diff]"
+    showNDC IsNDCBoth = " [NDC,NDC-Diff]"
+prettyTranslationElement (FunctionTypingInfo (NoEqUser (fsn, (_, priv, constr, ndc)), intypes, outtype)) =
   (text "function:")
     <-> text (unpack fsn)
     <-> parens (fsep $ punctuate comma $ map printType intypes)
     <-> text ":"
     <-> printType outtype
     <-> text (showPriv priv)
+    <-> text (showConst constr)
+    <-> text (showNDC ndc)
   where
     printType = maybe (text defaultSapicTypeS) text
     showPriv Private = " [private]"
     showPriv Public = ""
+    showConst Constructor = ""
+    showConst Destructor = " [destructor]"
+    showNDC NotNDC = ""
+    showNDC IsNDC = " [NDC]"
+    showNDC IsNDCDiff = " [NDC-Diff]"
+    showNDC IsNDCBoth = " [NDC,NDC-Diff]"
 prettyTranslationElement (ExportInfoItem eInfo) =
   (text "export: ")
     <-> text (L.get eTag eInfo)

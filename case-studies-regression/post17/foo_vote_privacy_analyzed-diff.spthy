@@ -170,7 +170,7 @@ rule-equivalence
   backward-search
     case LHS
     step( simplify )
-    step( solve( !KD( blind(m, r) ) ▶₀ #i ) )
+    step( solve( !KD( blind(x, x.1) ) ▶₀ #i ) )
       case Register_Admin_pk
       by step( solve( (#vl, 0) ~~> (#i, 0) ) )
     next
@@ -285,7 +285,7 @@ rule-equivalence
   next
     case RHS
     step( simplify )
-    step( solve( !KD( blind(m, r) ) ▶₀ #i ) )
+    step( solve( !KD( blind(x, x.1) ) ▶₀ #i ) )
       case Register_Admin_pk
       by step( solve( (#vl, 0) ~~> (#i, 0) ) )
     next
@@ -403,7 +403,7 @@ next
   backward-search
     case LHS
     step( simplify )
-    step( solve( !KD( sign(m, sk) ) ▶₀ #i ) )
+    step( solve( !KD( sign(x, x.1) ) ▶₀ #i ) )
       case Register_Admin_pk
       by step( solve( (#vl, 0) ~~> (#i, 0) ) )
     next
@@ -845,7 +845,7 @@ next
   next
     case RHS
     step( simplify )
-    step( solve( !KD( sign(m, sk) ) ▶₀ #i ) )
+    step( solve( !KD( sign(x, x.1) ) ▶₀ #i ) )
       case Register_Admin_pk
       by step( solve( (#vl, 0) ~~> (#i, 0) ) )
     next
@@ -2039,7 +2039,7 @@ next
   backward-search
     case LHS
     step( simplify )
-    step( solve( !KD( commit(m, r) ) ▶₀ #i ) )
+    step( solve( !KD( commit(x, x.1) ) ▶₀ #i ) )
       case Register_Admin_pk
       by step( solve( (#vl, 0) ~~> (#i, 0) ) )
     next
@@ -2205,13 +2205,13 @@ next
                             by step( solve( !KU( ~b ) @ #vk.9 ) )
                           next
                             case V_1_case_3
-                            by step( solve( !KU( ~b ) @ #vk.10 ) )
+                            by step( solve( !KU( ~b ) @ #vk.9 ) )
                           next
                             case V_1_case_4
                             by step( solve( !KU( ~b ) @ #vk.10 ) )
                           next
                             case V_1_case_5
-                            by step( solve( !KU( ~b ) @ #vk.9 ) )
+                            by step( solve( !KU( ~b ) @ #vk.10 ) )
                           next
                             case V_3_case_1
                             MIRRORED
@@ -2235,13 +2235,13 @@ next
                             by step( solve( !KU( ~b ) @ #vk.10 ) )
                           next
                             case V_1_case_3
-                            by step( solve( !KU( ~b ) @ #vk.11 ) )
+                            by step( solve( !KU( ~b ) @ #vk.10 ) )
                           next
                             case V_1_case_4
                             by step( solve( !KU( ~b ) @ #vk.11 ) )
                           next
                             case V_1_case_5
-                            by step( solve( !KU( ~b ) @ #vk.10 ) )
+                            by step( solve( !KU( ~b ) @ #vk.11 ) )
                           next
                             case V_3_case_1
                             step( solve( !KU( pk(~ltkV1.1) ) @ #vk.9 ) )
@@ -2408,13 +2408,13 @@ next
                             by step( solve( !KU( ~b.1 ) @ #vk.9 ) )
                           next
                             case V_1_case_3
-                            by step( solve( !KU( ~b.1 ) @ #vk.10 ) )
+                            by step( solve( !KU( ~b.1 ) @ #vk.9 ) )
                           next
                             case V_1_case_4
                             by step( solve( !KU( ~b.1 ) @ #vk.10 ) )
                           next
                             case V_1_case_5
-                            by step( solve( !KU( ~b.1 ) @ #vk.9 ) )
+                            by step( solve( !KU( ~b.1 ) @ #vk.10 ) )
                           next
                             case V_3_case_1
                             MIRRORED
@@ -2486,13 +2486,13 @@ next
                             by step( solve( !KU( ~b.1 ) @ #vk.10 ) )
                           next
                             case V_1_case_3
-                            by step( solve( !KU( ~b.1 ) @ #vk.11 ) )
+                            by step( solve( !KU( ~b.1 ) @ #vk.10 ) )
                           next
                             case V_1_case_4
                             by step( solve( !KU( ~b.1 ) @ #vk.11 ) )
                           next
                             case V_1_case_5
-                            by step( solve( !KU( ~b.1 ) @ #vk.10 ) )
+                            by step( solve( !KU( ~b.1 ) @ #vk.11 ) )
                           next
                             case V_3_case_1
                             step( solve( !KU( pk(~ltkV1) ) @ #vk.9 ) )
@@ -2610,13 +2610,13 @@ next
                             by step( solve( !KU( ~b ) @ #vk.9 ) )
                           next
                             case V_1_case_3
-                            by step( solve( !KU( ~b ) @ #vk.10 ) )
+                            by step( solve( !KU( ~b ) @ #vk.9 ) )
                           next
                             case V_1_case_4
                             by step( solve( !KU( ~b ) @ #vk.10 ) )
                           next
                             case V_1_case_5
-                            by step( solve( !KU( ~b ) @ #vk.9 ) )
+                            by step( solve( !KU( ~b ) @ #vk.10 ) )
                           next
                             case V_3_case_1
                             MIRRORED
@@ -2640,13 +2640,13 @@ next
                             by step( solve( !KU( ~b ) @ #vk.10 ) )
                           next
                             case V_1_case_3
-                            by step( solve( !KU( ~b ) @ #vk.11 ) )
+                            by step( solve( !KU( ~b ) @ #vk.10 ) )
                           next
                             case V_1_case_4
                             by step( solve( !KU( ~b ) @ #vk.11 ) )
                           next
                             case V_1_case_5
-                            by step( solve( !KU( ~b ) @ #vk.10 ) )
+                            by step( solve( !KU( ~b ) @ #vk.11 ) )
                           next
                             case V_3_case_1
                             step( solve( !KU( pk(~ltkV1.1) ) @ #vk.9 ) )
@@ -2813,13 +2813,13 @@ next
                             by step( solve( !KU( ~b.1 ) @ #vk.9 ) )
                           next
                             case V_1_case_3
-                            by step( solve( !KU( ~b.1 ) @ #vk.10 ) )
+                            by step( solve( !KU( ~b.1 ) @ #vk.9 ) )
                           next
                             case V_1_case_4
                             by step( solve( !KU( ~b.1 ) @ #vk.10 ) )
                           next
                             case V_1_case_5
-                            by step( solve( !KU( ~b.1 ) @ #vk.9 ) )
+                            by step( solve( !KU( ~b.1 ) @ #vk.10 ) )
                           next
                             case V_3_case_1
                             MIRRORED
@@ -2891,13 +2891,13 @@ next
                             by step( solve( !KU( ~b.1 ) @ #vk.10 ) )
                           next
                             case V_1_case_3
-                            by step( solve( !KU( ~b.1 ) @ #vk.11 ) )
+                            by step( solve( !KU( ~b.1 ) @ #vk.10 ) )
                           next
                             case V_1_case_4
                             by step( solve( !KU( ~b.1 ) @ #vk.11 ) )
                           next
                             case V_1_case_5
-                            by step( solve( !KU( ~b.1 ) @ #vk.10 ) )
+                            by step( solve( !KU( ~b.1 ) @ #vk.11 ) )
                           next
                             case V_3_case_1
                             step( solve( !KU( pk(~ltkV1) ) @ #vk.9 ) )
@@ -3028,13 +3028,13 @@ next
                                 by step( solve( !KU( ~b ) @ #vk.10 ) )
                               next
                                 case V_1_case_3
-                                by step( solve( !KU( ~b ) @ #vk.11 ) )
+                                by step( solve( !KU( ~b ) @ #vk.10 ) )
                               next
                                 case V_1_case_4
                                 by step( solve( !KU( ~b ) @ #vk.11 ) )
                               next
                                 case V_1_case_5
-                                by step( solve( !KU( ~b ) @ #vk.10 ) )
+                                by step( solve( !KU( ~b ) @ #vk.11 ) )
                               next
                                 case V_3_case_1
                                 MIRRORED
@@ -3055,13 +3055,13 @@ next
                                 by step( solve( !KU( ~b ) @ #vk.11 ) )
                               next
                                 case V_1_case_3
-                                by step( solve( !KU( ~b ) @ #vk.12 ) )
+                                by step( solve( !KU( ~b ) @ #vk.11 ) )
                               next
                                 case V_1_case_4
                                 by step( solve( !KU( ~b ) @ #vk.12 ) )
                               next
                                 case V_1_case_5
-                                by step( solve( !KU( ~b ) @ #vk.11 ) )
+                                by step( solve( !KU( ~b ) @ #vk.12 ) )
                               next
                                 case V_3_case_1
                                 step( solve( !KU( pk(~ltkV1.1) ) @ #vk.10 ) )
@@ -3222,13 +3222,13 @@ next
                                 by step( solve( !KU( ~b.1 ) @ #vk.10 ) )
                               next
                                 case V_1_case_3
-                                by step( solve( !KU( ~b.1 ) @ #vk.11 ) )
+                                by step( solve( !KU( ~b.1 ) @ #vk.10 ) )
                               next
                                 case V_1_case_4
                                 by step( solve( !KU( ~b.1 ) @ #vk.11 ) )
                               next
                                 case V_1_case_5
-                                by step( solve( !KU( ~b.1 ) @ #vk.10 ) )
+                                by step( solve( !KU( ~b.1 ) @ #vk.11 ) )
                               next
                                 case V_3_case_1
                                 MIRRORED
@@ -3294,13 +3294,13 @@ next
                                 by step( solve( !KU( ~b.1 ) @ #vk.11 ) )
                               next
                                 case V_1_case_3
-                                by step( solve( !KU( ~b.1 ) @ #vk.12 ) )
+                                by step( solve( !KU( ~b.1 ) @ #vk.11 ) )
                               next
                                 case V_1_case_4
                                 by step( solve( !KU( ~b.1 ) @ #vk.12 ) )
                               next
                                 case V_1_case_5
-                                by step( solve( !KU( ~b.1 ) @ #vk.11 ) )
+                                by step( solve( !KU( ~b.1 ) @ #vk.12 ) )
                               next
                                 case V_3_case_1
                                 step( solve( !KU( pk(~ltkV1) ) @ #vk.10 ) )
@@ -3415,13 +3415,13 @@ next
                                 by step( solve( !KU( ~b ) @ #vk.10 ) )
                               next
                                 case V_1_case_3
-                                by step( solve( !KU( ~b ) @ #vk.11 ) )
+                                by step( solve( !KU( ~b ) @ #vk.10 ) )
                               next
                                 case V_1_case_4
                                 by step( solve( !KU( ~b ) @ #vk.11 ) )
                               next
                                 case V_1_case_5
-                                by step( solve( !KU( ~b ) @ #vk.10 ) )
+                                by step( solve( !KU( ~b ) @ #vk.11 ) )
                               next
                                 case V_3_case_1
                                 MIRRORED
@@ -3442,13 +3442,13 @@ next
                                 by step( solve( !KU( ~b ) @ #vk.11 ) )
                               next
                                 case V_1_case_3
-                                by step( solve( !KU( ~b ) @ #vk.12 ) )
+                                by step( solve( !KU( ~b ) @ #vk.11 ) )
                               next
                                 case V_1_case_4
                                 by step( solve( !KU( ~b ) @ #vk.12 ) )
                               next
                                 case V_1_case_5
-                                by step( solve( !KU( ~b ) @ #vk.11 ) )
+                                by step( solve( !KU( ~b ) @ #vk.12 ) )
                               next
                                 case V_3_case_1
                                 step( solve( !KU( pk(~ltkV1.1) ) @ #vk.10 ) )
@@ -3609,13 +3609,13 @@ next
                                 by step( solve( !KU( ~b.1 ) @ #vk.10 ) )
                               next
                                 case V_1_case_3
-                                by step( solve( !KU( ~b.1 ) @ #vk.11 ) )
+                                by step( solve( !KU( ~b.1 ) @ #vk.10 ) )
                               next
                                 case V_1_case_4
                                 by step( solve( !KU( ~b.1 ) @ #vk.11 ) )
                               next
                                 case V_1_case_5
-                                by step( solve( !KU( ~b.1 ) @ #vk.10 ) )
+                                by step( solve( !KU( ~b.1 ) @ #vk.11 ) )
                               next
                                 case V_3_case_1
                                 MIRRORED
@@ -3681,13 +3681,13 @@ next
                                 by step( solve( !KU( ~b.1 ) @ #vk.11 ) )
                               next
                                 case V_1_case_3
-                                by step( solve( !KU( ~b.1 ) @ #vk.12 ) )
+                                by step( solve( !KU( ~b.1 ) @ #vk.11 ) )
                               next
                                 case V_1_case_4
                                 by step( solve( !KU( ~b.1 ) @ #vk.12 ) )
                               next
                                 case V_1_case_5
-                                by step( solve( !KU( ~b.1 ) @ #vk.11 ) )
+                                by step( solve( !KU( ~b.1 ) @ #vk.12 ) )
                               next
                                 case V_3_case_1
                                 step( solve( !KU( pk(~ltkV1) ) @ #vk.10 ) )
@@ -3789,7 +3789,7 @@ next
   next
     case RHS
     step( simplify )
-    step( solve( !KD( commit(m, r) ) ▶₀ #i ) )
+    step( solve( !KD( commit(x, x.1) ) ▶₀ #i ) )
       case Register_Admin_pk
       by step( solve( (#vl, 0) ~~> (#i, 0) ) )
     next
@@ -3955,13 +3955,13 @@ next
                             by step( solve( !KU( ~b ) @ #vk.9 ) )
                           next
                             case V_1_case_3
-                            by step( solve( !KU( ~b ) @ #vk.10 ) )
+                            by step( solve( !KU( ~b ) @ #vk.9 ) )
                           next
                             case V_1_case_4
                             by step( solve( !KU( ~b ) @ #vk.10 ) )
                           next
                             case V_1_case_5
-                            by step( solve( !KU( ~b ) @ #vk.9 ) )
+                            by step( solve( !KU( ~b ) @ #vk.10 ) )
                           next
                             case V_3_case_1
                             MIRRORED
@@ -3985,13 +3985,13 @@ next
                             by step( solve( !KU( ~b ) @ #vk.10 ) )
                           next
                             case V_1_case_3
-                            by step( solve( !KU( ~b ) @ #vk.11 ) )
+                            by step( solve( !KU( ~b ) @ #vk.10 ) )
                           next
                             case V_1_case_4
                             by step( solve( !KU( ~b ) @ #vk.11 ) )
                           next
                             case V_1_case_5
-                            by step( solve( !KU( ~b ) @ #vk.10 ) )
+                            by step( solve( !KU( ~b ) @ #vk.11 ) )
                           next
                             case V_3_case_1
                             step( solve( !KU( pk(~ltkV1.1) ) @ #vk.9 ) )
@@ -4158,13 +4158,13 @@ next
                             by step( solve( !KU( ~b.1 ) @ #vk.9 ) )
                           next
                             case V_1_case_3
-                            by step( solve( !KU( ~b.1 ) @ #vk.10 ) )
+                            by step( solve( !KU( ~b.1 ) @ #vk.9 ) )
                           next
                             case V_1_case_4
                             by step( solve( !KU( ~b.1 ) @ #vk.10 ) )
                           next
                             case V_1_case_5
-                            by step( solve( !KU( ~b.1 ) @ #vk.9 ) )
+                            by step( solve( !KU( ~b.1 ) @ #vk.10 ) )
                           next
                             case V_3_case_1
                             MIRRORED
@@ -4236,13 +4236,13 @@ next
                             by step( solve( !KU( ~b.1 ) @ #vk.10 ) )
                           next
                             case V_1_case_3
-                            by step( solve( !KU( ~b.1 ) @ #vk.11 ) )
+                            by step( solve( !KU( ~b.1 ) @ #vk.10 ) )
                           next
                             case V_1_case_4
                             by step( solve( !KU( ~b.1 ) @ #vk.11 ) )
                           next
                             case V_1_case_5
-                            by step( solve( !KU( ~b.1 ) @ #vk.10 ) )
+                            by step( solve( !KU( ~b.1 ) @ #vk.11 ) )
                           next
                             case V_3_case_1
                             step( solve( !KU( pk(~ltkV1) ) @ #vk.9 ) )
@@ -4360,13 +4360,13 @@ next
                             by step( solve( !KU( ~b ) @ #vk.9 ) )
                           next
                             case V_1_case_3
-                            by step( solve( !KU( ~b ) @ #vk.10 ) )
+                            by step( solve( !KU( ~b ) @ #vk.9 ) )
                           next
                             case V_1_case_4
                             by step( solve( !KU( ~b ) @ #vk.10 ) )
                           next
                             case V_1_case_5
-                            by step( solve( !KU( ~b ) @ #vk.9 ) )
+                            by step( solve( !KU( ~b ) @ #vk.10 ) )
                           next
                             case V_3_case_1
                             MIRRORED
@@ -4390,13 +4390,13 @@ next
                             by step( solve( !KU( ~b ) @ #vk.10 ) )
                           next
                             case V_1_case_3
-                            by step( solve( !KU( ~b ) @ #vk.11 ) )
+                            by step( solve( !KU( ~b ) @ #vk.10 ) )
                           next
                             case V_1_case_4
                             by step( solve( !KU( ~b ) @ #vk.11 ) )
                           next
                             case V_1_case_5
-                            by step( solve( !KU( ~b ) @ #vk.10 ) )
+                            by step( solve( !KU( ~b ) @ #vk.11 ) )
                           next
                             case V_3_case_1
                             step( solve( !KU( pk(~ltkV1.1) ) @ #vk.9 ) )
@@ -4563,13 +4563,13 @@ next
                             by step( solve( !KU( ~b.1 ) @ #vk.9 ) )
                           next
                             case V_1_case_3
-                            by step( solve( !KU( ~b.1 ) @ #vk.10 ) )
+                            by step( solve( !KU( ~b.1 ) @ #vk.9 ) )
                           next
                             case V_1_case_4
                             by step( solve( !KU( ~b.1 ) @ #vk.10 ) )
                           next
                             case V_1_case_5
-                            by step( solve( !KU( ~b.1 ) @ #vk.9 ) )
+                            by step( solve( !KU( ~b.1 ) @ #vk.10 ) )
                           next
                             case V_3_case_1
                             MIRRORED
@@ -4641,13 +4641,13 @@ next
                             by step( solve( !KU( ~b.1 ) @ #vk.10 ) )
                           next
                             case V_1_case_3
-                            by step( solve( !KU( ~b.1 ) @ #vk.11 ) )
+                            by step( solve( !KU( ~b.1 ) @ #vk.10 ) )
                           next
                             case V_1_case_4
                             by step( solve( !KU( ~b.1 ) @ #vk.11 ) )
                           next
                             case V_1_case_5
-                            by step( solve( !KU( ~b.1 ) @ #vk.10 ) )
+                            by step( solve( !KU( ~b.1 ) @ #vk.11 ) )
                           next
                             case V_3_case_1
                             step( solve( !KU( pk(~ltkV1) ) @ #vk.9 ) )
@@ -4778,13 +4778,13 @@ next
                                 by step( solve( !KU( ~b ) @ #vk.10 ) )
                               next
                                 case V_1_case_3
-                                by step( solve( !KU( ~b ) @ #vk.11 ) )
+                                by step( solve( !KU( ~b ) @ #vk.10 ) )
                               next
                                 case V_1_case_4
                                 by step( solve( !KU( ~b ) @ #vk.11 ) )
                               next
                                 case V_1_case_5
-                                by step( solve( !KU( ~b ) @ #vk.10 ) )
+                                by step( solve( !KU( ~b ) @ #vk.11 ) )
                               next
                                 case V_3_case_1
                                 MIRRORED
@@ -4805,13 +4805,13 @@ next
                                 by step( solve( !KU( ~b ) @ #vk.11 ) )
                               next
                                 case V_1_case_3
-                                by step( solve( !KU( ~b ) @ #vk.12 ) )
+                                by step( solve( !KU( ~b ) @ #vk.11 ) )
                               next
                                 case V_1_case_4
                                 by step( solve( !KU( ~b ) @ #vk.12 ) )
                               next
                                 case V_1_case_5
-                                by step( solve( !KU( ~b ) @ #vk.11 ) )
+                                by step( solve( !KU( ~b ) @ #vk.12 ) )
                               next
                                 case V_3_case_1
                                 step( solve( !KU( pk(~ltkV1.1) ) @ #vk.10 ) )
@@ -4972,13 +4972,13 @@ next
                                 by step( solve( !KU( ~b.1 ) @ #vk.10 ) )
                               next
                                 case V_1_case_3
-                                by step( solve( !KU( ~b.1 ) @ #vk.11 ) )
+                                by step( solve( !KU( ~b.1 ) @ #vk.10 ) )
                               next
                                 case V_1_case_4
                                 by step( solve( !KU( ~b.1 ) @ #vk.11 ) )
                               next
                                 case V_1_case_5
-                                by step( solve( !KU( ~b.1 ) @ #vk.10 ) )
+                                by step( solve( !KU( ~b.1 ) @ #vk.11 ) )
                               next
                                 case V_3_case_1
                                 MIRRORED
@@ -5044,13 +5044,13 @@ next
                                 by step( solve( !KU( ~b.1 ) @ #vk.11 ) )
                               next
                                 case V_1_case_3
-                                by step( solve( !KU( ~b.1 ) @ #vk.12 ) )
+                                by step( solve( !KU( ~b.1 ) @ #vk.11 ) )
                               next
                                 case V_1_case_4
                                 by step( solve( !KU( ~b.1 ) @ #vk.12 ) )
                               next
                                 case V_1_case_5
-                                by step( solve( !KU( ~b.1 ) @ #vk.11 ) )
+                                by step( solve( !KU( ~b.1 ) @ #vk.12 ) )
                               next
                                 case V_3_case_1
                                 step( solve( !KU( pk(~ltkV1) ) @ #vk.10 ) )
@@ -5165,13 +5165,13 @@ next
                                 by step( solve( !KU( ~b ) @ #vk.10 ) )
                               next
                                 case V_1_case_3
-                                by step( solve( !KU( ~b ) @ #vk.11 ) )
+                                by step( solve( !KU( ~b ) @ #vk.10 ) )
                               next
                                 case V_1_case_4
                                 by step( solve( !KU( ~b ) @ #vk.11 ) )
                               next
                                 case V_1_case_5
-                                by step( solve( !KU( ~b ) @ #vk.10 ) )
+                                by step( solve( !KU( ~b ) @ #vk.11 ) )
                               next
                                 case V_3_case_1
                                 MIRRORED
@@ -5192,13 +5192,13 @@ next
                                 by step( solve( !KU( ~b ) @ #vk.11 ) )
                               next
                                 case V_1_case_3
-                                by step( solve( !KU( ~b ) @ #vk.12 ) )
+                                by step( solve( !KU( ~b ) @ #vk.11 ) )
                               next
                                 case V_1_case_4
                                 by step( solve( !KU( ~b ) @ #vk.12 ) )
                               next
                                 case V_1_case_5
-                                by step( solve( !KU( ~b ) @ #vk.11 ) )
+                                by step( solve( !KU( ~b ) @ #vk.12 ) )
                               next
                                 case V_3_case_1
                                 step( solve( !KU( pk(~ltkV1.1) ) @ #vk.10 ) )
@@ -5359,13 +5359,13 @@ next
                                 by step( solve( !KU( ~b.1 ) @ #vk.10 ) )
                               next
                                 case V_1_case_3
-                                by step( solve( !KU( ~b.1 ) @ #vk.11 ) )
+                                by step( solve( !KU( ~b.1 ) @ #vk.10 ) )
                               next
                                 case V_1_case_4
                                 by step( solve( !KU( ~b.1 ) @ #vk.11 ) )
                               next
                                 case V_1_case_5
-                                by step( solve( !KU( ~b.1 ) @ #vk.10 ) )
+                                by step( solve( !KU( ~b.1 ) @ #vk.11 ) )
                               next
                                 case V_3_case_1
                                 MIRRORED
@@ -5431,13 +5431,13 @@ next
                                 by step( solve( !KU( ~b.1 ) @ #vk.11 ) )
                               next
                                 case V_1_case_3
-                                by step( solve( !KU( ~b.1 ) @ #vk.12 ) )
+                                by step( solve( !KU( ~b.1 ) @ #vk.11 ) )
                               next
                                 case V_1_case_4
                                 by step( solve( !KU( ~b.1 ) @ #vk.12 ) )
                               next
                                 case V_1_case_5
-                                by step( solve( !KU( ~b.1 ) @ #vk.11 ) )
+                                by step( solve( !KU( ~b.1 ) @ #vk.12 ) )
                               next
                                 case V_3_case_1
                                 step( solve( !KU( pk(~ltkV1) ) @ #vk.10 ) )
@@ -6293,7 +6293,7 @@ next
     step( simplify )
     step( solve( DiffIntrDestrd_0_unblind( ) @ #i ) )
       case d_0_unblind_case_1
-      step( solve( !KD( blind(m, r) ) ▶₀ #i ) )
+      step( solve( !KD( blind(x, x.1) ) ▶₀ #i ) )
         case Register_Admin_pk
         by step( solve( (#vl, 0) ~~> (#i, 0) ) )
       next
@@ -6407,7 +6407,7 @@ next
       qed
     next
       case d_0_unblind_case_2
-      step( solve( !KD( sign(blind(m, r), sk) ) ▶₀ #i ) )
+      step( solve( !KD( sign(blind(x, x.1), x.2) ) ▶₀ #i ) )
         case Register_Admin_pk
         by step( solve( (#vl, 0) ~~> (#i, 0) ) )
       next
@@ -6510,7 +6510,7 @@ next
     step( simplify )
     step( solve( DiffIntrDestrd_0_unblind( ) @ #i ) )
       case d_0_unblind_case_1
-      step( solve( !KD( blind(m, r) ) ▶₀ #i ) )
+      step( solve( !KD( blind(x, x.1) ) ▶₀ #i ) )
         case Register_Admin_pk
         by step( solve( (#vl, 0) ~~> (#i, 0) ) )
       next
@@ -6624,7 +6624,7 @@ next
       qed
     next
       case d_0_unblind_case_2
-      step( solve( !KD( sign(blind(m, r), sk) ) ▶₀ #i ) )
+      step( solve( !KD( sign(blind(x, x.1), x.2) ) ▶₀ #i ) )
         case Register_Admin_pk
         by step( solve( (#vl, 0) ~~> (#i, 0) ) )
       next
@@ -7381,13 +7381,13 @@ next
                       by step( solve( !KU( ~b ) @ #vk.8 ) )
                     next
                       case V_1_case_3
-                      by step( solve( !KU( ~b ) @ #vk.9 ) )
+                      by step( solve( !KU( ~b ) @ #vk.8 ) )
                     next
                       case V_1_case_4
                       by step( solve( !KU( ~b ) @ #vk.9 ) )
                     next
                       case V_1_case_5
-                      by step( solve( !KU( ~b ) @ #vk.8 ) )
+                      by step( solve( !KU( ~b ) @ #vk.9 ) )
                     next
                       case V_3_case_1
                       step( solve( !KU( blind(commit($vote, ~r), ~b) ) @ #vk.6 ) )
@@ -7530,13 +7530,13 @@ next
                       by step( solve( !KU( ~b.1 ) @ #vk.8 ) )
                     next
                       case V_1_case_3
-                      by step( solve( !KU( ~b.1 ) @ #vk.9 ) )
+                      by step( solve( !KU( ~b.1 ) @ #vk.8 ) )
                     next
                       case V_1_case_4
                       by step( solve( !KU( ~b.1 ) @ #vk.9 ) )
                     next
                       case V_1_case_5
-                      by step( solve( !KU( ~b.1 ) @ #vk.8 ) )
+                      by step( solve( !KU( ~b.1 ) @ #vk.9 ) )
                     next
                       case V_3_case_1
                       step( solve( !KU( blind(commit($vote1, ~r1), ~b) ) @ #vk.6 ) )
@@ -7678,13 +7678,13 @@ next
                       by step( solve( !KU( ~b ) @ #vk.8 ) )
                     next
                       case V_1_case_3
-                      by step( solve( !KU( ~b ) @ #vk.9 ) )
+                      by step( solve( !KU( ~b ) @ #vk.8 ) )
                     next
                       case V_1_case_4
                       by step( solve( !KU( ~b ) @ #vk.9 ) )
                     next
                       case V_1_case_5
-                      by step( solve( !KU( ~b ) @ #vk.8 ) )
+                      by step( solve( !KU( ~b ) @ #vk.9 ) )
                     next
                       case V_3_case_1
                       step( solve( !KU( blind(commit($vote, ~r), ~b) ) @ #vk.6 ) )
@@ -7827,13 +7827,13 @@ next
                       by step( solve( !KU( ~b.1 ) @ #vk.8 ) )
                     next
                       case V_1_case_3
-                      by step( solve( !KU( ~b.1 ) @ #vk.9 ) )
+                      by step( solve( !KU( ~b.1 ) @ #vk.8 ) )
                     next
                       case V_1_case_4
                       by step( solve( !KU( ~b.1 ) @ #vk.9 ) )
                     next
                       case V_1_case_5
-                      by step( solve( !KU( ~b.1 ) @ #vk.8 ) )
+                      by step( solve( !KU( ~b.1 ) @ #vk.9 ) )
                     next
                       case V_3_case_1
                       step( solve( !KU( blind(commit($vote1, ~r1), ~b) ) @ #vk.6 ) )
@@ -8009,13 +8009,13 @@ next
                                 by step( solve( !KU( ~b ) @ #vk.10 ) )
                               next
                                 case V_1_case_3
-                                by step( solve( !KU( ~b ) @ #vk.11 ) )
+                                by step( solve( !KU( ~b ) @ #vk.10 ) )
                               next
                                 case V_1_case_4
                                 by step( solve( !KU( ~b ) @ #vk.11 ) )
                               next
                                 case V_1_case_5
-                                by step( solve( !KU( ~b ) @ #vk.10 ) )
+                                by step( solve( !KU( ~b ) @ #vk.11 ) )
                               next
                                 case V_3_case_1
                                 MIRRORED
@@ -8039,13 +8039,13 @@ next
                                 by step( solve( !KU( ~b ) @ #vk.11 ) )
                               next
                                 case V_1_case_3
-                                by step( solve( !KU( ~b ) @ #vk.12 ) )
+                                by step( solve( !KU( ~b ) @ #vk.11 ) )
                               next
                                 case V_1_case_4
                                 by step( solve( !KU( ~b ) @ #vk.12 ) )
                               next
                                 case V_1_case_5
-                                by step( solve( !KU( ~b ) @ #vk.11 ) )
+                                by step( solve( !KU( ~b ) @ #vk.12 ) )
                               next
                                 case V_3_case_1
                                 step( solve( !KU( pk(~ltkV1.1) ) @ #vk.10 ) )
@@ -8236,13 +8236,13 @@ next
                                 by step( solve( !KU( ~b.1 ) @ #vk.10 ) )
                               next
                                 case V_1_case_3
-                                by step( solve( !KU( ~b.1 ) @ #vk.11 ) )
+                                by step( solve( !KU( ~b.1 ) @ #vk.10 ) )
                               next
                                 case V_1_case_4
                                 by step( solve( !KU( ~b.1 ) @ #vk.11 ) )
                               next
                                 case V_1_case_5
-                                by step( solve( !KU( ~b.1 ) @ #vk.10 ) )
+                                by step( solve( !KU( ~b.1 ) @ #vk.11 ) )
                               next
                                 case V_3_case_1
                                 MIRRORED
@@ -8314,13 +8314,13 @@ next
                                 by step( solve( !KU( ~b.1 ) @ #vk.11 ) )
                               next
                                 case V_1_case_3
-                                by step( solve( !KU( ~b.1 ) @ #vk.12 ) )
+                                by step( solve( !KU( ~b.1 ) @ #vk.11 ) )
                               next
                                 case V_1_case_4
                                 by step( solve( !KU( ~b.1 ) @ #vk.12 ) )
                               next
                                 case V_1_case_5
-                                by step( solve( !KU( ~b.1 ) @ #vk.11 ) )
+                                by step( solve( !KU( ~b.1 ) @ #vk.12 ) )
                               next
                                 case V_3_case_1
                                 step( solve( !KU( pk(~ltkV1) ) @ #vk.10 ) )
@@ -8462,13 +8462,13 @@ next
                                 by step( solve( !KU( ~b ) @ #vk.10 ) )
                               next
                                 case V_1_case_3
-                                by step( solve( !KU( ~b ) @ #vk.11 ) )
+                                by step( solve( !KU( ~b ) @ #vk.10 ) )
                               next
                                 case V_1_case_4
                                 by step( solve( !KU( ~b ) @ #vk.11 ) )
                               next
                                 case V_1_case_5
-                                by step( solve( !KU( ~b ) @ #vk.10 ) )
+                                by step( solve( !KU( ~b ) @ #vk.11 ) )
                               next
                                 case V_3_case_1
                                 MIRRORED
@@ -8492,13 +8492,13 @@ next
                                 by step( solve( !KU( ~b ) @ #vk.11 ) )
                               next
                                 case V_1_case_3
-                                by step( solve( !KU( ~b ) @ #vk.12 ) )
+                                by step( solve( !KU( ~b ) @ #vk.11 ) )
                               next
                                 case V_1_case_4
                                 by step( solve( !KU( ~b ) @ #vk.12 ) )
                               next
                                 case V_1_case_5
-                                by step( solve( !KU( ~b ) @ #vk.11 ) )
+                                by step( solve( !KU( ~b ) @ #vk.12 ) )
                               next
                                 case V_3_case_1
                                 step( solve( !KU( pk(~ltkV1.1) ) @ #vk.10 ) )
@@ -8689,13 +8689,13 @@ next
                                 by step( solve( !KU( ~b.1 ) @ #vk.10 ) )
                               next
                                 case V_1_case_3
-                                by step( solve( !KU( ~b.1 ) @ #vk.11 ) )
+                                by step( solve( !KU( ~b.1 ) @ #vk.10 ) )
                               next
                                 case V_1_case_4
                                 by step( solve( !KU( ~b.1 ) @ #vk.11 ) )
                               next
                                 case V_1_case_5
-                                by step( solve( !KU( ~b.1 ) @ #vk.10 ) )
+                                by step( solve( !KU( ~b.1 ) @ #vk.11 ) )
                               next
                                 case V_3_case_1
                                 MIRRORED
@@ -8767,13 +8767,13 @@ next
                                 by step( solve( !KU( ~b.1 ) @ #vk.11 ) )
                               next
                                 case V_1_case_3
-                                by step( solve( !KU( ~b.1 ) @ #vk.12 ) )
+                                by step( solve( !KU( ~b.1 ) @ #vk.11 ) )
                               next
                                 case V_1_case_4
                                 by step( solve( !KU( ~b.1 ) @ #vk.12 ) )
                               next
                                 case V_1_case_5
-                                by step( solve( !KU( ~b.1 ) @ #vk.11 ) )
+                                by step( solve( !KU( ~b.1 ) @ #vk.12 ) )
                               next
                                 case V_3_case_1
                                 step( solve( !KU( pk(~ltkV1) ) @ #vk.10 ) )
@@ -8897,13 +8897,13 @@ next
                           by step( solve( !KU( ~b ) @ #vk.9 ) )
                         next
                           case V_1_case_3
-                          by step( solve( !KU( ~b ) @ #vk.10 ) )
+                          by step( solve( !KU( ~b ) @ #vk.9 ) )
                         next
                           case V_1_case_4
                           by step( solve( !KU( ~b ) @ #vk.10 ) )
                         next
                           case V_1_case_5
-                          by step( solve( !KU( ~b ) @ #vk.9 ) )
+                          by step( solve( !KU( ~b ) @ #vk.10 ) )
                         next
                           case V_3_case_1
                           step( solve( !KU( blind(commit($vote, ~r), ~b) ) @ #vk.7 ) )
@@ -9046,13 +9046,13 @@ next
                           by step( solve( !KU( ~b.1 ) @ #vk.9 ) )
                         next
                           case V_1_case_3
-                          by step( solve( !KU( ~b.1 ) @ #vk.10 ) )
+                          by step( solve( !KU( ~b.1 ) @ #vk.9 ) )
                         next
                           case V_1_case_4
                           by step( solve( !KU( ~b.1 ) @ #vk.10 ) )
                         next
                           case V_1_case_5
-                          by step( solve( !KU( ~b.1 ) @ #vk.9 ) )
+                          by step( solve( !KU( ~b.1 ) @ #vk.10 ) )
                         next
                           case V_3_case_1
                           step( solve( !KU( blind(commit($vote1, ~r1), ~b) ) @ #vk.7 ) )
@@ -9194,13 +9194,13 @@ next
                           by step( solve( !KU( ~b ) @ #vk.9 ) )
                         next
                           case V_1_case_3
-                          by step( solve( !KU( ~b ) @ #vk.10 ) )
+                          by step( solve( !KU( ~b ) @ #vk.9 ) )
                         next
                           case V_1_case_4
                           by step( solve( !KU( ~b ) @ #vk.10 ) )
                         next
                           case V_1_case_5
-                          by step( solve( !KU( ~b ) @ #vk.9 ) )
+                          by step( solve( !KU( ~b ) @ #vk.10 ) )
                         next
                           case V_3_case_1
                           step( solve( !KU( blind(commit($vote, ~r), ~b) ) @ #vk.7 ) )
@@ -9343,13 +9343,13 @@ next
                           by step( solve( !KU( ~b.1 ) @ #vk.9 ) )
                         next
                           case V_1_case_3
-                          by step( solve( !KU( ~b.1 ) @ #vk.10 ) )
+                          by step( solve( !KU( ~b.1 ) @ #vk.9 ) )
                         next
                           case V_1_case_4
                           by step( solve( !KU( ~b.1 ) @ #vk.10 ) )
                         next
                           case V_1_case_5
-                          by step( solve( !KU( ~b.1 ) @ #vk.9 ) )
+                          by step( solve( !KU( ~b.1 ) @ #vk.10 ) )
                         next
                           case V_3_case_1
                           step( solve( !KU( blind(commit($vote1, ~r1), ~b) ) @ #vk.7 ) )
@@ -9525,13 +9525,13 @@ next
                                     by step( solve( !KU( ~b ) @ #vk.11 ) )
                                   next
                                     case V_1_case_3
-                                    by step( solve( !KU( ~b ) @ #vk.12 ) )
+                                    by step( solve( !KU( ~b ) @ #vk.11 ) )
                                   next
                                     case V_1_case_4
                                     by step( solve( !KU( ~b ) @ #vk.12 ) )
                                   next
                                     case V_1_case_5
-                                    by step( solve( !KU( ~b ) @ #vk.11 ) )
+                                    by step( solve( !KU( ~b ) @ #vk.12 ) )
                                   next
                                     case V_3_case_1
                                     MIRRORED
@@ -9552,13 +9552,13 @@ next
                                     by step( solve( !KU( ~b ) @ #vk.12 ) )
                                   next
                                     case V_1_case_3
-                                    by step( solve( !KU( ~b ) @ #vk.13 ) )
+                                    by step( solve( !KU( ~b ) @ #vk.12 ) )
                                   next
                                     case V_1_case_4
                                     by step( solve( !KU( ~b ) @ #vk.13 ) )
                                   next
                                     case V_1_case_5
-                                    by step( solve( !KU( ~b ) @ #vk.12 ) )
+                                    by step( solve( !KU( ~b ) @ #vk.13 ) )
                                   next
                                     case V_3_case_1
                                     step( solve( !KU( pk(~ltkV1.1) ) @ #vk.11 ) )
@@ -9743,13 +9743,13 @@ next
                                     by step( solve( !KU( ~b.1 ) @ #vk.11 ) )
                                   next
                                     case V_1_case_3
-                                    by step( solve( !KU( ~b.1 ) @ #vk.12 ) )
+                                    by step( solve( !KU( ~b.1 ) @ #vk.11 ) )
                                   next
                                     case V_1_case_4
                                     by step( solve( !KU( ~b.1 ) @ #vk.12 ) )
                                   next
                                     case V_1_case_5
-                                    by step( solve( !KU( ~b.1 ) @ #vk.11 ) )
+                                    by step( solve( !KU( ~b.1 ) @ #vk.12 ) )
                                   next
                                     case V_3_case_1
                                     MIRRORED
@@ -9815,13 +9815,13 @@ next
                                     by step( solve( !KU( ~b.1 ) @ #vk.12 ) )
                                   next
                                     case V_1_case_3
-                                    by step( solve( !KU( ~b.1 ) @ #vk.13 ) )
+                                    by step( solve( !KU( ~b.1 ) @ #vk.12 ) )
                                   next
                                     case V_1_case_4
                                     by step( solve( !KU( ~b.1 ) @ #vk.13 ) )
                                   next
                                     case V_1_case_5
-                                    by step( solve( !KU( ~b.1 ) @ #vk.12 ) )
+                                    by step( solve( !KU( ~b.1 ) @ #vk.13 ) )
                                   next
                                     case V_3_case_1
                                     step( solve( !KU( pk(~ltkV1) ) @ #vk.11 ) )
@@ -9960,13 +9960,13 @@ next
                                     by step( solve( !KU( ~b ) @ #vk.11 ) )
                                   next
                                     case V_1_case_3
-                                    by step( solve( !KU( ~b ) @ #vk.12 ) )
+                                    by step( solve( !KU( ~b ) @ #vk.11 ) )
                                   next
                                     case V_1_case_4
                                     by step( solve( !KU( ~b ) @ #vk.12 ) )
                                   next
                                     case V_1_case_5
-                                    by step( solve( !KU( ~b ) @ #vk.11 ) )
+                                    by step( solve( !KU( ~b ) @ #vk.12 ) )
                                   next
                                     case V_3_case_1
                                     MIRRORED
@@ -9987,13 +9987,13 @@ next
                                     by step( solve( !KU( ~b ) @ #vk.12 ) )
                                   next
                                     case V_1_case_3
-                                    by step( solve( !KU( ~b ) @ #vk.13 ) )
+                                    by step( solve( !KU( ~b ) @ #vk.12 ) )
                                   next
                                     case V_1_case_4
                                     by step( solve( !KU( ~b ) @ #vk.13 ) )
                                   next
                                     case V_1_case_5
-                                    by step( solve( !KU( ~b ) @ #vk.12 ) )
+                                    by step( solve( !KU( ~b ) @ #vk.13 ) )
                                   next
                                     case V_3_case_1
                                     step( solve( !KU( pk(~ltkV1.1) ) @ #vk.11 ) )
@@ -10178,13 +10178,13 @@ next
                                     by step( solve( !KU( ~b.1 ) @ #vk.11 ) )
                                   next
                                     case V_1_case_3
-                                    by step( solve( !KU( ~b.1 ) @ #vk.12 ) )
+                                    by step( solve( !KU( ~b.1 ) @ #vk.11 ) )
                                   next
                                     case V_1_case_4
                                     by step( solve( !KU( ~b.1 ) @ #vk.12 ) )
                                   next
                                     case V_1_case_5
-                                    by step( solve( !KU( ~b.1 ) @ #vk.11 ) )
+                                    by step( solve( !KU( ~b.1 ) @ #vk.12 ) )
                                   next
                                     case V_3_case_1
                                     MIRRORED
@@ -10250,13 +10250,13 @@ next
                                     by step( solve( !KU( ~b.1 ) @ #vk.12 ) )
                                   next
                                     case V_1_case_3
-                                    by step( solve( !KU( ~b.1 ) @ #vk.13 ) )
+                                    by step( solve( !KU( ~b.1 ) @ #vk.12 ) )
                                   next
                                     case V_1_case_4
                                     by step( solve( !KU( ~b.1 ) @ #vk.13 ) )
                                   next
                                     case V_1_case_5
-                                    by step( solve( !KU( ~b.1 ) @ #vk.12 ) )
+                                    by step( solve( !KU( ~b.1 ) @ #vk.13 ) )
                                   next
                                     case V_3_case_1
                                     step( solve( !KU( pk(~ltkV1) ) @ #vk.11 ) )
@@ -10435,13 +10435,13 @@ next
                             by step( solve( !KU( ~b ) @ #vk.9 ) )
                           next
                             case V_1_case_3
-                            by step( solve( !KU( ~b ) @ #vk.10 ) )
+                            by step( solve( !KU( ~b ) @ #vk.9 ) )
                           next
                             case V_1_case_4
                             by step( solve( !KU( ~b ) @ #vk.10 ) )
                           next
                             case V_1_case_5
-                            by step( solve( !KU( ~b ) @ #vk.9 ) )
+                            by step( solve( !KU( ~b ) @ #vk.10 ) )
                           next
                             case V_3_case_1
                             MIRRORED
@@ -10468,13 +10468,13 @@ next
                             by step( solve( !KU( ~b ) @ #vk.10 ) )
                           next
                             case V_1_case_3
-                            by step( solve( !KU( ~b ) @ #vk.11 ) )
+                            by step( solve( !KU( ~b ) @ #vk.10 ) )
                           next
                             case V_1_case_4
                             by step( solve( !KU( ~b ) @ #vk.11 ) )
                           next
                             case V_1_case_5
-                            by step( solve( !KU( ~b ) @ #vk.10 ) )
+                            by step( solve( !KU( ~b ) @ #vk.11 ) )
                           next
                             case V_3_case_1
                             step( solve( !KU( pk(~ltkV1.1) ) @ #vk.9 ) )
@@ -10710,13 +10710,13 @@ next
                             by step( solve( !KU( ~b.1 ) @ #vk.9 ) )
                           next
                             case V_1_case_3
-                            by step( solve( !KU( ~b.1 ) @ #vk.10 ) )
+                            by step( solve( !KU( ~b.1 ) @ #vk.9 ) )
                           next
                             case V_1_case_4
                             by step( solve( !KU( ~b.1 ) @ #vk.10 ) )
                           next
                             case V_1_case_5
-                            by step( solve( !KU( ~b.1 ) @ #vk.9 ) )
+                            by step( solve( !KU( ~b.1 ) @ #vk.10 ) )
                           next
                             case V_3_case_1
                             MIRRORED
@@ -10794,13 +10794,13 @@ next
                             by step( solve( !KU( ~b.1 ) @ #vk.10 ) )
                           next
                             case V_1_case_3
-                            by step( solve( !KU( ~b.1 ) @ #vk.11 ) )
+                            by step( solve( !KU( ~b.1 ) @ #vk.10 ) )
                           next
                             case V_1_case_4
                             by step( solve( !KU( ~b.1 ) @ #vk.11 ) )
                           next
                             case V_1_case_5
-                            by step( solve( !KU( ~b.1 ) @ #vk.10 ) )
+                            by step( solve( !KU( ~b.1 ) @ #vk.11 ) )
                           next
                             case V_3_case_1
                             step( solve( !KU( pk(~ltkV1) ) @ #vk.9 ) )
@@ -10984,13 +10984,13 @@ next
                             by step( solve( !KU( ~b ) @ #vk.9 ) )
                           next
                             case V_1_case_3
-                            by step( solve( !KU( ~b ) @ #vk.10 ) )
+                            by step( solve( !KU( ~b ) @ #vk.9 ) )
                           next
                             case V_1_case_4
                             by step( solve( !KU( ~b ) @ #vk.10 ) )
                           next
                             case V_1_case_5
-                            by step( solve( !KU( ~b ) @ #vk.9 ) )
+                            by step( solve( !KU( ~b ) @ #vk.10 ) )
                           next
                             case V_3_case_1
                             MIRRORED
@@ -11017,13 +11017,13 @@ next
                             by step( solve( !KU( ~b ) @ #vk.10 ) )
                           next
                             case V_1_case_3
-                            by step( solve( !KU( ~b ) @ #vk.11 ) )
+                            by step( solve( !KU( ~b ) @ #vk.10 ) )
                           next
                             case V_1_case_4
                             by step( solve( !KU( ~b ) @ #vk.11 ) )
                           next
                             case V_1_case_5
-                            by step( solve( !KU( ~b ) @ #vk.10 ) )
+                            by step( solve( !KU( ~b ) @ #vk.11 ) )
                           next
                             case V_3_case_1
                             step( solve( !KU( pk(~ltkV1.1) ) @ #vk.9 ) )
@@ -11259,13 +11259,13 @@ next
                             by step( solve( !KU( ~b.1 ) @ #vk.9 ) )
                           next
                             case V_1_case_3
-                            by step( solve( !KU( ~b.1 ) @ #vk.10 ) )
+                            by step( solve( !KU( ~b.1 ) @ #vk.9 ) )
                           next
                             case V_1_case_4
                             by step( solve( !KU( ~b.1 ) @ #vk.10 ) )
                           next
                             case V_1_case_5
-                            by step( solve( !KU( ~b.1 ) @ #vk.9 ) )
+                            by step( solve( !KU( ~b.1 ) @ #vk.10 ) )
                           next
                             case V_3_case_1
                             MIRRORED
@@ -11343,13 +11343,13 @@ next
                             by step( solve( !KU( ~b.1 ) @ #vk.10 ) )
                           next
                             case V_1_case_3
-                            by step( solve( !KU( ~b.1 ) @ #vk.11 ) )
+                            by step( solve( !KU( ~b.1 ) @ #vk.10 ) )
                           next
                             case V_1_case_4
                             by step( solve( !KU( ~b.1 ) @ #vk.11 ) )
                           next
                             case V_1_case_5
-                            by step( solve( !KU( ~b.1 ) @ #vk.10 ) )
+                            by step( solve( !KU( ~b.1 ) @ #vk.11 ) )
                           next
                             case V_3_case_1
                             step( solve( !KU( pk(~ltkV1) ) @ #vk.9 ) )
@@ -11479,13 +11479,13 @@ next
                       by step( solve( !KU( ~b ) @ #vk.10 ) )
                     next
                       case V_1_case_3
-                      by step( solve( !KU( ~b ) @ #vk.11 ) )
+                      by step( solve( !KU( ~b ) @ #vk.10 ) )
                     next
                       case V_1_case_4
                       by step( solve( !KU( ~b ) @ #vk.11 ) )
                     next
                       case V_1_case_5
-                      by step( solve( !KU( ~b ) @ #vk.10 ) )
+                      by step( solve( !KU( ~b ) @ #vk.11 ) )
                     next
                       case V_3_case_1
                       step( solve( !KU( blind(commit($vote, ~r), ~b) ) @ #vk.8 ) )
@@ -11614,13 +11614,13 @@ next
                       by step( solve( !KU( ~b ) @ #vk.10 ) )
                     next
                       case V_1_case_3
-                      by step( solve( !KU( ~b ) @ #vk.11 ) )
+                      by step( solve( !KU( ~b ) @ #vk.10 ) )
                     next
                       case V_1_case_4
                       by step( solve( !KU( ~b ) @ #vk.11 ) )
                     next
                       case V_1_case_5
-                      by step( solve( !KU( ~b ) @ #vk.10 ) )
+                      by step( solve( !KU( ~b ) @ #vk.11 ) )
                     next
                       case V_3_case_1
                       step( solve( !KU( blind(commit($vote, ~r), ~b) ) @ #vk.8 ) )
@@ -11772,13 +11772,13 @@ next
                       by step( solve( !KU( ~b.1 ) @ #vk.10 ) )
                     next
                       case V_1_case_3
-                      by step( solve( !KU( ~b.1 ) @ #vk.11 ) )
+                      by step( solve( !KU( ~b.1 ) @ #vk.10 ) )
                     next
                       case V_1_case_4
                       by step( solve( !KU( ~b.1 ) @ #vk.11 ) )
                     next
                       case V_1_case_5
-                      by step( solve( !KU( ~b.1 ) @ #vk.10 ) )
+                      by step( solve( !KU( ~b.1 ) @ #vk.11 ) )
                     next
                       case V_3_case_1
                       step( solve( !KU( blind(commit($vote1, ~r1), ~b) ) @ #vk.8 ) )
@@ -11907,13 +11907,13 @@ next
                       by step( solve( !KU( ~b.1 ) @ #vk.10 ) )
                     next
                       case V_1_case_3
-                      by step( solve( !KU( ~b.1 ) @ #vk.11 ) )
+                      by step( solve( !KU( ~b.1 ) @ #vk.10 ) )
                     next
                       case V_1_case_4
                       by step( solve( !KU( ~b.1 ) @ #vk.11 ) )
                     next
                       case V_1_case_5
-                      by step( solve( !KU( ~b.1 ) @ #vk.10 ) )
+                      by step( solve( !KU( ~b.1 ) @ #vk.11 ) )
                     next
                       case V_3_case_1
                       step( solve( !KU( blind(commit($vote1, ~r1), ~b) ) @ #vk.8 ) )
@@ -12064,13 +12064,13 @@ next
                       by step( solve( !KU( ~b ) @ #vk.10 ) )
                     next
                       case V_1_case_3
-                      by step( solve( !KU( ~b ) @ #vk.11 ) )
+                      by step( solve( !KU( ~b ) @ #vk.10 ) )
                     next
                       case V_1_case_4
                       by step( solve( !KU( ~b ) @ #vk.11 ) )
                     next
                       case V_1_case_5
-                      by step( solve( !KU( ~b ) @ #vk.10 ) )
+                      by step( solve( !KU( ~b ) @ #vk.11 ) )
                     next
                       case V_3_case_1
                       step( solve( !KU( blind(commit($vote, ~r), ~b) ) @ #vk.8 ) )
@@ -12199,13 +12199,13 @@ next
                       by step( solve( !KU( ~b ) @ #vk.10 ) )
                     next
                       case V_1_case_3
-                      by step( solve( !KU( ~b ) @ #vk.11 ) )
+                      by step( solve( !KU( ~b ) @ #vk.10 ) )
                     next
                       case V_1_case_4
                       by step( solve( !KU( ~b ) @ #vk.11 ) )
                     next
                       case V_1_case_5
-                      by step( solve( !KU( ~b ) @ #vk.10 ) )
+                      by step( solve( !KU( ~b ) @ #vk.11 ) )
                     next
                       case V_3_case_1
                       step( solve( !KU( blind(commit($vote, ~r), ~b) ) @ #vk.8 ) )
@@ -12357,13 +12357,13 @@ next
                       by step( solve( !KU( ~b.1 ) @ #vk.10 ) )
                     next
                       case V_1_case_3
-                      by step( solve( !KU( ~b.1 ) @ #vk.11 ) )
+                      by step( solve( !KU( ~b.1 ) @ #vk.10 ) )
                     next
                       case V_1_case_4
                       by step( solve( !KU( ~b.1 ) @ #vk.11 ) )
                     next
                       case V_1_case_5
-                      by step( solve( !KU( ~b.1 ) @ #vk.10 ) )
+                      by step( solve( !KU( ~b.1 ) @ #vk.11 ) )
                     next
                       case V_3_case_1
                       step( solve( !KU( blind(commit($vote1, ~r1), ~b) ) @ #vk.8 ) )
@@ -12492,13 +12492,13 @@ next
                       by step( solve( !KU( ~b.1 ) @ #vk.10 ) )
                     next
                       case V_1_case_3
-                      by step( solve( !KU( ~b.1 ) @ #vk.11 ) )
+                      by step( solve( !KU( ~b.1 ) @ #vk.10 ) )
                     next
                       case V_1_case_4
                       by step( solve( !KU( ~b.1 ) @ #vk.11 ) )
                     next
                       case V_1_case_5
-                      by step( solve( !KU( ~b.1 ) @ #vk.10 ) )
+                      by step( solve( !KU( ~b.1 ) @ #vk.11 ) )
                     next
                       case V_3_case_1
                       step( solve( !KU( blind(commit($vote1, ~r1), ~b) ) @ #vk.8 ) )
@@ -12647,13 +12647,13 @@ next
                     by step( solve( !KU( ~b ) @ #vk.9 ) )
                   next
                     case V_1_case_3
-                    by step( solve( !KU( ~b ) @ #vk.10 ) )
+                    by step( solve( !KU( ~b ) @ #vk.9 ) )
                   next
                     case V_1_case_4
                     by step( solve( !KU( ~b ) @ #vk.10 ) )
                   next
                     case V_1_case_5
-                    by step( solve( !KU( ~b ) @ #vk.9 ) )
+                    by step( solve( !KU( ~b ) @ #vk.10 ) )
                   next
                     case V_3_case_1
                     step( solve( !KU( blind(commit($vote, ~r), ~b) ) @ #vk.7 ) )
@@ -12793,13 +12793,13 @@ next
                     by step( solve( !KU( ~b.1 ) @ #vk.9 ) )
                   next
                     case V_1_case_3
-                    by step( solve( !KU( ~b.1 ) @ #vk.10 ) )
+                    by step( solve( !KU( ~b.1 ) @ #vk.9 ) )
                   next
                     case V_1_case_4
                     by step( solve( !KU( ~b.1 ) @ #vk.10 ) )
                   next
                     case V_1_case_5
-                    by step( solve( !KU( ~b.1 ) @ #vk.9 ) )
+                    by step( solve( !KU( ~b.1 ) @ #vk.10 ) )
                   next
                     case V_3_case_1
                     step( solve( !KU( blind(commit($vote1, ~r1), ~b) ) @ #vk.7 ) )
@@ -12938,13 +12938,13 @@ next
                     by step( solve( !KU( ~b ) @ #vk.9 ) )
                   next
                     case V_1_case_3
-                    by step( solve( !KU( ~b ) @ #vk.10 ) )
+                    by step( solve( !KU( ~b ) @ #vk.9 ) )
                   next
                     case V_1_case_4
                     by step( solve( !KU( ~b ) @ #vk.10 ) )
                   next
                     case V_1_case_5
-                    by step( solve( !KU( ~b ) @ #vk.9 ) )
+                    by step( solve( !KU( ~b ) @ #vk.10 ) )
                   next
                     case V_3_case_1
                     step( solve( !KU( blind(commit($vote, ~r), ~b) ) @ #vk.7 ) )
@@ -13084,13 +13084,13 @@ next
                     by step( solve( !KU( ~b.1 ) @ #vk.9 ) )
                   next
                     case V_1_case_3
-                    by step( solve( !KU( ~b.1 ) @ #vk.10 ) )
+                    by step( solve( !KU( ~b.1 ) @ #vk.9 ) )
                   next
                     case V_1_case_4
                     by step( solve( !KU( ~b.1 ) @ #vk.10 ) )
                   next
                     case V_1_case_5
-                    by step( solve( !KU( ~b.1 ) @ #vk.9 ) )
+                    by step( solve( !KU( ~b.1 ) @ #vk.10 ) )
                   next
                     case V_3_case_1
                     step( solve( !KU( blind(commit($vote1, ~r1), ~b) ) @ #vk.7 ) )
@@ -13696,13 +13696,13 @@ next
                       by step( solve( !KU( ~b ) @ #vk.8 ) )
                     next
                       case V_1_case_3
-                      by step( solve( !KU( ~b ) @ #vk.9 ) )
+                      by step( solve( !KU( ~b ) @ #vk.8 ) )
                     next
                       case V_1_case_4
                       by step( solve( !KU( ~b ) @ #vk.9 ) )
                     next
                       case V_1_case_5
-                      by step( solve( !KU( ~b ) @ #vk.8 ) )
+                      by step( solve( !KU( ~b ) @ #vk.9 ) )
                     next
                       case V_3_case_1
                       step( solve( !KU( blind(commit($vote, ~r), ~b) ) @ #vk.6 ) )
@@ -13845,13 +13845,13 @@ next
                       by step( solve( !KU( ~b.1 ) @ #vk.8 ) )
                     next
                       case V_1_case_3
-                      by step( solve( !KU( ~b.1 ) @ #vk.9 ) )
+                      by step( solve( !KU( ~b.1 ) @ #vk.8 ) )
                     next
                       case V_1_case_4
                       by step( solve( !KU( ~b.1 ) @ #vk.9 ) )
                     next
                       case V_1_case_5
-                      by step( solve( !KU( ~b.1 ) @ #vk.8 ) )
+                      by step( solve( !KU( ~b.1 ) @ #vk.9 ) )
                     next
                       case V_3_case_1
                       step( solve( !KU( blind(commit($vote1, ~r1), ~b) ) @ #vk.6 ) )
@@ -13993,13 +13993,13 @@ next
                       by step( solve( !KU( ~b ) @ #vk.8 ) )
                     next
                       case V_1_case_3
-                      by step( solve( !KU( ~b ) @ #vk.9 ) )
+                      by step( solve( !KU( ~b ) @ #vk.8 ) )
                     next
                       case V_1_case_4
                       by step( solve( !KU( ~b ) @ #vk.9 ) )
                     next
                       case V_1_case_5
-                      by step( solve( !KU( ~b ) @ #vk.8 ) )
+                      by step( solve( !KU( ~b ) @ #vk.9 ) )
                     next
                       case V_3_case_1
                       step( solve( !KU( blind(commit($vote, ~r), ~b) ) @ #vk.6 ) )
@@ -14142,13 +14142,13 @@ next
                       by step( solve( !KU( ~b.1 ) @ #vk.8 ) )
                     next
                       case V_1_case_3
-                      by step( solve( !KU( ~b.1 ) @ #vk.9 ) )
+                      by step( solve( !KU( ~b.1 ) @ #vk.8 ) )
                     next
                       case V_1_case_4
                       by step( solve( !KU( ~b.1 ) @ #vk.9 ) )
                     next
                       case V_1_case_5
-                      by step( solve( !KU( ~b.1 ) @ #vk.8 ) )
+                      by step( solve( !KU( ~b.1 ) @ #vk.9 ) )
                     next
                       case V_3_case_1
                       step( solve( !KU( blind(commit($vote1, ~r1), ~b) ) @ #vk.6 ) )
@@ -14324,13 +14324,13 @@ next
                                 by step( solve( !KU( ~b ) @ #vk.10 ) )
                               next
                                 case V_1_case_3
-                                by step( solve( !KU( ~b ) @ #vk.11 ) )
+                                by step( solve( !KU( ~b ) @ #vk.10 ) )
                               next
                                 case V_1_case_4
                                 by step( solve( !KU( ~b ) @ #vk.11 ) )
                               next
                                 case V_1_case_5
-                                by step( solve( !KU( ~b ) @ #vk.10 ) )
+                                by step( solve( !KU( ~b ) @ #vk.11 ) )
                               next
                                 case V_3_case_1
                                 MIRRORED
@@ -14354,13 +14354,13 @@ next
                                 by step( solve( !KU( ~b ) @ #vk.11 ) )
                               next
                                 case V_1_case_3
-                                by step( solve( !KU( ~b ) @ #vk.12 ) )
+                                by step( solve( !KU( ~b ) @ #vk.11 ) )
                               next
                                 case V_1_case_4
                                 by step( solve( !KU( ~b ) @ #vk.12 ) )
                               next
                                 case V_1_case_5
-                                by step( solve( !KU( ~b ) @ #vk.11 ) )
+                                by step( solve( !KU( ~b ) @ #vk.12 ) )
                               next
                                 case V_3_case_1
                                 step( solve( !KU( pk(~ltkV1.1) ) @ #vk.10 ) )
@@ -14551,13 +14551,13 @@ next
                                 by step( solve( !KU( ~b.1 ) @ #vk.10 ) )
                               next
                                 case V_1_case_3
-                                by step( solve( !KU( ~b.1 ) @ #vk.11 ) )
+                                by step( solve( !KU( ~b.1 ) @ #vk.10 ) )
                               next
                                 case V_1_case_4
                                 by step( solve( !KU( ~b.1 ) @ #vk.11 ) )
                               next
                                 case V_1_case_5
-                                by step( solve( !KU( ~b.1 ) @ #vk.10 ) )
+                                by step( solve( !KU( ~b.1 ) @ #vk.11 ) )
                               next
                                 case V_3_case_1
                                 MIRRORED
@@ -14629,13 +14629,13 @@ next
                                 by step( solve( !KU( ~b.1 ) @ #vk.11 ) )
                               next
                                 case V_1_case_3
-                                by step( solve( !KU( ~b.1 ) @ #vk.12 ) )
+                                by step( solve( !KU( ~b.1 ) @ #vk.11 ) )
                               next
                                 case V_1_case_4
                                 by step( solve( !KU( ~b.1 ) @ #vk.12 ) )
                               next
                                 case V_1_case_5
-                                by step( solve( !KU( ~b.1 ) @ #vk.11 ) )
+                                by step( solve( !KU( ~b.1 ) @ #vk.12 ) )
                               next
                                 case V_3_case_1
                                 step( solve( !KU( pk(~ltkV1) ) @ #vk.10 ) )
@@ -14777,13 +14777,13 @@ next
                                 by step( solve( !KU( ~b ) @ #vk.10 ) )
                               next
                                 case V_1_case_3
-                                by step( solve( !KU( ~b ) @ #vk.11 ) )
+                                by step( solve( !KU( ~b ) @ #vk.10 ) )
                               next
                                 case V_1_case_4
                                 by step( solve( !KU( ~b ) @ #vk.11 ) )
                               next
                                 case V_1_case_5
-                                by step( solve( !KU( ~b ) @ #vk.10 ) )
+                                by step( solve( !KU( ~b ) @ #vk.11 ) )
                               next
                                 case V_3_case_1
                                 MIRRORED
@@ -14807,13 +14807,13 @@ next
                                 by step( solve( !KU( ~b ) @ #vk.11 ) )
                               next
                                 case V_1_case_3
-                                by step( solve( !KU( ~b ) @ #vk.12 ) )
+                                by step( solve( !KU( ~b ) @ #vk.11 ) )
                               next
                                 case V_1_case_4
                                 by step( solve( !KU( ~b ) @ #vk.12 ) )
                               next
                                 case V_1_case_5
-                                by step( solve( !KU( ~b ) @ #vk.11 ) )
+                                by step( solve( !KU( ~b ) @ #vk.12 ) )
                               next
                                 case V_3_case_1
                                 step( solve( !KU( pk(~ltkV1.1) ) @ #vk.10 ) )
@@ -15004,13 +15004,13 @@ next
                                 by step( solve( !KU( ~b.1 ) @ #vk.10 ) )
                               next
                                 case V_1_case_3
-                                by step( solve( !KU( ~b.1 ) @ #vk.11 ) )
+                                by step( solve( !KU( ~b.1 ) @ #vk.10 ) )
                               next
                                 case V_1_case_4
                                 by step( solve( !KU( ~b.1 ) @ #vk.11 ) )
                               next
                                 case V_1_case_5
-                                by step( solve( !KU( ~b.1 ) @ #vk.10 ) )
+                                by step( solve( !KU( ~b.1 ) @ #vk.11 ) )
                               next
                                 case V_3_case_1
                                 MIRRORED
@@ -15082,13 +15082,13 @@ next
                                 by step( solve( !KU( ~b.1 ) @ #vk.11 ) )
                               next
                                 case V_1_case_3
-                                by step( solve( !KU( ~b.1 ) @ #vk.12 ) )
+                                by step( solve( !KU( ~b.1 ) @ #vk.11 ) )
                               next
                                 case V_1_case_4
                                 by step( solve( !KU( ~b.1 ) @ #vk.12 ) )
                               next
                                 case V_1_case_5
-                                by step( solve( !KU( ~b.1 ) @ #vk.11 ) )
+                                by step( solve( !KU( ~b.1 ) @ #vk.12 ) )
                               next
                                 case V_3_case_1
                                 step( solve( !KU( pk(~ltkV1) ) @ #vk.10 ) )
@@ -15212,13 +15212,13 @@ next
                           by step( solve( !KU( ~b ) @ #vk.9 ) )
                         next
                           case V_1_case_3
-                          by step( solve( !KU( ~b ) @ #vk.10 ) )
+                          by step( solve( !KU( ~b ) @ #vk.9 ) )
                         next
                           case V_1_case_4
                           by step( solve( !KU( ~b ) @ #vk.10 ) )
                         next
                           case V_1_case_5
-                          by step( solve( !KU( ~b ) @ #vk.9 ) )
+                          by step( solve( !KU( ~b ) @ #vk.10 ) )
                         next
                           case V_3_case_1
                           step( solve( !KU( blind(commit($vote, ~r), ~b) ) @ #vk.7 ) )
@@ -15361,13 +15361,13 @@ next
                           by step( solve( !KU( ~b.1 ) @ #vk.9 ) )
                         next
                           case V_1_case_3
-                          by step( solve( !KU( ~b.1 ) @ #vk.10 ) )
+                          by step( solve( !KU( ~b.1 ) @ #vk.9 ) )
                         next
                           case V_1_case_4
                           by step( solve( !KU( ~b.1 ) @ #vk.10 ) )
                         next
                           case V_1_case_5
-                          by step( solve( !KU( ~b.1 ) @ #vk.9 ) )
+                          by step( solve( !KU( ~b.1 ) @ #vk.10 ) )
                         next
                           case V_3_case_1
                           step( solve( !KU( blind(commit($vote1, ~r1), ~b) ) @ #vk.7 ) )
@@ -15509,13 +15509,13 @@ next
                           by step( solve( !KU( ~b ) @ #vk.9 ) )
                         next
                           case V_1_case_3
-                          by step( solve( !KU( ~b ) @ #vk.10 ) )
+                          by step( solve( !KU( ~b ) @ #vk.9 ) )
                         next
                           case V_1_case_4
                           by step( solve( !KU( ~b ) @ #vk.10 ) )
                         next
                           case V_1_case_5
-                          by step( solve( !KU( ~b ) @ #vk.9 ) )
+                          by step( solve( !KU( ~b ) @ #vk.10 ) )
                         next
                           case V_3_case_1
                           step( solve( !KU( blind(commit($vote, ~r), ~b) ) @ #vk.7 ) )
@@ -15658,13 +15658,13 @@ next
                           by step( solve( !KU( ~b.1 ) @ #vk.9 ) )
                         next
                           case V_1_case_3
-                          by step( solve( !KU( ~b.1 ) @ #vk.10 ) )
+                          by step( solve( !KU( ~b.1 ) @ #vk.9 ) )
                         next
                           case V_1_case_4
                           by step( solve( !KU( ~b.1 ) @ #vk.10 ) )
                         next
                           case V_1_case_5
-                          by step( solve( !KU( ~b.1 ) @ #vk.9 ) )
+                          by step( solve( !KU( ~b.1 ) @ #vk.10 ) )
                         next
                           case V_3_case_1
                           step( solve( !KU( blind(commit($vote1, ~r1), ~b) ) @ #vk.7 ) )
@@ -15840,13 +15840,13 @@ next
                                     by step( solve( !KU( ~b ) @ #vk.11 ) )
                                   next
                                     case V_1_case_3
-                                    by step( solve( !KU( ~b ) @ #vk.12 ) )
+                                    by step( solve( !KU( ~b ) @ #vk.11 ) )
                                   next
                                     case V_1_case_4
                                     by step( solve( !KU( ~b ) @ #vk.12 ) )
                                   next
                                     case V_1_case_5
-                                    by step( solve( !KU( ~b ) @ #vk.11 ) )
+                                    by step( solve( !KU( ~b ) @ #vk.12 ) )
                                   next
                                     case V_3_case_1
                                     MIRRORED
@@ -15867,13 +15867,13 @@ next
                                     by step( solve( !KU( ~b ) @ #vk.12 ) )
                                   next
                                     case V_1_case_3
-                                    by step( solve( !KU( ~b ) @ #vk.13 ) )
+                                    by step( solve( !KU( ~b ) @ #vk.12 ) )
                                   next
                                     case V_1_case_4
                                     by step( solve( !KU( ~b ) @ #vk.13 ) )
                                   next
                                     case V_1_case_5
-                                    by step( solve( !KU( ~b ) @ #vk.12 ) )
+                                    by step( solve( !KU( ~b ) @ #vk.13 ) )
                                   next
                                     case V_3_case_1
                                     step( solve( !KU( pk(~ltkV1.1) ) @ #vk.11 ) )
@@ -16058,13 +16058,13 @@ next
                                     by step( solve( !KU( ~b.1 ) @ #vk.11 ) )
                                   next
                                     case V_1_case_3
-                                    by step( solve( !KU( ~b.1 ) @ #vk.12 ) )
+                                    by step( solve( !KU( ~b.1 ) @ #vk.11 ) )
                                   next
                                     case V_1_case_4
                                     by step( solve( !KU( ~b.1 ) @ #vk.12 ) )
                                   next
                                     case V_1_case_5
-                                    by step( solve( !KU( ~b.1 ) @ #vk.11 ) )
+                                    by step( solve( !KU( ~b.1 ) @ #vk.12 ) )
                                   next
                                     case V_3_case_1
                                     MIRRORED
@@ -16130,13 +16130,13 @@ next
                                     by step( solve( !KU( ~b.1 ) @ #vk.12 ) )
                                   next
                                     case V_1_case_3
-                                    by step( solve( !KU( ~b.1 ) @ #vk.13 ) )
+                                    by step( solve( !KU( ~b.1 ) @ #vk.12 ) )
                                   next
                                     case V_1_case_4
                                     by step( solve( !KU( ~b.1 ) @ #vk.13 ) )
                                   next
                                     case V_1_case_5
-                                    by step( solve( !KU( ~b.1 ) @ #vk.12 ) )
+                                    by step( solve( !KU( ~b.1 ) @ #vk.13 ) )
                                   next
                                     case V_3_case_1
                                     step( solve( !KU( pk(~ltkV1) ) @ #vk.11 ) )
@@ -16275,13 +16275,13 @@ next
                                     by step( solve( !KU( ~b ) @ #vk.11 ) )
                                   next
                                     case V_1_case_3
-                                    by step( solve( !KU( ~b ) @ #vk.12 ) )
+                                    by step( solve( !KU( ~b ) @ #vk.11 ) )
                                   next
                                     case V_1_case_4
                                     by step( solve( !KU( ~b ) @ #vk.12 ) )
                                   next
                                     case V_1_case_5
-                                    by step( solve( !KU( ~b ) @ #vk.11 ) )
+                                    by step( solve( !KU( ~b ) @ #vk.12 ) )
                                   next
                                     case V_3_case_1
                                     MIRRORED
@@ -16302,13 +16302,13 @@ next
                                     by step( solve( !KU( ~b ) @ #vk.12 ) )
                                   next
                                     case V_1_case_3
-                                    by step( solve( !KU( ~b ) @ #vk.13 ) )
+                                    by step( solve( !KU( ~b ) @ #vk.12 ) )
                                   next
                                     case V_1_case_4
                                     by step( solve( !KU( ~b ) @ #vk.13 ) )
                                   next
                                     case V_1_case_5
-                                    by step( solve( !KU( ~b ) @ #vk.12 ) )
+                                    by step( solve( !KU( ~b ) @ #vk.13 ) )
                                   next
                                     case V_3_case_1
                                     step( solve( !KU( pk(~ltkV1.1) ) @ #vk.11 ) )
@@ -16493,13 +16493,13 @@ next
                                     by step( solve( !KU( ~b.1 ) @ #vk.11 ) )
                                   next
                                     case V_1_case_3
-                                    by step( solve( !KU( ~b.1 ) @ #vk.12 ) )
+                                    by step( solve( !KU( ~b.1 ) @ #vk.11 ) )
                                   next
                                     case V_1_case_4
                                     by step( solve( !KU( ~b.1 ) @ #vk.12 ) )
                                   next
                                     case V_1_case_5
-                                    by step( solve( !KU( ~b.1 ) @ #vk.11 ) )
+                                    by step( solve( !KU( ~b.1 ) @ #vk.12 ) )
                                   next
                                     case V_3_case_1
                                     MIRRORED
@@ -16565,13 +16565,13 @@ next
                                     by step( solve( !KU( ~b.1 ) @ #vk.12 ) )
                                   next
                                     case V_1_case_3
-                                    by step( solve( !KU( ~b.1 ) @ #vk.13 ) )
+                                    by step( solve( !KU( ~b.1 ) @ #vk.12 ) )
                                   next
                                     case V_1_case_4
                                     by step( solve( !KU( ~b.1 ) @ #vk.13 ) )
                                   next
                                     case V_1_case_5
-                                    by step( solve( !KU( ~b.1 ) @ #vk.12 ) )
+                                    by step( solve( !KU( ~b.1 ) @ #vk.13 ) )
                                   next
                                     case V_3_case_1
                                     step( solve( !KU( pk(~ltkV1) ) @ #vk.11 ) )
@@ -16750,13 +16750,13 @@ next
                             by step( solve( !KU( ~b ) @ #vk.9 ) )
                           next
                             case V_1_case_3
-                            by step( solve( !KU( ~b ) @ #vk.10 ) )
+                            by step( solve( !KU( ~b ) @ #vk.9 ) )
                           next
                             case V_1_case_4
                             by step( solve( !KU( ~b ) @ #vk.10 ) )
                           next
                             case V_1_case_5
-                            by step( solve( !KU( ~b ) @ #vk.9 ) )
+                            by step( solve( !KU( ~b ) @ #vk.10 ) )
                           next
                             case V_3_case_1
                             MIRRORED
@@ -16783,13 +16783,13 @@ next
                             by step( solve( !KU( ~b ) @ #vk.10 ) )
                           next
                             case V_1_case_3
-                            by step( solve( !KU( ~b ) @ #vk.11 ) )
+                            by step( solve( !KU( ~b ) @ #vk.10 ) )
                           next
                             case V_1_case_4
                             by step( solve( !KU( ~b ) @ #vk.11 ) )
                           next
                             case V_1_case_5
-                            by step( solve( !KU( ~b ) @ #vk.10 ) )
+                            by step( solve( !KU( ~b ) @ #vk.11 ) )
                           next
                             case V_3_case_1
                             step( solve( !KU( pk(~ltkV1.1) ) @ #vk.9 ) )
@@ -17025,13 +17025,13 @@ next
                             by step( solve( !KU( ~b.1 ) @ #vk.9 ) )
                           next
                             case V_1_case_3
-                            by step( solve( !KU( ~b.1 ) @ #vk.10 ) )
+                            by step( solve( !KU( ~b.1 ) @ #vk.9 ) )
                           next
                             case V_1_case_4
                             by step( solve( !KU( ~b.1 ) @ #vk.10 ) )
                           next
                             case V_1_case_5
-                            by step( solve( !KU( ~b.1 ) @ #vk.9 ) )
+                            by step( solve( !KU( ~b.1 ) @ #vk.10 ) )
                           next
                             case V_3_case_1
                             MIRRORED
@@ -17109,13 +17109,13 @@ next
                             by step( solve( !KU( ~b.1 ) @ #vk.10 ) )
                           next
                             case V_1_case_3
-                            by step( solve( !KU( ~b.1 ) @ #vk.11 ) )
+                            by step( solve( !KU( ~b.1 ) @ #vk.10 ) )
                           next
                             case V_1_case_4
                             by step( solve( !KU( ~b.1 ) @ #vk.11 ) )
                           next
                             case V_1_case_5
-                            by step( solve( !KU( ~b.1 ) @ #vk.10 ) )
+                            by step( solve( !KU( ~b.1 ) @ #vk.11 ) )
                           next
                             case V_3_case_1
                             step( solve( !KU( pk(~ltkV1) ) @ #vk.9 ) )
@@ -17299,13 +17299,13 @@ next
                             by step( solve( !KU( ~b ) @ #vk.9 ) )
                           next
                             case V_1_case_3
-                            by step( solve( !KU( ~b ) @ #vk.10 ) )
+                            by step( solve( !KU( ~b ) @ #vk.9 ) )
                           next
                             case V_1_case_4
                             by step( solve( !KU( ~b ) @ #vk.10 ) )
                           next
                             case V_1_case_5
-                            by step( solve( !KU( ~b ) @ #vk.9 ) )
+                            by step( solve( !KU( ~b ) @ #vk.10 ) )
                           next
                             case V_3_case_1
                             MIRRORED
@@ -17332,13 +17332,13 @@ next
                             by step( solve( !KU( ~b ) @ #vk.10 ) )
                           next
                             case V_1_case_3
-                            by step( solve( !KU( ~b ) @ #vk.11 ) )
+                            by step( solve( !KU( ~b ) @ #vk.10 ) )
                           next
                             case V_1_case_4
                             by step( solve( !KU( ~b ) @ #vk.11 ) )
                           next
                             case V_1_case_5
-                            by step( solve( !KU( ~b ) @ #vk.10 ) )
+                            by step( solve( !KU( ~b ) @ #vk.11 ) )
                           next
                             case V_3_case_1
                             step( solve( !KU( pk(~ltkV1.1) ) @ #vk.9 ) )
@@ -17574,13 +17574,13 @@ next
                             by step( solve( !KU( ~b.1 ) @ #vk.9 ) )
                           next
                             case V_1_case_3
-                            by step( solve( !KU( ~b.1 ) @ #vk.10 ) )
+                            by step( solve( !KU( ~b.1 ) @ #vk.9 ) )
                           next
                             case V_1_case_4
                             by step( solve( !KU( ~b.1 ) @ #vk.10 ) )
                           next
                             case V_1_case_5
-                            by step( solve( !KU( ~b.1 ) @ #vk.9 ) )
+                            by step( solve( !KU( ~b.1 ) @ #vk.10 ) )
                           next
                             case V_3_case_1
                             MIRRORED
@@ -17658,13 +17658,13 @@ next
                             by step( solve( !KU( ~b.1 ) @ #vk.10 ) )
                           next
                             case V_1_case_3
-                            by step( solve( !KU( ~b.1 ) @ #vk.11 ) )
+                            by step( solve( !KU( ~b.1 ) @ #vk.10 ) )
                           next
                             case V_1_case_4
                             by step( solve( !KU( ~b.1 ) @ #vk.11 ) )
                           next
                             case V_1_case_5
-                            by step( solve( !KU( ~b.1 ) @ #vk.10 ) )
+                            by step( solve( !KU( ~b.1 ) @ #vk.11 ) )
                           next
                             case V_3_case_1
                             step( solve( !KU( pk(~ltkV1) ) @ #vk.9 ) )
@@ -17794,13 +17794,13 @@ next
                       by step( solve( !KU( ~b ) @ #vk.10 ) )
                     next
                       case V_1_case_3
-                      by step( solve( !KU( ~b ) @ #vk.11 ) )
+                      by step( solve( !KU( ~b ) @ #vk.10 ) )
                     next
                       case V_1_case_4
                       by step( solve( !KU( ~b ) @ #vk.11 ) )
                     next
                       case V_1_case_5
-                      by step( solve( !KU( ~b ) @ #vk.10 ) )
+                      by step( solve( !KU( ~b ) @ #vk.11 ) )
                     next
                       case V_3_case_1
                       step( solve( !KU( blind(commit($vote, ~r), ~b) ) @ #vk.8 ) )
@@ -17929,13 +17929,13 @@ next
                       by step( solve( !KU( ~b ) @ #vk.10 ) )
                     next
                       case V_1_case_3
-                      by step( solve( !KU( ~b ) @ #vk.11 ) )
+                      by step( solve( !KU( ~b ) @ #vk.10 ) )
                     next
                       case V_1_case_4
                       by step( solve( !KU( ~b ) @ #vk.11 ) )
                     next
                       case V_1_case_5
-                      by step( solve( !KU( ~b ) @ #vk.10 ) )
+                      by step( solve( !KU( ~b ) @ #vk.11 ) )
                     next
                       case V_3_case_1
                       step( solve( !KU( blind(commit($vote, ~r), ~b) ) @ #vk.8 ) )
@@ -18087,13 +18087,13 @@ next
                       by step( solve( !KU( ~b.1 ) @ #vk.10 ) )
                     next
                       case V_1_case_3
-                      by step( solve( !KU( ~b.1 ) @ #vk.11 ) )
+                      by step( solve( !KU( ~b.1 ) @ #vk.10 ) )
                     next
                       case V_1_case_4
                       by step( solve( !KU( ~b.1 ) @ #vk.11 ) )
                     next
                       case V_1_case_5
-                      by step( solve( !KU( ~b.1 ) @ #vk.10 ) )
+                      by step( solve( !KU( ~b.1 ) @ #vk.11 ) )
                     next
                       case V_3_case_1
                       step( solve( !KU( blind(commit($vote1, ~r1), ~b) ) @ #vk.8 ) )
@@ -18222,13 +18222,13 @@ next
                       by step( solve( !KU( ~b.1 ) @ #vk.10 ) )
                     next
                       case V_1_case_3
-                      by step( solve( !KU( ~b.1 ) @ #vk.11 ) )
+                      by step( solve( !KU( ~b.1 ) @ #vk.10 ) )
                     next
                       case V_1_case_4
                       by step( solve( !KU( ~b.1 ) @ #vk.11 ) )
                     next
                       case V_1_case_5
-                      by step( solve( !KU( ~b.1 ) @ #vk.10 ) )
+                      by step( solve( !KU( ~b.1 ) @ #vk.11 ) )
                     next
                       case V_3_case_1
                       step( solve( !KU( blind(commit($vote1, ~r1), ~b) ) @ #vk.8 ) )
@@ -18379,13 +18379,13 @@ next
                       by step( solve( !KU( ~b ) @ #vk.10 ) )
                     next
                       case V_1_case_3
-                      by step( solve( !KU( ~b ) @ #vk.11 ) )
+                      by step( solve( !KU( ~b ) @ #vk.10 ) )
                     next
                       case V_1_case_4
                       by step( solve( !KU( ~b ) @ #vk.11 ) )
                     next
                       case V_1_case_5
-                      by step( solve( !KU( ~b ) @ #vk.10 ) )
+                      by step( solve( !KU( ~b ) @ #vk.11 ) )
                     next
                       case V_3_case_1
                       step( solve( !KU( blind(commit($vote, ~r), ~b) ) @ #vk.8 ) )
@@ -18514,13 +18514,13 @@ next
                       by step( solve( !KU( ~b ) @ #vk.10 ) )
                     next
                       case V_1_case_3
-                      by step( solve( !KU( ~b ) @ #vk.11 ) )
+                      by step( solve( !KU( ~b ) @ #vk.10 ) )
                     next
                       case V_1_case_4
                       by step( solve( !KU( ~b ) @ #vk.11 ) )
                     next
                       case V_1_case_5
-                      by step( solve( !KU( ~b ) @ #vk.10 ) )
+                      by step( solve( !KU( ~b ) @ #vk.11 ) )
                     next
                       case V_3_case_1
                       step( solve( !KU( blind(commit($vote, ~r), ~b) ) @ #vk.8 ) )
@@ -18672,13 +18672,13 @@ next
                       by step( solve( !KU( ~b.1 ) @ #vk.10 ) )
                     next
                       case V_1_case_3
-                      by step( solve( !KU( ~b.1 ) @ #vk.11 ) )
+                      by step( solve( !KU( ~b.1 ) @ #vk.10 ) )
                     next
                       case V_1_case_4
                       by step( solve( !KU( ~b.1 ) @ #vk.11 ) )
                     next
                       case V_1_case_5
-                      by step( solve( !KU( ~b.1 ) @ #vk.10 ) )
+                      by step( solve( !KU( ~b.1 ) @ #vk.11 ) )
                     next
                       case V_3_case_1
                       step( solve( !KU( blind(commit($vote1, ~r1), ~b) ) @ #vk.8 ) )
@@ -18807,13 +18807,13 @@ next
                       by step( solve( !KU( ~b.1 ) @ #vk.10 ) )
                     next
                       case V_1_case_3
-                      by step( solve( !KU( ~b.1 ) @ #vk.11 ) )
+                      by step( solve( !KU( ~b.1 ) @ #vk.10 ) )
                     next
                       case V_1_case_4
                       by step( solve( !KU( ~b.1 ) @ #vk.11 ) )
                     next
                       case V_1_case_5
-                      by step( solve( !KU( ~b.1 ) @ #vk.10 ) )
+                      by step( solve( !KU( ~b.1 ) @ #vk.11 ) )
                     next
                       case V_3_case_1
                       step( solve( !KU( blind(commit($vote1, ~r1), ~b) ) @ #vk.8 ) )
@@ -18962,13 +18962,13 @@ next
                     by step( solve( !KU( ~b ) @ #vk.9 ) )
                   next
                     case V_1_case_3
-                    by step( solve( !KU( ~b ) @ #vk.10 ) )
+                    by step( solve( !KU( ~b ) @ #vk.9 ) )
                   next
                     case V_1_case_4
                     by step( solve( !KU( ~b ) @ #vk.10 ) )
                   next
                     case V_1_case_5
-                    by step( solve( !KU( ~b ) @ #vk.9 ) )
+                    by step( solve( !KU( ~b ) @ #vk.10 ) )
                   next
                     case V_3_case_1
                     step( solve( !KU( blind(commit($vote, ~r), ~b) ) @ #vk.7 ) )
@@ -19108,13 +19108,13 @@ next
                     by step( solve( !KU( ~b.1 ) @ #vk.9 ) )
                   next
                     case V_1_case_3
-                    by step( solve( !KU( ~b.1 ) @ #vk.10 ) )
+                    by step( solve( !KU( ~b.1 ) @ #vk.9 ) )
                   next
                     case V_1_case_4
                     by step( solve( !KU( ~b.1 ) @ #vk.10 ) )
                   next
                     case V_1_case_5
-                    by step( solve( !KU( ~b.1 ) @ #vk.9 ) )
+                    by step( solve( !KU( ~b.1 ) @ #vk.10 ) )
                   next
                     case V_3_case_1
                     step( solve( !KU( blind(commit($vote1, ~r1), ~b) ) @ #vk.7 ) )
@@ -19253,13 +19253,13 @@ next
                     by step( solve( !KU( ~b ) @ #vk.9 ) )
                   next
                     case V_1_case_3
-                    by step( solve( !KU( ~b ) @ #vk.10 ) )
+                    by step( solve( !KU( ~b ) @ #vk.9 ) )
                   next
                     case V_1_case_4
                     by step( solve( !KU( ~b ) @ #vk.10 ) )
                   next
                     case V_1_case_5
-                    by step( solve( !KU( ~b ) @ #vk.9 ) )
+                    by step( solve( !KU( ~b ) @ #vk.10 ) )
                   next
                     case V_3_case_1
                     step( solve( !KU( blind(commit($vote, ~r), ~b) ) @ #vk.7 ) )
@@ -19399,13 +19399,13 @@ next
                     by step( solve( !KU( ~b.1 ) @ #vk.9 ) )
                   next
                     case V_1_case_3
-                    by step( solve( !KU( ~b.1 ) @ #vk.10 ) )
+                    by step( solve( !KU( ~b.1 ) @ #vk.9 ) )
                   next
                     case V_1_case_4
                     by step( solve( !KU( ~b.1 ) @ #vk.10 ) )
                   next
                     case V_1_case_5
-                    by step( solve( !KU( ~b.1 ) @ #vk.9 ) )
+                    by step( solve( !KU( ~b.1 ) @ #vk.10 ) )
                   next
                     case V_3_case_1
                     step( solve( !KU( blind(commit($vote1, ~r1), ~b) ) @ #vk.7 ) )
@@ -20447,13 +20447,13 @@ next
               by step( solve( !KU( ~b ) @ #vk.8 ) )
             next
               case V_1_case_3
-              by step( solve( !KU( ~b ) @ #vk.9 ) )
+              by step( solve( !KU( ~b ) @ #vk.8 ) )
             next
               case V_1_case_4
               by step( solve( !KU( ~b ) @ #vk.9 ) )
             next
               case V_1_case_5
-              by step( solve( !KU( ~b ) @ #vk.8 ) )
+              by step( solve( !KU( ~b ) @ #vk.9 ) )
             next
               case V_3_case_1
               step( solve( !KU( blind(commit($vote, ~r), ~b) ) @ #vk.6 ) )
@@ -20593,13 +20593,13 @@ next
               by step( solve( !KU( ~b.1 ) @ #vk.8 ) )
             next
               case V_1_case_3
-              by step( solve( !KU( ~b.1 ) @ #vk.9 ) )
+              by step( solve( !KU( ~b.1 ) @ #vk.8 ) )
             next
               case V_1_case_4
               by step( solve( !KU( ~b.1 ) @ #vk.9 ) )
             next
               case V_1_case_5
-              by step( solve( !KU( ~b.1 ) @ #vk.8 ) )
+              by step( solve( !KU( ~b.1 ) @ #vk.9 ) )
             next
               case V_3_case_1
               step( solve( !KU( blind(commit($vote1, ~r1), ~b) ) @ #vk.6 ) )
@@ -20738,13 +20738,13 @@ next
               by step( solve( !KU( ~b ) @ #vk.8 ) )
             next
               case V_1_case_3
-              by step( solve( !KU( ~b ) @ #vk.9 ) )
+              by step( solve( !KU( ~b ) @ #vk.8 ) )
             next
               case V_1_case_4
               by step( solve( !KU( ~b ) @ #vk.9 ) )
             next
               case V_1_case_5
-              by step( solve( !KU( ~b ) @ #vk.8 ) )
+              by step( solve( !KU( ~b ) @ #vk.9 ) )
             next
               case V_3_case_1
               step( solve( !KU( blind(commit($vote, ~r), ~b) ) @ #vk.6 ) )
@@ -20884,13 +20884,13 @@ next
               by step( solve( !KU( ~b.1 ) @ #vk.8 ) )
             next
               case V_1_case_3
-              by step( solve( !KU( ~b.1 ) @ #vk.9 ) )
+              by step( solve( !KU( ~b.1 ) @ #vk.8 ) )
             next
               case V_1_case_4
               by step( solve( !KU( ~b.1 ) @ #vk.9 ) )
             next
               case V_1_case_5
-              by step( solve( !KU( ~b.1 ) @ #vk.8 ) )
+              by step( solve( !KU( ~b.1 ) @ #vk.9 ) )
             next
               case V_3_case_1
               step( solve( !KU( blind(commit($vote1, ~r1), ~b) ) @ #vk.6 ) )
@@ -21033,13 +21033,13 @@ next
               by step( solve( !KU( ~b ) @ #vk.8 ) )
             next
               case V_1_case_3
-              by step( solve( !KU( ~b ) @ #vk.9 ) )
+              by step( solve( !KU( ~b ) @ #vk.8 ) )
             next
               case V_1_case_4
               by step( solve( !KU( ~b ) @ #vk.9 ) )
             next
               case V_1_case_5
-              by step( solve( !KU( ~b ) @ #vk.8 ) )
+              by step( solve( !KU( ~b ) @ #vk.9 ) )
             next
               case V_3_case_1
               step( solve( !KU( blind(commit($vote, ~r), ~b) ) @ #vk.6 ) )
@@ -21179,13 +21179,13 @@ next
               by step( solve( !KU( ~b.1 ) @ #vk.8 ) )
             next
               case V_1_case_3
-              by step( solve( !KU( ~b.1 ) @ #vk.9 ) )
+              by step( solve( !KU( ~b.1 ) @ #vk.8 ) )
             next
               case V_1_case_4
               by step( solve( !KU( ~b.1 ) @ #vk.9 ) )
             next
               case V_1_case_5
-              by step( solve( !KU( ~b.1 ) @ #vk.8 ) )
+              by step( solve( !KU( ~b.1 ) @ #vk.9 ) )
             next
               case V_3_case_1
               step( solve( !KU( blind(commit($vote1, ~r1), ~b) ) @ #vk.6 ) )
@@ -21324,13 +21324,13 @@ next
               by step( solve( !KU( ~b ) @ #vk.8 ) )
             next
               case V_1_case_3
-              by step( solve( !KU( ~b ) @ #vk.9 ) )
+              by step( solve( !KU( ~b ) @ #vk.8 ) )
             next
               case V_1_case_4
               by step( solve( !KU( ~b ) @ #vk.9 ) )
             next
               case V_1_case_5
-              by step( solve( !KU( ~b ) @ #vk.8 ) )
+              by step( solve( !KU( ~b ) @ #vk.9 ) )
             next
               case V_3_case_1
               step( solve( !KU( blind(commit($vote, ~r), ~b) ) @ #vk.6 ) )
@@ -21470,13 +21470,13 @@ next
               by step( solve( !KU( ~b.1 ) @ #vk.8 ) )
             next
               case V_1_case_3
-              by step( solve( !KU( ~b.1 ) @ #vk.9 ) )
+              by step( solve( !KU( ~b.1 ) @ #vk.8 ) )
             next
               case V_1_case_4
               by step( solve( !KU( ~b.1 ) @ #vk.9 ) )
             next
               case V_1_case_5
-              by step( solve( !KU( ~b.1 ) @ #vk.8 ) )
+              by step( solve( !KU( ~b.1 ) @ #vk.9 ) )
             next
               case V_3_case_1
               step( solve( !KU( blind(commit($vote1, ~r1), ~b) ) @ #vk.6 ) )
@@ -21889,9 +21889,9 @@ qed
 /*
 Generated from:
 Tamarin version 1.13.0
-Maude version 3.4
-Git revision: 1deff12bd69c96308abb2463d4de5f2c7610c191 (with uncommited changes), branch: develop
-Compiled at: 2026-03-09 07:36:56.194364 UTC
+Maude version 3.5.1
+Git revision: 53c49a44efa784b133c907eedf84491d61a48803 (with uncommited changes), branch: AC-NDC-property
+Compiled at: 2026-07-09 13:42:51.535083 UTC
 */
 
 end
@@ -21903,7 +21903,7 @@ summary of summaries:
 analyzed: examples/post17/foo_vote_privacy.spthy
 
   output:          examples/post17/foo_vote_privacy.spthy.tmp
-  processing time: 80.32s
+  processing time: 45.33s
   
   RHS :  exec (exists-trace): verified (12 steps)
   LHS :  exec (exists-trace): verified (12 steps)
