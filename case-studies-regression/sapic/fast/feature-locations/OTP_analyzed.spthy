@@ -5,9 +5,9 @@ begin
 // Function signature and definition of the equational theory E
 
 functions: adec/2, aenc/2, cde/1, chall/1, chall2/1,
-           check_rep/2[destructor], dcde/1, dchall/1, dchall2/1, dscode/1,
-           dshared/1, dsko/1, fst/1, get_rep/1[destructor], h/1, hash/2, list/2,
-           pair/2, pk/1, prog/2, rep/2[private,constructor], report/1, scode/1,
+           check_rep/2 [destructor], dcde/1, dchall/1, dchall2/1, dscode/1,
+           dshared/1, dsko/1, fst/1, get_rep/1 [destructor], h/1, hash/2, list/2,
+           pair/2, pk/1, prog/2, rep/2 [private,constructor], report/1, scode/1,
            sdec/2, senc/2, shared/1, sko/1, snd/1
 equations:
     adec(aenc(x.1, pk(x.2)), x.2) = x.1,
@@ -3180,9 +3180,9 @@ restriction single_session:
 /*
 Generated from:
 Tamarin version 1.13.0
-Maude version 3.4
-Git revision: 1deff12bd69c96308abb2463d4de5f2c7610c191 (with uncommited changes), branch: develop
-Compiled at: 2026-03-09 07:36:56.194364 UTC
+Maude version 3.5.1
+Git revision: 53c49a44efa784b133c907eedf84491d61a48803 (with uncommited changes), branch: AC-NDC-property
+Compiled at: 2026-07-09 13:42:51.535083 UTC
 */
 
 end
@@ -3194,7 +3194,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-locations/OTP.spthy
 
   output:          examples/sapic/fast/feature-locations/OTP.spthy.tmp
-  processing time: 36.34s
+  processing time: 36.71s
   
   reachV (exists-trace): falsified - no trace found (29 steps)
   secrecy_key (all-traces): verified (8 steps)

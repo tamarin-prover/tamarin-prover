@@ -66,15 +66,20 @@ module Term.Unification (
   , hashMaudeSig
   , rrulesForMaudeSig
   , stFunSyms
+  , stACFunSyms
   , funSyms
   , stRules
   , irreducibleFunSyms
   , reducibleFunSyms
   , noEqFunSyms
+  , acUserFunSyms
+  , userDefinedFunSyms
+  , userDefinedSTFunSyms
   , macroNames
   , addFunSym
   , addMacroSym
   , addCtxtStRule
+  , joinNDCinSig
 
   -- * Convenience exports
   , module Term.Substitution

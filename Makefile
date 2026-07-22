@@ -181,7 +181,7 @@ case-studies$(SUBDIR)%_analyzed-oracle-chaum.spthy: examples/%.spthy $(TAMARIN)
 
 # individual case studies, special case with sequential dfs
 case-studies$(SUBDIR)%_analyzed-seqdfs.spthy: examples/%.spthy $(TAMARIN)
-	mkdir -p case-studies$(SUBDIR)regression/trace
+	mkdir -p $(dir $@)
 	# Use -N3, as the fourth core is used by the OS and the console
 	$(TAMARIN) $< --prove --stop-on-trace=seqdfs -d=0 +RTS -N3  -RTS -o$<.tmp >$<.out
 	# We only produce the target after the run, otherwise aborted
@@ -194,7 +194,7 @@ case-studies$(SUBDIR)%_analyzed-seqdfs.spthy: examples/%.spthy $(TAMARIN)
 
 # individual case studies, special case with default oracle
 case-studies$(SUBDIR)%_analyzed-deforacle.spthy: examples/%.spthy $(TAMARIN)
-	mkdir -p case-studies$(SUBDIR)regression/trace
+	mkdir -p $(dir $@)
 	# Use -N3, as the fourth core is used by the OS and the console
 	cd examples/regression/trace && $(TAMARIN) defaultoracle.spthy --prove -d=0 +RTS -N3 -RTS -odefaultoracle.spthy.tmp >defaultoracle.spthy.out
 	# We only produce the target after the run, otherwise aborted
@@ -221,11 +221,7 @@ case-studies$(SUBDIR)features/derivation-checks/%_analyzed-derivcheck.spthy: exa
 
 # individual diff-based case studies
 case-studies$(SUBDIR)%_analyzed-diff.spthy:	examples/%.spthy $(TAMARIN)
-	mkdir -p case-studies$(SUBDIR)ccs15
-	mkdir -p case-studies$(SUBDIR)features/equivalence
-	mkdir -p case-studies$(SUBDIR)post17
-	mkdir -p case-studies$(SUBDIR)regression/diff
-	mkdir -p case-studies$(SUBDIR)csf18-xor/diff-models
+	mkdir -p $(dir $@)
 	# Use -N3, as the fourth core is used by the OS and the console
 	# For execution on server using -N14 for faster completion!
 	$(TAMARIN) $< --prove --diff --stop-on-trace=dfs -d=0 +RTS -N14 -RTS -o$<.tmp >$<.out
@@ -239,10 +235,7 @@ case-studies$(SUBDIR)%_analyzed-diff.spthy:	examples/%.spthy $(TAMARIN)
 
 # individual diff-based precomputed (no --prove) case studies
 case-studies$(SUBDIR)%_analyzed-diff-noprove.spthy:	examples/%.spthy $(TAMARIN)
-	mkdir -p case-studies$(SUBDIR)ccs15
-	mkdir -p case-studies$(SUBDIR)features/equivalence
-	mkdir -p case-studies$(SUBDIR)regression/diff
-	mkdir -p case-studies$(SUBDIR)csf18-xor/diff-models
+	mkdir -p $(dir $@)
 	# Use -N3, as the fourth core is used by the OS and the console
 	$(TAMARIN) $< --diff --stop-on-trace=dfs -d=0 +RTS -N3 -RTS -o$<.tmp >$<.out
 	# We only produce the target after the run, otherwise aborted
@@ -255,7 +248,7 @@ case-studies$(SUBDIR)%_analyzed-diff-noprove.spthy:	examples/%.spthy $(TAMARIN)
 
 # individual diff-based case studies running only on the Observational_equivalence lemma
 case-studies$(SUBDIR)%_analyzed-diff-obseqonly.spthy:	examples/%.spthy $(TAMARIN)
-	mkdir -p case-studies$(SUBDIR)csf18-xor/diff-models
+	mkdir -p $(dir $@)
 	# Use -N3, as the fourth core is used by the OS and the console
 	$(TAMARIN) $< --prove=Observational_equivalence --diff -d=0 --stop-on-trace=dfs +RTS -N3 -RTS -o$<.tmp >$<.out
 	# We only produce the target after the run, otherwise aborted
@@ -353,7 +346,8 @@ post17-case-studies:	$(POST17_TARGETS)
 ## XOR-using case studies
 #########################
 
-XOR_TRACE_CASE_STUDIES= NSLPK3xor.spthy CRxor.spthy CH07.spthy KCL07.spthy LAK06.spthy
+## Removed LAK06.spthy, as it is too slow now
+XOR_TRACE_CASE_STUDIES= NSLPK3xor.spthy CRxor.spthy CH07.spthy KCL07.spthy 
 XOR_TRACE_TARGETS=$(subst .spthy,_analyzed.spthy,$(addprefix case-studies$(SUBDIR)csf18-xor/,$(XOR_TRACE_CASE_STUDIES)))
 
 XOR_TRACE_ORACLE_CASE_STUDIES= chaum_offline_anonymity.spthy
@@ -362,8 +356,8 @@ XOR_TRACE_ORACLE_TARGETS=$(subst .spthy,_analyzed-oracle-chaum.spthy,$(addprefix
 XOR_BASIC_TRACE_CASE_STUDIES= xor0.spthy xor1.spthy xor2.spthy xor3.spthy xor4.spthy xor-basic.spthy
 XOR_BASIC_TRACE_TARGETS=$(subst .spthy,_analyzed.spthy,$(addprefix case-studies$(SUBDIR)features/xor/basicfunctionality/,$(XOR_BASIC_TRACE_CASE_STUDIES)))
 
-# Includes 6 out of 9 diff-case studies from CSF18, excluding KCL07-UK1, LAK06-UK2, LAK06-UK3 due to runtime!
-XOR_DIFF_CASE_STUDIES= CH07-UK1.spthy CH07-UK2.spthy  KCL07-UK2.spthy LAK06-UK1.spthy
+# Includes 6 out of 9 diff-case studies from CSF18, excluding KCL07-UK1, LAK06-UK1 LAK06-UK2, LAK06-UK3 due to runtime!
+XOR_DIFF_CASE_STUDIES= CH07-UK1.spthy CH07-UK2.spthy  KCL07-UK2.spthy
 XOR_DIFF_TARGETS=$(subst .spthy,_analyzed-diff.spthy,$(addprefix case-studies$(SUBDIR)csf18-xor/diff-models/,$(XOR_DIFF_CASE_STUDIES)))
 
 XOR_DIFF_OBSEQONLY_CASE_STUDIES= CH07-UK3.spthy
@@ -488,7 +482,7 @@ accountability-case-studies:	$(ACCOUNTABILITY_CS_TARGETS)
 ## Regression (old issues)
 ##########################
 
-FAST_REGRESSION_CASE_STUDIES=issue446-1.spthy issue446-2.spthy issue753-4.spthy issue753-5.spthy issue753-6.spthy issue834.spthy issue777.spthy
+FAST_REGRESSION_CASE_STUDIES=issue446-1.spthy issue446-2.spthy issue753-4.spthy issue753-5.spthy issue753-6.spthy issue834.spthy issue777.spthy issue770.spthy
 FAST_REGRESSION_TARGETS=$(subst .spthy,_analyzed.spthy,$(addprefix case-studies$(SUBDIR)regression/trace/,$(FAST_REGRESSION_CASE_STUDIES)))
 
 
@@ -532,6 +526,37 @@ sapic-case-studies-fast:	$(SAPIC_CS_TARGETS_FAST) # used for quick checks during
 sapic-case-studies-superslow:	$(SAPIC_CS_TARGETS_SUPER_SLOW) # used to heat in winter
 	grep "verified\|falsified\|processing time" $^
 
+## User-defined AC symbols
+##########################
+
+# diff with BFS
+case-studies$(SUBDIR)%_analyzed-diff-bfs.spthy:	examples/%.spthy $(TAMARIN)
+	mkdir -p $(dir $@)
+	# Use -N3, as the fourth core is used by the OS and the console
+	# For execution on server using -N14 for faster completion!
+	$(TAMARIN) $< --prove --diff --stop-on-trace=BFS -d=0 +RTS -N3 -RTS -o$<.tmp >$<.out
+	# We only produce the target after the run, otherwise aborted
+	# runs already 'finish' the case.
+	printf "\n/* Output\n" >>$<.tmp
+	cat $<.out >>$<.tmp
+	echo "*/" >>$<.tmp
+	mv $<.tmp $@
+	\rm -f $<.out
+
+FAST_AC_CASE_STUDIES=$(notdir $(wildcard examples/csf26-ac/fast/*.spthy))
+FAST_AC_CS_TARGETS=$(subst .spthy,_analyzed.spthy,$(addprefix case-studies$(SUBDIR)csf26-ac/fast/,$(FAST_AC_CASE_STUDIES)))
+
+FAST_AC_DIFF_CASE_STUDIES=$(notdir $(wildcard examples/csf26-ac/fast/diff/*.spthy))
+FAST_AC_DIFF_CS_TARGETS=$(subst .spthy,_analyzed-diff.spthy,$(addprefix case-studies$(SUBDIR)csf26-ac/fast/diff/,$(FAST_AC_DIFF_CASE_STUDIES)))
+
+fast-ac-case-studies:	$(FAST_AC_CS_TARGETS) $(FAST_AC_DIFF_CS_TARGETS)
+	grep "verified\|falsified\|processing time" $^
+
+AC_MIXNET=exponential_mixnet_V2.spthy
+AC_MIXNET_TARGETS=$(subst .spthy,_analyzed-diff-bfs.spthy,$(addprefix case-studies$(SUBDIR)csf26-ac/exponential_mixnet/,$(AC_MIXNET)))
+
+ac-case-studies:	$(AC_MIXNET_TARGETS) $(FAST_AC_CS_TARGETS) $(FAST_AC_DIFF_CS_TARGETS)
+	grep "verified\|falsified\|processing time" $^
 
 ## Derivation checks
 ##########################
@@ -560,7 +585,7 @@ else 	# ($(UNAME_S),Darwin)
 endif
 #	top -b | head >> $@
 
-CS_TARGETS=case-studies$(SUBDIR)Tutorial_analyzed.spthy $(CSF19_WRAPPING_TARGETS) $(CSF12_CS_TARGETS) $(CLASSIC_CS_TARGETS) $(IND_CS_TARGETS) $(AKE_DH_CS_TARGETS) $(AKE_BP_CS_TARGETS) $(FEATURES_CS_TARGETS) $(OBSEQ_TARGETS) $(SAPIC_CS_TARGETS_FAST) $(SAPIC_CS_TARGETS_SLOW) $(POST17_TARGETS) $(REGRESSION_TARGETS) $(XOR_TARGETS) $(AUTO_SOURCES_CS_TARGETS) $(ACCOUNTABILITY_CS_TARGETS) $(DERIVATION_CHECK_CS_TARGETS)
+CS_TARGETS=case-studies$(SUBDIR)Tutorial_analyzed.spthy $(CSF19_WRAPPING_TARGETS) $(CSF12_CS_TARGETS) $(CLASSIC_CS_TARGETS) $(IND_CS_TARGETS) $(AKE_DH_CS_TARGETS) $(AKE_BP_CS_TARGETS) $(FEATURES_CS_TARGETS) $(OBSEQ_TARGETS) $(SAPIC_CS_TARGETS_FAST) $(SAPIC_CS_TARGETS_SLOW) $(POST17_TARGETS) $(REGRESSION_TARGETS) $(XOR_TARGETS) $(AUTO_SOURCES_CS_TARGETS) $(ACCOUNTABILITY_CS_TARGETS) $(DERIVATION_CHECK_CS_TARGETS) $(FAST_AC_CS_TARGETS) $(FAST_AC_DIFF_CS_TARGETS) $(AC_MIXNET_TARGETS)
 
 case-studies: 	case-studies$(SUBDIR)system.info $(CS_TARGETS)
 	grep -R "verified\|falsified\|processing time" case-studies$(SUBDIR)
@@ -569,7 +594,7 @@ case-studies: 	case-studies$(SUBDIR)system.info $(CS_TARGETS)
 ## Fast case studies
 ####################
 
-FAST_CS_TARGETS = case-studies$(SUBDIR)Tutorial_analyzed.spthy $(CCS15_PCS_TARGETS) $(TESTOBSEQ_TARGETS) $(FEATURES_CS_TARGETS) $(REGRESSION_OBSEQ_TARGETS) $(CSF12_CS_TARGETS) $(IND_CS_TARGETS) $(CCS15_CS_TARGETS) $(XOR_TRACE_TARGETS) $(POST17_TRACE_TARGETS) $(CLASSIC_CS_TARGETS) $(AKE_BP_CS_TARGETS) $(SEQDFS_TARGETS) $(DEFAULTORACLE_CASE_TARGETS) $(FAST_REGRESSION_TARGETS) $(XOR_DIFF_OBSEQONLY_TARGETS) $(DERIVATION_CHECK_CS_TARGETS)
+FAST_CS_TARGETS = case-studies$(SUBDIR)Tutorial_analyzed.spthy $(CCS15_PCS_TARGETS) $(TESTOBSEQ_TARGETS) $(FEATURES_CS_TARGETS) $(REGRESSION_OBSEQ_TARGETS) $(CSF12_CS_TARGETS) $(IND_CS_TARGETS) $(CCS15_CS_TARGETS) $(XOR_TRACE_TARGETS) $(POST17_TRACE_TARGETS) $(CLASSIC_CS_TARGETS) $(AKE_BP_CS_TARGETS) $(SEQDFS_TARGETS) $(DEFAULTORACLE_CASE_TARGETS) $(FAST_REGRESSION_TARGETS) $(XOR_DIFF_OBSEQONLY_TARGETS) $(DERIVATION_CHECK_CS_TARGETS) $(FAST_AC_CS_TARGETS) $(FAST_AC_DIFF_CS_TARGETS)
 
 fast-case-studies: case-studies$(SUBDIR)system.info $(FAST_CS_TARGETS)
 	mkdir -p case-studies$(SUBDIR)

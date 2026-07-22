@@ -74,6 +74,7 @@ library
   hs-source-dirs: src
   exposed-modules:
     ClosedTheory
+    CloseRule
     Items.AccLemmaItem
     Items.CaseTestItem
     Items.ExportInfo
