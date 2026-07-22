@@ -69,7 +69,7 @@ rule (modulo E) Client_LeakKey:
        z     = true
   */
 
-rule (modulo E) Server_RenewKey:
+rule (modulo E) Server_RenewKey[no_derivcheck]:
    [
    In( <<'renew', A, pkNew>, requestSig> ), ServerDB( A, pk(sk) ),
    !ServerSK( skServer )
@@ -79,7 +79,7 @@ rule (modulo E) Server_RenewKey:
 
   // loop breaker: [1]
   /*
-  rule (modulo AC) Server_RenewKey:
+  rule (modulo AC) Server_RenewKey[no_derivcheck]:
      [
      In( <<'renew', A, pkNew>, requestSig> ), ServerDB( A, pk(sk) ),
      !ServerSK( skServer )
@@ -142,8 +142,8 @@ qed
 Generated from:
 Tamarin version 1.13.0
 Maude version 3.5.1
-Git revision: 53c49a44efa784b133c907eedf84491d61a48803 (with uncommited changes), branch: AC-NDC-property
-Compiled at: 2026-07-09 13:42:51.535083 UTC
+Git revision: abcb0ff3eca770d7b7f58a583b2616eafe845e15, branch: fix-derivation-check-warnings
+Compiled at: 2026-07-22 11:02:46.6864 UTC
 */
 
 end
@@ -155,7 +155,7 @@ summary of summaries:
 analyzed: examples/related_work/AIF_Moedersheim_CCS10/Keyserver.spthy
 
   output:          examples/related_work/AIF_Moedersheim_CCS10/Keyserver.spthy.tmp
-  processing time: 0.05s
+  processing time: 0.03s
   
   Knows_Honest_Key_imp_Revoked (all-traces): verified (6 steps)
 
