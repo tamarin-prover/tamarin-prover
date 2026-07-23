@@ -61,7 +61,7 @@ rule (modulo E) tag1:
        z     = (~r2.152⊕x.299)
   */
 
-rule (modulo E) reader2:
+rule (modulo E) reader2[no_derivcheck]:
    [
    Initiated( ~r1 ), !Reader( ~k, ~id ),
    In( <r2, lh((hash⊕rot(~id, hash)))> )
@@ -73,7 +73,7 @@ rule (modulo E) reader2:
    [ Out( rh((hash⊕rot(~id, hash))) ) ]
 
   /*
-  rule (modulo AC) reader2:
+  rule (modulo AC) reader2[no_derivcheck]:
      [ Initiated( ~r1 ), !Reader( ~k, ~id ), In( <r2, lh(z)> ) ]
     --[
     Alive( ~k, 'Tag' ), Response( ~k, 'Reader' ), Eq( h(z.1), hash ),
@@ -695,8 +695,8 @@ qed
 Generated from:
 Tamarin version 1.13.0
 Maude version 3.5.1
-Git revision: 53c49a44efa784b133c907eedf84491d61a48803 (with uncommited changes), branch: AC-NDC-property
-Compiled at: 2026-07-09 13:42:51.535083 UTC
+Git revision: abcb0ff3eca770d7b7f58a583b2616eafe845e15, branch: fix-derivation-check-warnings
+Compiled at: 2026-07-22 11:02:46.6864 UTC
 */
 
 end
@@ -708,7 +708,7 @@ summary of summaries:
 analyzed: examples/csf18-xor/CH07.spthy
 
   output:          examples/csf18-xor/CH07.spthy.tmp
-  processing time: 38.05s
+  processing time: 34.26s
   
   recentalive_tag (all-traces): falsified - found trace (11 steps)
   recentalive_reader (all-traces): verified (23 steps)

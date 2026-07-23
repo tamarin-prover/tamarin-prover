@@ -70,7 +70,7 @@ rule C_1:
 
 // Payment and deposit phase
 
-rule C_2:
+rule C_2 [no_derivcheck]:
   let s = sign(x,~skB) // unblind(sign(blind(x,~r), ~skB),~r)
   in
     [ !St_C_1(C, ~y, ~r ), In( sign(blind(x,~r), ~skB) ), !Bank_Pk($B, pk(~skB)) ]
