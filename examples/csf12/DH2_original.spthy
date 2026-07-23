@@ -33,7 +33,7 @@ rule Register_pk:
   [ !Ltk($A, ~ltkA), !Pk($A, pkA), Out(pkA) ]
 
 /* Initiator */
-rule Init_1:
+rule Init_1 [no_derivcheck]:
   let pkR = 'g'^~ltkR
       X   = 'g'^~m1
       XB  = pkR^~m1
@@ -43,7 +43,7 @@ rule Init_1:
      , EphKey ( ~m1, ~m1 ) ]->
    [ Init_1( ~m1, $I, $R, ~ltkI, X, XB ), !Ephk( ~m1,~m1 ), Out( XB ) ]
 
-rule Resp_1:
+rule Resp_1 [no_derivcheck]:
   let pkI = 'g'^~ltkI
       Y   = 'g'^~m2
       YA  = pkI^~m2

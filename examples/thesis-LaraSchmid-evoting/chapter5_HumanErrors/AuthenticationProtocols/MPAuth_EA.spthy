@@ -204,43 +204,43 @@ rule Setup:
   	]
 
 /* agent rules */
-rule D_4: 
+rule D_4 [no_derivcheck]: 
 	[ AgSt_D0($D,'D_0',< $H, $idH, pk(~skS) >), In(<$idS,r(~rS)>)
 	, !ID_S($S,$idS), !Ltk($S,~skS) // modeling that device D knows S belongs to idS and that it has right corresponding pk(skS), because S is already registered 
 	 ]
  	--[ D($D) ]->
 	[ AgSt_D5($D,'D_5',< $H, $idH, pk(~skS), $idS, $S, r(~rS) >), Out_S($D,$H,'idS',$idS) ]
-rule D_6: 
+rule D_6 [no_derivcheck]: 
 	[ AgSt_D5($D,'D_5',< $H, $idH, pk(~skS), $idS, $S, r(~rS) >), In_S($H,$D,<'pw','idH' >,<pw(~pw),$idH >), Fr(~rD) ]
  	--[DfromHx($D,$H,'pw',pw(~pw)), DfromHx($D,$H,'idH',$idH), RunningD($D,$S,<$H,f(<r(~rS),r(~rD)>)>), D($D) ]->
 	[ AgSt_D7($D,'D_7',< $H, $idH, pk(~skS), $idS, $S, r(~rS), r(~rD), pw(~pw) >),
 			Out( < aenc(r(~rD),pk(~skS)) , senc( <f(r(~rS)), $idH, pw(~pw) >,f(<r(~rS),r(~rD)>)) >) ]
-rule D_10:
+rule D_10 [no_derivcheck]:
 	[ AgSt_D7($D,'D_7',< $H, $idH, pk(~skS), $idS, $S, r(~rS), r(~rD), pw(~pw) >),
 		In(senc( f(r(~rD)),f(<r(~rS),r(~rD)>) ))]
 	--[Dfin(), CommitD($D,$S,<$H,f(<r(~rS),r(~rD)>)>), D($D)]->
 	[ Out_S($D,$H,'success','success')] 		
 
-rule S_2:
+rule S_2 [no_derivcheck]:
 	[ AgSt_S0($S,'S_0',< ~skS,$H, $idS, pw(~pw), $idH >), In('start'), Fr(~rS) ]
 	--[ Sstart($S) ]->
 	[ AgSt_S3($S,'S_3',< ~skS,$H, $idS, pw(~pw), $idH, r(~rS) >), Out(<$idS,r(~rS)>) ]
-rule S_8:
+rule S_8 [no_derivcheck]:
 	[ AgSt_S3($S,'S_3',< ~skS,$H, $idS, pw(~pw), $idH, r(~rS) >),
 		In( < aenc(r(~rD),pk(~skS)) , senc( <f(r(~rS)), $idH, pw(~pw) >,f(<r(~rS),r(~rD)>)) >) ]
 	--[ Commit($S,$H,pw(~pw)), CommitS($S,$D,<$H,f(<r(~rS),r(~rD)>)>), RunningS($S,$D,<$H,f(<r(~rS),r(~rD)>)>), CommitCA($S,$H) ]-> 
 	[ Out( senc( f(r(~rD)),f(<r(~rS),r(~rD)>) )) ]
 
 /* human agent rules */
-rule H_1:
+rule H_1 [no_derivcheck]:
 	[ AgSt_H0($H,'H_0',< $D, $P, $S, pw(~pw), $idH, $idS >)  ]
 	--[H_role($H,'1'), Send($H,'S',$S) ]->
 	[ AgSt_H1($H,'H_1',< $D, $P, $S, pw(~pw), $idH, $idS >), Out(<'S',$S>) ]
-rule H_5:           
+rule H_5 [no_derivcheck]:           
 	[ AgSt_H1($H,'H_1',< $D, $P, $S, pw(~pw), $idH, $idS >), In_S($D,$H,'idS',$idS) ]
 	--[H_role($H,'5'), Receive($H,'idS',$idS), Send($H,'pw',pw(~pw)), Send($H,'idH',$idH), To($D) ]->
 	[ AgSt_H6($H,'H_6',< $D, $P, $S, pw(~pw), $idH, $idS >), Out_S($H,$D,<'pw','idH' >,<pw(~pw),$idH >)]
-rule H_11:
+rule H_11 [no_derivcheck]:
 	[ AgSt_H6($H,'H_6',< $D, $P, $S, pw(~pw), $idH, $idS >), In_S($D,$H,'success','success')]
 	--[Hfin(), Receive($H,'success','success')]->
 	[] 

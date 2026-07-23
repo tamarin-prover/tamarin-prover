@@ -35,7 +35,7 @@ rule (modulo E) Proto1:
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) Proto2:
+rule (modulo E) Proto2[no_derivcheck]:
    [
    PState( $A, ($B++$C), ~ekA ), !Pk( $B, pk(ltkB) ), !Pk( $C, pk(ltkC) ),
    In( <XB, sign(<$B, ($A++$C), XB>, ltkB)> ),
@@ -45,7 +45,7 @@ rule (modulo E) Proto2:
    [ ]
 
   /*
-  rule (modulo AC) Proto2:
+  rule (modulo AC) Proto2[no_derivcheck]:
      [
      PState( $A, ($B++$C), ~ekA ), !Pk( $B, pk(ltkB) ), !Pk( $C, pk(ltkC) ),
      In( <XB, sign(<$B, ($A++$C), XB>, ltkB)> ),
@@ -1047,8 +1047,8 @@ qed
 Generated from:
 Tamarin version 1.13.0
 Maude version 3.5.1
-Git revision: 53c49a44efa784b133c907eedf84491d61a48803 (with uncommited changes), branch: AC-NDC-property
-Compiled at: 2026-07-09 13:42:51.535083 UTC
+Git revision: abcb0ff3eca770d7b7f58a583b2616eafe845e15, branch: fix-derivation-check-warnings
+Compiled at: 2026-07-22 11:02:46.6864 UTC
 */
 
 end
@@ -1060,7 +1060,7 @@ summary of summaries:
 analyzed: examples/ake/bilinear/Joux.spthy
 
   output:          examples/ake/bilinear/Joux.spthy.tmp
-  processing time: 7.15s
+  processing time: 7.17s
   
   session_key_establish (exists-trace): verified (28 steps)
   Session_Key_Secrecy_PFS (all-traces): verified (22 steps)

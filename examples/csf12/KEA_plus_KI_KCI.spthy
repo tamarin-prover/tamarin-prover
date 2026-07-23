@@ -33,7 +33,7 @@ rule Init_1:
      !Ephk(~ekI),
      Out( epkI ) ]
 
-rule Init_2:
+rule Init_2 [no_derivcheck]:
   let pkR  = 'g'^~lkR
       key  = h( <Y^~lkI, pkR^~ekI, $I, $R > ) 
   in
@@ -42,7 +42,7 @@ rule Init_2:
    [ !Sessk( ~ekI, key ) ]
 
 
-rule Resp_1:
+rule Resp_1 [no_derivcheck]:
   let pkI  = 'g'^~lkI
       epkR = 'g'^~ekR
       key  = h(< pkI^~ekR, X^~lkR, $I, $R >)

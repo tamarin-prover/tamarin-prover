@@ -89,7 +89,7 @@ rule (modulo E) H_2:
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) S_1:
+rule (modulo E) S_1 [no_derivcheck]:
    [
    AgSt_S0( $S, <~skS, (pk(~sskDa)+pk(~sskDb))> ),
    In( sg(encp(va, ra, pk(~skS)), ~sskDa) ),
@@ -147,7 +147,7 @@ rule (modulo E) BB:
   // loop breakers: [1,2,3,4]
   /* has exactly the trivial AC variant */
 
-rule (modulo E) A_1:
+rule (modulo E) A_1 [no_derivcheck]:
    [
    AgSt_A0( $A, <$S, $BB, pkS> ),
    In_A( $BB, <'b', (sg(bPrimea, sskDa)+sg(bPrimeb, sskDb))> ),

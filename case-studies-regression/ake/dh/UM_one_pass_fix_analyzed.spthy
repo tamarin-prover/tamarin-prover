@@ -22,7 +22,7 @@ rule (modulo E) I_Activate:
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) I_Complete:
+rule (modulo E) I_Complete[no_derivcheck]:
    [ I_Act( ~ex, $A, $B ), !Ltk( $A, ~ea ), !Pk( $B, 'g'^~eb ) ]
   --[
   Complete( <$A, $B, 'g'^~ex>, 'I', h(<'g'^~eb^~ex, 'g'^~eb^~ea, $A, $B>) )
@@ -34,7 +34,7 @@ rule (modulo E) I_Complete:
    ]
 
   /*
-  rule (modulo AC) I_Complete:
+  rule (modulo AC) I_Complete[no_derivcheck]:
      [ I_Act( ~ex, $A, $B ), !Ltk( $A, ~ea ), !Pk( $B, 'g'^~eb ) ]
     --[
     Complete( <$A, $B, 'g'^~ex>, 'I',
@@ -54,7 +54,7 @@ rule (modulo E) I_Expire:
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) R_Complete:
+rule (modulo E) R_Complete[no_derivcheck]:
    [ In( X ), !Ltk( $B, ~eb ), !Pk( $A, 'g'^~ea ) ]
   --[
   Activate( <$B, $A, X> ),
@@ -66,7 +66,7 @@ rule (modulo E) R_Complete:
    ]
 
   /*
-  rule (modulo AC) R_Complete:
+  rule (modulo AC) R_Complete[no_derivcheck]:
      [ In( X ), !Ltk( $B, ~eb ), !Pk( $A, 'g'^~x ) ]
     --[
     Activate( <$B, $A, X> ),
@@ -815,8 +815,8 @@ qed
 Generated from:
 Tamarin version 1.13.0
 Maude version 3.5.1
-Git revision: 53c49a44efa784b133c907eedf84491d61a48803 (with uncommited changes), branch: AC-NDC-property
-Compiled at: 2026-07-09 13:42:51.535083 UTC
+Git revision: abcb0ff3eca770d7b7f58a583b2616eafe845e15, branch: fix-derivation-check-warnings
+Compiled at: 2026-07-22 11:02:46.6864 UTC
 */
 
 end
@@ -828,7 +828,7 @@ summary of summaries:
 analyzed: examples/ake/dh/UM_one_pass_fix.spthy
 
   output:          examples/ake/dh/UM_one_pass_fix.spthy.tmp
-  processing time: 0.45s
+  processing time: 0.42s
   
   key_agreement_reachable (exists-trace): verified (10 steps)
   CK_secure (all-traces): verified (174 steps)
