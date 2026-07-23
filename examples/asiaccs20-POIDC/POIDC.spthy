@@ -32,7 +32,7 @@ equations: e1(sign(x,y,z)) = x
 equations: e2(sign(x,y,z)) = y
 equations: e3(sign(x,y,z)) = z
 
-rule reSign:
+rule reSign [no_derivcheck]:
 [In(<sk1,r1>), In(sign(m,r2,sk2))]
 -->
 [Out(sign(m,r1,sk1))]

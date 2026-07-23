@@ -39,7 +39,7 @@ rule Init_1:
      , !Ephk(~eskI, ~eskI)
      , Out( hkI ) ]
 
-rule Init_2:
+rule Init_2 [no_derivcheck]:
   let pkR = 'g'^~lkR
       exI = h1(< ~eskI, ~lkI >)
       kI  = h2(< Y^~lkI, pkR^exI, Y^exI, $I, $R >) 
@@ -68,7 +68,7 @@ rule Init_2_testsession:
 */
 
 /* Responder */
-rule Resp_1:
+rule Resp_1 [no_derivcheck]:
   let pkI = 'g'^~lkI
       exR = h1(< ~eskR, ~lkR >)
       hkr = 'g'^exR
