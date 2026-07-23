@@ -196,7 +196,7 @@ rule D_4:
 	[ AgSt_D0($D,'D_0',< $H, $S, ~skD >), In_S($S,$D,'l','record')]
 	--[ D($D) ]->
 	[ AgSt_D4($D,'D_4',< $H, $S, ~skD >)]
-rule D_7:
+rule D_7 [no_derivcheck]:
 	[ AgSt_D5($D,'D_5',< $H, $S, ~skD, r(~r) >), In_S($S,$D,'l',<senc(<$S,r(~r)>,~k),aenc(~k,pk(~skD))>)]
 	--[ D($D), Dfin() ]->
 	[ Out_S($D,$S,'l','ok')]
@@ -206,22 +206,22 @@ rule D_P_5:
 	--[ ]->
  	[ AgSt_D5($D,'D_5',< $H, $S, ~skD, r(~r) >),  Out(r(~r)) ]
 
-rule S_2:
+rule S_2 [no_derivcheck]:
 	[ AgSt_S0($S,'S_0',< $H, $D, pk(~skD), pw(~pw), $idH >), In(<$idH,pw(~pw)>)] 
 	--[ Sstart($S)]->
  	[ AgSt_S4($S,'S_4',< $H, $D, pk(~skD), pw(~pw), $idH >), Out(<'record',pk(~skD)>), Out_S($S,$D,'l','record')]
-rule S_6:
+rule S_6 [no_derivcheck]:
 	[ AgSt_S4($S,'S_4',< $H, $D, pk(~skD), pw(~pw), $idH >), In(record)]
 	--[ ]->
 	[ AgSt_S7($S,'S_7',< $H, $D, pk(~skD), pw(~pw), $idH, record >), Out_S($S,$D,'l',record)]
-rule S_8:
+rule S_8 [no_derivcheck]:
 	[ AgSt_S7($S,'S_7',< $H, $D, pk(~skD), pw(~pw), $idH, record >), In_S($D,$S,'l','ok')]
 	--[ Commit($S,$H,pw(~pw)),  CommitCA($S,$H) ]->
 	[]
 
 
 /* human agent rules */
-rule H_1:
+rule H_1 [no_derivcheck]:
 	[ AgSt_H0($H,'H_0',< $P, $D, $S, pw(~pw), $idH >) ]
 	--[H_role($H,'1'), Send($H,'S',$S)
 			 , Send($H,'idH',$idH)

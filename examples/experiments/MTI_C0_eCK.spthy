@@ -25,7 +25,7 @@ rule Register_pk:
   [ !Ltk($A, ~ltk), !Pk($A, 'g'^~ltk), Out('g'^~ltk) ]
 
 // Initiator
-rule Init_1:
+rule Init_1 [no_derivcheck]:
   [ Fr( ~ekI )
   , !Pk( $R, 'g'^~ltkR)  ]
  --[ SidI_1(  ~ekI, $I, $R, ('g'^~ltkR)^~ekI )
@@ -34,7 +34,7 @@ rule Init_1:
   , Out( ('g'^~ltkR)^~ekI )
   , !EphK(~ekI) ]
 
-rule Init_2:
+rule Init_2 [no_derivcheck]:
   [ Init_1( $I, $R, 'g'^~ltkR, ~ekI )
   , !Ltk( $I, ~ltkI)
   , In( Y ) ]
@@ -45,7 +45,7 @@ rule Init_2:
                , kdf( $I, $R, ('g'^~ltkR)^~ekI, Y, Y^(inv(~ltkI))^~ekI ) ) ]
 
 // Responder
-rule Resp_1:
+rule Resp_1 [no_derivcheck]:
     [ Fr( ~ekR )
     , !Ltk( $R, ~ltkR )
     , !Pk( $I, 'g'^~ltkI )

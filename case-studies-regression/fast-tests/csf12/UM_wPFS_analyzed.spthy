@@ -23,13 +23,13 @@ rule (modulo E) Init_1:
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) Init_2:
+rule (modulo E) Init_2[no_derivcheck]:
    [ Init_1( ~ekI, $I, $R, ~lkI, hkI ), In( Y ), !Pk( $R, 'g'^~lkR ) ]
   --[ SidI_2( ~ekI, $I, $R, hkI, Y, h(<Y^~ekI, 'g'^~lkR^~lkI>) ) ]->
    [ !Sessk( ~ekI, h(<Y^~ekI, 'g'^~lkR^~lkI>) ) ]
 
   /*
-  rule (modulo AC) Init_2:
+  rule (modulo AC) Init_2[no_derivcheck]:
      [ Init_1( ~ekI, $I, $R, ~lkI, hkI ), In( Y ), !Pk( $R, 'g'^~x ) ]
     --[ SidI_2( ~ekI, $I, $R, hkI, Y, h(<z, 'g'^(~lkI*~x)>) ) ]->
      [ !Sessk( ~ekI, h(<z, 'g'^(~lkI*~x)>) ) ]
@@ -62,7 +62,7 @@ rule (modulo E) Init_2:
        z     = DH_neutral
   */
 
-rule (modulo E) Resp_1:
+rule (modulo E) Resp_1[no_derivcheck]:
    [ In( X ), Fr( ~ekR ), !Ltk( $R, ~lkR ), !Pk( $I, 'g'^~lkI ) ]
   --[ SidR_1( ~ekR, $I, $R, X, 'g'^~ekR, h(<X^~ekR, 'g'^~lkI^~lkR>) ) ]->
    [
@@ -71,7 +71,7 @@ rule (modulo E) Resp_1:
    ]
 
   /*
-  rule (modulo AC) Resp_1:
+  rule (modulo AC) Resp_1[no_derivcheck]:
      [ In( X ), Fr( ~ekR ), !Ltk( $R, ~lkR ), !Pk( $I, 'g'^~x ) ]
     --[ SidR_1( ~ekR, $I, $R, X, 'g'^~ekR, h(<z, 'g'^(~lkR*~x)>) ) ]->
      [ Out( 'g'^~ekR ), !Ephk( ~ekR ), !Sessk( ~ekR, h(<z, 'g'^(~lkR*~x)>) ) ]
@@ -464,8 +464,8 @@ qed
 Generated from:
 Tamarin version 1.13.0
 Maude version 3.5.1
-Git revision: 53c49a44efa784b133c907eedf84491d61a48803 (with uncommited changes), branch: AC-NDC-property
-Compiled at: 2026-07-09 13:42:51.535083 UTC
+Git revision: abcb0ff3eca770d7b7f58a583b2616eafe845e15, branch: fix-derivation-check-warnings
+Compiled at: 2026-07-22 11:02:46.6864 UTC
 */
 
 end
@@ -477,7 +477,7 @@ summary of summaries:
 analyzed: examples/csf12/UM_wPFS.spthy
 
   output:          examples/csf12/UM_wPFS.spthy.tmp
-  processing time: 0.28s
+  processing time: 0.27s
   
   wPFS_initiator_key (all-traces): verified (40 steps)
   wPFS_responder_key (all-traces): verified (59 steps)
