@@ -83,7 +83,7 @@ rule V_3:
   --[ ]->
     [ Out( ~r ) ]
 
-rule C_2:
+rule C_2 [no_derivcheck]:
   let v = open(x, r)
   in
     [ In( r ), St_C_1( A, x ) ]

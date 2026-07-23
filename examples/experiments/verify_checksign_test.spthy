@@ -26,7 +26,7 @@ rule A_1:
 
 //Those three rules are equivalent
 
-rule B_1_pattern_matching_sign:                 // ==> s=sign(m,k)
+rule B_1_pattern_matching_sign [no_derivcheck]:                 // ==> s=sign(m,k)
   let s=sign(m,k)
   in
   [ In( <m,s> ),Pub_k(A, pk(k)) ] --[ Pat_match_sign(m) ]-> [ ]
@@ -36,7 +36,7 @@ rule B_1_verify:                                // ==> verif=true ==> s=sign(m,k
   in  
   [ In( <m,s> ),Pub_k(A, pkA) ] --[ Verify(m), Eq( verif, true ) ]-> [ ]
 
-rule B_1_sign:                                  // ==> s=sign( m, sk )
+rule B_1_sign [no_derivcheck]:                                  // ==> s=sign( m, sk )
   [ In( <m,s> ),Pub_k(A, pk(k)) ] --[ Eq_sign(m), Eq( s, sign(m,k) ) ]-> [ ]
 
 

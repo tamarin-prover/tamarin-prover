@@ -55,7 +55,7 @@ rule Reveal_ephmeral_key:
 
 // Protocol
 
-rule Init_1:
+rule Init_1 [no_derivcheck]:
   let skA = pmult( ~s, hp($A) )
       X   = em( skA, hp($B) )^~ex
   in 
@@ -82,7 +82,7 @@ rule Init_2:
   [ !Sessk( ~ex, sessKey ) ]
 
 
-rule Resp_1:
+rule Resp_1 [no_derivcheck]:
   let skB     = pmult( ~s, hp($B))
       Y       = em(hp($A), skB)^~ey
       sessKey = kdf(X^~ey, $A, $B, X, Y)

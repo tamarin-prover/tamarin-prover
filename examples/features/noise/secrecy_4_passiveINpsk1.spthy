@@ -108,7 +108,7 @@ rule Handshake_Initiator_Snd_1:
 
 /* Initiator is Recving this message: <- e ee se */
 
-rule Handshake_Initiator_Recv_2:
+rule Handshake_Initiator_Recv_2 [no_derivcheck]:
  let hash1 = h(<hash, ('g'^re0)>)
      ck2 = kdf1(<ck, ('g'^re0)>)
      k3 = kdf2(<ck, ('g'^re0)>)
@@ -128,7 +128,7 @@ rule Handshake_Initiator_Recv_2:
 
 /* Initiator switches to transport mode */
 
-rule Initiator_to_transport_mode:
+rule Initiator_to_transport_mode [no_derivcheck]:
  [ HandshakeState_Initiator_2(id, hash, ck, k, ~e, ('g'^re), ~s, psk) ]
  --[  ]->
  [ !Transport_Initiator(id, kdf1(ck), kdf2(ck)), !SessionId(id, hash) ]
@@ -144,7 +144,7 @@ rule Init_Handshake_Responder:
 
 /* Responder is Recving this message: -> e s psk */
 
-rule Handshake_Responder_Recv_1:
+rule Handshake_Responder_Recv_1 [no_derivcheck]:
  let hash1 = h(<hash, ('g'^re0)>)
      ck2 = kdf1(<ck, ('g'^re0)>)
      k3 = kdf2(<ck, ('g'^re0)>)
@@ -166,7 +166,7 @@ rule Handshake_Responder_Recv_1:
 
 /* Responder is Snding this message: <- e ee se */
 
-rule Handshake_Responder_Snd_2:
+rule Handshake_Responder_Snd_2 [no_derivcheck]:
  let hash1 = h(<hash, ('g'^~e0)>)
      ck2 = kdf1(<ck, ('g'^~e0)>)
      k3 = kdf2(<ck, ('g'^~e0)>)
@@ -190,7 +190,7 @@ rule Handshake_Responder_Snd_2:
 
 /* Responder switches to transport mode */
 
-rule Responder_to_transport_mode:
+rule Responder_to_transport_mode [no_derivcheck]:
  [ HandshakeState_Responder_2(id, hash, ck, k, ~e, ('g'^re), ('g'^rs), psk) ]
  --[  ]->
  [ !Transport_Responder(id, kdf1(ck), kdf2(ck)), !SessionId(id, hash) ]

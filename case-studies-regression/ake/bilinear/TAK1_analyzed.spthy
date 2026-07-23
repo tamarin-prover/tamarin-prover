@@ -28,9 +28,7 @@ rule (modulo E) Reveal_ephk:
   /* has exactly the trivial AC variant */
 
 rule (modulo E) Reveal_sessk:
-   [ !SessKey( ~sid, kdf(sessKey) ) ]
-  --[ SesskRev( ~sid ) ]->
-   [ Out( kdf(sessKey) ) ]
+   [ !SessKey( ~sid, sessKey ) ] --[ SesskRev( ~sid ) ]-> [ Out( sessKey ) ]
 
   /* has exactly the trivial AC variant */
 
@@ -245,7 +243,7 @@ rule (modulo E) Proto2:
         z     = em(x.11, x.12)^inv(x.9)
   */
 
-rule (modulo E) Proto3:
+rule (modulo E) Proto3[no_derivcheck]:
    [
    PState2( ~ex, $A, $B, $C, tag(XB), tag(XC), emXBXC ), !Ltk( $A, ~ea ),
    !Pk( $B, pmult(~eb, 'P') ), !Pk( $C, pmult(~ec, 'P') )
@@ -266,7 +264,7 @@ rule (modulo E) Proto3:
    ]
 
   /*
-  rule (modulo AC) Proto3:
+  rule (modulo AC) Proto3[no_derivcheck]:
      [
      PState2( ~ex, $A, $B, $C, tag(XB), tag(XC), emXBXC ), !Ltk( $A, ~ea ),
      !Pk( $B, pmult(~x, 'P') ), !Pk( $C, pmult(~x.1, 'P') )
@@ -2645,8 +2643,8 @@ qed
 Generated from:
 Tamarin version 1.13.0
 Maude version 3.5.1
-Git revision: 53c49a44efa784b133c907eedf84491d61a48803 (with uncommited changes), branch: AC-NDC-property
-Compiled at: 2026-07-09 13:42:51.535083 UTC
+Git revision: abcb0ff3eca770d7b7f58a583b2616eafe845e15, branch: fix-derivation-check-warnings
+Compiled at: 2026-07-22 11:02:46.6864 UTC
 */
 
 end
@@ -2658,7 +2656,7 @@ summary of summaries:
 analyzed: examples/ake/bilinear/TAK1.spthy
 
   output:          examples/ake/bilinear/TAK1.spthy.tmp
-  processing time: 11.55s
+  processing time: 12.06s
   
   session_key_establish (exists-trace): verified (17 steps)
   Session_Key_Secrecy (all-traces): verified (725 steps)

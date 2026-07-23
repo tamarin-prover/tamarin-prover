@@ -112,7 +112,7 @@ rule (modulo E) BB:
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) A_1:
+rule (modulo E) A_1 [no_derivcheck]:
    [
    AgSt_A0( $A, <$S, $BB, pkS> ),
    In_A( $BB, <'b', (sg(bPrimea, sskDa)+sg(bPrimeb, sskDb))> ),
