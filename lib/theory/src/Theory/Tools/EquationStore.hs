@@ -205,6 +205,24 @@ addDisj eqStore disj =
   where
     sid = L.get eqsNextSplitId eqStore
 
+-- | Enumerate a disjunction's cases in a canonical order. The disjunction is
+-- stored as a @Set LNSubstVFresh@, so @S.toList@ would enumerate the cases in
+-- the derived 'Ord' order of the substitutions. That order compares the
+-- substitutions' range terms, which contain the fresh witness variables
+-- introduced during back-conversion from Maude; their name hints and indices
+-- are an artifact of the fresh-variable allocation counter and are not in any
+-- canonical form. As a result the case order (and hence the positional
+-- @split_case_i@ labels in the emitted proof) could depend on the allocation
+-- history rather than on the structure of the unifiers, so a saved proof
+-- would fail to re-validate under a checker that allocates in a different
+-- order (because of threading, etc). Sorting on a key that renumbers the
+-- witnesses in a canonical order makes the enumeration reproducible across
+-- runs. Used by both 'performSplit' and 'prettyEqStore' so that the case
+-- order shown when displaying a system matches the case order a split
+-- produces.
+orderedSubsts :: S.Set LNSubstVFresh -> [LNSubstVFresh]
+orderedSubsts = sortOnMemo dropNameHintsLNSubstVFresh . S.toList
+
 -- | @performSplit eqs i@ performs a case-split on the first disjunction
 -- with the given 'SplitId'.
 performSplit :: EqStore -> SplitId -> Maybe [EqStore]
@@ -214,19 +232,6 @@ performSplit eqStore idx =
         (before, (_, disj):after) -> Just $
             mkNewEqStore before after <$> orderedSubsts disj
   where
-    -- The disjunction is stored as a @Set LNSubstVFresh@, so @S.toList@ would
-    -- enumerate the cases in the derived 'Ord' order of the substitutions. That
-    -- order compares the substitutions' range terms, which contain the fresh
-    -- witness variables introduced during back-conversion from Maude; their
-    -- indices are an artifact of the fresh-variable allocation counter and are
-    -- not in any canonical form. As a result the case order (and hence the
-    -- positional @split_case_i@ labels in the emitted proof) could depend on the
-    -- allocation history rather than on the structure of the unifiers, so a
-    -- saved proof would fail to re-validate under a checker that allocates
-    -- in a different order (because of threading, etc). Sorting the cases renumbers
-    -- witnesses in a canonical order so that it's reproducible across runs.
-    orderedSubsts = sortOnMemo dropNameHintsLNSubstVFresh . S.toList
-
     mkNewEqStore before after subst =
         fst $ addDisj (set eqsConj (Conj (before ++ after)) eqStore)
                       (S.singleton subst)
@@ -654,7 +659,7 @@ prettyEqStore eqs@(EqStore substFree (Conj disjs) _nextSplitId) = vcat $
     ppDisj (idx, substs) =
         text (show (unSplitId idx) ++ ".") <-> numbered' conjs
       where
-        conjs  = map ppSubst $ S.toList substs
+        conjs  = map ppSubst $ orderedSubsts substs
 
     ppEq (a,b) =
       prettyNTerm (lit (Var a)) $$ nest (6::Int) (opEqual <-> prettyNTerm b)
