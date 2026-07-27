@@ -161,6 +161,29 @@ function abbreviateAndFormatFact(
     return formattedFactLabel(abbreviate(nodeName, fact, ctx), ctx);
 }
 
+// Abbreviates and formats each fact, joining the results with `separator`.
+function formatFactList(
+    facts: JSONGraphNodeFact[],
+    nodeName: string,
+    ctx: TamarinGraphBuildContext,
+    separator: string,
+): string {
+    return facts.map(fact => abbreviateAndFormatFact(nodeName, fact, ctx)).join(separator);
+}
+
+// Formats facts as "[fact1,\lfact2,\l...]\l", or "" if facts is empty.
+// Used for the bracketed action-list suffix shared by rect/round box node labels.
+function bracketedFactList(
+    facts: JSONGraphNodeFact[],
+    nodeName: string,
+    ctx: TamarinGraphBuildContext,
+): string {
+    if (facts.length === 0) {
+        return "";
+    }
+    return "[" + formatFactList(facts, nodeName, ctx, ",\\l") + "]\\l";
+}
+
 export abstract class TamarinGraphEdge {
     jgEdge: JSONGraphEdge;
     ctx: TamarinGraphBuildContext;
@@ -259,14 +282,8 @@ export class TamarinGraphRectBoxNode extends TamarinGraphNode {
     }
 
     middleRow(afacts: JSONGraphNodeFact[]): DotNodeLabelCell {
-        let txt = this.jgNode.jgnId + " : " + this.jgNode.jgnLabel;
-        if (afacts.length > 0) {
-            txt += "[";
-            txt += afacts.map(fact => {
-                return abbreviateAndFormatFact(this.nodeName(), fact, this.ctx);
-            }).join(",\\l");
-            txt += "]\\l";
-        }
+        const txt = this.jgNode.jgnId + " : " + this.jgNode.jgnLabel
+            + bracketedFactList(afacts, this.nodeName(), this.ctx);
 
         return new DotNodeLabelCell(txt, this.middleRowPort)
     }
@@ -327,14 +344,7 @@ export class TamarinGraphRoundBoxNode extends TamarinGraphNode {
         let lbl = this.jgNode.jgnId + " : " + this.jgNode.jgnLabel;
 
         if (this.jgNode.jgnMetadata) {
-             // TODO(J): redundant with the one in TamarinGraphRectBoxNode
-            if (this.jgNode.jgnMetadata.jgnActs.length > 0) {
-                lbl += "[";
-                lbl += this.jgNode.jgnMetadata.jgnActs.map(fact => {
-                    return abbreviateAndFormatFact(this.nodeName(), fact, this.ctx);
-                }).join(",\\l");
-                lbl += "]\\l";
-            }
+            lbl += bracketedFactList(this.jgNode.jgnMetadata.jgnActs, this.nodeName(), this.ctx);
         }
         return lbl;
     }
@@ -398,10 +408,7 @@ export class TamarinGraphIntruderNode extends TamarinGraphRoundBoxNode {
         if (hasOutgoing || !this.jgNode.jgnMetadata || this.jgNode.jgnMetadata.jgnActs.length === 0) {
             return base;
         }
-        const acts = this.jgNode.jgnMetadata.jgnActs.map(fact => {
-            return abbreviateAndFormatFact(this.nodeName(), fact, this.ctx);
-        }).join(',\\l');
-        return base + '[' + acts + ']\\l';
+        return base + bracketedFactList(this.jgNode.jgnMetadata.jgnActs, this.nodeName(), this.ctx);
     }
 }
 
@@ -419,9 +426,7 @@ export class TamarinGraphUnsolvedActionNode extends TamarinGraphRoundBoxNode {
     label(): string {
         const nodeId = this.jgNode.jgnId;
         if (this.jgNode.jgnMetadata && this.jgNode.jgnMetadata.jgnActs.length > 0) {
-            const acts = this.jgNode.jgnMetadata.jgnActs.map(fact => {
-                return abbreviateAndFormatFact(this.nodeName(), fact, this.ctx);
-            }).join(', ');
+            const acts = formatFactList(this.jgNode.jgnMetadata.jgnActs, this.nodeName(), this.ctx, ', ');
             return acts + ' @ ' + nodeId;
         }
         return this.jgNode.jgnLabel + ' @ ' + nodeId;
