@@ -125,12 +125,12 @@ function abbreviate(
     nodeName: string,
     fact: JSONGraphNodeFact,
     ctx: TamarinGraphBuildContext): JSONGraphNodeFact {
-    fact.jgnFactTerms = fact.jgnFactTerms.map(t => {
-        const { term, rewrites } = ctx.abbreviationRewriter.replaceAll(t);
-        rewrites.forEach(({ index }) => ctx.recordAbbrev(index, nodeName));
-        return term;
+    const jgnFactTerms = fact.jgnFactTerms.map(t => {
+      const { term, rewrites } = ctx.abbreviationRewriter.replaceAll(t);
+      rewrites.forEach(({ index }) => ctx.recordAbbrev(index, nodeName));
+      return term;
     });
-    return fact;
+    return { ...fact, jgnFactTerms };
 }
 
 function equalFacts(first: JSONGraphNodeFact, second: JSONGraphNodeFact): boolean {
