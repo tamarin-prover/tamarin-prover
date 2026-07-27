@@ -23,11 +23,6 @@ interface NodeLocation {
     port?: string;
 }
 
-interface SortedAbbreviation {
-    abbrev: JsonGraphAbbrev;
-    index: number;
-}
-
 interface FormattedFactCacheEntry {
     fact: JSONGraphNodeFact;
     label: string;
@@ -41,8 +36,6 @@ export class TamarinGraphBuildContext {
     nodeLocationMap: Record<string, NodeLocation> // json id -> node name;
 
     abbreviations: JsonGraphAbbrev[];
-
-    sortedAbbreviations: SortedAbbreviation[];
 
     abbreviationRewriter: JSONGraphNodeTermRewriter;
 
@@ -60,18 +53,18 @@ export class TamarinGraphBuildContext {
         this.portCount = 0;
         this.nodeLocationMap = {};
         this.abbreviations = abbv;
-        // Preserve the original order for equal depths, as Array.sort does in the
-        // former per-term implementation, while avoiding repeated depth walks.
-        this.sortedAbbreviations = abbv
-            .map((abbrev, index) => ({ abbrev, index, depth: depth(abbrev.jgaTerm) }))
-            .sort((left, right) => right.depth - left.depth)
-            .map(({ abbrev, index }) => ({ abbrev, index }));
         this.abbreviationRewriter = new JSONGraphNodeTermRewriter(
-            this.sortedAbbreviations.map(({ abbrev, index }) => ({
-                find: abbrev.jgaTerm,
-                replaceBy: abbrev.jgaAbbrev,
-                index,
-            })),
+            // Sort by descending depth (deepest terms first) so nested abbreviations are
+            // rewritten before their parents. Preserves the original order for equal
+            // depths, as Array.sort does in the former per-term implementation.
+            abbv
+                .map((abbrev, index) => ({ abbrev, index, depth: depth(abbrev.jgaTerm) }))
+                .sort((left, right) => right.depth - left.depth)
+                .map(({ abbrev, index }) => ({
+                    find: abbrev.jgaTerm,
+                    replaceBy: abbrev.jgaAbbrev,
+                    index,
+                })),
         );
         this.formattedFactCache = new Map();
         this.abbrevMap = {};
