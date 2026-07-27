@@ -12,6 +12,7 @@ import {
     JSONGraphEdge,
     JSONGraphNode, 
     JSONGraphNodeFact, 
+    isEqual,
     replace
 } from "./jsongraph";
 import { DotNodeLabelCell, DotNodeLabelContainer } from "./vizhtml";
@@ -27,6 +28,11 @@ interface SortedAbbreviation {
     index: number;
 }
 
+interface FormattedFactCacheEntry {
+    fact: JSONGraphNodeFact;
+    label: string;
+}
+
 export class TamarinGraphBuildContext {
     nodeCount: number;
     edgeCount: number;
@@ -37,6 +43,8 @@ export class TamarinGraphBuildContext {
     abbreviations: JsonGraphAbbrev[];
 
     sortedAbbreviations: SortedAbbreviation[];
+
+    formattedFactCache: Map<string, FormattedFactCacheEntry[]>;
 
     abbrevMap: Record<number, Set<string>>; // abbreviation index -> list of node name
 
@@ -56,6 +64,7 @@ export class TamarinGraphBuildContext {
             .map((abbrev, index) => ({ abbrev, index, depth: depth(abbrev.jgaTerm) }))
             .sort((left, right) => right.depth - left.depth)
             .map(({ abbrev, index }) => ({ abbrev, index }));
+        this.formattedFactCache = new Map();
         this.abbrevMap = {};
     }
 
@@ -103,7 +112,6 @@ export class TamarinGraphBuildContext {
     }
 }
 
-
 function abbreviate(
     nodeName: string,
     fact: JSONGraphNodeFact,
@@ -121,6 +129,35 @@ function abbreviate(
     });
     return fact;
 }
+
+function equalFacts(first: JSONGraphNodeFact, second: JSONGraphNodeFact): boolean {
+    return first.jgnFactName === second.jgnFactName &&
+        first.jgnFactTerms.length === second.jgnFactTerms.length &&
+        first.jgnFactTerms.every((term, index) => isEqual(term, second.jgnFactTerms[index]));
+}
+
+function formattedFactLabel(fact: JSONGraphNodeFact, ctx: TamarinGraphBuildContext): string {
+    const cached = ctx.formattedFactCache.get(fact.jgnFactShow)
+        ?.find(entry => equalFacts(entry.fact, fact));
+    if (cached) {
+        return cached.label;
+    }
+
+    const label = prettierJSONGraphNodeFact(fact);
+    const entries = ctx.formattedFactCache.get(fact.jgnFactShow) ?? [];
+    entries.push({ fact, label });
+    ctx.formattedFactCache.set(fact.jgnFactShow, entries);
+    return label;
+}
+
+function abbreviateAndFormatFact(
+    nodeName: string,
+    fact: JSONGraphNodeFact,
+    ctx: TamarinGraphBuildContext,
+): string {
+    return formattedFactLabel(abbreviate(nodeName, fact, ctx), ctx);
+}
+
 export abstract class TamarinGraphEdge {
     jgEdge: JSONGraphEdge;
     ctx: TamarinGraphBuildContext;
@@ -210,8 +247,7 @@ export class TamarinGraphRectBoxNode extends TamarinGraphNode {
     factsToTblRow(facts: JSONGraphNodeFact[]): DotNodeLabelContainer {
         return new DotNodeLabelContainer(
             facts.map(fact => {
-                const abbreviatedFact = abbreviate(this.nodeName(), fact, this.ctx);
-                const pp = prettierJSONGraphNodeFact(abbreviatedFact);
+                const pp = abbreviateAndFormatFact(this.nodeName(), fact, this.ctx);
                 // hard fix in case of flat version i.e. if no linebreak, do not add trailing \l
                 const label = pp.includes('\\l') ? pp + '\\l' : pp;
                 return new DotNodeLabelCell(label, this.ctx.nodeLocation(fact.jgnFactId).port);
@@ -224,8 +260,7 @@ export class TamarinGraphRectBoxNode extends TamarinGraphNode {
         if (afacts.length > 0) {
             txt += "[";
             txt += afacts.map(fact => {
-                const abbreviatedFact = abbreviate(this.nodeName(), fact, this.ctx);
-                return prettierJSONGraphNodeFact(abbreviatedFact);
+                return abbreviateAndFormatFact(this.nodeName(), fact, this.ctx);
             }).join(",\\l");
             txt += "]\\l";
         }
@@ -293,8 +328,7 @@ export class TamarinGraphRoundBoxNode extends TamarinGraphNode {
             if (this.jgNode.jgnMetadata.jgnActs.length > 0) {
                 lbl += "[";
                 lbl += this.jgNode.jgnMetadata.jgnActs.map(fact => {
-                    const abbreviatedFact = abbreviate(this.nodeName(), fact, this.ctx);
-                    return prettierJSONGraphNodeFact(abbreviatedFact);
+                    return abbreviateAndFormatFact(this.nodeName(), fact, this.ctx);
                 }).join(",\\l");
                 lbl += "]\\l";
             }
@@ -362,8 +396,7 @@ export class TamarinGraphIntruderNode extends TamarinGraphRoundBoxNode {
             return base;
         }
         const acts = this.jgNode.jgnMetadata.jgnActs.map(fact => {
-            const abbreviated = abbreviate(this.nodeName(), fact, this.ctx);
-            return prettierJSONGraphNodeFact(abbreviated);
+            return abbreviateAndFormatFact(this.nodeName(), fact, this.ctx);
         }).join(',\\l');
         return base + '[' + acts + ']\\l';
     }
@@ -384,8 +417,7 @@ export class TamarinGraphUnsolvedActionNode extends TamarinGraphRoundBoxNode {
         const nodeId = this.jgNode.jgnId;
         if (this.jgNode.jgnMetadata && this.jgNode.jgnMetadata.jgnActs.length > 0) {
             const acts = this.jgNode.jgnMetadata.jgnActs.map(fact => {
-                const abbreviated = abbreviate(this.nodeName(), fact, this.ctx);
-                return prettierJSONGraphNodeFact(abbreviated);
+                return abbreviateAndFormatFact(this.nodeName(), fact, this.ctx);
             }).join(', ');
             return acts + ' @ ' + nodeId;
         }
