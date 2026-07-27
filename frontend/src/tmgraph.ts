@@ -22,6 +22,11 @@ interface NodeLocation {
     port?: string;
 }
 
+interface SortedAbbreviation {
+    abbrev: JsonGraphAbbrev;
+    index: number;
+}
+
 export class TamarinGraphBuildContext {
     nodeCount: number;
     edgeCount: number;
@@ -30,6 +35,8 @@ export class TamarinGraphBuildContext {
     nodeLocationMap: Record<string, NodeLocation> // json id -> node name;
 
     abbreviations: JsonGraphAbbrev[];
+
+    sortedAbbreviations: SortedAbbreviation[];
 
     abbrevMap: Record<number, Set<string>>; // abbreviation index -> list of node name
 
@@ -43,6 +50,12 @@ export class TamarinGraphBuildContext {
         this.portCount = 0;
         this.nodeLocationMap = {};
         this.abbreviations = abbv;
+        // Preserve the original order for equal depths, as Array.sort does in the
+        // former per-term implementation, while avoiding repeated depth walks.
+        this.sortedAbbreviations = abbv
+            .map((abbrev, index) => ({ abbrev, index, depth: depth(abbrev.jgaTerm) }))
+            .sort((left, right) => right.depth - left.depth)
+            .map(({ abbrev, index }) => ({ abbrev, index }));
         this.abbrevMap = {};
     }
 
@@ -97,14 +110,10 @@ function abbreviate(
     ctx: TamarinGraphBuildContext): JSONGraphNodeFact {
     fact.jgnFactTerms = fact.jgnFactTerms.map(t => {
 
-        // Sort by longest term first so replacement doesn't wrongly match a shorter
-        // abbreviation inside a longer one. Original backend index is kept intact this time
-        // for correct highlighting later.
-        const sortedAbbrevs = ctx.abbreviations.map((a, i) => ({ a, i })).sort((x, y) => depth(y.a.jgaTerm) - depth(x.a.jgaTerm));
-        for (const { a: abbrev, i } of sortedAbbrevs) {
+        for (const { abbrev, index } of ctx.sortedAbbreviations) {
             const result = replace(t, abbrev.jgaTerm, abbrev.jgaAbbrev);
             if (result.replaced) {
-                ctx.recordAbbrev(i, nodeName);
+                ctx.recordAbbrev(index, nodeName);
                 t = result.term;
             }
         }
