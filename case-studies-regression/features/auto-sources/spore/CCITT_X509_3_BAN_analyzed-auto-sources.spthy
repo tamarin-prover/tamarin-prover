@@ -29,7 +29,7 @@ rule (modulo E) Reveal_ltk:
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) A_send_1:
+rule (modulo E) A_send_1[no_derivcheck]:
    [
    !Pk( $B, pk(~ltkB) ), !Ltk( $A, ~ltkA ), Fr( ~na ), Fr( ~xa ), Fr( ~Ya )
    ]
@@ -44,7 +44,7 @@ rule (modulo E) A_send_1:
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) B_receive_1:
+rule (modulo E) B_receive_1[no_derivcheck]:
    [
    In( <x, na, $B, xa, aenc(Ya, pk(~ltkB)), 
         h(<na, $B, xa, aenc(Ya, pk(~ltkB))>), 
@@ -522,8 +522,8 @@ qed
 Generated from:
 Tamarin version 1.13.0
 Maude version 3.5.1
-Git revision: 53c49a44efa784b133c907eedf84491d61a48803 (with uncommited changes), branch: AC-NDC-property
-Compiled at: 2026-07-09 13:42:51.535083 UTC
+Git revision: abcb0ff3eca770d7b7f58a583b2616eafe845e15, branch: fix-derivation-check-warnings
+Compiled at: 2026-07-22 11:02:46.6864 UTC
 */
 
 end
@@ -535,7 +535,7 @@ summary of summaries:
 analyzed: examples/features/auto-sources/spore/CCITT_X509_3_BAN.spthy
 
   output:          examples/features/auto-sources/spore/CCITT_X509_3_BAN.spthy.tmp
-  processing time: 0.92s
+  processing time: 0.86s
   
   Secrecy (all-traces): verified (24 steps)
   injectiveagreement_B (all-traces): falsified - found trace (13 steps)

@@ -143,7 +143,7 @@ rule YSM_AES_ESC_BLOCK_ENCRYPT:
     --[]->
     [OutHSM(senc(data,k))]
 
-rule YSM_AEAD_YUBIKEY_OTP_DECODE:
+rule YSM_AEAD_YUBIKEY_OTP_DECODE [no_derivcheck]:
     let ks=keystream(kh,N)
         aead=<xorc(senc(ks,k),<k2,did>),mac(<k2,did>,k)>
         otp=senc(<did,sc,rand>,k2)
