@@ -127,7 +127,7 @@ rule Alice1:
 //   h(h('pcr0',n),'obtain')
 // to obtain a secret in an envelope. Note that we only allow for one session
 // per reboot as [1].
-rule Alice2:
+rule Alice2 [no_derivcheck]:
     [ Alice1(n)
     , Fr(~s)
     , !AIK(aik)

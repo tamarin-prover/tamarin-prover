@@ -32,7 +32,7 @@ rule Init_1:
      !Ephk(~ekI),
      Out( ~ekI ) ]
 
-rule Init_2:
+rule Init_2 [no_derivcheck]:
   let pkR = 'g'^~lkR
       key = h( < ~ekI, Y, pkR^~lkI > )
   in
@@ -40,7 +40,7 @@ rule Init_2:
    --[SidI_2( ~ekI, $I, $R, ~ekI, Y, key) ]->
    [ !Sessk( ~ekI, key ) ]
 
-rule Resp_1:
+rule Resp_1 [no_derivcheck]:
   let pkI = 'g'^~lkI
       key = h( < X, ~ekR, pkI^~lkR > )
   in

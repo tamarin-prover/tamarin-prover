@@ -31,7 +31,7 @@ rule (modulo E) Init_1:
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) Init_2:
+rule (modulo E) Init_2[no_derivcheck]:
    [
    Init_1( $I, $R, ~ltkI, ~ekI ), !Pk( $R, pk(~ltkR) ),
    In( <$R, $I, Y, sign(<Y, 'g'^~ekI>, ~ltkR), 
@@ -47,7 +47,7 @@ rule (modulo E) Init_2:
    ]
 
   /*
-  rule (modulo AC) Init_2:
+  rule (modulo AC) Init_2[no_derivcheck]:
      [
      Init_1( $I, $R, ~ltkI, ~ekI ), !Pk( $R, pk(~ltkR) ),
      In( <$R, $I, Y, sign(<Y, 'g'^~ekI>, ~ltkR), 
@@ -123,7 +123,7 @@ rule (modulo E) Resp_1:
        z     = DH_neutral
   */
 
-rule (modulo E) Resp_2:
+rule (modulo E) Resp_2[no_derivcheck]:
    [
    !Pk( $I, pk(~ltkI) ), Resp_1( $I, $R, ~ltkR, ~ekR, X ),
    In( <$I, $R, sign(<X, 'g'^~ekR>, ~ltkI), 
@@ -134,7 +134,7 @@ rule (modulo E) Resp_2:
    [ !SessionKey( ~ekR, $I, $R, KDF(X^~ekR) ) ]
 
   /*
-  rule (modulo AC) Resp_2:
+  rule (modulo AC) Resp_2[no_derivcheck]:
      [
      !Pk( $I, pk(~ltkI) ), Resp_1( $I, $R, ~ltkR, ~ekR, X ),
      In( <$I, $R, sign(<X, 'g'^~ekR>, ~ltkI), 
@@ -306,8 +306,8 @@ qed
 Generated from:
 Tamarin version 1.13.0
 Maude version 3.5.1
-Git revision: 53c49a44efa784b133c907eedf84491d61a48803 (with uncommited changes), branch: AC-NDC-property
-Compiled at: 2026-07-09 13:42:51.535083 UTC
+Git revision: abcb0ff3eca770d7b7f58a583b2616eafe845e15, branch: fix-derivation-check-warnings
+Compiled at: 2026-07-22 11:02:46.6864 UTC
 */
 
 end
@@ -319,7 +319,7 @@ summary of summaries:
 analyzed: examples/csf12/STS_MAC.spthy
 
   output:          examples/csf12/STS_MAC.spthy.tmp
-  processing time: 0.53s
+  processing time: 0.51s
   
   KI_Perfect_Forward_Secrecy_I (all-traces): falsified - found trace (12 steps)
   KI_Perfect_Forward_Secrecy_R (all-traces): falsified - found trace (13 steps)
