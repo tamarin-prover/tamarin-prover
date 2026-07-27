@@ -40,7 +40,7 @@ rule Proto1:
   , !Ephk( ~ekA)
   ]
 
-rule Proto2:
+rule Proto2 [no_derivcheck]:
     [ PState( $A, $B + $C, ~ekA)
     , !Pk($B, pk(ltkB))
     , !Pk($C, pk(ltkC))

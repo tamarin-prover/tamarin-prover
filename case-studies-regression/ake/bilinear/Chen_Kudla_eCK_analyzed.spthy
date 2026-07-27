@@ -34,7 +34,7 @@ rule (modulo E) Reveal_master_key:
   /* has exactly the trivial AC variant */
 
 rule (modulo E) Reveal_session_key:
-   [ !Sessk( ~ey, kdf(sek) ) ] --[ SesskRev( ~ey ) ]-> [ Out( kdf(sek) ) ]
+   [ !Sessk( ~ey, sessKey ) ] --[ SesskRev( ~ey ) ]-> [ Out( sessKey ) ]
 
   /* has exactly the trivial AC variant */
 
@@ -50,7 +50,7 @@ rule (modulo E) Init_1:
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) Init_2:
+rule (modulo E) Init_2[no_derivcheck]:
    [
    Init( ~ex, $A, $B ), !MPK( pmult(~s2, 'P') ),
    !LTK( $A, pmult(~s1, hp($A)) ), In( Y )
@@ -71,7 +71,7 @@ rule (modulo E) Init_2:
    ]
 
   /*
-  rule (modulo AC) Init_2:
+  rule (modulo AC) Init_2[no_derivcheck]:
      [
      Init( ~ex, $A, $B ), !MPK( pmult(~x.1, 'P') ),
      !LTK( $A, pmult(~x, hp($A)) ), In( Y )
@@ -216,7 +216,7 @@ rule (modulo E) Init_2:
         z.1   = pmult((x.1242*inv(x.1243)), x.1244)
   */
 
-rule (modulo E) Resp_1:
+rule (modulo E) Resp_1[no_derivcheck]:
    [
    Fr( ~ey ), !LTK( $B, pmult(~msk, hp($B)) ), !MPK( pmult(~msk, 'P') ),
    In( X )
@@ -239,7 +239,7 @@ rule (modulo E) Resp_1:
    ]
 
   /*
-  rule (modulo AC) Resp_1:
+  rule (modulo AC) Resp_1[no_derivcheck]:
      [
      Fr( ~ey ), !LTK( $B, pmult(~x, hp($B)) ), !MPK( pmult(~x, 'P') ), In( X )
      ]
@@ -433,8 +433,8 @@ qed
 Generated from:
 Tamarin version 1.13.0
 Maude version 3.5.1
-Git revision: 53c49a44efa784b133c907eedf84491d61a48803 (with uncommited changes), branch: AC-NDC-property
-Compiled at: 2026-07-09 13:42:51.535083 UTC
+Git revision: abcb0ff3eca770d7b7f58a583b2616eafe845e15, branch: fix-derivation-check-warnings
+Compiled at: 2026-07-22 11:02:46.6864 UTC
 */
 
 end
@@ -446,7 +446,7 @@ summary of summaries:
 analyzed: examples/ake/bilinear/Chen_Kudla_eCK.spthy
 
   output:          examples/ake/bilinear/Chen_Kudla_eCK.spthy.tmp
-  processing time: 7.47s
+  processing time: 10.84s
   
   key_secrecy_eCK_like (all-traces): falsified - found trace (24 steps)
 

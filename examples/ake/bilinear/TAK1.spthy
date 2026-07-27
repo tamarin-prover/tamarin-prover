@@ -33,9 +33,9 @@ rule Reveal_ephk:
     [ Out( ~ek ) ]
 
 rule Reveal_sessk:
-    [ !SessKey( ~sid, kdf(sessKey ) ) ]
+    [ !SessKey( ~sid, sessKey ) ]
   --[ SesskRev( ~sid ) ]->
-    [ Out( kdf(sessKey) ) ]
+    [ Out( sessKey ) ]
 
 
 // Protocol
@@ -63,7 +63,7 @@ rule Proto2:
     [ PState2( ~ex, $A, $B, $C, tag(XB), tag(XC), em(XB, XC) ) ]
 
 
-rule Proto3:
+rule Proto3 [no_derivcheck]:
   let pkB  = pmult(~eb,'P')
       pkC  = pmult(~ec,'P')
       XA   = pmult(~ex,'P')
