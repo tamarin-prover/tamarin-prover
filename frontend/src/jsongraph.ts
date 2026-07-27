@@ -147,6 +147,60 @@ export interface JSONGraphNodeTermReplaceResult {
     term: JSONGraphNodeTerm;
 }
 
+export interface JSONGraphNodeTermRewrite {
+    find: JSONGraphNodeTerm;
+    replaceBy: JSONGraphNodeTerm;
+    index: number;
+}
+
+export interface JSONGraphNodeTermRewriteResult {
+    rewrites: JSONGraphNodeTermRewrite[];
+    term: JSONGraphNodeTerm;
+}
+
+function rewriteKey(term: JSONGraphNodeTerm): string {
+    if (isJSONGraphNodeTermConst(term)) {
+        return `const\u0000${term.jgnConst}`;
+    }
+    return `function\u0000${term.jgnFunct}\u0000${term.jgnParams.length}`;
+}
+
+export class JSONGraphNodeTermRewriter {
+    private rewritesByRoot = new Map<string, JSONGraphNodeTermRewrite[]>();
+
+    constructor(rewrites: JSONGraphNodeTermRewrite[]) {
+        rewrites.forEach(rewrite => {
+            const key = rewriteKey(rewrite.find);
+            const candidates = this.rewritesByRoot.get(key) ?? [];
+            candidates.push(rewrite);
+            this.rewritesByRoot.set(key, candidates);
+        });
+    }
+
+    replaceAll(term: JSONGraphNodeTerm): JSONGraphNodeTermRewriteResult {
+        const rewrites: JSONGraphNodeTermRewrite[] = [];
+
+        const rewrite = (current: JSONGraphNodeTerm): JSONGraphNodeTerm => {
+            const matching = this.rewritesByRoot.get(rewriteKey(current))
+                ?.find(candidate => isEqual(current, candidate.find));
+            if (matching !== undefined) {
+                rewrites.push(matching);
+                return matching.replaceBy;
+            }
+            if (isJSONGraphNodeTermConst(current)) {
+                return current;
+            }
+
+            const params = current.jgnParams.map(rewrite);
+            return params.some((param, index) => param !== current.jgnParams[index])
+                ? { jgnFunct: current.jgnFunct, jgnParams: params, jgnShow: "" }
+                : current;
+        };
+
+        return { term: rewrite(term), rewrites };
+    }
+}
+
 export function replace(
     term: JSONGraphNodeTerm, 
     find: JSONGraphNodeTerm, 

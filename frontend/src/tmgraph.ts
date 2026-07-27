@@ -12,8 +12,8 @@ import {
     JSONGraphEdge,
     JSONGraphNode, 
     JSONGraphNodeFact, 
+    JSONGraphNodeTermRewriter,
     isEqual,
-    replace
 } from "./jsongraph";
 import { DotNodeLabelCell, DotNodeLabelContainer } from "./vizhtml";
 import { prettierJSONGraphNodeFact } from "./prettier";
@@ -44,6 +44,8 @@ export class TamarinGraphBuildContext {
 
     sortedAbbreviations: SortedAbbreviation[];
 
+    abbreviationRewriter: JSONGraphNodeTermRewriter;
+
     formattedFactCache: Map<string, FormattedFactCacheEntry[]>;
 
     abbrevMap: Record<number, Set<string>>; // abbreviation index -> list of node name
@@ -64,6 +66,13 @@ export class TamarinGraphBuildContext {
             .map((abbrev, index) => ({ abbrev, index, depth: depth(abbrev.jgaTerm) }))
             .sort((left, right) => right.depth - left.depth)
             .map(({ abbrev, index }) => ({ abbrev, index }));
+        this.abbreviationRewriter = new JSONGraphNodeTermRewriter(
+            this.sortedAbbreviations.map(({ abbrev, index }) => ({
+                find: abbrev.jgaTerm,
+                replaceBy: abbrev.jgaAbbrev,
+                index,
+            })),
+        );
         this.formattedFactCache = new Map();
         this.abbrevMap = {};
     }
@@ -117,15 +126,9 @@ function abbreviate(
     fact: JSONGraphNodeFact,
     ctx: TamarinGraphBuildContext): JSONGraphNodeFact {
     fact.jgnFactTerms = fact.jgnFactTerms.map(t => {
-
-        for (const { abbrev, index } of ctx.sortedAbbreviations) {
-            const result = replace(t, abbrev.jgaTerm, abbrev.jgaAbbrev);
-            if (result.replaced) {
-                ctx.recordAbbrev(index, nodeName);
-                t = result.term;
-            }
-        }
-        return t;
+        const { term, rewrites } = ctx.abbreviationRewriter.replaceAll(t);
+        rewrites.forEach(({ index }) => ctx.recordAbbrev(index, nodeName));
+        return term;
     });
     return fact;
 }
