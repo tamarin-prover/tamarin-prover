@@ -96,6 +96,17 @@ bitrot:
   - `feature-user-defined-sorts`
   - `feature-ac-rewrite-rules`
 
+Tree-sitter grammar changes
+---------------------------
+
+After changing the tree-sitter grammar, or after merging or rebasing `develop`
+into a branch containing grammar changes, regenerate the committed parser:
+
+    make -C tree-sitter generate
+
+Commit any resulting generated-file changes. CI verifies that regeneration with
+the lockfile-pinned tree-sitter CLI leaves the repository unchanged.
+
 Regression testing for pull requests
 ------------------------------------
 
