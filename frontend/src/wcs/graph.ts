@@ -14,6 +14,17 @@ const ARROW_HEAD_HEIGHT = 10;
 const ARROW_HEAD_HALF_WIDTH = ARROW_HEAD_WIDTH / 2;
 const MAX_FONT = 30;
 const ABSTRACT_VIEW_TRIGGER_FONT_PX = 5;
+const MAX_PARSED_JSON_GRAPH_CACHE_ENTRIES = 8;
+
+interface ParsedJsonGraphCacheEntry {
+  eTag: string;
+  source: string;
+  graphs: JSONGraphs;
+}
+
+// TamarinGraph creates abbreviated fact copies, so cached parsed graphs can be
+// reused directly without leaking state between renders.
+const parsedJsonGraphCache = new Map<string, ParsedJsonGraphCacheEntry>();
 
 type ZoomLevel = "ZoomIn" | "ZoomOut";
 
@@ -384,28 +395,55 @@ export class DotGraphViz extends HTMLElement {
 
 
   /*
-    Fetchs the dot graph string  
+    Fetches and parses the graph JSON.
+
+    An ETag identifies a response version. When a request returns a version
+    already parsed in this page, reuse its parsed representation rather than
+    reading and parsing the body again. If the server does not provide an ETag,
+    compare the response text to the cached source before deciding whether to
+    parse it again.
   */
-  fetchJsonSource = (url: string): Promise<JSONGraphs> => {
-    const { promise, resolve, reject } = Promise.withResolvers<JSONGraphs>();
+  fetchJsonSource = async (url: string): Promise<JSONGraphs> => {
+    const res = await fetch(url);
+    if (!res.ok) {
+      throw new Error("Failed to fetch graph json source.");
+    }
 
-    fetch(url).then((res) => {
-      if (!res.ok) {
-        reject("Failed to fetch graph json source.");
-        return;
-      }
+    const eTag = res.headers.get("ETag");
+    const cached = parsedJsonGraphCache.get(url);
+    if (eTag !== null && cached?.eTag === eTag) {
+      // Refresh the insertion order to keep the cache least-recently-used.
+      parsedJsonGraphCache.delete(url);
+      parsedJsonGraphCache.set(url, cached);
+      return cached.graphs;
+    }
 
-      res.text().then((str) => {
-        try {
-          const graphs = JSON.parse(str) as JSONGraphs;
-          resolve(graphs);
-        } catch {
-          reject("Graph source response is not a JSON");
-        }
-      }).catch(err => reject(err))
-    }).catch(err => reject(err));
+    const source = await res.text();
+    if (cached?.source === source) {
+      // The graph did not change, despite the missing or updated ETag.
+      cached.eTag = eTag ?? "";
+      parsedJsonGraphCache.delete(url);
+      parsedJsonGraphCache.set(url, cached);
+      return cached.graphs;
+    }
 
-    return promise;
+    let graphs: JSONGraphs;
+    try {
+      graphs = JSON.parse(source) as JSONGraphs;
+    } catch {
+      throw new Error("Graph source response is not a JSON");
+    }
+
+    parsedJsonGraphCache.set(url, {
+      eTag: eTag ?? "",
+      source,
+      graphs
+    });
+    if (parsedJsonGraphCache.size > MAX_PARSED_JSON_GRAPH_CACHE_ENTRIES) {
+      parsedJsonGraphCache.delete(parsedJsonGraphCache.keys().next().value!);
+    }
+
+    return graphs;
   };
 
   constructMinimizableObjects = () => {

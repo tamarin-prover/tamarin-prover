@@ -142,63 +142,58 @@ export function depth(t: JSONGraphNodeTerm): number {
     return 0;
 }
 
-export interface JSONGraphNodeTermReplaceResult {
-    replaced: boolean;
+export interface JSONGraphNodeTermRewrite {
+    find: JSONGraphNodeTerm;
+    replaceBy: JSONGraphNodeTerm;
+    index: number;
+}
+
+export interface JSONGraphNodeTermRewriteResult {
+    rewrites: JSONGraphNodeTermRewrite[];
     term: JSONGraphNodeTerm;
 }
 
-export function replace(
-    term: JSONGraphNodeTerm, 
-    find: JSONGraphNodeTerm, 
-    replaceBy: JSONGraphNodeTerm): 
-    JSONGraphNodeTermReplaceResult
-{
-    const successReplaceResult = 
-    (t: JSONGraphNodeTerm): JSONGraphNodeTermReplaceResult => ({
-        replaced: true, term: t
-    });
-
-    const failReplaceResult = 
-    (): JSONGraphNodeTermReplaceResult => ({
-        replaced: false, term
-    });
-
-    if (isEqual(term, find)) {
-        return successReplaceResult(replaceBy);
+function rewriteKey(term: JSONGraphNodeTerm): string {
+    if (isJSONGraphNodeTermConst(term)) {
+        return `const\u0000${term.jgnConst}`;
     }
-    else {
-        if (isJSONGraphNodeTermFunct(term)) {
-            // new parameter list after find and replace
-            const newParams: JSONGraphNodeTerm[] = [];
-            let anyParamReplaced = false;
+    return `function\u0000${term.jgnFunct}\u0000${term.jgnParams.length}`;
+}
 
-            for (const param of term.jgnParams) {
-                const paramFindResult = replace(param, find, replaceBy);
+export class JSONGraphNodeTermRewriter {
+    private rewritesByRoot = new Map<string, JSONGraphNodeTermRewrite[]>();
 
-                // populate new parameter list with replaced result
-                newParams.push(paramFindResult.term);
-                anyParamReplaced = anyParamReplaced || paramFindResult.replaced;
-            }
-
-            if (anyParamReplaced) {
-                // construct new funct term
-                let newFunct: JSONGraphNodeTermFunct = {
-                    jgnFunct: term.jgnFunct,
-                    jgnParams: newParams,
-                    jgnShow: ""
-                };
-                
-                // jgnShow is seldom used but we populated it as well
-                newFunct.jgnShow = prettyPrintTerm(newFunct);
-
-                return successReplaceResult(newFunct);
-            }
-        }
+    constructor(rewrites: JSONGraphNodeTermRewrite[]) {
+        rewrites.forEach(rewrite => {
+            const key = rewriteKey(rewrite.find);
+            const candidates = this.rewritesByRoot.get(key) ?? [];
+            candidates.push(rewrite);
+            this.rewritesByRoot.set(key, candidates);
+        });
     }
 
-    // if const term is not equal to find term,
-    // it will terminate with failed find result
-    return failReplaceResult();
+    replaceAll(term: JSONGraphNodeTerm): JSONGraphNodeTermRewriteResult {
+        const rewrites: JSONGraphNodeTermRewrite[] = [];
+
+        const rewrite = (current: JSONGraphNodeTerm): JSONGraphNodeTerm => {
+            const matching = this.rewritesByRoot.get(rewriteKey(current))
+                ?.find(candidate => isEqual(current, candidate.find));
+            if (matching !== undefined) {
+                rewrites.push(matching);
+                return matching.replaceBy;
+            }
+            if (isJSONGraphNodeTermConst(current)) {
+                return current;
+            }
+
+            const params = current.jgnParams.map(rewrite);
+            return params.some((param, index) => param !== current.jgnParams[index])
+                ? { jgnFunct: current.jgnFunct, jgnParams: params, jgnShow: "" }
+                : current;
+        };
+
+        return { term: rewrite(term), rewrites };
+    }
 }
 
 export function prettyPrintFact(f: JSONGraphNodeFact): string {

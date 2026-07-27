@@ -12,7 +12,8 @@ import {
     JSONGraphEdge,
     JSONGraphNode, 
     JSONGraphNodeFact, 
-    replace
+    JSONGraphNodeTermRewriter,
+    isEqual,
 } from "./jsongraph";
 import { DotNodeLabelCell, DotNodeLabelContainer } from "./vizhtml";
 import { prettierJSONGraphNodeFact } from "./prettier";
@@ -20,6 +21,11 @@ import { prettierJSONGraphNodeFact } from "./prettier";
 interface NodeLocation {
     name: string;
     port?: string;
+}
+
+interface FormattedFactCacheEntry {
+    fact: JSONGraphNodeFact;
+    label: string;
 }
 
 export class TamarinGraphBuildContext {
@@ -30,6 +36,10 @@ export class TamarinGraphBuildContext {
     nodeLocationMap: Record<string, NodeLocation> // json id -> node name;
 
     abbreviations: JsonGraphAbbrev[];
+
+    abbreviationRewriter: JSONGraphNodeTermRewriter;
+
+    formattedFactCache: Map<string, FormattedFactCacheEntry[]>;
 
     abbrevMap: Record<number, Set<string>>; // abbreviation index -> list of node name
 
@@ -43,6 +53,20 @@ export class TamarinGraphBuildContext {
         this.portCount = 0;
         this.nodeLocationMap = {};
         this.abbreviations = abbv;
+        this.abbreviationRewriter = new JSONGraphNodeTermRewriter(
+            // Sort by descending depth (deepest terms first) so nested abbreviations are
+            // rewritten before their parents. Preserves the original order for equal
+            // depths, as Array.sort does in the former per-term implementation.
+            abbv
+                .map((abbrev, index) => ({ abbrev, index, depth: depth(abbrev.jgaTerm) }))
+                .sort((left, right) => right.depth - left.depth)
+                .map(({ abbrev, index }) => ({
+                    find: abbrev.jgaTerm,
+                    replaceBy: abbrev.jgaAbbrev,
+                    index,
+                })),
+        );
+        this.formattedFactCache = new Map();
         this.abbrevMap = {};
     }
 
@@ -90,28 +114,69 @@ export class TamarinGraphBuildContext {
     }
 }
 
-
 function abbreviate(
     nodeName: string,
     fact: JSONGraphNodeFact,
     ctx: TamarinGraphBuildContext): JSONGraphNodeFact {
-    fact.jgnFactTerms = fact.jgnFactTerms.map(t => {
-
-        // Sort by longest term first so replacement doesn't wrongly match a shorter
-        // abbreviation inside a longer one. Original backend index is kept intact this time
-        // for correct highlighting later.
-        const sortedAbbrevs = ctx.abbreviations.map((a, i) => ({ a, i })).sort((x, y) => depth(y.a.jgaTerm) - depth(x.a.jgaTerm));
-        for (const { a: abbrev, i } of sortedAbbrevs) {
-            const result = replace(t, abbrev.jgaTerm, abbrev.jgaAbbrev);
-            if (result.replaced) {
-                ctx.recordAbbrev(i, nodeName);
-                t = result.term;
-            }
-        }
-        return t;
+    const jgnFactTerms = fact.jgnFactTerms.map(t => {
+      const { term, rewrites } = ctx.abbreviationRewriter.replaceAll(t);
+      rewrites.forEach(({ index }) => ctx.recordAbbrev(index, nodeName));
+      return term;
     });
-    return fact;
+    return { ...fact, jgnFactTerms };
 }
+
+function equalFacts(first: JSONGraphNodeFact, second: JSONGraphNodeFact): boolean {
+    return first.jgnFactName === second.jgnFactName &&
+        first.jgnFactTerms.length === second.jgnFactTerms.length &&
+        first.jgnFactTerms.every((term, index) => isEqual(term, second.jgnFactTerms[index]));
+}
+
+function formattedFactLabel(fact: JSONGraphNodeFact, ctx: TamarinGraphBuildContext): string {
+    const cached = ctx.formattedFactCache.get(fact.jgnFactShow)
+        ?.find(entry => equalFacts(entry.fact, fact));
+    if (cached) {
+        return cached.label;
+    }
+
+    const label = prettierJSONGraphNodeFact(fact);
+    const entries = ctx.formattedFactCache.get(fact.jgnFactShow) ?? [];
+    entries.push({ fact, label });
+    ctx.formattedFactCache.set(fact.jgnFactShow, entries);
+    return label;
+}
+
+function abbreviateAndFormatFact(
+    nodeName: string,
+    fact: JSONGraphNodeFact,
+    ctx: TamarinGraphBuildContext,
+): string {
+    return formattedFactLabel(abbreviate(nodeName, fact, ctx), ctx);
+}
+
+// Abbreviates and formats each fact, joining the results with `separator`.
+function formatFactList(
+    facts: JSONGraphNodeFact[],
+    nodeName: string,
+    ctx: TamarinGraphBuildContext,
+    separator: string,
+): string {
+    return facts.map(fact => abbreviateAndFormatFact(nodeName, fact, ctx)).join(separator);
+}
+
+// Formats facts as "[fact1,\lfact2,\l...]\l", or "" if facts is empty.
+// Used for the bracketed action-list suffix shared by rect/round box node labels.
+function bracketedFactList(
+    facts: JSONGraphNodeFact[],
+    nodeName: string,
+    ctx: TamarinGraphBuildContext,
+): string {
+    if (facts.length === 0) {
+        return "";
+    }
+    return "[" + formatFactList(facts, nodeName, ctx, ",\\l") + "]\\l";
+}
+
 export abstract class TamarinGraphEdge {
     jgEdge: JSONGraphEdge;
     ctx: TamarinGraphBuildContext;
@@ -147,17 +212,22 @@ export abstract class TamarinGraphNode {
             name: this.nodeName()
         });
 
-        // allocate ports for all facts
+        // Record every fact at its node. Record nodes replace this with a port location.
         if (this.jgNode.jgnMetadata) {
-            this.jgNode.jgnMetadata.jgnPrems.forEach(f => this.recordPorts(f));
-            this.jgNode.jgnMetadata.jgnActs.forEach(f => this.recordPorts(f));
-            this.jgNode.jgnMetadata.jgnConcs.forEach(f => this.recordPorts(f));
+            this.jgNode.jgnMetadata.jgnPrems.forEach(f => this.recordFactNode(f));
+            this.jgNode.jgnMetadata.jgnActs.forEach(f => this.recordFactNode(f));
+            this.jgNode.jgnMetadata.jgnConcs.forEach(f => this.recordFactNode(f));
         }
     }
     abstract nodeAttributes(): Attributes;
 
-    // record node name map for fact ports
-    recordPorts(fact: JSONGraphNodeFact): void {
+    recordFactNode(fact: JSONGraphNodeFact): void {
+        this.ctx.recordNode(fact.jgnFactId, {
+            name: this.nodeName()
+        });
+    }
+
+    recordFactPort(fact: JSONGraphNodeFact): void {
         this.ctx.recordNode(fact.jgnFactId, {
             name: this.nodeName(),
             port: `port${this.ctx.newPortId()}`
@@ -180,6 +250,11 @@ export class TamarinGraphRectBoxNode extends TamarinGraphNode {
     middleRowPort: string;
     constructor(jgNode: JSONGraphNode, ctx: TamarinGraphBuildContext) {
         super(jgNode, ctx);
+        if (this.jgNode.jgnMetadata) {
+            this.jgNode.jgnMetadata.jgnPrems.forEach(f => this.recordFactPort(f));
+            this.jgNode.jgnMetadata.jgnActs.forEach(f => this.recordFactPort(f));
+            this.jgNode.jgnMetadata.jgnConcs.forEach(f => this.recordFactPort(f));
+        }
         // this.color = isVaryingColor(colorMode) ? vary(color2hsv[colorMode.base]) : color2hsv[colorMode];
         // Allocate a port for the middle (rule-label) row and re-register the node ID to point to it.
         // This matches Haskell's dsNodes which resolves to the Nothing-keyed (action row) cell,
@@ -191,8 +266,7 @@ export class TamarinGraphRectBoxNode extends TamarinGraphNode {
     factsToTblRow(facts: JSONGraphNodeFact[]): DotNodeLabelContainer {
         return new DotNodeLabelContainer(
             facts.map(fact => {
-                const abbreviatedFact = abbreviate(this.nodeName(), fact, this.ctx);
-                const pp = prettierJSONGraphNodeFact(abbreviatedFact);
+                const pp = abbreviateAndFormatFact(this.nodeName(), fact, this.ctx);
                 // hard fix in case of flat version i.e. if no linebreak, do not add trailing \l
                 const label = pp.includes('\\l') ? pp + '\\l' : pp;
                 return new DotNodeLabelCell(label, this.ctx.nodeLocation(fact.jgnFactId).port);
@@ -201,15 +275,8 @@ export class TamarinGraphRectBoxNode extends TamarinGraphNode {
     }
 
     middleRow(afacts: JSONGraphNodeFact[]): DotNodeLabelCell {
-        let txt = this.jgNode.jgnId + " : " + this.jgNode.jgnLabel;
-        if (afacts.length > 0) {
-            txt += "[";
-            txt += afacts.map(fact => {
-                const abbreviatedFact = abbreviate(this.nodeName(), fact, this.ctx);
-                return prettierJSONGraphNodeFact(abbreviatedFact);
-            }).join(",\\l");
-            txt += "]\\l";
-        }
+        const txt = this.jgNode.jgnId + " : " + this.jgNode.jgnLabel
+            + bracketedFactList(afacts, this.nodeName(), this.ctx);
 
         return new DotNodeLabelCell(txt, this.middleRowPort)
     }
@@ -270,15 +337,7 @@ export class TamarinGraphRoundBoxNode extends TamarinGraphNode {
         let lbl = this.jgNode.jgnId + " : " + this.jgNode.jgnLabel;
 
         if (this.jgNode.jgnMetadata) {
-             // TODO(J): redundant with the one in TamarinGraphRectBoxNode
-            if (this.jgNode.jgnMetadata.jgnActs.length > 0) {
-                lbl += "[";
-                lbl += this.jgNode.jgnMetadata.jgnActs.map(fact => {
-                    const abbreviatedFact = abbreviate(this.nodeName(), fact, this.ctx);
-                    return prettierJSONGraphNodeFact(abbreviatedFact);
-                }).join(",\\l");
-                lbl += "]\\l";
-            }
+            lbl += bracketedFactList(this.jgNode.jgnMetadata.jgnActs, this.nodeName(), this.ctx);
         }
         return lbl;
     }
@@ -342,11 +401,7 @@ export class TamarinGraphIntruderNode extends TamarinGraphRoundBoxNode {
         if (hasOutgoing || !this.jgNode.jgnMetadata || this.jgNode.jgnMetadata.jgnActs.length === 0) {
             return base;
         }
-        const acts = this.jgNode.jgnMetadata.jgnActs.map(fact => {
-            const abbreviated = abbreviate(this.nodeName(), fact, this.ctx);
-            return prettierJSONGraphNodeFact(abbreviated);
-        }).join(',\\l');
-        return base + '[' + acts + ']\\l';
+        return base + bracketedFactList(this.jgNode.jgnMetadata.jgnActs, this.nodeName(), this.ctx);
     }
 }
 
@@ -364,10 +419,7 @@ export class TamarinGraphUnsolvedActionNode extends TamarinGraphRoundBoxNode {
     label(): string {
         const nodeId = this.jgNode.jgnId;
         if (this.jgNode.jgnMetadata && this.jgNode.jgnMetadata.jgnActs.length > 0) {
-            const acts = this.jgNode.jgnMetadata.jgnActs.map(fact => {
-                const abbreviated = abbreviate(this.nodeName(), fact, this.ctx);
-                return prettierJSONGraphNodeFact(abbreviated);
-            }).join(', ');
+            const acts = formatFactList(this.jgNode.jgnMetadata.jgnActs, this.nodeName(), this.ctx, ', ');
             return acts + ' @ ' + nodeId;
         }
         return this.jgNode.jgnLabel + ' @ ' + nodeId;
@@ -449,11 +501,13 @@ export class TamarinGraphDottedEdge extends TamarinGraphEdge {
     }
 
    egdeAttributes(): Attributes {
+        const tailPort = this.ctx.nodeLocation(this.jgEdge.jgeSource)?.port;
+        const headPort = this.ctx.nodeLocation(this.jgEdge.jgeTarget)?.port;
         return {
             style: "dashed",
             color: this.jgEdge.jgeColor || "black",
-            tailport: this.ctx.nodeLocation(this.jgEdge.jgeSource).port!,
-            headport: this.ctx.nodeLocation(this.jgEdge.jgeTarget).port!,
+            ...(tailPort ? { tailport: tailPort } : {}),
+            ...(headPort ? { headport: headPort } : {}),
         };
     }
 }
