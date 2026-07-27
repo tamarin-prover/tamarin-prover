@@ -187,9 +187,6 @@ export function replace(
                     jgnParams: newParams,
                     jgnShow: ""
                 };
-                
-                // jgnShow is seldom used but we populated it as well
-                newFunct.jgnShow = prettyPrintTerm(newFunct);
 
                 return successReplaceResult(newFunct);
             }
