@@ -37,7 +37,7 @@ rule (modulo E) C_to_AS:
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) AS_send_key:
+rule (modulo E) AS_send_key[no_derivcheck]:
    [ In( <'Req', x, y, n> ), !Ltk( 'AS', ~ltkAS ), !Pk( y, pk(~ltkY) ) ]
   -->
    [
@@ -48,7 +48,7 @@ rule (modulo E) AS_send_key:
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) C_to_S:
+rule (modulo E) C_to_S[no_derivcheck]:
    [
    In( <'AS', $C, ~n1, $S, pkS, 
         sign(<'Key', 'AS', $C, ~n1, $S, pkS>, ~ltkAS)>
@@ -72,7 +72,7 @@ rule (modulo E) C_to_S:
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) S_to_AS:
+rule (modulo E) S_to_AS[no_derivcheck]:
    [
    In( <c, $S, t, l, aenc(<'4', c, n2>, pk(~ltkS)), 
         sign(<'3', t, l, aenc(<'4', c, n2>, pk(~ltkS))>, ltkC)>
@@ -95,7 +95,7 @@ rule (modulo E) S_to_AS:
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) S_to_C:
+rule (modulo E) S_to_C[no_derivcheck]:
    [
    In( <AS, $S, ~n3, c, pk(ltkC), 
         sign(<'Key', AS, $S, ~n3, c, pk(ltkC)>, ~ltkAS)>
@@ -1117,8 +1117,8 @@ qed
 Generated from:
 Tamarin version 1.13.0
 Maude version 3.5.1
-Git revision: 53c49a44efa784b133c907eedf84491d61a48803 (with uncommited changes), branch: AC-NDC-property
-Compiled at: 2026-07-09 13:42:51.535083 UTC
+Git revision: abcb0ff3eca770d7b7f58a583b2616eafe845e15, branch: fix-derivation-check-warnings
+Compiled at: 2026-07-22 11:02:46.6864 UTC
 */
 
 end
@@ -1130,7 +1130,7 @@ summary of summaries:
 analyzed: examples/features/auto-sources/spore/SpliceAS_3.spthy
 
   output:          examples/features/auto-sources/spore/SpliceAS_3.spthy.tmp
-  processing time: 1.70s
+  processing time: 1.53s
   
   executability (exists-trace): verified (21 steps)
   Secrecy (all-traces): verified (39 steps)

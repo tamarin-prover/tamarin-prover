@@ -1,7 +1,6 @@
 # Variables
-CARGO = cargo
-TREE_SITTER_CLI = tree-sitter-cli
-TREE_SITTER_DIR = tree-sitter-spthy
+NPM ?= npm
+TREE_SITTER_DIR := tree-sitter-spthy
 
 # Default target
 .DEFAULT_GOAL := all
@@ -10,12 +9,12 @@ TREE_SITTER_DIR = tree-sitter-spthy
 .PHONY: all install generate
 
 # Default task
-all: install generate
+all: generate
 
-# Install tree-sitter-cli
+# Install the locked Node.js dependencies
 install:
-	$(CARGO) install $(TREE_SITTER_CLI)
+	cd $(TREE_SITTER_DIR) && $(NPM) ci
 
-# Generate tree-sitter grammar
-generate:
-	cd $(TREE_SITTER_DIR) && tree-sitter generate --abi 14
+# Generate the tree-sitter grammar with the locked CLI version
+generate: install
+	cd $(TREE_SITTER_DIR) && $(NPM) run generate

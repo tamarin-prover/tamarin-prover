@@ -1117,7 +1117,7 @@ rule BB:
 	, Out_A($BB, <'zkp', p >)
 	]
 	
-rule A_1:// add here "$" to votes for efficiency. Justification is that auditors can check that only valid votes are in the final tally as part of their verifiability check
+rule A_1 [no_derivcheck]:// add here "$" to votes for efficiency. Justification is that auditors can check that only valid votes are in the final tally as part of their verifiability check
 	[ AgSt_A0($A,<$S,$BB,pkS>)
 	// implicitly (by pattern matching) do verifyA1 since each ballot signed w/ exactly one valid verification key (also no duplicates) and since bPrime really corresponds to b without signatures:
 	, In_A($BB, <'b', sg(bPrimea,sskDa)+sg(bPrimeb,sskDb) >)

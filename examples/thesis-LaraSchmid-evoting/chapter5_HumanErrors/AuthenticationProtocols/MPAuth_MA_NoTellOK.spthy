@@ -183,30 +183,30 @@ rule SetupAfterEA:
   	]
 
 /* agent rules */
-rule D_15: 
+rule D_15 [no_derivcheck]: 
 	[ AgSt_D11($D,'D_7',< $H, $idH, pk(~skS), $idS, $S, ~rS, ~rD >), In( senc(<m(~m),~rS2>,f(~rS,~rD)) ) ]
  	--[ D($D) ]->
 	[ AgSt_D16($D,'D_16',< $H, $idH, pk(~skS), $idS, $S, ~rS, ~rD, m(~m), ~rS2 >), Out_S($D,$H,'m',m(~m)) ]
-rule D_17: 
+rule D_17 [no_derivcheck]: 
 	[ AgSt_D16($D,'D_16',< $H, $idH, pk(~skS), $idS, $S, ~rS, ~rD, m(~m), ~rS2 >), In_S($H,$D,'ok','ok') ]
  	--[ Dfin(), DfromHx($D,$H,'ok','ok')]->
 	[  Out(senc( f(m(~m),~rS2), f(~rS,~rD)) ) ]
 		
- rule S_13:
+ rule S_13 [no_derivcheck]:
 	[ AgSt_S9($S,'S_9',< ~skS, $idS, $H, $idH, ~rS, ~rD >), In(m(~m)), Fr(~rS2) ]
 	--[ ]->
 	[ AgSt_S14($S,'S_14',< ~skS, $idS, $H, $idH, ~rS, ~rD, m(~m), ~rS2 >), Out( senc(<m(~m),~rS2>,f(~rS,~rD)) ) ]
-rule S_19:
+rule S_19 [no_derivcheck]:
 	[ AgSt_S14($S,'S_14',< ~skS, $idS, $H, $idH, ~rS, ~rD, m(~m), ~rS2 >), In( senc( f(m(~m),~rS2), f(~rS,~rD)) )]
 	--[ Commit($S,$H,m(~m)) ]->
 	[ ]
 
 /* human agent rules */
-rule H_12:
+rule H_12 [no_derivcheck]:
 	[ AgSt_H11($H,'H_11',< $D, $P, $S, m(~m), $idH, $idS >) ]
 	--[H_role($H,'1'), Send($H,'m',m(~m)) ]->
 	[ AgSt_H12($H,'H_12',< $D, $P, $S, m(~m), $idH, $idS >), Out(<'m',m(~m)>) ]
-rule H_16:           
+rule H_16 [no_derivcheck]:           
 	[ AgSt_H12($H,'H_12',< $D, $P, $S, m(~m), $idH, $idS >), In_S($D,$H,'m',m(~m)) ]
 	--[H_role($H,'5'), Receive($H,'m',m(~m)), Send($H,'ok','ok'), To($D) ]->
 	[ Out_S($H,$D,'ok','ok') ]

@@ -33,7 +33,7 @@ rule tag1:
    , TagState(~k, r1, ~r2, hash)
    ]
 
-rule reader2:
+rule reader2 [no_derivcheck]:
    [ Initiated( ~r1 )
    , !Reader( ~k, ~id )
    , In( <r2, lh(rot(~id,hash) XOR hash)> ) 

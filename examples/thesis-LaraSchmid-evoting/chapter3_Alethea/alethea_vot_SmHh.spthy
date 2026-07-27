@@ -570,7 +570,7 @@ rule H_1:
 	[ AgSt_H1($H, <$D, $BB, $v>), Out_S($H,$D,$v)
 	]
 
-rule D_1:
+rule D_1 [no_derivcheck]:
 	[ AgSt_D0($D, <$H,$S,pkS,h($H,~x) >), In_S($H,$D,v), Fr(~r) ]
 	--[ Randomness(~r) ]->
 	[ Out_S($D,$H, sg(encp(v,~r,pkS),h($H,~x)) )
@@ -608,7 +608,7 @@ rule BB:
 	, Out_A($BB, <'zkp', p >)
 	]
 	
-rule A_1:// add here "$" to votes for efficiency. Justification is that auditors can check that only valid votes are in the final tally.
+rule A_1 [no_derivcheck]:// add here "$" to votes for efficiency. Justification is that auditors can check that only valid votes are in the final tally.
 	[ AgSt_A0($A,<$S,$BB,pkS>)
 	// implicitly (by pattern matching) do verifyA1 since each ballot signed w/ exactly one valid verification key (also no duplicates) and since bPrime really b w/o signatures:
 	, In_A($BB, <'b', sg(bPrimea,sskDa)+sg(bPrimeb,sskDb) >)
