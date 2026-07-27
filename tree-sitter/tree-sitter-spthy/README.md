@@ -5,8 +5,10 @@ Spthy grammar for [tree-sitter](https://github.com/tree-sitter/tree-sitter).
 The generated parser is committed so consumers do not need Node.js or the
 tree-sitter CLI at build time.
 
-Regenerate it after editing the grammar with `npm run generate`. This command
-uses ABI 14 for compatibility with the supported language bindings.
+Regenerate it after editing the grammar with `npm ci` followed by
+`npm run generate`. This installs the tree-sitter CLI version pinned in
+`package-lock.json` and uses ABI 14 for compatibility with the supported
+language bindings.
 
 ## Go
 
