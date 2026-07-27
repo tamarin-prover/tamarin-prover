@@ -147,17 +147,22 @@ export abstract class TamarinGraphNode {
             name: this.nodeName()
         });
 
-        // allocate ports for all facts
+        // Record every fact at its node. Record nodes replace this with a port location.
         if (this.jgNode.jgnMetadata) {
-            this.jgNode.jgnMetadata.jgnPrems.forEach(f => this.recordPorts(f));
-            this.jgNode.jgnMetadata.jgnActs.forEach(f => this.recordPorts(f));
-            this.jgNode.jgnMetadata.jgnConcs.forEach(f => this.recordPorts(f));
+            this.jgNode.jgnMetadata.jgnPrems.forEach(f => this.recordFactNode(f));
+            this.jgNode.jgnMetadata.jgnActs.forEach(f => this.recordFactNode(f));
+            this.jgNode.jgnMetadata.jgnConcs.forEach(f => this.recordFactNode(f));
         }
     }
     abstract nodeAttributes(): Attributes;
 
-    // record node name map for fact ports
-    recordPorts(fact: JSONGraphNodeFact): void {
+    recordFactNode(fact: JSONGraphNodeFact): void {
+        this.ctx.recordNode(fact.jgnFactId, {
+            name: this.nodeName()
+        });
+    }
+
+    recordFactPort(fact: JSONGraphNodeFact): void {
         this.ctx.recordNode(fact.jgnFactId, {
             name: this.nodeName(),
             port: `port${this.ctx.newPortId()}`
@@ -180,6 +185,11 @@ export class TamarinGraphRectBoxNode extends TamarinGraphNode {
     middleRowPort: string;
     constructor(jgNode: JSONGraphNode, ctx: TamarinGraphBuildContext) {
         super(jgNode, ctx);
+        if (this.jgNode.jgnMetadata) {
+            this.jgNode.jgnMetadata.jgnPrems.forEach(f => this.recordFactPort(f));
+            this.jgNode.jgnMetadata.jgnActs.forEach(f => this.recordFactPort(f));
+            this.jgNode.jgnMetadata.jgnConcs.forEach(f => this.recordFactPort(f));
+        }
         // this.color = isVaryingColor(colorMode) ? vary(color2hsv[colorMode.base]) : color2hsv[colorMode];
         // Allocate a port for the middle (rule-label) row and re-register the node ID to point to it.
         // This matches Haskell's dsNodes which resolves to the Nothing-keyed (action row) cell,
@@ -449,11 +459,13 @@ export class TamarinGraphDottedEdge extends TamarinGraphEdge {
     }
 
    egdeAttributes(): Attributes {
+        const tailPort = this.ctx.nodeLocation(this.jgEdge.jgeSource)?.port;
+        const headPort = this.ctx.nodeLocation(this.jgEdge.jgeTarget)?.port;
         return {
             style: "dashed",
             color: this.jgEdge.jgeColor || "black",
-            tailport: this.ctx.nodeLocation(this.jgEdge.jgeSource).port!,
-            headport: this.ctx.nodeLocation(this.jgEdge.jgeTarget).port!,
+            ...(tailPort ? { tailport: tailPort } : {}),
+            ...(headPort ? { headport: headPort } : {}),
         };
     }
 }
