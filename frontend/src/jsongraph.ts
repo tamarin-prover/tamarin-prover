@@ -142,11 +142,6 @@ export function depth(t: JSONGraphNodeTerm): number {
     return 0;
 }
 
-export interface JSONGraphNodeTermReplaceResult {
-    replaced: boolean;
-    term: JSONGraphNodeTerm;
-}
-
 export interface JSONGraphNodeTermRewrite {
     find: JSONGraphNodeTerm;
     replaceBy: JSONGraphNodeTerm;
@@ -199,57 +194,6 @@ export class JSONGraphNodeTermRewriter {
 
         return { term: rewrite(term), rewrites };
     }
-}
-
-export function replace(
-    term: JSONGraphNodeTerm, 
-    find: JSONGraphNodeTerm, 
-    replaceBy: JSONGraphNodeTerm): 
-    JSONGraphNodeTermReplaceResult
-{
-    const successReplaceResult = 
-    (t: JSONGraphNodeTerm): JSONGraphNodeTermReplaceResult => ({
-        replaced: true, term: t
-    });
-
-    const failReplaceResult = 
-    (): JSONGraphNodeTermReplaceResult => ({
-        replaced: false, term
-    });
-
-    if (isEqual(term, find)) {
-        return successReplaceResult(replaceBy);
-    }
-    else {
-        if (isJSONGraphNodeTermFunct(term)) {
-            // new parameter list after find and replace
-            const newParams: JSONGraphNodeTerm[] = [];
-            let anyParamReplaced = false;
-
-            for (const param of term.jgnParams) {
-                const paramFindResult = replace(param, find, replaceBy);
-
-                // populate new parameter list with replaced result
-                newParams.push(paramFindResult.term);
-                anyParamReplaced = anyParamReplaced || paramFindResult.replaced;
-            }
-
-            if (anyParamReplaced) {
-                // construct new funct term
-                let newFunct: JSONGraphNodeTermFunct = {
-                    jgnFunct: term.jgnFunct,
-                    jgnParams: newParams,
-                    jgnShow: ""
-                };
-
-                return successReplaceResult(newFunct);
-            }
-        }
-    }
-
-    // if const term is not equal to find term,
-    // it will terminate with failed find result
-    return failReplaceResult();
 }
 
 export function prettyPrintFact(f: JSONGraphNodeFact): string {
