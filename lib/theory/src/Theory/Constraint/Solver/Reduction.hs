@@ -608,11 +608,16 @@ substLemmas         = substFormulaPart sLemmas
 substNextGoalNr     = return ()
 
 -- | 'substPart' for the guarded-formula sets, re-normalising each member
--- after the substitution is applied.
+-- after the substitution is applied. Stored formulas are already normalised
+-- (every insertion goes through 'normaliseStoredFormula'), and only a
+-- substitution that actually changes a formula can take it out of normal
+-- form (e.g. by making two conjuncts identical), so formulas the
+-- substitution leaves unchanged are kept as they are.
 substFormulaPart :: (System :-> S.Set LNGuarded) -> Reduction ()
 substFormulaPart l = do
     subst <- getM sSubst
-    modM l (S.map (normaliseStoredFormula . apply subst))
+    modM l (S.map (\gf -> let gf' = apply subst gf
+                          in if gf' == gf then gf else normaliseStoredFormula gf'))
 
 -- | Apply the current substitution of the equation store to a part of the
 -- sequent. This is an internal function.
@@ -663,8 +668,12 @@ substGoals = do
         ActionG i fa@(kFactView -> Just (UpK, m))
           | (isMsgVar m || isProduct m || isUnion m {--|| isXor m-}) && (apply subst m /= m) ->
               insertAction i (apply subst fa)
+        -- Disjunction goals are normalised like the stored formulas they
+        -- mirror, and like those only need it when the substitution
+        -- changed them.
         DisjG disj -> do
-            let disj' = normaliseDisjList (apply subst disj)
+            let disj0 = apply subst disj
+                disj' = if disj0 == disj then disj else normaliseDisjList disj0
             modM sGoals $ M'.insertWith combineGoalStatus (DisjG disj') status
             return Unchanged
         _ -> do modM sGoals $
