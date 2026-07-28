@@ -63,18 +63,20 @@ data JSONGraphNodeTerm =
 
 -- | Automatically derived instances have unnecessarily many tag-value pairs. 
 -- Hence, we have our own here.
+-- jgnShow is omitted from the JSON entirely when empty (rather than encoded
+-- as ""), since it is only ever populated for outermost terms; this saves
+-- bytes on the (much more numerous) nested subterms that carry no jgnShow.
 instance FromJSON JSONGraphNodeTerm where
   parseJSON = withObject "JSONGraphNodeTerm" $ \o -> asum [
     Const <$> o .: "jgnConst",
-    Funct <$> o .: "jgnFunct" <*> o .: "jgnParams" <*> o .: "jgnShow" ]
+    Funct <$> o .: "jgnFunct" <*> o .: "jgnParams" <*> o .:? "jgnShow" .!= "" ]
 
 instance ToJSON JSONGraphNodeTerm where
   toJSON (Const s) = object [ "jgnConst" .= s ]
-  toJSON (Funct f p s) = object 
+  toJSON (Funct f p s) = object $
     [ "jgnFunct"  .= f
     , "jgnParams" .= toJSON p
-    , "jgnShow"   .= s
-    ] 
+    ] ++ [ "jgnShow" .= s | not (null s) ]
 
 -- | Representation of a fact in a JSON graph node.
 data JSONGraphNodeFact = JSONGraphNodeFact 
@@ -223,21 +225,30 @@ getGraph = do
 
 -- | Generate the JSON data structure from a term.
 -- | "instance Show a" in Raw.hs served as example.
+-- Only the outermost term gets a populated jgnShow field (the full
+-- pretty-printed string of that term); nested subterms always get "".
+-- This is safe because the pretty string of the outermost term already
+-- contains the textual representation of every subterm, and consumers
+-- reconstruct subterm display strings from the term structure itself
+-- rather than reading jgnShow on nested terms.
 lntermToJSONGraphNodeTerm :: Bool -> LNTerm -> JSONGraphNodeTerm
-lntermToJSONGraphNodeTerm pretty t =
-    case viewTerm t of
-      Lit l -> Const (show l)
-      FApp (NoEq (s,_)) [] 
-            -> Funct (plainstring $ show s) [] res
-      FApp (NoEq (s,_)) as 
-            -> Funct (plainstring $ show s) (map (lntermToJSONGraphNodeTerm pretty) as) res
-      FApp (AC o) as       
-            -> Funct (show o) (map (lntermToJSONGraphNodeTerm pretty) as) res
-      _     -> Const ("unknown term type: " ++ show t)
-    where 
-      res = case pretty of 
-              True -> show t
-              False -> "" 
+lntermToJSONGraphNodeTerm pretty = go True
+  where
+    go :: Bool -> LNTerm -> JSONGraphNodeTerm
+    go outermost t =
+        case viewTerm t of
+          Lit l -> Const (show l)
+          FApp (NoEq (s,_)) [] 
+                -> Funct (plainstring $ show s) [] res
+          FApp (NoEq (s,_)) as 
+                -> Funct (plainstring $ show s) (map (go False) as) res
+          FApp (AC o) as       
+                -> Funct (show o) (map (go False) as) res
+          _     -> Const ("unknown term type: " ++ show t)
+      where 
+        res = case pretty && outermost of 
+                True -> show t
+                False -> "" 
 
 -- | Generate the JSON data structure for items such as facts and actions. 
 itemToJSONGraphNodeFact :: Bool -> String -> LNFact -> JSONGraphNodeFact

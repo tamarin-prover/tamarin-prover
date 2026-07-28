@@ -5,7 +5,10 @@ export type JSONGraphNodeTermConst = {
 export type JSONGraphNodeTermFunct = {
     jgnFunct: string;
     jgnParams: JSONGraphNodeTerm[];
-    jgnShow: string;
+    // Only populated by the backend for outermost terms; omitted (undefined)
+    // for nested subterms. Not read anywhere in the frontend - display
+    // strings are always derived from jgnFunct/jgnParams/jgnConst instead.
+    jgnShow?: string;
 };
 
 export type JSONGraphNodeTerm = JSONGraphNodeTermConst | JSONGraphNodeTermFunct;
