@@ -123,6 +123,7 @@ executable tamarin-prover
 
     build-depends:
         HUnit
+      , aeson
       , base
       , binary
       , binary-orphans

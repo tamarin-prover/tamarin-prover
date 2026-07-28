@@ -34,6 +34,18 @@ dot-graph-viz>svg{
   display: block;
 }
 
+.graph-render-error {
+  margin: 1em;
+  padding: 0.75em 1em;
+  border: 1px solid #c0392b;
+  border-radius: 4px;
+  background-color: #fdecea;
+  color: #922b21;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 14px;
+  max-width: 40em;
+}
+
 /* styles for the legend box
  *
  * Scoped under `.graph-page`, the top-level container wrapping the whole

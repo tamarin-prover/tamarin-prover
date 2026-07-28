@@ -210,11 +210,30 @@ export class DotGraphViz extends HTMLElement {
         if (this.isAbbreviationEnabled) {
           this.renderLegend(ctx);
         }
+      }).catch(err => {
+        // Rendering very large graphs (long, deeply-nested terms) without
+        // abbreviations can exceed the Graphviz WASM engine's memory, which
+        // otherwise fails silently, leaving a blank page. Surface a visible,
+        // actionable message instead.
+        console.error("[dot-graph-viz]: Error occurs during rendering\n", err);
+        const message = this.isAbbreviationEnabled
+          ? "Failed to render this graph."
+          : "Failed to render this graph, possibly because it is too large to " +
+            "display without abbreviations. Try enabling abbreviations in the Options menu.";
+        this.innerHTML = "";
+        this.appendChild(this.renderErrorMessage(message));
       });
 
     }
 
 
+  }
+
+  renderErrorMessage = (message: string): HTMLDivElement => {
+    const errorBox = document.createElement("div");
+    errorBox.setAttribute("class", "graph-render-error");
+    errorBox.textContent = message;
+    return errorBox;
   }
 
   /**

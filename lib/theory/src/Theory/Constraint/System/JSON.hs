@@ -31,7 +31,9 @@ module Theory.Constraint.System.JSON (
     sequentsToJSON,                     
     writeSequentAsJSONToFile,
     sequentsToJSONPretty,
-    writeSequentAsJSONPrettyToFile
+    writeSequentAsJSONPrettyToFile,
+    JSONGraph(..),
+    JSONGraphs(..)
   ) where
 import           Extension.Data.Label       as L (get)
 import           Data.Aeson

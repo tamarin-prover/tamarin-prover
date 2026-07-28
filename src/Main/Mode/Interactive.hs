@@ -11,6 +11,8 @@ module Main.Mode.Interactive (
 
 import Control.Basics
 import Control.Exception (IOException, handle)
+import Data.Aeson (eitherDecode)
+import Data.ByteString.Lazy qualified as BSL
 import Data.Char (toLower)
 import Data.List
 import Data.Maybe
@@ -24,7 +26,7 @@ import Network.Wai.Handler.Warp (defaultSettings, setHost, setPort)
 import Network.Wai.Handler.Warp qualified as Warp
 import Web.Dispatch
 import Web.Settings qualified
-import Web.Types (OutputCommand(..), OutputFormat(..))
+import Web.Types (JSONGraphs, OutputCommand(..), OutputFormat(..))
 
 import Main.Console
 import Main.Environment
@@ -54,6 +56,8 @@ interactiveMode = tamarinMode
       , flagOpt "" ["interface","i"] (updateArg "interface") "INTERFACE"
                 "Interface to listen on (use '*4' for all IPv4 interfaces)"
       , flagOpt "" ["image-format"] (updateArg "image-format") "PNG|SVG" "image format used for graphs (default SVG)"
+      , flagOpt "" ["load-json"] (updateArg "load-json") "FILE"
+                "Load a JSON graph file (see --output-json) for standalone viewing at /loadjson (WORKDIR may be omitted)"
       , flagNone ["debug"] (addEmptyArg "debug") "Show server debugging output"
       , flagNone ["no-logging"] (addEmptyArg "no-logging") "Suppress web server logs."
       -- , flagNone ["autosave"] (addEmptyArg "autosave") "Automatically save proof state"
@@ -66,13 +70,19 @@ interactiveMode = tamarinMode
 
 -- | Start the interactive theorem proving mode.
 run :: TamarinMode -> Arguments -> IO ()
-run thisMode as = case findArg "workDir" as of
+run thisMode as = case findArg "workDir" as <|> (takeDirectory <$> findArg "load-json" as) of
+  -- WORKDIR may be omitted when --load-json is given: the JSON file's own
+  -- directory is used instead, since there is then usually no theory to load.
   Nothing -> helpAndExit thisMode (Just "no working directory specified")
   Just workDir0 -> do
     -- determine working directory
     wdIsFile <- doesFileExist workDir0
     let workDir | wdIsFile  = takeDirectory workDir0
                 | otherwise = workDir0
+        -- Passing a FILENAME.json positional argument is equivalent to
+        -- passing it as --load-json=FILENAME.json.
+        isJsonArg = wdIsFile && map toLower (takeExtension workDir0) == ".json"
+        loadJsonFileArg = findArg "load-json" as <|> (if isJsonArg then Just workDir0 else Nothing)
     wdIsDir  <- doesDirectoryExist workDir
     if wdIsDir then do
       -- determine caching directory
@@ -81,6 +91,9 @@ run thisMode as = case findArg "workDir" as of
       unixLoginName <- lookupEnv "USER"
       let loginName = fromMaybe "" (winLoginName <|> unixLoginName)
           cacheDir = tempDir </> ("tamarin-prover-cache-" ++ loginName)
+
+      -- Load and parse an externally exported JSON graph file, if requested.
+      loadedJsonGraphs <- readLoadJsonFileArg loadJsonFileArg
 
       -- Ensure Maude and get the Version in the arguments (__versionPrettyPrint__)
       version <- ensureMaudeAndGetVersion as
@@ -92,16 +105,20 @@ run thisMode as = case findArg "workDir" as of
 
       port <- readPort
       let webUrl = serverUrl port
+          -- When viewing an externally loaded JSON file, point the user
+          -- directly at /loadjson instead of reporting both the plain
+          -- server URL and the /loadjson URL separately.
+          readyUrl = maybe webUrl (const $ webUrl ++ "/loadjson") loadedJsonGraphs
       putStrLn $ intercalate "\n"
         [ "The server is starting up on port " ++ show port ++ "."
-        , "Browse to " ++ webUrl ++ " once the server is ready."
+        , "Browse to " ++ readyUrl ++ " once the server is ready."
         , ""
         , "Loading the security protocol theories '" ++ workDir </> "*.spthy"  ++ "' ..."
         , ""
         ]
 
       withWebUI
-        ("Finished loading theories ... server ready at \n\n    " ++ webUrl ++ "\n")
+        ("Finished loading theories ... server ready at \n\n    " ++ readyUrl ++ "\n")
         cacheDir
         workDir
 
@@ -116,6 +133,7 @@ run thisMode as = case findArg "workDir" as of
 
         (argExists "debug" as) (readOutputCommand as) readImageFormat
         (constructAutoProver thyLoadOptions)
+        loadedJsonGraphs
         (runWarp port)
 
     else
@@ -127,6 +145,19 @@ run thisMode as = case findArg "workDir" as of
     thyLoadOptions = case mkTheoryLoadOptions as of
       Left (ArgumentError e) -> error e
       Right opts             -> opts
+
+    -- Load and parse an externally exported JSON graph file (--load-json).
+    -----------------------------------------------------------------------
+    readLoadJsonFileArg :: Maybe FilePath -> IO (Maybe JSONGraphs)
+    readLoadJsonFileArg Nothing = pure Nothing
+    readLoadJsonFileArg (Just jsonFile) = do
+      exists <- doesFileExist jsonFile
+      unless exists $ error $
+        "--load-json: file '" ++ jsonFile ++ "' does not exist."
+      contents <- BSL.readFile jsonFile
+      case eitherDecode contents of
+        Left decodeErr -> error $ "--load-json: failed to parse '" ++ jsonFile ++ "': " ++ decodeErr
+        Right jgs -> pure $ Just jgs
 
     -- Port argument
     ----------------

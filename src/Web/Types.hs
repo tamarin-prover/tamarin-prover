@@ -50,6 +50,7 @@ module Web.Types
   , imageFormatMIME
   , OutputFormat(..)
   , OutputCommand(..)
+  , JSONGraphs
   , intdotLayout
   , optionsMenuItemTpl
   , popoutOptionsTpl
@@ -75,6 +76,7 @@ import Yesod.Core
 import Yesod.Static
 
 import Theory
+import Theory.Constraint.System.JSON (JSONGraphs)
 import Theory.Tools.Wellformedness (WfErrorReport)
 import Main.TheoryLoader
 
@@ -155,6 +157,9 @@ data WebUI = WebUI
     -- ^ The default prover to use for automatic proving.
   , debug              :: Bool
     -- ^ Output debug messages
+  , loadedJsonGraphs   :: Maybe JSONGraphs
+    -- ^ Graphs loaded from an externally exported JSON file (see --load-json),
+    -- for standalone viewing via the \/loadjson routes.
   }
 
 
@@ -620,6 +625,9 @@ mkYesodData "WebUI" [parseRoutes|
 /thy/equiv/#Int/del/path/*DiffTheoryPath      DeleteStepDiffR             GET
 /thy/equiv/#Int/reload                           ReloadTheoryDiffR           POST
 /thy/equiv/#Int/unload                           UnloadTheoryDiffR           GET
+/loadjson                                        LoadJsonR                   GET
+/loadjson/#Int                                    LoadJsonViewR               GET
+/loadjson/data/#Int                               LoadJsonDataR               GET
 /kill                                      KillThreadR             GET
 -- /threads                                   ThreadsR                GET
 /robots.txt                                RobotsR                 GET

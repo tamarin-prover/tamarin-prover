@@ -914,3 +914,29 @@ of the dot command line program.
 For JSON, the standard schema already defines a single top-level object with a
 "graphs" key that holds a list of the individual graphs, which we use to output
 the constrain systems.
+
+Viewing exported JSON graphs in the interactive GUI {#sec:load-json}
+-------------------------------------------------------------------
+
+A JSON file produced by `--output-json` (as described above) can be loaded
+directly into the interactive GUI for standalone viewing, without needing to
+reload or re-prove the original theory.
+This is useful for sharing a set of found attack traces or example graphs
+with someone else, or for revisiting old outputs later.
+
+To do so, either pass the JSON filename as the working-directory argument of
+`interactive` mode, or use the explicit `--load-json` flag:
+
+    tamarin-prover interactive traces.json
+    tamarin-prover interactive --load-json=traces.json
+
+A positional argument is treated as a JSON file to load automatically
+whenever it ends in the `.json` extension, therwise it is interpreted as
+usual, i.e., as a theory file or a directory of theory files.
+
+Once the server is ready, browse to `/loadjson` (e.g.
+<http://127.0.0.1:3001/loadjson>) to view the loaded graphs. If the file
+contains a single graph, you are redirected there directly; if it contains
+several, you will see a list of links, one per graph, labeled with the
+corresponding theory and lemma name.
+
