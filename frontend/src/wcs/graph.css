@@ -34,9 +34,30 @@ dot-graph-viz>svg{
   display: block;
 }
 
-/* styles for the legend box */
+/* styles for the legend box
+ *
+ * Scoped under `.graph-page`, the top-level container wrapping the whole
+ * graph page -- the floating Options bar (pop-out window only), the graph
+ * itself and its abbreviation legend (see `intdotLayout` in
+ * Web/Types.hs). This page also loads the shared tamarin-prover-ui.css
+ * (for the Options menu styling), which defines generic `table`/`th`/`td`
+ * rules meant for the main theory window's own tables. Resetting those
+ * properties here -- with the extra `.graph-page` class giving these
+ * rules higher specificity -- keeps the legend table's look
+ * self-contained regardless of what tamarin-prover-ui.css defines,
+ * instead of requiring one-off overrides whenever another property leaks
+ * through. */
 
-.lgd-container {
+.graph-page table,
+.graph-page table th,
+.graph-page table td {
+  border: none;
+  background: transparent;
+  padding: 0;
+  text-align: inherit;
+}
+
+.graph-page .lgd-container {
   position: fixed;
   bottom: 10px;
   right: 10px;
@@ -48,26 +69,26 @@ dot-graph-viz>svg{
   background-color: white;
 }
 
-.lgd-container > table {
+.graph-page .lgd-container > table {
   border-collapse: collapse;
 }
-.lgd-container td {
+.graph-page .lgd-container td {
     white-space: pre-wrap;
 }
 
-tr.lgd-item > td {
+.graph-page tr.lgd-item > td {
   padding: 4px;
   font-size: 12px;
   font-family: Arial, Helvetica, sans-serif;
 }
 
-tr.lgd-item:hover {
+.graph-page tr.lgd-item:hover {
   background-color: grey;
   color: white;
   cursor: pointer;
 }
 
-tr.lgd-item.active {
+.graph-page tr.lgd-item.active {
   background-color: yellow;
   color: black;
 }
