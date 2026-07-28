@@ -940,3 +940,7 @@ contains a single graph, you are redirected there directly; if it contains
 several, you will see a list of links, one per graph, labeled with the
 corresponding theory and lemma name.
 
+Pass `--browser` to `interactive` mode to open the ready interface automatically
+in the default web browser. This works for theory files, `--diff` theories, and
+graphs loaded with `--load-json`.
+
