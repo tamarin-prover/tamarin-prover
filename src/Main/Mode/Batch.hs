@@ -33,6 +33,7 @@ import Main.Environment
 import Main.TheoryLoader
 import Main.Utils
 import Data.Map qualified as M
+import Extension.Data.Label qualified as L
 import Theory.Constraint.System.Dot
 import Text.Dot qualified as D
 import Theory.Constraint.System.Graph.Graph
@@ -222,7 +223,7 @@ run thisMode as
       -- | Close and potentially prove theory.
       else do
         (report, thy') <- closeTheory versionData thyLoadOptions sig' thy
-        _ <- liftIO $ bitraverse outputTraces (const $ return ()) thy'
+        _ <- liftIO $ bitraverse outputTraces outputTracesDiff thy'
 
         pure $
           either (\t -> (prettyClosedTheory t,     ppWf report Pretty.$--$ prettyClosedSummary t))
@@ -245,72 +246,119 @@ run thisMode as
           Pretty.text ("WARNING: " ++ show (length rep) ++ " wellformedness check failed!")
           : [ Pretty.text   "         The analysis results might be wrong!" | thyLoadOptions.proveMode ]
 
-        -- | Output any found traces of the analyzed theory in dot/JSON format if the corresponing command line option is set.
-        -- The output is dumped into a single file per format. Multiple dot graphs are simply concatenated into a single file,
-        -- while the JSON schema already allows for multiple graphs.
+        -- | Output any found traces of the analyzed theory in dot/JSON format if the corresponding command line option is set.
         outputTraces :: ClosedTheory -> IO ()
-        outputTraces thy = do
-            let graphOptions = defaultGraphOptions
-                dotOptions = defaultDotOptions
-                serializeDot (label, system) = D.showDot label $ dotSystemCompact graphOptions dotOptions system
-                serializeJSON = sequentsToJSONPretty graphOptions
-                labelledSystems = map (\(lemma, proof, system) ->
-                  let label = traceOutputLabel graphOptions dotOptions lemma proof in
-                  (label, system)) systemsWithMetadata
+        outputTraces thy =
+          outputTraceSystems
+            [ (traceOutputLabel thy._thyName lemma._lName proofPath, system)
+            | lemma <- getLemmas thy
+            , (proofPath, system) <- proofSystems lemma._lProof
+            ]
 
-            case findArg "traceDot" as of
-              Nothing -> pure ()
-              Just outfile ->
-                let serialized = intercalate "\n" $ map serializeDot labelledSystems in
-                writeFile outfile serialized
-
-            case findArg "traceJSON" as of
-              Nothing -> pure ()
-              Just outfile ->
-                let serialized = serializeJSON labelledSystems in
-                writeFile outfile serialized
+        -- | Output the primary and, where present, mirrored graph for every diff attack. The mirror
+        -- calculation is the same one the interactive diff renderer performs for a 'DiffAttack'.
+        outputTracesDiff :: ClosedDiffTheory -> IO ()
+        outputTracesDiff thy = outputTraceSystems $ concatMap diffLemmaSystems (getDiffLemmas thy)
           where
-            -- | Collect all solved (i.e. a trace was found) systems of the theory along with their
-            -- path in the proof and the lemma in which they appear in the given theory.
-            systemsWithMetadata :: [(Lemma IncrementalProof, ProofPath, System)]
-            systemsWithMetadata = do
-              lemma <- getLemmas thy
-              let proof = lemma._lProof
-              [(lemma, proofPath, system) | (proofPath, system) <- proofSystems proof]
+            theoryName = L.get diffThyName thy
 
-            -- | Collect all solved (i.e. a trace was found) systems of the theory along with their
-            -- path in the proof.
-            proofSystems :: IncrementalProof -> [(ProofPath, System)]
-            proofSystems (LNode (ProofStep (Finished Solved) (Just rootSystem)) _) =  [([], rootSystem)]
-            proofSystems (LNode (ProofStep _ _) children) =  
-              [(l : ls, system) | (l, subProof) <- M.toList children 
-                                , (ls, system) <- proofSystems subProof ]
+            diffLemmaSystems lemma =
+              let diffContext = getDiffProofContext lemma thy
+                  label = diffTraceOutputLabel theoryName (L.get lDiffName lemma)
+              in concatMap (attackSystems label diffContext) $ diffProofSystems (L.get lDiffProof lemma)
 
-            -- | Make a label for use in the trace output out of all relevant information for a constraint system.
-            traceOutputLabel :: GraphOptions
-                             -> DotOptions
-                             -> Lemma IncrementalProof
-                             -> ProofPath
-                             -> String
-            traceOutputLabel graphOptions dotOptions lemma proofPath =
-              "trace_"
-              ++ thy._thyName                              -- Name of the theory in which the constraint system appears.
-              ++ "_"
-              ++ traceLabelOptions graphOptions dotOptions -- Graph options are included in a short format.
-              ++ "_"
-              ++ lemma._lName                              -- Name of the lemma in which the constraint system appears.
-              ++ intercalate "-" proofPath                 -- Path through the proof where the constraint system is located.
+            attackSystems label diffContext (proofPath, diffSystem) =
+              case L.get dsSystem diffSystem of
+                Nothing -> []
+                Just system ->
+                  let side = L.get dsSide diffSystem
+                      primary = (label side "attack" proofPath, system)
+                      mirror = maybe [] (mirrorSystems label diffContext proofPath system diffSystem) side
+                  in primary : mirror
 
-            -- | Format the graph rendering options in a concise way.
-            traceLabelOptions :: GraphOptions -> DotOptions -> String
-            traceLabelOptions graphOptions dotOptions =
-              let s1 = show graphOptions._goSimplificationLevel
-                  s2 = if graphOptions._goShowAutoSource then "AS1" else "AS0"
-                  s3 = if graphOptions._goClustering then "CL1" else "CL0"
-                  s4 = if graphOptions._goAbbreviate then "A1" else "A0"
-                  s5 = if graphOptions._goCompress then "C1" else "C0"
-                  s6 = case dotOptions._doNodeStyle of
-                         FullBoringNodes -> "NF"
-                         CompactBoringNodes -> "NB"
-              in
-                intercalate "-" [s1, s2, s3, s4, s5, s6]
+            mirrorSystems label diffContext proofPath system diffSystem attackSide =
+              case getMirrorDGandEvaluateRestrictions
+                     diffContext
+                     diffSystem
+                     (isSolved diffContext attackSide system) of
+                (_, mirrorSystem : _) ->
+                  [(label (Just $ opposite attackSide) "mirror" proofPath, mirrorSystem)]
+                _ -> []
+
+            isSolved diffContext side system =
+              null $ rankProofMethods GoalNrRanking [defaultTactic]
+                (eitherProofContext diffContext side)
+                system
+
+        -- | Write labelled systems in the established JSONGraphs format consumed by '--load-json'.
+        -- Multiple dot graphs are concatenated, while the JSON schema contains a graph list.
+        outputTraceSystems :: [(String, System)] -> IO ()
+        outputTraceSystems labelledSystems = do
+          let serializeDot (label, system) = D.showDot label $ dotSystemCompact graphOptions dotOptions system
+              serializeJSON = sequentsToJSONPretty graphOptions
+
+          case findArg "traceDot" as of
+            Nothing -> pure ()
+            Just outfile ->
+              writeFile outfile $ intercalate "\n" $ map serializeDot labelledSystems
+
+          case findArg "traceJSON" as of
+            Nothing -> pure ()
+            Just outfile ->
+              writeFile outfile $ serializeJSON labelledSystems
+
+        -- | Collect solved systems from an ordinary proof tree.
+        proofSystems :: IncrementalProof -> [(ProofPath, System)]
+        proofSystems (LNode (ProofStep (Finished Solved) (Just rootSystem)) _) = [([], rootSystem)]
+        proofSystems (LNode (ProofStep _ _) children) =
+          [(label : labels, system) | (label, subProof) <- M.toList children
+                                    , (labels, system) <- proofSystems subProof]
+
+        -- | Collect every attack from a diff proof tree.
+        diffProofSystems :: IncrementalDiffProof -> [(ProofPath, DiffSystem)]
+        diffProofSystems (LNode (DiffProofStep method info) children) =
+          current ++ descendants
+          where
+            current = case (method, info) of
+              (DiffAttack, Just diffSystem) -> [([], diffSystem)]
+              _ -> []
+            descendants =
+              [(label : labels, diffSystem) | (label, subProof) <- M.toList children
+                                            , (labels, diffSystem) <- diffProofSystems subProof]
+
+        graphOptions :: GraphOptions
+        graphOptions = defaultGraphOptions
+
+        dotOptions :: DotOptions
+        dotOptions = defaultDotOptions
+
+        -- | Make a label for an ordinary trace, preserving the established output format.
+        traceOutputLabel :: String -> String -> ProofPath -> String
+        traceOutputLabel theoryName lemmaName proofPath =
+          traceOutputPrefix theoryName lemmaName ++ intercalate "-" proofPath
+
+        -- | Make a distinct label for a graph exported from a diff attack.
+        diffTraceOutputLabel :: String -> String -> Maybe Side -> String -> ProofPath -> String
+        diffTraceOutputLabel theoryName lemmaName side graphKind proofPath =
+          intercalate "_" $
+            [traceOutputPrefix theoryName lemmaName]
+            ++ maybe [] (pure . show) side
+            ++ [graphKind]
+            ++ [intercalate "-" proofPath | not (null proofPath)]
+
+        traceOutputPrefix :: String -> String -> String
+        traceOutputPrefix theoryName lemmaName =
+          intercalate "_" ["trace", theoryName, traceLabelOptions, lemmaName]
+
+        -- | Format graph rendering options in a concise way for output labels.
+        traceLabelOptions :: String
+        traceLabelOptions =
+          let s1 = show graphOptions._goSimplificationLevel
+              s2 = if graphOptions._goShowAutoSource then "AS1" else "AS0"
+              s3 = if graphOptions._goClustering then "CL1" else "CL0"
+              s4 = if graphOptions._goAbbreviate then "A1" else "A0"
+              s5 = if graphOptions._goCompress then "C1" else "C0"
+              s6 = case dotOptions._doNodeStyle of
+                     FullBoringNodes -> "NF"
+                     CompactBoringNodes -> "NB"
+          in intercalate "-" [s1, s2, s3, s4, s5, s6]
