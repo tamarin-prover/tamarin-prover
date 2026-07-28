@@ -2008,54 +2008,9 @@ next
                   case split_case_3
                   step( solve( !KU( (~k⊕~r1⊕z) ) @ #vk.3 ) )
                     case c_xor_case_1
-                    step( solve( !KU( (~k⊕~r1) ) @ #vk.6 ) )
-                      case c_xor
-                      by step( solve( !KU( ~k ) @ #vk.7 ) )
-                    next
-                      case coerce
-                      step( solve( !KD( (~k⊕~r1) ) ▶₀ #vk.4 ) )
-                        case reader1
-                        by step( solve( (#vl.2, 0) ~~> (#vk.4, 0) ) )
-                      next
-                        case reader2
-                        by step( solve( (#vl.2, 0) ~~> (#vk.4, 0) ) )
-                      next
-                        case tag1
-                        step( solve( (#vl.2, 0) ~~> (#vk.4, 0) ) )
-                          case d_0_fst
-                          by step( solve( (#vr.7, 0) ~~> (#vk.4, 0) ) )
-                        next
-                          case d_0_snd
-                          by step( solve( (#vr.7, 0) ~~> (#vk.4, 0) ) )
-                        qed
-                      next
-                        case transcript_case_1
-                        by step( solve( (#vl.2, 0) ~~> (#vk.4, 0) ) )
-                      next
-                        case transcript_case_2
-                        step( solve( (#vl.2, 0) ~~> (#vk.4, 0) ) )
-                          case d_0_fst
-                          by step( solve( (#vr.7, 0) ~~> (#vk.4, 0) ) )
-                        next
-                          case d_0_snd
-                          step( solve( (#vr.7, 0) ~~> (#vk.4, 0) ) )
-                            case d_0_fst
-                            by step( solve( (#vr.8, 0) ~~> (#vk.4, 0) ) )
-                          next
-                            case d_0_snd
-                            by step( solve( (#vr.8, 0) ~~> (#vk.4, 0) ) )
-                          qed
-                        qed
-                      next
-                        case transcript_case_3
-                        by step( solve( (#vl.2, 0) ~~> (#vk.4, 0) ) )
-                      qed
-                    qed
-                  next
-                    case c_xor_case_2
                     by step( solve( !KU( ~k ) @ #vk.5 ) )
                   next
-                    case c_xor_case_3
+                    case c_xor_case_2
                     step( solve( !KU( (~k⊕z) ) @ #vk.6 ) )
                       case c_xor_case_1
                       by step( solve( !KU( ~k ) @ #vk.8 ) )
@@ -2148,15 +2103,57 @@ next
                       qed
                     qed
                   next
+                    case c_xor_case_3
+                    step( solve( !KU( (~k⊕~r1) ) @ #vk.6 ) )
+                      case c_xor
+                      by step( solve( !KU( ~k ) @ #vk.7 ) )
+                    next
+                      case coerce
+                      step( solve( !KD( (~k⊕~r1) ) ▶₀ #vk.4 ) )
+                        case reader1
+                        by step( solve( (#vl.2, 0) ~~> (#vk.4, 0) ) )
+                      next
+                        case reader2
+                        by step( solve( (#vl.2, 0) ~~> (#vk.4, 0) ) )
+                      next
+                        case tag1
+                        step( solve( (#vl.2, 0) ~~> (#vk.4, 0) ) )
+                          case d_0_fst
+                          by step( solve( (#vr.7, 0) ~~> (#vk.4, 0) ) )
+                        next
+                          case d_0_snd
+                          by step( solve( (#vr.7, 0) ~~> (#vk.4, 0) ) )
+                        qed
+                      next
+                        case transcript_case_1
+                        by step( solve( (#vl.2, 0) ~~> (#vk.4, 0) ) )
+                      next
+                        case transcript_case_2
+                        step( solve( (#vl.2, 0) ~~> (#vk.4, 0) ) )
+                          case d_0_fst
+                          by step( solve( (#vr.7, 0) ~~> (#vk.4, 0) ) )
+                        next
+                          case d_0_snd
+                          step( solve( (#vr.7, 0) ~~> (#vk.4, 0) ) )
+                            case d_0_fst
+                            by step( solve( (#vr.8, 0) ~~> (#vk.4, 0) ) )
+                          next
+                            case d_0_snd
+                            by step( solve( (#vr.8, 0) ~~> (#vk.4, 0) ) )
+                          qed
+                        qed
+                      next
+                        case transcript_case_3
+                        by step( solve( (#vl.2, 0) ~~> (#vk.4, 0) ) )
+                      qed
+                    qed
+                  next
                     case c_xor_case_4
                     step( solve( !KU( (~k⊕~r1⊕x.1) ) @ #vk.6 ) )
                       case c_xor_case_1
-                      by step( contradiction /* forbidden AC constructor chain */ )
-                    next
-                      case c_xor_case_2
                       by step( solve( !KU( ~k ) @ #vk.7 ) )
                     next
-                      case c_xor_case_3
+                      case c_xor_case_2
                       step( solve( !KU( (~k⊕x.1) ) @ #vk.8 ) )
                         case c_xor_case_1
                         by step( contradiction /* forbidden AC constructor chain */ )
@@ -2203,6 +2200,9 @@ next
                           by step( solve( (#vl.2, 0) ~~> (#vk.5, 0) ) )
                         qed
                       qed
+                    next
+                      case c_xor_case_3
+                      by step( contradiction /* forbidden AC constructor chain */ )
                     next
                       case c_xor_case_4
                       by step( contradiction /* forbidden AC constructor chain */ )
@@ -2429,6 +2429,99 @@ next
                   qed
                 next
                   case split_case_4
+                  step( solve( !KU( (~k⊕x) ) @ #vk.3 ) )
+                    case c_xor_case_1
+                    by step( solve( !KU( ~k ) @ #vk.6 ) )
+                  next
+                    case c_xor_case_2
+                    step( solve( !KU( (~k⊕x.1) ) @ #vk.6 ) )
+                      case c_xor_case_1
+                      by step( contradiction /* forbidden AC constructor chain */ )
+                    next
+                      case c_xor_case_2
+                      by step( contradiction /* forbidden AC constructor chain */ )
+                    next
+                      case coerce
+                      step( solve( !KD( (~k⊕x.1) ) ▶₀ #vk.4 ) )
+                        case reader1
+                        by step( solve( (#vl.2, 0) ~~> (#vk.4, 0) ) )
+                      next
+                        case reader2
+                        by step( solve( (#vl.2, 0) ~~> (#vk.4, 0) ) )
+                      next
+                        case tag1
+                        step( solve( (#vl.2, 0) ~~> (#vk.4, 0) ) )
+                          case d_0_fst
+                          by step( solve( (#vr.7, 0) ~~> (#vk.4, 0) ) )
+                        next
+                          case d_0_snd
+                          by step( solve( (#vr.7, 0) ~~> (#vk.4, 0) ) )
+                        qed
+                      next
+                        case transcript_case_1
+                        by step( solve( (#vl.2, 0) ~~> (#vk.4, 0) ) )
+                      next
+                        case transcript_case_2
+                        step( solve( (#vl.2, 0) ~~> (#vk.4, 0) ) )
+                          case d_0_fst
+                          by step( solve( (#vr.7, 0) ~~> (#vk.4, 0) ) )
+                        next
+                          case d_0_snd
+                          step( solve( (#vr.7, 0) ~~> (#vk.4, 0) ) )
+                            case d_0_fst
+                            by step( solve( (#vr.8, 0) ~~> (#vk.4, 0) ) )
+                          next
+                            case d_0_snd
+                            by step( solve( (#vr.8, 0) ~~> (#vk.4, 0) ) )
+                          qed
+                        qed
+                      next
+                        case transcript_case_3
+                        by step( solve( (#vl.2, 0) ~~> (#vk.4, 0) ) )
+                      qed
+                    qed
+                  next
+                    case coerce
+                    step( solve( !KD( (~k⊕x) ) ▶₀ #vk.3 ) )
+                      case reader1
+                      by step( solve( (#vl.2, 0) ~~> (#vk.3, 0) ) )
+                    next
+                      case reader2
+                      by step( solve( (#vl.2, 0) ~~> (#vk.3, 0) ) )
+                    next
+                      case tag1
+                      step( solve( (#vl.2, 0) ~~> (#vk.3, 0) ) )
+                        case d_0_fst
+                        by step( solve( (#vr.7, 0) ~~> (#vk.3, 0) ) )
+                      next
+                        case d_0_snd
+                        by step( solve( (#vr.7, 0) ~~> (#vk.3, 0) ) )
+                      qed
+                    next
+                      case transcript_case_1
+                      by step( solve( (#vl.2, 0) ~~> (#vk.3, 0) ) )
+                    next
+                      case transcript_case_2
+                      step( solve( (#vl.2, 0) ~~> (#vk.3, 0) ) )
+                        case d_0_fst
+                        by step( solve( (#vr.7, 0) ~~> (#vk.3, 0) ) )
+                      next
+                        case d_0_snd
+                        step( solve( (#vr.7, 0) ~~> (#vk.3, 0) ) )
+                          case d_0_fst
+                          by step( solve( (#vr.8, 0) ~~> (#vk.3, 0) ) )
+                        next
+                          case d_0_snd
+                          by step( solve( (#vr.8, 0) ~~> (#vk.3, 0) ) )
+                        qed
+                      qed
+                    next
+                      case transcript_case_3
+                      by step( solve( (#vl.2, 0) ~~> (#vk.3, 0) ) )
+                    qed
+                  qed
+                next
+                  case split_case_5
                   step( solve( !KU( (~r1⊕x) ) @ #vk.3 ) )
                     case c_xor_case_1
                     step( solve( !KU( ~r1 ) @ #vk.6 ) )
@@ -2630,99 +2723,6 @@ next
                   next
                     case coerce
                     step( solve( !KD( (~r1⊕x) ) ▶₀ #vk.3 ) )
-                      case reader1
-                      by step( solve( (#vl.2, 0) ~~> (#vk.3, 0) ) )
-                    next
-                      case reader2
-                      by step( solve( (#vl.2, 0) ~~> (#vk.3, 0) ) )
-                    next
-                      case tag1
-                      step( solve( (#vl.2, 0) ~~> (#vk.3, 0) ) )
-                        case d_0_fst
-                        by step( solve( (#vr.7, 0) ~~> (#vk.3, 0) ) )
-                      next
-                        case d_0_snd
-                        by step( solve( (#vr.7, 0) ~~> (#vk.3, 0) ) )
-                      qed
-                    next
-                      case transcript_case_1
-                      by step( solve( (#vl.2, 0) ~~> (#vk.3, 0) ) )
-                    next
-                      case transcript_case_2
-                      step( solve( (#vl.2, 0) ~~> (#vk.3, 0) ) )
-                        case d_0_fst
-                        by step( solve( (#vr.7, 0) ~~> (#vk.3, 0) ) )
-                      next
-                        case d_0_snd
-                        step( solve( (#vr.7, 0) ~~> (#vk.3, 0) ) )
-                          case d_0_fst
-                          by step( solve( (#vr.8, 0) ~~> (#vk.3, 0) ) )
-                        next
-                          case d_0_snd
-                          by step( solve( (#vr.8, 0) ~~> (#vk.3, 0) ) )
-                        qed
-                      qed
-                    next
-                      case transcript_case_3
-                      by step( solve( (#vl.2, 0) ~~> (#vk.3, 0) ) )
-                    qed
-                  qed
-                next
-                  case split_case_5
-                  step( solve( !KU( (~k⊕x) ) @ #vk.3 ) )
-                    case c_xor_case_1
-                    by step( solve( !KU( ~k ) @ #vk.6 ) )
-                  next
-                    case c_xor_case_2
-                    step( solve( !KU( (~k⊕x.1) ) @ #vk.6 ) )
-                      case c_xor_case_1
-                      by step( contradiction /* forbidden AC constructor chain */ )
-                    next
-                      case c_xor_case_2
-                      by step( contradiction /* forbidden AC constructor chain */ )
-                    next
-                      case coerce
-                      step( solve( !KD( (~k⊕x.1) ) ▶₀ #vk.4 ) )
-                        case reader1
-                        by step( solve( (#vl.2, 0) ~~> (#vk.4, 0) ) )
-                      next
-                        case reader2
-                        by step( solve( (#vl.2, 0) ~~> (#vk.4, 0) ) )
-                      next
-                        case tag1
-                        step( solve( (#vl.2, 0) ~~> (#vk.4, 0) ) )
-                          case d_0_fst
-                          by step( solve( (#vr.7, 0) ~~> (#vk.4, 0) ) )
-                        next
-                          case d_0_snd
-                          by step( solve( (#vr.7, 0) ~~> (#vk.4, 0) ) )
-                        qed
-                      next
-                        case transcript_case_1
-                        by step( solve( (#vl.2, 0) ~~> (#vk.4, 0) ) )
-                      next
-                        case transcript_case_2
-                        step( solve( (#vl.2, 0) ~~> (#vk.4, 0) ) )
-                          case d_0_fst
-                          by step( solve( (#vr.7, 0) ~~> (#vk.4, 0) ) )
-                        next
-                          case d_0_snd
-                          step( solve( (#vr.7, 0) ~~> (#vk.4, 0) ) )
-                            case d_0_fst
-                            by step( solve( (#vr.8, 0) ~~> (#vk.4, 0) ) )
-                          next
-                            case d_0_snd
-                            by step( solve( (#vr.8, 0) ~~> (#vk.4, 0) ) )
-                          qed
-                        qed
-                      next
-                        case transcript_case_3
-                        by step( solve( (#vl.2, 0) ~~> (#vk.4, 0) ) )
-                      qed
-                    qed
-                  next
-                    case coerce
-                    step( solve( !KD( (~k⊕x) ) ▶₀ #vk.3 ) )
                       case reader1
                       by step( solve( (#vl.2, 0) ~~> (#vk.3, 0) ) )
                     next
@@ -6014,54 +6014,9 @@ next
                   case split_case_3
                   step( solve( !KU( (~k⊕~r1⊕z) ) @ #vk.3 ) )
                     case c_xor_case_1
-                    step( solve( !KU( (~k⊕~r1) ) @ #vk.6 ) )
-                      case c_xor
-                      by step( solve( !KU( ~k ) @ #vk.7 ) )
-                    next
-                      case coerce
-                      step( solve( !KD( (~k⊕~r1) ) ▶₀ #vk.4 ) )
-                        case reader1
-                        by step( solve( (#vl.2, 0) ~~> (#vk.4, 0) ) )
-                      next
-                        case reader2
-                        by step( solve( (#vl.2, 0) ~~> (#vk.4, 0) ) )
-                      next
-                        case tag1
-                        step( solve( (#vl.2, 0) ~~> (#vk.4, 0) ) )
-                          case d_0_fst
-                          by step( solve( (#vr.7, 0) ~~> (#vk.4, 0) ) )
-                        next
-                          case d_0_snd
-                          by step( solve( (#vr.7, 0) ~~> (#vk.4, 0) ) )
-                        qed
-                      next
-                        case transcript_case_1
-                        by step( solve( (#vl.2, 0) ~~> (#vk.4, 0) ) )
-                      next
-                        case transcript_case_2
-                        step( solve( (#vl.2, 0) ~~> (#vk.4, 0) ) )
-                          case d_0_fst
-                          by step( solve( (#vr.7, 0) ~~> (#vk.4, 0) ) )
-                        next
-                          case d_0_snd
-                          step( solve( (#vr.7, 0) ~~> (#vk.4, 0) ) )
-                            case d_0_fst
-                            by step( solve( (#vr.8, 0) ~~> (#vk.4, 0) ) )
-                          next
-                            case d_0_snd
-                            by step( solve( (#vr.8, 0) ~~> (#vk.4, 0) ) )
-                          qed
-                        qed
-                      next
-                        case transcript_case_3
-                        by step( solve( (#vl.2, 0) ~~> (#vk.4, 0) ) )
-                      qed
-                    qed
-                  next
-                    case c_xor_case_2
                     by step( solve( !KU( ~k ) @ #vk.5 ) )
                   next
-                    case c_xor_case_3
+                    case c_xor_case_2
                     step( solve( !KU( (~k⊕z) ) @ #vk.6 ) )
                       case c_xor_case_1
                       by step( solve( !KU( ~k ) @ #vk.8 ) )
@@ -6154,15 +6109,57 @@ next
                       qed
                     qed
                   next
+                    case c_xor_case_3
+                    step( solve( !KU( (~k⊕~r1) ) @ #vk.6 ) )
+                      case c_xor
+                      by step( solve( !KU( ~k ) @ #vk.7 ) )
+                    next
+                      case coerce
+                      step( solve( !KD( (~k⊕~r1) ) ▶₀ #vk.4 ) )
+                        case reader1
+                        by step( solve( (#vl.2, 0) ~~> (#vk.4, 0) ) )
+                      next
+                        case reader2
+                        by step( solve( (#vl.2, 0) ~~> (#vk.4, 0) ) )
+                      next
+                        case tag1
+                        step( solve( (#vl.2, 0) ~~> (#vk.4, 0) ) )
+                          case d_0_fst
+                          by step( solve( (#vr.7, 0) ~~> (#vk.4, 0) ) )
+                        next
+                          case d_0_snd
+                          by step( solve( (#vr.7, 0) ~~> (#vk.4, 0) ) )
+                        qed
+                      next
+                        case transcript_case_1
+                        by step( solve( (#vl.2, 0) ~~> (#vk.4, 0) ) )
+                      next
+                        case transcript_case_2
+                        step( solve( (#vl.2, 0) ~~> (#vk.4, 0) ) )
+                          case d_0_fst
+                          by step( solve( (#vr.7, 0) ~~> (#vk.4, 0) ) )
+                        next
+                          case d_0_snd
+                          step( solve( (#vr.7, 0) ~~> (#vk.4, 0) ) )
+                            case d_0_fst
+                            by step( solve( (#vr.8, 0) ~~> (#vk.4, 0) ) )
+                          next
+                            case d_0_snd
+                            by step( solve( (#vr.8, 0) ~~> (#vk.4, 0) ) )
+                          qed
+                        qed
+                      next
+                        case transcript_case_3
+                        by step( solve( (#vl.2, 0) ~~> (#vk.4, 0) ) )
+                      qed
+                    qed
+                  next
                     case c_xor_case_4
                     step( solve( !KU( (~k⊕~r1⊕x.1) ) @ #vk.6 ) )
                       case c_xor_case_1
-                      by step( contradiction /* forbidden AC constructor chain */ )
-                    next
-                      case c_xor_case_2
                       by step( solve( !KU( ~k ) @ #vk.7 ) )
                     next
-                      case c_xor_case_3
+                      case c_xor_case_2
                       step( solve( !KU( (~k⊕x.1) ) @ #vk.8 ) )
                         case c_xor_case_1
                         by step( contradiction /* forbidden AC constructor chain */ )
@@ -6209,6 +6206,9 @@ next
                           by step( solve( (#vl.2, 0) ~~> (#vk.5, 0) ) )
                         qed
                       qed
+                    next
+                      case c_xor_case_3
+                      by step( contradiction /* forbidden AC constructor chain */ )
                     next
                       case c_xor_case_4
                       by step( contradiction /* forbidden AC constructor chain */ )
@@ -6435,6 +6435,99 @@ next
                   qed
                 next
                   case split_case_4
+                  step( solve( !KU( (~k⊕x) ) @ #vk.3 ) )
+                    case c_xor_case_1
+                    by step( solve( !KU( ~k ) @ #vk.6 ) )
+                  next
+                    case c_xor_case_2
+                    step( solve( !KU( (~k⊕x.1) ) @ #vk.6 ) )
+                      case c_xor_case_1
+                      by step( contradiction /* forbidden AC constructor chain */ )
+                    next
+                      case c_xor_case_2
+                      by step( contradiction /* forbidden AC constructor chain */ )
+                    next
+                      case coerce
+                      step( solve( !KD( (~k⊕x.1) ) ▶₀ #vk.4 ) )
+                        case reader1
+                        by step( solve( (#vl.2, 0) ~~> (#vk.4, 0) ) )
+                      next
+                        case reader2
+                        by step( solve( (#vl.2, 0) ~~> (#vk.4, 0) ) )
+                      next
+                        case tag1
+                        step( solve( (#vl.2, 0) ~~> (#vk.4, 0) ) )
+                          case d_0_fst
+                          by step( solve( (#vr.7, 0) ~~> (#vk.4, 0) ) )
+                        next
+                          case d_0_snd
+                          by step( solve( (#vr.7, 0) ~~> (#vk.4, 0) ) )
+                        qed
+                      next
+                        case transcript_case_1
+                        by step( solve( (#vl.2, 0) ~~> (#vk.4, 0) ) )
+                      next
+                        case transcript_case_2
+                        step( solve( (#vl.2, 0) ~~> (#vk.4, 0) ) )
+                          case d_0_fst
+                          by step( solve( (#vr.7, 0) ~~> (#vk.4, 0) ) )
+                        next
+                          case d_0_snd
+                          step( solve( (#vr.7, 0) ~~> (#vk.4, 0) ) )
+                            case d_0_fst
+                            by step( solve( (#vr.8, 0) ~~> (#vk.4, 0) ) )
+                          next
+                            case d_0_snd
+                            by step( solve( (#vr.8, 0) ~~> (#vk.4, 0) ) )
+                          qed
+                        qed
+                      next
+                        case transcript_case_3
+                        by step( solve( (#vl.2, 0) ~~> (#vk.4, 0) ) )
+                      qed
+                    qed
+                  next
+                    case coerce
+                    step( solve( !KD( (~k⊕x) ) ▶₀ #vk.3 ) )
+                      case reader1
+                      by step( solve( (#vl.2, 0) ~~> (#vk.3, 0) ) )
+                    next
+                      case reader2
+                      by step( solve( (#vl.2, 0) ~~> (#vk.3, 0) ) )
+                    next
+                      case tag1
+                      step( solve( (#vl.2, 0) ~~> (#vk.3, 0) ) )
+                        case d_0_fst
+                        by step( solve( (#vr.7, 0) ~~> (#vk.3, 0) ) )
+                      next
+                        case d_0_snd
+                        by step( solve( (#vr.7, 0) ~~> (#vk.3, 0) ) )
+                      qed
+                    next
+                      case transcript_case_1
+                      by step( solve( (#vl.2, 0) ~~> (#vk.3, 0) ) )
+                    next
+                      case transcript_case_2
+                      step( solve( (#vl.2, 0) ~~> (#vk.3, 0) ) )
+                        case d_0_fst
+                        by step( solve( (#vr.7, 0) ~~> (#vk.3, 0) ) )
+                      next
+                        case d_0_snd
+                        step( solve( (#vr.7, 0) ~~> (#vk.3, 0) ) )
+                          case d_0_fst
+                          by step( solve( (#vr.8, 0) ~~> (#vk.3, 0) ) )
+                        next
+                          case d_0_snd
+                          by step( solve( (#vr.8, 0) ~~> (#vk.3, 0) ) )
+                        qed
+                      qed
+                    next
+                      case transcript_case_3
+                      by step( solve( (#vl.2, 0) ~~> (#vk.3, 0) ) )
+                    qed
+                  qed
+                next
+                  case split_case_5
                   step( solve( !KU( (~r1⊕x) ) @ #vk.3 ) )
                     case c_xor_case_1
                     step( solve( !KU( ~r1 ) @ #vk.6 ) )
@@ -6636,99 +6729,6 @@ next
                   next
                     case coerce
                     step( solve( !KD( (~r1⊕x) ) ▶₀ #vk.3 ) )
-                      case reader1
-                      by step( solve( (#vl.2, 0) ~~> (#vk.3, 0) ) )
-                    next
-                      case reader2
-                      by step( solve( (#vl.2, 0) ~~> (#vk.3, 0) ) )
-                    next
-                      case tag1
-                      step( solve( (#vl.2, 0) ~~> (#vk.3, 0) ) )
-                        case d_0_fst
-                        by step( solve( (#vr.7, 0) ~~> (#vk.3, 0) ) )
-                      next
-                        case d_0_snd
-                        by step( solve( (#vr.7, 0) ~~> (#vk.3, 0) ) )
-                      qed
-                    next
-                      case transcript_case_1
-                      by step( solve( (#vl.2, 0) ~~> (#vk.3, 0) ) )
-                    next
-                      case transcript_case_2
-                      step( solve( (#vl.2, 0) ~~> (#vk.3, 0) ) )
-                        case d_0_fst
-                        by step( solve( (#vr.7, 0) ~~> (#vk.3, 0) ) )
-                      next
-                        case d_0_snd
-                        step( solve( (#vr.7, 0) ~~> (#vk.3, 0) ) )
-                          case d_0_fst
-                          by step( solve( (#vr.8, 0) ~~> (#vk.3, 0) ) )
-                        next
-                          case d_0_snd
-                          by step( solve( (#vr.8, 0) ~~> (#vk.3, 0) ) )
-                        qed
-                      qed
-                    next
-                      case transcript_case_3
-                      by step( solve( (#vl.2, 0) ~~> (#vk.3, 0) ) )
-                    qed
-                  qed
-                next
-                  case split_case_5
-                  step( solve( !KU( (~k⊕x) ) @ #vk.3 ) )
-                    case c_xor_case_1
-                    by step( solve( !KU( ~k ) @ #vk.6 ) )
-                  next
-                    case c_xor_case_2
-                    step( solve( !KU( (~k⊕x.1) ) @ #vk.6 ) )
-                      case c_xor_case_1
-                      by step( contradiction /* forbidden AC constructor chain */ )
-                    next
-                      case c_xor_case_2
-                      by step( contradiction /* forbidden AC constructor chain */ )
-                    next
-                      case coerce
-                      step( solve( !KD( (~k⊕x.1) ) ▶₀ #vk.4 ) )
-                        case reader1
-                        by step( solve( (#vl.2, 0) ~~> (#vk.4, 0) ) )
-                      next
-                        case reader2
-                        by step( solve( (#vl.2, 0) ~~> (#vk.4, 0) ) )
-                      next
-                        case tag1
-                        step( solve( (#vl.2, 0) ~~> (#vk.4, 0) ) )
-                          case d_0_fst
-                          by step( solve( (#vr.7, 0) ~~> (#vk.4, 0) ) )
-                        next
-                          case d_0_snd
-                          by step( solve( (#vr.7, 0) ~~> (#vk.4, 0) ) )
-                        qed
-                      next
-                        case transcript_case_1
-                        by step( solve( (#vl.2, 0) ~~> (#vk.4, 0) ) )
-                      next
-                        case transcript_case_2
-                        step( solve( (#vl.2, 0) ~~> (#vk.4, 0) ) )
-                          case d_0_fst
-                          by step( solve( (#vr.7, 0) ~~> (#vk.4, 0) ) )
-                        next
-                          case d_0_snd
-                          step( solve( (#vr.7, 0) ~~> (#vk.4, 0) ) )
-                            case d_0_fst
-                            by step( solve( (#vr.8, 0) ~~> (#vk.4, 0) ) )
-                          next
-                            case d_0_snd
-                            by step( solve( (#vr.8, 0) ~~> (#vk.4, 0) ) )
-                          qed
-                        qed
-                      next
-                        case transcript_case_3
-                        by step( solve( (#vl.2, 0) ~~> (#vk.4, 0) ) )
-                      qed
-                    qed
-                  next
-                    case coerce
-                    step( solve( !KD( (~k⊕x) ) ▶₀ #vk.3 ) )
                       case reader1
                       by step( solve( (#vl.2, 0) ~~> (#vk.3, 0) ) )
                     next
@@ -8835,54 +8835,9 @@ next
             case split_case_3
             step( solve( !KU( (~k⊕~r1⊕z) ) @ #vk.2 ) )
               case c_xor_case_1
-              step( solve( !KU( (~k⊕~r1) ) @ #vk.5 ) )
-                case c_xor
-                by step( solve( !KU( ~k ) @ #vk.6 ) )
-              next
-                case coerce
-                step( solve( !KD( (~k⊕~r1) ) ▶₀ #vk.3 ) )
-                  case reader1
-                  by step( solve( (#vl.1, 0) ~~> (#vk.3, 0) ) )
-                next
-                  case reader2
-                  by step( solve( (#vl.1, 0) ~~> (#vk.3, 0) ) )
-                next
-                  case tag1
-                  step( solve( (#vl.1, 0) ~~> (#vk.3, 0) ) )
-                    case d_0_fst
-                    by step( solve( (#vr.6, 0) ~~> (#vk.3, 0) ) )
-                  next
-                    case d_0_snd
-                    by step( solve( (#vr.6, 0) ~~> (#vk.3, 0) ) )
-                  qed
-                next
-                  case transcript_case_1
-                  by step( solve( (#vl.1, 0) ~~> (#vk.3, 0) ) )
-                next
-                  case transcript_case_2
-                  step( solve( (#vl.1, 0) ~~> (#vk.3, 0) ) )
-                    case d_0_fst
-                    by step( solve( (#vr.6, 0) ~~> (#vk.3, 0) ) )
-                  next
-                    case d_0_snd
-                    step( solve( (#vr.6, 0) ~~> (#vk.3, 0) ) )
-                      case d_0_fst
-                      by step( solve( (#vr.7, 0) ~~> (#vk.3, 0) ) )
-                    next
-                      case d_0_snd
-                      by step( solve( (#vr.7, 0) ~~> (#vk.3, 0) ) )
-                    qed
-                  qed
-                next
-                  case transcript_case_3
-                  by step( solve( (#vl.1, 0) ~~> (#vk.3, 0) ) )
-                qed
-              qed
-            next
-              case c_xor_case_2
               by step( solve( !KU( ~k ) @ #vk.4 ) )
             next
-              case c_xor_case_3
+              case c_xor_case_2
               step( solve( !KU( (~k⊕z) ) @ #vk.5 ) )
                 case c_xor_case_1
                 by step( solve( !KU( ~k ) @ #vk.7 ) )
@@ -8975,15 +8930,57 @@ next
                 qed
               qed
             next
+              case c_xor_case_3
+              step( solve( !KU( (~k⊕~r1) ) @ #vk.5 ) )
+                case c_xor
+                by step( solve( !KU( ~k ) @ #vk.6 ) )
+              next
+                case coerce
+                step( solve( !KD( (~k⊕~r1) ) ▶₀ #vk.3 ) )
+                  case reader1
+                  by step( solve( (#vl.1, 0) ~~> (#vk.3, 0) ) )
+                next
+                  case reader2
+                  by step( solve( (#vl.1, 0) ~~> (#vk.3, 0) ) )
+                next
+                  case tag1
+                  step( solve( (#vl.1, 0) ~~> (#vk.3, 0) ) )
+                    case d_0_fst
+                    by step( solve( (#vr.6, 0) ~~> (#vk.3, 0) ) )
+                  next
+                    case d_0_snd
+                    by step( solve( (#vr.6, 0) ~~> (#vk.3, 0) ) )
+                  qed
+                next
+                  case transcript_case_1
+                  by step( solve( (#vl.1, 0) ~~> (#vk.3, 0) ) )
+                next
+                  case transcript_case_2
+                  step( solve( (#vl.1, 0) ~~> (#vk.3, 0) ) )
+                    case d_0_fst
+                    by step( solve( (#vr.6, 0) ~~> (#vk.3, 0) ) )
+                  next
+                    case d_0_snd
+                    step( solve( (#vr.6, 0) ~~> (#vk.3, 0) ) )
+                      case d_0_fst
+                      by step( solve( (#vr.7, 0) ~~> (#vk.3, 0) ) )
+                    next
+                      case d_0_snd
+                      by step( solve( (#vr.7, 0) ~~> (#vk.3, 0) ) )
+                    qed
+                  qed
+                next
+                  case transcript_case_3
+                  by step( solve( (#vl.1, 0) ~~> (#vk.3, 0) ) )
+                qed
+              qed
+            next
               case c_xor_case_4
               step( solve( !KU( (~k⊕~r1⊕x.1) ) @ #vk.5 ) )
                 case c_xor_case_1
-                by step( contradiction /* forbidden AC constructor chain */ )
-              next
-                case c_xor_case_2
                 by step( solve( !KU( ~k ) @ #vk.6 ) )
               next
-                case c_xor_case_3
+                case c_xor_case_2
                 step( solve( !KU( (~k⊕x.1) ) @ #vk.7 ) )
                   case c_xor_case_1
                   by step( contradiction /* forbidden AC constructor chain */ )
@@ -9030,6 +9027,9 @@ next
                     by step( solve( (#vl.1, 0) ~~> (#vk.4, 0) ) )
                   qed
                 qed
+              next
+                case c_xor_case_3
+                by step( contradiction /* forbidden AC constructor chain */ )
               next
                 case c_xor_case_4
                 by step( contradiction /* forbidden AC constructor chain */ )
@@ -9256,6 +9256,99 @@ next
             qed
           next
             case split_case_4
+            step( solve( !KU( (~k⊕x) ) @ #vk.2 ) )
+              case c_xor_case_1
+              by step( solve( !KU( ~k ) @ #vk.5 ) )
+            next
+              case c_xor_case_2
+              step( solve( !KU( (~k⊕x.1) ) @ #vk.5 ) )
+                case c_xor_case_1
+                by step( contradiction /* forbidden AC constructor chain */ )
+              next
+                case c_xor_case_2
+                by step( contradiction /* forbidden AC constructor chain */ )
+              next
+                case coerce
+                step( solve( !KD( (~k⊕x.1) ) ▶₀ #vk.3 ) )
+                  case reader1
+                  by step( solve( (#vl.1, 0) ~~> (#vk.3, 0) ) )
+                next
+                  case reader2
+                  by step( solve( (#vl.1, 0) ~~> (#vk.3, 0) ) )
+                next
+                  case tag1
+                  step( solve( (#vl.1, 0) ~~> (#vk.3, 0) ) )
+                    case d_0_fst
+                    by step( solve( (#vr.6, 0) ~~> (#vk.3, 0) ) )
+                  next
+                    case d_0_snd
+                    by step( solve( (#vr.6, 0) ~~> (#vk.3, 0) ) )
+                  qed
+                next
+                  case transcript_case_1
+                  by step( solve( (#vl.1, 0) ~~> (#vk.3, 0) ) )
+                next
+                  case transcript_case_2
+                  step( solve( (#vl.1, 0) ~~> (#vk.3, 0) ) )
+                    case d_0_fst
+                    by step( solve( (#vr.6, 0) ~~> (#vk.3, 0) ) )
+                  next
+                    case d_0_snd
+                    step( solve( (#vr.6, 0) ~~> (#vk.3, 0) ) )
+                      case d_0_fst
+                      by step( solve( (#vr.7, 0) ~~> (#vk.3, 0) ) )
+                    next
+                      case d_0_snd
+                      by step( solve( (#vr.7, 0) ~~> (#vk.3, 0) ) )
+                    qed
+                  qed
+                next
+                  case transcript_case_3
+                  by step( solve( (#vl.1, 0) ~~> (#vk.3, 0) ) )
+                qed
+              qed
+            next
+              case coerce
+              step( solve( !KD( (~k⊕x) ) ▶₀ #vk.2 ) )
+                case reader1
+                by step( solve( (#vl.1, 0) ~~> (#vk.2, 0) ) )
+              next
+                case reader2
+                by step( solve( (#vl.1, 0) ~~> (#vk.2, 0) ) )
+              next
+                case tag1
+                step( solve( (#vl.1, 0) ~~> (#vk.2, 0) ) )
+                  case d_0_fst
+                  by step( solve( (#vr.6, 0) ~~> (#vk.2, 0) ) )
+                next
+                  case d_0_snd
+                  by step( solve( (#vr.6, 0) ~~> (#vk.2, 0) ) )
+                qed
+              next
+                case transcript_case_1
+                by step( solve( (#vl.1, 0) ~~> (#vk.2, 0) ) )
+              next
+                case transcript_case_2
+                step( solve( (#vl.1, 0) ~~> (#vk.2, 0) ) )
+                  case d_0_fst
+                  by step( solve( (#vr.6, 0) ~~> (#vk.2, 0) ) )
+                next
+                  case d_0_snd
+                  step( solve( (#vr.6, 0) ~~> (#vk.2, 0) ) )
+                    case d_0_fst
+                    by step( solve( (#vr.7, 0) ~~> (#vk.2, 0) ) )
+                  next
+                    case d_0_snd
+                    by step( solve( (#vr.7, 0) ~~> (#vk.2, 0) ) )
+                  qed
+                qed
+              next
+                case transcript_case_3
+                by step( solve( (#vl.1, 0) ~~> (#vk.2, 0) ) )
+              qed
+            qed
+          next
+            case split_case_5
             step( solve( !KU( (~r1⊕x) ) @ #vk.2 ) )
               case c_xor_case_1
               step( solve( !KU( ~r1 ) @ #vk.5 ) )
@@ -9457,99 +9550,6 @@ next
             next
               case coerce
               step( solve( !KD( (~r1⊕x) ) ▶₀ #vk.2 ) )
-                case reader1
-                by step( solve( (#vl.1, 0) ~~> (#vk.2, 0) ) )
-              next
-                case reader2
-                by step( solve( (#vl.1, 0) ~~> (#vk.2, 0) ) )
-              next
-                case tag1
-                step( solve( (#vl.1, 0) ~~> (#vk.2, 0) ) )
-                  case d_0_fst
-                  by step( solve( (#vr.6, 0) ~~> (#vk.2, 0) ) )
-                next
-                  case d_0_snd
-                  by step( solve( (#vr.6, 0) ~~> (#vk.2, 0) ) )
-                qed
-              next
-                case transcript_case_1
-                by step( solve( (#vl.1, 0) ~~> (#vk.2, 0) ) )
-              next
-                case transcript_case_2
-                step( solve( (#vl.1, 0) ~~> (#vk.2, 0) ) )
-                  case d_0_fst
-                  by step( solve( (#vr.6, 0) ~~> (#vk.2, 0) ) )
-                next
-                  case d_0_snd
-                  step( solve( (#vr.6, 0) ~~> (#vk.2, 0) ) )
-                    case d_0_fst
-                    by step( solve( (#vr.7, 0) ~~> (#vk.2, 0) ) )
-                  next
-                    case d_0_snd
-                    by step( solve( (#vr.7, 0) ~~> (#vk.2, 0) ) )
-                  qed
-                qed
-              next
-                case transcript_case_3
-                by step( solve( (#vl.1, 0) ~~> (#vk.2, 0) ) )
-              qed
-            qed
-          next
-            case split_case_5
-            step( solve( !KU( (~k⊕x) ) @ #vk.2 ) )
-              case c_xor_case_1
-              by step( solve( !KU( ~k ) @ #vk.5 ) )
-            next
-              case c_xor_case_2
-              step( solve( !KU( (~k⊕x.1) ) @ #vk.5 ) )
-                case c_xor_case_1
-                by step( contradiction /* forbidden AC constructor chain */ )
-              next
-                case c_xor_case_2
-                by step( contradiction /* forbidden AC constructor chain */ )
-              next
-                case coerce
-                step( solve( !KD( (~k⊕x.1) ) ▶₀ #vk.3 ) )
-                  case reader1
-                  by step( solve( (#vl.1, 0) ~~> (#vk.3, 0) ) )
-                next
-                  case reader2
-                  by step( solve( (#vl.1, 0) ~~> (#vk.3, 0) ) )
-                next
-                  case tag1
-                  step( solve( (#vl.1, 0) ~~> (#vk.3, 0) ) )
-                    case d_0_fst
-                    by step( solve( (#vr.6, 0) ~~> (#vk.3, 0) ) )
-                  next
-                    case d_0_snd
-                    by step( solve( (#vr.6, 0) ~~> (#vk.3, 0) ) )
-                  qed
-                next
-                  case transcript_case_1
-                  by step( solve( (#vl.1, 0) ~~> (#vk.3, 0) ) )
-                next
-                  case transcript_case_2
-                  step( solve( (#vl.1, 0) ~~> (#vk.3, 0) ) )
-                    case d_0_fst
-                    by step( solve( (#vr.6, 0) ~~> (#vk.3, 0) ) )
-                  next
-                    case d_0_snd
-                    step( solve( (#vr.6, 0) ~~> (#vk.3, 0) ) )
-                      case d_0_fst
-                      by step( solve( (#vr.7, 0) ~~> (#vk.3, 0) ) )
-                    next
-                      case d_0_snd
-                      by step( solve( (#vr.7, 0) ~~> (#vk.3, 0) ) )
-                    qed
-                  qed
-                next
-                  case transcript_case_3
-                  by step( solve( (#vl.1, 0) ~~> (#vk.3, 0) ) )
-                qed
-              qed
-            next
-              case coerce
-              step( solve( !KD( (~k⊕x) ) ▶₀ #vk.2 ) )
                 case reader1
                 by step( solve( (#vl.1, 0) ~~> (#vk.2, 0) ) )
               next
@@ -10888,54 +10888,9 @@ next
             case split_case_3
             step( solve( !KU( (~k⊕~r1⊕z) ) @ #vk.2 ) )
               case c_xor_case_1
-              step( solve( !KU( (~k⊕~r1) ) @ #vk.5 ) )
-                case c_xor
-                by step( solve( !KU( ~k ) @ #vk.6 ) )
-              next
-                case coerce
-                step( solve( !KD( (~k⊕~r1) ) ▶₀ #vk.3 ) )
-                  case reader1
-                  by step( solve( (#vl.1, 0) ~~> (#vk.3, 0) ) )
-                next
-                  case reader2
-                  by step( solve( (#vl.1, 0) ~~> (#vk.3, 0) ) )
-                next
-                  case tag1
-                  step( solve( (#vl.1, 0) ~~> (#vk.3, 0) ) )
-                    case d_0_fst
-                    by step( solve( (#vr.6, 0) ~~> (#vk.3, 0) ) )
-                  next
-                    case d_0_snd
-                    by step( solve( (#vr.6, 0) ~~> (#vk.3, 0) ) )
-                  qed
-                next
-                  case transcript_case_1
-                  by step( solve( (#vl.1, 0) ~~> (#vk.3, 0) ) )
-                next
-                  case transcript_case_2
-                  step( solve( (#vl.1, 0) ~~> (#vk.3, 0) ) )
-                    case d_0_fst
-                    by step( solve( (#vr.6, 0) ~~> (#vk.3, 0) ) )
-                  next
-                    case d_0_snd
-                    step( solve( (#vr.6, 0) ~~> (#vk.3, 0) ) )
-                      case d_0_fst
-                      by step( solve( (#vr.7, 0) ~~> (#vk.3, 0) ) )
-                    next
-                      case d_0_snd
-                      by step( solve( (#vr.7, 0) ~~> (#vk.3, 0) ) )
-                    qed
-                  qed
-                next
-                  case transcript_case_3
-                  by step( solve( (#vl.1, 0) ~~> (#vk.3, 0) ) )
-                qed
-              qed
-            next
-              case c_xor_case_2
               by step( solve( !KU( ~k ) @ #vk.4 ) )
             next
-              case c_xor_case_3
+              case c_xor_case_2
               step( solve( !KU( (~k⊕z) ) @ #vk.5 ) )
                 case c_xor_case_1
                 by step( solve( !KU( ~k ) @ #vk.7 ) )
@@ -11028,15 +10983,57 @@ next
                 qed
               qed
             next
+              case c_xor_case_3
+              step( solve( !KU( (~k⊕~r1) ) @ #vk.5 ) )
+                case c_xor
+                by step( solve( !KU( ~k ) @ #vk.6 ) )
+              next
+                case coerce
+                step( solve( !KD( (~k⊕~r1) ) ▶₀ #vk.3 ) )
+                  case reader1
+                  by step( solve( (#vl.1, 0) ~~> (#vk.3, 0) ) )
+                next
+                  case reader2
+                  by step( solve( (#vl.1, 0) ~~> (#vk.3, 0) ) )
+                next
+                  case tag1
+                  step( solve( (#vl.1, 0) ~~> (#vk.3, 0) ) )
+                    case d_0_fst
+                    by step( solve( (#vr.6, 0) ~~> (#vk.3, 0) ) )
+                  next
+                    case d_0_snd
+                    by step( solve( (#vr.6, 0) ~~> (#vk.3, 0) ) )
+                  qed
+                next
+                  case transcript_case_1
+                  by step( solve( (#vl.1, 0) ~~> (#vk.3, 0) ) )
+                next
+                  case transcript_case_2
+                  step( solve( (#vl.1, 0) ~~> (#vk.3, 0) ) )
+                    case d_0_fst
+                    by step( solve( (#vr.6, 0) ~~> (#vk.3, 0) ) )
+                  next
+                    case d_0_snd
+                    step( solve( (#vr.6, 0) ~~> (#vk.3, 0) ) )
+                      case d_0_fst
+                      by step( solve( (#vr.7, 0) ~~> (#vk.3, 0) ) )
+                    next
+                      case d_0_snd
+                      by step( solve( (#vr.7, 0) ~~> (#vk.3, 0) ) )
+                    qed
+                  qed
+                next
+                  case transcript_case_3
+                  by step( solve( (#vl.1, 0) ~~> (#vk.3, 0) ) )
+                qed
+              qed
+            next
               case c_xor_case_4
               step( solve( !KU( (~k⊕~r1⊕x.1) ) @ #vk.5 ) )
                 case c_xor_case_1
-                by step( contradiction /* forbidden AC constructor chain */ )
-              next
-                case c_xor_case_2
                 by step( solve( !KU( ~k ) @ #vk.6 ) )
               next
-                case c_xor_case_3
+                case c_xor_case_2
                 step( solve( !KU( (~k⊕x.1) ) @ #vk.7 ) )
                   case c_xor_case_1
                   by step( contradiction /* forbidden AC constructor chain */ )
@@ -11083,6 +11080,9 @@ next
                     by step( solve( (#vl.1, 0) ~~> (#vk.4, 0) ) )
                   qed
                 qed
+              next
+                case c_xor_case_3
+                by step( contradiction /* forbidden AC constructor chain */ )
               next
                 case c_xor_case_4
                 by step( contradiction /* forbidden AC constructor chain */ )
@@ -11309,6 +11309,99 @@ next
             qed
           next
             case split_case_4
+            step( solve( !KU( (~k⊕x) ) @ #vk.2 ) )
+              case c_xor_case_1
+              by step( solve( !KU( ~k ) @ #vk.5 ) )
+            next
+              case c_xor_case_2
+              step( solve( !KU( (~k⊕x.1) ) @ #vk.5 ) )
+                case c_xor_case_1
+                by step( contradiction /* forbidden AC constructor chain */ )
+              next
+                case c_xor_case_2
+                by step( contradiction /* forbidden AC constructor chain */ )
+              next
+                case coerce
+                step( solve( !KD( (~k⊕x.1) ) ▶₀ #vk.3 ) )
+                  case reader1
+                  by step( solve( (#vl.1, 0) ~~> (#vk.3, 0) ) )
+                next
+                  case reader2
+                  by step( solve( (#vl.1, 0) ~~> (#vk.3, 0) ) )
+                next
+                  case tag1
+                  step( solve( (#vl.1, 0) ~~> (#vk.3, 0) ) )
+                    case d_0_fst
+                    by step( solve( (#vr.6, 0) ~~> (#vk.3, 0) ) )
+                  next
+                    case d_0_snd
+                    by step( solve( (#vr.6, 0) ~~> (#vk.3, 0) ) )
+                  qed
+                next
+                  case transcript_case_1
+                  by step( solve( (#vl.1, 0) ~~> (#vk.3, 0) ) )
+                next
+                  case transcript_case_2
+                  step( solve( (#vl.1, 0) ~~> (#vk.3, 0) ) )
+                    case d_0_fst
+                    by step( solve( (#vr.6, 0) ~~> (#vk.3, 0) ) )
+                  next
+                    case d_0_snd
+                    step( solve( (#vr.6, 0) ~~> (#vk.3, 0) ) )
+                      case d_0_fst
+                      by step( solve( (#vr.7, 0) ~~> (#vk.3, 0) ) )
+                    next
+                      case d_0_snd
+                      by step( solve( (#vr.7, 0) ~~> (#vk.3, 0) ) )
+                    qed
+                  qed
+                next
+                  case transcript_case_3
+                  by step( solve( (#vl.1, 0) ~~> (#vk.3, 0) ) )
+                qed
+              qed
+            next
+              case coerce
+              step( solve( !KD( (~k⊕x) ) ▶₀ #vk.2 ) )
+                case reader1
+                by step( solve( (#vl.1, 0) ~~> (#vk.2, 0) ) )
+              next
+                case reader2
+                by step( solve( (#vl.1, 0) ~~> (#vk.2, 0) ) )
+              next
+                case tag1
+                step( solve( (#vl.1, 0) ~~> (#vk.2, 0) ) )
+                  case d_0_fst
+                  by step( solve( (#vr.6, 0) ~~> (#vk.2, 0) ) )
+                next
+                  case d_0_snd
+                  by step( solve( (#vr.6, 0) ~~> (#vk.2, 0) ) )
+                qed
+              next
+                case transcript_case_1
+                by step( solve( (#vl.1, 0) ~~> (#vk.2, 0) ) )
+              next
+                case transcript_case_2
+                step( solve( (#vl.1, 0) ~~> (#vk.2, 0) ) )
+                  case d_0_fst
+                  by step( solve( (#vr.6, 0) ~~> (#vk.2, 0) ) )
+                next
+                  case d_0_snd
+                  step( solve( (#vr.6, 0) ~~> (#vk.2, 0) ) )
+                    case d_0_fst
+                    by step( solve( (#vr.7, 0) ~~> (#vk.2, 0) ) )
+                  next
+                    case d_0_snd
+                    by step( solve( (#vr.7, 0) ~~> (#vk.2, 0) ) )
+                  qed
+                qed
+              next
+                case transcript_case_3
+                by step( solve( (#vl.1, 0) ~~> (#vk.2, 0) ) )
+              qed
+            qed
+          next
+            case split_case_5
             step( solve( !KU( (~r1⊕x) ) @ #vk.2 ) )
               case c_xor_case_1
               step( solve( !KU( ~r1 ) @ #vk.5 ) )
@@ -11547,99 +11640,6 @@ next
                 by step( solve( (#vl.1, 0) ~~> (#vk.2, 0) ) )
               qed
             qed
-          next
-            case split_case_5
-            step( solve( !KU( (~k⊕x) ) @ #vk.2 ) )
-              case c_xor_case_1
-              by step( solve( !KU( ~k ) @ #vk.5 ) )
-            next
-              case c_xor_case_2
-              step( solve( !KU( (~k⊕x.1) ) @ #vk.5 ) )
-                case c_xor_case_1
-                by step( contradiction /* forbidden AC constructor chain */ )
-              next
-                case c_xor_case_2
-                by step( contradiction /* forbidden AC constructor chain */ )
-              next
-                case coerce
-                step( solve( !KD( (~k⊕x.1) ) ▶₀ #vk.3 ) )
-                  case reader1
-                  by step( solve( (#vl.1, 0) ~~> (#vk.3, 0) ) )
-                next
-                  case reader2
-                  by step( solve( (#vl.1, 0) ~~> (#vk.3, 0) ) )
-                next
-                  case tag1
-                  step( solve( (#vl.1, 0) ~~> (#vk.3, 0) ) )
-                    case d_0_fst
-                    by step( solve( (#vr.6, 0) ~~> (#vk.3, 0) ) )
-                  next
-                    case d_0_snd
-                    by step( solve( (#vr.6, 0) ~~> (#vk.3, 0) ) )
-                  qed
-                next
-                  case transcript_case_1
-                  by step( solve( (#vl.1, 0) ~~> (#vk.3, 0) ) )
-                next
-                  case transcript_case_2
-                  step( solve( (#vl.1, 0) ~~> (#vk.3, 0) ) )
-                    case d_0_fst
-                    by step( solve( (#vr.6, 0) ~~> (#vk.3, 0) ) )
-                  next
-                    case d_0_snd
-                    step( solve( (#vr.6, 0) ~~> (#vk.3, 0) ) )
-                      case d_0_fst
-                      by step( solve( (#vr.7, 0) ~~> (#vk.3, 0) ) )
-                    next
-                      case d_0_snd
-                      by step( solve( (#vr.7, 0) ~~> (#vk.3, 0) ) )
-                    qed
-                  qed
-                next
-                  case transcript_case_3
-                  by step( solve( (#vl.1, 0) ~~> (#vk.3, 0) ) )
-                qed
-              qed
-            next
-              case coerce
-              step( solve( !KD( (~k⊕x) ) ▶₀ #vk.2 ) )
-                case reader1
-                by step( solve( (#vl.1, 0) ~~> (#vk.2, 0) ) )
-              next
-                case reader2
-                by step( solve( (#vl.1, 0) ~~> (#vk.2, 0) ) )
-              next
-                case tag1
-                step( solve( (#vl.1, 0) ~~> (#vk.2, 0) ) )
-                  case d_0_fst
-                  by step( solve( (#vr.6, 0) ~~> (#vk.2, 0) ) )
-                next
-                  case d_0_snd
-                  by step( solve( (#vr.6, 0) ~~> (#vk.2, 0) ) )
-                qed
-              next
-                case transcript_case_1
-                by step( solve( (#vl.1, 0) ~~> (#vk.2, 0) ) )
-              next
-                case transcript_case_2
-                step( solve( (#vl.1, 0) ~~> (#vk.2, 0) ) )
-                  case d_0_fst
-                  by step( solve( (#vr.6, 0) ~~> (#vk.2, 0) ) )
-                next
-                  case d_0_snd
-                  step( solve( (#vr.6, 0) ~~> (#vk.2, 0) ) )
-                    case d_0_fst
-                    by step( solve( (#vr.7, 0) ~~> (#vk.2, 0) ) )
-                  next
-                    case d_0_snd
-                    by step( solve( (#vr.7, 0) ~~> (#vk.2, 0) ) )
-                  qed
-                qed
-              next
-                case transcript_case_3
-                by step( solve( (#vl.1, 0) ~~> (#vk.2, 0) ) )
-              qed
-            qed
           qed
         qed
       qed
@@ -11668,6 +11668,9 @@ next
         by step( solve( !KU( ~k ) @ #vk ) )
       next
         case split_case_2
+        MIRRORED
+      next
+        case split_case_3
         step( solve( !KU( zero ) @ #vk ) )
           case c_zero
           MIRRORED
@@ -11711,9 +11714,6 @@ next
             by step( solve( (#vl, 0) ~~> (#vk, 0) ) )
           qed
         qed
-      next
-        case split_case_3
-        MIRRORED
       next
         case split_case_4
         step( solve( !KU( (~k⊕x) ) @ #vk ) )
@@ -11819,6 +11819,9 @@ next
         by step( solve( !KU( ~k ) @ #vk ) )
       next
         case split_case_2
+        MIRRORED
+      next
+        case split_case_3
         step( solve( !KU( zero ) @ #vk ) )
           case c_zero
           MIRRORED
@@ -11862,9 +11865,6 @@ next
             by step( solve( (#vl, 0) ~~> (#vk, 0) ) )
           qed
         qed
-      next
-        case split_case_3
-        MIRRORED
       next
         case split_case_4
         step( solve( !KU( (~k⊕x) ) @ #vk ) )
@@ -12086,57 +12086,6 @@ next
               case split_case_2
               step( solve( !KU( (~r2⊕r1⊕~r1.1) ) @ #vk.4 ) )
                 case c_xor_case_1
-                step( solve( !KU( (~r2⊕~r1.1) ) @ #vk.5 ) )
-                  case c_xor
-                  step( solve( !KU( ~r2 ) @ #vk.6 ) )
-                    case tag1
-                    step( solve( !KU( ~r1.1 ) @ #vk.7 ) )
-                      case reader1
-                      MIRRORED
-                    qed
-                  qed
-                next
-                  case coerce
-                  step( solve( !KD( (~r2⊕~r1.1) ) ▶₀ #vk.4 ) )
-                    case reader1
-                    by step( solve( (#vl.2, 0) ~~> (#vk.4, 0) ) )
-                  next
-                    case reader2
-                    by step( solve( (#vl.2, 0) ~~> (#vk.4, 0) ) )
-                  next
-                    case tag1
-                    step( solve( (#vl.2, 0) ~~> (#vk.4, 0) ) )
-                      case d_0_fst
-                      by step( solve( (#vr.7, 0) ~~> (#vk.4, 0) ) )
-                    next
-                      case d_0_snd
-                      by step( solve( (#vr.7, 0) ~~> (#vk.4, 0) ) )
-                    qed
-                  next
-                    case transcript_case_1
-                    by step( solve( (#vl.2, 0) ~~> (#vk.4, 0) ) )
-                  next
-                    case transcript_case_2
-                    step( solve( (#vl.2, 0) ~~> (#vk.4, 0) ) )
-                      case d_0_fst
-                      by step( solve( (#vr.7, 0) ~~> (#vk.4, 0) ) )
-                    next
-                      case d_0_snd
-                      step( solve( (#vr.7, 0) ~~> (#vk.4, 0) ) )
-                        case d_0_fst
-                        by step( solve( (#vr.8, 0) ~~> (#vk.4, 0) ) )
-                      next
-                        case d_0_snd
-                        by step( solve( (#vr.8, 0) ~~> (#vk.4, 0) ) )
-                      qed
-                    qed
-                  next
-                    case transcript_case_3
-                    by step( solve( (#vl.2, 0) ~~> (#vk.4, 0) ) )
-                  qed
-                qed
-              next
-                case c_xor_case_2
                 step( solve( !KU( (r1⊕~r1.1) ) @ #vk.6 ) )
                   case c_xor_case_1
                   step( solve( !KU( ~r2 ) @ #vk.6 ) )
@@ -12197,6 +12146,57 @@ next
                 next
                   case coerce
                   step( solve( !KD( (r1⊕~r1.1) ) ▶₀ #vk.4 ) )
+                    case reader1
+                    by step( solve( (#vl.2, 0) ~~> (#vk.4, 0) ) )
+                  next
+                    case reader2
+                    by step( solve( (#vl.2, 0) ~~> (#vk.4, 0) ) )
+                  next
+                    case tag1
+                    step( solve( (#vl.2, 0) ~~> (#vk.4, 0) ) )
+                      case d_0_fst
+                      by step( solve( (#vr.7, 0) ~~> (#vk.4, 0) ) )
+                    next
+                      case d_0_snd
+                      by step( solve( (#vr.7, 0) ~~> (#vk.4, 0) ) )
+                    qed
+                  next
+                    case transcript_case_1
+                    by step( solve( (#vl.2, 0) ~~> (#vk.4, 0) ) )
+                  next
+                    case transcript_case_2
+                    step( solve( (#vl.2, 0) ~~> (#vk.4, 0) ) )
+                      case d_0_fst
+                      by step( solve( (#vr.7, 0) ~~> (#vk.4, 0) ) )
+                    next
+                      case d_0_snd
+                      step( solve( (#vr.7, 0) ~~> (#vk.4, 0) ) )
+                        case d_0_fst
+                        by step( solve( (#vr.8, 0) ~~> (#vk.4, 0) ) )
+                      next
+                        case d_0_snd
+                        by step( solve( (#vr.8, 0) ~~> (#vk.4, 0) ) )
+                      qed
+                    qed
+                  next
+                    case transcript_case_3
+                    by step( solve( (#vl.2, 0) ~~> (#vk.4, 0) ) )
+                  qed
+                qed
+              next
+                case c_xor_case_2
+                step( solve( !KU( (~r2⊕~r1.1) ) @ #vk.5 ) )
+                  case c_xor
+                  step( solve( !KU( ~r2 ) @ #vk.6 ) )
+                    case tag1
+                    step( solve( !KU( ~r1.1 ) @ #vk.7 ) )
+                      case reader1
+                      MIRRORED
+                    qed
+                  qed
+                next
+                  case coerce
+                  step( solve( !KD( (~r2⊕~r1.1) ) ▶₀ #vk.4 ) )
                     case reader1
                     by step( solve( (#vl.2, 0) ~~> (#vk.4, 0) ) )
                   next
@@ -12337,9 +12337,6 @@ next
                 case c_xor_case_4
                 step( solve( !KU( (~r1⊕~r2⊕x.1) ) @ #vk.6 ) )
                   case c_xor_case_1
-                  by step( contradiction /* forbidden AC constructor chain */ )
-                next
-                  case c_xor_case_2
                   step( solve( !KU( (~r2⊕x.1) ) @ #vk.8 ) )
                     case c_xor_case_1
                     by step( contradiction /* forbidden AC constructor chain */ )
@@ -12387,7 +12384,7 @@ next
                     qed
                   qed
                 next
-                  case c_xor_case_3
+                  case c_xor_case_2
                   step( solve( !KU( (~r1⊕x.1) ) @ #vk.8 ) )
                     case c_xor_case_1
                     by step( contradiction /* forbidden AC constructor chain */ )
@@ -12434,6 +12431,9 @@ next
                       by step( solve( (#vl.2, 0) ~~> (#vk.5, 0) ) )
                     qed
                   qed
+                next
+                  case c_xor_case_3
+                  by step( contradiction /* forbidden AC constructor chain */ )
                 next
                   case c_xor_case_4
                   by step( contradiction /* forbidden AC constructor chain */ )
@@ -13653,57 +13653,6 @@ next
               case split_case_2
               step( solve( !KU( (~r2⊕r1⊕~r1.1) ) @ #vk.4 ) )
                 case c_xor_case_1
-                step( solve( !KU( (~r2⊕~r1.1) ) @ #vk.5 ) )
-                  case c_xor
-                  step( solve( !KU( ~r2 ) @ #vk.6 ) )
-                    case tag1
-                    step( solve( !KU( ~r1.1 ) @ #vk.7 ) )
-                      case reader1
-                      MIRRORED
-                    qed
-                  qed
-                next
-                  case coerce
-                  step( solve( !KD( (~r2⊕~r1.1) ) ▶₀ #vk.4 ) )
-                    case reader1
-                    by step( solve( (#vl.2, 0) ~~> (#vk.4, 0) ) )
-                  next
-                    case reader2
-                    by step( solve( (#vl.2, 0) ~~> (#vk.4, 0) ) )
-                  next
-                    case tag1
-                    step( solve( (#vl.2, 0) ~~> (#vk.4, 0) ) )
-                      case d_0_fst
-                      by step( solve( (#vr.7, 0) ~~> (#vk.4, 0) ) )
-                    next
-                      case d_0_snd
-                      by step( solve( (#vr.7, 0) ~~> (#vk.4, 0) ) )
-                    qed
-                  next
-                    case transcript_case_1
-                    by step( solve( (#vl.2, 0) ~~> (#vk.4, 0) ) )
-                  next
-                    case transcript_case_2
-                    step( solve( (#vl.2, 0) ~~> (#vk.4, 0) ) )
-                      case d_0_fst
-                      by step( solve( (#vr.7, 0) ~~> (#vk.4, 0) ) )
-                    next
-                      case d_0_snd
-                      step( solve( (#vr.7, 0) ~~> (#vk.4, 0) ) )
-                        case d_0_fst
-                        by step( solve( (#vr.8, 0) ~~> (#vk.4, 0) ) )
-                      next
-                        case d_0_snd
-                        by step( solve( (#vr.8, 0) ~~> (#vk.4, 0) ) )
-                      qed
-                    qed
-                  next
-                    case transcript_case_3
-                    by step( solve( (#vl.2, 0) ~~> (#vk.4, 0) ) )
-                  qed
-                qed
-              next
-                case c_xor_case_2
                 step( solve( !KU( (r1⊕~r1.1) ) @ #vk.6 ) )
                   case c_xor_case_1
                   step( solve( !KU( ~r2 ) @ #vk.6 ) )
@@ -13764,6 +13713,57 @@ next
                 next
                   case coerce
                   step( solve( !KD( (r1⊕~r1.1) ) ▶₀ #vk.4 ) )
+                    case reader1
+                    by step( solve( (#vl.2, 0) ~~> (#vk.4, 0) ) )
+                  next
+                    case reader2
+                    by step( solve( (#vl.2, 0) ~~> (#vk.4, 0) ) )
+                  next
+                    case tag1
+                    step( solve( (#vl.2, 0) ~~> (#vk.4, 0) ) )
+                      case d_0_fst
+                      by step( solve( (#vr.7, 0) ~~> (#vk.4, 0) ) )
+                    next
+                      case d_0_snd
+                      by step( solve( (#vr.7, 0) ~~> (#vk.4, 0) ) )
+                    qed
+                  next
+                    case transcript_case_1
+                    by step( solve( (#vl.2, 0) ~~> (#vk.4, 0) ) )
+                  next
+                    case transcript_case_2
+                    step( solve( (#vl.2, 0) ~~> (#vk.4, 0) ) )
+                      case d_0_fst
+                      by step( solve( (#vr.7, 0) ~~> (#vk.4, 0) ) )
+                    next
+                      case d_0_snd
+                      step( solve( (#vr.7, 0) ~~> (#vk.4, 0) ) )
+                        case d_0_fst
+                        by step( solve( (#vr.8, 0) ~~> (#vk.4, 0) ) )
+                      next
+                        case d_0_snd
+                        by step( solve( (#vr.8, 0) ~~> (#vk.4, 0) ) )
+                      qed
+                    qed
+                  next
+                    case transcript_case_3
+                    by step( solve( (#vl.2, 0) ~~> (#vk.4, 0) ) )
+                  qed
+                qed
+              next
+                case c_xor_case_2
+                step( solve( !KU( (~r2⊕~r1.1) ) @ #vk.5 ) )
+                  case c_xor
+                  step( solve( !KU( ~r2 ) @ #vk.6 ) )
+                    case tag1
+                    step( solve( !KU( ~r1.1 ) @ #vk.7 ) )
+                      case reader1
+                      MIRRORED
+                    qed
+                  qed
+                next
+                  case coerce
+                  step( solve( !KD( (~r2⊕~r1.1) ) ▶₀ #vk.4 ) )
                     case reader1
                     by step( solve( (#vl.2, 0) ~~> (#vk.4, 0) ) )
                   next
@@ -13904,9 +13904,6 @@ next
                 case c_xor_case_4
                 step( solve( !KU( (~r1⊕~r2⊕x.1) ) @ #vk.6 ) )
                   case c_xor_case_1
-                  by step( contradiction /* forbidden AC constructor chain */ )
-                next
-                  case c_xor_case_2
                   step( solve( !KU( (~r2⊕x.1) ) @ #vk.8 ) )
                     case c_xor_case_1
                     by step( contradiction /* forbidden AC constructor chain */ )
@@ -13954,7 +13951,7 @@ next
                     qed
                   qed
                 next
-                  case c_xor_case_3
+                  case c_xor_case_2
                   step( solve( !KU( (~r1⊕x.1) ) @ #vk.8 ) )
                     case c_xor_case_1
                     by step( contradiction /* forbidden AC constructor chain */ )
@@ -14001,6 +13998,9 @@ next
                       by step( solve( (#vl.2, 0) ~~> (#vk.5, 0) ) )
                     qed
                   qed
+                next
+                  case c_xor_case_3
+                  by step( contradiction /* forbidden AC constructor chain */ )
                 next
                   case c_xor_case_4
                   by step( contradiction /* forbidden AC constructor chain */ )
@@ -15117,8 +15117,8 @@ qed
 Generated from:
 Tamarin version 1.13.0
 Maude version 3.5.1
-Git revision: abcb0ff3eca770d7b7f58a583b2616eafe845e15, branch: fix-derivation-check-warnings
-Compiled at: 2026-07-22 11:02:46.6864 UTC
+Git revision: 41bc81379b23681e7057314a5cf66a25c45e1986, branch: canonicalise-subst
+Compiled at: 2026-07-27 16:11:34.947223 UTC
 */
 
 end
@@ -15130,7 +15130,7 @@ summary of summaries:
 analyzed: examples/csf18-xor/diff-models/CH07-UK2.spthy
 
   output:          examples/csf18-xor/diff-models/CH07-UK2.spthy.tmp
-  processing time: 21.50s
+  processing time: 21.39s
   
   RHS :  executable (exists-trace): verified (5 steps)
   LHS :  executable (exists-trace): verified (5 steps)

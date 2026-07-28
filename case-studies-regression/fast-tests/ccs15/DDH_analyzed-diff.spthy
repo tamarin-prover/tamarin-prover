@@ -7041,10 +7041,10 @@ next
               by step( solve( !KU( ~x ) @ #vk.2 ) )
             next
               case DDH_case_2
-              by step( solve( !KU( ~x ) @ #vk.3 ) )
+              MIRRORED
             next
               case DDH_case_3
-              MIRRORED
+              by step( solve( !KU( ~x ) @ #vk.3 ) )
             next
               case DDH_case_4
               by step( solve( !KU( ~x ) @ #vk.2 ) )
@@ -7103,10 +7103,10 @@ next
                 by step( solve( !KU( ~y ) @ #vk.2 ) )
               next
                 case DDH_case_4
-                by step( solve( !KU( ~y ) @ #vk.3 ) )
+                MIRRORED
               next
                 case DDH_case_5
-                MIRRORED
+                by step( solve( !KU( ~y ) @ #vk.3 ) )
               next
                 case DDH_case_6
                 by step( solve( !KU( ~y ) @ #vk.2 ) )
@@ -7163,10 +7163,10 @@ next
                 by step( solve( !KU( ~z ) @ #vk.2 ) )
               next
                 case DDH_case_6
-                by step( solve( !KU( ~z ) @ #vk.3 ) )
+                MIRRORED
               next
                 case DDH_case_7
-                MIRRORED
+                by step( solve( !KU( ~z ) @ #vk.3 ) )
               next
                 case c_exp
                 by step( solve( !KU( ~z ) @ #vk.4 ) )
@@ -7249,10 +7249,10 @@ next
               by step( solve( !KU( ~x ) @ #vk.2 ) )
             next
               case DDH_case_2
-              by step( solve( !KU( ~x ) @ #vk.3 ) )
+              MIRRORED
             next
               case DDH_case_3
-              MIRRORED
+              by step( solve( !KU( ~x ) @ #vk.3 ) )
             next
               case DDH_case_4
               by step( solve( !KU( ~x ) @ #vk.2 ) )
@@ -7267,10 +7267,10 @@ next
               by step( solve( !KU( ~x ) @ #vk.2 ) )
             next
               case DDH_case_8
-              by step( solve( !KU( ~x ) @ #vk.3 ) )
+              by step( solve( !KU( ~y ) @ #vk.3 ) )
             next
               case DDH_case_9
-              by step( solve( !KU( ~y ) @ #vk.3 ) )
+              by step( solve( !KU( ~x ) @ #vk.3 ) )
             next
               case c_exp
               by step( solve( !KU( ~x ) @ #vk.4 ) )
@@ -7317,10 +7317,10 @@ next
                 by step( solve( !KU( ~y ) @ #vk.2 ) )
               next
                 case DDH_case_4
-                by step( solve( !KU( ~y ) @ #vk.3 ) )
+                MIRRORED
               next
                 case DDH_case_5
-                MIRRORED
+                by step( solve( !KU( ~y ) @ #vk.3 ) )
               next
                 case DDH_case_6
                 by step( solve( !KU( ~x ) @ #vk.1 ) )
@@ -7329,10 +7329,10 @@ next
                 by step( solve( !KU( ~y ) @ #vk.2 ) )
               next
                 case DDH_case_8
-                by step( solve( !KU( ~y ) @ #vk.3 ) )
+                by step( solve( !KU( ~x ) @ #vk.3 ) )
               next
                 case DDH_case_9
-                by step( solve( !KU( ~x ) @ #vk.3 ) )
+                by step( solve( !KU( ~y ) @ #vk.3 ) )
               next
                 case c_exp
                 by step( solve( !KU( ~y ) @ #vk.4 ) )
@@ -7371,10 +7371,10 @@ next
                 by step( solve( !KU( ~x ) @ #vk.3 ) )
               next
                 case DDH_case_02
-                by step( solve( !KU( ~x ) @ #vk.3 ) )
+                by step( solve( !KU( ~y ) @ #vk.3 ) )
               next
                 case DDH_case_03
-                by step( solve( !KU( ~y ) @ #vk.3 ) )
+                by step( solve( !KU( ~x ) @ #vk.3 ) )
               next
                 case DDH_case_04
                 by step( solve( !KU( ~x ) @ #vk.3 ) )
@@ -7386,25 +7386,25 @@ next
                 by step( solve( !KU( ~x ) @ #vk.3 ) )
               next
                 case DDH_case_07
-                by step( solve( !KU( ~x ) @ #vk.3 ) )
-              next
-                case DDH_case_08
-                by step( solve( !KU( ~x ) @ #vk.3 ) )
-              next
-                case DDH_case_09
-                by step( solve( !KU( ~x ) @ #vk.1 ) )
-              next
-                case DDH_case_10
-                by step( solve( !KU( ~x ) @ #vk.2 ) )
-              next
-                case DDH_case_11
                 by step( solve( !KU( ~y ) @ #vk.1 ) )
               next
-                case DDH_case_12
+                case DDH_case_08
+                by step( solve( !KU( ~x ) @ #vk.1 ) )
+              next
+                case DDH_case_09
                 MIRRORED
               next
-                case DDH_case_13
+                case DDH_case_10
+                by step( solve( !KU( ~x ) @ #vk.3 ) )
+              next
+                case DDH_case_11
                 by step( solve( !KU( ~y ) @ #vk.2 ) )
+              next
+                case DDH_case_12
+                by step( solve( !KU( ~x ) @ #vk.2 ) )
+              next
+                case DDH_case_13
+                by step( solve( !KU( ~x ) @ #vk.3 ) )
               next
                 case c_exp
                 by step( solve( !KU( ~x ) @ #vk.4 ) )
@@ -7557,8 +7557,8 @@ qed
 Generated from:
 Tamarin version 1.13.0
 Maude version 3.5.1
-Git revision: abcb0ff3eca770d7b7f58a583b2616eafe845e15, branch: fix-derivation-check-warnings
-Compiled at: 2026-07-22 11:02:46.6864 UTC
+Git revision: 41bc81379b23681e7057314a5cf66a25c45e1986, branch: canonicalise-subst
+Compiled at: 2026-07-27 16:11:34.947223 UTC
 */
 
 end
@@ -7570,7 +7570,7 @@ summary of summaries:
 analyzed: examples/ccs15/DDH.spthy
 
   output:          examples/ccs15/DDH.spthy.tmp
-  processing time: 1.61s
+  processing time: 1.59s
   
   DiffLemma:  Observational_equivalence : verified (2522 steps)
 

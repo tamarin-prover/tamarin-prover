@@ -446,13 +446,13 @@ solve( (¬(role = 'I'))  ∥
               case c_h
               solve( !KU( 'g'^(~eb*~x) ) @ #vk.5 )
                 case Register_key_honest_case_1
-                solve( !KU( ~eb ) @ #vk.9 )
+                solve( !KU( ~x ) @ #vk.9 )
                   case Corrupt_Ltk
                   by contradiction /* from formulas */
                 qed
               next
                 case Register_key_honest_case_2
-                solve( !KU( ~x ) @ #vk.9 )
+                solve( !KU( ~eb ) @ #vk.9 )
                   case Corrupt_Ltk
                   by contradiction /* from formulas */
                 qed
@@ -784,13 +784,13 @@ next
               case c_h
               solve( !KU( 'g'^(~eb*~x) ) @ #vk.5 )
                 case Register_key_honest_case_1
-                solve( !KU( ~eb ) @ #vk.9 )
+                solve( !KU( ~x ) @ #vk.9 )
                   case Corrupt_Ltk
                   by contradiction /* from formulas */
                 qed
               next
                 case Register_key_honest_case_2
-                solve( !KU( ~x ) @ #vk.9 )
+                solve( !KU( ~eb ) @ #vk.9 )
                   case Corrupt_Ltk
                   by contradiction /* from formulas */
                 qed
@@ -815,8 +815,8 @@ qed
 Generated from:
 Tamarin version 1.13.0
 Maude version 3.5.1
-Git revision: abcb0ff3eca770d7b7f58a583b2616eafe845e15, branch: fix-derivation-check-warnings
-Compiled at: 2026-07-22 11:02:46.6864 UTC
+Git revision: 41bc81379b23681e7057314a5cf66a25c45e1986, branch: canonicalise-subst
+Compiled at: 2026-07-27 16:11:34.947223 UTC
 */
 
 end
@@ -828,7 +828,7 @@ summary of summaries:
 analyzed: examples/ake/dh/UM_one_pass_fix.spthy
 
   output:          examples/ake/dh/UM_one_pass_fix.spthy.tmp
-  processing time: 0.42s
+  processing time: 0.41s
   
   key_agreement_reachable (exists-trace): verified (10 steps)
   CK_secure (all-traces): verified (174 steps)

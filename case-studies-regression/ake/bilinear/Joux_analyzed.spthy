@@ -921,7 +921,7 @@ solve( SessionKey( A, (B++C), k ) @ #ia )
                                     solve( splitEqs(3) )
                                       case split_case_3
                                       solve( splitEqs(6) )
-                                        case split_case_4
+                                        case split_case_5
                                         solve( !KU( pmult(~ekA.1, 'P') ) @ #vk.6 )
                                           case Proto1
                                           solve( splitEqs(11) )
@@ -993,31 +993,31 @@ solve( SessionKey( A, (B++C), sessKey ) @ #i )
             case Proto1
             solve( !KU( em('P', 'P')^(~ekA*~ekA.1*~ekA.2) ) @ #vk.3 )
               case Proto1_case_1
-              by solve( !KU( ~ekA ) @ #vk.9 )
+              by solve( !KU( ~ekA.1 ) @ #vk.9 )
             next
               case Proto1_case_2
               by solve( !KU( ~ekA ) @ #vk.9 )
             next
               case Proto1_case_3
-              by solve( !KU( ~ekA.1 ) @ #vk.9 )
+              by solve( !KU( ~ekA ) @ #vk.9 )
             next
               case Proto1_case_4
-              by solve( !KU( ~ekA ) @ #vk.7 )
+              by solve( !KU( ~ekA.2 ) @ #vk.7 )
             next
               case Proto1_case_5
-              by solve( !KU( ~ekA ) @ #vk.7 )
-            next
-              case Proto1_case_6
               by solve( !KU( ~ekA.1 ) @ #vk.7 )
             next
-              case Proto1_case_7
+              case Proto1_case_6
               by solve( !KU( ~ekA.2 ) @ #vk.7 )
+            next
+              case Proto1_case_7
+              by solve( !KU( ~ekA ) @ #vk.7 )
             next
               case Proto1_case_8
               by solve( !KU( ~ekA.1 ) @ #vk.7 )
             next
               case Proto1_case_9
-              by solve( !KU( ~ekA.2 ) @ #vk.7 )
+              by solve( !KU( ~ekA ) @ #vk.7 )
             next
               case c_exp
               by solve( !KU( ~ekA ) @ #vk.9 )
@@ -1047,8 +1047,8 @@ qed
 Generated from:
 Tamarin version 1.13.0
 Maude version 3.5.1
-Git revision: abcb0ff3eca770d7b7f58a583b2616eafe845e15, branch: fix-derivation-check-warnings
-Compiled at: 2026-07-22 11:02:46.6864 UTC
+Git revision: 41bc81379b23681e7057314a5cf66a25c45e1986, branch: canonicalise-subst
+Compiled at: 2026-07-27 16:11:34.947223 UTC
 */
 
 end
@@ -1060,7 +1060,7 @@ summary of summaries:
 analyzed: examples/ake/bilinear/Joux.spthy
 
   output:          examples/ake/bilinear/Joux.spthy.tmp
-  processing time: 7.17s
+  processing time: 6.80s
   
   session_key_establish (exists-trace): verified (28 steps)
   Session_Key_Secrecy_PFS (all-traces): verified (22 steps)

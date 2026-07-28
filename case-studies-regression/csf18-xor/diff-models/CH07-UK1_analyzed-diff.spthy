@@ -1802,7 +1802,7 @@ next
                       case c_xor_case_1
                       step( solve( !KU( (~r2⊕x.1) ) @ #vk.4 ) )
                         case c_xor_case_1
-                        by step( contradiction /* forbidden AC constructor chain */ )
+                        by step( contradiction /* cyclic */ )
                       next
                         case c_xor_case_2
                         by step( contradiction /* forbidden AC constructor chain */ )
@@ -1856,7 +1856,7 @@ next
                       case c_xor_case_3
                       step( solve( !KU( (~r2⊕x.1) ) @ #vk.4 ) )
                         case c_xor_case_1
-                        by step( contradiction /* cyclic */ )
+                        by step( contradiction /* forbidden AC constructor chain */ )
                       next
                         case c_xor_case_2
                         by step( contradiction /* forbidden AC constructor chain */ )
@@ -2393,7 +2393,7 @@ next
                       case c_xor_case_1
                       step( solve( !KU( (~r2⊕x.1) ) @ #vk.4 ) )
                         case c_xor_case_1
-                        by step( contradiction /* forbidden AC constructor chain */ )
+                        by step( contradiction /* cyclic */ )
                       next
                         case c_xor_case_2
                         by step( contradiction /* forbidden AC constructor chain */ )
@@ -2447,7 +2447,7 @@ next
                       case c_xor_case_3
                       step( solve( !KU( (~r2⊕x.1) ) @ #vk.4 ) )
                         case c_xor_case_1
-                        by step( contradiction /* cyclic */ )
+                        by step( contradiction /* forbidden AC constructor chain */ )
                       next
                         case c_xor_case_2
                         by step( contradiction /* forbidden AC constructor chain */ )
@@ -3044,7 +3044,7 @@ next
                       case c_xor_case_1
                       step( solve( !KU( (~r2.1⊕x.1) ) @ #vk.6 ) )
                         case c_xor_case_1
-                        by step( contradiction /* forbidden AC constructor chain */ )
+                        by step( contradiction /* cyclic */ )
                       next
                         case c_xor_case_2
                         by step( contradiction /* forbidden AC constructor chain */ )
@@ -3098,7 +3098,7 @@ next
                       case c_xor_case_3
                       step( solve( !KU( (~r2.1⊕x.1) ) @ #vk.6 ) )
                         case c_xor_case_1
-                        by step( contradiction /* cyclic */ )
+                        by step( contradiction /* forbidden AC constructor chain */ )
                       next
                         case c_xor_case_2
                         by step( contradiction /* forbidden AC constructor chain */ )
@@ -3641,7 +3641,7 @@ next
                       case c_xor_case_1
                       step( solve( !KU( (~r2.1⊕x.1) ) @ #vk.6 ) )
                         case c_xor_case_1
-                        by step( contradiction /* forbidden AC constructor chain */ )
+                        by step( contradiction /* cyclic */ )
                       next
                         case c_xor_case_2
                         by step( contradiction /* forbidden AC constructor chain */ )
@@ -3695,7 +3695,7 @@ next
                       case c_xor_case_3
                       step( solve( !KU( (~r2.1⊕x.1) ) @ #vk.6 ) )
                         case c_xor_case_1
-                        by step( contradiction /* cyclic */ )
+                        by step( contradiction /* forbidden AC constructor chain */ )
                       next
                         case c_xor_case_2
                         by step( contradiction /* forbidden AC constructor chain */ )
@@ -4698,7 +4698,7 @@ next
                       case c_xor_case_1
                       step( solve( !KU( (~r2⊕x.1) ) @ #vk.4 ) )
                         case c_xor_case_1
-                        by step( contradiction /* forbidden AC constructor chain */ )
+                        by step( contradiction /* cyclic */ )
                       next
                         case c_xor_case_2
                         by step( contradiction /* forbidden AC constructor chain */ )
@@ -4752,7 +4752,7 @@ next
                       case c_xor_case_3
                       step( solve( !KU( (~r2⊕x.1) ) @ #vk.4 ) )
                         case c_xor_case_1
-                        by step( contradiction /* cyclic */ )
+                        by step( contradiction /* forbidden AC constructor chain */ )
                       next
                         case c_xor_case_2
                         by step( contradiction /* forbidden AC constructor chain */ )
@@ -5175,7 +5175,7 @@ next
                       case c_xor_case_1
                       step( solve( !KU( (~r2⊕x.1) ) @ #vk.4 ) )
                         case c_xor_case_1
-                        by step( contradiction /* forbidden AC constructor chain */ )
+                        by step( contradiction /* cyclic */ )
                       next
                         case c_xor_case_2
                         by step( contradiction /* forbidden AC constructor chain */ )
@@ -5229,7 +5229,7 @@ next
                       case c_xor_case_3
                       step( solve( !KU( (~r2⊕x.1) ) @ #vk.4 ) )
                         case c_xor_case_1
-                        by step( contradiction /* cyclic */ )
+                        by step( contradiction /* forbidden AC constructor chain */ )
                       next
                         case c_xor_case_2
                         by step( contradiction /* forbidden AC constructor chain */ )
@@ -5943,7 +5943,7 @@ next
                       case c_xor_case_1
                       step( solve( !KU( (~r2.1⊕x.1) ) @ #vk.6 ) )
                         case c_xor_case_1
-                        by step( contradiction /* forbidden AC constructor chain */ )
+                        by step( contradiction /* cyclic */ )
                       next
                         case c_xor_case_2
                         by step( contradiction /* forbidden AC constructor chain */ )
@@ -5997,7 +5997,7 @@ next
                       case c_xor_case_3
                       step( solve( !KU( (~r2.1⊕x.1) ) @ #vk.6 ) )
                         case c_xor_case_1
-                        by step( contradiction /* cyclic */ )
+                        by step( contradiction /* forbidden AC constructor chain */ )
                       next
                         case c_xor_case_2
                         by step( contradiction /* forbidden AC constructor chain */ )
@@ -6423,7 +6423,7 @@ next
                       case c_xor_case_1
                       step( solve( !KU( (~r2.1⊕x.1) ) @ #vk.6 ) )
                         case c_xor_case_1
-                        by step( contradiction /* forbidden AC constructor chain */ )
+                        by step( contradiction /* cyclic */ )
                       next
                         case c_xor_case_2
                         by step( contradiction /* forbidden AC constructor chain */ )
@@ -6477,7 +6477,7 @@ next
                       case c_xor_case_3
                       step( solve( !KU( (~r2.1⊕x.1) ) @ #vk.6 ) )
                         case c_xor_case_1
-                        by step( contradiction /* cyclic */ )
+                        by step( contradiction /* forbidden AC constructor chain */ )
                       next
                         case c_xor_case_2
                         by step( contradiction /* forbidden AC constructor chain */ )
@@ -6956,6 +6956,9 @@ next
         by step( solve( !KU( ~k ) @ #vk ) )
       next
         case split_case_2
+        MIRRORED
+      next
+        case split_case_3
         step( solve( !KU( zero ) @ #vk ) )
           case c_zero
           MIRRORED
@@ -6978,9 +6981,6 @@ next
             qed
           qed
         qed
-      next
-        case split_case_3
-        MIRRORED
       next
         case split_case_4
         step( solve( !KU( (~k⊕x) ) @ #vk ) )
@@ -7040,6 +7040,9 @@ next
         by step( solve( !KU( ~k ) @ #vk ) )
       next
         case split_case_2
+        MIRRORED
+      next
+        case split_case_3
         step( solve( !KU( zero ) @ #vk ) )
           case c_zero
           MIRRORED
@@ -7062,9 +7065,6 @@ next
             qed
           qed
         qed
-      next
-        case split_case_3
-        MIRRORED
       next
         case split_case_4
         step( solve( !KU( (~k⊕x) ) @ #vk ) )
@@ -7124,6 +7124,9 @@ next
         by step( solve( !KU( ~k ) @ #vk ) )
       next
         case split_case_2
+        MIRRORED
+      next
+        case split_case_3
         step( solve( !KU( zero ) @ #vk ) )
           case c_zero
           MIRRORED
@@ -7146,9 +7149,6 @@ next
             qed
           qed
         qed
-      next
-        case split_case_3
-        MIRRORED
       next
         case split_case_4
         step( solve( !KU( (~k⊕x) ) @ #vk ) )
@@ -7212,6 +7212,9 @@ next
         by step( solve( !KU( ~k ) @ #vk ) )
       next
         case split_case_2
+        MIRRORED
+      next
+        case split_case_3
         step( solve( !KU( zero ) @ #vk ) )
           case c_zero
           MIRRORED
@@ -7234,9 +7237,6 @@ next
             qed
           qed
         qed
-      next
-        case split_case_3
-        MIRRORED
       next
         case split_case_4
         step( solve( !KU( (~k⊕x) ) @ #vk ) )
@@ -7296,6 +7296,9 @@ next
         by step( solve( !KU( ~k ) @ #vk ) )
       next
         case split_case_2
+        MIRRORED
+      next
+        case split_case_3
         step( solve( !KU( zero ) @ #vk ) )
           case c_zero
           MIRRORED
@@ -7318,9 +7321,6 @@ next
             qed
           qed
         qed
-      next
-        case split_case_3
-        MIRRORED
       next
         case split_case_4
         step( solve( !KU( (~k⊕x) ) @ #vk ) )
@@ -7380,6 +7380,9 @@ next
         by step( solve( !KU( ~k ) @ #vk ) )
       next
         case split_case_2
+        MIRRORED
+      next
+        case split_case_3
         step( solve( !KU( zero ) @ #vk ) )
           case c_zero
           MIRRORED
@@ -7402,9 +7405,6 @@ next
             qed
           qed
         qed
-      next
-        case split_case_3
-        MIRRORED
       next
         case split_case_4
         step( solve( !KU( (~k⊕x) ) @ #vk ) )
@@ -7665,8 +7665,8 @@ Facts occur in the left-hand-side but not in any right-hand-side
 Generated from:
 Tamarin version 1.13.0
 Maude version 3.5.1
-Git revision: abcb0ff3eca770d7b7f58a583b2616eafe845e15, branch: fix-derivation-check-warnings
-Compiled at: 2026-07-22 11:02:46.6864 UTC
+Git revision: 41bc81379b23681e7057314a5cf66a25c45e1986, branch: canonicalise-subst
+Compiled at: 2026-07-27 16:11:34.947223 UTC
 */
 
 end
@@ -7678,7 +7678,7 @@ summary of summaries:
 analyzed: examples/csf18-xor/diff-models/CH07-UK1.spthy
 
   output:          examples/csf18-xor/diff-models/CH07-UK1.spthy.tmp
-  processing time: 5.79s
+  processing time: 5.78s
   
   WARNING: 1 wellformedness check failed!
            The analysis results might be wrong!

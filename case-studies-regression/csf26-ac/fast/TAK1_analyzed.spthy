@@ -924,13 +924,13 @@ solve( ((∃ #k spartner. (Origin( spartner, XC ) @ #k)) ∧
               case c_kdf
               solve( !KU( em('P', 'P')^(~ex*~ex.1*~ex.2) ) @ #vk.4 )
                 case Proto1_case_1
-                solve( !KU( ~ex ) @ #vk.12 )
+                solve( !KU( ~ex.1 ) @ #vk.12 )
                   case Reveal_ephk
-                  solve( !KU( ~ex.1 ) @ #vk.13 )
+                  solve( !KU( ~ex.2 ) @ #vk.13 )
                     case Reveal_ephk
                     solve( !KU( em('P', 'P')^(~ea*~x*~x.1) ) @ #vk.9 )
                       case Register_pk_case_1
-                      solve( !KU( ~ea ) @ #vk.15 )
+                      solve( !KU( ~x ) @ #vk.15 )
                         case Reveal_ltk
                         by contradiction /* from formulas */
                       qed
@@ -942,31 +942,31 @@ solve( ((∃ #k spartner. (Origin( spartner, XC ) @ #k)) ∧
                       qed
                     next
                       case Register_pk_case_3
-                      solve( !KU( ~x ) @ #vk.15 )
+                      solve( !KU( ~ea ) @ #vk.15 )
                         case Reveal_ltk
                         by contradiction /* from formulas */
                       qed
                     next
                       case Register_pk_case_4
-                      solve( !KU( ~ea ) @ #vk.14 )
+                      solve( !KU( ~x.1 ) @ #vk.14 )
                         case Reveal_ltk
                         by contradiction /* from formulas */
                       qed
                     next
                       case Register_pk_case_5
-                      solve( !KU( ~ea ) @ #vk.14 )
-                        case Reveal_ltk
-                        by contradiction /* from formulas */
-                      qed
-                    next
-                      case Register_pk_case_6
                       solve( !KU( ~x ) @ #vk.14 )
                         case Reveal_ltk
                         by contradiction /* from formulas */
                       qed
                     next
-                      case Register_pk_case_7
+                      case Register_pk_case_6
                       solve( !KU( ~x.1 ) @ #vk.14 )
+                        case Reveal_ltk
+                        by contradiction /* from formulas */
+                      qed
+                    next
+                      case Register_pk_case_7
+                      solve( !KU( ~ea ) @ #vk.14 )
                         case Reveal_ltk
                         by contradiction /* from formulas */
                       qed
@@ -978,7 +978,7 @@ solve( ((∃ #k spartner. (Origin( spartner, XC ) @ #k)) ∧
                       qed
                     next
                       case Register_pk_case_9
-                      solve( !KU( ~x.1 ) @ #vk.14 )
+                      solve( !KU( ~ea ) @ #vk.14 )
                         case Reveal_ltk
                         by contradiction /* from formulas */
                       qed
@@ -999,7 +999,7 @@ solve( ((∃ #k spartner. (Origin( spartner, XC ) @ #k)) ∧
                     case Reveal_ephk
                     solve( !KU( em('P', 'P')^(~ea*~x*~x.1) ) @ #vk.9 )
                       case Register_pk_case_1
-                      solve( !KU( ~ea ) @ #vk.15 )
+                      solve( !KU( ~x ) @ #vk.15 )
                         case Reveal_ltk
                         by contradiction /* from formulas */
                       qed
@@ -1011,31 +1011,31 @@ solve( ((∃ #k spartner. (Origin( spartner, XC ) @ #k)) ∧
                       qed
                     next
                       case Register_pk_case_3
-                      solve( !KU( ~x ) @ #vk.15 )
+                      solve( !KU( ~ea ) @ #vk.15 )
                         case Reveal_ltk
                         by contradiction /* from formulas */
                       qed
                     next
                       case Register_pk_case_4
-                      solve( !KU( ~ea ) @ #vk.14 )
+                      solve( !KU( ~x.1 ) @ #vk.14 )
                         case Reveal_ltk
                         by contradiction /* from formulas */
                       qed
                     next
                       case Register_pk_case_5
-                      solve( !KU( ~ea ) @ #vk.14 )
-                        case Reveal_ltk
-                        by contradiction /* from formulas */
-                      qed
-                    next
-                      case Register_pk_case_6
                       solve( !KU( ~x ) @ #vk.14 )
                         case Reveal_ltk
                         by contradiction /* from formulas */
                       qed
                     next
-                      case Register_pk_case_7
+                      case Register_pk_case_6
                       solve( !KU( ~x.1 ) @ #vk.14 )
+                        case Reveal_ltk
+                        by contradiction /* from formulas */
+                      qed
+                    next
+                      case Register_pk_case_7
+                      solve( !KU( ~ea ) @ #vk.14 )
                         case Reveal_ltk
                         by contradiction /* from formulas */
                       qed
@@ -1047,7 +1047,7 @@ solve( ((∃ #k spartner. (Origin( spartner, XC ) @ #k)) ∧
                       qed
                     next
                       case Register_pk_case_9
-                      solve( !KU( ~x.1 ) @ #vk.14 )
+                      solve( !KU( ~ea ) @ #vk.14 )
                         case Reveal_ltk
                         by contradiction /* from formulas */
                       qed
@@ -1062,13 +1062,13 @@ solve( ((∃ #k spartner. (Origin( spartner, XC ) @ #k)) ∧
                 qed
               next
                 case Proto1_case_3
-                solve( !KU( ~ex.1 ) @ #vk.12 )
+                solve( !KU( ~ex ) @ #vk.12 )
                   case Reveal_ephk
-                  solve( !KU( ~ex.2 ) @ #vk.13 )
+                  solve( !KU( ~ex.1 ) @ #vk.13 )
                     case Reveal_ephk
                     solve( !KU( em('P', 'P')^(~ea*~x*~x.1) ) @ #vk.9 )
                       case Register_pk_case_1
-                      solve( !KU( ~ea ) @ #vk.15 )
+                      solve( !KU( ~x ) @ #vk.15 )
                         case Reveal_ltk
                         by contradiction /* from formulas */
                       qed
@@ -1080,31 +1080,31 @@ solve( ((∃ #k spartner. (Origin( spartner, XC ) @ #k)) ∧
                       qed
                     next
                       case Register_pk_case_3
-                      solve( !KU( ~x ) @ #vk.15 )
+                      solve( !KU( ~ea ) @ #vk.15 )
                         case Reveal_ltk
                         by contradiction /* from formulas */
                       qed
                     next
                       case Register_pk_case_4
-                      solve( !KU( ~ea ) @ #vk.14 )
+                      solve( !KU( ~x.1 ) @ #vk.14 )
                         case Reveal_ltk
                         by contradiction /* from formulas */
                       qed
                     next
                       case Register_pk_case_5
-                      solve( !KU( ~ea ) @ #vk.14 )
-                        case Reveal_ltk
-                        by contradiction /* from formulas */
-                      qed
-                    next
-                      case Register_pk_case_6
                       solve( !KU( ~x ) @ #vk.14 )
                         case Reveal_ltk
                         by contradiction /* from formulas */
                       qed
                     next
-                      case Register_pk_case_7
+                      case Register_pk_case_6
                       solve( !KU( ~x.1 ) @ #vk.14 )
+                        case Reveal_ltk
+                        by contradiction /* from formulas */
+                      qed
+                    next
+                      case Register_pk_case_7
+                      solve( !KU( ~ea ) @ #vk.14 )
                         case Reveal_ltk
                         by contradiction /* from formulas */
                       qed
@@ -1116,7 +1116,7 @@ solve( ((∃ #k spartner. (Origin( spartner, XC ) @ #k)) ∧
                       qed
                     next
                       case Register_pk_case_9
-                      solve( !KU( ~x.1 ) @ #vk.14 )
+                      solve( !KU( ~ea ) @ #vk.14 )
                         case Reveal_ltk
                         by contradiction /* from formulas */
                       qed
@@ -1131,11 +1131,11 @@ solve( ((∃ #k spartner. (Origin( spartner, XC ) @ #k)) ∧
                 qed
               next
                 case Proto1_case_4
-                solve( !KU( ~ex ) @ #vk.10 )
+                solve( !KU( ~ex.2 ) @ #vk.10 )
                   case Reveal_ephk
                   solve( !KU( em('P', 'P')^(~ea*~x*~x.1) ) @ #vk.7 )
                     case Register_pk_case_1
-                    solve( !KU( ~ea ) @ #vk.13 )
+                    solve( !KU( ~x ) @ #vk.13 )
                       case Reveal_ltk
                       by contradiction /* from formulas */
                     qed
@@ -1147,31 +1147,31 @@ solve( ((∃ #k spartner. (Origin( spartner, XC ) @ #k)) ∧
                     qed
                   next
                     case Register_pk_case_3
-                    solve( !KU( ~x ) @ #vk.13 )
+                    solve( !KU( ~ea ) @ #vk.13 )
                       case Reveal_ltk
                       by contradiction /* from formulas */
                     qed
                   next
                     case Register_pk_case_4
-                    solve( !KU( ~ea ) @ #vk.11 )
+                    solve( !KU( ~x.1 ) @ #vk.11 )
                       case Reveal_ltk
                       by contradiction /* from formulas */
                     qed
                   next
                     case Register_pk_case_5
-                    solve( !KU( ~ea ) @ #vk.11 )
-                      case Reveal_ltk
-                      by contradiction /* from formulas */
-                    qed
-                  next
-                    case Register_pk_case_6
                     solve( !KU( ~x ) @ #vk.11 )
                       case Reveal_ltk
                       by contradiction /* from formulas */
                     qed
                   next
-                    case Register_pk_case_7
+                    case Register_pk_case_6
                     solve( !KU( ~x.1 ) @ #vk.11 )
+                      case Reveal_ltk
+                      by contradiction /* from formulas */
+                    qed
+                  next
+                    case Register_pk_case_7
+                    solve( !KU( ~ea ) @ #vk.11 )
                       case Reveal_ltk
                       by contradiction /* from formulas */
                     qed
@@ -1183,7 +1183,7 @@ solve( ((∃ #k spartner. (Origin( spartner, XC ) @ #k)) ∧
                     qed
                   next
                     case Register_pk_case_9
-                    solve( !KU( ~x.1 ) @ #vk.11 )
+                    solve( !KU( ~ea ) @ #vk.11 )
                       case Reveal_ltk
                       by contradiction /* from formulas */
                     qed
@@ -1197,11 +1197,11 @@ solve( ((∃ #k spartner. (Origin( spartner, XC ) @ #k)) ∧
                 qed
               next
                 case Proto1_case_5
-                solve( !KU( ~ex ) @ #vk.10 )
+                solve( !KU( ~ex.1 ) @ #vk.10 )
                   case Reveal_ephk
                   solve( !KU( em('P', 'P')^(~ea*~x*~x.1) ) @ #vk.7 )
                     case Register_pk_case_1
-                    solve( !KU( ~ea ) @ #vk.13 )
+                    solve( !KU( ~x ) @ #vk.13 )
                       case Reveal_ltk
                       by contradiction /* from formulas */
                     qed
@@ -1213,31 +1213,31 @@ solve( ((∃ #k spartner. (Origin( spartner, XC ) @ #k)) ∧
                     qed
                   next
                     case Register_pk_case_3
-                    solve( !KU( ~x ) @ #vk.13 )
+                    solve( !KU( ~ea ) @ #vk.13 )
                       case Reveal_ltk
                       by contradiction /* from formulas */
                     qed
                   next
                     case Register_pk_case_4
-                    solve( !KU( ~ea ) @ #vk.11 )
+                    solve( !KU( ~x.1 ) @ #vk.11 )
                       case Reveal_ltk
                       by contradiction /* from formulas */
                     qed
                   next
                     case Register_pk_case_5
-                    solve( !KU( ~ea ) @ #vk.11 )
-                      case Reveal_ltk
-                      by contradiction /* from formulas */
-                    qed
-                  next
-                    case Register_pk_case_6
                     solve( !KU( ~x ) @ #vk.11 )
                       case Reveal_ltk
                       by contradiction /* from formulas */
                     qed
                   next
-                    case Register_pk_case_7
+                    case Register_pk_case_6
                     solve( !KU( ~x.1 ) @ #vk.11 )
+                      case Reveal_ltk
+                      by contradiction /* from formulas */
+                    qed
+                  next
+                    case Register_pk_case_7
+                    solve( !KU( ~ea ) @ #vk.11 )
                       case Reveal_ltk
                       by contradiction /* from formulas */
                     qed
@@ -1249,7 +1249,7 @@ solve( ((∃ #k spartner. (Origin( spartner, XC ) @ #k)) ∧
                     qed
                   next
                     case Register_pk_case_9
-                    solve( !KU( ~x.1 ) @ #vk.11 )
+                    solve( !KU( ~ea ) @ #vk.11 )
                       case Reveal_ltk
                       by contradiction /* from formulas */
                     qed
@@ -1263,11 +1263,11 @@ solve( ((∃ #k spartner. (Origin( spartner, XC ) @ #k)) ∧
                 qed
               next
                 case Proto1_case_6
-                solve( !KU( ~ex.1 ) @ #vk.10 )
+                solve( !KU( ~ex.2 ) @ #vk.10 )
                   case Reveal_ephk
                   solve( !KU( em('P', 'P')^(~ea*~x*~x.1) ) @ #vk.7 )
                     case Register_pk_case_1
-                    solve( !KU( ~ea ) @ #vk.13 )
+                    solve( !KU( ~x ) @ #vk.13 )
                       case Reveal_ltk
                       by contradiction /* from formulas */
                     qed
@@ -1279,31 +1279,31 @@ solve( ((∃ #k spartner. (Origin( spartner, XC ) @ #k)) ∧
                     qed
                   next
                     case Register_pk_case_3
-                    solve( !KU( ~x ) @ #vk.13 )
+                    solve( !KU( ~ea ) @ #vk.13 )
                       case Reveal_ltk
                       by contradiction /* from formulas */
                     qed
                   next
                     case Register_pk_case_4
-                    solve( !KU( ~ea ) @ #vk.11 )
+                    solve( !KU( ~x.1 ) @ #vk.11 )
                       case Reveal_ltk
                       by contradiction /* from formulas */
                     qed
                   next
                     case Register_pk_case_5
-                    solve( !KU( ~ea ) @ #vk.11 )
-                      case Reveal_ltk
-                      by contradiction /* from formulas */
-                    qed
-                  next
-                    case Register_pk_case_6
                     solve( !KU( ~x ) @ #vk.11 )
                       case Reveal_ltk
                       by contradiction /* from formulas */
                     qed
                   next
-                    case Register_pk_case_7
+                    case Register_pk_case_6
                     solve( !KU( ~x.1 ) @ #vk.11 )
+                      case Reveal_ltk
+                      by contradiction /* from formulas */
+                    qed
+                  next
+                    case Register_pk_case_7
+                    solve( !KU( ~ea ) @ #vk.11 )
                       case Reveal_ltk
                       by contradiction /* from formulas */
                     qed
@@ -1315,7 +1315,7 @@ solve( ((∃ #k spartner. (Origin( spartner, XC ) @ #k)) ∧
                     qed
                   next
                     case Register_pk_case_9
-                    solve( !KU( ~x.1 ) @ #vk.11 )
+                    solve( !KU( ~ea ) @ #vk.11 )
                       case Reveal_ltk
                       by contradiction /* from formulas */
                     qed
@@ -1329,11 +1329,11 @@ solve( ((∃ #k spartner. (Origin( spartner, XC ) @ #k)) ∧
                 qed
               next
                 case Proto1_case_7
-                solve( !KU( ~ex.2 ) @ #vk.10 )
+                solve( !KU( ~ex ) @ #vk.10 )
                   case Reveal_ephk
                   solve( !KU( em('P', 'P')^(~ea*~x*~x.1) ) @ #vk.7 )
                     case Register_pk_case_1
-                    solve( !KU( ~ea ) @ #vk.13 )
+                    solve( !KU( ~x ) @ #vk.13 )
                       case Reveal_ltk
                       by contradiction /* from formulas */
                     qed
@@ -1345,31 +1345,31 @@ solve( ((∃ #k spartner. (Origin( spartner, XC ) @ #k)) ∧
                     qed
                   next
                     case Register_pk_case_3
-                    solve( !KU( ~x ) @ #vk.13 )
+                    solve( !KU( ~ea ) @ #vk.13 )
                       case Reveal_ltk
                       by contradiction /* from formulas */
                     qed
                   next
                     case Register_pk_case_4
-                    solve( !KU( ~ea ) @ #vk.11 )
+                    solve( !KU( ~x.1 ) @ #vk.11 )
                       case Reveal_ltk
                       by contradiction /* from formulas */
                     qed
                   next
                     case Register_pk_case_5
-                    solve( !KU( ~ea ) @ #vk.11 )
-                      case Reveal_ltk
-                      by contradiction /* from formulas */
-                    qed
-                  next
-                    case Register_pk_case_6
                     solve( !KU( ~x ) @ #vk.11 )
                       case Reveal_ltk
                       by contradiction /* from formulas */
                     qed
                   next
-                    case Register_pk_case_7
+                    case Register_pk_case_6
                     solve( !KU( ~x.1 ) @ #vk.11 )
+                      case Reveal_ltk
+                      by contradiction /* from formulas */
+                    qed
+                  next
+                    case Register_pk_case_7
+                    solve( !KU( ~ea ) @ #vk.11 )
                       case Reveal_ltk
                       by contradiction /* from formulas */
                     qed
@@ -1381,7 +1381,7 @@ solve( ((∃ #k spartner. (Origin( spartner, XC ) @ #k)) ∧
                     qed
                   next
                     case Register_pk_case_9
-                    solve( !KU( ~x.1 ) @ #vk.11 )
+                    solve( !KU( ~ea ) @ #vk.11 )
                       case Reveal_ltk
                       by contradiction /* from formulas */
                     qed
@@ -1399,7 +1399,7 @@ solve( ((∃ #k spartner. (Origin( spartner, XC ) @ #k)) ∧
                   case Reveal_ephk
                   solve( !KU( em('P', 'P')^(~ea*~x*~x.1) ) @ #vk.7 )
                     case Register_pk_case_1
-                    solve( !KU( ~ea ) @ #vk.13 )
+                    solve( !KU( ~x ) @ #vk.13 )
                       case Reveal_ltk
                       by contradiction /* from formulas */
                     qed
@@ -1411,31 +1411,31 @@ solve( ((∃ #k spartner. (Origin( spartner, XC ) @ #k)) ∧
                     qed
                   next
                     case Register_pk_case_3
-                    solve( !KU( ~x ) @ #vk.13 )
+                    solve( !KU( ~ea ) @ #vk.13 )
                       case Reveal_ltk
                       by contradiction /* from formulas */
                     qed
                   next
                     case Register_pk_case_4
-                    solve( !KU( ~ea ) @ #vk.11 )
+                    solve( !KU( ~x.1 ) @ #vk.11 )
                       case Reveal_ltk
                       by contradiction /* from formulas */
                     qed
                   next
                     case Register_pk_case_5
-                    solve( !KU( ~ea ) @ #vk.11 )
-                      case Reveal_ltk
-                      by contradiction /* from formulas */
-                    qed
-                  next
-                    case Register_pk_case_6
                     solve( !KU( ~x ) @ #vk.11 )
                       case Reveal_ltk
                       by contradiction /* from formulas */
                     qed
                   next
-                    case Register_pk_case_7
+                    case Register_pk_case_6
                     solve( !KU( ~x.1 ) @ #vk.11 )
+                      case Reveal_ltk
+                      by contradiction /* from formulas */
+                    qed
+                  next
+                    case Register_pk_case_7
+                    solve( !KU( ~ea ) @ #vk.11 )
                       case Reveal_ltk
                       by contradiction /* from formulas */
                     qed
@@ -1447,7 +1447,7 @@ solve( ((∃ #k spartner. (Origin( spartner, XC ) @ #k)) ∧
                     qed
                   next
                     case Register_pk_case_9
-                    solve( !KU( ~x.1 ) @ #vk.11 )
+                    solve( !KU( ~ea ) @ #vk.11 )
                       case Reveal_ltk
                       by contradiction /* from formulas */
                     qed
@@ -1461,11 +1461,11 @@ solve( ((∃ #k spartner. (Origin( spartner, XC ) @ #k)) ∧
                 qed
               next
                 case Proto1_case_9
-                solve( !KU( ~ex.2 ) @ #vk.10 )
+                solve( !KU( ~ex ) @ #vk.10 )
                   case Reveal_ephk
                   solve( !KU( em('P', 'P')^(~ea*~x*~x.1) ) @ #vk.7 )
                     case Register_pk_case_1
-                    solve( !KU( ~ea ) @ #vk.13 )
+                    solve( !KU( ~x ) @ #vk.13 )
                       case Reveal_ltk
                       by contradiction /* from formulas */
                     qed
@@ -1477,31 +1477,31 @@ solve( ((∃ #k spartner. (Origin( spartner, XC ) @ #k)) ∧
                     qed
                   next
                     case Register_pk_case_3
-                    solve( !KU( ~x ) @ #vk.13 )
+                    solve( !KU( ~ea ) @ #vk.13 )
                       case Reveal_ltk
                       by contradiction /* from formulas */
                     qed
                   next
                     case Register_pk_case_4
-                    solve( !KU( ~ea ) @ #vk.11 )
+                    solve( !KU( ~x.1 ) @ #vk.11 )
                       case Reveal_ltk
                       by contradiction /* from formulas */
                     qed
                   next
                     case Register_pk_case_5
-                    solve( !KU( ~ea ) @ #vk.11 )
-                      case Reveal_ltk
-                      by contradiction /* from formulas */
-                    qed
-                  next
-                    case Register_pk_case_6
                     solve( !KU( ~x ) @ #vk.11 )
                       case Reveal_ltk
                       by contradiction /* from formulas */
                     qed
                   next
-                    case Register_pk_case_7
+                    case Register_pk_case_6
                     solve( !KU( ~x.1 ) @ #vk.11 )
+                      case Reveal_ltk
+                      by contradiction /* from formulas */
+                    qed
+                  next
+                    case Register_pk_case_7
+                    solve( !KU( ~ea ) @ #vk.11 )
                       case Reveal_ltk
                       by contradiction /* from formulas */
                     qed
@@ -1513,7 +1513,7 @@ solve( ((∃ #k spartner. (Origin( spartner, XC ) @ #k)) ∧
                     qed
                   next
                     case Register_pk_case_9
-                    solve( !KU( ~x.1 ) @ #vk.11 )
+                    solve( !KU( ~ea ) @ #vk.11 )
                       case Reveal_ltk
                       by contradiction /* from formulas */
                     qed
@@ -1535,7 +1535,7 @@ solve( ((∃ #k spartner. (Origin( spartner, XC ) @ #k)) ∧
                       case Reveal_ephk
                       solve( !KU( em('P', 'P')^(~ea*~x*~x.1) ) @ #vk.10 )
                         case Register_pk_case_1
-                        solve( !KU( ~ea ) @ #vk.17 )
+                        solve( !KU( ~x ) @ #vk.17 )
                           case Reveal_ltk
                           by contradiction /* from formulas */
                         qed
@@ -1547,31 +1547,31 @@ solve( ((∃ #k spartner. (Origin( spartner, XC ) @ #k)) ∧
                         qed
                       next
                         case Register_pk_case_3
-                        solve( !KU( ~x ) @ #vk.17 )
+                        solve( !KU( ~ea ) @ #vk.17 )
                           case Reveal_ltk
                           by contradiction /* from formulas */
                         qed
                       next
                         case Register_pk_case_4
-                        solve( !KU( ~ea ) @ #vk.15 )
+                        solve( !KU( ~x.1 ) @ #vk.15 )
                           case Reveal_ltk
                           by contradiction /* from formulas */
                         qed
                       next
                         case Register_pk_case_5
-                        solve( !KU( ~ea ) @ #vk.15 )
-                          case Reveal_ltk
-                          by contradiction /* from formulas */
-                        qed
-                      next
-                        case Register_pk_case_6
                         solve( !KU( ~x ) @ #vk.15 )
                           case Reveal_ltk
                           by contradiction /* from formulas */
                         qed
                       next
-                        case Register_pk_case_7
+                        case Register_pk_case_6
                         solve( !KU( ~x.1 ) @ #vk.15 )
+                          case Reveal_ltk
+                          by contradiction /* from formulas */
+                        qed
+                      next
+                        case Register_pk_case_7
+                        solve( !KU( ~ea ) @ #vk.15 )
                           case Reveal_ltk
                           by contradiction /* from formulas */
                         qed
@@ -1583,7 +1583,7 @@ solve( ((∃ #k spartner. (Origin( spartner, XC ) @ #k)) ∧
                         qed
                       next
                         case Register_pk_case_9
-                        solve( !KU( ~x.1 ) @ #vk.15 )
+                        solve( !KU( ~ea ) @ #vk.15 )
                           case Reveal_ltk
                           by contradiction /* from formulas */
                         qed
@@ -2056,7 +2056,7 @@ solve( ((∃ #k spartner. (Origin( spartner, XC ) @ #k)) ∧
               case c_kdf
               solve( !KU( em('P', 'P')^(~ex*~ex.1*~ex.2) ) @ #vk.4 )
                 case Proto1_case_1
-                solve( !KU( ~ex ) @ #vk.12 )
+                solve( !KU( ~ex.1 ) @ #vk.12 )
                   case Reveal_ephk
                   by contradiction /* from formulas */
                 qed
@@ -2068,31 +2068,31 @@ solve( ((∃ #k spartner. (Origin( spartner, XC ) @ #k)) ∧
                 qed
               next
                 case Proto1_case_3
-                solve( !KU( ~ex.1 ) @ #vk.12 )
+                solve( !KU( ~ex ) @ #vk.12 )
                   case Reveal_ephk
                   by contradiction /* from formulas */
                 qed
               next
                 case Proto1_case_4
-                solve( !KU( ~ex ) @ #vk.10 )
+                solve( !KU( ~ex.2 ) @ #vk.10 )
                   case Reveal_ephk
                   by contradiction /* from formulas */
                 qed
               next
                 case Proto1_case_5
-                solve( !KU( ~ex ) @ #vk.10 )
-                  case Reveal_ephk
-                  by contradiction /* from formulas */
-                qed
-              next
-                case Proto1_case_6
                 solve( !KU( ~ex.1 ) @ #vk.10 )
                   case Reveal_ephk
                   by contradiction /* from formulas */
                 qed
               next
-                case Proto1_case_7
+                case Proto1_case_6
                 solve( !KU( ~ex.2 ) @ #vk.10 )
+                  case Reveal_ephk
+                  by contradiction /* from formulas */
+                qed
+              next
+                case Proto1_case_7
+                solve( !KU( ~ex ) @ #vk.10 )
                   case Reveal_ephk
                   by contradiction /* from formulas */
                 qed
@@ -2104,7 +2104,7 @@ solve( ((∃ #k spartner. (Origin( spartner, XC ) @ #k)) ∧
                 qed
               next
                 case Proto1_case_9
-                solve( !KU( ~ex.2 ) @ #vk.10 )
+                solve( !KU( ~ex ) @ #vk.10 )
                   case Reveal_ephk
                   by contradiction /* from formulas */
                 qed
@@ -2569,7 +2569,7 @@ next
             case c_kdf
             solve( !KU( em('P', 'P')^(~ea*~x*~x.1) ) @ #vk.6 )
               case Register_pk_case_1
-              solve( !KU( ~ea ) @ #vk.12 )
+              solve( !KU( ~x ) @ #vk.12 )
                 case Reveal_ltk
                 by contradiction /* from formulas */
               qed
@@ -2581,31 +2581,31 @@ next
               qed
             next
               case Register_pk_case_3
-              solve( !KU( ~x ) @ #vk.12 )
+              solve( !KU( ~ea ) @ #vk.12 )
                 case Reveal_ltk
                 by contradiction /* from formulas */
               qed
             next
               case Register_pk_case_4
-              solve( !KU( ~ea ) @ #vk.10 )
+              solve( !KU( ~x.1 ) @ #vk.10 )
                 case Reveal_ltk
                 by contradiction /* from formulas */
               qed
             next
               case Register_pk_case_5
-              solve( !KU( ~ea ) @ #vk.10 )
-                case Reveal_ltk
-                by contradiction /* from formulas */
-              qed
-            next
-              case Register_pk_case_6
               solve( !KU( ~x ) @ #vk.10 )
                 case Reveal_ltk
                 by contradiction /* from formulas */
               qed
             next
-              case Register_pk_case_7
+              case Register_pk_case_6
               solve( !KU( ~x.1 ) @ #vk.10 )
+                case Reveal_ltk
+                by contradiction /* from formulas */
+              qed
+            next
+              case Register_pk_case_7
+              solve( !KU( ~ea ) @ #vk.10 )
                 case Reveal_ltk
                 by contradiction /* from formulas */
               qed
@@ -2617,7 +2617,7 @@ next
               qed
             next
               case Register_pk_case_9
-              solve( !KU( ~x.1 ) @ #vk.10 )
+              solve( !KU( ~ea ) @ #vk.10 )
                 case Reveal_ltk
                 by contradiction /* from formulas */
               qed
@@ -2641,8 +2641,8 @@ qed
 Generated from:
 Tamarin version 1.13.0
 Maude version 3.5.1
-Git revision: abcb0ff3eca770d7b7f58a583b2616eafe845e15, branch: fix-derivation-check-warnings
-Compiled at: 2026-07-22 11:02:46.6864 UTC
+Git revision: 41bc81379b23681e7057314a5cf66a25c45e1986, branch: canonicalise-subst
+Compiled at: 2026-07-27 16:11:34.947223 UTC
 */
 
 end
@@ -2654,7 +2654,7 @@ summary of summaries:
 analyzed: examples/csf26-ac/fast/TAK1.spthy
 
   output:          examples/csf26-ac/fast/TAK1.spthy.tmp
-  processing time: 11.12s
+  processing time: 11.22s
   
   session_key_establish (exists-trace): verified (17 steps)
   Session_Key_Secrecy (all-traces): verified (718 steps)
