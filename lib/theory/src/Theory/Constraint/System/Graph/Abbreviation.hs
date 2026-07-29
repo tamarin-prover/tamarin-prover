@@ -197,11 +197,11 @@ computeAbbreviations repr options = makeRecursive $ M.toList $ go allTermOccs M.
     -- | Collect all terms in a single graph node. 
     -- At the moment terms only appear in SystemNodes and UnsolvedActionNodes.
     getNodeTerms :: Node -> [LNTerm]
-    getNodeTerms (Node _ (SystemNode ru)) =
+    getNodeTerms (Node _ (SystemNode ru) _) =
       concatMap getFactTerms (get rPrems ru)
       ++ concatMap getFactTerms (get rActs ru)
       ++ concatMap getFactTerms (get rConcs ru) 
-    getNodeTerms (Node _ (UnsolvedActionNode facts)) = concatMap getFactTerms facts
+    getNodeTerms (Node _ (UnsolvedActionNode facts) _) = concatMap getFactTerms facts
     getNodeTerms _ = []
 
     -- | Collect all terms of a LNFact.

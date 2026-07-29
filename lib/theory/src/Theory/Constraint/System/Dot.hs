@@ -257,9 +257,12 @@ dotNodeCompact node manualNodeColor = do
 
       let color = M.lookup rInfoVal colorMap
           nodeColor = fromMaybe (maybe "white" rgbToHex color) (ruleColor' <|> manualNodeColor)
-          attrs = [("fillcolor", nodeColor), ("style", "filled")
-                  , ("fontcolor", if colorUsesWhiteFont color then "white" else "black")
-                  , ("role", role)]
+          baseAttrs = [("fillcolor", nodeColor), ("style", "filled")
+                      , ("fontcolor", if colorUsesWhiteFont color then "white" else "black")
+                      , ("role", role)]
+          attrs = if get nIsCollapsed node
+                  then ("peripheries", "2") : baseAttrs
+                  else baseAttrs
 
       ids <- mkNode v ru attrs outgoingEdge dotOptions
       let prems = [ ((v, i), nid) | (Just (Left i),  nid) <- ids ]
@@ -268,12 +271,32 @@ dotNodeCompact node manualNodeColor = do
       modM dsConcs $ M.union $ M.fromList concs
       return $ fromJust $ lookup Nothing ids
     UnsolvedActionNode facts -> cacheState dsNodes v $ do
-      lblPre <- (fsep <$> punctuate comma <$> mapM renderLNFact facts)
-      let lbl = lblPre <-> opAction <-> text (show v)
-      let attrs | any isKUFact facts = [("color","gray")]
-                | otherwise          = [("color","darkblue")]
+      let isCollapsed = get nIsCollapsed node
+      lbl <- if isCollapsed
+             then do
+               -- For collapsed nodes, display as "#v : K ( t )" where t is the term from KU facts
+               let kuFacts = filter isKUFact facts
+                   terms = concatMap factTerms kuFacts
+               case terms of
+                 [t] -> do
+                   renderedTerm <- renderLNFact (Fact KUFact S.empty [t])
+                   return $ text (show v) <-> text ":" <-> text "K" <-> text "(" <-> renderedTerm <-> text ")"
+                 _ -> do
+                   -- Fallback for multiple or no terms
+                   lblPre <- (fsep <$> punctuate comma <$> mapM renderLNFact facts)
+                   return $ lblPre <-> opAction <-> text (show v)
+             else do
+               lblPre <- (fsep <$> punctuate comma <$> mapM renderLNFact facts)
+               return $ lblPre <-> opAction <-> text (show v)
+      let baseAttrs | any isKUFact facts = [("color","gray")]
+                    | otherwise          = [("color","darkblue")]
+          attrs = if isCollapsed
+                  then ("peripheries", "2") : baseAttrs
+                  else baseAttrs
       mkSimpleNode (render lbl) attrs
-    LastActionAtom -> cacheState dsNodes v $ mkSimpleNode (show v) []
+    LastActionAtom -> cacheState dsNodes v $ 
+      let attrs = if get nIsCollapsed node then [("peripheries", "2")] else []
+      in mkSimpleNode (show v) attrs
     MissingNode (Left conc) -> cacheState dsConcs (v, conc) $ dotConcC (v, conc)
     MissingNode (Right prem) -> cacheState dsPrems (v, prem) $ dotPremC (v, prem)
   where
@@ -301,9 +324,17 @@ dotNodeCompact node manualNodeColor = do
             ps <- psM
             as <- asM
             cs <- csM
-            let lbl | outgoingEdge = show v ++ " : " ++ showDotRuleCaseName ru
-                    | otherwise       = concatMap snd as
-            nid <- mkSimpleNode lbl []
+            let isCollapsed = get nIsCollapsed node
+                lbl | isCollapsed && isISendRule ru = 
+                        -- For collapsed isend nodes, show "K ( term )" format
+                        let kuTerms = concatMap (factTerms . snd) (enumConcs ru)
+                        in case kuTerms of
+                             [t] -> show v ++ " : K ( " ++ render (prettyLNTerm t) ++ " )"
+                             _   -> show v ++ " : " ++ showDotRuleCaseName ru
+                    | outgoingEdge = show v ++ " : " ++ showDotRuleCaseName ru
+                    | otherwise    = concatMap snd as
+                simpleAttrs = if isCollapsed then [("peripheries", "2")] else []
+            nid <- mkSimpleNode lbl simpleAttrs
             return [ (key, nid) | (key, _) <- ps ++ as ++ cs ]
       -- full record syntax
       | otherwise = do

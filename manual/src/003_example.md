@@ -428,7 +428,10 @@ does not use an `LtkReveal( S )`. This is visualized in the graph as
 follows. The only way of getting a `SessKeyC( S, k )` action is using an
 instance of the `Client_2` rule on the left, and the `K( k )` rule is
 symbolized on the right using a round box (adversary reasoning is always
-visualized using round boxes).  Just below the graph, the formula
+visualized using round boxes). Note that at higher graph simplification levels
+(particularly level 3), adversary derivation clusters may be collapsed and
+represented by nodes with **double outlines**, showing only the final derived
+knowledge rather than all intermediate intruder deduction steps. Just below the graph, the formula
 
     formulas: ∀ #r. (LtkReveal( S ) @ #r) ⇒ ⊥
 
@@ -438,11 +441,21 @@ We can either inspect the graph in the main window, or we can open the graph in
 another window by clicking the `Open the Graph in New Tab` link or the `Popout`
 button under certain graphs. The links under graphs in the resources tab (Raw
 Resources or Refined Resources) or of the subcases under the main proof steps
-will open the same graph in a new tab. The buttons under the main proof graph
-will open the same graph in a new window with dynamic rendering enabled; i.e.,
-when we navigate through the proof steps (either by clicking at a certain proof
-step or using the `j` or `k` keys), the graph in the new window will change
-accordingly. This is especially useful when working with large proof graphs.
+will open the same graph in a new tab. 
+
+#### Viewing graphs in a separate window
+The buttons under the main proof graph will open the same graph in a new window
+with dynamic rendering enabled; i.e., when we navigate through the proof steps
+(either by clicking at a certain proof step or using the `j` or `k` keys), the
+graph in the new window will change accordingly. This is especially useful when
+working with large proof graphs.
+
+#### Selecting a graph view simplification level
+The visualization of constraint systems can be adjusted using the graph
+simplification dropdown menu on the right-hand side of the menu bar, which
+offers four different simplification levels to make complex graphs more
+readable. For more information, see the [Advanced Features
+section](011_advanced-features.html#graph-simplification-levels).
 
 The proof graph is zoomable using the mouse wheel; if the font size of the node
 contents becomes too small while zooming out, Tamarin will automatically

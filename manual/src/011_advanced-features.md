@@ -914,3 +914,46 @@ of the dot command line program.
 For JSON, the standard schema already defines a single top-level object with a
 "graphs" key that holds a list of the individual graphs, which we use to output
 the constrain systems.
+
+### Graph Simplification Levels
+
+When visualizing constraint systems in both the interactive GUI and when
+generating dot output with `--output-dot`, Tamarin applies graph simplification
+to make large constraint graphs more readable. 
+
+There are four simplification levels:
+
+ - **Level 0**: No simplification. Shows the complete constraint graph
+   with all edges and nodes in full detail. This is useful for detailed analysis
+   but can be overwhelming for large constraint systems.
+
+ - **Level 1**: Basic compression. Hides simple intruder deduction rules,
+   including the built-in Fr rule.
+
+ - **Level 2 (default)**: In addition to the level 1 simplifications, also applies
+   transitive reduction to the less-than ordering constraints (`sLessAtoms`) but
+   preserves edges that are marked as having `Formula` or `Adversary` reasons.
+   This significantly reduces visual clutter while retaining proof-relevant
+   orderings.
+
+ - **Level 3**: In addition to the level 2 simplifications, this view collapses
+   adversary derivation clusters by hiding internal intruder deduction steps and
+   showing only the sink nodes that represent the derived knowledge. Such
+   collapsed adversary clusters are visualized as nodes with *double outlines*
+   to distinguish them from regular nodes. 
+
+#### Setting the Simplification Level in the GUI
+
+In the interactive mode, you can change the simplification level using the
+dropdown menu in the top-right of the page.
+
+#### Setting the Simplification Level for dot output on the command-line
+
+On the command-line, when using the `--output-dot` option, you can control the
+simplification level using `--graph-simplification`. For example:
+
+    tamarin-prover --prove --output-dot=traces.dot --graph-simplification=3 my.spthy
+
+The flag accepts values from 0 to 3. Similar to the GUI mode, the default is
+level 2. The used simplification level is encoded in the output dot graph
+labels, e.g., a graph whose label contains `SL3` indicates simplication level 3.
