@@ -146,7 +146,24 @@ data JSONGraphs = JSONGraphs
     } deriving (Show)
 
 -- | Derive ToJSON and FromJSON. 
-concat <$> mapM (deriveJSON defaultOptions) [''JSONGraphNodeFact, ''JSONGraphNodeMetadata, ''JSONGraphEdge, ''JSONGraphCluster, ''JSONGraphAbbrev, ''JSONGraph, ''JSONGraphs]
+concat <$> mapM (deriveJSON defaultOptions) [''JSONGraphNodeFact, ''JSONGraphNodeMetadata, ''JSONGraphCluster, ''JSONGraphAbbrev, ''JSONGraph, ''JSONGraphs]
+
+-- Older JSON graph exports omit the presentation-only edge color. The frontend
+-- already treats an empty color as the default black, so accept that format too.
+instance FromJSON JSONGraphEdge where
+  parseJSON = withObject "JSONGraphEdge" $ \o -> JSONGraphEdge
+      <$> o .: "jgeSource"
+      <*> o .: "jgeRelation"
+      <*> o .: "jgeTarget"
+      <*> o .:? "jgeColor" .!= ""
+
+instance ToJSON JSONGraphEdge where
+  toJSON (JSONGraphEdge source relation target color) = object
+      [ "jgeSource" .= source
+      , "jgeRelation" .= relation
+      , "jgeTarget" .= target
+      , "jgeColor" .= color
+      ]
 
 -- | Optional fields are not handled correctly with automatically derived instances
 -- hence, we have our own here.
