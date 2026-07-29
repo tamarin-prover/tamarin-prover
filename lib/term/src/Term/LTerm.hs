@@ -126,6 +126,7 @@ import           Control.Basics
 import           Control.DeepSeq
 import           Control.Monad.Bind
 import           Control.Monad.Identity
+import qualified Control.Monad.State.Strict       as St
 import qualified Control.Monad.Trans.PreciseFresh as Precise
 
 import           GHC.Generics                     (Generic)
@@ -716,8 +717,20 @@ avoidPrecise = avoidPreciseVars . frees
 --   fresh state, the same result is returned for two terms that only differ
 --   in the indices of variables.
 {-# INLINABLE renamePrecise #-}
-renamePrecise :: (MonadFresh m, HasFrees a) => a -> m a
-renamePrecise x = evalBindT (someInst x) noBindings
+renamePrecise :: HasFrees a => a -> a
+renamePrecise t = St.evalState (mapFrees (Arbitrary renameVar) t) (M.empty, M.empty)
+  where
+    renameVar :: LVar -> St.State (M.Map LVar LVar, M.Map String Integer) LVar
+    renameVar v = do
+        (renaming, nextIdx) <- St.get
+        case M.lookup v renaming of
+          Just v' -> return v'                  -- seen before: reuse the same var
+          Nothing -> do                         -- first occurrence: take its next index
+            let name = lvarName v
+                idx  = M.findWithDefault 0 name nextIdx
+                v'   = LVar name (lvarSort v) idx
+            St.put (M.insert v v' renaming, M'.insert name (idx + 1) nextIdx)
+            return v'
 
 
 renameDropNamehint :: (MonadFresh m, MonadBind LVar LVar m, HasFrees a) => a -> m a

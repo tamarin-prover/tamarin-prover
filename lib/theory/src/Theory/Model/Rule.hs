@@ -1140,9 +1140,18 @@ unifyRuleACInstEqs eqs
         zipWith Equal (L.get rConcs ru1) (L.get rConcs ru2)
 
 -- | Are these two rule instances unifiable?
+--
+-- Fast path: structurally equal rule instances are trivially unifiable, so
+-- there is no need to ship a reflexive @t =? t@ query to Maude.  Only the
+-- boolean is observed (the unifiers are discarded by @not . null@), so this
+-- cannot change any downstream substitution.  This is the dominant Maude
+-- cost on AC-heavy theories: 'nonUnifiableNodes' (contradiction detection and
+-- N6/fresh-ordering) re-checks the same node pair on essentially every solver
+-- step, and those pairs are very frequently identical.
 unifiableRuleACInsts :: RuleACInst -> RuleACInst -> WithMaude Bool
-unifiableRuleACInsts ru1 ru2 =
-    not . null <$> unifyRuleACInstEqs [Equal ru1 ru2]
+unifiableRuleACInsts ru1 ru2
+  | ru1 == ru2 = return True
+  | otherwise  = (not . null) <$> unifyRuleACInstEqs [Equal ru1 ru2]
 
 -- | Are these two rule instances equal up to renaming of variables, and ignoring their names ?
 equalRuleUpToRenamingIgnoringNames :: (Show a, Eq a, HasFrees a) => Rule a -> Rule a -> WithMaude Bool
