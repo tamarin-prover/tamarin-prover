@@ -32,6 +32,7 @@ import Main.Console
 import Main.Environment
 import Main.TheoryLoader
 import Main.Utils
+import Data.ByteString.Lazy qualified as BL
 import Data.Map qualified as M
 import Theory.Constraint.System.Dot
 import Text.Dot qualified as D
@@ -268,7 +269,7 @@ run thisMode as
               Nothing -> pure ()
               Just outfile ->
                 let serialized = serializeJSON labelledSystems in
-                writeFile outfile serialized
+                BL.writeFile outfile serialized
           where
             -- | Collect all solved (i.e. a trace was found) systems of the theory along with their
             -- path in the proof and the lemma in which they appear in the given theory.
