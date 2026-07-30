@@ -237,6 +237,7 @@ instance Show Name where
   show (Name PubName    n) = "'"  ++ show n ++ "'"
   show (Name NodeName   n) = "#'" ++ show n ++ "'"
   show (Name NatName   n) = "%'" ++ show n ++ "'"
+  show (Name AbbrevName n) = show n
 
 instance Show NameId where
   show = getNameId
@@ -262,6 +263,7 @@ sortOfName (Name FreshName _) = LSortFresh
 sortOfName (Name PubName   _) = LSortPub
 sortOfName (Name NodeName  _) = LSortNode
 sortOfName (Name NatName   _) = LSortNat
+sortOfName (Name AbbrevName _) = LSortMsg
 
 -- | Is a term a public constant?
 isPubConst :: LNTerm -> Bool
