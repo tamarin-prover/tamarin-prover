@@ -21,6 +21,7 @@ where
 
 import Control.Monad.State (State)
 import qualified Control.Monad.State as State
+import qualified Data.ByteString.Char8 as BC
 
 import Extension.Data.Label (get, modify)
 import Data.Map.Strict (Map)
@@ -70,7 +71,9 @@ computeLegend n sys = do
 shorten :: LNTerm -> State TermState LNTerm
 shorten (viewTerm -> FApp (NoEq (bs, _)) _) = do
   m <- State.get
-  let str = show bs
+  -- The bare symbol name (unpack, not show — show would bake literal
+  -- quotes into the displayed abbreviation label).
+  let str = BC.unpack bs
       nameId = case M.lookup str m of
         Just n -> str ++ show n
         Nothing -> str

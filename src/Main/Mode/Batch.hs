@@ -32,6 +32,7 @@ import Main.Console
 import Main.Environment
 import Main.TheoryLoader
 import Main.Utils
+import Data.ByteString.Lazy qualified as BL
 import Data.Map qualified as M
 import Extension.Data.Label qualified as L
 import Theory.Constraint.System.Dot
@@ -305,7 +306,7 @@ run thisMode as
           case findArg "traceJSON" as of
             Nothing -> pure ()
             Just outfile ->
-              writeFile outfile $ serializeJSON labelledSystems
+              BL.writeFile outfile $ serializeJSON labelledSystems
 
         -- | Collect solved systems from an ordinary proof tree.
         proofSystems :: IncrementalProof -> [(ProofPath, System)]

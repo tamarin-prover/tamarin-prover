@@ -10,7 +10,7 @@ module Main.Mode.Interactive (
   ) where
 
 import Control.Basics
-import Control.Exception (IOException, handle)
+import Control.Exception (IOException, handle, try)
 import Data.Aeson (eitherDecode)
 import Data.ByteString.Lazy qualified as BSL
 import Data.Char (toLower)
@@ -21,8 +21,11 @@ import System.Console.CmdArgs.Explicit as CmdArgs
 import System.Directory (doesDirectoryExist, doesFileExist, getTemporaryDirectory)
 import System.Environment (lookupEnv)
 import System.FilePath
+import System.Info (os)
+import System.IO (hPutStrLn, stderr)
+import System.Process (callProcess)
 
-import Network.Wai.Handler.Warp (defaultSettings, setHost, setPort)
+import Network.Wai.Handler.Warp (defaultSettings, setBeforeMainLoop, setHost, setPort)
 import Network.Wai.Handler.Warp qualified as Warp
 import Web.Dispatch
 import Web.Settings qualified
@@ -55,6 +58,7 @@ interactiveMode = tamarinMode
       [ flagOpt "" ["port","p"] (updateArg "port") "PORT" "Port to listen on"
       , flagOpt "" ["interface","i"] (updateArg "interface") "INTERFACE"
                 "Interface to listen on (use '*4' for all IPv4 interfaces)"
+      , flagNone ["browser"] (addEmptyArg "browser") "Open the interactive interface in the default web browser"
       , flagOpt "" ["image-format"] (updateArg "image-format") "PNG|SVG" "image format used for graphs (default SVG)"
       , flagOpt "" ["load-json"] (updateArg "load-json") "FILE"
                 "Load a JSON graph file (see --output-json) for standalone viewing at /loadjson (WORKDIR may be omitted)"
@@ -134,7 +138,7 @@ run thisMode as = case findArg "workDir" as <|> (takeDirectory <$> findArg "load
         (argExists "debug" as) (readOutputCommand as) readImageFormat
         (constructAutoProver thyLoadOptions)
         loadedJsonGraphs
-        (runWarp port)
+        (runWarp port readyUrl)
 
     else
       helpAndExit thisMode
@@ -185,11 +189,41 @@ run thisMode as = case findArg "workDir" as <|> (takeDirectory <$> findArg "load
         address | interface `elem` ["*","*4","*6"] = "127.0.0.1"
                 | otherwise                        = interface
 
-    runWarp port wapp =
+    runWarp port readyUrl wapp =
       handle (\e -> err (e::IOException)) $
         Warp.runSettings
-          (setHost (fromString interface) $ setPort port defaultSettings)
+          (setBeforeMainLoop openInterface $
+           setHost (fromString interface) $ setPort port defaultSettings)
           wapp
+      where
+        openInterface
+          | argExists "browser" as = openBrowser readyUrl
+          | otherwise           = pure ()
+
+    -- | Open a URL with the platform's default browser. Failure to launch a
+    -- browser should not prevent the interactive server from running.
+    openBrowser :: String -> IO ()
+    openBrowser = openWithBrowserCommands . browserCommands
+
+    -- | Commands are tried in order. 'xdg-open' is the standard opener on
+    -- Linux desktops, while 'gio open' is a useful fallback on systems that
+    -- provide GNOME's command-line tools.
+    browserCommands :: String -> [(FilePath, [String])]
+    browserCommands url = case os of
+      "darwin"  -> [("open", [url])]
+      "mingw32" -> [("cmd", ["/c", "start", "", url])]
+      _         -> [("xdg-open", [url]), ("gio", ["open", url])]
+
+    openWithBrowserCommands :: [(FilePath, [String])] -> IO ()
+    openWithBrowserCommands [] = pure ()
+    openWithBrowserCommands ((command, commandArgs) : fallbackCommands) = do
+      result <- try (callProcess command commandArgs) :: IO (Either IOException ())
+      case result of
+        Right () -> pure ()
+        Left e
+          | null fallbackCommands ->
+              hPutStrLn stderr $ "Unable to open the default web browser: " ++ show e
+          | otherwise -> openWithBrowserCommands fallbackCommands
 
     err e = error $
       "Starting the webserver on "++interface++" failed: \n"
