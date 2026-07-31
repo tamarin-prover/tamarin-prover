@@ -15,6 +15,7 @@ import Control.Monad.Except (runExceptT)
 import Control.Monad.IO.Class (MonadIO(liftIO))
 import Data.List
 import Data.Maybe (isJust)
+import qualified Data.ByteString.Lazy as LBS
 import System.Console.CmdArgs.Explicit as CmdArgs
 import System.Exit (die)
 import System.FilePath
@@ -268,7 +269,7 @@ run thisMode as
               Nothing -> pure ()
               Just outfile ->
                 let serialized = serializeJSON labelledSystems in
-                writeFile outfile serialized
+                LBS.writeFile outfile serialized
           where
             -- | Collect all solved (i.e. a trace was found) systems of the theory along with their
             -- path in the proof and the lemma in which they appear in the given theory.
