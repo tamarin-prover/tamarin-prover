@@ -233,10 +233,11 @@ type NTerm v = VTerm Name v
 instance IsConst Name where
 
 instance Show Name where
-  show (Name FreshName  n) = "~'" ++ show n ++ "'"
-  show (Name PubName    n) = "'"  ++ show n ++ "'"
-  show (Name NodeName   n) = "#'" ++ show n ++ "'"
-  show (Name NatName   n) = "%'" ++ show n ++ "'"
+    show (Name FreshName  n) = "~'" ++ show n ++ "'"
+    show (Name PubName    n) = "'"  ++ show n ++ "'"
+    show (Name NodeName   n) = "#'" ++ show n ++ "'"
+    show (Name NatName    n) = "%'" ++ show n ++ "'"
+    show (Name AbbrevName n) = show n
 
 instance Show NameId where
   show = getNameId
