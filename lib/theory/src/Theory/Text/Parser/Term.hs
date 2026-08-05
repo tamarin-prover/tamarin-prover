@@ -100,7 +100,8 @@ naryOpApp eqn plit = do
                ", but here it is used with arity " ++ show k'
     --let app o = if BC.pack op == emapSymString then fAppC EMap else fAppNoEq o
     case (BC.pack op,(k,priv,constr,acstate)) of
-      (o,(_,_,_,_)) | o == emapSymString -> return $ fAppC EMap ts
+      -- only the binary em is the built-in bilinear e-map
+      (o,(2,_,_,_)) | o == emapSymString -> return $ fAppC EMap ts
       (_,(_,_,_,NotAC)) -> return $ fAppNoEq (BC.pack op, (k,priv,constr,ndcstate)) ts
       (_,(_,_,_,IsAC)) -> return $ fAppAC (ACfct (BC.pack op, (priv,constr,ndcstate))) ts
     --return $ app (BC.pack op, (k,priv,constr)) ts
