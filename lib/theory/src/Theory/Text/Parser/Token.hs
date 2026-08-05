@@ -12,6 +12,7 @@ module Theory.Text.Parser.Token (
   -- * Symbols
   , symbol
   , symbol_
+  , reserved
   , dot
   , comma
   , colon
@@ -275,6 +276,11 @@ symbol sym = try (T.symbol spthy sym) <?> ("\"" ++ sym ++ "\"")
 -- | Parse a symbol without returning the parsed string.
 symbol_ :: String -> Parser ()
 symbol_ = void . symbol
+
+-- | Parse a keyword, i.e. a symbol that must not be followed by an
+-- identifier character (so @end@ does not match a prefix of @endrule@).
+reserved :: String -> Parser ()
+reserved = T.reserved spthy
 
 -- | Between braces.
 braced :: Parser a -> Parser a
