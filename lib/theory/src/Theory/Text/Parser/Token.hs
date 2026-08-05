@@ -512,7 +512,11 @@ lvarNoSuffix = sortedLVarNoSuffix [minBound..]
 sapicvar :: Parser SapicLVar
 sapicvar = do
         v <- lvarNoSuffix
-        t <- option Nothing $ colon *> typep
+        -- node variables default to the node type so that a quantified
+        -- "#j" matches its occurrences parsed by sapicnodevar
+        let defaultType = if lvarSort v == LSortNode
+                            then defaultSapicNodeType else Nothing
+        t <- option defaultType $ colon *> typep
         return (SapicLVar v t)
 
 sapicpatternvar :: Parser PatternSapicLVar
