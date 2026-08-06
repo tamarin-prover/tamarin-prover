@@ -170,7 +170,7 @@ theoryLoadFlags =
       ["open-chains", "c"]
       (updateArg "OpenChainsLimit")
       "PositiveInteger"
-      "Limits the number of open chains to be resoled during precomputations (default 10)",
+      "Limits the number of open chains to be resolved during precomputations (default 10)",
     flagOpt
       "5"
       ["saturation", "s"]
