@@ -141,18 +141,22 @@ refineSource ctxt proofStep th =
 -- repeatedly simplifying the proof state.
 --
 -- Returns the names of the steps applied.
-solveAllSafeGoals :: [Source] -> Integer -> Reduction [String]
-solveAllSafeGoals ths' openChainsLimit =
-    solve ths' [] Nothing openChainsLimit
+solveAllSafeGoals :: [Source] -> IntegerParameters -> Reduction [String]
+solveAllSafeGoals ths' parameters =
+    solve ths' [] Nothing (get paramOpenChainsLimit parameters)
   where
 --    extensiveSplitting = unsafePerformIO $
 --      (getEnv "TAMARIN_EXTENSIVE_SPLIT" >> return True) `catchIOError` \_ -> return False
+    traceChainLimit = if get showSaturationSteps parameters
+        then trace ("[Open Chains] Too many chain constraints, stopping precomputation. Open Chains limits (can be changed with -c=): "
+                    ++ show (get paramOpenChainsLimit parameters))
+        else id
     safeGoal _       _          (_,   (_, LoopBreaker)) = False
     safeGoal doSplit chainsLeft (goal, _              ) =
       case goal of
         ChainG _ _    -> if (chainsLeft > 0)
                             then True
-                            else trace ("[Open Chains] Too many chain constraints, stopping precomputation. Open Chains limits (can be changed with -c=): "++ show openChainsLimit) False
+                            else traceChainLimit False
         ActionG _ fa  -> not (isKUFact fa)
         -- we do not solve KD goals for Xor facts as insertAction inserts
         -- these goals directly. This prevents loops in the precomputations
@@ -379,8 +383,7 @@ saturateSources parameters ctxt thsInit  =
           (changes, ths') = unzip $ map (refineSource ctxt solver) ths
           goodTh th = length (getDisj (get cdCases th)) <= 1
           solver
-            = do names <- solveAllSafeGoals
-                            (filter goodTh ths) (get paramOpenChainsLimit parameters)
+            = do names <- solveAllSafeGoals (filter goodTh ths) parameters
                  return (not $ null names, names)
 
 -- | Precompute a saturated set of case distinctions.
