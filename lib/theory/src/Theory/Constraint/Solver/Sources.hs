@@ -368,7 +368,7 @@ saturateSources parameters ctxt thsInit  =
       | n > get paramSaturationLimit parameters =
           if get showSaturationSteps parameters then
             trace ("[Saturating Sources] Saturation aborted, more than " ++ show (get paramSaturationLimit parameters) ++
-                 " iterations. (Limit can be change with -s=)") ths'
+                 " iterations. (Limit can be changed with -s=)") ths'
           else
             ths'
       | otherwise =
