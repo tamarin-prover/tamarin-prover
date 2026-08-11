@@ -1,0 +1,18 @@
+theory DataAttribute
+begin
+
+functions: record/2 [data]
+
+rule Publish:
+  [ Fr(~x), Fr(~y) ]
+  --[ Published(~x, ~y) ]->
+  [ Out(record(~x, ~y)) ]
+
+lemma data_constructor_is_deconstructible:
+  exists-trace
+  "Ex x y #i #j #k.
+      Published(x, y) @ i
+    & K(x) @ j
+    & K(y) @ k"
+
+end

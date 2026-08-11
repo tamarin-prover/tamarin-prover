@@ -2475,6 +2475,21 @@
     "fields": {}
   },
   {
+    "type": "function_attributes",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "function_attribute",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
     "type": "function_name",
     "named": true,
     "fields": {}
@@ -2505,11 +2520,15 @@
       }
     },
     "children": {
-      "multiple": false,
+      "multiple": true,
       "required": false,
       "types": [
         {
           "type": "arguments",
+          "named": true
+        },
+        {
+          "type": "function_attributes",
           "named": true
         }
       ]
@@ -2541,11 +2560,11 @@
       }
     },
     "children": {
-      "multiple": true,
+      "multiple": false,
       "required": false,
       "types": [
         {
-          "type": "function_attribute",
+          "type": "function_attributes",
           "named": true
         }
       ]
@@ -7006,6 +7025,10 @@
   },
   {
     "type": "convergent",
+    "named": false
+  },
+  {
+    "type": "data",
     "named": false
   },
   {

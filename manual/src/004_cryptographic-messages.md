@@ -83,6 +83,18 @@ defines the private function `g` and the public functions `f` and `l`.
 We will describe in the next section how you can define equations that formalize
 properties of functions.
 
+Tamarin also supports *data constructors* via the `[data]` attribute. A declaration
+
+    functions: keyhost/2 [data]
+
+keeps `keyhost` as a constructor and implicitly generates public destructor
+symbols `keyhost_1/1` and `keyhost_2/1` together with the equations
+
+    keyhost_1(keyhost(x,y)) = x
+    keyhost_2(keyhost(x,y)) = y
+
+This makes data constructors deconstructible by the attacker, similar to tuples.
+
 Functions can be *associative and commutative* (AC), declared using the attribute `[AC]`:
 
     functions: h/2 [AC]

@@ -239,21 +239,24 @@ module.exports = grammar({
           field('function_identifier', $.ident),
           '/',
           field('arity', $.natural),
-          optional ( seq (
-              '[',
-                  $.function_attribute,
-                  repeat(seq(
-                      ',',
-                      $.function_attribute
-                  )),
-                  optional(',')
-              ,']')
-          )
+          optional($.function_attributes)
+      ),
+
+      function_attributes: $ => seq(
+          '[',
+          $.function_attribute,
+          repeat(seq(
+              ',',
+              $.function_attribute
+          )),
+          optional(','),
+          ']'
       ),
 
       function_attribute: $ => choice(
             'private',
             'destructor',
+            'data',
             'AC',
             'NDC',
             'NDC-diff',
@@ -262,7 +265,8 @@ module.exports = grammar({
       function_typed: $ => seq(
           field('function_identifier', $.ident),
           '(', optional($.arguments), ')',
-          ':', field('function_type', $.ident)
+          ':', field('function_type', $.ident),
+          optional($.function_attributes)
       ),
 
       // Equations:

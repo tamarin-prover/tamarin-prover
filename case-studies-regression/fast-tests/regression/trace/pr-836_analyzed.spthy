@@ -1,0 +1,64 @@
+theory DataAttribute
+
+begin
+
+// Function signature and definition of the equational theory E
+
+functions: fst/1, pair/2, record/2, record_1/1[destructor],
+           record_2/1[destructor], snd/1
+equations:
+    fst(<x.1, x.2>) = x.1,
+    record_1(record(x.1, x.2)) = x.1,
+    record_2(record(x.1, x.2)) = x.2,
+    snd(<x.1, x.2>) = x.2
+
+rule (modulo E) Publish:
+   [ Fr( ~x ), Fr( ~y ) ]
+  --[ Published( ~x, ~y ) ]->
+   [ Out( record(~x, ~y) ) ]
+
+  /* has exactly the trivial AC variant */
+
+lemma data_constructor_is_deconstructible:
+  exists-trace
+  "∃ x y #i #j #k.
+    ((Published( x, y ) @ #i) ∧ (K( x ) @ #j)) ∧ (K( y ) @ #k)"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ x y #i #j #k.
+  (Published( x, y ) @ #i) ∧ (K( x ) @ #j) ∧ (K( y ) @ #k)"
+*/
+simplify
+solve( !KU( ~x ) @ #vk )
+  case Publish
+  solve( !KU( ~y ) @ #vk.1 )
+    case Publish
+    SOLVED // trace found
+  qed
+qed
+
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.13.0
+Maude version 3.4
+Git revision: 8fc04ec8ad35972dfc0baeff3e31a1e4363046a3 (with uncommited changes), branch: feature/data-attribute
+Compiled at: 2026-07-18 16:42:12.125521 UTC
+*/
+
+end
+/* Output
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/regression/trace/pr-836.spthy
+
+  output:          examples/regression/trace/pr-836.spthy.tmp
+  processing time: 0.05s
+
+  data_constructor_is_deconstructible (exists-trace): verified (4 steps)
+
+==============================================================================
+*/

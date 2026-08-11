@@ -24,6 +24,9 @@ only parse function applications of defined functions.
 ~~~~ {.tamarin grammar="grammar/grammar.ebnf" rules="_signature_spec,function,_function_sym,function_untyped,function_typed,function_attribute,equations,equation"}
 ~~~~
 
+Function declarations support attributes such as `[private]`, `[destructor]`,
+and `[data]`. Typed declarations may also carry these attributes.
+
 Note that the equations must be convergent and have the
 Finite Variant Property (FVP), and do not allow the use
 of fixed public names in the terms. Tamarin provides built-in
