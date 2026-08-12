@@ -160,7 +160,7 @@ isSafetyFormula :: HasFrees (Guarded s c v) => Guarded s c v -> Bool
 isSafetyFormula gf0 =
     null (frees [gf0]) && noExistential gf0
   where
-    noExistential (GAto _ )             = True
+    noExistential (GAto a)              = not $ isLastAtom a
     noExistential (GGuarded Ex _ _ _)   = False
     noExistential (GGuarded All _ _ gf) = noExistential gf
     noExistential (GDisj disj)          = all noExistential $ getDisj disj
