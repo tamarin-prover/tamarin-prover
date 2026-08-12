@@ -1,0 +1,7 @@
+theory InexistentFact
+begin
+
+lemma Test:
+  "All #x. P() @ #x ==> F"
+
+end
