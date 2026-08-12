@@ -992,6 +992,11 @@ checkGuarded header fm = case formulaToGuarded fm of
         nest 2 err
     Right _  -> []
 
+checkNoLast :: HighlightDocument a => String -> LNFormula -> [a]
+checkNoLast header fm
+  | foldFormula isLastAtom (const False) id (const (||)) (\_ _ -> id) fm = return $ text (header ++ " contains last atom")
+  | otherwise = []
+
 -- | Check for mistakes in lemmas.
 --
 -- TODO: Perhaps a lot of errors would be captured when making the signature
@@ -999,9 +1004,10 @@ checkGuarded header fm = case formulaToGuarded fm of
 formulaReports :: OpenTranslatedTheory -> WfErrorReport
 formulaReports thy = do
     (header, fm) <- annFormulas
-    msum [ ((,) (underlineTopic "Quantifier sorts")) <$> checkQuantifiers header fm
-         , ((,) (underlineTopic "Formula terms"))    <$> checkTerms header (get (sigpMaudeSig . thySignature) thy) fm
-         , ((,) (underlineTopic " Formula guardedness"))      <$> checkGuarded header fm
+    msum [ (,) (underlineTopic "Quantifier sorts")    <$> checkQuantifiers header fm
+         , (,) (underlineTopic "Formula terms")       <$> checkTerms header (get (sigpMaudeSig . thySignature) thy) fm
+         , (,) (underlineTopic "Formula guardedness") <$> checkGuarded header fm
+         , (,) (underlineTopic "Last atom usage")     <$> checkNoLast header fm
          ]
   where
     annFormulas = do LemmaItem l <- get thyItems thy
