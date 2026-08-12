@@ -575,12 +575,11 @@ freshFactArguments' rules = do
         text ("rule " ++ quote (showRuleCaseName ru)) <->
         text "fact:" <-> prettyLNFact fa
 
--- | Report on facts usage. Skip checks on non-existant actions if `incompleteMSRs` is True.
-factReports :: Bool -> OpenTranslatedTheory -> WfErrorReport
-factReports incompleteMSRs thy =
+factReports :: OpenTranslatedTheory -> WfErrorReport
+factReports thy =
     concat  [ reservedReport, reservedFactNameRules, freshFactArguments, specialFactsUsage
     , factUsage, factLhsOccurNoRhs]
-    ++ concat [ inexistentActions ++ inexistentActionsRestrictions | incompleteMSRs ]
+    ++ concat [ inexistentActions ++ inexistentActionsRestrictions ]
   where
     ruleFacts ru =
       ( "Rule " ++ quote (showRuleCaseName ru)
@@ -1267,15 +1266,15 @@ checkWellformednessDiff thy sig = -- trace ("checkWellformednessDiff: " ++ show 
 -- | Returns a list of errors, if there are any. `incompleteMSR`, if true, indicates
 -- that the MSRs are incomplete (e.g., when we export to ProVerif) and that
 -- checks that rely on that should not be performed.
-checkWellformedness :: Bool -> OpenTranslatedTheory -> SignatureWithMaude -> WfErrorReport
-checkWellformedness incompleteMSRs thy sig = concatMap ($ thy) (
+checkWellformedness :: OpenTranslatedTheory -> SignatureWithMaude -> WfErrorReport
+checkWellformedness thy sig = concatMap ($ thy) (
     [ checkIfLemmasInTheory
     , unboundReport
     , freshNamesReport
     , publicNamesReport
     , ruleSortsReport
     , ruleVariantsReport sig
-    , factReports incompleteMSRs
+    , factReports
     , formulaReports
     , lemmaAttributeReport
     , multRestrictedReport

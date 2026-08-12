@@ -559,7 +559,7 @@ checkTranslatedTheory ::
 checkTranslatedTheory thyOpts sign thy = do
   let transReport =
         either
-          (\openThy -> checkWellformedness incompleteMSRs openThy sign)
+          (\openThy -> checkWellformedness openThy sign)
           (`checkWellformednessDiff` sign)
           thy
 
@@ -599,7 +599,6 @@ checkTranslatedTheory thyOpts sign thy = do
   pure (report, signWithMaude, deducThy)
   where
     mh = sign._sigMaudeInfo
-    incompleteMSRs = False -- TODO how do we know if we do not have all MSRs due to translation?
     autoSources = thyOpts.autoSources
     derivChecks = thyOpts.derivationChecks
     derivTimeoutMsg =
