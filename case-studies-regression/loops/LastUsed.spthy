@@ -1,0 +1,8 @@
+theory LastUsed begin
+
+rule R: [] --[ P() ]-> []
+
+restriction Illegal:
+  "All #i. P() @ #i ==> last(#i)"
+
+end
