@@ -2,6 +2,7 @@ theory LastUsed begin
 
 rule R: [] --[ P() ]-> []
 
+// Restrictions must not use last atoms.
 restriction Illegal:
   "All #i. P() @ #i ==> last(#i)"
 
