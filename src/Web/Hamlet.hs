@@ -187,15 +187,7 @@ headerTpl info = [whamlet|
                 <form method=POST action=@{AppendNewLemmasR idx filename} class=ajax-form>
                   <button type=submit class=link-button>Append modified lemmas to file
         <li><a href="#">Options</a>
-          <ul class="list-with-toggles">
-            <li><a id=abbrv-toggle href="#">Abbreviate terms</a>
-            <li><a id=agent-toggle href="#">Clustering by role</a>
-            <li><a id=auto-toggle href="#">Show annotation auto-sources</a>
-            <li><a id=abstr-toggle href="#">Abstract node content</a>
-            <li><a id=lvl0-toggle href="#">Graph simplification off</a>
-            <li><a id=lvl1-toggle href="#">Graph simplification L1</a>
-            <li><a id=lvl2-toggle href="#">Graph simplification L2</a>
-            <li><a id=lvl3-toggle href="#">Graph simplification L3</a>
+          ^{optionsMenuItemTpl True}
   |]
   where
             -- <li><a id=debug-toggle href="#">Debug pane</a>
@@ -240,14 +232,7 @@ headerDiffTpl info = [whamlet|
             <li><a target=_blank href=@{TheorySourceDiffR idx}>Show source</a>
             <li><a href=@{DownloadTheoryDiffR idx filename}>Download source</a>
         <li><a href="#">Options</a>
-          <ul class="list-with-toggles">
-            <li><a id=abbrv-toggle href="#">Abbreviate terms</a>
-            <li><a id=agent-toggle href="#">Clustering by role</a>
-            <li><a id=auto-toggle href="#">Show annotation auto-sources</a>
-            <li><a id=lvl0-toggle href="#">Graph simplification off</a>
-            <li><a id=lvl1-toggle href="#">Graph simplification L1</a>
-            <li><a id=lvl2-toggle href="#">Graph simplification L2</a>
-            <li><a id=lvl3-toggle href="#">Graph simplification L3</a>
+          ^{optionsMenuItemTpl False}
   |]
   where
             -- <li><a id=debug-toggle href="#">Debug pane</a>

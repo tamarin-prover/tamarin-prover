@@ -263,13 +263,13 @@ rule-equivalence
                 case genKey
                 step( solve( !KU( (~r m ~skA m x) ) @ #vk.2 ) )
                   case c_m_case_1
-                  by sorry // bound reached
-                next
-                  case c_m_case_2
                   by step( solve( !KU( ~r ) @ #vk.5 ) )
                 next
-                  case c_m_case_3
+                  case c_m_case_2
                   by step( solve( !KU( ~skA ) @ #vk.5 ) )
+                next
+                  case c_m_case_3
+                  by sorry // bound reached
                 next
                   case c_m_case_4
                   by sorry // bound reached
@@ -717,13 +717,13 @@ rule-equivalence
                 case genKey
                 step( solve( !KU( (~r m ~skB m x) ) @ #vk.2 ) )
                   case c_m_case_1
-                  by sorry // bound reached
-                next
-                  case c_m_case_2
                   by step( solve( !KU( ~r ) @ #vk.5 ) )
                 next
-                  case c_m_case_3
+                  case c_m_case_2
                   by step( solve( !KU( ~skB ) @ #vk.5 ) )
+                next
+                  case c_m_case_3
+                  by sorry // bound reached
                 next
                   case c_m_case_4
                   by sorry // bound reached
@@ -3739,6 +3739,9 @@ next
               by step( solve( !KU( ~skA ) @ #vk.1 ) )
             next
               case genKey_case_2
+              MIRRORED
+            next
+              case genKey_case_3
               step( solve( !KU( (~skA m x) ) @ #vk.1 ) )
                 case c_m_case_1
                 by step( solve( !KU( ~skA ) @ #vk.3 ) )
@@ -3771,9 +3774,6 @@ next
                 qed
               qed
             next
-              case genKey_case_3
-              MIRRORED
-            next
               case genKey_case_4
               by step( solve( !KU( ~skA ) @ #vk.2 ) )
             next
@@ -3785,13 +3785,13 @@ next
                 case c_m_case_2
                 step( solve( !KU( (~skB m x m x.1) ) @ #vk.2 ) )
                   case c_m_case_1
-                  by sorry // bound reached
+                  by step( solve( !KU( ~skB ) @ #vk.5 ) )
                 next
                   case c_m_case_2
                   by sorry // bound reached
                 next
                   case c_m_case_3
-                  by step( solve( !KU( ~skB ) @ #vk.5 ) )
+                  by sorry // bound reached
                 next
                   case c_m_case_4
                   by sorry // bound reached
@@ -3835,6 +3835,39 @@ next
               by step( solve( !KU( ~skA ) @ #vk.3 ) )
             next
               case mixnet_case_03
+              step( solve( !KU( (~r m x) ) @ #vk.1 ) )
+                case c_m_case_1
+                by step( solve( !KU( ~r ) @ #vk.4 ) )
+              next
+                case c_m_case_2
+                step( solve( !KU( (~r m x.1) ) @ #vk.5 ) )
+                  case c_m_case_1
+                  by step( contradiction /* forbidden AC constructor chain */ )
+                next
+                  case c_m_case_2
+                  by step( contradiction /* forbidden AC constructor chain */ )
+                next
+                  case coerce
+                  by sorry // bound reached
+                qed
+              next
+                case coerce
+                step( solve( !KD( (~r m x) ) ▶₀ #vk.1 ) )
+                  case genKey_case_1
+                  by sorry // bound reached
+                next
+                  case genKey_case_2
+                  by sorry // bound reached
+                next
+                  case mixnet_case_1
+                  by sorry // bound reached
+                next
+                  case mixnet_case_2
+                  by sorry // bound reached
+                qed
+              qed
+            next
+              case mixnet_case_04
               step( solve( !KU( (~skA m x) ) @ #vk.3 ) )
                 case c_m_case_1
                 by step( solve( !KU( ~skA ) @ #vk.5 ) )
@@ -3842,16 +3875,16 @@ next
                 case c_m_case_2
                 step( solve( !KU( (~r m ~skA m x m x.1) ) @ #vk.2 ) )
                   case c_m_case_01
-                  by sorry // bound reached
-                next
-                  case c_m_case_02
-                  by sorry // bound reached
-                next
-                  case c_m_case_03
                   by step( solve( !KU( ~r ) @ #vk.6 ) )
                 next
-                  case c_m_case_04
+                  case c_m_case_02
                   by step( solve( !KU( ~skA ) @ #vk.6 ) )
+                next
+                  case c_m_case_03
+                  by sorry // bound reached
+                next
+                  case c_m_case_04
+                  by sorry // bound reached
                 next
                   case c_m_case_05
                   by sorry // bound reached
@@ -3912,39 +3945,6 @@ next
                 qed
               qed
             next
-              case mixnet_case_04
-              step( solve( !KU( (~r m x) ) @ #vk.1 ) )
-                case c_m_case_1
-                by step( solve( !KU( ~r ) @ #vk.4 ) )
-              next
-                case c_m_case_2
-                step( solve( !KU( (~r m x.1) ) @ #vk.5 ) )
-                  case c_m_case_1
-                  by step( contradiction /* forbidden AC constructor chain */ )
-                next
-                  case c_m_case_2
-                  by step( contradiction /* forbidden AC constructor chain */ )
-                next
-                  case coerce
-                  by sorry // bound reached
-                qed
-              next
-                case coerce
-                step( solve( !KD( (~r m x) ) ▶₀ #vk.1 ) )
-                  case genKey_case_1
-                  by sorry // bound reached
-                next
-                  case genKey_case_2
-                  by sorry // bound reached
-                next
-                  case mixnet_case_1
-                  by sorry // bound reached
-                next
-                  case mixnet_case_2
-                  by sorry // bound reached
-                qed
-              qed
-            next
               case mixnet_case_05
               by step( solve( !KU( ~skA ) @ #vk.3 ) )
             next
@@ -3956,16 +3956,16 @@ next
                 case c_m_case_2
                 step( solve( !KU( (~r m ~skB m x m x.1) ) @ #vk.2 ) )
                   case c_m_case_01
-                  by sorry // bound reached
-                next
-                  case c_m_case_02
-                  by sorry // bound reached
-                next
-                  case c_m_case_03
                   by step( solve( !KU( ~r ) @ #vk.6 ) )
                 next
-                  case c_m_case_04
+                  case c_m_case_02
                   by step( solve( !KU( ~skB ) @ #vk.6 ) )
+                next
+                  case c_m_case_03
+                  by sorry // bound reached
+                next
+                  case c_m_case_04
+                  by sorry // bound reached
                 next
                   case c_m_case_05
                   by sorry // bound reached
@@ -4099,6 +4099,42 @@ next
               qed
             next
               case mixnet_case_08
+              by step( solve( !KU( ~skA ) @ #vk.3 ) )
+            next
+              case mixnet_case_09
+              step( solve( !KU( (~skA m x.1) ) @ #vk.3 ) )
+                case c_m_case_1
+                by step( solve( !KU( ~skA ) @ #vk.5 ) )
+              next
+                case c_m_case_2
+                step( solve( !KU( (~skA m x.2) ) @ #vk.5 ) )
+                  case c_m_case_1
+                  by step( contradiction /* forbidden AC constructor chain */ )
+                next
+                  case c_m_case_2
+                  by step( contradiction /* forbidden AC constructor chain */ )
+                next
+                  case coerce
+                  by sorry // bound reached
+                qed
+              next
+                case coerce
+                step( solve( !KD( (~skA m x.1) ) ▶₀ #vk.1 ) )
+                  case genKey_case_1
+                  by sorry // bound reached
+                next
+                  case genKey_case_2
+                  by sorry // bound reached
+                next
+                  case mixnet_case_1
+                  by sorry // bound reached
+                next
+                  case mixnet_case_2
+                  by sorry // bound reached
+                qed
+              qed
+            next
+              case mixnet_case_10
               step( solve( !KU( expo('g', x.2) ) @ #vk.2 ) )
                 case c_expo
                 step( solve( !KU( (x m x.1) ) @ #vk.2 ) )
@@ -4248,42 +4284,6 @@ next
                 by step( contradiction /* cyclic */ )
               qed
             next
-              case mixnet_case_09
-              by step( solve( !KU( ~skA ) @ #vk.3 ) )
-            next
-              case mixnet_case_10
-              step( solve( !KU( (~skA m x.1) ) @ #vk.3 ) )
-                case c_m_case_1
-                by step( solve( !KU( ~skA ) @ #vk.5 ) )
-              next
-                case c_m_case_2
-                step( solve( !KU( (~skA m x.2) ) @ #vk.5 ) )
-                  case c_m_case_1
-                  by step( contradiction /* forbidden AC constructor chain */ )
-                next
-                  case c_m_case_2
-                  by step( contradiction /* forbidden AC constructor chain */ )
-                next
-                  case coerce
-                  by sorry // bound reached
-                qed
-              next
-                case coerce
-                step( solve( !KD( (~skA m x.1) ) ▶₀ #vk.1 ) )
-                  case genKey_case_1
-                  by sorry // bound reached
-                next
-                  case genKey_case_2
-                  by sorry // bound reached
-                next
-                  case mixnet_case_1
-                  by sorry // bound reached
-                next
-                  case mixnet_case_2
-                  by sorry // bound reached
-                qed
-              qed
-            next
               case mixnet_case_11
               by step( solve( !KU( ~skA ) @ #vk.3 ) )
             next
@@ -4295,13 +4295,13 @@ next
                 case c_m_case_2
                 step( solve( !KU( (~r m x m x.1) ) @ #vk.2 ) )
                   case c_m_case_1
-                  by sorry // bound reached
+                  by step( solve( !KU( ~r ) @ #vk.6 ) )
                 next
                   case c_m_case_2
                   by sorry // bound reached
                 next
                   case c_m_case_3
-                  by step( solve( !KU( ~r ) @ #vk.6 ) )
+                  by sorry // bound reached
                 next
                   case c_m_case_4
                   by sorry // bound reached
@@ -4590,13 +4590,13 @@ next
                 case c_m_case_2
                 step( solve( !KU( (~skA m x m x.1) ) @ #vk.2 ) )
                   case c_m_case_1
-                  by sorry // bound reached
+                  by step( solve( !KU( ~skA ) @ #vk.5 ) )
                 next
                   case c_m_case_2
                   by sorry // bound reached
                 next
                   case c_m_case_3
-                  by step( solve( !KU( ~skA ) @ #vk.5 ) )
+                  by sorry // bound reached
                 next
                   case c_m_case_4
                   by sorry // bound reached
@@ -4637,6 +4637,9 @@ next
               by step( solve( !KU( ~skB ) @ #vk.1 ) )
             next
               case genKey_case_4
+              MIRRORED
+            next
+              case genKey_case_5
               step( solve( !KU( (~skB m x) ) @ #vk.1 ) )
                 case c_m_case_1
                 by step( solve( !KU( ~skB ) @ #vk.3 ) )
@@ -4669,9 +4672,6 @@ next
                 qed
               qed
             next
-              case genKey_case_5
-              MIRRORED
-            next
               case mixnet_case_01
               by step( solve( !KU( ~skB ) @ #vk.3 ) )
             next
@@ -4683,16 +4683,16 @@ next
                 case c_m_case_2
                 step( solve( !KU( (~r m ~skA m x m x.1) ) @ #vk.2 ) )
                   case c_m_case_01
-                  by sorry // bound reached
-                next
-                  case c_m_case_02
-                  by sorry // bound reached
-                next
-                  case c_m_case_03
                   by step( solve( !KU( ~r ) @ #vk.6 ) )
                 next
-                  case c_m_case_04
+                  case c_m_case_02
                   by step( solve( !KU( ~skA ) @ #vk.6 ) )
+                next
+                  case c_m_case_03
+                  by sorry // bound reached
+                next
+                  case c_m_case_04
+                  by sorry // bound reached
                 next
                   case c_m_case_05
                   by sorry // bound reached
@@ -4760,6 +4760,39 @@ next
               by step( solve( !KU( ~skB ) @ #vk.3 ) )
             next
               case mixnet_case_05
+              step( solve( !KU( (~r m x) ) @ #vk.1 ) )
+                case c_m_case_1
+                by step( solve( !KU( ~r ) @ #vk.4 ) )
+              next
+                case c_m_case_2
+                step( solve( !KU( (~r m x.1) ) @ #vk.5 ) )
+                  case c_m_case_1
+                  by step( contradiction /* forbidden AC constructor chain */ )
+                next
+                  case c_m_case_2
+                  by step( contradiction /* forbidden AC constructor chain */ )
+                next
+                  case coerce
+                  by sorry // bound reached
+                qed
+              next
+                case coerce
+                step( solve( !KD( (~r m x) ) ▶₀ #vk.1 ) )
+                  case genKey_case_1
+                  by sorry // bound reached
+                next
+                  case genKey_case_2
+                  by sorry // bound reached
+                next
+                  case mixnet_case_1
+                  by sorry // bound reached
+                next
+                  case mixnet_case_2
+                  by sorry // bound reached
+                qed
+              qed
+            next
+              case mixnet_case_06
               step( solve( !KU( (~skB m x) ) @ #vk.3 ) )
                 case c_m_case_1
                 by step( solve( !KU( ~skB ) @ #vk.5 ) )
@@ -4767,16 +4800,16 @@ next
                 case c_m_case_2
                 step( solve( !KU( (~r m ~skB m x m x.1) ) @ #vk.2 ) )
                   case c_m_case_01
-                  by sorry // bound reached
-                next
-                  case c_m_case_02
-                  by sorry // bound reached
-                next
-                  case c_m_case_03
                   by step( solve( !KU( ~r ) @ #vk.6 ) )
                 next
-                  case c_m_case_04
+                  case c_m_case_02
                   by step( solve( !KU( ~skB ) @ #vk.6 ) )
+                next
+                  case c_m_case_03
+                  by sorry // bound reached
+                next
+                  case c_m_case_04
+                  by sorry // bound reached
                 next
                   case c_m_case_05
                   by sorry // bound reached
@@ -4823,39 +4856,6 @@ next
               next
                 case coerce
                 step( solve( !KD( (~skB m x) ) ▶₀ #vk.1 ) )
-                  case genKey_case_1
-                  by sorry // bound reached
-                next
-                  case genKey_case_2
-                  by sorry // bound reached
-                next
-                  case mixnet_case_1
-                  by sorry // bound reached
-                next
-                  case mixnet_case_2
-                  by sorry // bound reached
-                qed
-              qed
-            next
-              case mixnet_case_06
-              step( solve( !KU( (~r m x) ) @ #vk.1 ) )
-                case c_m_case_1
-                by step( solve( !KU( ~r ) @ #vk.4 ) )
-              next
-                case c_m_case_2
-                step( solve( !KU( (~r m x.1) ) @ #vk.5 ) )
-                  case c_m_case_1
-                  by step( contradiction /* forbidden AC constructor chain */ )
-                next
-                  case c_m_case_2
-                  by step( contradiction /* forbidden AC constructor chain */ )
-                next
-                  case coerce
-                  by sorry // bound reached
-                qed
-              next
-                case coerce
-                step( solve( !KD( (~r m x) ) ▶₀ #vk.1 ) )
                   case genKey_case_1
                   by sorry // bound reached
                 next
@@ -4943,6 +4943,42 @@ next
               qed
             next
               case mixnet_case_08
+              by step( solve( !KU( ~skB ) @ #vk.3 ) )
+            next
+              case mixnet_case_09
+              step( solve( !KU( (~skB m x.1) ) @ #vk.3 ) )
+                case c_m_case_1
+                by step( solve( !KU( ~skB ) @ #vk.5 ) )
+              next
+                case c_m_case_2
+                step( solve( !KU( (~skB m x.2) ) @ #vk.5 ) )
+                  case c_m_case_1
+                  by step( contradiction /* forbidden AC constructor chain */ )
+                next
+                  case c_m_case_2
+                  by step( contradiction /* forbidden AC constructor chain */ )
+                next
+                  case coerce
+                  by sorry // bound reached
+                qed
+              next
+                case coerce
+                step( solve( !KD( (~skB m x.1) ) ▶₀ #vk.1 ) )
+                  case genKey_case_1
+                  by sorry // bound reached
+                next
+                  case genKey_case_2
+                  by sorry // bound reached
+                next
+                  case mixnet_case_1
+                  by sorry // bound reached
+                next
+                  case mixnet_case_2
+                  by sorry // bound reached
+                qed
+              qed
+            next
+              case mixnet_case_10
               step( solve( !KU( expo('g', x.2) ) @ #vk.2 ) )
                 case c_expo
                 step( solve( !KU( (x m x.1) ) @ #vk.2 ) )
@@ -5092,42 +5128,6 @@ next
                 by step( contradiction /* cyclic */ )
               qed
             next
-              case mixnet_case_09
-              by step( solve( !KU( ~skB ) @ #vk.3 ) )
-            next
-              case mixnet_case_10
-              step( solve( !KU( (~skB m x.1) ) @ #vk.3 ) )
-                case c_m_case_1
-                by step( solve( !KU( ~skB ) @ #vk.5 ) )
-              next
-                case c_m_case_2
-                step( solve( !KU( (~skB m x.2) ) @ #vk.5 ) )
-                  case c_m_case_1
-                  by step( contradiction /* forbidden AC constructor chain */ )
-                next
-                  case c_m_case_2
-                  by step( contradiction /* forbidden AC constructor chain */ )
-                next
-                  case coerce
-                  by sorry // bound reached
-                qed
-              next
-                case coerce
-                step( solve( !KD( (~skB m x.1) ) ▶₀ #vk.1 ) )
-                  case genKey_case_1
-                  by sorry // bound reached
-                next
-                  case genKey_case_2
-                  by sorry // bound reached
-                next
-                  case mixnet_case_1
-                  by sorry // bound reached
-                next
-                  case mixnet_case_2
-                  by sorry // bound reached
-                qed
-              qed
-            next
               case mixnet_case_11
               by step( solve( !KU( ~skB ) @ #vk.3 ) )
             next
@@ -5139,13 +5139,13 @@ next
                 case c_m_case_2
                 step( solve( !KU( (~r m x m x.1) ) @ #vk.2 ) )
                   case c_m_case_1
-                  by sorry // bound reached
+                  by step( solve( !KU( ~r ) @ #vk.6 ) )
                 next
                   case c_m_case_2
                   by sorry // bound reached
                 next
                   case c_m_case_3
-                  by step( solve( !KU( ~r ) @ #vk.6 ) )
+                  by sorry // bound reached
                 next
                   case c_m_case_4
                   by sorry // bound reached
@@ -5349,19 +5349,19 @@ next
                   by sorry // bound reached
                 next
                   case mixnet_case_01
-                  by sorry // bound reached
+                  by step( solve( !KU( ~skA ) @ #vk.2 ) )
                 next
                   case mixnet_case_02
-                  by sorry // bound reached
+                  by step( solve( !KU( ~r ) @ #vk.2 ) )
                 next
                   case mixnet_case_03
-                  by step( solve( !KU( ~r ) @ #vk.2 ) )
+                  by sorry // bound reached
                 next
                   case mixnet_case_04
                   by sorry // bound reached
                 next
                   case mixnet_case_05
-                  by step( solve( !KU( ~skA ) @ #vk.2 ) )
+                  by sorry // bound reached
                 next
                   case mixnet_case_06
                   by sorry // bound reached
@@ -5370,13 +5370,13 @@ next
                   by sorry // bound reached
                 next
                   case mixnet_case_08
-                  by sorry // bound reached
+                  by step( solve( !KU( ~skA ) @ #vk.3 ) )
                 next
                   case mixnet_case_09
                   by sorry // bound reached
                 next
                   case mixnet_case_10
-                  by step( solve( !KU( ~skA ) @ #vk.3 ) )
+                  by sorry // bound reached
                 next
                   case mixnet_case_11
                   by sorry // bound reached
@@ -5394,13 +5394,13 @@ next
                   by sorry // bound reached
                 next
                   case mixnet_case_16
-                  by sorry // bound reached
+                  by step( solve( !KU( ~skA ) @ #vk.3 ) )
                 next
                   case mixnet_case_17
-                  by sorry // bound reached
+                  by step( solve( !KU( ~r ) @ #vk.3 ) )
                 next
                   case mixnet_case_18
-                  by step( solve( !KU( ~skA ) @ #vk.3 ) )
+                  by sorry // bound reached
                 next
                   case mixnet_case_19
                   by sorry // bound reached
@@ -5409,7 +5409,7 @@ next
                   by sorry // bound reached
                 next
                   case mixnet_case_21
-                  by step( solve( !KU( ~r ) @ #vk.3 ) )
+                  by sorry // bound reached
                 next
                   case mixnet_case_22
                   by step( solve( !KU( ~r ) @ #vk.2 ) )
@@ -5976,9 +5976,9 @@ next
                 by step( solve( !KU( ~r ) @ #vk.3 ) )
               next
                 case mixnet_case_03
-                step( solve( !KU( (~r m x) ) @ #vk.3 ) )
+                step( solve( !KU( (~skA m x) ) @ #vk.2 ) )
                   case c_m_case_1
-                  by step( solve( !KU( ~r ) @ #vk.5 ) )
+                  by step( solve( !KU( ~skA ) @ #vk.4 ) )
                 next
                   case c_m_case_2
                   by sorry // ignored (attack exists)
@@ -5988,9 +5988,9 @@ next
                 qed
               next
                 case mixnet_case_04
-                step( solve( !KU( (~skA m x) ) @ #vk.2 ) )
+                step( solve( !KU( (~r m x) ) @ #vk.3 ) )
                   case c_m_case_1
-                  by step( solve( !KU( ~skA ) @ #vk.4 ) )
+                  by step( solve( !KU( ~r ) @ #vk.5 ) )
                 next
                   case c_m_case_2
                   by sorry // ignored (attack exists)
@@ -6006,9 +6006,9 @@ next
                 by step( solve( !KU( ~r ) @ #vk.3 ) )
               next
                 case mixnet_case_07
-                step( solve( !KU( (~r m x) ) @ #vk.3 ) )
+                step( solve( !KU( (~skB m x) ) @ #vk.2 ) )
                   case c_m_case_1
-                  by step( solve( !KU( ~r ) @ #vk.5 ) )
+                  by step( solve( !KU( ~skB ) @ #vk.4 ) )
                 next
                   case c_m_case_2
                   by sorry // ignored (attack exists)
@@ -6018,9 +6018,9 @@ next
                 qed
               next
                 case mixnet_case_08
-                step( solve( !KU( (~skB m x) ) @ #vk.2 ) )
+                step( solve( !KU( (~r m x) ) @ #vk.3 ) )
                   case c_m_case_1
-                  by step( solve( !KU( ~skB ) @ #vk.4 ) )
+                  by step( solve( !KU( ~r ) @ #vk.5 ) )
                 next
                   case c_m_case_2
                   by sorry // ignored (attack exists)
@@ -6075,6 +6075,21 @@ next
                 qed
               next
                 case mixnet_case_11
+                by step( solve( !KU( ~r ) @ #vk.3 ) )
+              next
+                case mixnet_case_12
+                step( solve( !KU( (~r m x.1) ) @ #vk.3 ) )
+                  case c_m_case_1
+                  by step( solve( !KU( ~r ) @ #vk.5 ) )
+                next
+                  case c_m_case_2
+                  by sorry // ignored (attack exists)
+                next
+                  case coerce
+                  by sorry // ignored (attack exists)
+                qed
+              next
+                case mixnet_case_13
                 step( solve( !KU( expo('g', x.1) ) @ #vk.1 ) )
                   case c_expo
                   by sorry // ignored (attack exists)
@@ -6110,25 +6125,19 @@ next
                   by step( contradiction /* cyclic */ )
                 qed
               next
-                case mixnet_case_12
-                by step( solve( !KU( ~r ) @ #vk.3 ) )
-              next
-                case mixnet_case_13
-                step( solve( !KU( (~r m x.1) ) @ #vk.3 ) )
-                  case c_m_case_1
-                  by step( solve( !KU( ~r ) @ #vk.5 ) )
-                next
-                  case c_m_case_2
-                  by sorry // ignored (attack exists)
-                next
-                  case coerce
-                  by sorry // ignored (attack exists)
-                qed
-              next
                 case mixnet_case_14
                 by step( solve( !KU( ~r ) @ #vk.2 ) )
               next
                 case mixnet_case_15
+                step( solve( splitEqs(0) ) )
+                  case split_case_1
+                  MIRRORED
+                next
+                  case split_case_2
+                  by sorry // ignored (attack exists)
+                qed
+              next
+                case mixnet_case_16
                 step( solve( !KU( (~r m x) ) @ #vk.2 ) )
                   case c_m_case_1
                   by step( solve( !KU( ~r ) @ #vk.4 ) )
@@ -6137,15 +6146,6 @@ next
                   by sorry // ignored (attack exists)
                 next
                   case coerce
-                  by sorry // ignored (attack exists)
-                qed
-              next
-                case mixnet_case_16
-                step( solve( splitEqs(0) ) )
-                  case split_case_1
-                  MIRRORED
-                next
-                  case split_case_2
                   by sorry // ignored (attack exists)
                 qed
               qed
@@ -6399,6 +6399,9 @@ next
               by step( solve( !KU( ~skA ) @ #vk.1 ) )
             next
               case genKey_case_2
+              MIRRORED
+            next
+              case genKey_case_3
               step( solve( !KU( (~skA m x) ) @ #vk.1 ) )
                 case c_m_case_1
                 by step( solve( !KU( ~skA ) @ #vk.3 ) )
@@ -6431,9 +6434,6 @@ next
                 qed
               qed
             next
-              case genKey_case_3
-              MIRRORED
-            next
               case genKey_case_4
               by step( solve( !KU( ~skA ) @ #vk.2 ) )
             next
@@ -6445,13 +6445,13 @@ next
                 case c_m_case_2
                 step( solve( !KU( (~skB m x m x.1) ) @ #vk.2 ) )
                   case c_m_case_1
-                  by sorry // ignored (attack exists)
+                  by step( solve( !KU( ~skB ) @ #vk.5 ) )
                 next
                   case c_m_case_2
                   by sorry // ignored (attack exists)
                 next
                   case c_m_case_3
-                  by step( solve( !KU( ~skB ) @ #vk.5 ) )
+                  by sorry // ignored (attack exists)
                 next
                   case c_m_case_4
                   by sorry // ignored (attack exists)
@@ -6499,16 +6499,16 @@ next
                 case c_m_case_2
                 step( solve( !KU( (~r m ~skB m x m x.1) ) @ #vk.2 ) )
                   case c_m_case_01
-                  by sorry // ignored (attack exists)
-                next
-                  case c_m_case_02
-                  by sorry // ignored (attack exists)
-                next
-                  case c_m_case_03
                   by step( solve( !KU( ~r ) @ #vk.6 ) )
                 next
-                  case c_m_case_04
+                  case c_m_case_02
                   by step( solve( !KU( ~skB ) @ #vk.6 ) )
+                next
+                  case c_m_case_03
+                  by sorry // ignored (attack exists)
+                next
+                  case c_m_case_04
+                  by sorry // ignored (attack exists)
                 next
                   case c_m_case_05
                   by sorry // ignored (attack exists)
@@ -6576,6 +6576,39 @@ next
               by step( solve( !KU( ~skA ) @ #vk.3 ) )
             next
               case mixnet_case_05
+              step( solve( !KU( (~r m x) ) @ #vk.1 ) )
+                case c_m_case_1
+                by step( solve( !KU( ~r ) @ #vk.4 ) )
+              next
+                case c_m_case_2
+                step( solve( !KU( (~r m x.1) ) @ #vk.5 ) )
+                  case c_m_case_1
+                  by step( contradiction /* forbidden AC constructor chain */ )
+                next
+                  case c_m_case_2
+                  by step( contradiction /* forbidden AC constructor chain */ )
+                next
+                  case coerce
+                  by sorry // ignored (attack exists)
+                qed
+              next
+                case coerce
+                step( solve( !KD( (~r m x) ) ▶₀ #vk.1 ) )
+                  case genKey_case_1
+                  by sorry // ignored (attack exists)
+                next
+                  case genKey_case_2
+                  by sorry // ignored (attack exists)
+                next
+                  case mixnet_case_1
+                  by sorry // ignored (attack exists)
+                next
+                  case mixnet_case_2
+                  by sorry // ignored (attack exists)
+                qed
+              qed
+            next
+              case mixnet_case_06
               step( solve( !KU( (~skA m x) ) @ #vk.3 ) )
                 case c_m_case_1
                 by step( solve( !KU( ~skA ) @ #vk.5 ) )
@@ -6583,16 +6616,16 @@ next
                 case c_m_case_2
                 step( solve( !KU( (~r m ~skA m x m x.1) ) @ #vk.2 ) )
                   case c_m_case_01
-                  by sorry // ignored (attack exists)
-                next
-                  case c_m_case_02
-                  by sorry // ignored (attack exists)
-                next
-                  case c_m_case_03
                   by step( solve( !KU( ~r ) @ #vk.6 ) )
                 next
-                  case c_m_case_04
+                  case c_m_case_02
                   by step( solve( !KU( ~skA ) @ #vk.6 ) )
+                next
+                  case c_m_case_03
+                  by sorry // ignored (attack exists)
+                next
+                  case c_m_case_04
+                  by sorry // ignored (attack exists)
                 next
                   case c_m_case_05
                   by sorry // ignored (attack exists)
@@ -6639,39 +6672,6 @@ next
               next
                 case coerce
                 step( solve( !KD( (~skA m x) ) ▶₀ #vk.1 ) )
-                  case genKey_case_1
-                  by sorry // ignored (attack exists)
-                next
-                  case genKey_case_2
-                  by sorry // ignored (attack exists)
-                next
-                  case mixnet_case_1
-                  by sorry // ignored (attack exists)
-                next
-                  case mixnet_case_2
-                  by sorry // ignored (attack exists)
-                qed
-              qed
-            next
-              case mixnet_case_06
-              step( solve( !KU( (~r m x) ) @ #vk.1 ) )
-                case c_m_case_1
-                by step( solve( !KU( ~r ) @ #vk.4 ) )
-              next
-                case c_m_case_2
-                step( solve( !KU( (~r m x.1) ) @ #vk.5 ) )
-                  case c_m_case_1
-                  by step( contradiction /* forbidden AC constructor chain */ )
-                next
-                  case c_m_case_2
-                  by step( contradiction /* forbidden AC constructor chain */ )
-                next
-                  case coerce
-                  by sorry // ignored (attack exists)
-                qed
-              next
-                case coerce
-                step( solve( !KD( (~r m x) ) ▶₀ #vk.1 ) )
                   case genKey_case_1
                   by sorry // ignored (attack exists)
                 next
@@ -6759,6 +6759,42 @@ next
               qed
             next
               case mixnet_case_08
+              by step( solve( !KU( ~skA ) @ #vk.3 ) )
+            next
+              case mixnet_case_09
+              step( solve( !KU( (~skA m x.1) ) @ #vk.3 ) )
+                case c_m_case_1
+                by step( solve( !KU( ~skA ) @ #vk.5 ) )
+              next
+                case c_m_case_2
+                step( solve( !KU( (~skA m x.2) ) @ #vk.5 ) )
+                  case c_m_case_1
+                  by step( contradiction /* forbidden AC constructor chain */ )
+                next
+                  case c_m_case_2
+                  by step( contradiction /* forbidden AC constructor chain */ )
+                next
+                  case coerce
+                  by sorry // ignored (attack exists)
+                qed
+              next
+                case coerce
+                step( solve( !KD( (~skA m x.1) ) ▶₀ #vk.1 ) )
+                  case genKey_case_1
+                  by sorry // ignored (attack exists)
+                next
+                  case genKey_case_2
+                  by sorry // ignored (attack exists)
+                next
+                  case mixnet_case_1
+                  by sorry // ignored (attack exists)
+                next
+                  case mixnet_case_2
+                  by sorry // ignored (attack exists)
+                qed
+              qed
+            next
+              case mixnet_case_10
               step( solve( !KU( expo('g', x.2) ) @ #vk.2 ) )
                 case c_expo
                 step( solve( !KU( (x m x.1) ) @ #vk.2 ) )
@@ -6908,42 +6944,6 @@ next
                 by step( contradiction /* cyclic */ )
               qed
             next
-              case mixnet_case_09
-              by step( solve( !KU( ~skA ) @ #vk.3 ) )
-            next
-              case mixnet_case_10
-              step( solve( !KU( (~skA m x.1) ) @ #vk.3 ) )
-                case c_m_case_1
-                by step( solve( !KU( ~skA ) @ #vk.5 ) )
-              next
-                case c_m_case_2
-                step( solve( !KU( (~skA m x.2) ) @ #vk.5 ) )
-                  case c_m_case_1
-                  by step( contradiction /* forbidden AC constructor chain */ )
-                next
-                  case c_m_case_2
-                  by step( contradiction /* forbidden AC constructor chain */ )
-                next
-                  case coerce
-                  by sorry // ignored (attack exists)
-                qed
-              next
-                case coerce
-                step( solve( !KD( (~skA m x.1) ) ▶₀ #vk.1 ) )
-                  case genKey_case_1
-                  by sorry // ignored (attack exists)
-                next
-                  case genKey_case_2
-                  by sorry // ignored (attack exists)
-                next
-                  case mixnet_case_1
-                  by sorry // ignored (attack exists)
-                next
-                  case mixnet_case_2
-                  by sorry // ignored (attack exists)
-                qed
-              qed
-            next
               case mixnet_case_11
               by step( solve( !KU( ~skA ) @ #vk.3 ) )
             next
@@ -6955,13 +6955,13 @@ next
                 case c_m_case_2
                 step( solve( !KU( (~r m x m x.1) ) @ #vk.2 ) )
                   case c_m_case_1
-                  by sorry // ignored (attack exists)
+                  by step( solve( !KU( ~r ) @ #vk.6 ) )
                 next
                   case c_m_case_2
                   by sorry // ignored (attack exists)
                 next
                   case c_m_case_3
-                  by step( solve( !KU( ~r ) @ #vk.6 ) )
+                  by sorry // ignored (attack exists)
                 next
                   case c_m_case_4
                   by sorry // ignored (attack exists)
@@ -7250,13 +7250,13 @@ next
                 case c_m_case_2
                 step( solve( !KU( (~skA m x m x.1) ) @ #vk.2 ) )
                   case c_m_case_1
-                  by sorry // ignored (attack exists)
+                  by step( solve( !KU( ~skA ) @ #vk.5 ) )
                 next
                   case c_m_case_2
                   by sorry // ignored (attack exists)
                 next
                   case c_m_case_3
-                  by step( solve( !KU( ~skA ) @ #vk.5 ) )
+                  by sorry // ignored (attack exists)
                 next
                   case c_m_case_4
                   by sorry // ignored (attack exists)
@@ -7297,6 +7297,9 @@ next
               by step( solve( !KU( ~skB ) @ #vk.1 ) )
             next
               case genKey_case_4
+              MIRRORED
+            next
+              case genKey_case_5
               step( solve( !KU( (~skB m x) ) @ #vk.1 ) )
                 case c_m_case_1
                 by step( solve( !KU( ~skB ) @ #vk.3 ) )
@@ -7329,9 +7332,6 @@ next
                 qed
               qed
             next
-              case genKey_case_5
-              MIRRORED
-            next
               case mixnet_case_01
               by step( solve( !KU( ~x ) @ #vk.1 ) )
             next
@@ -7339,6 +7339,39 @@ next
               by step( solve( !KU( ~skB ) @ #vk.3 ) )
             next
               case mixnet_case_03
+              step( solve( !KU( (~r m x) ) @ #vk.1 ) )
+                case c_m_case_1
+                by step( solve( !KU( ~r ) @ #vk.4 ) )
+              next
+                case c_m_case_2
+                step( solve( !KU( (~r m x.1) ) @ #vk.5 ) )
+                  case c_m_case_1
+                  by step( contradiction /* forbidden AC constructor chain */ )
+                next
+                  case c_m_case_2
+                  by step( contradiction /* forbidden AC constructor chain */ )
+                next
+                  case coerce
+                  by sorry // ignored (attack exists)
+                qed
+              next
+                case coerce
+                step( solve( !KD( (~r m x) ) ▶₀ #vk.1 ) )
+                  case genKey_case_1
+                  by sorry // ignored (attack exists)
+                next
+                  case genKey_case_2
+                  by sorry // ignored (attack exists)
+                next
+                  case mixnet_case_1
+                  by sorry // ignored (attack exists)
+                next
+                  case mixnet_case_2
+                  by sorry // ignored (attack exists)
+                qed
+              qed
+            next
+              case mixnet_case_04
               step( solve( !KU( (~skB m x) ) @ #vk.3 ) )
                 case c_m_case_1
                 by step( solve( !KU( ~skB ) @ #vk.5 ) )
@@ -7346,16 +7379,16 @@ next
                 case c_m_case_2
                 step( solve( !KU( (~r m ~skB m x m x.1) ) @ #vk.2 ) )
                   case c_m_case_01
-                  by sorry // ignored (attack exists)
-                next
-                  case c_m_case_02
-                  by sorry // ignored (attack exists)
-                next
-                  case c_m_case_03
                   by step( solve( !KU( ~r ) @ #vk.6 ) )
                 next
-                  case c_m_case_04
+                  case c_m_case_02
                   by step( solve( !KU( ~skB ) @ #vk.6 ) )
+                next
+                  case c_m_case_03
+                  by sorry // ignored (attack exists)
+                next
+                  case c_m_case_04
+                  by sorry // ignored (attack exists)
                 next
                   case c_m_case_05
                   by sorry // ignored (attack exists)
@@ -7416,39 +7449,6 @@ next
                 qed
               qed
             next
-              case mixnet_case_04
-              step( solve( !KU( (~r m x) ) @ #vk.1 ) )
-                case c_m_case_1
-                by step( solve( !KU( ~r ) @ #vk.4 ) )
-              next
-                case c_m_case_2
-                step( solve( !KU( (~r m x.1) ) @ #vk.5 ) )
-                  case c_m_case_1
-                  by step( contradiction /* forbidden AC constructor chain */ )
-                next
-                  case c_m_case_2
-                  by step( contradiction /* forbidden AC constructor chain */ )
-                next
-                  case coerce
-                  by sorry // ignored (attack exists)
-                qed
-              next
-                case coerce
-                step( solve( !KD( (~r m x) ) ▶₀ #vk.1 ) )
-                  case genKey_case_1
-                  by sorry // ignored (attack exists)
-                next
-                  case genKey_case_2
-                  by sorry // ignored (attack exists)
-                next
-                  case mixnet_case_1
-                  by sorry // ignored (attack exists)
-                next
-                  case mixnet_case_2
-                  by sorry // ignored (attack exists)
-                qed
-              qed
-            next
               case mixnet_case_05
               by step( solve( !KU( ~skB ) @ #vk.3 ) )
             next
@@ -7460,16 +7460,16 @@ next
                 case c_m_case_2
                 step( solve( !KU( (~r m ~skA m x m x.1) ) @ #vk.2 ) )
                   case c_m_case_01
-                  by sorry // ignored (attack exists)
-                next
-                  case c_m_case_02
-                  by sorry // ignored (attack exists)
-                next
-                  case c_m_case_03
                   by step( solve( !KU( ~r ) @ #vk.6 ) )
                 next
-                  case c_m_case_04
+                  case c_m_case_02
                   by step( solve( !KU( ~skA ) @ #vk.6 ) )
+                next
+                  case c_m_case_03
+                  by sorry // ignored (attack exists)
+                next
+                  case c_m_case_04
+                  by sorry // ignored (attack exists)
                 next
                   case c_m_case_05
                   by sorry // ignored (attack exists)
@@ -7603,6 +7603,42 @@ next
               qed
             next
               case mixnet_case_08
+              by step( solve( !KU( ~skB ) @ #vk.3 ) )
+            next
+              case mixnet_case_09
+              step( solve( !KU( (~skB m x.1) ) @ #vk.3 ) )
+                case c_m_case_1
+                by step( solve( !KU( ~skB ) @ #vk.5 ) )
+              next
+                case c_m_case_2
+                step( solve( !KU( (~skB m x.2) ) @ #vk.5 ) )
+                  case c_m_case_1
+                  by step( contradiction /* forbidden AC constructor chain */ )
+                next
+                  case c_m_case_2
+                  by step( contradiction /* forbidden AC constructor chain */ )
+                next
+                  case coerce
+                  by sorry // ignored (attack exists)
+                qed
+              next
+                case coerce
+                step( solve( !KD( (~skB m x.1) ) ▶₀ #vk.1 ) )
+                  case genKey_case_1
+                  by sorry // ignored (attack exists)
+                next
+                  case genKey_case_2
+                  by sorry // ignored (attack exists)
+                next
+                  case mixnet_case_1
+                  by sorry // ignored (attack exists)
+                next
+                  case mixnet_case_2
+                  by sorry // ignored (attack exists)
+                qed
+              qed
+            next
+              case mixnet_case_10
               step( solve( !KU( expo('g', x.2) ) @ #vk.2 ) )
                 case c_expo
                 step( solve( !KU( (x m x.1) ) @ #vk.2 ) )
@@ -7752,42 +7788,6 @@ next
                 by step( contradiction /* cyclic */ )
               qed
             next
-              case mixnet_case_09
-              by step( solve( !KU( ~skB ) @ #vk.3 ) )
-            next
-              case mixnet_case_10
-              step( solve( !KU( (~skB m x.1) ) @ #vk.3 ) )
-                case c_m_case_1
-                by step( solve( !KU( ~skB ) @ #vk.5 ) )
-              next
-                case c_m_case_2
-                step( solve( !KU( (~skB m x.2) ) @ #vk.5 ) )
-                  case c_m_case_1
-                  by step( contradiction /* forbidden AC constructor chain */ )
-                next
-                  case c_m_case_2
-                  by step( contradiction /* forbidden AC constructor chain */ )
-                next
-                  case coerce
-                  by sorry // ignored (attack exists)
-                qed
-              next
-                case coerce
-                step( solve( !KD( (~skB m x.1) ) ▶₀ #vk.1 ) )
-                  case genKey_case_1
-                  by sorry // ignored (attack exists)
-                next
-                  case genKey_case_2
-                  by sorry // ignored (attack exists)
-                next
-                  case mixnet_case_1
-                  by sorry // ignored (attack exists)
-                next
-                  case mixnet_case_2
-                  by sorry // ignored (attack exists)
-                qed
-              qed
-            next
               case mixnet_case_11
               by step( solve( !KU( ~skB ) @ #vk.3 ) )
             next
@@ -7799,13 +7799,13 @@ next
                 case c_m_case_2
                 step( solve( !KU( (~r m x m x.1) ) @ #vk.2 ) )
                   case c_m_case_1
-                  by sorry // ignored (attack exists)
+                  by step( solve( !KU( ~r ) @ #vk.6 ) )
                 next
                   case c_m_case_2
                   by sorry // ignored (attack exists)
                 next
                   case c_m_case_3
-                  by step( solve( !KU( ~r ) @ #vk.6 ) )
+                  by sorry // ignored (attack exists)
                 next
                   case c_m_case_4
                   by sorry // ignored (attack exists)
@@ -8009,19 +8009,19 @@ next
                   by sorry // ignored (attack exists)
                 next
                   case mixnet_case_01
-                  by sorry // ignored (attack exists)
+                  by step( solve( !KU( ~skB ) @ #vk.2 ) )
                 next
                   case mixnet_case_02
-                  by sorry // ignored (attack exists)
+                  by step( solve( !KU( ~r ) @ #vk.2 ) )
                 next
                   case mixnet_case_03
-                  by step( solve( !KU( ~r ) @ #vk.2 ) )
+                  by sorry // ignored (attack exists)
                 next
                   case mixnet_case_04
                   by sorry // ignored (attack exists)
                 next
                   case mixnet_case_05
-                  by step( solve( !KU( ~skB ) @ #vk.2 ) )
+                  by sorry // ignored (attack exists)
                 next
                   case mixnet_case_06
                   by sorry // ignored (attack exists)
@@ -8030,13 +8030,13 @@ next
                   by sorry // ignored (attack exists)
                 next
                   case mixnet_case_08
-                  by sorry // ignored (attack exists)
+                  by step( solve( !KU( ~skB ) @ #vk.3 ) )
                 next
                   case mixnet_case_09
                   by sorry // ignored (attack exists)
                 next
                   case mixnet_case_10
-                  by step( solve( !KU( ~skB ) @ #vk.3 ) )
+                  by sorry // ignored (attack exists)
                 next
                   case mixnet_case_11
                   by sorry // ignored (attack exists)
@@ -8054,13 +8054,13 @@ next
                   by sorry // ignored (attack exists)
                 next
                   case mixnet_case_16
-                  by sorry // ignored (attack exists)
+                  by step( solve( !KU( ~skB ) @ #vk.3 ) )
                 next
                   case mixnet_case_17
-                  by sorry // ignored (attack exists)
+                  by step( solve( !KU( ~r ) @ #vk.3 ) )
                 next
                   case mixnet_case_18
-                  by step( solve( !KU( ~skB ) @ #vk.3 ) )
+                  by sorry // ignored (attack exists)
                 next
                   case mixnet_case_19
                   by sorry // ignored (attack exists)
@@ -8069,7 +8069,7 @@ next
                   by sorry // ignored (attack exists)
                 next
                   case mixnet_case_21
-                  by step( solve( !KU( ~r ) @ #vk.3 ) )
+                  by sorry // ignored (attack exists)
                 next
                   case mixnet_case_22
                   by step( solve( !KU( ~r ) @ #vk.2 ) )
@@ -8636,9 +8636,9 @@ next
                 by step( solve( !KU( ~r ) @ #vk.3 ) )
               next
                 case mixnet_case_03
-                step( solve( !KU( (~r m x) ) @ #vk.3 ) )
+                step( solve( !KU( (~skB m x) ) @ #vk.2 ) )
                   case c_m_case_1
-                  by step( solve( !KU( ~r ) @ #vk.5 ) )
+                  by step( solve( !KU( ~skB ) @ #vk.4 ) )
                 next
                   case c_m_case_2
                   by sorry // ignored (attack exists)
@@ -8648,9 +8648,9 @@ next
                 qed
               next
                 case mixnet_case_04
-                step( solve( !KU( (~skB m x) ) @ #vk.2 ) )
+                step( solve( !KU( (~r m x) ) @ #vk.3 ) )
                   case c_m_case_1
-                  by step( solve( !KU( ~skB ) @ #vk.4 ) )
+                  by step( solve( !KU( ~r ) @ #vk.5 ) )
                 next
                   case c_m_case_2
                   by sorry // ignored (attack exists)
@@ -8666,9 +8666,9 @@ next
                 by step( solve( !KU( ~r ) @ #vk.3 ) )
               next
                 case mixnet_case_07
-                step( solve( !KU( (~r m x) ) @ #vk.3 ) )
+                step( solve( !KU( (~skA m x) ) @ #vk.2 ) )
                   case c_m_case_1
-                  by step( solve( !KU( ~r ) @ #vk.5 ) )
+                  by step( solve( !KU( ~skA ) @ #vk.4 ) )
                 next
                   case c_m_case_2
                   by sorry // ignored (attack exists)
@@ -8678,9 +8678,9 @@ next
                 qed
               next
                 case mixnet_case_08
-                step( solve( !KU( (~skA m x) ) @ #vk.2 ) )
+                step( solve( !KU( (~r m x) ) @ #vk.3 ) )
                   case c_m_case_1
-                  by step( solve( !KU( ~skA ) @ #vk.4 ) )
+                  by step( solve( !KU( ~r ) @ #vk.5 ) )
                 next
                   case c_m_case_2
                   by sorry // ignored (attack exists)
@@ -8735,6 +8735,21 @@ next
                 qed
               next
                 case mixnet_case_11
+                by step( solve( !KU( ~r ) @ #vk.3 ) )
+              next
+                case mixnet_case_12
+                step( solve( !KU( (~r m x.1) ) @ #vk.3 ) )
+                  case c_m_case_1
+                  by step( solve( !KU( ~r ) @ #vk.5 ) )
+                next
+                  case c_m_case_2
+                  by sorry // ignored (attack exists)
+                next
+                  case coerce
+                  by sorry // ignored (attack exists)
+                qed
+              next
+                case mixnet_case_13
                 step( solve( !KU( expo('g', x.1) ) @ #vk.1 ) )
                   case c_expo
                   by sorry // ignored (attack exists)
@@ -8770,25 +8785,19 @@ next
                   by step( contradiction /* cyclic */ )
                 qed
               next
-                case mixnet_case_12
-                by step( solve( !KU( ~r ) @ #vk.3 ) )
-              next
-                case mixnet_case_13
-                step( solve( !KU( (~r m x.1) ) @ #vk.3 ) )
-                  case c_m_case_1
-                  by step( solve( !KU( ~r ) @ #vk.5 ) )
-                next
-                  case c_m_case_2
-                  by sorry // ignored (attack exists)
-                next
-                  case coerce
-                  by sorry // ignored (attack exists)
-                qed
-              next
                 case mixnet_case_14
                 by step( solve( !KU( ~r ) @ #vk.2 ) )
               next
                 case mixnet_case_15
+                step( solve( splitEqs(0) ) )
+                  case split_case_1
+                  MIRRORED
+                next
+                  case split_case_2
+                  by sorry // ignored (attack exists)
+                qed
+              next
+                case mixnet_case_16
                 step( solve( !KU( (~r m x) ) @ #vk.2 ) )
                   case c_m_case_1
                   by step( solve( !KU( ~r ) @ #vk.4 ) )
@@ -8797,15 +8806,6 @@ next
                   by sorry // ignored (attack exists)
                 next
                   case coerce
-                  by sorry // ignored (attack exists)
-                qed
-              next
-                case mixnet_case_16
-                step( solve( splitEqs(0) ) )
-                  case split_case_1
-                  MIRRORED
-                next
-                  case split_case_2
                   by sorry // ignored (attack exists)
                 qed
               qed
@@ -9047,8 +9047,8 @@ Subterm Convergence Warning
 Generated from:
 Tamarin version 1.13.0
 Maude version 3.5.1
-Git revision: abcb0ff3eca770d7b7f58a583b2616eafe845e15, branch: fix-derivation-check-warnings
-Compiled at: 2026-07-22 11:02:46.6864 UTC
+Git revision: 41bc81379b23681e7057314a5cf66a25c45e1986, branch: canonicalise-subst
+Compiled at: 2026-07-27 16:11:34.947223 UTC
 */
 
 end
@@ -9060,7 +9060,7 @@ summary of summaries:
 analyzed: examples/csf26-ac/exponential_mixnet/exponential_mixnet_V2.spthy
 
   output:          examples/csf26-ac/exponential_mixnet/exponential_mixnet_V2.spthy.tmp
-  processing time: 34.18s
+  processing time: 33.24s
   
   WARNING: 1 wellformedness check failed!
            The analysis results might be wrong!

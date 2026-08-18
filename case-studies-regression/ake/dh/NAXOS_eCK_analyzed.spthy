@@ -1487,9 +1487,6 @@ next
             case Sessk_reveal_case_1
             solve( splitEqs(2) )
               case split_case_1
-              by contradiction /* from formulas */
-            next
-              case split_case_2
               solve( !KU( 'g'^(~ea*h1(<~ey, ~eb>)*inv(~eb)) ) @ #vk.2 )
                 case Resp_1
                 solve( !KU( ~ea ) @ #vk.4 )
@@ -1509,6 +1506,9 @@ next
                   by contradiction /* from formulas */
                 qed
               qed
+            next
+              case split_case_2
+              by contradiction /* from formulas */
             qed
           next
             case Sessk_reveal_case_2
@@ -1553,8 +1553,8 @@ qed
 Generated from:
 Tamarin version 1.13.0
 Maude version 3.5.1
-Git revision: abcb0ff3eca770d7b7f58a583b2616eafe845e15, branch: fix-derivation-check-warnings
-Compiled at: 2026-07-22 11:02:46.6864 UTC
+Git revision: 41bc81379b23681e7057314a5cf66a25c45e1986, branch: canonicalise-subst
+Compiled at: 2026-07-27 16:11:34.947223 UTC
 */
 
 end
@@ -1566,7 +1566,7 @@ summary of summaries:
 analyzed: examples/ake/dh/NAXOS_eCK.spthy
 
   output:          examples/ake/dh/NAXOS_eCK.spthy.tmp
-  processing time: 2.41s
+  processing time: 2.39s
   
   eCK_key_secrecy (all-traces): verified (136 steps)
 

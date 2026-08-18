@@ -15,7 +15,10 @@ module Theory.Constraint.System.Dot (
   , DotOptions(..)
   , doNodeStyle
   , defaultDotOptions
+  , NodeColorMap
+  , nodeColorMap
   , SeDot
+  , orderAbbreviationsForJSON
   ) where
 
 
@@ -408,6 +411,28 @@ dotLessEdge (src, tgt, color) = do
   srcId <- getState dsNodes src ("Source node of less edge not found: " ++ show src)
   tgtId <- getState dsNodes tgt ("Target node of less edge not found: " ++ show src)
   liftDot $ D.edge srcId tgtId [("color",color),("style","dashed")]
+
+-- Function to order abbreviations for JSON output. Replicating the topological sort used in the legend generation to ensure consistent ordering.
+-- We need to preserve terms for the new JSON output, as the terms are later used for highlighting nodes in the graph.
+orderAbbreviationsForJSON :: Abbreviations -> [(LNTerm, (AbbreviationTerm, AbbreviationExpansion))]
+orderAbbreviationsForJSON abbrevs =
+  topoSortAbbrevs $ zip [0..] $ sortOn( Data.Ord.Down . render . Sys.prettyLNTerm . fst . snd) (M.toList abbrevs)
+  where
+    topoSortAbbrevs :: [(Int, (LNTerm, (AbbreviationTerm, AbbreviationExpansion)))]  -> [(LNTerm,(AbbreviationTerm,AbbreviationExpansion))]
+    topoSortAbbrevs keyedElems =
+      let edgeList = map (\(key1, node) ->
+                            let outlist = findLegendEdges keyedElems node in
+                            (node, key1, outlist)) keyedElems
+          (graph, vf, _) = G.graphFromEdges edgeList
+          vertices = G.topSort graph in
+      map (\v -> fst3 $ vf v) vertices
+
+    findLegendEdges :: [(Int, (LNTerm, (AbbreviationTerm, AbbreviationExpansion)))]  -> (LNTerm, (AbbreviationTerm, AbbreviationExpansion)) -> [Int]
+    findLegendEdges keyedElems (_, (abbrevName1, _)) =
+      mapMaybe (\(key2, (_,(_, recursiveExpansion2))) ->
+                  if isProperSubterm abbrevName1 recursiveExpansion2
+                  then Just key2
+                  else Nothing) keyedElems
 
 -- | Dot a legend listing all abbreviations by adding a sink node with a suitable HTML table label.
 generateLegend :: SeDot ()

@@ -126,6 +126,7 @@ import           Control.Basics
 import           Control.DeepSeq
 import           Control.Monad.Bind
 import           Control.Monad.Identity
+import qualified Control.Monad.State.Strict       as St
 import qualified Control.Monad.Trans.PreciseFresh as Precise
 
 import           GHC.Generics                     (Generic)
@@ -215,7 +216,7 @@ newtype NameId = NameId { getNameId :: String }
     deriving( Eq, Ord, Typeable, Data, Generic, NFData, Binary )
 
 -- | Tags for names.
-data NameTag = FreshName | PubName | NodeName | NatName
+data NameTag = FreshName | PubName | NodeName | NatName | AbbrevName
     deriving( Eq, Ord, Show, Typeable, Data, Generic, NFData, Binary )
 
 -- | Names.
@@ -236,6 +237,7 @@ instance Show Name where
   show (Name PubName    n) = "'"  ++ show n ++ "'"
   show (Name NodeName   n) = "#'" ++ show n ++ "'"
   show (Name NatName   n) = "%'" ++ show n ++ "'"
+  show (Name AbbrevName n) = show n
 
 instance Show NameId where
   show = getNameId
@@ -261,6 +263,7 @@ sortOfName (Name FreshName _) = LSortFresh
 sortOfName (Name PubName   _) = LSortPub
 sortOfName (Name NodeName  _) = LSortNode
 sortOfName (Name NatName   _) = LSortNat
+sortOfName (Name AbbrevName _) = LSortMsg
 
 -- | Is a term a public constant?
 isPubConst :: LNTerm -> Bool
@@ -716,8 +719,20 @@ avoidPrecise = avoidPreciseVars . frees
 --   fresh state, the same result is returned for two terms that only differ
 --   in the indices of variables.
 {-# INLINABLE renamePrecise #-}
-renamePrecise :: (MonadFresh m, HasFrees a) => a -> m a
-renamePrecise x = evalBindT (someInst x) noBindings
+renamePrecise :: HasFrees a => a -> a
+renamePrecise t = St.evalState (mapFrees (Arbitrary renameVar) t) (M.empty, M.empty)
+  where
+    renameVar :: LVar -> St.State (M.Map LVar LVar, M.Map String Integer) LVar
+    renameVar v = do
+        (renaming, nextIdx) <- St.get
+        case M.lookup v renaming of
+          Just v' -> return v'                  -- seen before: reuse the same var
+          Nothing -> do                         -- first occurrence: take its next index
+            let name = lvarName v
+                idx  = M.findWithDefault 0 name nextIdx
+                v'   = LVar name (lvarSort v) idx
+            St.put (M.insert v v' renaming, M'.insert name (idx + 1) nextIdx)
+            return v'
 
 
 renameDropNamehint :: (MonadFresh m, MonadBind LVar LVar m, HasFrees a) => a -> m a

@@ -50,7 +50,10 @@ module Web.Types
   , imageFormatMIME
   , OutputFormat(..)
   , OutputCommand(..)
+  , JSONGraphs
   , intdotLayout
+  , optionsMenuItemTpl
+  , popoutOptionsTpl
   )
 where
 
@@ -73,6 +76,7 @@ import Yesod.Core
 import Yesod.Static
 
 import Theory
+import Theory.Constraint.System.JSON (JSONGraphs)
 import Theory.Tools.Wellformedness (WfErrorReport)
 import Main.TheoryLoader
 
@@ -153,6 +157,9 @@ data WebUI = WebUI
     -- ^ The default prover to use for automatic proving.
   , debug              :: Bool
     -- ^ Output debug messages
+  , loadedJsonGraphs   :: Maybe JSONGraphs
+    -- ^ Graphs loaded from an externally exported JSON file (see --load-json),
+    -- for standalone viewing via the \/loadjson routes.
   }
 
 
@@ -580,6 +587,7 @@ mkYesodData "WebUI" [parseRoutes|
 -- /thy/trace/#Int/debug/*TheoryPath             TheoryPathDR            GET
 /thy/trace/#Int/graph/*TheoryPath             TheoryGraphR            GET
 /thy/trace/#Int/interactive-graph-def/*TheoryPath             TheoryInteractiveGraphR            GET
+/thy/trace/#Int/json/*TheoryPath          TheoryGraphJsonR            GET
 /thy/trace/#Int/autoprove/#SolutionExtractor/#Int/#Bool/*TheoryPath AutoProverR             GET
 /thy/trace/#Int/autoproveAll/#SolutionExtractor/#Int/*TheoryPath AutoProverAllR             GET
 /thy/trace/#Int/next/#String/*TheoryPath      NextTheoryPathR         GET
@@ -599,6 +607,8 @@ mkYesodData "WebUI" [parseRoutes|
 -- /thy/equiv/#Int/debug/*DiffTheoryPath             TheoryPathDiffDR            GET
 /thy/equiv/#Int/graph/*DiffTheoryPath         TheoryGraphDiffR            GET
 /thy/equiv/#Int/mirror/*DiffTheoryPath        TheoryMirrorDiffR            GET
+/thy/equiv/#Int/json/*DiffTheoryPath          TheoryGraphJsonDiffR         GET
+/thy/equiv/#Int/json-mirror/*DiffTheoryPath   TheoryGraphJsonMirrorDiffR   GET
 /thy/equiv/#Int/interactive-graph-def/*DiffTheoryPath         TheoryInteractiveGraphDiffR            GET
 /thy/equiv/#Int/interactive-mirror-def/*DiffTheoryPath        TheoryInteractiveMirrorDiffR            GET
 /thy/equiv/#Int/intdot/mirror/*DiffTheoryPath             InteractiveDotGraphMirrorDiffR            GET
@@ -615,6 +625,9 @@ mkYesodData "WebUI" [parseRoutes|
 /thy/equiv/#Int/del/path/*DiffTheoryPath      DeleteStepDiffR             GET
 /thy/equiv/#Int/reload                           ReloadTheoryDiffR           POST
 /thy/equiv/#Int/unload                           UnloadTheoryDiffR           GET
+/loadjson                                        LoadJsonR                   GET
+/loadjson/#Int                                    LoadJsonViewR               GET
+/loadjson/data/#Int                               LoadJsonDataR               GET
 /kill                                      KillThreadR             GET
 -- /threads                                   ThreadsR                GET
 /robots.txt                                RobotsR                 GET
@@ -724,9 +737,70 @@ defaultLayout' w = do
           -- <li.delstep>
             -- <a href="#del/path">Remove step</a>
 
-intdotLayout :: Widget -> Handler Html
-intdotLayout w = do
-  page <- widgetToPageContent w
+-- | The list of visualization toggles (abbreviate terms, clustering by
+-- role, auto-sources, node content abstraction and graph simplification
+-- level) shown inside the "Options" drop-down.
+--
+-- Shared between the main theory header ('Web.Hamlet.headerTpl' and
+-- 'Web.Hamlet.headerDiffTpl') and the floating options bar shown in the
+-- pop-out graph window ('popoutOptionsTpl'), so the toggles (and the ids
+-- relied upon by @tamarin-prover-ui.js@) are only defined once. Callers are
+-- responsible for wrapping this in the "Options" menu item (@<li>@).
+optionsMenuItemTpl :: Bool -- ^ Whether to include the "Abstract node content" toggle (omitted for diff theories).
+                   -> Widget
+optionsMenuItemTpl includeAbstractToggle = [whamlet|
+    $newline never
+    <ul class="list-with-toggles">
+      <li><a id=abbrv-toggle href="#">Abbreviate terms</a>
+      <li><a id=agent-toggle href="#">Clustering by role</a>
+      <li><a id=auto-toggle href="#">Show annotation auto-sources</a>
+      $if includeAbstractToggle
+        <li><a id=abstr-toggle href="#">Abstract node content</a>
+      <li><a id=lvl0-toggle href="#">Graph simplification off</a>
+      <li><a id=lvl1-toggle href="#">Graph simplification L1</a>
+      <li><a id=lvl2-toggle href="#">Graph simplification L2</a>
+      <li><a id=lvl3-toggle href="#">Graph simplification L3</a>
+|]
+
+-- | Floating options bar shown in the top-right corner of the pop-out /
+-- interactive graph window, which has no header/navigation bar of its own.
+-- Re-uses 'optionsMenuItemTpl' so the pop-out window offers exactly the
+-- same visualization toggles as the main theory view.
+popoutOptionsTpl :: Bool -> Widget
+popoutOptionsTpl includeAbstractToggle = [whamlet|
+    $newline never
+    <div #popout-options>
+      <ul #navigation>
+        <li><a href="#">Options</a>
+          ^{optionsMenuItemTpl includeAbstractToggle}
+|]
+
+-- | Layout for the interactive graph page (@\/thy\/.\/intdot\/...@). This
+-- same page is used both as the actual pop-out window (opened via
+-- @window.open@) and as the iframe embedded inside each graph display in
+-- the main theory window (via @\<static-graph\>@\/@\<dynamic-graph\>@). The
+-- main window already has its own Options menu in the header, so the
+-- floating 'popoutOptionsTpl' bar is only shown when this page is not
+-- embedded in another window (detected client-side via
+-- @window.self === window.top@; see the inline script below).
+--
+-- Everything on this page (the floating options bar, the graph itself and
+-- its abbreviation legend) is wrapped in a single top-level @.graph-page@
+-- container. This page also loads the shared @tamarin-prover-ui.css@ (for
+-- the Options menu styling), which contains generic rules (e.g. for
+-- @table@\/@a@) meant for the main theory window's own content; scoping
+-- the graph\/legend's own styling (in @graph.css@) under @.graph-page@
+-- keeps it self-contained and immune to such rules, rather than requiring
+-- one-off overrides for each leaking property.
+intdotLayout :: Bool -- ^ Whether to include the "Abstract node content" toggle (omitted for diff theories).
+             -> Widget -> Handler Html
+intdotLayout includeAbstractToggle w = do
+  page <- widgetToPageContent [whamlet|
+      $newline never
+      <div .graph-page>
+        ^{popoutOptionsTpl includeAbstractToggle}
+        ^{w}
+  |]
   withUrlRenderer [hamlet|
     $newline never
     !!!
@@ -737,6 +811,12 @@ intdotLayout w = do
         <title>#{pageTitle page}
         <style> body,html{width: 100%; height: 100%; overflow: hidden; margin: 0; padding: 0; }
         <link rel=stylesheet href=/static/css/intdot-style.css>
+        <link rel=stylesheet href=/static/css/tamarin-prover-ui.css>
+        <script src=/static/js/jquery.js></script>
+        <script src=/static/js/jquery-cookie.js></script>
+        <script src=/static/js/jquery-superfish.js></script>
+        <script>window.tamarinPopoutGraph = (window.self === window.top); if (!window.tamarinPopoutGraph) { document.documentElement.classList.add("graph-embedded"); }</script>
+        <script src=/static/js/tamarin-prover-ui.js></script>
         <script type="module" src=/static/js/intdot-graph.es.js></script>
         ^{pageHead page}
       <body>

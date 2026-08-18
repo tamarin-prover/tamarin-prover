@@ -294,6 +294,32 @@ a.remove-step:hover {
     filter: alpha(opacity=100);
 }
 
+/* Floating options bar used in the pop-out graph window, which has no
+   layout panes (north/west/east) to host the regular header navigation. */
+div#popout-options {
+    display: inline-block;
+    position: fixed;
+    top: 0.5em;
+    right: 10px;
+    z-index: 1000;
+}
+
+/* The regular header navigation reserves right-hand spacing between menu
+   items. The pop-out has only one item, so remove that inherited spacing to
+   align the visible Options button with the abbreviation legend. */
+div#popout-options ul#navigation,
+div#popout-options ul#navigation li {
+    margin-right: 0;
+}
+
+/* The same graph page is also embedded as an iframe inside the main theory
+   window (e.g. via <static-graph>/<dynamic-graph>). The main window already
+   has its own Options menu in the header, so hide the redundant floating
+   one there; only show it in the actual pop-out window. */
+html.graph-embedded div#popout-options {
+    display: none;
+}
+
 ul#navigation {
     list-style: none;
     float: right;

@@ -26,7 +26,6 @@ import           Logic.Connectives
 -- import           Control.Applicative
 import           Control.Monad.Bind
 import           Control.Monad.Reader
-import qualified Control.Monad.Trans.PreciseFresh as Precise
 
 import qualified Data.Map                         as M
 import qualified Data.Set                         as S
@@ -61,7 +60,7 @@ tmpdir = "/tmp/tamarin/"
 variantsProtoRule :: MaudeHandle -> ProtoRuleE -> Maybe ProtoRuleAC
 variantsProtoRule hnd ru@(Rule (ProtoRuleEInfo na attr _) prems0 concs0 acts0 nvs0) =
     -- rename rule to decrease variable indices
-    (`Precise.evalFresh` Precise.nothingUsed) . renamePrecise  $ convertRule `evalFreshTAvoiding` ru
+    renamePrecise $ convertRule `evalFreshTAvoiding` ru
   where
     convertRule :: FreshT Maybe (Rule ProtoRuleACInfo)
     convertRule = do

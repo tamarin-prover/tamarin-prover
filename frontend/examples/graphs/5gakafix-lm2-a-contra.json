@@ -1,0 +1,2474 @@
+{
+  "graphs": [
+    {
+      "jgAbbrevs": [
+        {
+          "jgaAbbrev": {
+            "jgnConst": "F6"
+          },
+          "jgaExpansion": {
+            "jgnFunct": "f1",
+            "jgnParams": [
+              {
+                "jgnConst": "~k"
+              },
+              {
+                "jgnFunct": "pair",
+                "jgnParams": [
+                  {
+                    "jgnConst": "UN1"
+                  },
+                  {
+                    "jgnFunct": "pair",
+                    "jgnParams": [
+                      {
+                        "jgnConst": "~RAND"
+                      },
+                      {
+                        "jgnFunct": "pair",
+                        "jgnParams": [
+                          {
+                            "jgnConst": "'5G'"
+                          },
+                          {
+                            "jgnConst": "idSN.1"
+                          }
+                        ],
+                        "jgnShow": "pair('5G',idSN.1)"
+                      }
+                    ],
+                    "jgnShow": "pair(~RAND,pair('5G',idSN.1))"
+                  }
+                ],
+                "jgnShow": "pair(UN1,pair(~RAND,pair('5G',idSN.1)))"
+              }
+            ],
+            "jgnShow": "f1(~k,pair(UN1,pair(~RAND,pair('5G',idSN.1))))"
+          },
+          "jgaTerm": {
+            "jgnFunct": "f1",
+            "jgnParams": [
+              {
+                "jgnConst": "~k"
+              },
+              {
+                "jgnFunct": "pair",
+                "jgnParams": [
+                  {
+                    "jgnFunct": "Union",
+                    "jgnParams": [
+                      {
+                        "jgnConst": "'1'"
+                      },
+                      {
+                        "jgnConst": "SqnHSS"
+                      }
+                    ],
+                    "jgnShow": "Union('1',SqnHSS)"
+                  },
+                  {
+                    "jgnFunct": "pair",
+                    "jgnParams": [
+                      {
+                        "jgnConst": "~RAND"
+                      },
+                      {
+                        "jgnFunct": "pair",
+                        "jgnParams": [
+                          {
+                            "jgnConst": "'5G'"
+                          },
+                          {
+                            "jgnConst": "idSN.1"
+                          }
+                        ],
+                        "jgnShow": "pair('5G',idSN.1)"
+                      }
+                    ],
+                    "jgnShow": "pair(~RAND,pair('5G',idSN.1))"
+                  }
+                ],
+                "jgnShow": "pair(Union('1',SqnHSS),pair(~RAND,pair('5G',idSN.1)))"
+              }
+            ],
+            "jgnShow": "f1(~k,pair(Union('1',SqnHSS),pair(~RAND,pair('5G',idSN.1))))"
+          }
+        },
+        {
+          "jgaAbbrev": {
+            "jgnConst": "UN1"
+          },
+          "jgaExpansion": {
+            "jgnFunct": "Union",
+            "jgnParams": [
+              {
+                "jgnConst": "'1'"
+              },
+              {
+                "jgnConst": "SqnHSS"
+              }
+            ],
+            "jgnShow": "Union('1',SqnHSS)"
+          },
+          "jgaTerm": {
+            "jgnFunct": "Union",
+            "jgnParams": [
+              {
+                "jgnConst": "'1'"
+              },
+              {
+                "jgnConst": "SqnHSS"
+              }
+            ],
+            "jgnShow": "Union('1',SqnHSS)"
+          }
+        },
+        {
+          "jgaAbbrev": {
+            "jgnConst": "UN2"
+          },
+          "jgaExpansion": {
+            "jgnFunct": "Union",
+            "jgnParams": [
+              {
+                "jgnConst": "'1'"
+              },
+              {
+                "jgnConst": "count"
+              }
+            ],
+            "jgnShow": "Union('1',count)"
+          },
+          "jgaTerm": {
+            "jgnFunct": "Union",
+            "jgnParams": [
+              {
+                "jgnConst": "'1'"
+              },
+              {
+                "jgnConst": "count"
+              }
+            ],
+            "jgnShow": "Union('1',count)"
+          }
+        },
+        {
+          "jgaAbbrev": {
+            "jgnConst": "XO1"
+          },
+          "jgaExpansion": {
+            "jgnFunct": "Xor",
+            "jgnParams": [
+              {
+                "jgnFunct": "f5",
+                "jgnParams": [
+                  {
+                    "jgnConst": "~k"
+                  },
+                  {
+                    "jgnConst": "~RAND"
+                  }
+                ],
+                "jgnShow": "f5(~k,~RAND)"
+              },
+              {
+                "jgnConst": "UN1"
+              }
+            ],
+            "jgnShow": "Xor(f5(~k,~RAND),UN1)"
+          },
+          "jgaTerm": {
+            "jgnFunct": "Xor",
+            "jgnParams": [
+              {
+                "jgnFunct": "f5",
+                "jgnParams": [
+                  {
+                    "jgnConst": "~k"
+                  },
+                  {
+                    "jgnConst": "~RAND"
+                  }
+                ],
+                "jgnShow": "f5(~k,~RAND)"
+              },
+              {
+                "jgnFunct": "Union",
+                "jgnParams": [
+                  {
+                    "jgnConst": "'1'"
+                  },
+                  {
+                    "jgnConst": "SqnHSS"
+                  }
+                ],
+                "jgnShow": "Union('1',SqnHSS)"
+              }
+            ],
+            "jgnShow": "Xor(f5(~k,~RAND),Union('1',SqnHSS))"
+          }
+        }
+      ],
+      "jgClusters": [],
+      "jgDirected": true,
+      "jgEdges": [
+        {
+          "jgeRelation": "default",
+          "jgeSource": "#vf.2:c0",
+          "jgeTarget": "#j:p6"
+        },
+        {
+          "jgeRelation": "LessAtoms",
+          "jgeSource": "#j",
+          "jgeTarget": "#i"
+        },
+        {
+          "jgeRelation": "LessAtoms",
+          "jgeSource": "#j",
+          "jgeTarget": "#last"
+        },
+        {
+          "jgeRelation": "LessAtoms",
+          "jgeSource": "#vk",
+          "jgeTarget": "#vf.2"
+        }
+      ],
+      "jgLabel": "Theory: 5G_aka_fix Lemma: rand_autn_src",
+      "jgNodes": [
+        {
+          "jgnId": "#i",
+          "jgnLabel": "seaf_receive_aia_send_authReq",
+          "jgnMetadata": {
+            "jgnActs": [
+              {
+                "jgnFactId": "action",
+                "jgnFactMult": "",
+                "jgnFactName": "Out_Src",
+                "jgnFactShow": "Out_Src( ~RAND, <(f5(~k, ~RAND)Ã¢ÂŠÂ•('1'++SqnHSS)), f1(~k, <('1'++SqnHSS), ~RAND, '5G', idSN.1>)>)",
+                "jgnFactTag": "ProtoFact",
+                "jgnFactTerms": [
+                  {
+                    "jgnConst": "~RAND"
+                  },
+                  {
+                    "jgnFunct": "pair",
+                    "jgnParams": [
+                      {
+                        "jgnFunct": "Xor",
+                        "jgnParams": [
+                          {
+                            "jgnFunct": "f5",
+                            "jgnParams": [
+                              {
+                                "jgnConst": "~k"
+                              },
+                              {
+                                "jgnConst": "~RAND"
+                              }
+                            ],
+                            "jgnShow": "f5(~k,~RAND)"
+                          },
+                          {
+                            "jgnFunct": "Union",
+                            "jgnParams": [
+                              {
+                                "jgnConst": "'1'"
+                              },
+                              {
+                                "jgnConst": "SqnHSS"
+                              }
+                            ],
+                            "jgnShow": "Union('1',SqnHSS)"
+                          }
+                        ],
+                        "jgnShow": "Xor(f5(~k,~RAND),Union('1',SqnHSS))"
+                      },
+                      {
+                        "jgnFunct": "f1",
+                        "jgnParams": [
+                          {
+                            "jgnConst": "~k"
+                          },
+                          {
+                            "jgnFunct": "pair",
+                            "jgnParams": [
+                              {
+                                "jgnFunct": "Union",
+                                "jgnParams": [
+                                  {
+                                    "jgnConst": "'1'"
+                                  },
+                                  {
+                                    "jgnConst": "SqnHSS"
+                                  }
+                                ],
+                                "jgnShow": "Union('1',SqnHSS)"
+                              },
+                              {
+                                "jgnFunct": "pair",
+                                "jgnParams": [
+                                  {
+                                    "jgnConst": "~RAND"
+                                  },
+                                  {
+                                    "jgnFunct": "pair",
+                                    "jgnParams": [
+                                      {
+                                        "jgnConst": "'5G'"
+                                      },
+                                      {
+                                        "jgnConst": "idSN.1"
+                                      }
+                                    ],
+                                    "jgnShow": "pair('5G',idSN.1)"
+                                  }
+                                ],
+                                "jgnShow": "pair(~RAND,pair('5G',idSN.1))"
+                              }
+                            ],
+                            "jgnShow": "pair(Union('1',SqnHSS),pair(~RAND,pair('5G',idSN.1)))"
+                          }
+                        ],
+                        "jgnShow": "f1(~k,pair(Union('1',SqnHSS),pair(~RAND,pair('5G',idSN.1))))"
+                      }
+                    ],
+                    "jgnShow": "pair(Xor(f5(~k,~RAND),Union('1',SqnHSS)),f1(~k,pair(Union('1',SqnHSS),pair(~RAND,pair('5G',idSN.1)))))"
+                  }
+                ]
+              },
+              {
+                "jgnFactId": "action",
+                "jgnFactMult": "",
+                "jgnFactName": "Running",
+                "jgnFactShow": "Running( ~idSN, idHN, <'HSS', 'SEAF', 'K_seaf', K_seaf> )",
+                "jgnFactTag": "ProtoFact",
+                "jgnFactTerms": [
+                  {
+                    "jgnConst": "~idSN"
+                  },
+                  {
+                    "jgnConst": "idHN"
+                  },
+                  {
+                    "jgnFunct": "pair",
+                    "jgnParams": [
+                      {
+                        "jgnConst": "'HSS'"
+                      },
+                      {
+                        "jgnFunct": "pair",
+                        "jgnParams": [
+                          {
+                            "jgnConst": "'SEAF'"
+                          },
+                          {
+                            "jgnFunct": "pair",
+                            "jgnParams": [
+                              {
+                                "jgnConst": "'K_seaf'"
+                              },
+                              {
+                                "jgnConst": "K_seaf"
+                              }
+                            ],
+                            "jgnShow": "pair('K_seaf',K_seaf)"
+                          }
+                        ],
+                        "jgnShow": "pair('SEAF',pair('K_seaf',K_seaf))"
+                      }
+                    ],
+                    "jgnShow": "pair('HSS',pair('SEAF',pair('K_seaf',K_seaf)))"
+                  }
+                ]
+              },
+              {
+                "jgnFactId": "action",
+                "jgnFactMult": "",
+                "jgnFactName": "Running_anonymous",
+                "jgnFactShow": "Running_anonymous( ~idSN, <'UE', 'SEAF', 'K_seaf', K_seaf> )",
+                "jgnFactTag": "ProtoFact",
+                "jgnFactTerms": [
+                  {
+                    "jgnConst": "~idSN"
+                  },
+                  {
+                    "jgnFunct": "pair",
+                    "jgnParams": [
+                      {
+                        "jgnConst": "'UE'"
+                      },
+                      {
+                        "jgnFunct": "pair",
+                        "jgnParams": [
+                          {
+                            "jgnConst": "'SEAF'"
+                          },
+                          {
+                            "jgnFunct": "pair",
+                            "jgnParams": [
+                              {
+                                "jgnConst": "'K_seaf'"
+                              },
+                              {
+                                "jgnConst": "K_seaf"
+                              }
+                            ],
+                            "jgnShow": "pair('K_seaf',K_seaf)"
+                          }
+                        ],
+                        "jgnShow": "pair('SEAF',pair('K_seaf',K_seaf))"
+                      }
+                    ],
+                    "jgnShow": "pair('UE',pair('SEAF',pair('K_seaf',K_seaf)))"
+                  }
+                ]
+              }
+            ],
+            "jgnConcs": [
+              {
+                "jgnFactId": "#i:c0",
+                "jgnFactMult": "",
+                "jgnFactName": "St_2_SEAF",
+                "jgnFactShow": "St_2_SEAF( ~tid, ~idSN, SNID, conc_supi, idHN, ~RAND, HXRES_star, K_seaf, ~cid)",
+                "jgnFactTag": "ProtoFact",
+                "jgnFactTerms": [
+                  {
+                    "jgnConst": "~tid"
+                  },
+                  {
+                    "jgnConst": "~idSN"
+                  },
+                  {
+                    "jgnConst": "SNID"
+                  },
+                  {
+                    "jgnConst": "conc_supi"
+                  },
+                  {
+                    "jgnConst": "idHN"
+                  },
+                  {
+                    "jgnConst": "~RAND"
+                  },
+                  {
+                    "jgnConst": "HXRES_star"
+                  },
+                  {
+                    "jgnConst": "K_seaf"
+                  },
+                  {
+                    "jgnConst": "~cid"
+                  }
+                ]
+              },
+              {
+                "jgnFactId": "#i:c1",
+                "jgnFactMult": "",
+                "jgnFactName": "Out",
+                "jgnFactShow": "Out( <~RAND, <(f5(~k, ~RAND)Ã¢ÂŠÂ•('1'++SqnHSS)), f1(~k, <('1'++SqnHSS), ~RAND, '5G', idSN.1>)>, SNID>)",
+                "jgnFactTag": "OutFact",
+                "jgnFactTerms": [
+                  {
+                    "jgnFunct": "pair",
+                    "jgnParams": [
+                      {
+                        "jgnConst": "~RAND"
+                      },
+                      {
+                        "jgnFunct": "pair",
+                        "jgnParams": [
+                          {
+                            "jgnFunct": "pair",
+                            "jgnParams": [
+                              {
+                                "jgnFunct": "Xor",
+                                "jgnParams": [
+                                  {
+                                    "jgnFunct": "f5",
+                                    "jgnParams": [
+                                      {
+                                        "jgnConst": "~k"
+                                      },
+                                      {
+                                        "jgnConst": "~RAND"
+                                      }
+                                    ],
+                                    "jgnShow": "f5(~k,~RAND)"
+                                  },
+                                  {
+                                    "jgnFunct": "Union",
+                                    "jgnParams": [
+                                      {
+                                        "jgnConst": "'1'"
+                                      },
+                                      {
+                                        "jgnConst": "SqnHSS"
+                                      }
+                                    ],
+                                    "jgnShow": "Union('1',SqnHSS)"
+                                  }
+                                ],
+                                "jgnShow": "Xor(f5(~k,~RAND),Union('1',SqnHSS))"
+                              },
+                              {
+                                "jgnFunct": "f1",
+                                "jgnParams": [
+                                  {
+                                    "jgnConst": "~k"
+                                  },
+                                  {
+                                    "jgnFunct": "pair",
+                                    "jgnParams": [
+                                      {
+                                        "jgnFunct": "Union",
+                                        "jgnParams": [
+                                          {
+                                            "jgnConst": "'1'"
+                                          },
+                                          {
+                                            "jgnConst": "SqnHSS"
+                                          }
+                                        ],
+                                        "jgnShow": "Union('1',SqnHSS)"
+                                      },
+                                      {
+                                        "jgnFunct": "pair",
+                                        "jgnParams": [
+                                          {
+                                            "jgnConst": "~RAND"
+                                          },
+                                          {
+                                            "jgnFunct": "pair",
+                                            "jgnParams": [
+                                              {
+                                                "jgnConst": "'5G'"
+                                              },
+                                              {
+                                                "jgnConst": "idSN.1"
+                                              }
+                                            ],
+                                            "jgnShow": "pair('5G',idSN.1)"
+                                          }
+                                        ],
+                                        "jgnShow": "pair(~RAND,pair('5G',idSN.1))"
+                                      }
+                                    ],
+                                    "jgnShow": "pair(Union('1',SqnHSS),pair(~RAND,pair('5G',idSN.1)))"
+                                  }
+                                ],
+                                "jgnShow": "f1(~k,pair(Union('1',SqnHSS),pair(~RAND,pair('5G',idSN.1))))"
+                              }
+                            ],
+                            "jgnShow": "pair(Xor(f5(~k,~RAND),Union('1',SqnHSS)),f1(~k,pair(Union('1',SqnHSS),pair(~RAND,pair('5G',idSN.1)))))"
+                          },
+                          {
+                            "jgnConst": "SNID"
+                          }
+                        ],
+                        "jgnShow": "pair(pair(Xor(f5(~k,~RAND),Union('1',SqnHSS)),f1(~k,pair(Union('1',SqnHSS),pair(~RAND,pair('5G',idSN.1))))),SNID)"
+                      }
+                    ],
+                    "jgnShow": "pair(~RAND,pair(pair(Xor(f5(~k,~RAND),Union('1',SqnHSS)),f1(~k,pair(Union('1',SqnHSS),pair(~RAND,pair('5G',idSN.1))))),SNID))"
+                  }
+                ]
+              }
+            ],
+            "jgnPrems": [
+              {
+                "jgnFactId": "#i:p0",
+                "jgnFactMult": "",
+                "jgnFactName": "St_1_SEAF",
+                "jgnFactShow": "St_1_SEAF( ~tid, ~idSN, SNID, conc_supi, idHN, ~cid )",
+                "jgnFactTag": "ProtoFact",
+                "jgnFactTerms": [
+                  {
+                    "jgnConst": "~tid"
+                  },
+                  {
+                    "jgnConst": "~idSN"
+                  },
+                  {
+                    "jgnConst": "SNID"
+                  },
+                  {
+                    "jgnConst": "conc_supi"
+                  },
+                  {
+                    "jgnConst": "idHN"
+                  },
+                  {
+                    "jgnConst": "~cid"
+                  }
+                ]
+              },
+              {
+                "jgnFactId": "#i:p1",
+                "jgnFactMult": "",
+                "jgnFactName": "RcvS",
+                "jgnFactShow": "RcvS( ~cid, idHN, ~idSN, <'aia', ~RAND, HXRES_star, K_seaf, (f5(~k, ~RAND)Ã¢ÂŠÂ•('1'++SqnHSS)), f1(~k, <('1'++SqnHSS), ~RAND, '5G', idSN.1>)>)",
+                "jgnFactTag": "ProtoFact",
+                "jgnFactTerms": [
+                  {
+                    "jgnConst": "~cid"
+                  },
+                  {
+                    "jgnConst": "idHN"
+                  },
+                  {
+                    "jgnConst": "~idSN"
+                  },
+                  {
+                    "jgnFunct": "pair",
+                    "jgnParams": [
+                      {
+                        "jgnConst": "'aia'"
+                      },
+                      {
+                        "jgnFunct": "pair",
+                        "jgnParams": [
+                          {
+                            "jgnConst": "~RAND"
+                          },
+                          {
+                            "jgnFunct": "pair",
+                            "jgnParams": [
+                              {
+                                "jgnConst": "HXRES_star"
+                              },
+                              {
+                                "jgnFunct": "pair",
+                                "jgnParams": [
+                                  {
+                                    "jgnConst": "K_seaf"
+                                  },
+                                  {
+                                    "jgnFunct": "pair",
+                                    "jgnParams": [
+                                      {
+                                        "jgnFunct": "Xor",
+                                        "jgnParams": [
+                                          {
+                                            "jgnFunct": "f5",
+                                            "jgnParams": [
+                                              {
+                                                "jgnConst": "~k"
+                                              },
+                                              {
+                                                "jgnConst": "~RAND"
+                                              }
+                                            ],
+                                            "jgnShow": "f5(~k,~RAND)"
+                                          },
+                                          {
+                                            "jgnFunct": "Union",
+                                            "jgnParams": [
+                                              {
+                                                "jgnConst": "'1'"
+                                              },
+                                              {
+                                                "jgnConst": "SqnHSS"
+                                              }
+                                            ],
+                                            "jgnShow": "Union('1',SqnHSS)"
+                                          }
+                                        ],
+                                        "jgnShow": "Xor(f5(~k,~RAND),Union('1',SqnHSS))"
+                                      },
+                                      {
+                                        "jgnFunct": "f1",
+                                        "jgnParams": [
+                                          {
+                                            "jgnConst": "~k"
+                                          },
+                                          {
+                                            "jgnFunct": "pair",
+                                            "jgnParams": [
+                                              {
+                                                "jgnFunct": "Union",
+                                                "jgnParams": [
+                                                  {
+                                                    "jgnConst": "'1'"
+                                                  },
+                                                  {
+                                                    "jgnConst": "SqnHSS"
+                                                  }
+                                                ],
+                                                "jgnShow": "Union('1',SqnHSS)"
+                                              },
+                                              {
+                                                "jgnFunct": "pair",
+                                                "jgnParams": [
+                                                  {
+                                                    "jgnConst": "~RAND"
+                                                  },
+                                                  {
+                                                    "jgnFunct": "pair",
+                                                    "jgnParams": [
+                                                      {
+                                                        "jgnConst": "'5G'"
+                                                      },
+                                                      {
+                                                        "jgnConst": "idSN.1"
+                                                      }
+                                                    ],
+                                                    "jgnShow": "pair('5G',idSN.1)"
+                                                  }
+                                                ],
+                                                "jgnShow": "pair(~RAND,pair('5G',idSN.1))"
+                                              }
+                                            ],
+                                            "jgnShow": "pair(Union('1',SqnHSS),pair(~RAND,pair('5G',idSN.1)))"
+                                          }
+                                        ],
+                                        "jgnShow": "f1(~k,pair(Union('1',SqnHSS),pair(~RAND,pair('5G',idSN.1))))"
+                                      }
+                                    ],
+                                    "jgnShow": "pair(Xor(f5(~k,~RAND),Union('1',SqnHSS)),f1(~k,pair(Union('1',SqnHSS),pair(~RAND,pair('5G',idSN.1)))))"
+                                  }
+                                ],
+                                "jgnShow": "pair(K_seaf,pair(Xor(f5(~k,~RAND),Union('1',SqnHSS)),f1(~k,pair(Union('1',SqnHSS),pair(~RAND,pair('5G',idSN.1))))))"
+                              }
+                            ],
+                            "jgnShow": "pair(HXRES_star,pair(K_seaf,pair(Xor(f5(~k,~RAND),Union('1',SqnHSS)),f1(~k,pair(Union('1',SqnHSS),pair(~RAND,pair('5G',idSN.1)))))))"
+                          }
+                        ],
+                        "jgnShow": "pair(~RAND,pair(HXRES_star,pair(K_seaf,pair(Xor(f5(~k,~RAND),Union('1',SqnHSS)),f1(~k,pair(Union('1',SqnHSS),pair(~RAND,pair('5G',idSN.1))))))))"
+                      }
+                    ],
+                    "jgnShow": "pair('aia',pair(~RAND,pair(HXRES_star,pair(K_seaf,pair(Xor(f5(~k,~RAND),Union('1',SqnHSS)),f1(~k,pair(Union('1',SqnHSS),pair(~RAND,pair('5G',idSN.1)))))))))"
+                  }
+                ]
+              }
+            ]
+          },
+          "jgnType": "isProtocolRule"
+        },
+        {
+          "jgnId": "#j",
+          "jgnLabel": "hss_receive_air_send_aia",
+          "jgnMetadata": {
+            "jgnActs": [
+              {
+                "jgnFactId": "action",
+                "jgnFactMult": "",
+                "jgnFactName": "Sqn_HSS_Invariance",
+                "jgnFactShow": "Sqn_HSS_Invariance( ~idHN.1, ~supi, ('1'++SqnHSS), ~sqn_root, ('1'++count))",
+                "jgnFactTag": "ProtoFact",
+                "jgnFactTerms": [
+                  {
+                    "jgnConst": "~idHN.1"
+                  },
+                  {
+                    "jgnConst": "~supi"
+                  },
+                  {
+                    "jgnFunct": "Union",
+                    "jgnParams": [
+                      {
+                        "jgnConst": "'1'"
+                      },
+                      {
+                        "jgnConst": "SqnHSS"
+                      }
+                    ],
+                    "jgnShow": "Union('1',SqnHSS)"
+                  },
+                  {
+                    "jgnConst": "~sqn_root"
+                  },
+                  {
+                    "jgnFunct": "Union",
+                    "jgnParams": [
+                      {
+                        "jgnConst": "'1'"
+                      },
+                      {
+                        "jgnConst": "count"
+                      }
+                    ],
+                    "jgnShow": "Union('1',count)"
+                  }
+                ]
+              },
+              {
+                "jgnFactId": "action",
+                "jgnFactMult": "",
+                "jgnFactName": "Src",
+                "jgnFactShow": "Src( ~RAND, <(f5(~k, ~RAND)Ã¢ÂŠÂ•('1'++SqnHSS)), f1(~k, <('1'++SqnHSS), ~RAND, '5G', idSN.1>)>)",
+                "jgnFactTag": "ProtoFact",
+                "jgnFactTerms": [
+                  {
+                    "jgnConst": "~RAND"
+                  },
+                  {
+                    "jgnFunct": "pair",
+                    "jgnParams": [
+                      {
+                        "jgnFunct": "Xor",
+                        "jgnParams": [
+                          {
+                            "jgnFunct": "f5",
+                            "jgnParams": [
+                              {
+                                "jgnConst": "~k"
+                              },
+                              {
+                                "jgnConst": "~RAND"
+                              }
+                            ],
+                            "jgnShow": "f5(~k,~RAND)"
+                          },
+                          {
+                            "jgnFunct": "Union",
+                            "jgnParams": [
+                              {
+                                "jgnConst": "'1'"
+                              },
+                              {
+                                "jgnConst": "SqnHSS"
+                              }
+                            ],
+                            "jgnShow": "Union('1',SqnHSS)"
+                          }
+                        ],
+                        "jgnShow": "Xor(f5(~k,~RAND),Union('1',SqnHSS))"
+                      },
+                      {
+                        "jgnFunct": "f1",
+                        "jgnParams": [
+                          {
+                            "jgnConst": "~k"
+                          },
+                          {
+                            "jgnFunct": "pair",
+                            "jgnParams": [
+                              {
+                                "jgnFunct": "Union",
+                                "jgnParams": [
+                                  {
+                                    "jgnConst": "'1'"
+                                  },
+                                  {
+                                    "jgnConst": "SqnHSS"
+                                  }
+                                ],
+                                "jgnShow": "Union('1',SqnHSS)"
+                              },
+                              {
+                                "jgnFunct": "pair",
+                                "jgnParams": [
+                                  {
+                                    "jgnConst": "~RAND"
+                                  },
+                                  {
+                                    "jgnFunct": "pair",
+                                    "jgnParams": [
+                                      {
+                                        "jgnConst": "'5G'"
+                                      },
+                                      {
+                                        "jgnConst": "idSN.1"
+                                      }
+                                    ],
+                                    "jgnShow": "pair('5G',idSN.1)"
+                                  }
+                                ],
+                                "jgnShow": "pair(~RAND,pair('5G',idSN.1))"
+                              }
+                            ],
+                            "jgnShow": "pair(Union('1',SqnHSS),pair(~RAND,pair('5G',idSN.1)))"
+                          }
+                        ],
+                        "jgnShow": "f1(~k,pair(Union('1',SqnHSS),pair(~RAND,pair('5G',idSN.1))))"
+                      }
+                    ],
+                    "jgnShow": "pair(Xor(f5(~k,~RAND),Union('1',SqnHSS)),f1(~k,pair(Union('1',SqnHSS),pair(~RAND,pair('5G',idSN.1)))))"
+                  }
+                ]
+              },
+              {
+                "jgnFactId": "action",
+                "jgnFactMult": "",
+                "jgnFactName": "KSEAF",
+                "jgnFactShow": "KSEAF( KDF(KDF(<f3(~k, ~RAND), f4(~k, ~RAND)>, <<'5G', idSN.1>, (f5(~k, ~RAND)Ã¢ÂŠÂ•('1'++SqnHSS))>), <'5G', idSN.1>))",
+                "jgnFactTag": "ProtoFact",
+                "jgnFactTerms": [
+                  {
+                    "jgnFunct": "KDF",
+                    "jgnParams": [
+                      {
+                        "jgnFunct": "KDF",
+                        "jgnParams": [
+                          {
+                            "jgnFunct": "pair",
+                            "jgnParams": [
+                              {
+                                "jgnFunct": "f3",
+                                "jgnParams": [
+                                  {
+                                    "jgnConst": "~k"
+                                  },
+                                  {
+                                    "jgnConst": "~RAND"
+                                  }
+                                ],
+                                "jgnShow": "f3(~k,~RAND)"
+                              },
+                              {
+                                "jgnFunct": "f4",
+                                "jgnParams": [
+                                  {
+                                    "jgnConst": "~k"
+                                  },
+                                  {
+                                    "jgnConst": "~RAND"
+                                  }
+                                ],
+                                "jgnShow": "f4(~k,~RAND)"
+                              }
+                            ],
+                            "jgnShow": "pair(f3(~k,~RAND),f4(~k,~RAND))"
+                          },
+                          {
+                            "jgnFunct": "pair",
+                            "jgnParams": [
+                              {
+                                "jgnFunct": "pair",
+                                "jgnParams": [
+                                  {
+                                    "jgnConst": "'5G'"
+                                  },
+                                  {
+                                    "jgnConst": "idSN.1"
+                                  }
+                                ],
+                                "jgnShow": "pair('5G',idSN.1)"
+                              },
+                              {
+                                "jgnFunct": "Xor",
+                                "jgnParams": [
+                                  {
+                                    "jgnFunct": "f5",
+                                    "jgnParams": [
+                                      {
+                                        "jgnConst": "~k"
+                                      },
+                                      {
+                                        "jgnConst": "~RAND"
+                                      }
+                                    ],
+                                    "jgnShow": "f5(~k,~RAND)"
+                                  },
+                                  {
+                                    "jgnFunct": "Union",
+                                    "jgnParams": [
+                                      {
+                                        "jgnConst": "'1'"
+                                      },
+                                      {
+                                        "jgnConst": "SqnHSS"
+                                      }
+                                    ],
+                                    "jgnShow": "Union('1',SqnHSS)"
+                                  }
+                                ],
+                                "jgnShow": "Xor(f5(~k,~RAND),Union('1',SqnHSS))"
+                              }
+                            ],
+                            "jgnShow": "pair(pair('5G',idSN.1),Xor(f5(~k,~RAND),Union('1',SqnHSS)))"
+                          }
+                        ],
+                        "jgnShow": "KDF(pair(f3(~k,~RAND),f4(~k,~RAND)),pair(pair('5G',idSN.1),Xor(f5(~k,~RAND),Union('1',SqnHSS))))"
+                      },
+                      {
+                        "jgnFunct": "pair",
+                        "jgnParams": [
+                          {
+                            "jgnConst": "'5G'"
+                          },
+                          {
+                            "jgnConst": "idSN.1"
+                          }
+                        ],
+                        "jgnShow": "pair('5G',idSN.1)"
+                      }
+                    ],
+                    "jgnShow": "KDF(KDF(pair(f3(~k,~RAND),f4(~k,~RAND)),pair(pair('5G',idSN.1),Xor(f5(~k,~RAND),Union('1',SqnHSS)))),pair('5G',idSN.1))"
+                  }
+                ]
+              },
+              {
+                "jgnFactId": "action",
+                "jgnFactMult": "",
+                "jgnFactName": "Start_HSS_Session",
+                "jgnFactShow": "Start_HSS_Session( ~idHN.1 )",
+                "jgnFactTag": "ProtoFact",
+                "jgnFactTerms": [
+                  {
+                    "jgnConst": "~idHN.1"
+                  }
+                ]
+              },
+              {
+                "jgnFactId": "action",
+                "jgnFactMult": "",
+                "jgnFactName": "HSS_Send_Aia",
+                "jgnFactShow": "HSS_Send_Aia( )",
+                "jgnFactTag": "ProtoFact",
+                "jgnFactTerms": []
+              },
+              {
+                "jgnFactId": "action",
+                "jgnFactMult": "",
+                "jgnFactName": "Running",
+                "jgnFactShow": "Running( ~idHN.1, idSN.1, <'SEAF', 'HSS', 'K_seaf', KDF(KDF(<f3(~k, ~RAND), f4(~k, ~RAND)>, <<'5G', idSN.1>, (f5(~k, ~RAND)Ã¢ÂŠÂ•('1'++SqnHSS))>), <'5G', idSN.1>) >)",
+                "jgnFactTag": "ProtoFact",
+                "jgnFactTerms": [
+                  {
+                    "jgnConst": "~idHN.1"
+                  },
+                  {
+                    "jgnConst": "idSN.1"
+                  },
+                  {
+                    "jgnFunct": "pair",
+                    "jgnParams": [
+                      {
+                        "jgnConst": "'SEAF'"
+                      },
+                      {
+                        "jgnFunct": "pair",
+                        "jgnParams": [
+                          {
+                            "jgnConst": "'HSS'"
+                          },
+                          {
+                            "jgnFunct": "pair",
+                            "jgnParams": [
+                              {
+                                "jgnConst": "'K_seaf'"
+                              },
+                              {
+                                "jgnFunct": "KDF",
+                                "jgnParams": [
+                                  {
+                                    "jgnFunct": "KDF",
+                                    "jgnParams": [
+                                      {
+                                        "jgnFunct": "pair",
+                                        "jgnParams": [
+                                          {
+                                            "jgnFunct": "f3",
+                                            "jgnParams": [
+                                              {
+                                                "jgnConst": "~k"
+                                              },
+                                              {
+                                                "jgnConst": "~RAND"
+                                              }
+                                            ],
+                                            "jgnShow": "f3(~k,~RAND)"
+                                          },
+                                          {
+                                            "jgnFunct": "f4",
+                                            "jgnParams": [
+                                              {
+                                                "jgnConst": "~k"
+                                              },
+                                              {
+                                                "jgnConst": "~RAND"
+                                              }
+                                            ],
+                                            "jgnShow": "f4(~k,~RAND)"
+                                          }
+                                        ],
+                                        "jgnShow": "pair(f3(~k,~RAND),f4(~k,~RAND))"
+                                      },
+                                      {
+                                        "jgnFunct": "pair",
+                                        "jgnParams": [
+                                          {
+                                            "jgnFunct": "pair",
+                                            "jgnParams": [
+                                              {
+                                                "jgnConst": "'5G'"
+                                              },
+                                              {
+                                                "jgnConst": "idSN.1"
+                                              }
+                                            ],
+                                            "jgnShow": "pair('5G',idSN.1)"
+                                          },
+                                          {
+                                            "jgnFunct": "Xor",
+                                            "jgnParams": [
+                                              {
+                                                "jgnFunct": "f5",
+                                                "jgnParams": [
+                                                  {
+                                                    "jgnConst": "~k"
+                                                  },
+                                                  {
+                                                    "jgnConst": "~RAND"
+                                                  }
+                                                ],
+                                                "jgnShow": "f5(~k,~RAND)"
+                                              },
+                                              {
+                                                "jgnFunct": "Union",
+                                                "jgnParams": [
+                                                  {
+                                                    "jgnConst": "'1'"
+                                                  },
+                                                  {
+                                                    "jgnConst": "SqnHSS"
+                                                  }
+                                                ],
+                                                "jgnShow": "Union('1',SqnHSS)"
+                                              }
+                                            ],
+                                            "jgnShow": "Xor(f5(~k,~RAND),Union('1',SqnHSS))"
+                                          }
+                                        ],
+                                        "jgnShow": "pair(pair('5G',idSN.1),Xor(f5(~k,~RAND),Union('1',SqnHSS)))"
+                                      }
+                                    ],
+                                    "jgnShow": "KDF(pair(f3(~k,~RAND),f4(~k,~RAND)),pair(pair('5G',idSN.1),Xor(f5(~k,~RAND),Union('1',SqnHSS))))"
+                                  },
+                                  {
+                                    "jgnFunct": "pair",
+                                    "jgnParams": [
+                                      {
+                                        "jgnConst": "'5G'"
+                                      },
+                                      {
+                                        "jgnConst": "idSN.1"
+                                      }
+                                    ],
+                                    "jgnShow": "pair('5G',idSN.1)"
+                                  }
+                                ],
+                                "jgnShow": "KDF(KDF(pair(f3(~k,~RAND),f4(~k,~RAND)),pair(pair('5G',idSN.1),Xor(f5(~k,~RAND),Union('1',SqnHSS)))),pair('5G',idSN.1))"
+                              }
+                            ],
+                            "jgnShow": "pair('K_seaf',KDF(KDF(pair(f3(~k,~RAND),f4(~k,~RAND)),pair(pair('5G',idSN.1),Xor(f5(~k,~RAND),Union('1',SqnHSS)))),pair('5G',idSN.1)))"
+                          }
+                        ],
+                        "jgnShow": "pair('HSS',pair('K_seaf',KDF(KDF(pair(f3(~k,~RAND),f4(~k,~RAND)),pair(pair('5G',idSN.1),Xor(f5(~k,~RAND),Union('1',SqnHSS)))),pair('5G',idSN.1))))"
+                      }
+                    ],
+                    "jgnShow": "pair('SEAF',pair('HSS',pair('K_seaf',KDF(KDF(pair(f3(~k,~RAND),f4(~k,~RAND)),pair(pair('5G',idSN.1),Xor(f5(~k,~RAND),Union('1',SqnHSS)))),pair('5G',idSN.1)))))"
+                  }
+                ]
+              },
+              {
+                "jgnFactId": "action",
+                "jgnFactMult": "",
+                "jgnFactName": "Running",
+                "jgnFactShow": "Running( ~idHN.1, idSN.1, <'SEAF', 'HSS', 'supi', ~supi> )",
+                "jgnFactTag": "ProtoFact",
+                "jgnFactTerms": [
+                  {
+                    "jgnConst": "~idHN.1"
+                  },
+                  {
+                    "jgnConst": "idSN.1"
+                  },
+                  {
+                    "jgnFunct": "pair",
+                    "jgnParams": [
+                      {
+                        "jgnConst": "'SEAF'"
+                      },
+                      {
+                        "jgnFunct": "pair",
+                        "jgnParams": [
+                          {
+                            "jgnConst": "'HSS'"
+                          },
+                          {
+                            "jgnFunct": "pair",
+                            "jgnParams": [
+                              {
+                                "jgnConst": "'supi'"
+                              },
+                              {
+                                "jgnConst": "~supi"
+                              }
+                            ],
+                            "jgnShow": "pair('supi',~supi)"
+                          }
+                        ],
+                        "jgnShow": "pair('HSS',pair('supi',~supi))"
+                      }
+                    ],
+                    "jgnShow": "pair('SEAF',pair('HSS',pair('supi',~supi)))"
+                  }
+                ]
+              },
+              {
+                "jgnFactId": "action",
+                "jgnFactMult": "",
+                "jgnFactName": "Running",
+                "jgnFactShow": "Running( ~idHN.1, idSN.1, <'SEAF', 'HSS', 'RES_star', KDF(<f3(~k, ~RAND), f4(~k, ~RAND)>, <<'5G', idSN.1>, f2(~k, ~RAND), ~RAND>) >)",
+                "jgnFactTag": "ProtoFact",
+                "jgnFactTerms": [
+                  {
+                    "jgnConst": "~idHN.1"
+                  },
+                  {
+                    "jgnConst": "idSN.1"
+                  },
+                  {
+                    "jgnFunct": "pair",
+                    "jgnParams": [
+                      {
+                        "jgnConst": "'SEAF'"
+                      },
+                      {
+                        "jgnFunct": "pair",
+                        "jgnParams": [
+                          {
+                            "jgnConst": "'HSS'"
+                          },
+                          {
+                            "jgnFunct": "pair",
+                            "jgnParams": [
+                              {
+                                "jgnConst": "'RES_star'"
+                              },
+                              {
+                                "jgnFunct": "KDF",
+                                "jgnParams": [
+                                  {
+                                    "jgnFunct": "pair",
+                                    "jgnParams": [
+                                      {
+                                        "jgnFunct": "f3",
+                                        "jgnParams": [
+                                          {
+                                            "jgnConst": "~k"
+                                          },
+                                          {
+                                            "jgnConst": "~RAND"
+                                          }
+                                        ],
+                                        "jgnShow": "f3(~k,~RAND)"
+                                      },
+                                      {
+                                        "jgnFunct": "f4",
+                                        "jgnParams": [
+                                          {
+                                            "jgnConst": "~k"
+                                          },
+                                          {
+                                            "jgnConst": "~RAND"
+                                          }
+                                        ],
+                                        "jgnShow": "f4(~k,~RAND)"
+                                      }
+                                    ],
+                                    "jgnShow": "pair(f3(~k,~RAND),f4(~k,~RAND))"
+                                  },
+                                  {
+                                    "jgnFunct": "pair",
+                                    "jgnParams": [
+                                      {
+                                        "jgnFunct": "pair",
+                                        "jgnParams": [
+                                          {
+                                            "jgnConst": "'5G'"
+                                          },
+                                          {
+                                            "jgnConst": "idSN.1"
+                                          }
+                                        ],
+                                        "jgnShow": "pair('5G',idSN.1)"
+                                      },
+                                      {
+                                        "jgnFunct": "pair",
+                                        "jgnParams": [
+                                          {
+                                            "jgnFunct": "f2",
+                                            "jgnParams": [
+                                              {
+                                                "jgnConst": "~k"
+                                              },
+                                              {
+                                                "jgnConst": "~RAND"
+                                              }
+                                            ],
+                                            "jgnShow": "f2(~k,~RAND)"
+                                          },
+                                          {
+                                            "jgnConst": "~RAND"
+                                          }
+                                        ],
+                                        "jgnShow": "pair(f2(~k,~RAND),~RAND)"
+                                      }
+                                    ],
+                                    "jgnShow": "pair(pair('5G',idSN.1),pair(f2(~k,~RAND),~RAND))"
+                                  }
+                                ],
+                                "jgnShow": "KDF(pair(f3(~k,~RAND),f4(~k,~RAND)),pair(pair('5G',idSN.1),pair(f2(~k,~RAND),~RAND)))"
+                              }
+                            ],
+                            "jgnShow": "pair('RES_star',KDF(pair(f3(~k,~RAND),f4(~k,~RAND)),pair(pair('5G',idSN.1),pair(f2(~k,~RAND),~RAND))))"
+                          }
+                        ],
+                        "jgnShow": "pair('HSS',pair('RES_star',KDF(pair(f3(~k,~RAND),f4(~k,~RAND)),pair(pair('5G',idSN.1),pair(f2(~k,~RAND),~RAND)))))"
+                      }
+                    ],
+                    "jgnShow": "pair('SEAF',pair('HSS',pair('RES_star',KDF(pair(f3(~k,~RAND),f4(~k,~RAND)),pair(pair('5G',idSN.1),pair(f2(~k,~RAND),~RAND))))))"
+                  }
+                ]
+              },
+              {
+                "jgnFactId": "action",
+                "jgnFactMult": "",
+                "jgnFactName": "Running",
+                "jgnFactShow": "Running( ~idHN.1, ~supi, <'UE', 'HSS', 'K_seaf', KDF(KDF(<f3(~k, ~RAND), f4(~k, ~RAND)>, <<'5G', idSN.1>, (f5(~k, ~RAND)Ã¢ÂŠÂ•('1'++SqnHSS))>), <'5G', idSN.1>) >)",
+                "jgnFactTag": "ProtoFact",
+                "jgnFactTerms": [
+                  {
+                    "jgnConst": "~idHN.1"
+                  },
+                  {
+                    "jgnConst": "~supi"
+                  },
+                  {
+                    "jgnFunct": "pair",
+                    "jgnParams": [
+                      {
+                        "jgnConst": "'UE'"
+                      },
+                      {
+                        "jgnFunct": "pair",
+                        "jgnParams": [
+                          {
+                            "jgnConst": "'HSS'"
+                          },
+                          {
+                            "jgnFunct": "pair",
+                            "jgnParams": [
+                              {
+                                "jgnConst": "'K_seaf'"
+                              },
+                              {
+                                "jgnFunct": "KDF",
+                                "jgnParams": [
+                                  {
+                                    "jgnFunct": "KDF",
+                                    "jgnParams": [
+                                      {
+                                        "jgnFunct": "pair",
+                                        "jgnParams": [
+                                          {
+                                            "jgnFunct": "f3",
+                                            "jgnParams": [
+                                              {
+                                                "jgnConst": "~k"
+                                              },
+                                              {
+                                                "jgnConst": "~RAND"
+                                              }
+                                            ],
+                                            "jgnShow": "f3(~k,~RAND)"
+                                          },
+                                          {
+                                            "jgnFunct": "f4",
+                                            "jgnParams": [
+                                              {
+                                                "jgnConst": "~k"
+                                              },
+                                              {
+                                                "jgnConst": "~RAND"
+                                              }
+                                            ],
+                                            "jgnShow": "f4(~k,~RAND)"
+                                          }
+                                        ],
+                                        "jgnShow": "pair(f3(~k,~RAND),f4(~k,~RAND))"
+                                      },
+                                      {
+                                        "jgnFunct": "pair",
+                                        "jgnParams": [
+                                          {
+                                            "jgnFunct": "pair",
+                                            "jgnParams": [
+                                              {
+                                                "jgnConst": "'5G'"
+                                              },
+                                              {
+                                                "jgnConst": "idSN.1"
+                                              }
+                                            ],
+                                            "jgnShow": "pair('5G',idSN.1)"
+                                          },
+                                          {
+                                            "jgnFunct": "Xor",
+                                            "jgnParams": [
+                                              {
+                                                "jgnFunct": "f5",
+                                                "jgnParams": [
+                                                  {
+                                                    "jgnConst": "~k"
+                                                  },
+                                                  {
+                                                    "jgnConst": "~RAND"
+                                                  }
+                                                ],
+                                                "jgnShow": "f5(~k,~RAND)"
+                                              },
+                                              {
+                                                "jgnFunct": "Union",
+                                                "jgnParams": [
+                                                  {
+                                                    "jgnConst": "'1'"
+                                                  },
+                                                  {
+                                                    "jgnConst": "SqnHSS"
+                                                  }
+                                                ],
+                                                "jgnShow": "Union('1',SqnHSS)"
+                                              }
+                                            ],
+                                            "jgnShow": "Xor(f5(~k,~RAND),Union('1',SqnHSS))"
+                                          }
+                                        ],
+                                        "jgnShow": "pair(pair('5G',idSN.1),Xor(f5(~k,~RAND),Union('1',SqnHSS)))"
+                                      }
+                                    ],
+                                    "jgnShow": "KDF(pair(f3(~k,~RAND),f4(~k,~RAND)),pair(pair('5G',idSN.1),Xor(f5(~k,~RAND),Union('1',SqnHSS))))"
+                                  },
+                                  {
+                                    "jgnFunct": "pair",
+                                    "jgnParams": [
+                                      {
+                                        "jgnConst": "'5G'"
+                                      },
+                                      {
+                                        "jgnConst": "idSN.1"
+                                      }
+                                    ],
+                                    "jgnShow": "pair('5G',idSN.1)"
+                                  }
+                                ],
+                                "jgnShow": "KDF(KDF(pair(f3(~k,~RAND),f4(~k,~RAND)),pair(pair('5G',idSN.1),Xor(f5(~k,~RAND),Union('1',SqnHSS)))),pair('5G',idSN.1))"
+                              }
+                            ],
+                            "jgnShow": "pair('K_seaf',KDF(KDF(pair(f3(~k,~RAND),f4(~k,~RAND)),pair(pair('5G',idSN.1),Xor(f5(~k,~RAND),Union('1',SqnHSS)))),pair('5G',idSN.1)))"
+                          }
+                        ],
+                        "jgnShow": "pair('HSS',pair('K_seaf',KDF(KDF(pair(f3(~k,~RAND),f4(~k,~RAND)),pair(pair('5G',idSN.1),Xor(f5(~k,~RAND),Union('1',SqnHSS)))),pair('5G',idSN.1))))"
+                      }
+                    ],
+                    "jgnShow": "pair('UE',pair('HSS',pair('K_seaf',KDF(KDF(pair(f3(~k,~RAND),f4(~k,~RAND)),pair(pair('5G',idSN.1),Xor(f5(~k,~RAND),Union('1',SqnHSS)))),pair('5G',idSN.1)))))"
+                  }
+                ]
+              },
+              {
+                "jgnFactId": "action",
+                "jgnFactMult": "",
+                "jgnFactName": "Running",
+                "jgnFactShow": "Running( ~idHN.1, ~supi, <'UE', 'HSS', 'supi', ~supi> )",
+                "jgnFactTag": "ProtoFact",
+                "jgnFactTerms": [
+                  {
+                    "jgnConst": "~idHN.1"
+                  },
+                  {
+                    "jgnConst": "~supi"
+                  },
+                  {
+                    "jgnFunct": "pair",
+                    "jgnParams": [
+                      {
+                        "jgnConst": "'UE'"
+                      },
+                      {
+                        "jgnFunct": "pair",
+                        "jgnParams": [
+                          {
+                            "jgnConst": "'HSS'"
+                          },
+                          {
+                            "jgnFunct": "pair",
+                            "jgnParams": [
+                              {
+                                "jgnConst": "'supi'"
+                              },
+                              {
+                                "jgnConst": "~supi"
+                              }
+                            ],
+                            "jgnShow": "pair('supi',~supi)"
+                          }
+                        ],
+                        "jgnShow": "pair('HSS',pair('supi',~supi))"
+                      }
+                    ],
+                    "jgnShow": "pair('UE',pair('HSS',pair('supi',~supi)))"
+                  }
+                ]
+              },
+              {
+                "jgnFactId": "action",
+                "jgnFactMult": "",
+                "jgnFactName": "Running",
+                "jgnFactShow": "Running( ~idHN.1, ~supi, <'UE', 'HSS', 'AUTN', (f5(~k, ~RAND)Ã¢ÂŠÂ•('1'++SqnHSS)), f1(~k, <('1'++SqnHSS), ~RAND, '5G', idSN.1>)>)",
+                "jgnFactTag": "ProtoFact",
+                "jgnFactTerms": [
+                  {
+                    "jgnConst": "~idHN.1"
+                  },
+                  {
+                    "jgnConst": "~supi"
+                  },
+                  {
+                    "jgnFunct": "pair",
+                    "jgnParams": [
+                      {
+                        "jgnConst": "'UE'"
+                      },
+                      {
+                        "jgnFunct": "pair",
+                        "jgnParams": [
+                          {
+                            "jgnConst": "'HSS'"
+                          },
+                          {
+                            "jgnFunct": "pair",
+                            "jgnParams": [
+                              {
+                                "jgnConst": "'AUTN'"
+                              },
+                              {
+                                "jgnFunct": "pair",
+                                "jgnParams": [
+                                  {
+                                    "jgnFunct": "Xor",
+                                    "jgnParams": [
+                                      {
+                                        "jgnFunct": "f5",
+                                        "jgnParams": [
+                                          {
+                                            "jgnConst": "~k"
+                                          },
+                                          {
+                                            "jgnConst": "~RAND"
+                                          }
+                                        ],
+                                        "jgnShow": "f5(~k,~RAND)"
+                                      },
+                                      {
+                                        "jgnFunct": "Union",
+                                        "jgnParams": [
+                                          {
+                                            "jgnConst": "'1'"
+                                          },
+                                          {
+                                            "jgnConst": "SqnHSS"
+                                          }
+                                        ],
+                                        "jgnShow": "Union('1',SqnHSS)"
+                                      }
+                                    ],
+                                    "jgnShow": "Xor(f5(~k,~RAND),Union('1',SqnHSS))"
+                                  },
+                                  {
+                                    "jgnFunct": "f1",
+                                    "jgnParams": [
+                                      {
+                                        "jgnConst": "~k"
+                                      },
+                                      {
+                                        "jgnFunct": "pair",
+                                        "jgnParams": [
+                                          {
+                                            "jgnFunct": "Union",
+                                            "jgnParams": [
+                                              {
+                                                "jgnConst": "'1'"
+                                              },
+                                              {
+                                                "jgnConst": "SqnHSS"
+                                              }
+                                            ],
+                                            "jgnShow": "Union('1',SqnHSS)"
+                                          },
+                                          {
+                                            "jgnFunct": "pair",
+                                            "jgnParams": [
+                                              {
+                                                "jgnConst": "~RAND"
+                                              },
+                                              {
+                                                "jgnFunct": "pair",
+                                                "jgnParams": [
+                                                  {
+                                                    "jgnConst": "'5G'"
+                                                  },
+                                                  {
+                                                    "jgnConst": "idSN.1"
+                                                  }
+                                                ],
+                                                "jgnShow": "pair('5G',idSN.1)"
+                                              }
+                                            ],
+                                            "jgnShow": "pair(~RAND,pair('5G',idSN.1))"
+                                          }
+                                        ],
+                                        "jgnShow": "pair(Union('1',SqnHSS),pair(~RAND,pair('5G',idSN.1)))"
+                                      }
+                                    ],
+                                    "jgnShow": "f1(~k,pair(Union('1',SqnHSS),pair(~RAND,pair('5G',idSN.1))))"
+                                  }
+                                ],
+                                "jgnShow": "pair(Xor(f5(~k,~RAND),Union('1',SqnHSS)),f1(~k,pair(Union('1',SqnHSS),pair(~RAND,pair('5G',idSN.1)))))"
+                              }
+                            ],
+                            "jgnShow": "pair('AUTN',pair(Xor(f5(~k,~RAND),Union('1',SqnHSS)),f1(~k,pair(Union('1',SqnHSS),pair(~RAND,pair('5G',idSN.1))))))"
+                          }
+                        ],
+                        "jgnShow": "pair('HSS',pair('AUTN',pair(Xor(f5(~k,~RAND),Union('1',SqnHSS)),f1(~k,pair(Union('1',SqnHSS),pair(~RAND,pair('5G',idSN.1)))))))"
+                      }
+                    ],
+                    "jgnShow": "pair('UE',pair('HSS',pair('AUTN',pair(Xor(f5(~k,~RAND),Union('1',SqnHSS)),f1(~k,pair(Union('1',SqnHSS),pair(~RAND,pair('5G',idSN.1))))))))"
+                  }
+                ]
+              },
+              {
+                "jgnFactId": "action",
+                "jgnFactMult": "",
+                "jgnFactName": "Honest",
+                "jgnFactShow": "Honest( ~supi )",
+                "jgnFactTag": "ProtoFact",
+                "jgnFactTerms": [
+                  {
+                    "jgnConst": "~supi"
+                  }
+                ]
+              },
+              {
+                "jgnFactId": "action",
+                "jgnFactMult": "",
+                "jgnFactName": "Honest",
+                "jgnFactShow": "Honest( ~idHN.1 )",
+                "jgnFactTag": "ProtoFact",
+                "jgnFactTerms": [
+                  {
+                    "jgnConst": "~idHN.1"
+                  }
+                ]
+              },
+              {
+                "jgnFactId": "action",
+                "jgnFactMult": "",
+                "jgnFactName": "Honest",
+                "jgnFactShow": "Honest( idSN.1 )",
+                "jgnFactTag": "ProtoFact",
+                "jgnFactTerms": [
+                  {
+                    "jgnConst": "idSN.1"
+                  }
+                ]
+              }
+            ],
+            "jgnConcs": [
+              {
+                "jgnFactId": "#j:c0",
+                "jgnFactMult": "",
+                "jgnFactName": "St_1_HSS",
+                "jgnFactShow": "St_1_HSS( ~tid.1, ~idHN.1, ~supi, <aenc(<~supi, ~R>, pk(~sk_HN)), ~idHN.1>, idSN.1, <'5G', idSN.1>, ~k, ('1'++SqnHSS), KDF(<f3(~k, ~RAND), f4(~k, ~RAND)>, <<'5G', idSN.1>, f2(~k, ~RAND), ~RAND>), ~RAND, ~sqn_root, ~sk_HN, ~cid.1)",
+                "jgnFactTag": "ProtoFact",
+                "jgnFactTerms": [
+                  {
+                    "jgnConst": "~tid.1"
+                  },
+                  {
+                    "jgnConst": "~idHN.1"
+                  },
+                  {
+                    "jgnConst": "~supi"
+                  },
+                  {
+                    "jgnFunct": "pair",
+                    "jgnParams": [
+                      {
+                        "jgnFunct": "aenc",
+                        "jgnParams": [
+                          {
+                            "jgnFunct": "pair",
+                            "jgnParams": [
+                              {
+                                "jgnConst": "~supi"
+                              },
+                              {
+                                "jgnConst": "~R"
+                              }
+                            ],
+                            "jgnShow": "pair(~supi,~R)"
+                          },
+                          {
+                            "jgnFunct": "pk",
+                            "jgnParams": [
+                              {
+                                "jgnConst": "~sk_HN"
+                              }
+                            ],
+                            "jgnShow": "pk(~sk_HN)"
+                          }
+                        ],
+                        "jgnShow": "aenc(pair(~supi,~R),pk(~sk_HN))"
+                      },
+                      {
+                        "jgnConst": "~idHN.1"
+                      }
+                    ],
+                    "jgnShow": "pair(aenc(pair(~supi,~R),pk(~sk_HN)),~idHN.1)"
+                  },
+                  {
+                    "jgnConst": "idSN.1"
+                  },
+                  {
+                    "jgnFunct": "pair",
+                    "jgnParams": [
+                      {
+                        "jgnConst": "'5G'"
+                      },
+                      {
+                        "jgnConst": "idSN.1"
+                      }
+                    ],
+                    "jgnShow": "pair('5G',idSN.1)"
+                  },
+                  {
+                    "jgnConst": "~k"
+                  },
+                  {
+                    "jgnFunct": "Union",
+                    "jgnParams": [
+                      {
+                        "jgnConst": "'1'"
+                      },
+                      {
+                        "jgnConst": "SqnHSS"
+                      }
+                    ],
+                    "jgnShow": "Union('1',SqnHSS)"
+                  },
+                  {
+                    "jgnFunct": "KDF",
+                    "jgnParams": [
+                      {
+                        "jgnFunct": "pair",
+                        "jgnParams": [
+                          {
+                            "jgnFunct": "f3",
+                            "jgnParams": [
+                              {
+                                "jgnConst": "~k"
+                              },
+                              {
+                                "jgnConst": "~RAND"
+                              }
+                            ],
+                            "jgnShow": "f3(~k,~RAND)"
+                          },
+                          {
+                            "jgnFunct": "f4",
+                            "jgnParams": [
+                              {
+                                "jgnConst": "~k"
+                              },
+                              {
+                                "jgnConst": "~RAND"
+                              }
+                            ],
+                            "jgnShow": "f4(~k,~RAND)"
+                          }
+                        ],
+                        "jgnShow": "pair(f3(~k,~RAND),f4(~k,~RAND))"
+                      },
+                      {
+                        "jgnFunct": "pair",
+                        "jgnParams": [
+                          {
+                            "jgnFunct": "pair",
+                            "jgnParams": [
+                              {
+                                "jgnConst": "'5G'"
+                              },
+                              {
+                                "jgnConst": "idSN.1"
+                              }
+                            ],
+                            "jgnShow": "pair('5G',idSN.1)"
+                          },
+                          {
+                            "jgnFunct": "pair",
+                            "jgnParams": [
+                              {
+                                "jgnFunct": "f2",
+                                "jgnParams": [
+                                  {
+                                    "jgnConst": "~k"
+                                  },
+                                  {
+                                    "jgnConst": "~RAND"
+                                  }
+                                ],
+                                "jgnShow": "f2(~k,~RAND)"
+                              },
+                              {
+                                "jgnConst": "~RAND"
+                              }
+                            ],
+                            "jgnShow": "pair(f2(~k,~RAND),~RAND)"
+                          }
+                        ],
+                        "jgnShow": "pair(pair('5G',idSN.1),pair(f2(~k,~RAND),~RAND))"
+                      }
+                    ],
+                    "jgnShow": "KDF(pair(f3(~k,~RAND),f4(~k,~RAND)),pair(pair('5G',idSN.1),pair(f2(~k,~RAND),~RAND)))"
+                  },
+                  {
+                    "jgnConst": "~RAND"
+                  },
+                  {
+                    "jgnConst": "~sqn_root"
+                  },
+                  {
+                    "jgnConst": "~sk_HN"
+                  },
+                  {
+                    "jgnConst": "~cid.1"
+                  }
+                ]
+              },
+              {
+                "jgnFactId": "#j:c1",
+                "jgnFactMult": "",
+                "jgnFactName": "Sqn_HSS",
+                "jgnFactShow": "Sqn_HSS( ~supi, ~idHN.1, ('1'++SqnHSS), ~sqn_root, ('1'++count) )",
+                "jgnFactTag": "ProtoFact",
+                "jgnFactTerms": [
+                  {
+                    "jgnConst": "~supi"
+                  },
+                  {
+                    "jgnConst": "~idHN.1"
+                  },
+                  {
+                    "jgnFunct": "Union",
+                    "jgnParams": [
+                      {
+                        "jgnConst": "'1'"
+                      },
+                      {
+                        "jgnConst": "SqnHSS"
+                      }
+                    ],
+                    "jgnShow": "Union('1',SqnHSS)"
+                  },
+                  {
+                    "jgnConst": "~sqn_root"
+                  },
+                  {
+                    "jgnFunct": "Union",
+                    "jgnParams": [
+                      {
+                        "jgnConst": "'1'"
+                      },
+                      {
+                        "jgnConst": "count"
+                      }
+                    ],
+                    "jgnShow": "Union('1',count)"
+                  }
+                ]
+              },
+              {
+                "jgnFactId": "#j:c2",
+                "jgnFactMult": "",
+                "jgnFactName": "SndS",
+                "jgnFactShow": "SndS( ~cid.1, ~idHN.1, idSN.1, <'aia', ~RAND, SHA256(KDF(<f3(~k, ~RAND), f4(~k, ~RAND)>, <<'5G', idSN.1>, f2(~k, ~RAND), ~RAND>), ~RAND), KDF(KDF(<f3(~k, ~RAND), f4(~k, ~RAND)>, <<'5G', idSN.1>, (f5(~k, ~RAND)Ã¢ÂŠÂ•('1'++SqnHSS))>), <'5G', idSN.1>), (f5(~k, ~RAND)Ã¢ÂŠÂ•('1'++SqnHSS)), f1(~k, <('1'++SqnHSS), ~RAND, '5G', idSN.1>)>)",
+                "jgnFactTag": "ProtoFact",
+                "jgnFactTerms": [
+                  {
+                    "jgnConst": "~cid.1"
+                  },
+                  {
+                    "jgnConst": "~idHN.1"
+                  },
+                  {
+                    "jgnConst": "idSN.1"
+                  },
+                  {
+                    "jgnFunct": "pair",
+                    "jgnParams": [
+                      {
+                        "jgnConst": "'aia'"
+                      },
+                      {
+                        "jgnFunct": "pair",
+                        "jgnParams": [
+                          {
+                            "jgnConst": "~RAND"
+                          },
+                          {
+                            "jgnFunct": "pair",
+                            "jgnParams": [
+                              {
+                                "jgnFunct": "SHA256",
+                                "jgnParams": [
+                                  {
+                                    "jgnFunct": "KDF",
+                                    "jgnParams": [
+                                      {
+                                        "jgnFunct": "pair",
+                                        "jgnParams": [
+                                          {
+                                            "jgnFunct": "f3",
+                                            "jgnParams": [
+                                              {
+                                                "jgnConst": "~k"
+                                              },
+                                              {
+                                                "jgnConst": "~RAND"
+                                              }
+                                            ],
+                                            "jgnShow": "f3(~k,~RAND)"
+                                          },
+                                          {
+                                            "jgnFunct": "f4",
+                                            "jgnParams": [
+                                              {
+                                                "jgnConst": "~k"
+                                              },
+                                              {
+                                                "jgnConst": "~RAND"
+                                              }
+                                            ],
+                                            "jgnShow": "f4(~k,~RAND)"
+                                          }
+                                        ],
+                                        "jgnShow": "pair(f3(~k,~RAND),f4(~k,~RAND))"
+                                      },
+                                      {
+                                        "jgnFunct": "pair",
+                                        "jgnParams": [
+                                          {
+                                            "jgnFunct": "pair",
+                                            "jgnParams": [
+                                              {
+                                                "jgnConst": "'5G'"
+                                              },
+                                              {
+                                                "jgnConst": "idSN.1"
+                                              }
+                                            ],
+                                            "jgnShow": "pair('5G',idSN.1)"
+                                          },
+                                          {
+                                            "jgnFunct": "pair",
+                                            "jgnParams": [
+                                              {
+                                                "jgnFunct": "f2",
+                                                "jgnParams": [
+                                                  {
+                                                    "jgnConst": "~k"
+                                                  },
+                                                  {
+                                                    "jgnConst": "~RAND"
+                                                  }
+                                                ],
+                                                "jgnShow": "f2(~k,~RAND)"
+                                              },
+                                              {
+                                                "jgnConst": "~RAND"
+                                              }
+                                            ],
+                                            "jgnShow": "pair(f2(~k,~RAND),~RAND)"
+                                          }
+                                        ],
+                                        "jgnShow": "pair(pair('5G',idSN.1),pair(f2(~k,~RAND),~RAND))"
+                                      }
+                                    ],
+                                    "jgnShow": "KDF(pair(f3(~k,~RAND),f4(~k,~RAND)),pair(pair('5G',idSN.1),pair(f2(~k,~RAND),~RAND)))"
+                                  },
+                                  {
+                                    "jgnConst": "~RAND"
+                                  }
+                                ],
+                                "jgnShow": "SHA256(KDF(pair(f3(~k,~RAND),f4(~k,~RAND)),pair(pair('5G',idSN.1),pair(f2(~k,~RAND),~RAND))),~RAND)"
+                              },
+                              {
+                                "jgnFunct": "pair",
+                                "jgnParams": [
+                                  {
+                                    "jgnFunct": "KDF",
+                                    "jgnParams": [
+                                      {
+                                        "jgnFunct": "KDF",
+                                        "jgnParams": [
+                                          {
+                                            "jgnFunct": "pair",
+                                            "jgnParams": [
+                                              {
+                                                "jgnFunct": "f3",
+                                                "jgnParams": [
+                                                  {
+                                                    "jgnConst": "~k"
+                                                  },
+                                                  {
+                                                    "jgnConst": "~RAND"
+                                                  }
+                                                ],
+                                                "jgnShow": "f3(~k,~RAND)"
+                                              },
+                                              {
+                                                "jgnFunct": "f4",
+                                                "jgnParams": [
+                                                  {
+                                                    "jgnConst": "~k"
+                                                  },
+                                                  {
+                                                    "jgnConst": "~RAND"
+                                                  }
+                                                ],
+                                                "jgnShow": "f4(~k,~RAND)"
+                                              }
+                                            ],
+                                            "jgnShow": "pair(f3(~k,~RAND),f4(~k,~RAND))"
+                                          },
+                                          {
+                                            "jgnFunct": "pair",
+                                            "jgnParams": [
+                                              {
+                                                "jgnFunct": "pair",
+                                                "jgnParams": [
+                                                  {
+                                                    "jgnConst": "'5G'"
+                                                  },
+                                                  {
+                                                    "jgnConst": "idSN.1"
+                                                  }
+                                                ],
+                                                "jgnShow": "pair('5G',idSN.1)"
+                                              },
+                                              {
+                                                "jgnFunct": "Xor",
+                                                "jgnParams": [
+                                                  {
+                                                    "jgnFunct": "f5",
+                                                    "jgnParams": [
+                                                      {
+                                                        "jgnConst": "~k"
+                                                      },
+                                                      {
+                                                        "jgnConst": "~RAND"
+                                                      }
+                                                    ],
+                                                    "jgnShow": "f5(~k,~RAND)"
+                                                  },
+                                                  {
+                                                    "jgnFunct": "Union",
+                                                    "jgnParams": [
+                                                      {
+                                                        "jgnConst": "'1'"
+                                                      },
+                                                      {
+                                                        "jgnConst": "SqnHSS"
+                                                      }
+                                                    ],
+                                                    "jgnShow": "Union('1',SqnHSS)"
+                                                  }
+                                                ],
+                                                "jgnShow": "Xor(f5(~k,~RAND),Union('1',SqnHSS))"
+                                              }
+                                            ],
+                                            "jgnShow": "pair(pair('5G',idSN.1),Xor(f5(~k,~RAND),Union('1',SqnHSS)))"
+                                          }
+                                        ],
+                                        "jgnShow": "KDF(pair(f3(~k,~RAND),f4(~k,~RAND)),pair(pair('5G',idSN.1),Xor(f5(~k,~RAND),Union('1',SqnHSS))))"
+                                      },
+                                      {
+                                        "jgnFunct": "pair",
+                                        "jgnParams": [
+                                          {
+                                            "jgnConst": "'5G'"
+                                          },
+                                          {
+                                            "jgnConst": "idSN.1"
+                                          }
+                                        ],
+                                        "jgnShow": "pair('5G',idSN.1)"
+                                      }
+                                    ],
+                                    "jgnShow": "KDF(KDF(pair(f3(~k,~RAND),f4(~k,~RAND)),pair(pair('5G',idSN.1),Xor(f5(~k,~RAND),Union('1',SqnHSS)))),pair('5G',idSN.1))"
+                                  },
+                                  {
+                                    "jgnFunct": "pair",
+                                    "jgnParams": [
+                                      {
+                                        "jgnFunct": "Xor",
+                                        "jgnParams": [
+                                          {
+                                            "jgnFunct": "f5",
+                                            "jgnParams": [
+                                              {
+                                                "jgnConst": "~k"
+                                              },
+                                              {
+                                                "jgnConst": "~RAND"
+                                              }
+                                            ],
+                                            "jgnShow": "f5(~k,~RAND)"
+                                          },
+                                          {
+                                            "jgnFunct": "Union",
+                                            "jgnParams": [
+                                              {
+                                                "jgnConst": "'1'"
+                                              },
+                                              {
+                                                "jgnConst": "SqnHSS"
+                                              }
+                                            ],
+                                            "jgnShow": "Union('1',SqnHSS)"
+                                          }
+                                        ],
+                                        "jgnShow": "Xor(f5(~k,~RAND),Union('1',SqnHSS))"
+                                      },
+                                      {
+                                        "jgnFunct": "f1",
+                                        "jgnParams": [
+                                          {
+                                            "jgnConst": "~k"
+                                          },
+                                          {
+                                            "jgnFunct": "pair",
+                                            "jgnParams": [
+                                              {
+                                                "jgnFunct": "Union",
+                                                "jgnParams": [
+                                                  {
+                                                    "jgnConst": "'1'"
+                                                  },
+                                                  {
+                                                    "jgnConst": "SqnHSS"
+                                                  }
+                                                ],
+                                                "jgnShow": "Union('1',SqnHSS)"
+                                              },
+                                              {
+                                                "jgnFunct": "pair",
+                                                "jgnParams": [
+                                                  {
+                                                    "jgnConst": "~RAND"
+                                                  },
+                                                  {
+                                                    "jgnFunct": "pair",
+                                                    "jgnParams": [
+                                                      {
+                                                        "jgnConst": "'5G'"
+                                                      },
+                                                      {
+                                                        "jgnConst": "idSN.1"
+                                                      }
+                                                    ],
+                                                    "jgnShow": "pair('5G',idSN.1)"
+                                                  }
+                                                ],
+                                                "jgnShow": "pair(~RAND,pair('5G',idSN.1))"
+                                              }
+                                            ],
+                                            "jgnShow": "pair(Union('1',SqnHSS),pair(~RAND,pair('5G',idSN.1)))"
+                                          }
+                                        ],
+                                        "jgnShow": "f1(~k,pair(Union('1',SqnHSS),pair(~RAND,pair('5G',idSN.1))))"
+                                      }
+                                    ],
+                                    "jgnShow": "pair(Xor(f5(~k,~RAND),Union('1',SqnHSS)),f1(~k,pair(Union('1',SqnHSS),pair(~RAND,pair('5G',idSN.1)))))"
+                                  }
+                                ],
+                                "jgnShow": "pair(KDF(KDF(pair(f3(~k,~RAND),f4(~k,~RAND)),pair(pair('5G',idSN.1),Xor(f5(~k,~RAND),Union('1',SqnHSS)))),pair('5G',idSN.1)),pair(Xor(f5(~k,~RAND),Union('1',SqnHSS)),f1(~k,pair(Union('1',SqnHSS),pair(~RAND,pair('5G',idSN.1))))))"
+                              }
+                            ],
+                            "jgnShow": "pair(SHA256(KDF(pair(f3(~k,~RAND),f4(~k,~RAND)),pair(pair('5G',idSN.1),pair(f2(~k,~RAND),~RAND))),~RAND),pair(KDF(KDF(pair(f3(~k,~RAND),f4(~k,~RAND)),pair(pair('5G',idSN.1),Xor(f5(~k,~RAND),Union('1',SqnHSS)))),pair('5G',idSN.1)),pair(Xor(f5(~k,~RAND),Union('1',SqnHSS)),f1(~k,pair(Union('1',SqnHSS),pair(~RAND,pair('5G',idSN.1)))))))"
+                          }
+                        ],
+                        "jgnShow": "pair(~RAND,pair(SHA256(KDF(pair(f3(~k,~RAND),f4(~k,~RAND)),pair(pair('5G',idSN.1),pair(f2(~k,~RAND),~RAND))),~RAND),pair(KDF(KDF(pair(f3(~k,~RAND),f4(~k,~RAND)),pair(pair('5G',idSN.1),Xor(f5(~k,~RAND),Union('1',SqnHSS)))),pair('5G',idSN.1)),pair(Xor(f5(~k,~RAND),Union('1',SqnHSS)),f1(~k,pair(Union('1',SqnHSS),pair(~RAND,pair('5G',idSN.1))))))))"
+                      }
+                    ],
+                    "jgnShow": "pair('aia',pair(~RAND,pair(SHA256(KDF(pair(f3(~k,~RAND),f4(~k,~RAND)),pair(pair('5G',idSN.1),pair(f2(~k,~RAND),~RAND))),~RAND),pair(KDF(KDF(pair(f3(~k,~RAND),f4(~k,~RAND)),pair(pair('5G',idSN.1),Xor(f5(~k,~RAND),Union('1',SqnHSS)))),pair('5G',idSN.1)),pair(Xor(f5(~k,~RAND),Union('1',SqnHSS)),f1(~k,pair(Union('1',SqnHSS),pair(~RAND,pair('5G',idSN.1)))))))))"
+                  }
+                ]
+              }
+            ],
+            "jgnPrems": [
+              {
+                "jgnFactId": "#j:p0",
+                "jgnFactMult": "!",
+                "jgnFactName": "!HSS",
+                "jgnFactShow": "!HSS( ~idHN.1, ~sk_HN )",
+                "jgnFactTag": "ProtoFact",
+                "jgnFactTerms": [
+                  {
+                    "jgnConst": "~idHN.1"
+                  },
+                  {
+                    "jgnConst": "~sk_HN"
+                  }
+                ]
+              },
+              {
+                "jgnFactId": "#j:p1",
+                "jgnFactMult": "",
+                "jgnFactName": "RcvS",
+                "jgnFactShow": "RcvS( ~cid.1, idSN.1, ~idHN.1, <'air', <aenc(<~supi, ~R>, pk(~sk_HN)), ~idHN.1>, '5G', idSN.1>)",
+                "jgnFactTag": "ProtoFact",
+                "jgnFactTerms": [
+                  {
+                    "jgnConst": "~cid.1"
+                  },
+                  {
+                    "jgnConst": "idSN.1"
+                  },
+                  {
+                    "jgnConst": "~idHN.1"
+                  },
+                  {
+                    "jgnFunct": "pair",
+                    "jgnParams": [
+                      {
+                        "jgnConst": "'air'"
+                      },
+                      {
+                        "jgnFunct": "pair",
+                        "jgnParams": [
+                          {
+                            "jgnFunct": "pair",
+                            "jgnParams": [
+                              {
+                                "jgnFunct": "aenc",
+                                "jgnParams": [
+                                  {
+                                    "jgnFunct": "pair",
+                                    "jgnParams": [
+                                      {
+                                        "jgnConst": "~supi"
+                                      },
+                                      {
+                                        "jgnConst": "~R"
+                                      }
+                                    ],
+                                    "jgnShow": "pair(~supi,~R)"
+                                  },
+                                  {
+                                    "jgnFunct": "pk",
+                                    "jgnParams": [
+                                      {
+                                        "jgnConst": "~sk_HN"
+                                      }
+                                    ],
+                                    "jgnShow": "pk(~sk_HN)"
+                                  }
+                                ],
+                                "jgnShow": "aenc(pair(~supi,~R),pk(~sk_HN))"
+                              },
+                              {
+                                "jgnConst": "~idHN.1"
+                              }
+                            ],
+                            "jgnShow": "pair(aenc(pair(~supi,~R),pk(~sk_HN)),~idHN.1)"
+                          },
+                          {
+                            "jgnFunct": "pair",
+                            "jgnParams": [
+                              {
+                                "jgnConst": "'5G'"
+                              },
+                              {
+                                "jgnConst": "idSN.1"
+                              }
+                            ],
+                            "jgnShow": "pair('5G',idSN.1)"
+                          }
+                        ],
+                        "jgnShow": "pair(pair(aenc(pair(~supi,~R),pk(~sk_HN)),~idHN.1),pair('5G',idSN.1))"
+                      }
+                    ],
+                    "jgnShow": "pair('air',pair(pair(aenc(pair(~supi,~R),pk(~sk_HN)),~idHN.1),pair('5G',idSN.1)))"
+                  }
+                ]
+              },
+              {
+                "jgnFactId": "#j:p2",
+                "jgnFactMult": "!",
+                "jgnFactName": "!Ltk_Sym",
+                "jgnFactShow": "!Ltk_Sym( ~supi, ~idHN.1, ~k, ~sqn_root )",
+                "jgnFactTag": "ProtoFact",
+                "jgnFactTerms": [
+                  {
+                    "jgnConst": "~supi"
+                  },
+                  {
+                    "jgnConst": "~idHN.1"
+                  },
+                  {
+                    "jgnConst": "~k"
+                  },
+                  {
+                    "jgnConst": "~sqn_root"
+                  }
+                ]
+              },
+              {
+                "jgnFactId": "#j:p3",
+                "jgnFactMult": "",
+                "jgnFactName": "Sqn_HSS",
+                "jgnFactShow": "Sqn_HSS( ~supi, ~idHN.1, SqnHSS, ~sqn_root, count )",
+                "jgnFactTag": "ProtoFact",
+                "jgnFactTerms": [
+                  {
+                    "jgnConst": "~supi"
+                  },
+                  {
+                    "jgnConst": "~idHN.1"
+                  },
+                  {
+                    "jgnConst": "SqnHSS"
+                  },
+                  {
+                    "jgnConst": "~sqn_root"
+                  },
+                  {
+                    "jgnConst": "count"
+                  }
+                ]
+              },
+              {
+                "jgnFactId": "#j:p4",
+                "jgnFactMult": "",
+                "jgnFactName": "Fr",
+                "jgnFactShow": "Fr( ~RAND )",
+                "jgnFactTag": "FreshFact",
+                "jgnFactTerms": [
+                  {
+                    "jgnConst": "~RAND"
+                  }
+                ]
+              },
+              {
+                "jgnFactId": "#j:p5",
+                "jgnFactMult": "",
+                "jgnFactName": "Fr",
+                "jgnFactShow": "Fr( ~tid.1 )",
+                "jgnFactTag": "FreshFact",
+                "jgnFactTerms": [
+                  {
+                    "jgnConst": "~tid.1"
+                  }
+                ]
+              },
+              {
+                "jgnFactId": "#j:p6",
+                "jgnFactMult": "",
+                "jgnFactName": "In",
+                "jgnFactShow": "In( count )",
+                "jgnFactTag": "InFact",
+                "jgnFactTerms": [
+                  {
+                    "jgnConst": "count"
+                  }
+                ]
+              }
+            ]
+          },
+          "jgnType": "isProtocolRule"
+        },
+        {
+          "jgnId": "#vf.2",
+          "jgnLabel": "Send",
+          "jgnMetadata": {
+            "jgnActs": [
+              {
+                "jgnFactId": "action",
+                "jgnFactMult": "",
+                "jgnFactName": "K",
+                "jgnFactShow": "K( count )",
+                "jgnFactTag": "ProtoFact",
+                "jgnFactTerms": [
+                  {
+                    "jgnConst": "count"
+                  }
+                ]
+              }
+            ],
+            "jgnConcs": [
+              {
+                "jgnFactId": "#vf.2:c0",
+                "jgnFactMult": "",
+                "jgnFactName": "In",
+                "jgnFactShow": "In( count )",
+                "jgnFactTag": "InFact",
+                "jgnFactTerms": [
+                  {
+                    "jgnConst": "count"
+                  }
+                ]
+              }
+            ],
+            "jgnPrems": [
+              {
+                "jgnFactId": "#vf.2:p0",
+                "jgnFactMult": "!",
+                "jgnFactName": "!KU",
+                "jgnFactShow": "!KU( count )",
+                "jgnFactTag": "KUFact",
+                "jgnFactTerms": [
+                  {
+                    "jgnConst": "count"
+                  }
+                ]
+              }
+            ]
+          },
+          "jgnType": "isIntruderRule"
+        },
+        {
+          "jgnId": "#vk",
+          "jgnLabel": "!KU( count )",
+          "jgnMetadata": {
+            "jgnActs": [
+              {
+                "jgnFactId": "action",
+                "jgnFactMult": "!",
+                "jgnFactName": "!KU",
+                "jgnFactShow": "!KU( count )",
+                "jgnFactTag": "KUFact",
+                "jgnFactTerms": [
+                  {
+                    "jgnConst": "count"
+                  }
+                ]
+              }
+            ],
+            "jgnConcs": [],
+            "jgnPrems": []
+          },
+          "jgnType": "unsolvedActionAtom"
+        },
+        {
+          "jgnId": "#last",
+          "jgnLabel": "#last",
+          "jgnType": "lastAtom"
+        }
+      ],
+      "jgType": "Tamarin prover constraint system"
+    }
+  ]
+}
