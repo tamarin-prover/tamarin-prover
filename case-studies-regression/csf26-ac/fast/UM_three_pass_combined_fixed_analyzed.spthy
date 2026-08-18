@@ -1495,7 +1495,7 @@ solve( (∃ #l matchingComm.
                 solve( I_Act( ~ex, $A, $B ) ▶₀ #l )
                   case I_Activate
                   solve( (∀ rest.
-                           ((rest add 'g'^~ex) =
+                           ((rest add ('g'^~ex)) =
                             (<'1', 'g'^~ex> add 
                              <'2', 'g'^~ey, 
                               MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 'g'^~ey, 'UM3'
@@ -1544,7 +1544,7 @@ solve( (∃ #l matchingComm.
                 solve( I_Act( ~ex, $A, $B ) ▶₀ #l )
                   case I_Activate
                   solve( (∀ rest.
-                           ((rest add 'g'^~ex) =
+                           ((rest add ('g'^~ex)) =
                             (<'1', 'g'^~ex> add 
                              <'2', 'g'^~ey, 
                               MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 'g'^~ey, 'UM3'
@@ -3512,7 +3512,7 @@ next
             next
               case I_Complete_case_2
               solve( (∀ rest.
-                       ((rest add 'g'^~ex) =
+                       ((rest add ('g'^~ex)) =
                         (<'1', 'g'^~ex> add 
                          <'2', 'g'^~ey, 
                           MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 'g'^~ey, 'UM3'
@@ -3908,7 +3908,7 @@ next
                 next
                   case Corrupt_SessionKey_case_2
                   solve( (∀ rest.
-                           ((rest add 'g'^~ex) =
+                           ((rest add ('g'^~ex)) =
                             (<'1', 'g'^~ex> add 
                              <'2', 'g'^~ey, 
                               MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 'g'^~ey, 'UM3'
@@ -4388,7 +4388,7 @@ next
                 next
                   case Reveal_SessionKey_case_2
                   solve( (∀ rest.
-                           ((rest add 'g'^~ex) =
+                           ((rest add ('g'^~ex)) =
                             (<'1', 'g'^~ex> add 
                              <'2', 'g'^~ey, 
                               MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 'g'^~ey, 'UM3'
@@ -5661,8 +5661,8 @@ qed
 Generated from:
 Tamarin version 1.13.0
 Maude version 3.5.1
-Git revision: 41bc81379b23681e7057314a5cf66a25c45e1986, branch: canonicalise-subst
-Compiled at: 2026-07-27 16:11:34.947223 UTC
+Git revision: 767a8a730bfb2462364e6079a0834478c79db7b8, branch: issue-914
+Compiled at: 2026-08-18 09:13:37.448390675 UTC
 */
 
 end
@@ -5674,7 +5674,7 @@ summary of summaries:
 analyzed: examples/csf26-ac/fast/UM_three_pass_combined_fixed.spthy
 
   output:          examples/csf26-ac/fast/UM_three_pass_combined_fixed.spthy.tmp
-  processing time: 7.85s
+  processing time: 13.68s
   
   key_agreement_reachable (exists-trace): verified (14 steps)
   CK_secure_UM3 (all-traces): verified (497 steps)
