@@ -161,7 +161,7 @@ simplify
 solve( Name( ~n0, ~n1, ~n2, ~n3 ) ▶₀ #i )
   case rule0
   solve( splitEqs(0) )
-    case split_case_1
+    case split_case_3
     solve( !KU( (~n0⊕~n1⊕x) ) @ #vk )
       case c_xor_case_5
       solve( !KU( (~n0⊕x) ) @ #vk.2 )
@@ -199,8 +199,8 @@ qed
 Generated from:
 Tamarin version 1.13.0
 Maude version 3.5.1
-Git revision: abcb0ff3eca770d7b7f58a583b2616eafe845e15, branch: fix-derivation-check-warnings
-Compiled at: 2026-07-22 11:02:46.6864 UTC
+Git revision: 41bc81379b23681e7057314a5cf66a25c45e1986, branch: canonicalise-subst
+Compiled at: 2026-07-27 16:11:34.947223 UTC
 */
 
 end
@@ -212,7 +212,7 @@ summary of summaries:
 analyzed: examples/regression/trace/issue770.spthy
 
   output:          examples/regression/trace/issue770.spthy.tmp
-  processing time: 5.40s
+  processing time: 5.22s
   
   alive (all-traces): falsified - found trace (13 steps)
 

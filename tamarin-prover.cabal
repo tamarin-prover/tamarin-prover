@@ -123,6 +123,7 @@ executable tamarin-prover
 
     build-depends:
         HUnit
+      , aeson
       , base
       , binary
       , binary-orphans
@@ -182,6 +183,7 @@ executable tamarin-prover
       Web.Settings
       Web.Theory
       Web.Types
+      Web.Utils
 
       Test.ParserTests
 

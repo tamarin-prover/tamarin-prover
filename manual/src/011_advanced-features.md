@@ -80,7 +80,11 @@ The syntax of the tactics will be detailed below in the part `Using a tactic`. H
   that runs independently of Tamarin and ranks the proof methods.
   The path of the program can be specified after the proof method ranking, e.g., `o "oracles/oracle-default"`
   to use the program `oracles/oracle-default` as the oracle.
-  If no path is specified, the default is `oracle`.
+  If no path is specified, Tamarin first looks in the protocol file's directory for an oracle with the
+  same base name as the protocol file and the `.oracle` extension. If that file does not exist, Tamarin
+  falls back to a file named `oracle` in the same directory. For example, if `models/MyProtocol.spthy`
+  contains `heuristic: o`, then running `tamarin-prover --prove models/MyProtocol.spthy` from the parent
+  directory uses `models/MyProtocol.oracle` if it exists, and otherwise uses `models/oracle`.
   The path of the program is relative to the directory of the protocol file containing the proof method ranking.
   If the heuristic is specified using the `--heuristic` option, the path can be given using the
   `--oraclename` command line option. In this case, the path is relative to the current working directory.
@@ -914,3 +918,33 @@ of the dot command line program.
 For JSON, the standard schema already defines a single top-level object with a
 "graphs" key that holds a list of the individual graphs, which we use to output
 the constrain systems.
+
+Viewing exported JSON graphs in the interactive GUI {#sec:load-json}
+-------------------------------------------------------------------
+
+A JSON file produced by `--output-json` (as described above) can be loaded
+directly into the interactive GUI for standalone viewing, without needing to
+reload or re-prove the original theory.
+This is useful for sharing a set of found attack traces or example graphs
+with someone else, or for revisiting old outputs later.
+
+To do so, either pass the JSON filename as the working-directory argument of
+`interactive` mode, or use the explicit `--load-json` flag:
+
+    tamarin-prover interactive traces.json
+    tamarin-prover interactive --load-json=traces.json
+
+A positional argument is treated as a JSON file to load automatically
+whenever it ends in the `.json` extension, therwise it is interpreted as
+usual, i.e., as a theory file or a directory of theory files.
+
+Once the server is ready, browse to `/loadjson` (e.g.
+<http://127.0.0.1:3001/loadjson>) to view the loaded graphs. If the file
+contains a single graph, you are redirected there directly; if it contains
+several, you will see a list of links, one per graph, labeled with the
+corresponding theory and lemma name.
+
+Pass `--browser` to `interactive` mode to open the ready interface automatically
+in the default web browser. This works for theory files, `--diff` theories, and
+graphs loaded with `--load-json`.
+

@@ -86,10 +86,12 @@ withWebUI
   -- ^ together with indication of choice "dot", "json", ...
   -> ImageFormat           -- ^ The preferred image format
   -> AutoProver            -- ^ The default autoprover.
+  -> Maybe JSONGraphs      -- ^ Graphs loaded from an externally exported JSON file, if any.
   -> (Application -> IO b) -- ^ Function to execute
   -> IO b
 withWebUI readyMsg cacheDir workDir enableLogging loadState autosave thyOpts
-          loadThy closeThy debug outputCmd imageFormat defaultAutoProver f = do
+          loadThy closeThy debug outputCmd imageFormat defaultAutoProver
+          loadedJsonGraphs f = do
   thy <- getTheos
   threadVar <- newMVar M.empty
   theoryVar <- newMVar thy
@@ -116,6 +118,7 @@ withWebUI readyMsg cacheDir workDir enableLogging loadState autosave thyOpts
                     , imageFormat
                     , defaultAutoProver
                     , debug
+                    , loadedJsonGraphs
                     }
       in if enableLogging then
         toWaiApp webUI

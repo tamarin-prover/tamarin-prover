@@ -186,8 +186,6 @@ var ui = {
         }
 
         // $.cookie("simplification", 2, { path: '/' });
-        // Navigation drop-down menus
-        $("ul#navigation").superfish();
 
         // Add keyboard shortcuts
         var shortcuts = {
@@ -337,94 +335,6 @@ var ui = {
             mainDisplay.toggleOption(debug_toggle);
         });
 
-       // Click handlers for graph simplification handlers
-        var f = {};
-        f.makeHandler = function (obj,i) {
-            obj.click(function(ev) {
-                ev.preventDefault();
-                $.cookie("simplification", i, { path: '/' });
-	        for (var j=0;j<10;j++) {
-	            var olink = "a#lvl"+j+"-toggle";
-		    var obj = $(olink);
-	            if (i == j) {
-    		        obj.removeClass('inactive-option');
-		            obj.addClass('active-option');
-		        } else {
-		            obj.removeClass('active-option');
-		            obj.addClass('inactive-option');
-		        }
-	        }
-                $("a.active-link").click();
-            });
-        }
-	for (var i=0;i<10;i++) {
-	    var linkname = "a#lvl"+i+"-toggle";
-            f.makeHandler($(linkname),i);
-	}
- 
-       // Click handler for abbreviation toggle
-        var abbrv_toggle = $('a#abbrv-toggle');
-        abbrv_toggle.click(function(ev) {
-            ev.preventDefault();
-            if ($.cookie("abbreviate")) {
-                $.cookie("abbreviate", null, { path: '/' });
-            } else {
-                $.cookie("abbreviate", true, { path: '/' });
-            }
-            $("a.active-link").click();
-            mainDisplay.toggleOption(abbrv_toggle);
-        });
-
-        // Click handler for auto-sources' toggle
-        var auto_toggle = $('a#auto-toggle');
-        auto_toggle.click(function(ev) {
-            ev.preventDefault();
-            var pathname = window.location.href;
-            if ($.cookie("auto-sources")) {      
-                $.cookie("auto-sources", null, { path: '/' });  
-            } else {
-                $.cookie("auto-sources", true, { path: '/' });
-              
-            }
-            mainDisplay.toggleOption(auto_toggle);  
-            // to tell that this is a call from the toggle
-            $.cookie("not-init",true,{path: "/"});
-            $("a.active-link").click();
-        });
-
-        // Click handler for clustering toggle
-        var agent_toggle = $('a#agent-toggle');
-        agent_toggle.click(function(ev) {
-            ev.preventDefault();
-            if ($.cookie("clustering")) {
-                $.cookie("clustering", null, { path: '/' });
-            } else {
-                $.cookie("clustering", true, { path: '/' });
-            }
-            $("a.active-link").click();
-            mainDisplay.toggleOption(agent_toggle);
-        });
-
-        // Abstract node content toggle
-        var abstr_toggle = $('a#abstr-toggle');
-        abstr_toggle.click(function(ev) {
-            ev.preventDefault();
-            // store and set cookie to true if toggle turned on 
-            // meaning on interactive graph, node content will be simplified
-            // note that it is NOT the same as the simplification level of the graph.
-            if ($.cookie("abstract")) {
-                $.cookie("abstract", null, { path: '/' });
-            } else {
-                $.cookie("abstract", true, { path: '/' });
-            }
-            // refresh page
-            $("a.active-link").click();
-            // update toggle button style
-            mainDisplay.toggleOption(abstr_toggle);
-        });
-
-
-
         // Install event handlers
         events.installScrollHandler(
             "west",
@@ -490,7 +400,17 @@ var ui = {
             var pos = $.cookie("west-position");
             $("div.ui-layout-west div.scroll-wrapper").scrollTop(pos);
         }
+    },
 
+    /**
+     * Initialize the active/inactive/disabled icon state of the
+     * visualization options menu (graph simplification level, abbreviate
+     * terms, clustering, auto-sources, abstract node content) from cookies.
+     *
+     * Shared between the main window and the pop-out graph window, which
+     * both show this menu but do not share any other UI chrome.
+     */
+    loadOptionSettings: function() {
 	/* If no simplification level specified yet, default to 1 */
 	if ($.cookie("simplification") == null) {
 	    $.cookie("simplification", 2, { path: '/' });
@@ -528,6 +448,121 @@ var ui = {
             $("a#abstr-toggle").addClass("active-option");
         } else {
             $("a#abstr-toggle").addClass("disabled-option");
+        }
+    },
+
+    /**
+     * Wire up the visualization options drop-down: graph simplification
+     * level, abbreviate terms, clustering by role, auto-sources and
+     * abstract node content.
+     *
+     * Shared between the main theory window (where this menu lives in the
+     * north header bar) and the pop-out graph window (where it is shown as
+     * a floating bar in the top-right corner), so the toggles are only
+     * wired up in one place.
+     */
+    initOptionsMenu: function() {
+        // Navigation drop-down menu
+        $("ul#navigation").superfish();
+
+        // Click handlers for graph simplification handlers
+        var f = {};
+        f.makeHandler = function (obj,i) {
+            obj.click(function(ev) {
+                ev.preventDefault();
+                $.cookie("simplification", i, { path: '/' });
+	        for (var j=0;j<10;j++) {
+	            var olink = "a#lvl"+j+"-toggle";
+		    var obj = $(olink);
+	            if (i == j) {
+    		        obj.removeClass('inactive-option');
+			            obj.addClass('active-option');
+		        } else {
+			            obj.removeClass('active-option');
+			            obj.addClass('inactive-option');
+		        }
+	        }
+                ui.refreshGraphView();
+            });
+        }
+	for (var i=0;i<10;i++) {
+	    var linkname = "a#lvl"+i+"-toggle";
+            f.makeHandler($(linkname),i);
+	}
+
+        // Click handler for abbreviation toggle
+        var abbrv_toggle = $('a#abbrv-toggle');
+        abbrv_toggle.click(function(ev) {
+            ev.preventDefault();
+            if ($.cookie("abbreviate")) {
+                $.cookie("abbreviate", null, { path: '/' });
+            } else {
+                $.cookie("abbreviate", true, { path: '/' });
+            }
+            ui.refreshGraphView();
+            mainDisplay.toggleOption(abbrv_toggle);
+        });
+
+        // Click handler for auto-sources' toggle
+        var auto_toggle = $('a#auto-toggle');
+        auto_toggle.click(function(ev) {
+            ev.preventDefault();
+            if ($.cookie("auto-sources")) {      
+                $.cookie("auto-sources", null, { path: '/' });  
+            } else {
+                $.cookie("auto-sources", true, { path: '/' });
+              
+            }
+            mainDisplay.toggleOption(auto_toggle);  
+            // to tell that this is a call from the toggle
+            $.cookie("not-init",true,{path: "/"});
+            ui.refreshGraphView();
+        });
+
+        // Click handler for clustering toggle
+        var agent_toggle = $('a#agent-toggle');
+        agent_toggle.click(function(ev) {
+            ev.preventDefault();
+            if ($.cookie("clustering")) {
+                $.cookie("clustering", null, { path: '/' });
+            } else {
+                $.cookie("clustering", true, { path: '/' });
+            }
+            ui.refreshGraphView();
+            mainDisplay.toggleOption(agent_toggle);
+        });
+
+        // Abstract node content toggle
+        var abstr_toggle = $('a#abstr-toggle');
+        abstr_toggle.click(function(ev) {
+            ev.preventDefault();
+            // store and set cookie to true if toggle turned on 
+            // meaning on interactive graph, node content will be simplified
+            // note that it is NOT the same as the simplification level of the graph.
+            if ($.cookie("abstract")) {
+                $.cookie("abstract", null, { path: '/' });
+            } else {
+                $.cookie("abstract", true, { path: '/' });
+            }
+            // refresh page
+            ui.refreshGraphView();
+            // update toggle button style
+            mainDisplay.toggleOption(abstr_toggle);
+        });
+    },
+
+    /**
+     * Refresh the graph view after an options toggle changed a cookie.
+     *
+     * In the main window, this re-navigates the currently active proof-tree
+     * link, reloading the visualization pane with the new settings. The
+     * pop-out graph window has no such link (and no proof-tree pane), so a
+     * full page reload is used instead to pick up the new cookie values.
+     */
+    refreshGraphView: function() {
+        $("a.active-link").click();
+        if (window.tamarinPopoutGraph) {
+            location.reload();
         }
     },
 
@@ -1016,6 +1051,14 @@ var mainDisplay = {
  * Initialize when document is ready.
  */
 $(document).ready(function() {
+    // Wire up the visualization options menu wherever it appears (the main
+    // window's header, or the floating bar in the pop-out graph window).
+    // Harmless no-op if the menu is not present on the current page.
+    if ($("ul#navigation").length) {
+        ui.loadOptionSettings();
+        ui.initOptionsMenu();
+    }
+
     // Only run rest of script if the main display is available
     var main_display = $("#ui-main-display");
     if(main_display.length != 1) return;

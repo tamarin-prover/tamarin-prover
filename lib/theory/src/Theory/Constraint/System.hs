@@ -260,7 +260,7 @@ import           GHC.Generics                         (Generic)
 import           Data.Binary
 import qualified Data.ByteString.Char8                as BC
 import qualified Data.DAG.Simple                      as D
-import           Data.List                            (foldl', partition, intersect,find,intercalate, groupBy)
+import           Data.List                            (foldl', partition, intersect,find,intercalate)
 import qualified Data.Map                             as M
 import           Data.Maybe                           (fromMaybe,mapMaybe, isNothing)
 -- import           Data.Monoid                          (Monoid(..))
@@ -552,12 +552,14 @@ defaultOracleNames srcThyInFileName = map (mapOracleRanking remapOracle)
   where
     remapOracle o@(Oracle workDir relPath) =
       if isNothing relPath
-        then if unsafePerformIO (doesFileExist inFileOracleName)
-               then Oracle workDir (Just inFileOracleName)
-               else Oracle workDir (Just "oracle")
+        then
+          let oracleDir = fromMaybe (takeDirectory srcThyInFileName) workDir
+              mkOracle = Oracle (Just oracleDir) . Just
+          in if unsafePerformIO (doesFileExist (oracleDir </> inFileOracleName))
+               then mkOracle inFileOracleName
+               else mkOracle "oracle"
         else o
-    inFileOracleName =
-      last (groupBy (\_ b -> b /= '/') $ head $ groupBy (\_ b -> b /= '.') srcThyInFileName) ++ ".oracle"
+    inFileOracleName = takeBaseName srcThyInFileName <.> "oracle"
 
 maybeSetOracleWorkDir :: Maybe FilePath -> Oracle -> Oracle
 maybeSetOracleWorkDir p o = o{ oracleWorkDir = p }

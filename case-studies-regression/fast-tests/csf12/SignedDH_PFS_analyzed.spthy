@@ -246,8 +246,8 @@ qed
 Generated from:
 Tamarin version 1.13.0
 Maude version 3.5.1
-Git revision: abcb0ff3eca770d7b7f58a583b2616eafe845e15, branch: fix-derivation-check-warnings
-Compiled at: 2026-07-22 11:02:46.6864 UTC
+Git revision: 41bc81379b23681e7057314a5cf66a25c45e1986, branch: canonicalise-subst
+Compiled at: 2026-07-27 16:11:34.947223 UTC
 */
 
 end
@@ -259,7 +259,7 @@ summary of summaries:
 analyzed: examples/csf12/SignedDH_PFS.spthy
 
   output:          examples/csf12/SignedDH_PFS.spthy.tmp
-  processing time: 0.12s
+  processing time: 0.11s
   
   Perfect_Forward_Secrecy (all-traces): verified (39 steps)
 
