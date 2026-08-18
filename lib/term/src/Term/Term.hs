@@ -302,7 +302,7 @@ prettyTerm ppLit = ppTerm
     ppTerm t = case viewTerm t of
         Lit l                                     -> ppLit l
         FApp (AC (ACfct (f, _))) []               -> text (BC.unpack f)
-        FApp (AC (ACfct (f, _))) ts               -> ppTerms (" " ++ BC.unpack f ++ " ") 1 "(" ")" ts
+        FApp (AC (ACfct (f, _))) ts               -> ppTermsWith ppACArg (" " ++ BC.unpack f ++ " ") 1 "(" ")" ts
         FApp (AC Mult)     ts                     -> ppTerms "*" 1 "(" ")" ts
         FApp (AC Xor)      ts                     -> ppTerms "⊕" 1 "(" ")" ts
         FApp (AC Union)    ts                     -> ppTerms "++" 1 "(" ")" ts
@@ -316,9 +316,18 @@ prettyTerm ppLit = ppTerm
         FApp (C EMap)      ts                     -> ppFun emapSymString ts
         FApp List          ts                     -> ppFun "LIST" ts
  
-    ppTerms sepa n lead finish ts =
+    ppTerms = ppTermsWith ppTerm
+
+    ppTermsWith pp sepa n lead finish ts =
         fcat . (text lead :) . (++[text finish]) .
-            map (nest n) . punctuate (text sepa) . map ppTerm $ ts
+            map (nest n) . punctuate (text sepa) . map pp $ ts
+
+    -- A user-defined AC operator binds more tightly than '^'. Print
+    -- parentheses around an exponentiation argument so that the parser
+    -- reads the term back unchanged.
+    ppACArg t = case viewTerm t of
+        FApp (NoEq s) [_,_] | s == expSym -> parens (ppTerm t)
+        _                                 -> ppTerm t
 
     split (viewTerm2 -> FPair t1 t2) = t1 : split t2
     split t                          = [t]
