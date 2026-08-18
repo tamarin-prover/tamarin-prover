@@ -324,7 +324,9 @@ prettyTerm ppLit = ppTerm
 
     -- A user-defined AC operator binds more tightly than '^'. Print
     -- parentheses around an exponentiation argument so that the parser
-    -- reads the term back unchanged.
+    -- reads the term back unchanged. Exponentiation is the only form
+    -- that this printer writes infix without its own brackets. If you
+    -- add another such form, extend this guard.
     ppACArg t = case viewTerm t of
         FApp (NoEq s) [_,_] | s == expSym -> parens (ppTerm t)
         _                                 -> ppTerm t
