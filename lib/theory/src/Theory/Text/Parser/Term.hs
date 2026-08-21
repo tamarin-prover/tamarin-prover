@@ -32,7 +32,6 @@ import           Term.Substitution
 import           Theory
 import           Theory.Text.Parser.Token
 import           Data.ByteString.Internal        (unpackChars)
-import Data.Functor (($>))
 
 -- | An AC operator
 opAC :: ACfctSym -> Parser ()
@@ -155,12 +154,15 @@ term eqn plit = asum
   where
     application = asum $ map (try . ($ plit)) [naryOpApp eqn, binaryAlgApp eqn, diffOp eqn]
     pairing = angled (tupleterm eqn plit)
-    nullaryApp = do
+    -- Match a full identifier, so that a nullary symbol that is a prefix of
+    -- another identifier is not taken by mistake.
+    nullaryApp = try $ do
       maudeSig <- sig <$> getState
-      -- FIXME: This try should not be necessary.
-      asum [ try (symbol (BC.unpack sym)) $> fApp fs []
+      op <- BC.pack <$> identifier
+      asum [ pure (fApp fs [])
            | fs@(NoEq (sym,(0,_,_,_))) <- S.toList $
-               funSyms maudeSig `S.union` S.map NoEq (macroNames maudeSig) ]
+               funSyms maudeSig `S.union` S.map NoEq (macroNames maudeSig)
+           , sym == op ]
 
 -- | A left-associative sequence of user-defined AC operators.
 acterm :: Ord l => Bool -> Parser (Term l) -> Parser (Term l)

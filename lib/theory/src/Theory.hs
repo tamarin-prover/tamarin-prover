@@ -30,6 +30,7 @@ module Theory (
   , clearFunctionTypingInfos
 
   -- * Options
+  , declarableOptions
   , transAllowPatternMatchinginLookup
   , transProgress
   , transReliable
