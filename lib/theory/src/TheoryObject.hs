@@ -840,7 +840,14 @@ prettyTranslationElement (ExportInfoItem eInfo) =
   (text "export: ")
     <-> text (L.get eTag eInfo)
     <-> nest 2 (doubleQuotes $ text $ L.get eText eInfo)
-prettyTranslationElement (SignatureBuiltin s) = (text "builtin ") <-> (text s)
+-- Builtins that only consist of function symbols and equations are already
+-- printed as part of the signature. Builtins that set a translation option
+-- must be printed, as the option cannot be recovered from the signature.
+prettyTranslationElement (SignatureBuiltin s)
+  | s `elem` optionBuiltins = text "builtins" <> colon <-> text s
+  | otherwise               = emptyDoc
+  where
+    optionBuiltins = ["locations-report", "reliable-channel"]
 
 prettyPredicate :: (HighlightDocument d) => Predicate -> d
 prettyPredicate p = kwPredicate <> colon <-> text (factstr ++ "<=>" ++ formulastr)
