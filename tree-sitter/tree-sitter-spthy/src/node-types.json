@@ -58,6 +58,10 @@
             "named": true
           },
           {
+            "type": "lesser_check",
+            "named": true
+          },
+          {
             "type": "negation",
             "named": true
           },
@@ -540,6 +544,10 @@
             "named": true
           },
           {
+            "type": "lesser_check",
+            "named": true
+          },
+          {
             "type": "negation",
             "named": true
           },
@@ -707,7 +715,31 @@
         "required": true,
         "types": [
           {
+            "type": "action_constraint",
+            "named": true
+          },
+          {
+            "type": "atom",
+            "named": true
+          },
+          {
+            "type": "conjunction",
+            "named": true
+          },
+          {
+            "type": "disjunction",
+            "named": true
+          },
+          {
             "type": "equality_check",
+            "named": true
+          },
+          {
+            "type": "iff",
+            "named": true
+          },
+          {
+            "type": "imp",
             "named": true
           },
           {
@@ -715,7 +747,43 @@
             "named": true
           },
           {
+            "type": "negation",
+            "named": true
+          },
+          {
+            "type": "nested_formula",
+            "named": true
+          },
+          {
+            "type": "pre_defined",
+            "named": true
+          },
+          {
             "type": "predicate_ref",
+            "named": true
+          },
+          {
+            "type": "quantified_formula",
+            "named": true
+          },
+          {
+            "type": "subterm_rel",
+            "named": true
+          },
+          {
+            "type": "temp_var_eq",
+            "named": true
+          },
+          {
+            "type": "temp_var_induction",
+            "named": true
+          },
+          {
+            "type": "temp_var_order",
+            "named": true
+          },
+          {
+            "type": "term_eq",
             "named": true
           }
         ]
@@ -927,6 +995,10 @@
             "named": true
           },
           {
+            "type": "lesser_check",
+            "named": true
+          },
+          {
             "type": "negation",
             "named": true
           },
@@ -994,6 +1066,10 @@
           },
           {
             "type": "imp",
+            "named": true
+          },
+          {
+            "type": "lesser_check",
             "named": true
           },
           {
@@ -1577,6 +1653,10 @@
             "named": true
           },
           {
+            "type": "lesser_check",
+            "named": true
+          },
+          {
             "type": "negation",
             "named": true
           },
@@ -1644,6 +1724,10 @@
           },
           {
             "type": "imp",
+            "named": true
+          },
+          {
+            "type": "lesser_check",
             "named": true
           },
           {
@@ -1723,6 +1807,10 @@
             "named": true
           },
           {
+            "type": "lesser_check",
+            "named": true
+          },
+          {
             "type": "negation",
             "named": true
           },
@@ -1799,6 +1887,10 @@
             "named": true
           },
           {
+            "type": "lesser_check",
+            "named": true
+          },
+          {
             "type": "negation",
             "named": true
           },
@@ -1866,71 +1958,7 @@
       "required": true,
       "types": [
         {
-          "type": "action_constraint",
-          "named": true
-        },
-        {
-          "type": "atom",
-          "named": true
-        },
-        {
-          "type": "conjunction",
-          "named": true
-        },
-        {
-          "type": "disjunction",
-          "named": true
-        },
-        {
-          "type": "iff",
-          "named": true
-        },
-        {
-          "type": "imp",
-          "named": true
-        },
-        {
           "type": "mset_term",
-          "named": true
-        },
-        {
-          "type": "negation",
-          "named": true
-        },
-        {
-          "type": "nested_formula",
-          "named": true
-        },
-        {
-          "type": "pre_defined",
-          "named": true
-        },
-        {
-          "type": "predicate_ref",
-          "named": true
-        },
-        {
-          "type": "quantified_formula",
-          "named": true
-        },
-        {
-          "type": "subterm_rel",
-          "named": true
-        },
-        {
-          "type": "temp_var_eq",
-          "named": true
-        },
-        {
-          "type": "temp_var_induction",
-          "named": true
-        },
-        {
-          "type": "temp_var_order",
-          "named": true
-        },
-        {
-          "type": "term_eq",
           "named": true
         }
       ]
@@ -2976,6 +3004,10 @@
             "named": true
           },
           {
+            "type": "lesser_check",
+            "named": true
+          },
+          {
             "type": "negation",
             "named": true
           },
@@ -3043,6 +3075,10 @@
           },
           {
             "type": "imp",
+            "named": true
+          },
+          {
+            "type": "lesser_check",
             "named": true
           },
           {
@@ -3122,6 +3158,10 @@
             "named": true
           },
           {
+            "type": "lesser_check",
+            "named": true
+          },
+          {
             "type": "negation",
             "named": true
           },
@@ -3189,6 +3229,10 @@
           },
           {
             "type": "imp",
+            "named": true
+          },
+          {
+            "type": "lesser_check",
             "named": true
           },
           {
@@ -3470,6 +3514,10 @@
             "named": true
           },
           {
+            "type": "lesser_check",
+            "named": true
+          },
+          {
             "type": "negation",
             "named": true
           },
@@ -3608,16 +3656,27 @@
   {
     "type": "lesser_check",
     "named": true,
-    "fields": {},
-    "children": {
-      "multiple": true,
-      "required": true,
-      "types": [
-        {
-          "type": "mset_term",
-          "named": true
-        }
-      ]
+    "fields": {
+      "left": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "mset_term",
+            "named": true
+          }
+        ]
+      },
+      "right": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "mset_term",
+            "named": true
+          }
+        ]
+      }
     }
   },
   {
@@ -4182,6 +4241,10 @@
             "named": true
           },
           {
+            "type": "lesser_check",
+            "named": true
+          },
+          {
             "type": "negation",
             "named": true
           },
@@ -4255,6 +4318,10 @@
         },
         {
           "type": "imp",
+          "named": true
+        },
+        {
+          "type": "lesser_check",
           "named": true
         },
         {
@@ -4685,6 +4752,10 @@
           },
           {
             "type": "imp",
+            "named": true
+          },
+          {
+            "type": "lesser_check",
             "named": true
           },
           {
@@ -5234,6 +5305,10 @@
           },
           {
             "type": "imp",
+            "named": true
+          },
+          {
+            "type": "lesser_check",
             "named": true
           },
           {
@@ -5798,6 +5873,10 @@
           },
           {
             "type": "imp",
+            "named": true
+          },
+          {
+            "type": "lesser_check",
             "named": true
           },
           {

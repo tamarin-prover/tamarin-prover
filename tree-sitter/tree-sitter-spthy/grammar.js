@@ -598,16 +598,11 @@ module.exports = grammar({
 
       _condition: $ => choice(
           $.equality_check,
-          $.lesser_check,
-          $.predicate_ref
+          $._formula
       ),
 
       equality_check: $ => seq(
-          choice($.mset_term, $._formula), token(prec(1, '=')), choice($.mset_term, $._formula)
-      ),
-
-      lesser_check: $ => seq(
-          $.mset_term, choice('(<)', '<<'), $.mset_term
+          $.mset_term, token(prec(1, '=')), $.mset_term
       ),
 
 
@@ -1357,6 +1352,7 @@ module.exports = grammar({
           $.action_constraint,
           $.term_eq,
           $.subterm_rel,
+          $.lesser_check,
           $.quantified_formula,
           $.atom,
           $.predicate_ref,
@@ -1433,6 +1429,12 @@ module.exports = grammar({
       subterm_rel: $ => prec('ATOM', seq(
           field('left', $.mset_term),
           choice('<<', '⊏'),
+          field('right', $.mset_term)
+      )),
+
+      lesser_check: $ => prec('ATOM', seq(
+          field('left', $.mset_term),
+          '(<)',
           field('right', $.mset_term)
       )),
 

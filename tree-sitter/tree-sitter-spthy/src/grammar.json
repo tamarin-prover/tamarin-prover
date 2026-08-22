@@ -2457,11 +2457,7 @@
         },
         {
           "type": "SYMBOL",
-          "name": "lesser_check"
-        },
-        {
-          "type": "SYMBOL",
-          "name": "predicate_ref"
+          "name": "_formula"
         }
       ]
     },
@@ -2469,17 +2465,8 @@
       "type": "SEQ",
       "members": [
         {
-          "type": "CHOICE",
-          "members": [
-            {
-              "type": "SYMBOL",
-              "name": "mset_term"
-            },
-            {
-              "type": "SYMBOL",
-              "name": "_formula"
-            }
-          ]
+          "type": "SYMBOL",
+          "name": "mset_term"
         },
         {
           "type": "TOKEN",
@@ -2491,41 +2478,6 @@
               "value": "="
             }
           }
-        },
-        {
-          "type": "CHOICE",
-          "members": [
-            {
-              "type": "SYMBOL",
-              "name": "mset_term"
-            },
-            {
-              "type": "SYMBOL",
-              "name": "_formula"
-            }
-          ]
-        }
-      ]
-    },
-    "lesser_check": {
-      "type": "SEQ",
-      "members": [
-        {
-          "type": "SYMBOL",
-          "name": "mset_term"
-        },
-        {
-          "type": "CHOICE",
-          "members": [
-            {
-              "type": "STRING",
-              "value": "(<)"
-            },
-            {
-              "type": "STRING",
-              "value": "<<"
-            }
-          ]
         },
         {
           "type": "SYMBOL",
@@ -5951,6 +5903,10 @@
         },
         {
           "type": "SYMBOL",
+          "name": "lesser_check"
+        },
+        {
+          "type": "SYMBOL",
           "name": "quantified_formula"
         },
         {
@@ -6352,6 +6308,35 @@
                 "value": "⊏"
               }
             ]
+          },
+          {
+            "type": "FIELD",
+            "name": "right",
+            "content": {
+              "type": "SYMBOL",
+              "name": "mset_term"
+            }
+          }
+        ]
+      }
+    },
+    "lesser_check": {
+      "type": "PREC",
+      "value": "ATOM",
+      "content": {
+        "type": "SEQ",
+        "members": [
+          {
+            "type": "FIELD",
+            "name": "left",
+            "content": {
+              "type": "SYMBOL",
+              "name": "mset_term"
+            }
+          },
+          {
+            "type": "STRING",
+            "value": "(<)"
           },
           {
             "type": "FIELD",
