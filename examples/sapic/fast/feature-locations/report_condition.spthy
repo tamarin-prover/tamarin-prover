@@ -1,0 +1,46 @@
+theory ReportCondition
+
+/*
+
+ A remote party at 'loc' reports the inputs it accepts to a verifier. It
+ guards its input with an embedded rule restriction and with a condition that
+ is not an equality, so the translation has to rewrite the report terms of
+ formulas as well as those of terms.
+
+*/
+
+begin
+
+builtins: locations-report
+
+predicates:
+Report(x,y) <=> not (y = 'loc')
+
+let p =                                        // The remote party running at 'loc'
+	( in(x);
+	  [] --[ _restrict(not (x = 'worse')) ]-> [];
+	  if not (x = 'bad') then
+		( event Remote(x,'loc');
+		  out(<x, report(x)>) )
+	)@'loc'
+
+let v =                                        // The verifier
+	in(<x,r>);
+	if x = check_rep(r,'loc') then             // verification of the validity of the report
+		event Local(x,'loc')
+
+process:
+ ( !p || !v )
+
+lemma can_run_v: //for sanity
+	exists-trace
+	"Ex #i m . Local(m,'loc')@i"
+
+lemma simp[reuse]:
+	"All #i m . KU(rep(m,'loc'))@i ==> (Ex #j . Remote(m,'loc')@j)"
+
+// Attested computation theorem
+lemma attested_comput:
+	"All #i m . Local(m,'loc')@i ==> (Ex #j . Remote(m,'loc')@j)"
+
+end
