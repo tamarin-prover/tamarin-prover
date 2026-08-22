@@ -138,14 +138,14 @@ term :: Ord l => Bool -> Parser (Term l) -> Parser (Term l)
 term eqn plit = asum
     [ pairing       <?> "pairs"
     , parens (msetterm eqn plit)
-    , symbol "DH_neutral" *> pure fAppDHNeutral    
-    , symbol "1:nat"
+    , reservedSymbol "DH_neutral" *> pure fAppDHNeutral
+    , reservedSymbol "1:nat"
         *> requireNaturalNumbers "natural-number literal 1:nat"
         *> pure fAppNatOne
-    , symbol "%1"
+    , reservedSymbol "%1"
         *> requireNaturalNumbers "natural-number literal %1"
         *> pure fAppNatOne
-    , symbol "1"          *> pure fAppOne
+    , reservedSymbol "1"  *> pure fAppOne
     , application        <?> "function application"
     , nullaryApp
     , plit

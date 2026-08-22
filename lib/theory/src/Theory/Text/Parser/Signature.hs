@@ -280,7 +280,9 @@ export thy = do
                     _          <- try (symbol "export")
                     tag          <- identifier
                     _          <- colon
-                    text       <- doubleQuoted $ many bodyChar -- TODO Gotta use some kind of text.
+                    -- The opening quote must not be a lexeme: a lexeme would
+                    -- consume whitespace and comments that belong to the text.
+                    text       <- between (char '"') (symbol "\"") (many bodyChar)
                     let ei = ExportInfo tag text
                     return (addExportInfo ei thy)
                     <?> "export block"
