@@ -14,10 +14,8 @@ module Theory.Text.Parser.Tactics (
 )
 where
 
-import           Prelude                    hiding (id)
 import           Control.Applicative        hiding (empty, many, optional)
 import qualified Data.Map                   as M
-import qualified Extension.Data.Label       as L
 import qualified Data.Set                   as S
 import           Data.List
 
@@ -146,7 +144,7 @@ tacticFunctions = M.fromList
             retrieveFun :: String -> [String]
             retrieveFun pgoal_ = map init $ map tail $ getAllTextMatches $ pgoal_ =~ functionsDetection
 
-            safenoncePattern = "(~n|" ++ intercalate "|" (map show $ concat (map (checkFormula $ head param) (S.toList $ L.get sFormulas sys)))++")(?![.0-9a-zA-Z])"
+            safenoncePattern = "(~n|" ++ intercalate "|" (map show $ concat (map (checkFormula $ head param) (S.toList sys.formulas)))++")(?![.0-9a-zA-Z])"
             hasSafeNonces = not (pg =~ safenoncePattern)
 
     dhreNoise :: [String] -> (AnnotatedGoal, ProofContext,  System) -> Bool
@@ -157,7 +155,7 @@ tacticFunctions = M.fromList
 
             oracleType = head param
             sysPatternDiff = "(~[a-zA-Z0-9.]*)"
-            sysPattern = if oracleType == "curve" then "(~n|" ++ intercalate "|" (map show $ concat (map (checkFormula oracleType) (S.toList $ L.get sFormulas sys)))++")(?![.0-9a-zA-Z])" else "(~n|" ++ intercalate "|" (map show $ concat (map (checkFormula oracleType) (S.toList $ L.get sFormulas sys)))++")"-- ++ head t (fst param f)
+            sysPattern = if oracleType == "curve" then "(~n|" ++ intercalate "|" (map show $ concat (map (checkFormula oracleType) (S.toList sys.formulas)))++")(?![.0-9a-zA-Z])" else "(~n|" ++ intercalate "|" (map show $ concat (map (checkFormula oracleType) (S.toList sys.formulas)))++")"-- ++ head t (fst param f)
             goalPattern = if oracleType == "diff" then ".*(\\(("++sysPatternDiff++"\\*)+"++sysPatternDiff++"\\)|inv\\("++sysPatternDiff++"\\))" else ".*(\\(("++sysPattern++"\\*)+"++sysPattern++"\\)|inv\\("++sysPattern++"\\))"
 
     defaultNoise :: [String] -> (AnnotatedGoal, ProofContext,  System) -> Bool
@@ -170,7 +168,7 @@ tacticFunctions = M.fromList
             pg = concat . lines . render $ pgoal goal
             goalMatches = getAllTextMatches $ pg =~ paramGoal -- "\\(?<!'g'^\\)~[a-zA-Z.0-9]*"
 
-            sysPattern = map show $ concat (map (checkFormula oracleType) (S.toList $ L.get sFormulas sys))
+            sysPattern = map show $ concat (map (checkFormula oracleType) (S.toList sys.formulas))
 
     reasonableNoncesNoise :: [String] -> (AnnotatedGoal, ProofContext,  System) -> Bool
     reasonableNoncesNoise param (goal,_,sys) = or $ map ((flip elem) sysPattern) nonces
@@ -185,7 +183,7 @@ tacticFunctions = M.fromList
             getFactTerms_ (ActionG _ (Fact { factTag = _ ,factAnnotations =  _ , factTerms = ft }), _ ) = ft
             getFactTerms_ _ = []
 
-            sysPattern = "~n":(map show $ concat (map (checkFormula oracleType) (S.toList $ L.get sFormulas sys)))
+            sysPattern = "~n":(map show $ concat (map (checkFormula oracleType) (S.toList sys.formulas)))
 
     checkFormula :: String -> LNGuarded -> [LVar]
     checkFormula oracleType f = if rev && expG then concat $ getFormulaTermsCore f else []

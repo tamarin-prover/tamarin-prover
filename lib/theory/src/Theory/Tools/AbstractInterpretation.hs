@@ -25,7 +25,6 @@ import           Control.Basics
 import           Control.Monad.Bind
 import           Control.Monad.Reader
 
-import           Data.Label
 import           Data.List
 import qualified Data.Set             as S
 -- import           Data.Traversable     (traverse)
@@ -67,16 +66,16 @@ interpretAbstractly unifyFactEqs initState addFact stateFacts rus =
         (st, rus') : if st == st' then [] else go st'
       where
         rus' = concatMap refineRule rus
-        st'  = foldl' (flip addFact) st $ concatMap (get rConcs) rus'
+        st'  = foldl' (flip addFact) st $ concatMap (.concs) rus'
 
         -- Refine a rule in the context of an abstract state: for all premise
         -- to state facts combinations, try to solve the corresponding
         -- E-unification problem. If successful, return the rule with the
         -- unifier applied.
         refineRule ru = (`evalFreshT` avoid ru) $ do
-            eqs <- forM (get rPrems ru) $ \prem -> msum $ do
+            eqs <- forM ru.prems $ \prem -> msum $ do
                 fa <- stateFacts st
-                guard (factTag prem == factTag fa)
+                guard (prem.factTag == fa.factTag)
                 -- we compute a list of 'FreshT []' actions for the outer msum
                 return (Equal prem <$> rename fa)
             subst <- msum $ freshToFree <$> unifyFactEqs eqs

@@ -196,7 +196,7 @@ headerTpl info = [whamlet|
             -- <li><a class=edit-link href=@{EditPathR idx (TheoryLemma "")}>Add lemma</a>
             --
     idx = info.index
-    filename = info.theory._thyName ++ ".spthy"
+    filename = info.theory.name ++ ".spthy"
     origin = info.origin
     -- Check if theory origin is a local file (needed for reload functionality)
     isLocalOrigin (Local _) = True
@@ -241,7 +241,7 @@ headerDiffTpl info = [whamlet|
             -- <li><a class=edit-link href=@{EditPathR idx (TheoryLemma "")}>Add lemma</a>
             --
     idx = info.index
-    filename = info.theory._diffThyName ++ ".spthy"
+    filename = info.theory.name ++ ".spthy"
     origin = info.origin
     -- Check if theory origin is a local file (needed for reload functionality)
     isLocalOrigin (Local _) = True

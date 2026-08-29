@@ -5,6 +5,10 @@
 {-# LANGUAGE TypeSynonymInstances       #-}
 {-# LANGUAGE FlexibleInstances          #-}
 {-# LANGUAGE MultiParamTypeClasses      #-}
+{-# LANGUAGE DataKinds #-}
+{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE UndecidableInstances #-}
+
 -- |
 -- Copyright   : (c) 2010-2012 Benedikt Schmidt & Simon Meier
 -- License     : GPL v3 (see LICENSE)
@@ -24,9 +28,6 @@ module Theory.Constraint.System.Constraints (
 
   -- ** Less Atoms
   , LessAtom(..)
-  , laSmaller
-  , laLarger
-  , laReason
   , lessAtomFromEdge
   , lessAtomToEdge
   , getLessRel
@@ -52,10 +53,10 @@ module Theory.Constraint.System.Constraints (
 import           GHC.Generics (Generic)
 import           Data.Binary
 import           Data.Data
-import           Data.Label (mkLabels)
 
 import           Control.DeepSeq
 
+import           Optics.TH (makeFieldLabelsNoPrefix)
 import           Text.PrettyPrint.Class
 import           Text.Unicode
 
@@ -116,12 +117,12 @@ instance HasFrees Edge where
 
 -- | A *⋖* constraint between 'NodeId's.
 data LessAtom = LessAtom
-  { _laSmaller :: NodeId
-  , _laLarger :: NodeId
-  , _laReason :: Reason }
+  { smaller :: NodeId
+  , larger :: NodeId
+  , reason :: Reason }
   deriving( Show, Generic, NFData, Binary )
 
-$(mkLabels [''LessAtom])
+makeFieldLabelsNoPrefix ''LessAtom
 
 instance Eq LessAtom where
   (LessAtom s1 l1 _) == (LessAtom s2 l2 _) = s1 == s2 && l1 == l2
@@ -283,7 +284,7 @@ prettyGoal (DisjG (Disj gfs)) = fsep $
     punctuate (operator_ "  ∥") (map (nest 1 . parens . prettyGuarded) gfs)
     -- punctuate (operator_ " |") (map (nest 1 . parens . prettyGuarded) gfs)
 prettyGoal (SplitG x) =
-    text "splitEqs" <> parens (text $ show (unSplitId x))
+    text "splitEqs" <> parens (text $ show x.unSplitId)
 prettyGoal (SubtermG (l,r)) =
     prettyLNTerm l <-> operator_ "⊏" <-> prettyLNTerm r
 

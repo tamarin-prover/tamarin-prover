@@ -199,7 +199,7 @@ type DiffTheoryInfo = GenericTheoryInfo ClosedDiffTheory
 compareTI :: TheoryInfo -> TheoryInfo -> Ordering
 compareTI (TheoryInfo _ i1 t1 p1 a1 o1 _ _) (TheoryInfo _ i2 t2 p2 a2 o2 _ _) =
   mconcat
-    [ comparing (._thyName) i1 i2
+    [ comparing (.name) i1 i2
     , comparing zonedTimeToUTC t1 t2
     , compare a1 a2
     , compare p1 p2
@@ -213,7 +213,7 @@ compareTI (TheoryInfo _ i1 t1 p1 a1 o1 _ _) (TheoryInfo _ i2 t2 p2 a2 o2 _ _) =
 compareDTI :: DiffTheoryInfo -> DiffTheoryInfo -> Ordering
 compareDTI (TheoryInfo _ i1 t1 p1 a1 o1 _ _) (TheoryInfo _ i2 t2 p2 a2 o2 _ _) =
   mconcat
-    [ comparing (._diffThyName) i1 i2
+    [ comparing (.name) i1 i2
     , comparing zonedTimeToUTC t1 t2
     , compare a1 a2
     , compare p1 p2
@@ -247,8 +247,8 @@ data EitherTheoryInfo
 
 -- Direct access functionf for Either Theory Type
 getEitherTheoryName :: EitherTheoryInfo -> String
-getEitherTheoryName (Trace i) = i.theory._thyName
-getEitherTheoryName (Diff i) = i.theory._diffThyName
+getEitherTheoryName (Trace i) = i.theory.name
+getEitherTheoryName (Diff i) = i.theory.name
 
 isTheoryInfo :: EitherTheoryInfo -> Bool
 isTheoryInfo (Trace _) = True
@@ -281,7 +281,7 @@ getEitherTheoryIndex (Diff i) = i.index
 compareEDTI :: EitherTheoryInfo -> EitherTheoryInfo -> Ordering
 compareEDTI (Trace (TheoryInfo _ i1 t1 p1 a1 o1 _ _)) (Trace (TheoryInfo _ i2 t2 p2 a2 o2 _ _)) =
   mconcat
-    [ comparing (._thyName) i1 i2
+    [ comparing (.name) i1 i2
     , comparing zonedTimeToUTC t1 t2
     , compare a1 a2
     , compare p1 p2
@@ -289,7 +289,7 @@ compareEDTI (Trace (TheoryInfo _ i1 t1 p1 a1 o1 _ _)) (Trace (TheoryInfo _ i2 t2
     ]
 compareEDTI (Diff (TheoryInfo _ i1 t1 p1 a1 o1 _ _)) (Diff (TheoryInfo _ i2 t2 p2 a2 o2 _ _)) =
   mconcat
-    [ comparing (._diffThyName) i1 i2
+    [ comparing (.name) i1 i2
     , comparing zonedTimeToUTC t1 t2
     , compare a1 a2
     , compare p1 p2
@@ -297,7 +297,7 @@ compareEDTI (Diff (TheoryInfo _ i1 t1 p1 a1 o1 _ _)) (Diff (TheoryInfo _ i2 t2 p
     ]
 compareEDTI (Diff (TheoryInfo _ i1 t1 p1 a1 o1 _ _)) (Trace (TheoryInfo _ i2 t2 p2 a2 o2 _ _)) =
   mconcat
-    [ compare i1._diffThyName i2._thyName
+    [ compare i1.name i2.name
     , comparing zonedTimeToUTC t1 t2
     , compare a1 a2
     , compare p1 p2
@@ -305,7 +305,7 @@ compareEDTI (Diff (TheoryInfo _ i1 t1 p1 a1 o1 _ _)) (Trace (TheoryInfo _ i2 t2 
     ]
 compareEDTI (Trace (TheoryInfo _ i1 t1 p1 a1 o1 _ _)) (Diff (TheoryInfo _ i2 t2 p2 a2 o2 _ _)) =
   mconcat
-    [ compare i1._thyName i2._diffThyName
+    [ compare i1.name i2.name
     , comparing zonedTimeToUTC t1 t2
     , compare a1 a2
     , compare p1 p2

@@ -86,7 +86,7 @@ instance Semigroup (ProcessAnnotation v) where
         (mayMerge p1.isStateChannel p2.isStateChannel)
 
 getProcessNames :: GoodAnnotation ann => ann -> [String]
-getProcessNames = processnames . getProcessParsedAnnotation
+getProcessNames = (.processnames) . getProcessParsedAnnotation
 
 -- | Replace the process names and keep the other parsed annotations.
 setProcessNames :: GoodAnnotation a => [String] -> a -> a

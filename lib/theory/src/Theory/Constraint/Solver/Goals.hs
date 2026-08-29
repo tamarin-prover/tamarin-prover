@@ -22,7 +22,7 @@ module Theory.Constraint.Solver.Goals (
   , plainOpenGoals
   ) where
 
-import           Prelude                                 hiding (id, (.))
+-- import           Debug.Trace
 
 import qualified Data.ByteString.Char8                   as BC
 import qualified Data.DAG.Simple                         as D (reachableSet)
@@ -34,11 +34,13 @@ import           Data.List
 import           Data.Maybe
 
 import           Control.Basics
-import           Control.Category
 import           Control.Monad.Disj
+import           Control.Monad.Reader (asks)
 import           Control.Monad.State                     (gets)
 
-import           Extension.Data.Label                    as L
+import           Optics.Core
+import           Optics.State
+import           Optics.State.Operators ((.=))
 
 import           Theory.Constraint.Solver.AnnotatedGoals
 import           Theory.Constraint.Solver.Contradictions (substCreatesNonNormalTerms)
@@ -64,18 +66,18 @@ import           Utils.Misc                              (twoPartitions)
 -- Each goal is annotated with its age and an indicator for its usefulness.
 openGoals :: ProofContext -> System -> [AnnotatedGoal]
 openGoals ctxt sys = do
-    (goal, status) <- M.toList $ get sGoals sys
-    let solved = get gsSolved status
+    (goal, status) <- M.toList sys.goals
+    let solved = status.solved
     -- check whether the goal is still open
     guard $ case goal of
         ActionG i (kFactView -> Just (UpK, m)) ->
-          if get sDiffSystem sys
+          if sys.diffSystem
              -- In a diff proof, all action goals need to be solved.
              then not solved
              else
                not $    solved
                     -- message variables are not solved, except if the node already exists in the system -> facilitates finding contradictions
-                    || (isMsgVar m && Nothing == M.lookup i (get sNodes sys))
+                    || (isMsgVar m && Nothing == M.lookup i sys.nodes)
                     || sortOfLNTerm m == LSortPub
                     || sortOfLNTerm m == LSortNat
                     || isTrivialACFunSymTerm m -- do not solve actions that consist of an AC symbol where all arguments are simple msg variables, important for soundness
@@ -102,12 +104,12 @@ openGoals ctxt sys = do
 
         -- FIXME: Split goals may be duplicated, we always have to check
         -- explicitly if they still exist.
-        SplitG idx -> splitExists (get sEqStore sys) idx
-        SubtermG st -> st `elem` L.get (posSubterms . sSubtermStore) sys
+        SplitG idx -> splitExists sys.eqStore idx
+        SubtermG st -> st `elem` sys.subtermStore.posSubterms
 
     let
         useful = case goal of
-          _ | get gsLoopBreaker status              -> LoopBreaker
+          _ | status.loopBreaker   -> LoopBreaker
           ActionG i (kFactView -> Just (UpK, m))
               -- if there are KU-guards then all knowledge goals are useful
             | hasKUGuards             -> Useful
@@ -115,11 +117,11 @@ openGoals ctxt sys = do
             | probablyConstructible m -> ProbablyConstructible
           _                           -> Useful
 
-    return (goal, (get gsNr status, useful))
+    return (goal, (status.nr, useful))
   where
     existingDeps = rawLessRel sys
     hasKUGuards  =
-        any ((KUFact `elem`) . guardFactTags) $ S.toList $ get sFormulas sys
+        any ((KUFact `elem`) . guardFactTags) $ S.toList sys.formulas
 
     checkTermLits :: (LSort -> Bool) -> LNTerm -> Bool
     checkTermLits p =
@@ -142,12 +144,12 @@ openGoals ctxt sys = do
                           || extractible i m
 
     extractible i m = or $ do
-        (j, ru) <- M.toList $ get sNodes sys
+        (j, ru) <- M.toList sys.nodes
         -- We cannot deduce a message from a last node.
         guard (not $ isLast sys j)
         let derivedMsgs = concatMap toplevelTerms $
-                [ t | Fact OutFact _ [t] <- get rConcs ru] <|>
-                [ t | Just (DnK, t)    <- kFactView <$> get rConcs ru]
+                [ t | Fact OutFact _ [t] <- ru.concs ] <|>
+                [ t | Just (DnK, t)    <- kFactView <$> ru.concs ]
         -- m is deducible from j without an immediate contradiction
         -- if it is a derived message of 'ru' and the dependency does
         -- not make the graph cyclic.
@@ -186,7 +188,7 @@ openGoals ctxt sys = do
 plainOpenGoals:: System -> [(Goal, GoalStatus)]
 plainOpenGoals sys = openGoalsLeft
   where
-    openGoalsLeft = filter isOpen (M.toList $ L.get sGoals sys)
+    openGoalsLeft = filter isOpen (M.toList sys.goals)
     isOpen(_, status) = case status of
       GoalStatus s _ _ -> not s
 
@@ -201,12 +203,12 @@ solveGoal :: Goal -> Reduction String
 solveGoal goal = do
     -- mark before solving, as representation might change due to unification
     markGoalAsSolved "directly" goal
-    rules <- askM pcRules
+    rules <- asks (.rules)
     case goal of
       ActionG i fa  -> solveAction (nonSilentRules rules) (i, fa)
       PremiseG p fa ->
-           solvePremise (get crProtocol rules ++ get crConstruct rules) p fa
-      ChainG c p    -> solveChain (get crDestruct  rules) (c, p)
+           solvePremise (rules.protocol ++ rules.construct) p fa
+      ChainG c p    -> solveChain rules.destruct (c, p)
       SplitG i      -> solveSplit i
       DisjG disj    -> solveDisjunction disj
       SubtermG st   -> solveSubterm st
@@ -219,22 +221,22 @@ solveAction :: [RuleAC]          -- ^ All rules labelled with an action
             -> (NodeId, LNFact)  -- ^ The action we are looking for.
             -> Reduction String  -- ^ A sensible case name.
 solveAction rules (i, fa@(Fact _ ann _)) = do
-    mayRu <- M.lookup i <$> getM sNodes
+    mayRu <- M.lookup i <$> gets (.nodes)
     showRuleCaseName <$> case mayRu of
         Nothing -> case fa of
             (Fact KUFact _ [m@(FAPP (AC o) ts)]) -> do
                    ru  <- labelNodeId i (annotatePrems <$> rules) Nothing
-                   let prems = map getKUVars $ get rPrems ru
-                   act <- disjunctionOfList $ get rActs ru
+                   let prems = map getKUVars ru.prems
+                   act <- disjunctionOfList ru.acts
                    void (solveFactEqs SplitNow (ACConstructor (head prems) (prems!!1)) [Equal fa act])
                    return ru
             _                                    -> do
                    ru  <- labelNodeId i (annotatePrems <$> rules) Nothing
-                   act <- disjunctionOfList $ get rActs ru
+                   act <- disjunctionOfList ru.acts
                    void (solveFactEqs SplitNow OtherRule [Equal fa act])
                    return ru
-        Just ru -> do unless (fa `elem` get rActs ru) $ do
-                          act <- disjunctionOfList $ get rActs ru
+        Just ru -> do unless (fa `elem` ru.acts) $ do
+                          act <- disjunctionOfList ru.acts
                           void (solveFactEqs SplitNow OtherRule [Equal fa act])
                       return ru
   where
@@ -271,7 +273,7 @@ solvePremise rules p faPrem
           ruLearn = Rule (IntrInfo IRecvRule) [premLearn] [concLearn] [] []
           cLearn = (iLearn, ConcIdx 0)
           pLearn = (iLearn, PremIdx 0)
-      modM sNodes  (M.insert iLearn ruLearn)
+      modifying #nodes (M.insert iLearn ruLearn)
       insertChain cLearn p
       solvePremise rules pLearn premLearn
 
@@ -286,7 +288,7 @@ solveChain :: [RuleAC]              -- ^ All destruction rules.
            -> Reduction String      -- ^ Case name to use.
 solveChain rules (c, p) = do
     faConc  <- gets $ nodeConcFact c
-    isDiffProof <- askM pcDiffContext
+    isDiffProof <- asks (.diffContext)
     do -- solve it by a direct edge
         cRule <- gets $ nodeRule (nodeConcNode c)
         pRule <- gets $ nodeRule (nodePremNode p)
@@ -311,7 +313,7 @@ solveChain rules (c, p) = do
                               args
                 -- NOTE: We rely on the check that the chain is open here.
                 ru <- disjunctionOfList rus
-                modM sNodes (M.insert i ru)
+                modifying #nodes (M.insert i ru)
                 -- FIXME: Do we have to add the PremiseG here so it
                 -- marked as solved?
                 let v = PremIdx 0
@@ -372,7 +374,7 @@ solveChain rules (c, p) = do
 -- to delay these splits.
 solveSplit :: SplitId -> Reduction String
 solveSplit x = do
-    split <- gets ((`performSplit` x) . get sEqStore)
+    split <- gets ((`performSplit` x) . (.eqStore))
     let errMsg = error "solveSplit: inexistent split-id"
     store      <- maybe errMsg disjunctionOfList split
     -- FIXME: Simplify this interaction with the equation store
@@ -380,7 +382,7 @@ solveSplit x = do
     substCheck <- gets (substCreatesNonNormalTerms hnd)
     store'     <- simp hnd substCheck store
     contradictoryIf (eqsIsFalse store')
-    sEqStore =: store'
+    #eqStore .= store'
     return "split"
 
 -- | CR-rule *S_disj*: solve a disjunction of guarded formulas using a case
@@ -405,8 +407,8 @@ solveDisjunction disj = do
 solveSubterm :: (LNTerm, LNTerm) -> Reduction String
 solveSubterm st = do
       -- mark subterm as solved
-      modM (posSubterms . sSubtermStore) (st `S.delete`)
-      modM (solvedSubterms . sSubtermStore) (st `S.insert`)
+      modifying (#subtermStore % #posSubterms) (st `S.delete`)
+      modifying (#subtermStore % #solvedSubterms) (st `S.insert`)
       
       -- find all splits
       reducible <- reducibleFunSyms . mhMaudeSig <$> getMaudeHandle
@@ -416,13 +418,13 @@ solveSubterm st = do
       -- from here on: only look at a single split
       case split of
         TrueD -> return ()
-        SubtermD st1 -> modM sSubtermStore (addSubterm st1)
+        SubtermD st1 -> modifying #subtermStore (addSubterm st1)
         NatSubtermD st1@(s,t) -> if length splitList == 1
                                     then do
                                       newVar <- freshLVar "newVar" LSortNat
                                       let sPlus = s ++: varTerm newVar
                                       insertFormula $ closeGuarded Ex [newVar] [EqE sPlus t] gtrue
-                                    else modM sSubtermStore (addSubterm st1)
+                                    else modifying #subtermStore (addSubterm st1)
         EqualD (l, r) -> insertFormula $ GAto $ EqE (lTermToBTerm l) (lTermToBTerm r)
         ACNewVarD ((smallPlus, big), newVar) -> insertFormula $ closeGuarded Ex [newVar] [EqE smallPlus big] gtrue
         

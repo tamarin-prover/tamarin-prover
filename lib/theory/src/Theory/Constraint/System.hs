@@ -7,6 +7,11 @@
 {-# LANGUAGE TypeSynonymInstances       #-}
 {-# LANGUAGE FlexibleInstances          #-}
 {-# LANGUAGE MultiParamTypeClasses      #-}
+{-# LANGUAGE DataKinds #-}
+{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE PartialTypeSignatures #-}
+{-# LANGUAGE FlexibleContexts #-}
 -- |
 -- Copyright   : (c) 2010-2012 Benedikt Schmidt & Simon Meier
 -- License     : GPL v3 (see LICENSE)
@@ -71,38 +76,12 @@ module Theory.Constraint.System (
   , DiffProofContext(..)
   , InductionHint(..)
 
-  , pcSignature
-  , pcRules
-  , pcInjectiveFactInsts
-  , pcSources
-  , pcSourceKind
-  , pcUseInduction
-  , pcHeuristic
-  , pcTactic
-  , pcTraceQuantifier
-  , pcLemmaName
-  , pcHiddenLemmas
   , pcMaudeHandle
-  , pcDiffContext
-  , pcTrueSubterm
-  , pcVerbose
-  , pcConstantRHS
-  , pcIsSapic
-  , dpcPCLeft
-  , dpcPCRight
-  , dpcProtoRules
-  , dpcDestrRules
-  , dpcConstrRules
-  , dpcRestrictions
-  , dpcReuseLemmas
   , eitherProofContext
 
   -- ** Classified rules
   , ClassifiedRules(..)
   , emptyClassifiedRules
-  , crConstruct
-  , crDestruct
-  , crProtocol
   , joinAllRules
   , nonSilentRules
 
@@ -111,9 +90,6 @@ module Theory.Constraint.System (
   -- important for getting rid of all chain constraints before actually
   -- starting to verify security properties.
   , Source(..)
-
-  , cdGoal
-  , cdCases
 
   , Side(..)
   , opposite
@@ -131,18 +107,7 @@ module Theory.Constraint.System (
   , SystemTraceQuantifier(..)
   , formulaToSystem
 
-  -- ** Diff proof system
-  , dsProofType
-  , dsProtoRules
-  , dsConstrRules
-  , dsDestrRules
-  , dsCurrentRule
-  , dsSide
-  , dsSystem
-  , dsProofContext
-
   -- ** Node constraints
-  , sNodes
   , allKDConcs
   , allInPrems
   , allPrems
@@ -167,7 +132,6 @@ module Theory.Constraint.System (
   , compareSystemsUpToNewVars
 
   -- ** Edge and chain constraints
-  , sEdges
   , unsolvedChains
 
   , Trivalent(..)
@@ -189,7 +153,6 @@ module Theory.Constraint.System (
   , allOpenGoalsAreSimpleFacts
 
   -- ** Temporal ordering
-  , sLessAtoms
 
   , getLessAtoms
   , rawLessRel
@@ -199,42 +162,26 @@ module Theory.Constraint.System (
   , isInTrace
 
   -- ** The last node
-  , sLastAtom
   , isLast
 
   -- ** Equations
   , module Theory.Tools.EquationStore
-  , sEqStore
   , sSubst
   , sConjDisjEqs
 
   -- ** Subterms
   , module Theory.Tools.SubtermStore
-  , sSubtermStore
-
-  -- ** Formulas
-  , sFormulas
-  , sSolvedFormulas
 
   -- ** Lemmas
-  , sLemmas
   , insertLemmas
 
   -- ** Keeping track of source assumptions
   , SourceKind(..)
-  , sSourceKind
 
   -- ** Goals
   , GoalStatus(..)
-  , gsSolved
-  , gsLoopBreaker
-  , gsNr
-
-  , sGoals
-  , sNextGoalNr
 
   , isDiffSystem
-  , sDiffSystem
 
   -- * Formula simplification
   , impliedFormulas
@@ -253,8 +200,6 @@ module Theory.Constraint.System (
 -- import           Debug.Trace
 -- import           Debug.Trace.Ignore
 
-import           Prelude                              hiding (id, (.))
-
 import           GHC.Generics                         (Generic)
 
 import           Data.Binary
@@ -262,7 +207,7 @@ import qualified Data.ByteString.Char8                as BC
 import qualified Data.DAG.Simple                      as D
 import           Data.List                            (foldl', partition, intersect,find,intercalate)
 import qualified Data.Map                             as M
-import           Data.Maybe                           (fromMaybe,mapMaybe, isNothing)
+import           Data.Maybe                           (fromMaybe,mapMaybe, isNothing, fromJust)
 -- import           Data.Monoid                          (Monoid(..))
 import qualified Data.Monoid                             as Mono
 import qualified Data.Set                             as S
@@ -270,13 +215,12 @@ import           Data.Either                          (partitionEithers, lefts)
 import           Data.Tuple                           (swap)
 
 import           Control.Basics
-import           Control.Category
 import           Control.DeepSeq
 import           Control.Monad.Fresh
 import           Control.Monad.Reader
 
-import           Data.Label                           ((:->), mkLabels)
-import qualified Extension.Data.Label                 as L
+import           Optics.Core (Lens', (%), over, set, preview, view, ix)
+import           Optics.TH (makeFieldLabelsNoPrefix)
 
 import           GHC.IO                               (unsafePerformIO)
 
@@ -299,13 +243,13 @@ import           Text.Show.Functions()
 ----------------------------------------------------------------------
 
 data ClassifiedRules = ClassifiedRules
-     { _crProtocol      :: [RuleAC] -- all protocol rules
-     , _crDestruct      :: [RuleAC] -- destruction rules
-     , _crConstruct     :: [RuleAC] -- construction rules
+     { protocol      :: [RuleAC] -- all protocol rules
+     , destruct      :: [RuleAC] -- destruction rules
+     , construct     :: [RuleAC] -- construction rules
      }
      deriving( Eq, Ord, Show, Generic, NFData, Binary )
 
-$(mkLabels [''ClassifiedRules])
+makeFieldLabelsNoPrefix ''ClassifiedRules
 
 -- | The empty proof rule set.
 emptyClassifiedRules :: ClassifiedRules
@@ -318,7 +262,7 @@ joinAllRules (ClassifiedRules a b c) = a ++ b ++ c
 
 -- | Extract all non-silent rules.
 nonSilentRules :: ClassifiedRules -> [RuleAC]
-nonSilentRules = filter (not . null . L.get rActs) . joinAllRules
+nonSilentRules = filter (not . null . (.acts)) . joinAllRules
 
 ------------------------------------------------------------------------------
 -- Types
@@ -367,12 +311,12 @@ instance Ord SourceKind where
 -- | The status of a 'Goal'. Use its 'Semigroup' instance to combine the
 -- status info of goals that collapse.
 data GoalStatus = GoalStatus
-    { _gsSolved :: Bool
+    { solved :: Bool
        -- True if the goal has been solved already.
-    , _gsNr :: Integer
+    , nr :: Integer
        -- The number of the goal: we use it to track the creation order of
        -- goals.
-    , _gsLoopBreaker :: Bool
+    , loopBreaker :: Bool
        -- True if this goal should be solved with care because it may lead to
        -- non-termination.
     }
@@ -380,26 +324,27 @@ data GoalStatus = GoalStatus
 
 -- | A constraint system.
 data System = System
-    { _sNodes          :: M.Map NodeId RuleACInst
-    , _sEdges          :: S.Set Edge
-    , _sLessAtoms      :: S.Set LessAtom
-    , _sLastAtom       :: Maybe NodeId
-    , _sSubtermStore   :: SubtermStore
-    , _sEqStore        :: EqStore
-    , _sFormulas       :: S.Set LNGuarded
-    , _sSolvedFormulas :: S.Set LNGuarded
-    , _sLemmas         :: S.Set LNGuarded
-    , _sGoals          :: M.Map Goal GoalStatus
-    , _sNextGoalNr     :: Integer
-    , _sSourceKind     :: SourceKind
-    , _sDiffSystem     :: Bool
+    { nodes          :: M.Map NodeId RuleACInst
+    , edges          :: S.Set Edge
+    , lessAtoms      :: S.Set LessAtom
+    , lastAtom       :: Maybe NodeId
+    , subtermStore   :: SubtermStore
+    , eqStore        :: EqStore
+    , formulas       :: S.Set LNGuarded
+    , solvedFormulas :: S.Set LNGuarded
+    , lemmas         :: S.Set LNGuarded
+    , goals          :: M.Map Goal GoalStatus
+    , nextGoalNr     :: Integer
+    , sourceKind     :: SourceKind
+    , diffSystem     :: Bool
     }
     -- NOTE: Don't forget to update 'substSystem' in
     -- "Constraint.Solver.Reduction" when adding further fields to the
     -- constraint system.
     deriving( Eq, Ord, Generic, NFData, Binary )
 
-$(mkLabels [''System, ''GoalStatus])
+makeFieldLabelsNoPrefix ''GoalStatus
+makeFieldLabelsNoPrefix ''System
 
 deriving instance Show System
 
@@ -407,13 +352,13 @@ deriving instance Show System
 --------------------
 
 -- | Label to access the free substitution of the equation store.
-sSubst :: System :-> LNSubst
-sSubst = eqsSubst . sEqStore
+sSubst :: Lens' System LNSubst
+sSubst = #eqStore % #subst
 
 -- | Label to access the conjunction of disjunctions of fresh substutitution in
 -- the equation store.
-sConjDisjEqs :: System :-> Conj (SplitId, S.Set (LNSubstVFresh))
-sConjDisjEqs = eqsConj . sEqStore
+sConjDisjEqs :: System -> Conj (SplitId, S.Set LNSubstVFresh)
+sConjDisjEqs = (.eqStore.conj)
 
 ------------------------------------------------------------------------------
 -- Oracles
@@ -445,7 +390,7 @@ data Prio a = Prio {
     deriving( Generic )
 
 instance Show (Prio a) where
-    show p = (stringRankingPrio p) ++ " _ " ++ intercalate ", " (stringsPrio p)
+    show p = p.stringRankingPrio ++ " _ " ++ intercalate ", " p.stringsPrio
 
 instance Eq (Prio a) where
     (==) _ _ = True
@@ -475,7 +420,7 @@ data Deprio a = Deprio {
     deriving ( Generic )
 
 instance Show (Deprio a) where
-    show d = (stringRankingDeprio d) ++ " _ " ++ intercalate ", " (map show $ stringsDeprio d)
+    show d = d.stringRankingDeprio ++ " _ " ++ intercalate ", " (map show d.stringsDeprio)
 
 instance Eq (Deprio a) where
     (==) _ _ = True
@@ -494,10 +439,10 @@ instance Binary (Deprio a) where
 
 -- | The object that record a user written tactic.
 data Tactic a = Tactic{
-      _name :: String,                  -- The name of the tactic
-      _presort :: GoalRanking a,        -- The default strategy to order recognized goals in a tactic
-      _prios :: [Prio a],               -- The list of priorities, the higher in the list the priority, the earlier its recognized goals will be treated
-      _deprios :: [Deprio a]            -- The list of depriorities, the higher in the list the priority, the earlier its recognized goals will be treated
+      name :: String,                  -- The name of the tactic
+      presort :: GoalRanking a,        -- The default strategy to order recognized goals in a tactic
+      prios :: [Prio a],               -- The list of priorities, the higher in the list the priority, the earlier its recognized goals will be treated
+      deprios :: [Deprio a]            -- The list of depriorities, the higher in the list the priority, the earlier its recognized goals will be treated
                                         -- (but still after all the goals recognized by the priorities and not recognized has been treated).
     }
     deriving (Eq, Ord, Show, Generic, NFData, Binary )
@@ -573,10 +518,10 @@ mapOracleRanking f (OracleSmartRanking b o) = OracleSmartRanking b (f o)
 mapOracleRanking _ r = r
 
 oraclePath :: Oracle -> FilePath
-oraclePath (Oracle oracleWorkDir_ oracleRelPath_) = fromMaybe "." oracleWorkDir_ </> normalise (fromMaybe "" oracleRelPath_)
+oraclePath (Oracle oracleWorkDir oracleRelPath) = fromMaybe "." oracleWorkDir </> normalise (fromMaybe "" oracleRelPath)
 
 maybeSetInternalTacticName :: Maybe String -> Tactic ProofContext -> Tactic ProofContext
-maybeSetInternalTacticName s t = maybe t (\x -> t{ _name = x }) s
+maybeSetInternalTacticName s t = maybe t (\x -> set #name x t) s
 
 mapInternalTacticRanking :: (Tactic ProofContext -> Tactic ProofContext) -> GoalRanking ProofContext -> GoalRanking ProofContext
 mapInternalTacticRanking f (InternalTacticRanking q t) = InternalTacticRanking q (f t)
@@ -697,7 +642,7 @@ goalRankingName ranking =
         SmartRanking useLoopBreakers  -> "the 'smart' heuristic" ++ loopStatus useLoopBreakers
         SmartDiffRanking              -> "the 'smart' heuristic (for diff proofs)"
         InjRanking useLoopBreakers    -> "heuristics adapted to stateful injective protocols" ++ loopStatus useLoopBreakers
-        InternalTacticRanking _ tactic -> "the tactic written in the theory file: "++ _name tactic
+        InternalTacticRanking _ tactic -> "the tactic written in the theory file: "++ tactic.name
    where
      loopStatus b = " (loop breakers " ++ (if b then "allowed" else "delayed") ++ ")"
      printOracle o@(Oracle workDir relPath) =
@@ -710,9 +655,9 @@ prettyGoalRankings rs = unwords (map prettyGoalRanking rs)
 
 prettyGoalRanking :: GoalRanking ProofContext -> String
 prettyGoalRanking ranking = case ranking of
-    OracleRanking _ oracle          -> findIdentifier ranking ++ " \"" ++ fromMaybe "" (oracleRelPath oracle) ++ "\""
-    OracleSmartRanking _ oracle     -> findIdentifier ranking ++ " \"" ++ fromMaybe "" (oracleRelPath oracle) ++ "\""
-    InternalTacticRanking _ tactic  -> '{':_name tactic++"}"
+    OracleRanking _ oracle          -> findIdentifier ranking ++ " \"" ++ fromMaybe "" oracle.oracleRelPath ++ "\""
+    OracleSmartRanking _ oracle     -> findIdentifier ranking ++ " \"" ++ fromMaybe "" oracle.oracleRelPath ++ "\""
+    InternalTacticRanking _ tactic  -> '{': tactic.name ++"}"
     _                         -> findIdentifier ranking
   where
     findIdentifier r = case find (compareRankings r . snd) combinedIdentifiers of
@@ -735,10 +680,10 @@ prettyGoalRanking ranking = case ranking of
 
 -- | A big-step source. (Formerly known as case distinction.)
 data Source = Source
-     { _cdGoal     :: Goal   -- start goal of source
+     { goal     :: Goal   -- start goal of source
        -- disjunction of named sequents with premise being solved; each name
        -- being the path of proof steps required to arrive at these cases
-     , _cdCases    :: Disj ([String], System)
+     , cases    :: Disj ([String], System)
      }
      deriving( Eq, Ord, Show, Generic, NFData, Binary )
 
@@ -748,22 +693,22 @@ data InductionHint = UseInduction | AvoidInduction
 -- | A proof context contains the globally fresh facts, classified rewrite
 -- rules and the corresponding precomputed premise source theorems.
 data ProofContext = ProofContext
-       { _pcSignature          :: SignatureWithMaude
-       , _pcRules              :: ClassifiedRules
-       , _pcInjectiveFactInsts :: S.Set (FactTag, [[MonotonicBehaviour]])
-       , _pcSourceKind         :: SourceKind
-       , _pcSources            :: [Source]
-       , _pcUseInduction       :: InductionHint
-       , _pcHeuristic          :: Maybe (Heuristic ProofContext)
-       , _pcTactic             :: Maybe [Tactic ProofContext]
-       , _pcTraceQuantifier    :: SystemTraceQuantifier
-       , _pcLemmaName          :: String
-       , _pcHiddenLemmas       :: [String]
-       , _pcVerbose            :: Bool -- true if we want to show the achieved goal and formula
-       , _pcDiffContext        :: Bool -- true if diff proof
-       , _pcTrueSubterm        :: Bool -- true if in all rules the RHS is a subterm of the LHS
-       , _pcConstantRHS        :: Bool -- true if there are rules with a constant RHS
-       , _pcIsSapic            :: Bool -- true if the model was originally a sapic process
+       { signature          :: SignatureWithMaude
+       , rules              :: ClassifiedRules
+       , injectiveFactInsts :: S.Set (FactTag, [[MonotonicBehaviour]])
+       , sourceKind         :: SourceKind
+       , sources            :: [Source]
+       , useInduction       :: InductionHint
+       , heuristic          :: Maybe (Heuristic ProofContext)
+       , tactic             :: Maybe [Tactic ProofContext]
+       , traceQuantifier    :: SystemTraceQuantifier
+       , lemmaName          :: String
+       , hiddenLemmas       :: [String]
+       , verbose            :: Bool -- true if we want to show the achieved goal and formula
+       , diffContext        :: Bool -- true if diff proof
+       , trueSubterm        :: Bool -- true if in all rules the RHS is a subterm of the LHS
+       , constantRHS        :: Bool -- true if there are rules with a constant RHS
+       , isSapic            :: Bool -- true if the model was originally a sapic process
        }
        deriving( Eq, Ord, Show, Generic, NFData, Binary )
 
@@ -771,27 +716,29 @@ data ProofContext = ProofContext
 -- and all rules.
 data DiffProofContext = DiffProofContext
        {
-         _dpcPCLeft               :: ProofContext
-       , _dpcPCRight              :: ProofContext
-       , _dpcProtoRules           :: [ProtoRuleE]
-       , _dpcConstrRules          :: [RuleAC]
-       , _dpcDestrRules           :: [RuleAC]
-       , _dpcRestrictions         :: [(Side, [LNGuarded])]
-       , _dpcReuseLemmas          :: [(Side, LNGuarded)]
+         pcLeft               :: ProofContext
+       , pcRight              :: ProofContext
+       , protoRules           :: [ProtoRuleE]
+       , constrRules          :: [RuleAC]
+       , destrRules           :: [RuleAC]
+       , restrictions         :: [(Side, [LNGuarded])]
+       , reuseLemmas          :: [(Side, LNGuarded)]
        }
        deriving( Eq, Ord, Show )
 
 
-$(mkLabels [''ProofContext, ''DiffProofContext, ''Source])
+makeFieldLabelsNoPrefix ''ProofContext
+makeFieldLabelsNoPrefix ''DiffProofContext
+makeFieldLabelsNoPrefix ''Source
 
 
 -- | The 'MaudeHandle' of a proof-context.
-pcMaudeHandle :: ProofContext :-> MaudeHandle
-pcMaudeHandle = sigmMaudeHandle . pcSignature
+pcMaudeHandle :: ProofContext -> MaudeHandle
+pcMaudeHandle = (.signature.maudeInfo)
 
 -- | Returns the LHS or RHS proof-context of a diff proof context.
 eitherProofContext :: DiffProofContext -> Side -> ProofContext
-eitherProofContext ctxt s = if s==LHS then L.get dpcPCLeft ctxt else L.get dpcPCRight ctxt
+eitherProofContext ctxt s = if s==LHS then ctxt.pcLeft else ctxt.pcRight
 
 -- Instances
 ------------
@@ -801,18 +748,18 @@ data DiffProofType = RuleEquivalence | None
 
 -- | A system used in diff proofs.
 data DiffSystem = DiffSystem
-    { _dsProofType      :: Maybe DiffProofType              -- The diff proof technique used
-    , _dsSide           :: Maybe Side                       -- The side for backward search, when doing rule equivalence
-    , _dsProofContext   :: Maybe ProofContext               -- The proof context used
-    , _dsSystem         :: Maybe System                     -- The constraint system used
-    , _dsProtoRules     :: S.Set ProtoRuleE                 -- the rules of the protocol
-    , _dsConstrRules    :: S.Set RuleAC                     -- the construction rules of the theory
-    , _dsDestrRules     :: S.Set RuleAC                     -- the deconstruction rules of the theory
-    , _dsCurrentRule    :: Maybe String                     -- the name of the rule under consideration
+    { proofType      :: Maybe DiffProofType              -- The diff proof technique used
+    , side           :: Maybe Side                       -- The side for backward search, when doing rule equivalence
+    , proofContext   :: Maybe ProofContext               -- The proof context used
+    , system         :: Maybe System                     -- The constraint system used
+    , protoRules     :: S.Set ProtoRuleE                 -- the rules of the protocol
+    , constrRules    :: S.Set RuleAC                     -- the construction rules of the theory
+    , destrRules     :: S.Set RuleAC                     -- the deconstruction rules of the theory
+    , currentRule    :: Maybe String                     -- the name of the rule under consideration
     }
     deriving( Eq, Ord, Generic, NFData, Binary )
 
-$(mkLabels [''DiffSystem])
+makeFieldLabelsNoPrefix ''DiffSystem
 
 ------------------------------------------------------------------------------
 -- Constraint system construction
@@ -827,7 +774,7 @@ emptySystem d isdiff = System
 
 -- TODO: I do not like the second conjunct; this should be done cleaner
 isInitialSystem :: System -> Bool
-isInitialSystem sys = null (L.get sSolvedFormulas sys) && not (S.member bot (L.get sFormulas sys))
+isInitialSystem sys = null sys.solvedFormulas && not (S.member bot sys.formulas)
   where bot = GDisj (Disj [])
 
 -- | The empty diff constraint system.
@@ -845,7 +792,7 @@ formulaToSystem :: [LNGuarded]           -- ^ Restrictions to add
                 -> System
 formulaToSystem restrictions kind traceQuantifier isdiff fm =
       insertLemmas safetyRestrictions
-    $ L.set sFormulas (S.singleton gf2)
+    $ set #formulas (S.singleton gf2)
     $ (emptySystem kind isdiff)
   where
     (safetyRestrictions, otherRestrictions) = partition isSafetyFormula restrictions
@@ -863,7 +810,7 @@ insertLemma =
     go
   where
     go (GConj conj) = foldr (.) id $ map go $ getConj conj
-    go fm           = L.modify sLemmas (S.insert fm)
+    go fm           = over #lemmas (S.insert fm)
 
 -- | Add lemmas / additional assumptions to a constraint system.
 insertLemmas :: [LNGuarded] -> System -> System
@@ -880,21 +827,21 @@ insertLemmas fms sys = foldl' (flip insertLemma) sys fms
 -- | A list of all KD-conclusions in the 'System'.
 allKDConcs :: System -> [(NodeId, RuleACInst, LNTerm)]
 allKDConcs sys = do
-    (i, ru)                         <- M.toList $ L.get sNodes sys
+    (i, ru)                         <- M.toList sys.nodes
     (_, kFactView -> Just (DnK, m)) <- enumConcs ru
     return (i, ru, m)
 
 -- | A list of all In-premises in the 'System'.
 allInPrems :: System -> [(NodeId, PremIdx, LNTerm)]
 allInPrems sys = do
-    (i, ru)                   <- M.toList $ L.get sNodes sys
+    (i, ru)                   <- M.toList sys.nodes
     (j, inFactView -> Just m) <- enumPrems ru
     return (i, j, m)
 
 -- | A list of all In- and Protocol premises in the 'System'.
 allPrems :: System -> [(NodeId, PremIdx, Int, LNTerm)]
 allPrems sys = do
-    (i, ru)                           <- M.toList $ L.get sNodes sys
+    (i, ru)                           <- M.toList sys.nodes
     (j, protoOrInFactView -> Just m') <- enumPrems ru
     (k, m)                            <- zip [0..] m'
     return (i, j, k, m)
@@ -904,7 +851,7 @@ allPrems sys = do
 -- it is present in the sequent.
 nodeRule :: NodeId -> System -> RuleACInst
 nodeRule v se =
-    fromMaybe errMsg $ M.lookup v $ L.get sNodes se
+    fromMaybe errMsg $ M.lookup v se.nodes
   where
     errMsg = error $
         "nodeRule: node '" ++ show v ++ "' does not exist in sequent\n" ++
@@ -912,13 +859,13 @@ nodeRule v se =
 
 -- | @nodeRuleSafe v@ accesses the rule label of node @v@.
 nodeRuleSafe :: NodeId -> System -> Maybe RuleACInst
-nodeRuleSafe v se = M.lookup v $ L.get sNodes se
+nodeRuleSafe v se = M.lookup v se.nodes
 
 -- | @nodePremFact prem se@ computes the fact associated to premise @prem@ in
 -- sequent @se@ under the assumption that premise @prem@ is a a premise in
 -- @se@.
 nodePremFact :: NodePrem -> System -> LNFact
-nodePremFact (v, i) se = L.get (rPrem i) $ nodeRule v se
+nodePremFact (v, i) se = fromJust $ preview (#prems % ix i.getPremIdx) $ nodeRule v se
 
 -- | @nodePremNode prem@ is the node that this premise is referring to.
 nodePremNode :: NodePrem -> NodeId
@@ -926,17 +873,17 @@ nodePremNode = fst
 
 -- | All facts associated to this node premise.
 resolveNodePremFact :: NodePrem -> System -> Maybe LNFact
-resolveNodePremFact (v, i) se = lookupPrem i =<< M.lookup v (L.get sNodes se)
+resolveNodePremFact (v, i) se = lookupPrem i =<< M.lookup v se.nodes
 
 -- | The fact associated with this node conclusion, if there is one.
 resolveNodeConcFact :: NodeConc -> System -> Maybe LNFact
-resolveNodeConcFact (v, i) se = lookupConc i =<< M.lookup v (L.get sNodes se)
+resolveNodeConcFact (v, i) se = lookupConc i =<< M.lookup v se.nodes
 
 -- | @nodeConcFact (NodeConc (v, i))@ accesses the @i@-th conclusion of the
 -- rule associated with node @v@ under the assumption that @v@ is labeled with
 -- a rule that has an @i@-th conclusion.
 nodeConcFact :: NodeConc -> System -> LNFact
-nodeConcFact (v, i) = L.get (rConc i) . nodeRule v
+nodeConcFact (v, i) se = fromJust $ preview (#concs % ix i.getConcIdx) $ nodeRule v se
 
 -- | 'nodeConcNode' @c@ compute the node-id of the node conclusion @c@.
 nodeConcNode :: NodeConc -> NodeId
@@ -944,11 +891,11 @@ nodeConcNode = fst
 
 -- | Returns a node premise fact from a node map
 nodePremFactMap :: NodePrem -> M.Map NodeId RuleACInst -> LNFact
-nodePremFactMap (v, i) nodes = L.get (rPrem i) $ nodeRuleMap v nodes
+nodePremFactMap (v, i) nodes = fromJust $ preview (#prems % ix i.getPremIdx) $ nodeRuleMap v nodes
 
 -- | Returns a node conclusion fact from a node map
 nodeConcFactMap :: NodeConc -> M.Map NodeId RuleACInst -> LNFact
-nodeConcFactMap (v, i) nodes = L.get (rConc i) $ nodeRuleMap v nodes
+nodeConcFactMap (v, i) nodes = fromJust $ preview (#concs % ix i.getConcIdx) $ nodeRuleMap v nodes
 
 -- | Returns a rule instance from a node map
 nodeRuleMap :: NodeId -> M.Map NodeId RuleACInst -> RuleACInst
@@ -973,7 +920,7 @@ goalRule sys goal = case goalNodeId goal of
 
 -- | 'getMaudeHandle' @ctxt@ @side@ returns the maude handle on side @side@ in diff proof context @ctxt@.
 getMaudeHandle :: DiffProofContext -> Side -> MaudeHandle
-getMaudeHandle ctxt side = if side == RHS then L.get (pcMaudeHandle . dpcPCRight) ctxt else L.get (pcMaudeHandle . dpcPCLeft) ctxt
+getMaudeHandle ctxt side = if side == RHS then pcMaudeHandle ctxt.pcRight else pcMaudeHandle ctxt.pcLeft
 
 -- | 'getAllRulesOnOtherSide' @ctxt@ @side@ returns all rules in diff proof context @ctxt@ on the opposite side of side @side@.
 getAllRulesOnOtherSide :: DiffProofContext -> Side -> [RuleAC]
@@ -981,12 +928,12 @@ getAllRulesOnOtherSide ctxt side = getAllRulesOnSide ctxt $ if side == LHS then 
 
 -- | 'getAllRulesOnSide' @ctxt@ @side@ returns all rules in diff proof context @ctxt@ on the side @side@.
 getAllRulesOnSide :: DiffProofContext -> Side -> [RuleAC]
-getAllRulesOnSide ctxt side = joinAllRules $ L.get pcRules $ if side == RHS then L.get dpcPCRight ctxt else L.get dpcPCLeft ctxt
+getAllRulesOnSide ctxt side = joinAllRules $ (.rules) $ if side == RHS then ctxt.pcRight else ctxt.pcLeft
 
 -- | 'protocolRuleWithName' @rules@ @name@ returns all rules with protocol rule name @name@ in rules @rules@.
 protocolRuleWithName :: [RuleAC] -> ProtoRuleName -> [RuleAC]
 protocolRuleWithName rules name = filter (\(Rule x _ _ _ _) -> case x of
-                                             ProtoInfo p -> (L.get pracName p) == name
+                                             ProtoInfo p -> p.name == name
                                              IntrInfo  _ -> False) rules
 
 -- | 'intruderRuleWithName' @rules@ @name@ returns all rules with intruder rule name @name@ in rules @rules@.
@@ -1002,8 +949,8 @@ intruderRuleWithName rules name = filter (\(Rule x _ _ _ _) -> case x of
 -- | 'getOppositeRules' @ctxt@ @side@ @rule@ returns all rules with the same name as @rule@ in diff proof context @ctxt@ on the opposite side of side @side@.
 getOppositeRules :: DiffProofContext -> Side -> RuleACInst -> [RuleAC]
 getOppositeRules ctxt side (Rule rule prem _ _ _) = case rule of
-    ProtoInfo p -> case protocolRuleWithName (getAllRulesOnOtherSide ctxt side) (L.get praciName p) of
-        [] -> error $ "No other rule found for protocol rule " ++ show (L.get praciName p) ++ show (getAllRulesOnOtherSide ctxt side)
+    ProtoInfo p -> case protocolRuleWithName (getAllRulesOnOtherSide ctxt side) p.name of
+        [] -> error $ "No other rule found for protocol rule " ++ show p.name ++ show (getAllRulesOnOtherSide ctxt side)
         x  -> x
     IntrInfo  i -> case i of
         (ConstrRule _ x) | x == AC Mult     -> [(multRuleInstance (length prem))]
@@ -1018,9 +965,9 @@ getOppositeRules ctxt side (Rule rule prem _ _ _) = case rule of
 -- | 'getOriginalRule' @ctxt@ @side@ @rule@ returns the original rule of protocol rule @rule@ in diff proof context @ctxt@ on side @side@.
 getOriginalRule :: DiffProofContext -> Side -> RuleACInst -> RuleAC
 getOriginalRule ctxt side (Rule rule _ _ _ _) = case rule of
-               ProtoInfo p -> case protocolRuleWithName (getAllRulesOnSide ctxt side) (L.get praciName p) of
+               ProtoInfo p -> case protocolRuleWithName (getAllRulesOnSide ctxt side) p.name of
                                    [x]  -> x
-                                   _    -> error $ "getOriginalRule: No or more than one other rule found for protocol rule " ++ show (L.get praciName p) ++ show (getAllRulesOnSide ctxt side)
+                                   _    -> error $ "getOriginalRule: No or more than one other rule found for protocol rule " ++ show p.name ++ show (getAllRulesOnSide ctxt side)
                IntrInfo  _ -> error $ "getOriginalRule: This should be a protocol rule: " ++ show rule
 
 
@@ -1028,13 +975,13 @@ getOriginalRule ctxt side (Rule rule _ _ _ _) = case rule of
 -- | Note that this does not check if all goals are solved, nor if any restrictions are violated!
 -- FIXME: consider implicit deduction
 isCorrectDG :: System -> Bool
-isCorrectDG sys = M.foldrWithKey (\k x y -> y && (checkRuleInstance sys k x)) True (L.get sNodes sys)
+isCorrectDG sys = M.foldrWithKey (\k x y -> y && (checkRuleInstance sys k x)) True sys.nodes
   where
     checkRuleInstance :: System -> NodeId -> RuleACInst -> Bool
     checkRuleInstance sys' idx rule = foldr (\x y -> y && (checkPrems sys' idx x)) True (enumPrems rule)
 
     checkPrems :: System -> NodeId -> (PremIdx, LNFact) -> Bool
-    checkPrems sys' idx (premidx, fact) = case S.toList (S.filter (\(Edge _ y) -> y == (idx, premidx)) (L.get sEdges sys')) of
+    checkPrems sys' idx (premidx, fact) = case S.toList (S.filter (\(Edge _ y) -> y == (idx, premidx)) sys'.edges) of
                                                [(Edge x _)] -> fact == nodeConcFact x sys'
                                                _            -> False
 
@@ -1052,29 +999,29 @@ safePartialAtomValuation :: ProofContext -> System -> LNAtom -> Maybe Bool
 safePartialAtomValuation ctxt sys =
     eval
   where
-    runMaude   = (`runReader` L.get pcMaudeHandle ctxt)
+    runMaude   = (`runReader` pcMaudeHandle ctxt)
     before     = alwaysBefore sys
     lessRel    = rawLessRel sys
     nodesAfter = \i -> filter (i /=) $ S.toList $ D.reachableSet [i] lessRel
-    reducible  = reducibleFunSyms $ mhMaudeSig $ L.get pcMaudeHandle ctxt
-    sst        = L.get sSubtermStore sys
+    reducible  = reducibleFunSyms $ mhMaudeSig $ pcMaudeHandle ctxt
+    sst        = sys.subtermStore
 
     -- | 'True' iff there in every solution to the system the two node-ids are
     -- instantiated to a different index *in* the trace.
     nonUnifiableNodes :: NodeId -> NodeId -> Bool
     nonUnifiableNodes i j = maybe False (not . runMaude) $
-        (unifiableRuleACInsts) <$> M.lookup i (L.get sNodes sys)
-                               <*> M.lookup j (L.get sNodes sys)
+        (unifiableRuleACInsts) <$> M.lookup i sys.nodes
+                               <*> M.lookup j sys.nodes
 
     -- | Try to evaluate the truth value of this atom in all models of the
     -- constraint system 'sys'.
     eval ato = case ato of
           Action (ltermNodeId' -> i) fa
             | otherwise ->
-                case M.lookup i (L.get sNodes sys) of
+                case M.lookup i sys.nodes of
                   Just ru
-                    | any (fa ==) (L.get rActs ru)                                -> Just True
-                    | all (not . runMaude . unifiableLNFacts fa) (L.get rActs ru) -> Just False
+                    | any (fa ==) ru.acts                                -> Just True
+                    | all (not . runMaude . unifiableLNFacts fa) ru.acts -> Just False
                   _                                                               -> Nothing
 
           Less (ltermNodeId' -> i) (ltermNodeId' -> j)
@@ -1101,7 +1048,7 @@ safePartialAtomValuation ctxt sys =
             | isLast sys i                       -> Just True
             | any (isInTrace sys) (nodesAfter i) -> Just False
             | otherwise ->
-                case L.get sLastAtom sys of
+                case sys.lastAtom of
                   Just j | nonUnifiableNodes i j -> Just False
                   _                              -> Nothing
 
@@ -1174,13 +1121,13 @@ impliedFormulasAndSystems hnd sys gf = res
       where
         go :: [(NodeId, LNFact)] -> [([Equal LNTerm], [Equal LNTerm])]
         go []                                                  = []
-        go ((nid, sysAct):acts) | factTag sysAct == factTag fa =
+        go ((nid, sysAct):acts) | sysAct.factTag == fa.factTag =
             (map (\(x, y) -> ((((Equal (variableToConst nid) a):(zipWith Equal sysTerms formulaTerms)) ++ x),
                               (((Equal (varTerm nid) a):(zipWith Equal sysTerms formulaTerms)) ++ y))) $ equalities as)
                                   ++ (go acts)
             where
-                sysTerms = map freshToConst (factTerms sysAct)
-                formulaTerms = factTerms fa
+                sysTerms = map freshToConst sysAct.factTerms
+                formulaTerms = fa.factTerms
 
         go ((_  , _     ):acts) | otherwise                    = go acts
     equalities ((GEqE s t):as)     = map (\(x, y) -> ((Equal s t):x, (Equal s t):y)) $ equalities as
@@ -1189,7 +1136,7 @@ impliedFormulasAndSystems hnd sys gf = res
 filterRestrictions :: ProofContext -> System -> [LNGuarded] -> [LNGuarded]
 filterRestrictions ctxt sys formulas = filter (unifiableNodes) formulas
   where
-    runMaude   = (`runReader` L.get pcMaudeHandle ctxt)
+    runMaude   = (`runReader` pcMaudeHandle ctxt)
 
     -- | 'True' iff there in every solution to the system the two node-ids are
     -- instantiated to a different index *in* the trace.
@@ -1198,7 +1145,7 @@ filterRestrictions ctxt sys formulas = filter (unifiableNodes) formulas
          (GAto ato)  -> unifiableAtoms {-- $ trace ("atom on which bvarToLVar will be applied [ato]: " ++ show ato)-} $ [bvarToLVar ato]
          (GDisj fms) -> any unifiableNodes $ getDisj fms
          (GConj fms) -> any unifiableNodes $ getConj fms
-         gg@(GGuarded _ _ _ _) -> case evalFreshAvoiding (openGuarded gg) (L.get sNodes sys) of
+         gg@(GGuarded _ _ _ _) -> case evalFreshAvoiding (openGuarded gg) sys.nodes of
                                           Nothing               -> error "Bug in filterRestrictions, please report."
                                           Just (_, _, atos, gf) -> (unifiableNodes gf) || (unifiableAtoms atos)
 
@@ -1210,7 +1157,7 @@ filterRestrictions ctxt sys formulas = filter (unifiableNodes) formulas
     unifiableFact :: LNFact -> Bool
     unifiableFact fact = mapper fact
 
-    mapper fact = any (runMaude . unifiableLNFacts fact) $ concat $ map (L.get rActs . snd) $ M.toList (L.get sNodes sys)
+    mapper fact = any (runMaude . unifiableLNFacts fact) $ concat $ map ((.acts) . snd) $ M.toList sys.nodes
 
 -- | Data type for a trivalent logic used to return whether restrictions on mirrors are valid, invalid or unknown
 data Trivalent = TTrue | TFalse | TUnknown deriving (Show, Eq)
@@ -1219,7 +1166,7 @@ data Trivalent = TTrue | TFalse | TUnknown deriving (Show, Eq)
 -- Returns Just True and a list of mirrors if all hold, Just False and a list of attacks (if found) if at least one does not hold and Nothing otherwise.
 getMirrorDGandEvaluateRestrictions :: DiffProofContext -> DiffSystem -> Bool -> (Trivalent, [System])
 getMirrorDGandEvaluateRestrictions dctxt dsys isSolved =
-    case (L.get dsSide dsys, L.get dsSystem dsys) of
+    case (dsys.side, dsys.system) of
           (Nothing,   _       ) -> (TFalse, [])
           (Just _ , Nothing   ) -> (TFalse, [])
           (Just side, Just sys) -> evaluateRestrictions dctxt dsys (getMirrorDG dctxt side sys) isSolved
@@ -1228,7 +1175,7 @@ getMirrorDGandEvaluateRestrictions dctxt dsys isSolved =
 -- Returns Just True and a list of mirrors if all hold, Just False and a list of attacks (if found) if at least one does not hold and Nothing otherwise.
 evaluateRestrictions :: DiffProofContext -> DiffSystem -> [System] -> Bool -> (Trivalent, [System])
 evaluateRestrictions dctxt dsys mirrors isSolved =
-    case (L.get dsSide dsys, L.get dsSystem dsys) of
+    case (dsys.side, dsys.system) of
         (Nothing,   _       ) -> (TFalse, [])
         (Just _ , Nothing   ) -> (TFalse, [])
         (Just side, Just sys) -> if {-trace (show evals) $-} evals == []
@@ -1242,7 +1189,7 @@ evaluateRestrictions dctxt dsys mirrors isSolved =
                             (TFalse, concat $ map snd $ filter (\x -> fst x == TFalse) evals)
             where
                 oppositeCtxt = eitherProofContext dctxt (opposite side)
-                restrictions = filterRestrictions oppositeCtxt sys $ restrictions' (opposite side) $ L.get dpcRestrictions dctxt
+                restrictions = filterRestrictions oppositeCtxt sys $ restrictions' (opposite side) dctxt.restrictions
                 evals = map (\x -> doRestrictionsHold oppositeCtxt x restrictions isSolved) mirrors
 
                 restrictions' _  []               = []
@@ -1281,19 +1228,19 @@ doRestrictionsHold ctxt sys formulas isSolved = -- Just (True, [sys]) -- FIXME J
     impliedOrInitial :: Bool -> (LNGuarded, System) -> [(LNGuarded, System)]
     impliedOrInitial solved (f, sys') = if isAllGuarded f && (solved || not (null imps)) then imps else [(f, sys')]
       where
-        imps = map (fmap (normDG ctxt)) $ impliedFormulasAndSystems (L.get pcMaudeHandle ctxt) sys' f
+        imps = map (fmap (normDG ctxt)) $ impliedFormulasAndSystems (pcMaudeHandle ctxt) sys' f
 
 -- | Normalizes all terms in the dependency graph.
 normDG :: ProofContext -> System -> System
-normDG ctxt sys = L.set sNodes normalizedNodes sys
+normDG ctxt sys = set #nodes normalizedNodes sys
   where
-    normalizedNodes = M.map (\r -> runReader (normRule r) (L.get pcMaudeHandle ctxt)) (L.get sNodes sys)
+    normalizedNodes = M.map (\r -> runReader (normRule r) (pcMaudeHandle ctxt)) sys.nodes
 
 -- | Returns the mirrored DGs, if they exist.
 getMirrorDG :: DiffProofContext -> Side -> System -> [System]
 getMirrorDG ctxt side sys = {-trace (show (evalFreshAvoiding newNodes (freshNatAndPubConstrRules, sys))) $-} fmap (normDG $ eitherProofContext ctxt side) $ unifyInstances $ evalFreshAvoiding newNodes (freshNatAndPubConstrRules, sys)
   where
-    (freshNatAndPubConstrRules, notFreshNorPub) = (M.partition (\rule -> (isFreshRule rule) || (isPubConstrRule rule) || (isNatConstrRule rule)) (L.get sNodes sys))
+    (freshNatAndPubConstrRules, notFreshNorPub) = (M.partition (\rule -> (isFreshRule rule) || (isPubConstrRule rule) || (isNatConstrRule rule)) sys.nodes)
     (newProtoRules, otherRules) = (M.partition (\rule -> (containsNewVars rule) && (isProtocolRule rule)) notFreshNorPub)
     newNodes = (M.foldrWithKey (transformRuleInstance) (M.foldrWithKey (transformRuleInstance) (return [freshNatAndPubConstrRules]) newProtoRules) otherRules)
 
@@ -1336,7 +1283,7 @@ getMirrorDG ctxt side sys = {-trace (show (evalFreshAvoiding newNodes (freshNatA
         where
           jumpNotUnifiable ret x = if (null foundUnifiers)
                       then ret
-                      else (L.set sNodes (foldl (\y z -> apply z y) x (freeUnifiers x)) sys):ret
+                      else (set #nodes (foldl (\y z -> apply z y) x (freeUnifiers x)) sys):ret
             where
               (foundUnifiers, constSubsts) = unifiers $ equalities True x
 
@@ -1365,7 +1312,7 @@ getMirrorDG ctxt side sys = {-trace (show (evalFreshAvoiding newNodes (freshNatA
     equalities fixNewPublicVars newrules = (getNewVarEqualities fixNewPublicVars newrules, (getGraphEqualities newrules) ++ (getKUGraphEqualities newrules))
 
     getGraphEqualities :: M.Map NodeId RuleACInst -> [Equal LNFact]
-    getGraphEqualities nodes = map (\(Edge x y) -> Equal (nodePremFactMap y nodes) (nodeConcFactMap x nodes)) $ S.toList (L.get sEdges sys)
+    getGraphEqualities nodes = map (\(Edge x y) -> Equal (nodePremFactMap y nodes) (nodeConcFactMap x nodes)) $ S.toList sys.edges
 
     getKUGraphEqualities :: M.Map NodeId RuleACInst -> [Equal LNFact]
     getKUGraphEqualities nodes = toEquality [] $ getEdgesFromLessRelation sys
@@ -1401,7 +1348,7 @@ getMirrorDG ctxt side sys = {-trace (show (evalFreshAvoiding newNodes (freshNatA
 -- | Returns the set of edges of a system saturated with all edges deducible from the nodes and the less relation
 --   This does not cover edges to open goals.
 saturateEdgesWithLessRelation :: System -> S.Set Edge
-saturateEdgesWithLessRelation sys = S.union (S.fromList $ lefts $ getEdgesFromLessRelation sys) (L.get sEdges sys)
+saturateEdgesWithLessRelation sys = S.union (S.fromList $ lefts $ getEdgesFromLessRelation sys) sys.edges
 
 -- | Returns the set of implicit edges of a system, which are implied by the nodes and the less relation
 --   If the edge references an open goal, the corresponding fact is returned.
@@ -1420,7 +1367,7 @@ getAllMatchingConcs sys premid (x:xs) = case (nodeRuleSafe x sys) of
                      else [])
                   ++ (getAllMatchingConcs sys premid xs)
                     where
-                      goals = L.get sGoals sys
+                      goals = sys.goals
     Just rule -> (map (\(cid, _) -> (premid, Left (x, cid))) (filter (\(_, cf) -> nodePremFact premid sys == cf) $ enumConcs rule))
         ++ (getAllMatchingConcs sys premid xs)
 getAllMatchingConcs _    _     []     = []
@@ -1435,21 +1382,21 @@ getAllMatchingPrems _   _     []  = []
 
 -- | Given a system and a node, gives the list of all nodes that have a "less" edge to this node
 getAllLessPreds :: System -> NodeId -> [NodeId]
-getAllLessPreds sys nid = map (L.get laSmaller) $ filter ((nid ==) . L.get laLarger) (S.toList (L.get sLessAtoms sys))
+getAllLessPreds sys nid = map (.smaller) $ filter ((nid ==) . (.larger)) (S.toList sys.lessAtoms)
 
 -- | Given a system and a node, gives the list of all nodes that have a "less" edge to this node
 getAllLessSucs :: System -> NodeId -> [NodeId]
-getAllLessSucs sys nid = map (L.get laLarger) $ filter ((nid ==) . L.get laSmaller) (S.toList (L.get sLessAtoms sys))
+getAllLessSucs sys nid = map (.larger) $ filter ((nid ==) . (.smaller)) (S.toList sys.lessAtoms)
 
 -- | Given a system, returns all node premises that have no incoming edge
 getOpenNodePrems :: System -> [NodePrem]
-getOpenNodePrems sys = getOpenIncoming (M.toList $ L.get sNodes sys)
+getOpenNodePrems sys = getOpenIncoming (M.toList sys.nodes)
   where
     getOpenIncoming :: [(NodeId, RuleACInst)] -> [NodePrem]
     getOpenIncoming []          = []
     getOpenIncoming ((k, r):xs) = (filter hasNoIncomingEdge $ map (\(x, _) -> (k, x)) (enumPrems r)) ++ (getOpenIncoming xs)
 
-    hasNoIncomingEdge np = S.null (S.filter (\(Edge _ y) -> y == np) (L.get sEdges sys))
+    hasNoIncomingEdge np = S.null (S.filter (\(Edge _ y) -> y == np) sys.edges)
 
 -- | Returns a list of all open trivial facts of nodes in the current system, and the variable they need to be unified with
 getTrivialFacts :: M.Map NodeId RuleACInst -> System -> Maybe ([(LNFact, LVar, LVar)])
@@ -1483,8 +1430,8 @@ getFactAndVars nodes premid = (map (\x -> (fact, x))) <$> (isTrivialFact fact)
 checkIndependence :: System -> (Either NodePrem LVar, LNFact) -> Bool
 checkIndependence sys (eith, fact) = not (D.cyclic (rawLessRel sys))
     && (checkNodes $ case eith of
-                         (Left premidx) -> checkIndependenceRec (L.get sNodes sys) premidx
-                         (Right lvar)   -> foldl checkIndependenceRec (L.get sNodes sys) $ identifyPremises lvar fact)
+                         (Left premidx) -> checkIndependenceRec sys.nodes premidx
+                         (Right lvar)   -> foldl checkIndependenceRec sys.nodes $ identifyPremises lvar fact)
   where
     edges = S.toList $ saturateEdgesWithLessRelation sys
     variables = fromMaybe (error $ "checkIndependence: This fact " ++ show fact ++ " should be trivial! System: " ++ show sys) (isTrivialFact fact)
@@ -1505,16 +1452,16 @@ checkIndependence sys (eith, fact) = not (D.cyclic (rawLessRel sys))
 -- | All premises that still need to be solved.
 unsolvedPremises :: System -> [(NodePrem, LNFact)]
 unsolvedPremises sys =
-      do (PremiseG premidx fa, status) <- M.toList (L.get sGoals sys)
-         guard (not $ L.get gsSolved status)
+      do (PremiseG premidx fa, status) <- M.toList sys.goals
+         guard (not status.solved)
          return (premidx, fa)
 
 -- | All trivial goals that still need to be solved.
 unsolvedTrivialGoals :: System -> [(Either NodePrem LVar, LNFact)]
-unsolvedTrivialGoals sys = foldl f [] $ M.toList (L.get sGoals sys)
+unsolvedTrivialGoals sys = foldl f [] $ M.toList sys.goals
   where
-    f l (PremiseG premidx fa, status) = if ((isTrivialFact fa /= Nothing) && (not $ L.get gsSolved status)) then (Left premidx, fa):l else l
-    f l (ActionG var fa, status)      = if ((isTrivialFact fa /= Nothing) && (isKUFact fa) && (not $ L.get gsSolved status)) then (Right var, fa):l else l
+    f l (PremiseG premidx fa, status) = if ((isTrivialFact fa /= Nothing) && (not status.solved)) then (Left premidx, fa):l else l
+    f l (ActionG var fa, status)      = if ((isTrivialFact fa /= Nothing) && (isKUFact fa) && (not status.solved)) then (Right var, fa):l else l
     f l (ChainG _ _, _)               = l
     f l (SplitG _, _)                 = l
     f l (DisjG _, _)                  = l
@@ -1532,11 +1479,11 @@ noCommonVarsInGoals goals =
 
 -- | Returns true if all formulas in the system are solved.
 allFormulasAreSolved :: System -> Bool
-allFormulasAreSolved sys = S.null $ L.get sFormulas sys
+allFormulasAreSolved sys = S.null sys.formulas
 
 -- | Returns true if all the depedency graph is not empty.
 dgIsNotEmpty :: System -> Bool
-dgIsNotEmpty sys = not $ M.null $ L.get sNodes sys
+dgIsNotEmpty sys = not $ M.null sys.nodes
 
 -- | Assumption: all open goals in the system are "trivial" fact goals. Returns true if these goals are independent from each other and the rest of the system.
 allOpenFactGoalsAreIndependent :: System -> Bool
@@ -1546,7 +1493,7 @@ allOpenFactGoalsAreIndependent sys = (noCommonVarsInGoals unsolvedGoals) && (all
 
 -- | Returns true if all open goals in the system are "trivial" fact goals.
 allOpenGoalsAreSimpleFacts :: DiffProofContext -> System -> Bool
-allOpenGoalsAreSimpleFacts ctxt sys = M.foldlWithKey goalIsSimpleFact True (L.get sGoals sys)
+allOpenGoalsAreSimpleFacts ctxt sys = M.foldlWithKey goalIsSimpleFact True sys.goals
   where
     goalIsSimpleFact :: Bool -> Goal -> GoalStatus -> Bool
     goalIsSimpleFact ret (ActionG _ fact)         (GoalStatus solved _ _) = ret && (solved || ((isTrivialFact fact /= Nothing) && (isKUFact fact)))
@@ -1560,7 +1507,7 @@ allOpenGoalsAreSimpleFacts ctxt sys = M.foldlWithKey goalIsSimpleFact True (L.ge
 
 -- | Returns true if the current system is a diff system
 isDiffSystem :: System -> Bool
-isDiffSystem = L.get sDiffSystem
+isDiffSystem = (.diffSystem)
 
 -- Actions
 ----------
@@ -1568,16 +1515,16 @@ isDiffSystem = L.get sDiffSystem
 -- | All actions that hold in a sequent.
 unsolvedActionAtoms :: System -> [(NodeId, LNFact)]
 unsolvedActionAtoms sys =
-      do (ActionG i fa, status) <- M.toList (L.get sGoals sys)
-         guard (not $ L.get gsSolved status)
+      do (ActionG i fa, status) <- M.toList sys.goals
+         guard (not status.solved)
          return (i, fa)
 
 -- | All actions that hold in a sequent.
 allActions :: System -> [(NodeId, LNFact)]
 allActions sys =
       unsolvedActionAtoms sys
-  <|> do (i, ru) <- M.toList $ L.get sNodes sys
-         (,) i <$> L.get rActs ru
+  <|> do (i, ru) <- M.toList sys.nodes
+         (,) i <$> ru.acts
 
 -- | All actions that hold in a sequent.
 allKUActions :: System -> [(NodeId, LNFact, LNTerm)]
@@ -1601,8 +1548,8 @@ kuActionAtoms sys = do
 -- | All unsolved destruction chains in the constraint system.
 unsolvedChains :: System -> [(NodeConc, NodePrem)]
 unsolvedChains sys = do
-    (ChainG from to, status) <- M.toList $ L.get sGoals sys
-    guard (not $ L.get gsSolved status)
+    (ChainG from to, status) <- M.toList sys.goals
+    guard (not status.solved)
     return (from, to)
 
 
@@ -1613,17 +1560,17 @@ unsolvedChains sys = do
 -- edge-path from @from@ to @to@ in @se@ without appealing to transitivity.
 rawEdgeRel :: System -> [(NodeId, NodeId)]
 rawEdgeRel sys = map (nodeConcNode *** nodePremNode) $
-     [(from, to) | Edge from to <- S.toList $ L.get sEdges sys]
+     [(from, to) | Edge from to <- S.toList sys.edges]
   ++ unsolvedChains sys
 
 -- | @(from,to)@ is in @rawLessRel se@ iff we can prove that there is a path
 -- (possibly using the 'Less' relation) from @from@ to @to@ in @se@ without
 -- appealing to transitivity.
 rawLessRel :: System -> [(NodeId,NodeId)]
-rawLessRel se = (getLessRel $ S.toList (L.get sLessAtoms se)) ++ rawEdgeRel se
+rawLessRel se = (getLessRel $ S.toList se.lessAtoms) ++ rawEdgeRel se
 
 getLessAtoms :: System -> S.Set (NodeId, NodeId)
-getLessAtoms = S.fromList . getLessRel . S.toList . L.get sLessAtoms
+getLessAtoms = S.fromList . getLessRel . S.toList . (.lessAtoms)
 
 -- | Returns a predicate that is 'True' iff the first argument happens before
 -- the second argument in all models of the sequent.
@@ -1641,14 +1588,14 @@ alwaysBefore sys =
 -- index in the trace.
 isInTrace :: System -> NodeId -> Bool
 isInTrace sys i =
-     i `M.member` L.get sNodes sys
+     i `M.member` sys.nodes
   || isLast sys i
   || any ((i ==) . fst) (unsolvedActionAtoms sys)
 
 -- | 'True' iff the given node id is guaranteed to be instantiated to the last
 -- index of the trace.
 isLast :: System -> NodeId -> Bool
-isLast sys i = Just i == L.get sLastAtom sys
+isLast sys i = Just i == sys.lastAtom
 
 ------------------------------------------------------------------------------
 -- Pretty printing                                                          --
@@ -1658,10 +1605,10 @@ isLast sys i = Just i == L.get sLastAtom sys
 prettySystem :: HighlightDocument d => System -> d
 prettySystem se = vcat $
     map combine_
-      [ ("nodes",          vcat $ map prettyNode $ M.toList $ L.get sNodes se)
+      [ ("nodes",          vcat $ map prettyNode $ M.toList se.nodes)
       , ("actions",        fsepList ppActionAtom $ unsolvedActionAtoms se)
-      , ("edges",          fsepList prettyEdge   $ S.toList $ L.get sEdges se)
-      , ("less",           fsepList prettyLess   $ S.toList $ L.get sLessAtoms se)
+      , ("edges",          fsepList prettyEdge   $ S.toList se.edges)
+      , ("less",           fsepList prettyLess   $ S.toList se.lessAtoms)
       , ("unsolved constraints", prettyGoals False se)
       ]
     ++ [prettyNonGraphSystem se]
@@ -1673,13 +1620,13 @@ prettySystem se = vcat $
 -- clauses.
 prettyNonGraphSystem :: HighlightDocument d => System -> d
 prettyNonGraphSystem se = vsep $ map combine_ -- text $ show se
-  [ ("last",            maybe (text "none") prettyNodeId $ L.get sLastAtom se)
-  , ("formulas",        vsep $ map prettyGuarded {-(text . show)-} $ S.toList $ L.get sFormulas se)
-  , ("subterms",        prettySubtermStore $ L.get sSubtermStore se)
-  , ("equations",       prettyEqStore $ L.get sEqStore se)
-  , ("lemmas",          vsep $ map prettyGuarded $ S.toList $ L.get sLemmas se)
-  , ("allowed cases",   text $ show $ L.get sSourceKind se)
-  , ("solved formulas", vsep $ map prettyGuarded $ S.toList $ L.get sSolvedFormulas se)
+  [ ("last",            maybe (text "none") prettyNodeId se.lastAtom)
+  , ("formulas",        vsep $ map prettyGuarded {-(text . show)-} $ S.toList se.formulas)
+  , ("subterms",        prettySubtermStore se.subtermStore)
+  , ("equations",       prettyEqStore se.eqStore)
+  , ("lemmas",          vsep $ map prettyGuarded $ S.toList se.lemmas)
+  , ("allowed cases",   text $ show se.sourceKind)
+  , ("solved formulas", vsep $ map prettyGuarded $ S.toList se.solvedFormulas)
   , ("unsolved constraints", prettyGoals False se)
   , ("solved constraints", prettyGoals True se)
   ]
@@ -1690,17 +1637,17 @@ prettyNonGraphSystem se = vsep $ map combine_ -- text $ show se
 -- clauses.
 prettyNonGraphSystemDiff :: HighlightDocument d => DiffProofContext -> DiffSystem -> d
 prettyNonGraphSystemDiff ctxt se = vsep $ map combine_
-  [ ("proof type",          prettyProofType $ L.get dsProofType se)
-  , ("current rule",        maybe (text "none") text $ L.get dsCurrentRule se)
-  , ("system",              maybe (text "none") prettyNonGraphSystem $ L.get dsSystem se)
-  , ("mirror system",       case ((L.get dsSide se), (L.get dsSystem se)) of
+  [ ("proof type",          prettyProofType se.proofType)
+  , ("current rule",        maybe (text "none") text se.currentRule)
+  , ("system",              maybe (text "none") prettyNonGraphSystem se.system)
+  , ("mirror system",       case (se.side, se.system) of
                                  (Just s, Just sys) | (dgIsNotEmpty sys) && (allOpenGoalsAreSimpleFacts ctxt sys) && (allOpenFactGoalsAreIndependent sys) -> vsep $ map (prettySystem) $ getMirrorDG ctxt s sys
                                  _                                                                                                                        -> text "none")
 --   , ("DEBUG",               maybe (text "none") (\x -> vsep $ map prettyGuarded x) help)
 --   , ("DEBUG2",              maybe (text "none") (\x -> vsep $ map prettyGuarded x) help2)
-  , ("protocol rules",      vsep $ map prettyProtoRuleE $ S.toList $ L.get dsProtoRules se)
-  , ("construction rules",  vsep $ map prettyRuleAC $ S.toList $ L.get dsConstrRules se)
-  , ("destruction rules",   vsep $ map prettyRuleAC $ S.toList $ L.get dsDestrRules se)
+  , ("protocol rules",      vsep $ map prettyProtoRuleE $ S.toList se.protoRules)
+  , ("construction rules",  vsep $ map prettyRuleAC $ S.toList se.constrRules)
+  , ("destruction rules",   vsep $ map prettyRuleAC $ S.toList se.destrRules)
   ]
   where
     combine_ (header, d)  = fsep [keyword_ header <> colon, nest 2 d]
@@ -1735,16 +1682,16 @@ prettyProofType (Just p) = text $ show p
 -- | Pretty print solved or un.
 prettyGoals :: HighlightDocument d => Bool -> System -> d
 prettyGoals solved sys = vsep $ do
-    (goal, status) <- M.toList $ L.get sGoals sys
-    guard (solved == L.get gsSolved status)
-    let nr  = L.get gsNr status
+    (goal, status) <- M.toList sys.goals
+    guard (solved == status.solved)
+    let nr  = status.nr
         sourceRule = case goalRule sys goal of
             Just ru -> " (from rule " ++ getRuleName ru ++ ")"
             Nothing -> ""
-        loopBreaker | L.get gsLoopBreaker status = " (loop breaker)"
-                    | otherwise                  = ""
+        loopBreaker | status.loopBreaker = " (loop breaker)"
+                    | otherwise             = ""
         useful = case goal of
-          _ | L.get gsLoopBreaker status              -> " (loop breaker)"
+          _ | status.loopBreaker         -> " (loop breaker)"
           ActionG i (kFactView -> Just (UpK, m))
               -- if there are KU-guards then all knowledge goals are useful
             | hasKUGuards             -> " (useful1)"
@@ -1755,7 +1702,7 @@ prettyGoals solved sys = vsep $ do
   where
     existingDeps = rawLessRel sys
     hasKUGuards  =
-        any ((KUFact `elem`) . guardFactTags) $ S.toList $ L.get sFormulas sys
+        any ((KUFact `elem`) . guardFactTags) $ S.toList sys.formulas
 
     checkTermLits :: (LSort -> Bool) -> LNTerm -> Bool
     checkTermLits p =
@@ -1778,12 +1725,12 @@ prettyGoals solved sys = vsep $ do
                           || extractible i m
 
     extractible i m = or $ do
-        (j, ru) <- M.toList $ L.get sNodes sys
+        (j, ru) <- M.toList sys.nodes
         -- We cannot deduce a message from a last node.
         guard (not $ isLast sys j)
         let derivedMsgs = concatMap toplevelTerms $
-                [ t | Fact OutFact _ [t] <- L.get rConcs ru] <|>
-                [ t | Just (DnK, t)    <- kFactView <$> L.get rConcs ru]
+                [ t | Fact OutFact _ [t] <- ru.concs] <|>
+                [ t | Just (DnK, t)    <- kFactView <$> ru.concs]
         -- m is deducible from j without an immediate contradiction
         -- if it is a derived message of 'ru' and the dependency does
         -- not make the graph cyclic.
@@ -1798,8 +1745,8 @@ prettyGoals solved sys = vsep $ do
 -- | Pretty print a case distinction
 prettySource :: HighlightDocument d => Source -> d
 prettySource th = vcat $
-   [ prettyGoal $ L.get cdGoal th ]
-   ++ map combine_ (zip [(1::Int)..] $ map snd . getDisj $ (L.get cdCases th))
+   [ prettyGoal th.goal ]
+   ++ map combine_ (zip [(1::Int)..] $ map snd . getDisj $ th.cases)
   where
     combine_ (i, sys) = fsep [keyword_ ("Case " ++ show i) <> colon, nest 2 (prettySystem sys)]
 
@@ -1881,14 +1828,14 @@ instance HasFrees System where
 instance HasFrees Source where
     {-# INLINABLE foldFrees #-}
     foldFrees f th =
-        foldFrees f (L.get cdGoal th)   `mappend`
-        foldFrees f (L.get cdCases th)
+        foldFrees f th.goal   `mappend`
+        foldFrees f th.cases
 
     foldFreesOcc  _ _ = const mempty
 
     {-# INLINABLE mapFrees #-}
-    mapFrees f th = Source <$> mapFrees f (L.get cdGoal th)
-                                    <*> mapFrees f (L.get cdCases th)
+    mapFrees f th = Source <$> mapFrees f th.goal
+                                    <*> mapFrees f th.cases
 
 -- Special comparison functions to ignore new var instantiations
 ----------------------------------------------------------------
@@ -1927,15 +1874,15 @@ compareSystemsUpToNewVars s1 s2 = compare s1 s2
 -- | 'True' iff the dotted system will be a non-empty graph.
 nonEmptyGraph :: System -> Bool
 nonEmptyGraph sys = not $
-    M.null (L.get sNodes sys) && null (unsolvedActionAtoms sys) &&
+    M.null sys.nodes && null (unsolvedActionAtoms sys) &&
     null (unsolvedChains sys) &&
-    S.null (L.get sEdges sys) && S.null (L.get sLessAtoms sys)
+    S.null sys.edges && S.null sys.lessAtoms
 
 -- | 'True' iff the dotted system will be a non-empty graph.
 nonEmptyGraphDiff :: DiffSystem -> Bool
 nonEmptyGraphDiff diffSys = not $
-     case (L.get dsSystem diffSys) of
+     case diffSys.system of
           Nothing    -> True
-          (Just sys) -> M.null (L.get sNodes sys) && null (unsolvedActionAtoms sys) &&
+          (Just sys) -> M.null sys.nodes && null (unsolvedActionAtoms sys) &&
                         null (unsolvedChains sys) &&
-                        S.null (L.get sEdges sys) && S.null (L.get sLessAtoms sys)
+                        S.null sys.edges && S.null sys.lessAtoms

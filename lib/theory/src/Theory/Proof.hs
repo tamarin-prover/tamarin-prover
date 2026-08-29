@@ -107,7 +107,6 @@ import           GHC.Generics                     (Generic)
 
 import           Data.Binary
 import           Data.List
-import qualified Data.Label                       as L
 import qualified Data.Map                         as M
 import           Data.Maybe
 -- import           Data.Monoid
@@ -185,8 +184,8 @@ mergeMapsWith leftOnly rightOnly combine l r =
 -- | A proof steps is a proof method together with additional context-dependent
 -- information.
 data ProofStep a = ProofStep
-     { psMethod :: ProofMethod
-     , psInfo   :: a
+     { method :: ProofMethod
+     , info   :: a
      }
      deriving( Eq, Ord, Show, Generic, NFData, Binary )
 
@@ -194,7 +193,7 @@ instance Functor ProofStep where
     fmap f (ProofStep m i) = ProofStep m (f i)
 
 instance Foldable ProofStep where
-    foldMap f = f . psInfo
+    foldMap f = f . (.info)
 
 instance Traversable ProofStep where
     traverse f (ProofStep m i) = ProofStep m <$> f i
@@ -207,8 +206,8 @@ instance HasFrees a => HasFrees (ProofStep a) where
 -- | A diff proof steps is a proof method together with additional context-dependent
 -- information.
 data DiffProofStep a = DiffProofStep
-     { dpsMethod :: DiffProofMethod
-     , dpsInfo   :: a
+     { method :: DiffProofMethod
+     , info   :: a
      }
      deriving( Eq, Ord, Show, Generic, NFData, Binary )
 
@@ -216,7 +215,7 @@ instance Functor DiffProofStep where
     fmap f (DiffProofStep m i) = DiffProofStep m (f i)
 
 instance Foldable DiffProofStep where
-    foldMap f = f . dpsInfo
+    foldMap f = f . (.info)
 
 instance Traversable DiffProofStep where
     traverse f (DiffProofStep m i) = DiffProofStep m <$> f i
@@ -271,11 +270,11 @@ diffUnproven = diffSorry Nothing
 
 -- | @prf `atPath` path@ returns the subproof at the @path@ in @prf@.
 atPath :: Proof a -> ProofPath -> Maybe (Proof a)
-atPath = foldM (flip M.lookup . children)
+atPath = foldM (flip M.lookup . (.children))
 
 -- | @prf `atPath` path@ returns the subproof at the @path@ in @prf@.
 atPathDiff :: DiffProof a -> ProofPath -> Maybe (DiffProof a)
-atPathDiff = foldM (flip M.lookup . children)
+atPathDiff = foldM (flip M.lookup . (.children))
 
 -- | @modifyAtPath f path prf@ applies @f@ to the subproof at @path@,
 -- if there is one.
@@ -286,7 +285,7 @@ modifyAtPath f =
   where
     go []     prf = f prf
     go (l:ls) prf = do
-        let cs = children prf
+        let cs = prf.children
         prf' <- go ls =<< M.lookup l cs
         return (prf { children = M.insert l prf' cs })
 
@@ -299,7 +298,7 @@ modifyAtPathDiff f =
   where
     go []     prf = f prf
     go (l:ls) prf = do
-        let cs = children prf
+        let cs = prf.children
         prf' <- go ls =<< M.lookup l cs
         return (prf { children = M.insert l prf' cs })
 
@@ -377,7 +376,7 @@ annotateProof f =
         LNode (ProofStep method info') cs'
       where
         cs' = M.map go cs
-        info' = f step (map (psInfo . root . snd) (M.toList cs'))
+        info' = f step (map ((.root.info) . snd) (M.toList cs'))
 
 -- | Annotate a proof in a bottom-up fashion.
 annotateDiffProof :: (DiffProofStep a -> [b] -> b) -> DiffProof a -> DiffProof b
@@ -388,7 +387,7 @@ annotateDiffProof f =
         LNode (DiffProofStep method info') cs'
       where
         cs' = M.map go cs
-        info' = f step (map (dpsInfo . root . snd) (M.toList cs'))
+        info' = f step (map ((.root.info) . snd) (M.toList cs'))
 
 -- Proof cutting
 ----------------
@@ -520,6 +519,15 @@ newtype Prover =  Prover
               -> Maybe IncrementalProof    -- resulting proof
           }
 
+runProver ::
+     Prover
+  -> ProofContext              -- proof rules to use
+  -> Int                       -- proof depth
+  -> System                    -- original sequent to start with
+  -> IncrementalProof          -- original proof
+  -> Maybe IncrementalProof    -- resulting proof
+runProver = (.runProver)
+
 instance Semigroup Prover where
     p1 <> p2 = Prover $ \ctxt d se ->
         runProver p1 ctxt d se >=> runProver p2 ctxt d se
@@ -540,6 +548,15 @@ newtype DiffProver =  DiffProver
               -> IncrementalDiffProof          -- original proof
               -> Maybe IncrementalDiffProof    -- resulting proof
           }
+
+runDiffProver ::
+     DiffProver
+  -> DiffProofContext              -- proof rules to use
+  -> Int                           -- proof depth
+  -> DiffSystem                    -- original sequent to start with
+  -> IncrementalDiffProof          -- original proof
+  -> Maybe IncrementalDiffProof    -- resulting proof
+runDiffProver = (.runDiffProver)
 
 instance Semigroup DiffProver where
     p1 <> p2 = DiffProver $ \ctxt d se ->
@@ -606,7 +623,7 @@ focus path prover =
         modifyAtPath (prover' ctxt (d + length path)) path prf
   where
     prover' ctxt d prf = do
-        se <- psInfo (root prf)
+        se <- prf.root.info
         runProver prover ctxt d se prf
 
 -- | Apply a diff prover only to a sub-proof, fails if the subproof doesn't exist.
@@ -617,7 +634,7 @@ focusDiff path prover =
         modifyAtPathDiff (prover' ctxt (d + length path)) path prf
   where
     prover' ctxt d prf = do
-        se <- dpsInfo (root prf)
+        se <- prf.root.info
         runDiffProver prover ctxt d se prf
 
 -- | Check the proof and handle new cases using the given prover.
@@ -679,7 +696,7 @@ firstDiffProver = foldr orelseDiff failDiffProver
 -- | Diff Prover that does one contradiction step if possible.
 contradictionDiffProver :: DiffProver
 contradictionDiffProver = DiffProver $ \ctxt d sys prf ->
-  case (L.get dsCurrentRule sys, L.get dsSide sys, L.get dsSystem sys) of
+  case (sys.currentRule, sys.side, sys.system) of
     (Just _, Just s, Just sys') -> runDiffProver
               (firstDiffProver $ map oneStepDiffProver $
                   (DiffBackwardSearchStep . Finished . Contradictory . Just <$> contradictions (eitherProofContext ctxt s) sys'))
@@ -694,38 +711,38 @@ data SolutionExtractor = CutDFS | CutBFS | CutSingleThreadDFS | CutNothing | Cut
     deriving( Eq, Ord, Show, Read, Generic, NFData, Binary )
 
 data AutoProver = AutoProver
-    { apDefaultHeuristic :: Maybe (Heuristic ProofContext)
-    , apDefaultTactic   :: Maybe [Tactic ProofContext]
-    , apBound            :: Maybe Int
-    , apCut              :: SolutionExtractor
+    { defaultHeuristic   :: Maybe (Heuristic ProofContext)
+    , defaultTactic      :: Maybe [Tactic ProofContext]
+    , bound              :: Maybe Int
+    , cut                :: SolutionExtractor
     , quitOnEmptyOracle  :: Bool
     }
     deriving ( Generic, NFData, Binary )
 
 selectHeuristic :: AutoProver -> ProofContext -> Heuristic ProofContext
 selectHeuristic prover ctx = setQuitOnEmpty $ fromMaybe (defaultHeuristic False)
-                             (apDefaultHeuristic prover <|> L.get pcHeuristic ctx)
+                             (prover.defaultHeuristic <|> ctx.heuristic)
   where
     setQuitOnEmpty :: Heuristic ProofContext -> Heuristic ProofContext
     setQuitOnEmpty (Heuristic rankings) = Heuristic (map aux rankings)
 
     aux :: GoalRanking a -> GoalRanking a
-    aux (OracleRanking _ o) = OracleRanking (quitOnEmptyOracle prover) o
-    aux (OracleSmartRanking _ o) = OracleSmartRanking (quitOnEmptyOracle prover) o
-    aux (InternalTacticRanking _ t) = InternalTacticRanking (quitOnEmptyOracle prover) t
+    aux (OracleRanking _ o) = OracleRanking prover.quitOnEmptyOracle o
+    aux (OracleSmartRanking _ o) = OracleSmartRanking prover.quitOnEmptyOracle o
+    aux (InternalTacticRanking _ t) = InternalTacticRanking prover.quitOnEmptyOracle t
     aux gr = gr
 
 selectDiffHeuristic :: AutoProver -> DiffProofContext -> Heuristic ProofContext
 selectDiffHeuristic prover ctx = fromMaybe (defaultHeuristic True)
-                                 (apDefaultHeuristic prover <|> L.get pcHeuristic (L.get dpcPCLeft ctx))
+                                 (prover.defaultHeuristic <|> ctx.pcLeft.heuristic)
 
 selectTactic :: AutoProver -> ProofContext -> [Tactic ProofContext]
 selectTactic prover ctx = fromMaybe [defaultTactic]
-                             (apDefaultTactic prover <|> L.get pcTactic ctx)
+                             (prover.defaultTactic <|> ctx.tactic)
 
 selectDiffTactic :: AutoProver -> DiffProofContext -> [Tactic ProofContext]
 selectDiffTactic prover ctx = fromMaybe [defaultTactic]
-                                 (apDefaultTactic prover <|> L.get pcTactic (L.get dpcPCLeft ctx))
+                                 (prover.defaultTactic <|> ctx.pcLeft.tactic)
 
 runAutoProver :: AutoProver -> Prover
 runAutoProver aut@(AutoProver _ _  bound cut _) =
@@ -871,9 +888,9 @@ cutOnSolvedDFS prf0 =
                       (cs `using` parTraversable nfProofMethod)
 
         nfProofMethod node = do
-            void $ rseq (psMethod $ root node)
-            void $ rseq (psInfo   $ root node)
-            void $ rseq (children node)
+            void $ rseq node.root.method
+            void $ rseq node.root.info
+            void $ rseq node.children
             return node
 
     extractSolved []         p               = p
@@ -912,9 +929,9 @@ cutOnSolvedDFSDiff prf0 =
                       (cs `using` parTraversable nfProofMethod)
 
         nfProofMethod node = do
-            void $ rseq (dpsMethod $ root node)
-            void $ rseq (dpsInfo   $ root node)
-            void $ rseq (children node)
+            void $ rseq node.root.method
+            void $ rseq node.root.info
+            void $ rseq node.children
             return node
 
     extractSolved []         p               = p
@@ -951,7 +968,7 @@ cutOnSolvedBFS =
               _           -> S.put IncompleteProof >> return "bound reached"
           return $ LNode (ProofStep (Sorry (Just msg)) x) M.empty
     checkLevel l prf@(LNode step cs)
-      | isNothing (psInfo step) = return prf
+      | isNothing step.info = return prf
       | otherwise               = LNode step <$> traverse (checkLevel (l-1)) cs
 
 -- | Search for attacks in a BFS manner.
@@ -981,8 +998,8 @@ cutOnSolvedBFSDiff =
               _           -> S.put IncompleteProof >> return "bound reached"
           return $ LNode (DiffProofStep (DiffSorry (Just msg)) x) M.empty
     checkLevel l prf@(LNode step cs)
-      | isNothing (dpsInfo step) = return prf
-      | otherwise                = LNode step <$> traverse (checkLevel (l-1)) cs
+      | isNothing step.info = return prf
+      | otherwise           = LNode step <$> traverse (checkLevel (l-1)) cs
 
 cutAfterFirstSorry :: Proof (Maybe a) -> Proof (Maybe a)
 cutAfterFirstSorry = snd . go False
@@ -1049,7 +1066,7 @@ proveDiffSystemDFS heuristic tactics ctxt =
 
 
 prettyProof :: HighlightDocument d => Proof a -> d
-prettyProof = prettyProofWith (prettyProofMethod . psMethod) (const id)
+prettyProof = prettyProofWith (prettyProofMethod . (.method)) (const id)
 
 prettyProofWith :: HighlightDocument d
                 => (ProofStep a -> d)      -- ^ Make proof step pretty
@@ -1071,11 +1088,11 @@ prettyProofWith prettyStep prettyCase =
         prettyCase ps kwQED
 
     ppCase (name, prf) = nest 2 $
-      (prettyCase (root prf) $ kwCase <-> text name) $-$
+      (prettyCase prf.root $ kwCase <-> text name) $-$
       ppPrf prf
 
 prettyDiffProof :: HighlightDocument d => DiffProof a -> d
-prettyDiffProof = prettyDiffProofWith (prettyDiffProofMethod . dpsMethod) (const id)
+prettyDiffProof = prettyDiffProofWith (prettyDiffProofMethod . (.method)) (const id)
 
 prettyDiffProofWith :: HighlightDocument d
                 => (DiffProofStep a -> d)      -- ^ Make proof step pretty
@@ -1097,7 +1114,7 @@ prettyDiffProofWith prettyStep prettyCase =
         prettyCase ps kwQED
 
     ppCase (name, prf) = nest 2 $
-      (prettyCase (root prf) $ kwCase <-> text name) $-$
+      (prettyCase prf.root $ kwCase <-> text name) $-$
       ppPrf prf
 
 -- | Convert a proof status to a readable string.

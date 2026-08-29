@@ -1,6 +1,6 @@
 name:               tamarin-prover-utils
 
-cabal-version:      >= 1.8
+cabal-version:      >= 1.10
 build-type:         Simple
 version:            1.13.0
 license:            GPL
@@ -33,6 +33,7 @@ source-repository head
 ----------------------
 
 library
+    default-language: GHC2021
     ghc-options:       -Wall -fwarn-tabs
     ghc-prof-options:  -auto-all
 
@@ -46,9 +47,11 @@ library
       , containers
       , deepseq
       , dlist
-      , fclabels
       , logict
       , mtl
+      , optics-core
+      , optics-extra
+      , optics-th
       , pretty
       , safe
       , syb
@@ -73,7 +76,6 @@ library
         Data.DAG.Simple
 
         Extension.Prelude
-        Extension.Data.Label
         Extension.Data.Monoid
         Extension.Data.ByteString
 
@@ -98,3 +100,7 @@ library
         Control.Monad.Trans.Disj
         Control.Monad.Disj.Class
 
+    default-extensions:
+        DuplicateRecordFields
+        OverloadedLabels
+        OverloadedRecordDot

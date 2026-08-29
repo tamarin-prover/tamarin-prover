@@ -8,12 +8,6 @@ module Rule (
 
 import Items.RuleItem
 
-import Prelude                             hiding (id, (.))
-
-import Control.Category
-
-import qualified Extension.Data.Label                as L
-
 import Theory.Model
 import Theory.Proof
 import Theory.Tools.RuleVariants
@@ -46,14 +40,14 @@ intruderRules rules = do
 
 -- | Open a rule cache. Variants and precomputed case distinctions are dropped.
 openRuleCache :: ClosedRuleCache -> OpenRuleCache
-openRuleCache = intruderRules . L.get crcRules
+openRuleCache = intruderRules . (.rules)
 
 -- | Open a protocol rule; i.e., drop variants and proof annotations.
 openProtoRule :: ClosedProtoRule -> OpenProtoRule
 openProtoRule r = OpenProtoRule ruleE ruleAC
   where
-    ruleE   = L.get cprRuleE r
-    ruleAC' = L.get cprRuleAC r
+    ruleE   = r.ruleE
+    ruleAC' = r.ruleAC
     ruleAC  = if equalUpToTerms ruleAC' ruleE
                then []
                else [ruleAC']
@@ -65,16 +59,16 @@ unfoldRuleVariants (ClosedProtoRule ruE ruAC@(Rule ruACInfoOld ps cs as nvs))
    | isTrivialProtoVariantAC ruAC ruE = [ClosedProtoRule ruE ruAC]
    | otherwise = map toClosedProtoRule variants
         where
-          ruACInfo i = ProtoRuleACInfo (rName i (L.get pracName ruACInfoOld)) rAttributes (Disj [emptySubstVFresh]) loopBreakers
-          rAttributes = L.get pracAttributes ruACInfoOld
-          loopBreakers = L.get pracLoopBreakers ruACInfoOld
+          ruACInfo i = ProtoRuleACInfo (rName i ruACInfoOld.name) rAttributes (Disj [emptySubstVFresh]) loopBreakers
+          rAttributes = ruACInfoOld.attributes
+          loopBreakers = ruACInfoOld.loopBreakers
           rName i oldName = case oldName of
             FreshRule -> FreshRule
             StandRule s -> StandRule $ s ++ "___VARIANT_" ++ show i
 
           toClosedProtoRule (i, (ps', cs', as', nvs'))
             = ClosedProtoRule ruE (Rule (ruACInfo i) ps' cs' as' nvs')
-          variants = zip [1::Int ..] $ map (\x -> apply x (ps, cs, as, nvs)) $ substs (L.get pracVariants ruACInfoOld)
+          variants = zip [1::Int ..] $ map (\x -> apply x (ps, cs, as, nvs)) $ substs ruACInfoOld.variants
           substs (Disj s) = map (`freshToFreeAvoiding` ruAC) s
 
 -- | Close a protocol rule; i.e., compute AC variant and source assertion
@@ -84,6 +78,7 @@ closeProtoRule :: MaudeHandle -> [LNMacro] -> OpenProtoRule -> [ClosedProtoRule]
 closeProtoRule hnd []     (OpenProtoRule ruE [])   = ClosedProtoRule ruE <$> maybeToList (variantsProtoRule hnd ruE)
 closeProtoRule hnd macros (OpenProtoRule ruE [])   = ClosedProtoRule ruE <$> maybeToList (variantsProtoRule hnd (applyMacroInRule macros ruE))
 closeProtoRule _   _      (OpenProtoRule ruE ruAC) = map (ClosedProtoRule ruE) ruAC
+
 
 
 -- | Returns true if the REFINED sources contain open chains.

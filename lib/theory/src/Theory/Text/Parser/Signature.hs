@@ -46,8 +46,7 @@ import Theory.Text.Parser.Formula
 import Theory.Text.Parser.Exceptions
 import Debug.Trace (traceM)
 
-import Data.Label.Total
-import Data.Label.Mono (Lens)
+import Optics.Core (Lens', over)
 import Theory.Sapic
 import qualified Data.Functor
 
@@ -77,11 +76,11 @@ builtinsDiffNames = [
 
 -- | Describes the mapping between a builtin name, its potential Maude Signatures
 -- and its potential option
-builtinsNames :: [([Char], Maybe MaudeSig, Maybe (Lens Total Option Bool))]
+builtinsNames :: [([Char], Maybe MaudeSig, Maybe (Lens' Option Bool))]
 builtinsNames =
   [
-  ("locations-report",  Just locationReportMaudeSig, Just transReport),
-  ("reliable-channel",  Nothing, Just transReliable)
+  ("locations-report",  Just locationReportMaudeSig, Just #transReport),
+  ("reliable-channel",  Nothing, Just #transReliable)
   ]
   ++ map (\(x,y) -> (x, Just y, Nothing)) builtinsDiffNames
 
@@ -94,7 +93,7 @@ builtins thy0 =do
                                          -- builtinTheory modifies signature in state.
             return $ foldl setOption' thy0 l
   where
-    setName thy name = modify thyItems (++ [TranslationItem (SignatureBuiltin name)]) thy
+    setName thy name = over #items (++ [TranslationItem (SignatureBuiltin name)]) thy
     setOption' thy (Nothing, name)  = setName thy name
     setOption' thy (Just l, name) = setOption l (setName thy name)
     -- Check for conflicts between builtin functions and user defined functions, and fail with a helpful error message if any are found.
@@ -103,9 +102,9 @@ builtins thy0 =do
         _ <- symbol name
         st <- getState
         let builtinFuncs = S.toList $ stFunSyms msig
-        let macroSyms    = S.toList $ macroNames (sig st)
+        let macroSyms    = S.toList $ macroNames st.sig
         let macroFuncs   = S.fromList $ map (BC.unpack . fst) macroSyms
-        let currFuncs    = S.toList $ stFunSyms (sig st)
+        let currFuncs    = S.toList $ stFunSyms st.sig
 
         let functionConflicts = [ (BC.unpack fname, builtinArity, userArity)
                                 | (fname, builtinArity) <- builtinFuncs
@@ -129,8 +128,8 @@ builtins thy0 =do
             fail $ "Builtin '" ++ name ++ "' conflicts with existing macro '" ++ show [fname | (fname, _, _) <- macroConflicts] ++ "'"
         
         modifyStateSig (`mappend` msig)
-        modifyState (\st -> st { reservedBuiltinNames = 
-                                reservedBuiltinNames st ++ 
+        modifyState (\st -> st { reservedBuiltinNames =
+                                st.reservedBuiltinNames ++
                                 fromMaybe [] (lookup name builtinReservedNames) })
         return (opt, name)
     extendSig (name, Nothing, opt) = do
@@ -186,7 +185,7 @@ function = do
         (argTypes,outType) <- functionType
         atts <- option [] $ list functionAttribute
         st <- getState
-        sign <- sig <$> getState
+        sign <- (.sig) <$> getState
         let k = length argTypes
         let priv = if Privacy Private `elem` atts then Private else Public
         let destr = if Constructability Destructor `elem` atts then Destructor else Constructor
@@ -198,7 +197,7 @@ function = do
         let requested = (k, priv, destr, ndc)
 
         -- Check specifically for conflicts with builtins to give a precise error message.
-        let allReservedNames = reservedBuiltinNames st
+        let allReservedNames = st.reservedBuiltinNames
         when (BC.unpack f `elem` allReservedNames) $ do
           let conflictingBuiltins = [b | (b, names) <- builtinReservedNames, BC.unpack f `elem` names]
           case lookup f (S.toList $ stFunSyms sign) of
@@ -239,7 +238,7 @@ equations = do
     unless convergent $ symbol "equations" *> colon
     eqs <- commaSep1 equation
     modifyStateSig (\sig -> foldl (flip addCtxtStRule) sig eqs)
-    modifyState (\st -> st { sig = (sig st) { eqConvergent = convergent } })  -- Explicit state update
+    modifyState (\st -> st { sig = st.sig { eqConvergent = convergent } })  -- Explicit state update
     return ()
   where
     equation = do
@@ -261,11 +260,11 @@ options thy0 =do
     setOption' thy (Just l) = setOption l thy
     builtinTheory = asum
       [  try 
-         (symbol "translation-progress") Data.Functor.$> Just transProgress
-        , symbol "translation-allow-pattern-lookups" Data.Functor.$> Just transAllowPatternMatchinginLookup
-        , symbol "translation-state-optimisation" Data.Functor.$> Just stateChannelOpt
-        , symbol "translation-asynchronous-channels" Data.Functor.$> Just asynchronousChannels
-        , symbol "translation-compress-events" Data.Functor.$> Just compressEvents
+         (symbol "translation-progress") Data.Functor.$> Just #transProgress
+        , symbol "translation-allow-pattern-lookups" Data.Functor.$> Just #transAllowPatternMatchinginLookup
+        , symbol "translation-state-optimisation" Data.Functor.$> Just #stateChannelOpt
+        , symbol "translation-asynchronous-channels" Data.Functor.$> Just #asynchronousChannels
+        , symbol "translation-compress-events" Data.Functor.$> Just #compressEvents
       ]
 
 predicate :: Parser Predicate

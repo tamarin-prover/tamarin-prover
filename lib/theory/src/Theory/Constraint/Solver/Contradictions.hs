@@ -25,8 +25,6 @@ module Theory.Constraint.Solver.Contradictions (
 
   ) where
 
-import           Prelude                        hiding (id, (.))
-
 import           GHC.Generics                   (Generic)
 import           Data.Binary
 import qualified Data.DAG.Simple                as D (cyclic, reachableSet)
@@ -40,11 +38,9 @@ import qualified Data.Set                       as S
 import           Safe                           (headMay)
 
 import           Control.Basics
-import           Control.Category
 import           Control.DeepSeq
 import           Control.Monad.Reader
 
-import qualified Extension.Data.Label           as L
 import           Extension.Prelude
 
 import           Theory.Constraint.System
@@ -94,7 +90,7 @@ contradictions ctxt sys = F.asum
     -- CR-rule **
     [ guard (D.cyclic $ rawLessRel sys)             $> Cyclic
     -- CR-rule *S_Subterm-Chain-Fail*
-    , guard (L.get isContradictory subtermStore)    $> SubtermCyclic
+    , guard (subtermStore.isContradictory)          $> SubtermCyclic
     -- CR-rule *N1*
     , guard (hasNonNormalTerms sig sys)             $> NonNormalTerms
     -- FIXME: add CR-rule
@@ -110,9 +106,9 @@ contradictions ctxt sys = F.asum
     -- New Constraint for AC constructors
     , guard (hasForbiddenConstrChain sys)           $> ForbiddenACConstrChain
     -- CR-rules *S_≐* and *S_≈* are implemented via the equation store
-    , guard (eqsIsFalse $ L.get sEqStore sys)       $> IncompatibleEqs
+    , guard (eqsIsFalse sys.eqStore)                $> IncompatibleEqs
     -- CR-rules *S_⟂*, *S_{¬,last,1}*, *S_{¬,≐}*, *S_{¬,≈}*
-    , guard (S.member gfalse $ L.get sFormulas sys) $> FormulasFalse
+    , guard (S.member gfalse sys.formulas)          $> FormulasFalse
     ]
     ++
     -- This rule is not yet documented. It removes constraint systems that
@@ -124,19 +120,19 @@ contradictions ctxt sys = F.asum
     -- TODO: Document corresponding constraint reduction rule.
     (NodeAfterLast <$> nodesAfterLast sys)
   where
-    sig  = L.get pcSignature ctxt
-    msig = mhMaudeSig . L.get pcMaudeHandle $ ctxt
-    subtermStore = L.get sSubtermStore sys
+    sig  = ctxt.signature
+    msig = mhMaudeSig . pcMaudeHandle $ ctxt
+    subtermStore = sys.subtermStore
 
 -- | New normal form condition:
 -- We do not allow @KD(t)@ facts if @t@ does not contain
 -- any fresh names or private functions.
 hasForbiddenKD :: System -> Bool
 hasForbiddenKD sys = (not $ isDiffSystem sys) &&
-    (any isForbiddenKD $ M.elems $ L.get sNodes sys)
+    (any isForbiddenKD $ M.elems sys.nodes)
   where
     isForbiddenKD ru = fromMaybe False $ do
-        [conc] <- return $ L.get rConcs ru
+        [conc] <- return ru.concs
         (DnK, t) <- kFactView conc
         return $ neverContainsFreshPriv t
 
@@ -146,15 +142,15 @@ hasForbiddenKD sys = (not $ isDiffSystem sys) &&
 hasNonNormalTerms :: SignatureWithMaude -> System -> Bool
 hasNonNormalTerms sig se = -- trace ("non-normal terms" ++ show (maybeNonNormalTerms hnd se) ++ " -- " ++ show (map ((`runReader` hnd) . nf') (maybeNonNormalTerms hnd se)) ) $
     any (not . (`runReader` hnd) . nf') (maybeNonNormalTerms hnd se)
-  where hnd = L.get sigmMaudeHandle sig
+  where hnd = sig.maudeInfo
 
 -- | Returns all (sub)terms of node constraints that may be not in normal form.
 maybeNonNormalTerms :: MaudeHandle -> System -> [LNTerm]
 maybeNonNormalTerms hnd se =
-    sortednub . concatMap getTerms . M.elems . L.get sNodes $ se
+    sortednub . concatMap getTerms . M.elems $ se.nodes
     where getTerms (Rule _ ps cs as nvs) = do
            f <- ps++cs++as
-           t <- factTerms f ++ nvs
+           t <- f.factTerms ++ nvs
            maybeNotNfSubterms (mhMaudeSig hnd) t
 
 substCreatesNonNormalTerms :: MaudeHandle -> System -> LNSubst -> LNSubstVFresh -> Bool
@@ -188,21 +184,21 @@ substCreatesNonNormalTerms hnd sys fsubst =
 -- temporal orderings.
 nonInjectiveFactInstances :: ProofContext -> System -> [(NodeId, NodeId, NodeId)]
 nonInjectiveFactInstances ctxt se = do
-    Edge c@(i, _) (k, _) <- S.toList $ L.get sEdges se
+    Edge c@(i, _) (k, _) <- S.toList se.edges
     let kFaPrem            = nodeConcFact c se
-        kTag               = factTag kFaPrem
+        kTag               = kFaPrem.factTag
         kTerm              = firstTerm kFaPrem
-        conflictingFact fa = factTag fa == kTag && firstTerm fa == kTerm
+        conflictingFact fa = fa.factTag == kTag && firstTerm fa == kTerm
 
-    guard (kTag `S.member` S.map fst (L.get pcInjectiveFactInsts ctxt))
+    guard (kTag `S.member` S.map fst ctxt.injectiveFactInsts)
     j <- S.toList $ D.reachableSet [i] less
 
     let isCounterExample = (j /= i) && (j /= k) &&
-                           maybe False checkRule (M.lookup j $ L.get sNodes se)
+                           maybe False checkRule (M.lookup j se.nodes)
 
         -- FIXME: There should be a weaker version of the rule that just
         -- introduces the constraint 'k < j || k == j' here.
-        checkRule jRu    = any conflictingFact (L.get rPrems jRu ++ L.get rConcs jRu) &&
+        checkRule jRu    = any conflictingFact (jRu.prems ++ jRu.concs) &&
                            (k `S.member` D.reachableSet [j] less
                              || isLast se k)
 
@@ -210,12 +206,12 @@ nonInjectiveFactInstances ctxt se = do
     return (i, j, k) -- counter-example to unique fact instances
   where
     less      = rawLessRel se
-    firstTerm = headMay . factTerms
+    firstTerm = headMay . (.factTerms)
 
 -- | The node-ids that must be instantiated to the trace, but are temporally
 -- after the last node.
 nodesAfterLast :: System -> [(NodeId, NodeId)]
-nodesAfterLast sys = case L.get sLastAtom sys of
+nodesAfterLast sys = case sys.lastAtom of
   Nothing -> []
   Just i  -> do j <- S.toList $ D.reachableSet [i] $ rawLessRel sys
                 guard (j /= i && isInTrace sys j)
@@ -227,7 +223,7 @@ nodesAfterLast sys = case L.get sLastAtom sys of
 -- it with an edge.
 hasImpossibleChain :: ProofContext -> System -> Bool
 hasImpossibleChain ctxt sys = {-trace (show (L.get pcTrueSubterm ctxt)) $-}
-    any impossibleChain [ (c,p) | ChainG c p <- M.keys $ L.get sGoals sys ]
+    any impossibleChain [ (c,p) | ChainG c p <- M.keys sys.goals ]
   where
     impossibleChain (c,p) = fromMaybe False $ do
         (DnK, t_start) <- kFactView $ nodeConcFact c sys
@@ -238,7 +234,7 @@ hasImpossibleChain ctxt sys = {-trace (show (L.get pcTrueSubterm ctxt)) $-}
         -- the chain is impossible if both the required root-symbol
         -- and the possible root-symbols for the chain-end can be
         -- determined and the required symbol is not possible.
-        if (L.get pcTrueSubterm ctxt)
+        if ctxt.trueSubterm
            then do
               -- the root symbol of the chain-end if it can be determined
               req_end_sym_subterm <- rootSym t_end
@@ -286,7 +282,7 @@ hasImpossibleChain ctxt sys = {-trace (show (L.get pcTrueSubterm ctxt)) $-}
 -- and starting from a KD(x) that follows from a KU(x).
 hasForbiddenChain :: System -> Bool
 hasForbiddenChain sys =
-    any illegalChain [ (c,p) | ChainG c p <- M.keys $ L.get sGoals sys ]
+    any illegalChain [ (c,p) | ChainG c p <- M.keys sys.goals ]
   where
     illegalChain :: (NodeConc, NodePrem) -> Bool
     illegalChain (c,p) = fromMaybe False $ do
@@ -310,13 +306,13 @@ hasForbiddenConstrChain sys =
   where
     -- list of linked AC-constructor rules 
     extractedNodesAndRules :: [(NodeId, RuleACInst, NodeId, RuleACInst, FunSym)]
-    extractedNodesAndRules = mapMaybe extractNodesAndRules $ S.toList $ L.get sLessAtoms sys
+    extractedNodesAndRules = mapMaybe extractNodesAndRules $ S.toList sys.lessAtoms
 
     -- initial map for union-find. Maps node ids to (root node id (initialized as ?), isTrivialKUFact, name of the AC-constructor rule)
     initialMap :: M.Map NodeId (NodeId, S.Set NodeId, FunSym)
     initialMap = M.fromList $ concatMap (\(n1, r1, n2, r2, n) -> [(n1, (n1, trivial r1 n n1, n)), (n2, (n2, trivial r2 n n2, n))]) extractedNodesAndRules
       where
-        trivial r n iden = if any (\ x -> isTrivialKUFact x || isNearlyTrivialKUFact n x) (L.get rPrems r) then S.singleton iden else S.empty
+        trivial r n iden = if any (\ x -> isTrivialKUFact x || isNearlyTrivialKUFact n x) r.prems then S.singleton iden else S.empty
         
     -- final map after union-find. Maps node ids to (root node id, isTrivialKUFact, name of the AC-constructor rule)
     finalMap :: (Bool, M.Map NodeId (NodeId, S.Set NodeId, FunSym))
@@ -342,8 +338,8 @@ hasForbiddenConstrChain sys =
         r2 <- nodeRuleSafe n2 sys
         name1 <- isACConstrRule r1
         name2 <- isACConstrRule r2
-        conc <- headMay (L.get rConcs r1)
-        guard $ name1 == name2 && conc `elem` L.get rPrems r2 -- both rules are AC-constructor rules with the same name and the conclusion of the first rule is a premise of the second rule
+        conc <- headMay r1.concs
+        guard $ name1 == name2 && conc `elem` r2.prems -- both rules are AC-constructor rules with the same name and the conclusion of the first rule is a premise of the second rule
         return (n1, r1, n2, r2, name1) -- both nodes exist, return n2 if they are both AC-constructor rules with the same name
       where
         r1' = nodeRuleSafe n1 sys
@@ -357,11 +353,11 @@ hasForbiddenConstrChain sys =
 -- a normal dependency graph.
 hasForbiddenExp :: System -> Bool
 hasForbiddenExp sys =
-    any forbiddenDExp $ M.toList $ L.get sNodes sys
+    any forbiddenDExp $ M.toList sys.nodes
   where
     forbiddenDExp (i,ru) = fromMaybe False $ do
-        [p1,p2] <- return $ L.get rPrems ru
-        [conc]  <- return $ L.get rConcs ru
+        [p1,p2] <- return ru.prems
+        [conc]  <- return ru.concs
         (DnK, viewTerm2 -> FExp _ _) <- kFactView p1
         (UpK, b                    ) <- kFactView p2
         case kFactView conc of
@@ -385,16 +381,16 @@ hasForbiddenExp sys =
 -- is not allowed in a normal dependency graph.
 hasForbiddenBP :: System -> Bool
 hasForbiddenBP sys =
-    (any isForbiddenDPMult $ M.elems $ L.get sNodes sys) ||
-    (any (isForbiddenDEMap sys) $ M.toList $ L.get sNodes sys) ||
-    (any (isForbiddenDEMapOrder sys) $ M.toList $ L.get sNodes sys)
+    (any isForbiddenDPMult $ M.elems sys.nodes) ||
+    (any (isForbiddenDEMap sys) $ M.toList sys.nodes) ||
+    (any (isForbiddenDEMapOrder sys) $ M.toList sys.nodes)
 
 -- | @isForbiddenDPMult ru@ returns @True@ if @ru@ is not allowed in
 -- a normal dependency graph.
 isForbiddenDPMult :: Rule a -> Bool
 isForbiddenDPMult ru = fromMaybe False $ do
-    [p1,p2] <- return $ L.get rPrems ru
-    [conc]  <- return $ L.get rConcs ru
+    [p1,p2] <- return ru.prems
+    [conc]  <- return ru.concs
     (DnK, viewTerm2 -> FPMult _ _) <- kFactView p1
     (UpK, b                      ) <- kFactView p2
     (DnK, viewTerm2 -> FPMult c p) <- kFactView conc
@@ -426,11 +422,11 @@ isForbiddenDEMap sys (i, ruExp) = fromMaybe False $ do
     (UpK, ke) <- kFactView ke_f
 
     ruEMap <- flip nodeRule sys <$>
-                 listToMaybe [ ns | Edge (ns,_) (nt,pit) <- S.toList (L.get sEdges sys)
+                 listToMaybe [ ns | Edge (ns,_) (nt,pit) <- S.toList sys.edges
                              , nt == i, pit == PremIdx 0 ]
     guard (isDEMapRule ruEMap)
 
-    [sP_f, rQ_f] <- return $ L.get rPrems ruEMap
+    [sP_f, rQ_f] <- return ruEMap.prems
     (DnK, viewTerm2 -> FPMult s p) <- kFactView sP_f
     (DnK, viewTerm2 -> FPMult r q) <- kFactView rQ_f
 
@@ -450,8 +446,8 @@ isForbiddenDEMapOrder sys (i, ruDEMap) = fromMaybe False $ do
     guard (isDEMapRule ruDEMap)
 
     -- ensure that ruDEMap is instance of the right rule
-    [f_p0, f_p1] <- return $ L.get rPrems ruDEMap
-    [f_c0] <- return $ L.get rConcs ruDEMap
+    [f_p0, f_p1] <- return ruDEMap.prems
+    [f_c0] <- return ruDEMap.concs
     (DnK, viewTerm2 -> FPMult s p) <- kFactView f_p0
     (DnK, viewTerm2 -> FPMult r q) <- kFactView f_p1
     (DnK, viewTerm2 -> FExp (viewTerm2 -> FEMap p' q') (viewTerm2 -> FMult as)) <- kFactView f_c0
@@ -470,12 +466,12 @@ isForbiddenDEMapOrder sys (i, ruDEMap) = fromMaybe False $ do
     return $ (factTags ruProto1) > (factTags ruProto2)
   where
     lookupPremProvider (k,prem) =
-        listToMaybe [ ns | Edge (ns,_) (nt,pit) <- S.toList (L.get sEdges sys)
+        listToMaybe [ ns | Edge (ns,_) (nt,pit) <- S.toList sys.edges
                     , nt == k, pit == prem ]
 
-    factTags ru = map (map factTag) [L.get rPrems ru, L.get rConcs ru, L.get rActs ru]
+    factTags ru = map (map (.factTag)) [ru.prems, ru.concs, ru.acts]
 
-    isStandRule ru = ruleInfo (isStandName . L.get praciName) (const False) $ L.get rInfo ru
+    isStandRule ru = ruleInfo (isStandName . (.name)) (const False) ru.info
     isStandName (StandRule _) = True
     isStandName _             = False
 

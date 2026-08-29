@@ -45,6 +45,9 @@ library
       , deepseq
       , dlist
       , mtl
+      , optics-core
+      , optics-extra
+      , optics-th
       , parallel
       , parsec
       , process
@@ -86,4 +89,5 @@ library
     default-extensions:
       DuplicateRecordFields
       NoFieldSelectors
+      OverloadedLabels
       OverloadedRecordDot

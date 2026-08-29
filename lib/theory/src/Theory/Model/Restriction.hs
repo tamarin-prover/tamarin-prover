@@ -7,6 +7,7 @@
 {-# LANGUAGE StandaloneDeriving   #-}
 {-# LANGUAGE TemplateHaskell      #-}
 {-# LANGUAGE TupleSections        #-}
+
 -- |
 -- Copyright   : (c) 2020 Robert Künnemann
 -- License     : GPL v3 (see LICENSE)
@@ -21,8 +22,6 @@ module Theory.Model.Restriction (
   , Restriction
   , SyntacticRestriction
   , RestrictionAttribute(..)
-  , rstrName
-  , rstrFormula
   , restrPrefix
   , varNow
   , fromRuleRestriction
@@ -32,10 +31,7 @@ module Theory.Model.Restriction (
 import           Control.DeepSeq
 import qualified Control.Monad.State           as State
 import           Control.Monad.Trans.FastFresh (evalFreshT)
-import           Extension.Data.Label          hiding (get)
 import           GHC.Generics                  (Generic)
-import           Prelude                       
--- import qualified Extension.Data.Label                as L
 import qualified Data.List                     as L
 import qualified Data.Map                      as M
 import qualified Data.Set                      as S
@@ -61,9 +57,9 @@ data RestrictionAttribute = LHSRestriction
 -- | A restriction describes a property that must hold for all traces. Restrictions are
 -- always used as lemmas in proofs.
 data ProtoRestriction f = Restriction
-    { _rstrName    :: String
-    , _rstrFormula :: f
-    , _rstrOriginalFormula :: Maybe f
+    { name    :: String
+    , formula :: f
+    , originalFormula :: Maybe f
     }
     deriving (Generic)
 
@@ -75,8 +71,6 @@ deriving instance Ord Restriction
 deriving instance Show Restriction
 deriving instance NFData Restriction
 deriving instance Binary Restriction
-
-$(mkLabels [''ProtoRestriction])
 
 ------------------------------------------------------------------------------
 -- Constants

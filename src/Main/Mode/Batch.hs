@@ -191,7 +191,7 @@ run thisMode as
       srcThy <- liftIO $ readFile inFile
       thy    <- loadTheory thyLoadOptions srcThy inFile
 
-      let sig = either (._thySignature) (._diffThySignature) thy
+      let sig = either (.signature) (.signature) thy
       sig'   <- liftIO $ toSignatureWithMaude thyLoadOptions.maudePath sig
 
       -- | Pretty print the theory as is without performing any checks.
@@ -276,7 +276,7 @@ run thisMode as
             systemsWithMetadata :: [(Lemma IncrementalProof, ProofPath, System)]
             systemsWithMetadata = do
               lemma <- getLemmas thy
-              let proof = lemma._lProof
+              let proof = lemma.proof
               [(lemma, proofPath, system) | (proofPath, system) <- proofSystems proof]
 
             -- | Collect all solved (i.e. a trace was found) systems of the theory along with their
@@ -295,21 +295,21 @@ run thisMode as
                              -> String
             traceOutputLabel graphOptions dotOptions lemma proofPath =
               "trace_"
-              ++ thy._thyName                              -- Name of the theory in which the constraint system appears.
+              ++ thy.name                              -- Name of the theory in which the constraint system appears.
               ++ "_"
               ++ traceLabelOptions graphOptions dotOptions -- Graph options are included in a short format.
               ++ "_"
-              ++ lemma._lName                              -- Name of the lemma in which the constraint system appears.
+              ++ lemma.name                              -- Name of the lemma in which the constraint system appears.
               ++ intercalate "-" proofPath                 -- Path through the proof where the constraint system is located.
 
             -- | Format the graph rendering options in a concise way.
             traceLabelOptions :: GraphOptions -> DotOptions -> String
             traceLabelOptions graphOptions dotOptions =
-              let s1 = show graphOptions._goSimplificationLevel
-                  s2 = if graphOptions._goShowAutoSource then "AS1" else "AS0"
-                  s3 = if graphOptions._goClustering then "CL1" else "CL0"
-                  s4 = if graphOptions._goAbbreviate then "A1" else "A0"
-                  s5 = if graphOptions._goCompress then "C1" else "C0"
+              let s1 = show graphOptions.simplificationLevel
+                  s2 = if graphOptions.showAutoSource then "AS1" else "AS0"
+                  s3 = if graphOptions.clustering then "CL1" else "CL0"
+                  s4 = if graphOptions.abbreviate then "A1" else "A0"
+                  s5 = if graphOptions.compress then "C1" else "C0"
                   s6 = case dotOptions._doNodeStyle of
                          FullBoringNodes -> "NF"
                          CompactBoringNodes -> "NB"

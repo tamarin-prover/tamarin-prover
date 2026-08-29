@@ -13,7 +13,6 @@ module Theory.Text.Parser.Accountability(
 )
 where
 
-import           Prelude                    hiding (id, (.))
 import           Theory
 import           Theory.Text.Parser.Token
 import           Theory.Text.Parser.Formula

@@ -2,6 +2,11 @@
 {-# LANGUAGE TypeOperators   #-}
 {-# LANGUAGE LambdaCase   #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE DataKinds #-}
+{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE UndecidableInstances #-}
+
 -- |
 -- Copyright   : (c) 2010, 2011 Simon Meier
 -- License     : GPL v3 (see LICENSE)
@@ -13,7 +18,6 @@ module Theory.Constraint.System.Dot (
     dotSystemCompact
   , BoringNodeStyle(..)
   , DotOptions(..)
-  , doNodeStyle
   , defaultDotOptions
   , NodeColorMap
   , nodeColorMap
@@ -31,13 +35,15 @@ import           Data.Maybe
 import qualified Data.Set                 as S
 import           Data.Ratio
 import qualified Data.Text.Lazy           as T
-import           Extension.Data.Label
 import           Extension.Prelude
+
+import Optics.Core (Lens')
+import Optics.State (modifying, use)
+import Optics.TH (makeFieldLabelsNoPrefix)
 
 import Text.Printf (printf)
 
 import           Control.Basics
-import qualified Control.Category         as L
 import           Control.Monad.Reader
 import           Control.Monad.State      (StateT, evalStateT, runStateT)
 import qualified Control.Monad.State as State
@@ -66,7 +72,6 @@ import           Theory.Text.Pretty       (opAction)
 
 import           Utils.Misc
 import qualified Data.Graph               as G
-import Theory (laSmaller, laLarger, laReason)
 
 
 -- | The style for nodes of the intruder.
@@ -86,40 +91,38 @@ defaultDotOptions = DotOptions CompactBoringNodes black
   where
     black = D.RGB 0 0 0
 
-$(mkLabels [''DotOptions])
-
 type NodeColorMap = M.Map (RuleInfo ProtoRuleACInstInfo IntrRuleACInfo) (RGB Rational)
 type SeDot = ReaderT (Graph, NodeColorMap, DotOptions) (StateT DotState D.Dot)
 
 -- | State to track the dot NodeId (different from a System NodeId) of created dot components.
 data DotState = DotState {
-    _dsNodes   :: M.Map NodeId   D.NodeId
-  , _dsPrems   :: M.Map NodePrem D.NodeId
-  , _dsConcs   :: M.Map NodeConc D.NodeId
+    nodes   :: M.Map NodeId   D.NodeId
+  , prems   :: M.Map NodePrem D.NodeId
+  , concs   :: M.Map NodeConc D.NodeId
   -- a.d. TODO this is unused. Check if I droppped it somewhere, else delete.
-  , _dsSingles :: M.Map (NodeConc, NodePrem) D.NodeId
+  , singles :: M.Map (NodeConc, NodePrem) D.NodeId
   }
 
-$(mkLabels [''DotState])
+makeFieldLabelsNoPrefix ''DotState
 
 -- | Wrap a computation that generates dot components (SeDot) in order cache that component in the DotState and be able to retrieve its NodeId.
 cacheState :: Ord k
-           => (DotState :-> M.Map k D.NodeId) -- ^ Accessor to map storing this type of actions.
+           => (Lens' DotState (M.Map k D.NodeId)) -- ^ Accessor to map storing this type of actions.
            -> k                               -- ^ Action index.
            -> SeDot D.NodeId
            -> SeDot ()
 cacheState stateAccessor k dot = do
     i <- dot
-    modM stateAccessor (M.insert k i)
+    modifying stateAccessor (M.insert k i)
 
 -- | Retrieve a NodeId from a cached dot component.
 getState :: Ord k
-         => (DotState :-> M.Map k D.NodeId)
+         => (Lens' DotState (M.Map k D.NodeId))
          -> k
          -> String
          -> SeDot D.NodeId
 getState stateAccessor k msg = do
-    stateMap <- getM stateAccessor
+    stateMap <- use stateAccessor
     let mi = stateMap M.!? k
     case mi of
       Nothing -> error msg
@@ -181,11 +184,11 @@ roleCluster roleName dot = do
   let cid = D.createClusterNodeId roleName
   env <- ask
   currentState <- State.get
-  let clusterState = D.DotGenState { D._dgsId = uq, D._dgsElements = [] }
+  let clusterState = D.DotGenState { D.dgsId = uq, D.elements = [] }
   ((_, newState), finalDotState) <- lift . lift . lift $ runStateT (runStateT (runReaderT dot env) currentState) clusterState
   State.put newState
-  _ <- liftDot $ D.setId $ D._dgsId finalDotState
-  liftDot $ D.addElements [D.createSubGraph (Just cid) (D._dgsElements finalDotState)]
+  _ <- liftDot $ D.setId $ D.dgsId finalDotState
+  liftDot $ D.addElements [D.createSubGraph (Just cid) (D.elements finalDotState)]
 
 
 -- | Compute a color map for nodes labelled with a proof rule info of one of
@@ -193,7 +196,7 @@ roleCluster roleName dot = do
 nodeColorMap :: [RuleACInst] -> NodeColorMap
 nodeColorMap rules =
     M.fromList $
-      [ (get rInfo ru, getColorForRule (ruleAttributes ru) gIdx mIdx)
+      [ (ru.info, getColorForRule (ruleAttributes ru) gIdx mIdx)
       | (gIdx, grp) <- groups, (mIdx, ru) <- zip [0..] grp ]
   where
     groupIdx ru
@@ -212,7 +215,7 @@ nodeColorMap rules =
     getColor idx = fromMaybe (HSV 0 1 1) $ M.lookup idx colors
 
     -- Function to get color for a given rule
-    getColorForRule attrs gIdx mIdx = fromMaybe defaultColor (ruleColor attrs)
+    getColorForRule attrs gIdx mIdx = fromMaybe defaultColor attrs.ruleColor
         where
             defaultColor =  hsvToRGB $ getColor (gIdx, mIdx)
 
@@ -228,8 +231,8 @@ nodeColorMap rules =
 renderLNFact :: Document d => LNFact -> SeDot d
 renderLNFact fact = do
   (graph, _, _) <- ask
-  let abbreviate = get ((L..) goAbbreviate gOptions) graph
-      abbrevs = get gAbbreviations graph
+  let abbreviate = graph.options.abbreviate
+      abbrevs = graph.abbreviations
       replacedFact = applyAbbreviationsFact (lookupAbbreviation abbrevs) fact
   if abbreviate
     then return $ prettyLNFact replacedFact
@@ -238,19 +241,19 @@ renderLNFact fact = do
 -- | Dot a node in record based (compact) format.
 dotNodeCompact :: Node -> Maybe String -> SeDot ()
 dotNodeCompact node manualNodeColor = do
-  let v = get nNodeId node
+  let v = node.nodeId
   (graph, colorMap, dotOptions) <- ask
-  case get nNodeType node of
-    SystemNode ru -> cacheState dsNodes v $ do
+  case node.nodeType of
+    SystemNode ru -> cacheState #nodes v $ do
       let outgoingEdge = hasOutgoingEdge graph v
       let role = fromMaybe "Undefined" (getNodeRole node)
 
-      let rInfoVal = get rInfo ru
+      let rInfoVal = ru.info
 
       -- TODO this is pretty ugly. Shorten using standard functions
       let ruleColor' = case rInfoVal of
                         ProtoInfo protoRule ->
-                          case ruleColor (_praciAttributes protoRule) of
+                          case protoRule.attributes.ruleColor of
                             Just rgb -> Just (rgbToHex rgb)
                             _ -> Nothing
                         _ -> Nothing
@@ -264,22 +267,23 @@ dotNodeCompact node manualNodeColor = do
       ids <- mkNode v ru attrs outgoingEdge dotOptions
       let prems = [ ((v, i), nid) | (Just (Left i),  nid) <- ids ]
           concs = [ ((v, i), nid) | (Just (Right i), nid) <- ids ]
-      modM dsPrems $ M.union $ M.fromList prems
-      modM dsConcs $ M.union $ M.fromList concs
+      modifying #prems $ M.union $ M.fromList prems
+      modifying #concs $ M.union $ M.fromList concs
       return $ fromJust $ lookup Nothing ids
-    UnsolvedActionNode facts -> cacheState dsNodes v $ do
+    UnsolvedActionNode facts -> cacheState #nodes v $ do
       lblPre <- (fsep <$> punctuate comma <$> mapM renderLNFact facts)
       let lbl = lblPre <-> opAction <-> text (show v)
       let attrs | any isKUFact facts = [("color","gray")]
                 | otherwise          = [("color","darkblue")]
       mkSimpleNode (render lbl) attrs
-    LastActionAtom -> cacheState dsNodes v $ mkSimpleNode (show v) []
-    MissingNode (Left conc) -> cacheState dsConcs (v, conc) $ dotConcC (v, conc)
-    MissingNode (Right prem) -> cacheState dsPrems (v, prem) $ dotPremC (v, prem)
+    LastActionAtom -> cacheState #nodes v $ mkSimpleNode (show v) []
+    MissingNode (Left conc) -> cacheState #concs (v, conc) $ dotConcC (v, conc)
+    MissingNode (Right prem) -> cacheState #prems (v, prem) $ dotPremC (v, prem)
   where
+    hasOutgoingEdge :: Graph -> NodeId -> Bool
     hasOutgoingEdge graph v =
-      let repr = get gRepr graph
-      in or [ v == v' | SystemEdge ((v', _), _) <- get grEdges repr ]
+      let repr = graph.repr
+      in or [ v == v' | SystemEdge ((v', _), _) <- repr.edges ]
     missingNode shape label = liftDot $ D.node $ [("label", render label),("shape",shape)]
     dotPremC prem = missingNode "invtrapezium" $ prettyNodePrem prem
     dotConcC conc = missingNode "trapezium" $ prettyNodeConc conc
@@ -296,7 +300,7 @@ dotNodeCompact node manualNodeColor = do
       -> SeDot [(Maybe (Either PremIdx ConcIdx), D.NodeId)]
     mkNode v ru attrs outgoingEdge dotOptions
       -- single node, share node-id for all premises and conclusions
-      | get doNodeStyle dotOptions == CompactBoringNodes &&
+      | dotOptions._doNodeStyle == CompactBoringNodes &&
         (isIntruderRule ru || isFreshRule ru) = do
             ps <- psM
             as <- asM
@@ -331,10 +335,10 @@ dotNodeCompact node manualNodeColor = do
           return $ renderRow row
 
         ruleLabelM = do
-          showAutoSource <- asks (get ((L..) goShowAutoSource gOptions) . fst3)
+          showAutoSource <- asks ((.options.showAutoSource) . fst3)
           lbl <- if showAutoSource
-                      then mapM renderLNFact $ filter isAutoSource $ filter isNotDiffAnnotation $ get rActs ru
-                      else mapM renderLNFact $ filter isNotDiffAnnotation $ get rActs ru
+                      then mapM renderLNFact $ filter isAutoSource $ filter isNotDiffAnnotation ru.acts
+                      else mapM renderLNFact $ filter isNotDiffAnnotation ru.acts
           return $
             prettyNodeId v <-> colon
             <-> text (showDotRuleCaseName ru)
@@ -401,15 +405,15 @@ dotEdge edge =
     LessEdge _ -> error "LessEdges are handled by dotLessEdge"
   where
     dotGenEdge style src tgt = do
-      srcId <- getState dsConcs src ("Source node of edge not found: " ++ show src)
-      tgtId <- getState dsPrems tgt ("Target node of edge not found: " ++ show tgt)
+      srcId <- getState #concs src ("Source node of edge not found: " ++ show src)
+      tgtId <- getState #prems tgt ("Target node of edge not found: " ++ show tgt)
       liftDot $ D.edge srcId tgtId style
 
 -- | Dot a less edge, which needs to be transformed first to contain the correct color.
 dotLessEdge :: (NodeId, NodeId, String) -> SeDot ()
 dotLessEdge (src, tgt, color) = do
-  srcId <- getState dsNodes src ("Source node of less edge not found: " ++ show src)
-  tgtId <- getState dsNodes tgt ("Target node of less edge not found: " ++ show src)
+  srcId <- getState #nodes src ("Source node of less edge not found: " ++ show src)
+  tgtId <- getState #nodes tgt ("Target node of less edge not found: " ++ show src)
   liftDot $ D.edge srcId tgtId [("color",color),("style","dashed")]
 
 -- Function to order abbreviations for JSON output. Replicating the topological sort used in the legend generation to ensure consistent ordering.
@@ -438,22 +442,22 @@ orderAbbreviationsForJSON abbrevs =
 generateLegend :: SeDot ()
 generateLegend = do
   (graph, _, dotOptions) <- ask
-  let abbrevs = get gAbbreviations graph
+  let abbrevs = graph.abbreviations
   -- Skip generating anything if no abbreviations exist.
   unless (null abbrevs) $ do
     nLegend <- liftDot $ D.scope (do
       D.attribute ("rank", "sink")
       let sortedAbbrevs = topoSortAbbrevs $ zip [0..] $
             sortOn (Data.Ord.Down . render . Sys.prettyLNTerm . fst) $ M.elems abbrevs
-          labelColor = get doAbbrevColor dotOptions
+          labelColor = dotOptions._doAbbrevColor
           htmlLabel = D.htmlLabel $ abbrevLabel sortedAbbrevs labelColor
       D.node [("shape", "plain"), htmlLabel])
     -- We add invisible edges from all sink nodes of the graph to the legend node to place it somewhere in the middle of the bottom row.
     -- We only add edges from the sink nodes because edges from earlier nodes will be routed avoid later nodes (even if they are invisible) and create constraints that lead to excessive whitespace on the edges of the graph.
     let sinks = getGraphSinks graph
-    dotIds <- getM dsNodes
+    dotIds <- use #nodes
     mapM_ (\nsink ->
-      case M.lookup (get nNodeId nsink) dotIds of
+      case M.lookup nsink.nodeId dotIds of
       Nothing -> pure ()
       Just nid -> liftDot $ D.edge nid nLegend [("style", "invis")]) sinks
   where
@@ -507,7 +511,7 @@ dotSystemCompact :: GraphOptions -> DotOptions -> System -> D.Dot ()
 dotSystemCompact graphOptions dotOptions se =
     let graph = systemToGraph se graphOptions
         -- a.d. TODO make nodeColorMap filter systemnodes from graph instead of accessing System directly.
-        colorMap = nodeColorMap (M.elems $ get sNodes se)
+        colorMap = nodeColorMap (M.elems se.nodes)
         dot = dotGraphCompact dotOptions colorMap graph in
     dot
 
@@ -518,14 +522,14 @@ dotGraphCompact dotOptions colorMap graph =
         (`runReaderT` (graph, colorMap, dotOptions)) $ do
 
             -- Get the graph representation details
-            let repr = get gRepr graph
-                clusters = get grClusters repr
-                edges = get grEdges repr
-                nodes = get grNodes repr
+            let repr = graph.repr
+                clusters = repr.clusters
+                edges = repr.edges
+                nodes = repr.nodes
                 (lessEdges, restEdges) = mergeLessEdges edges
-                abbreviate = get ((L..) goAbbreviate gOptions) graph
+                abbreviate = graph.options.abbreviate
 
-            if null $ get grClusters repr then liftDot setDefaultAttributes else liftDot setDefaultAttributesIfCluster
+            if null $ repr.clusters then liftDot setDefaultAttributes else liftDot setDefaultAttributesIfCluster
 
             -- Process the nodes, clusters, and edges
             mapM_ (\node -> dotNodeCompact node Nothing) nodes
@@ -541,7 +545,7 @@ dotGraphCompact dotOptions colorMap graph =
 -- Function to dot edges from multiple clusters
 dotClustersEdges :: [Cluster] -> SeDot ()
 dotClustersEdges clusters = do
-    let allEdges = concatMap (get cEdges) clusters
+    let allEdges = concatMap (.edges) clusters
         (lessEdges, restEdges) = mergeLessEdges allEdges
     mapM_ dotEdge restEdges
     mapM_ dotLessEdge lessEdges
@@ -609,9 +613,9 @@ mergeLessEdges edges = (merged, rest)
     -- SAFETY: Output of eqClasses never contains the empty list.
     getAllRToC [] = error "empty list"
     getAllRToC xs@(x:_) =
-      (get laSmaller x, get laLarger x,
+      (x.smaller, x.larger,
         -- Sort order is reversed to put the "most important reason" first.
-        allRtoColors (sortBy (comparing Data.Ord.Down) $ map (get laReason) xs))
+        allRtoColors (sortBy (comparing Data.Ord.Down) $ map (.reason) xs))
 
     allRtoColors :: [Reason] -> String
     allRtoColors reasons =

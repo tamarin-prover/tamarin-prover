@@ -24,7 +24,6 @@ import Control.Applicative (empty)
 import Control.DeepSeq
 import Control.Monad.Fresh
 import Data.Binary
-import Data.Label as L
 import Data.List
 import Data.Map qualified as M
 import Data.Maybe
@@ -121,20 +120,20 @@ simpleInjectiveFactInstances reducible rules = S.fromList $ do
     candidates :: M.Map FactTag [[MonotonicBehaviour]]
     candidates = M.fromListWith combineShapes $ do
       ru <- rules
-      conc <- L.get rConcs ru
-      let tag = factTag conc
+      conc <- ru.concs
+      let tag = conc.factTag
       guard $
         (factTagMultiplicity tag == Linear)
-          && (tag `elem` (factTag <$> L.get rPrems ru))
-      prem <- L.get rPrems ru
-      guard (factTag prem == tag)
-      guard (not (null $ factTerms conc))
+          && (tag `elem` ((.factTag) <$> ru.prems))
+      prem <- ru.prems
+      guard (prem.factTag == tag)
+      guard (not (null conc.factTerms))
       return (tag, combineShapes (getShape conc) (getShape prem))
       where
         -- Compute the default shape of the fact. I.e., a correct shape
         -- with unspecified behaviour.
         getShape :: LNFact -> [[MonotonicBehaviour]]
-        getShape (factTerms -> _ : terms) = map (flip replicate Unspecified . length . getPairTerms) terms
+        getShape ((.factTerms) -> _ : terms) = map (flip replicate Unspecified . length . getPairTerms) terms
         getShape _ = error "a fact without terms cannot be injective"
 
         -- Combining two shapes is simply taking the shorter list at each position
@@ -172,10 +171,10 @@ simpleInjectiveFactInstances reducible rules = S.fromList $ do
       -- trace (show ("getMaybeEqStrict", tag, ru, combineAll (map getMaybeEqMonConclusion copies) tag)) $
       combineAll (map getMaybeEqMonConclusion copies) tag
       where
-        prems = L.get rPrems ru
-        copies = filter ((tag ==) . factTag) (L.get rConcs ru)
-        constraints = concatMap extractConstraints (L.get preRestriction (L.get rInfo ru))
-        firstTerm = headMay . factTerms
+        prems = ru.prems
+        copies = filter ((tag ==) . (.factTag)) ru.concs
+        constraints = concatMap extractConstraints ru.info.restriction
+        firstTerm = headMay . (.factTerms)
 
         -- duplicateFirstTerms are the first terms that appear at least twice - i.e. the corresponding fact cannot be injective
         allFirstTerms = sort $ mapMaybe firstTerm copies
@@ -203,7 +202,7 @@ simpleInjectiveFactInstances reducible rules = S.fromList $ do
 
                 -- Unfold each term according to the default shape
                 trimmedPairTerms :: LNFact -> [[LNTerm]]
-                trimmedPairTerms (factTerms -> _ : terms) = zipWith shapeTerm terms (map length shape)
+                trimmedPairTerms ((.factTerms) -> _ : terms) = zipWith shapeTerm terms (map length shape)
                 trimmedPairTerms _ = error "a fact with no terms cannot be injective"
 
                 -- Zip the matching terms from premise instance and conclusion instance
@@ -223,6 +222,6 @@ simpleInjectiveFactInstances reducible rules = S.fromList $ do
                   map (map getBehaviour) zipped
 
         -- get the corresponding fact in the premise
-        getPrem tConc = case (`filter` prems) (\faPrem -> factTag faPrem == tag && Just tConc == firstTerm faPrem) of
+        getPrem tConc = case (`filter` prems) (\faPrem -> faPrem.factTag == tag && Just tConc == firstTerm faPrem) of
           [g] -> Just g
           _ -> Nothing -- if there are multiple such guards, the rule cannot be executed

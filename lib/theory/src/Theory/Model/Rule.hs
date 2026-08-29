@@ -8,6 +8,10 @@
 {-# LANGUAGE TypeOperators              #-}
 {-# LANGUAGE TypeSynonymInstances       #-}
 {-# LANGUAGE MultiParamTypeClasses      #-}
+{-# LANGUAGE DataKinds #-}
+{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE UndecidableInstances #-}
+
 -- |
 -- Copyright   : (c) 2010-2012 Benedikt Schmidt & Simon Meier
 -- License     : GPL v3 (see LICENSE)
@@ -23,13 +27,6 @@ module Theory.Model.Rule (
   , ConcIdx(..)
 
   -- ** Accessors
-  , rInfo
-  , rPrems
-  , rConcs
-  , rActs
-  , rPrem
-  , rConc
-  , rNewVars
   , lookupPrem
   , lookupConc
   , enumPrems
@@ -48,18 +45,8 @@ module Theory.Model.Rule (
   , RuleAttributes(..)
   , ProtoRuleName(..)
   , ProtoRuleEInfo(..)
-  , preName
-  , preAttributes
-  , preRestriction
   , ProtoRuleACInfo(..)
-  , pracName
-  , pracAttributes
-  , pracVariants
-  , pracLoopBreakers
   , ProtoRuleACInstInfo(..)
-  , praciName
-  , praciAttributes
-  , praciLoopBreakers
   , RuleACConstrs
 
   -- * Intruder Rule Information
@@ -168,8 +155,6 @@ module Theory.Model.Rule (
 
   , prettyIntruderVariants)  where
 
-import           Prelude              hiding (id, (.))
-
 import           GHC.Generics (Generic)
 import           Data.Binary
 import qualified Data.ByteString.Char8 as BC
@@ -182,17 +167,14 @@ import Data.Maybe
 import           Data.Monoid
 -- import           Data.Maybe            (fromMaybe)
 import           Data.Color
-import           Safe
+import           Safe hiding (at)
 
 -- import           Control.Basics
-import           Control.Category
 import           Control.DeepSeq
 import           Control.Monad.Bind
 import           Control.Monad.Reader
 import           Text.Read (readMaybe)
 
-import           Extension.Data.Label hiding (get)
-import qualified Extension.Data.Label as L
 import           Logic.Connectives
 
 import           Term.LTerm
@@ -209,6 +191,10 @@ import Data.Char (chr, isDigit)
 import Data.List.Split (splitOn)
 import           Utils.Misc
 
+import Optics.TH (makeFieldLabelsNoPrefix)
+
+-- import           Debug.Trace
+
 ------------------------------------------------------------------------------
 -- General Rule
 ------------------------------------------------------------------------------
@@ -216,19 +202,19 @@ import           Utils.Misc
 -- | Rewriting rules with arbitrary additional information and facts with names
 -- and logical variables.
 data Rule i = Rule {
-         _rInfo    :: i
-       , _rPrems   :: [LNFact]
-       , _rConcs   :: [LNFact]
-       , _rActs    :: [LNFact]
+         info    :: i
+       , prems   :: [LNFact]
+       , concs   :: [LNFact]
+       , acts    :: [LNFact]
        -- contains initially the new variables, then their instantiations
-       , _rNewVars :: [LNTerm]
+       , newVars :: [LNTerm]
        }
        deriving(Eq, Ord, Show, Data, Typeable, Generic)
 
 instance NFData i => NFData (Rule i)
 instance Binary i => Binary (Rule i)
 
-$(mkLabels [''Rule])
+makeFieldLabelsNoPrefix ''Rule
 
 -- | An index of a premise. The first premise has index '0'.
 newtype PremIdx = PremIdx { getPremIdx :: Int }
@@ -240,27 +226,19 @@ newtype ConcIdx = ConcIdx { getConcIdx :: Int }
 
 -- | @lookupPrem i ru@ returns the @i@-th premise of rule @ru@, if possible.
 lookupPrem :: PremIdx -> Rule i -> Maybe LNFact
-lookupPrem i = (`atMay` getPremIdx i) . L.get rPrems
+lookupPrem i = (`atMay` i.getPremIdx) . (.prems)
 
 -- | @lookupConc i ru@ returns the @i@-th conclusion of rule @ru@, if possible.
 lookupConc :: ConcIdx -> Rule i -> Maybe LNFact
-lookupConc i = (`atMay` getConcIdx i) . L.get rConcs
-
--- | @rPrem i@ is a lens for the @i@-th premise of a rule.
-rPrem :: PremIdx -> (Rule i :-> LNFact)
-rPrem i = nthL (getPremIdx i) . rPrems
-
--- | @rConc i@ is a lens for the @i@-th conclusion of a rule.
-rConc :: ConcIdx -> (Rule i :-> LNFact)
-rConc i = nthL (getConcIdx i) . rConcs
+lookupConc i = (`atMay` i.getConcIdx) . (.concs)
 
 -- | Enumerate all premises of a rule.
 enumPrems :: Rule i -> [(PremIdx, LNFact)]
-enumPrems = zip [(PremIdx 0)..] . L.get rPrems
+enumPrems = zip [(PremIdx 0)..] . (.prems)
 
 -- | Enumerate all conclusions of a rule.
 enumConcs :: Rule i -> [(ConcIdx, LNFact)]
-enumConcs = zip [(ConcIdx 0)..] . L.get rConcs
+enumConcs = zip [(ConcIdx 0)..] . (.concs)
 
 -- Instances
 ------------
@@ -319,10 +297,10 @@ instance Sized (Rule i) where
 type ExtendedPosition = (PremIdx, Int, Position)
 
 printPosition :: ExtendedPosition -> String
-printPosition (pidx, i, pos) = show (getPremIdx pidx) ++ "_" ++ show i ++ "_" ++ foldl (\x y -> x ++ show y  ++ "_") "" pos
+printPosition (pidx, i, pos) = show pidx.getPremIdx ++ "_" ++ show i ++ "_" ++ foldl (\x y -> x ++ show y  ++ "_") "" pos
 
 printFactPosition :: ExtendedPosition -> String
-printFactPosition (pidx, _, _) = show (getPremIdx pidx)
+printFactPosition (pidx, _, _) = show pidx.getPremIdx
 
 ------------------------------------------------------------------------------
 -- Rule information split into intruder rule and protocol rules
@@ -384,11 +362,11 @@ instance Semigroup RuleAttributes where
     -- Check: is the operation on each attribute associative?
     -- `x <> (y <> z) = (x <> y) <> z `
         RuleAttributes {
-            ruleColor = preferRight (ruleColor r1) (ruleColor r2),
-            ruleProcess = preferRight (ruleProcess r1) (ruleProcess r2),
-            ignoreDerivChecks = ignoreDerivChecks r1 || ignoreDerivChecks r2,
-            isSAPiCRule = isSAPiCRule r1 || isSAPiCRule r2,
-            role = preferRight (role r1) (role r2)
+            ruleColor = preferRight r1.ruleColor r2.ruleColor,
+            ruleProcess = preferRight r1.ruleProcess r2.ruleProcess,
+            ignoreDerivChecks = r1.ignoreDerivChecks || r2.ignoreDerivChecks,
+            isSAPiCRule = r1.isSAPiCRule || r2.isSAPiCRule,
+            role = preferRight r1.role r2.role
         }
         where
             -- is associative
@@ -419,9 +397,9 @@ instance Binary ProtoRuleName
 
 -- | Information for protocol rules modulo E.
 data ProtoRuleEInfo = ProtoRuleEInfo
-       { _preName       :: ProtoRuleName
-       , _preAttributes :: RuleAttributes
-       , _preRestriction:: [F.SyntacticLNFormula]
+       { name       :: ProtoRuleName
+       , attributes :: RuleAttributes
+       , restriction:: [F.SyntacticLNFormula]
        }
        deriving( Eq, Ord, Show, Data, Generic)
 instance NFData ProtoRuleEInfo
@@ -431,10 +409,10 @@ instance Binary ProtoRuleEInfo
 -- instantiations of the free variables of the rule. The source is interpreted
 -- modulo AC; i.e., its variants were also built.
 data ProtoRuleACInfo = ProtoRuleACInfo
-       { _pracName         :: ProtoRuleName
-       , _pracAttributes   :: RuleAttributes
-       , _pracVariants     :: Disj (LNSubstVFresh)
-       , _pracLoopBreakers :: [PremIdx]
+       { name         :: ProtoRuleName
+       , attributes   :: RuleAttributes
+       , variants     :: Disj (LNSubstVFresh)
+       , loopBreakers :: [PremIdx]
        }
        deriving(Eq, Ord, Show, Generic)
 instance NFData ProtoRuleACInfo
@@ -442,16 +420,18 @@ instance Binary ProtoRuleACInfo
 
 -- | Information for instances of protocol rules modulo AC.
 data ProtoRuleACInstInfo = ProtoRuleACInstInfo
-       { _praciName         :: ProtoRuleName
-       , _praciAttributes   :: RuleAttributes
-       , _praciLoopBreakers :: [PremIdx]
+       { name         :: ProtoRuleName
+       , attributes   :: RuleAttributes
+       , loopBreakers :: [PremIdx]
        }
        deriving(Eq, Ord, Show, Generic)
 instance NFData ProtoRuleACInstInfo
 instance Binary ProtoRuleACInstInfo
 
 
-$(mkLabels [''ProtoRuleEInfo, ''ProtoRuleACInfo, ''ProtoRuleACInstInfo])
+makeFieldLabelsNoPrefix ''ProtoRuleEInfo
+makeFieldLabelsNoPrefix ''ProtoRuleACInfo
+makeFieldLabelsNoPrefix ''ProtoRuleACInstInfo
 
 
 -- Instances
@@ -653,38 +633,38 @@ class HasRuleName t where
   ruleName       :: t -> RuleInfo ProtoRuleName IntrRuleACInfo
 
 instance HasRuleName ProtoRuleE where
-  ruleName       = ProtoInfo . L.get (preName . rInfo)
+  ruleName       = ProtoInfo . (.name) . (.info)
 
 instance HasRuleName RuleAC where
-  ruleName = ruleInfo (ProtoInfo . L.get pracName) IntrInfo . L.get rInfo
+  ruleName = ruleInfo (ProtoInfo . (.name)) IntrInfo . (.info)
 
 instance HasRuleName ProtoRuleAC where
-  ruleName  = ProtoInfo . L.get (pracName . rInfo)
+  ruleName  = ProtoInfo . (.name) . (.info)
 
 instance HasRuleName IntrRuleAC where
-  ruleName = IntrInfo . L.get rInfo
+  ruleName = IntrInfo . (.info)
 
 instance HasRuleName RuleACInst where
-  ruleName = ruleInfo (ProtoInfo . L.get praciName) IntrInfo . L.get rInfo
+  ruleName = ruleInfo (ProtoInfo . (.name)) IntrInfo . (.info)
 
 class HasRuleAttributes t where
   ruleAttributes :: t -> RuleAttributes
 
 instance HasRuleAttributes ProtoRuleE where
-  ruleAttributes = L.get (preAttributes . rInfo)
+  ruleAttributes = (.info.attributes)
 
 instance HasRuleAttributes RuleAC where
-  ruleAttributes (Rule (ProtoInfo ri) _ _ _ _) = L.get pracAttributes ri
+  ruleAttributes (Rule (ProtoInfo ri) _ _ _ _) = ri.attributes
   ruleAttributes _                             = mempty
 
 instance HasRuleAttributes ProtoRuleAC where
-  ruleAttributes = L.get (pracAttributes . rInfo)
+  ruleAttributes = (.info.attributes)
 
 instance HasRuleAttributes IntrRuleAC where
   ruleAttributes _ = mempty
 
 instance HasRuleAttributes RuleACInst where
-  ruleAttributes (Rule (ProtoInfo ri) _ _ _ _) = L.get praciAttributes ri
+  ruleAttributes (Rule (ProtoInfo ri) _ _ _ _) = ri.attributes
   ruleAttributes _                             = mempty
 
 -- Queries
@@ -789,7 +769,7 @@ isProtocolRule ru =
 -- | True if the protocol rule has only the trivial variant.
 isTrivialProtoVariantAC :: ProtoRuleAC -> ProtoRuleE -> Bool
 isTrivialProtoVariantAC (Rule info ps as cs nvs) (Rule _ ps' as' cs' nvs') =
-    L.get pracVariants info == Disj [emptySubstVFresh]
+    info.variants == Disj [emptySubstVFresh]
     && ps == ps' && as == as' && cs == cs' && nvs == nvs'
 
 -- | Returns a rule's name
@@ -1018,12 +998,12 @@ someRuleACInst =
   where
     extractInsts (Rule (ProtoInfo i) ps cs as nvs) =
       ( Rule (ProtoInfo i') ps cs as nvs
-      , Just (L.get pracVariants i)
+      , Just i.variants
       )
       where
-        i' = ProtoRuleACInstInfo (L.get pracName i)
-                                 (L.get pracAttributes i)
-                                 (L.get pracLoopBreakers i)
+        i' = ProtoRuleACInstInfo i.name
+                                 i.attributes
+                                 i.loopBreakers
     extractInsts (Rule (IntrInfo i) ps cs as nvs) =
       ( Rule (IntrInfo i) ps cs as nvs, Nothing )
 
@@ -1038,12 +1018,12 @@ someRuleACInstAvoiding r s =
   where
     extractInsts (Rule (ProtoInfo i) ps cs as nvs) =
       ( Rule (ProtoInfo i') ps cs as nvs
-      , Just (L.get pracVariants i)
+      , Just i.variants
       )
       where
-        i' = ProtoRuleACInstInfo (L.get pracName i)
-                                 (L.get pracAttributes i)
-                                 (L.get pracLoopBreakers i)
+        i' = ProtoRuleACInstInfo i.name
+                                 i.attributes
+                                 i.loopBreakers
     extractInsts (Rule (IntrInfo i) ps cs as nvs) =
       ( Rule (IntrInfo i) ps cs as nvs, Nothing )
 
@@ -1058,12 +1038,12 @@ someRuleACInstFixing r subst =
   where
     extractInsts (Rule (ProtoInfo i) ps cs as nvs) =
       ( apply subst (Rule (ProtoInfo i') ps cs as nvs)
-      , Just (L.get pracVariants i)
+      , Just i.variants
       )
       where
-        i' = ProtoRuleACInstInfo (L.get pracName i)
-                                 (L.get pracAttributes i)
-                                 (L.get pracLoopBreakers i)
+        i' = ProtoRuleACInstInfo i.name
+                                 i.attributes
+                                 i.loopBreakers
     extractInsts (Rule (IntrInfo i) ps cs as nvs) =
       ( apply subst (Rule (IntrInfo i) ps cs as nvs), Nothing )
 
@@ -1079,12 +1059,12 @@ someRuleACInstAvoidingFixing r s subst =
   where
     extractInsts (Rule (ProtoInfo i) ps cs as nvs) =
       ( apply subst (Rule (ProtoInfo i') ps cs as nvs)
-      , Just (L.get pracVariants i)
+      , Just i.variants
       )
       where
-        i' = ProtoRuleACInstInfo (L.get pracName i)
-                                 (L.get pracAttributes i)
-                                 (L.get pracLoopBreakers i)
+        i' = ProtoRuleACInstInfo i.name
+                                 i.attributes
+                                 i.loopBreakers
     extractInsts (Rule (IntrInfo i) ps cs as nvs) =
       ( apply subst (Rule (IntrInfo i) ps cs as nvs), Nothing )
 
@@ -1131,13 +1111,13 @@ unifyRuleACInstEqs eqs
   | otherwise         = return []
   where
     unifiable (Equal ru1 ru2) =
-         L.get rInfo ru1            == L.get rInfo ru2
-      && length (L.get rPrems ru1) == length (L.get rPrems ru2)
-      && length (L.get rConcs ru1) == length (L.get rConcs ru2)
+         ru1.info         == ru2.info
+      && length ru1.prems == length ru2.prems
+      && length ru1.concs == length ru2.concs
 
     ruleEqs (Equal ru1 ru2) =
-        zipWith Equal (L.get rPrems ru1) (L.get rPrems ru2) ++
-        zipWith Equal (L.get rConcs ru1) (L.get rConcs ru2)
+        zipWith Equal ru1.prems ru2.prems ++
+        zipWith Equal ru1.concs ru2.concs
 
 -- | Are these two rule instances unifiable?
 --
@@ -1292,7 +1272,7 @@ prettyProtoRuleName rn = text $ case rn of
 prettyDotProtoRuleName :: Document d => RuleAttributes -> ProtoRuleName -> d
 prettyDotProtoRuleName attrs rn = text $ case rn of
     FreshRule   -> "Fresh"
-    StandRule n -> if isSAPiCRule attrs
+    StandRule n -> if attrs.isSAPiCRule
 
                      then (if "new" `isPrefixOf` n then chr 957 : ' ' : drop 3 (trimSapicName n) else trimSapicName n)
                      else prefixIfReserved n
@@ -1313,11 +1293,11 @@ prettyRuleName = ruleInfo prettyProtoRuleName prettyIntrRuleACInfo . ruleName
 -- | Pretty print the attributes of a rule. Omits values that are `Nothing :: Maybe a` or `False` by default.
 prettyRuleAttribute :: (HighlightDocument d) => RuleAttributes -> d
 prettyRuleAttribute attr = fsep $ punctuate comma $ catMaybes [ -- Maybe types are only printed if they are (Just x). Hence fmap.
-    fmap (\c -> text "color=" <> text (rgbToHex c)) (ruleColor attr),
-    fmap ppProcess (ruleProcess attr),
-    boolToMaybe (ignoreDerivChecks attr) $ text "no_derivcheck",
-    boolToMaybe (isSAPiCRule attr) $ text "issapicrule",
-    fmap (\roleName -> text "role=\'" <> text roleName <> text "\'") (role attr)
+    fmap (\c -> text "color=" <> text (rgbToHex c)) attr.ruleColor,
+    fmap ppProcess attr.ruleProcess,
+    boolToMaybe attr.ignoreDerivChecks $ text "no_derivcheck",
+    boolToMaybe attr.isSAPiCRule $ text "issapicrule",
+    fmap (\roleName -> text "role=\'" <> text roleName <> text "\'") attr.role
     ]
     where
 
@@ -1397,16 +1377,16 @@ prettyNamedRule :: (HighlightDocument d, HasRuleName (Rule i), HasRuleAttributes
 prettyNamedRule prefix ppInfo ru =
     prefix <-> prettyRuleName ru <> prettyRuleAttributes ru <> colon $-$
     nest 2
-    (prettyRule (facts rPrems) acts (facts rConcs))  $-$
-    nest 2 (ppInfo $ L.get rInfo ru) --- $-$
+    (prettyRule (facts (.prems)) acts (facts (.concs)))  $-$
+    nest 2 (ppInfo ru.info) --- $-$
     where
-    acts             = filter isNotDiffAnnotation (L.get rActs ru)
+    acts             = filter isNotDiffAnnotation ru.acts
     isNotDiffAnnotation fa = (fa /= Fact {factTag = ProtoFact Linear ("Diff" ++ getRuleNameDiff ru) 0, factAnnotations = S.empty, factTerms = []})
-    facts proj     = L.get proj ru
+    facts proj     = proj ru
 
 prettyProtoRuleACInfo :: HighlightDocument d => ProtoRuleACInfo -> d
 prettyProtoRuleACInfo i =
-    (ppVariants $ L.get pracVariants i) $-$
+    (ppVariants i.variants) $-$
     prettyLoopBreakers i
   where
     ppVariants (Disj [subst]) | subst == emptySubstVFresh = emptyDoc
@@ -1421,7 +1401,7 @@ prettyLoopBreakers i = case breakers of
     [_] -> lineComment_ $ "loop breaker: "  ++ show breakers
     _   -> lineComment_ $ "loop breakers: " ++ show breakers
   where
-    breakers = getPremIdx <$> L.get pracLoopBreakers i
+    breakers = (.getPremIdx) <$> i.loopBreakers
 
 prettyInstLoopBreakers :: HighlightDocument d => ProtoRuleACInstInfo -> d
 prettyInstLoopBreakers i = case breakers of
@@ -1429,7 +1409,7 @@ prettyInstLoopBreakers i = case breakers of
     [_] -> lineComment_ $ "loop breaker: "  ++ show breakers
     _   -> lineComment_ $ "loop breakers: " ++ show breakers
   where
-    breakers = getPremIdx <$> L.get praciLoopBreakers i
+    breakers = (.getPremIdx) <$> i.loopBreakers
 
 prettyProtoRuleE :: HighlightDocument d => ProtoRuleE -> d
 prettyProtoRuleE = prettyNamedRule (kwRuleModulo "E") (const emptyDoc)

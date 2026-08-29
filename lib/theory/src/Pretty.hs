@@ -2,7 +2,6 @@ module Pretty (
     module Pretty
 ) where
 
-import           Prelude                             hiding (id, (.))
 import           Theory.Proof
 import           Theory.Text.Pretty
 

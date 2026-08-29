@@ -40,6 +40,7 @@ import Sapic.Annotation
 import Sapic.Exceptions
 import Sapic.Facts
 import Sapic.ProcessUtils
+import Optics.Core (over)
 import Text.RawString.QQ qualified as QQ
 import Theory
 import Theory.Sapic
@@ -421,8 +422,8 @@ resLocking hasUnlock v =  do
               Action t (f {factTag = ProtoFact Linear (hardcode "Unlock") 3})
             | otherwise = a
         hardcode s = s ++ "_" ++ show (lvarIdx v)
-        mapFormula f r = r { _rstrFormula = f r._rstrFormula }
-        mapName f r = r { _rstrName = f r._rstrName }
+        mapFormula f r = over #formula f r
+        mapName f r = over #name f r
 
 resEq :: String
 resEq = [QQ.r|restriction predicate_eq:

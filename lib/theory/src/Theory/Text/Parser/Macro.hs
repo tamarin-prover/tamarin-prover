@@ -12,7 +12,6 @@ module Theory.Text.Parser.Macro (
 )
 where
 
-import           Prelude                    hiding (id)
 import qualified Data.ByteString.Char8      as BC
 import qualified Data.Set                   as S
 import           Data.List
@@ -37,7 +36,7 @@ macros = do symbol "macros" *> colon *> commaSep macro
         unless (length args == length (nub args))
             $ error $ show op ++ " have two arguments with the same name."
         out <- equalSign *> msetterm False llit
-        sign <- sig <$> getState
+        sign <- (.sig) <$> getState
         let mc = (op, args, out)
         let k = length args
         if op `elem` map extractName (S.toList (userDefinedFunSyms sign) ++ map NoEqUser (S.toList (macroNames sign)))

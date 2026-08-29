@@ -3,6 +3,7 @@
 {-# LANGUAGE TupleSections      #-}
 {-# LANGUAGE LambdaCase         #-}
 {-# LANGUAGE DoAndIfThenElse    #-}
+{-# LANGUAGE FlexibleContexts   #-}
 -- |
 -- Copyright   : (c) 2010-2012 Benedikt Schmidt & Simon Meier
 -- License     : GPL v3 (see LICENSE)
@@ -24,24 +25,23 @@ module Theory.Constraint.Solver.Simplify (
 
 import           Debug.Trace
 
-import           Prelude                            hiding (id, (.))
-
 import qualified Data.DAG.Simple                    as D
 import qualified Data.Foldable                      as F
 import           Data.List
 import qualified Data.Map                           as M
 import qualified Data.Set                           as S
-import           Data.Maybe                         (mapMaybe, listToMaybe)
+import           Data.Maybe                         (mapMaybe, listToMaybe, fromJust)
 
 import           Control.Basics
-import           Control.Category
 import           Control.Monad.Disj
 import           Control.Monad.Reader
 import           Control.Monad.State                (gets)
 
+import           Optics.Core ((%), ix, preview, set)
+import           Optics.State (assign, modifying)
+
 import           Safe                           (headMay)
 
-import           Extension.Data.Label               hiding (modify)
 import           Extension.Prelude
 
 import           Theory.Constraint.Solver.Goals
@@ -55,7 +55,7 @@ import           Theory.Tools.InjectiveFactInstances
 -- system does not change anymore.
 simplifySystem :: Reduction ()
 simplifySystem = do
-    isdiff <- getM sDiffSystem
+    isdiff <- gets (.diffSystem)
     -- Start simplification, indicating that some change happened
     go (0 :: Int) [Changed]
     if isdiff
@@ -81,7 +81,7 @@ simplifySystem = do
           -- changes as 'substSystem' is idempotent.
           void substSystem
           -- Perform one simplification pass.
-          isdiff <- getM sDiffSystem
+          isdiff <- gets (.diffSystem)
           -- In the diff case, we cannot enfore N4-N6.
           if isdiff
             then do
@@ -181,7 +181,7 @@ enforceNodeUniqueness =
   where
     -- *DG4*
     freshRuleInsts se = do
-        (i, ru) <- M.toList $ get sNodes se
+        (i, ru) <- M.toList se.nodes
         guard (isFreshRule ru)
         return (ru, ((), i))  -- no need to merge equal rules
 
@@ -218,7 +218,7 @@ enforceFreshAndKuNodeUniqueness =
   where
     -- *DG4*
     freshRuleInsts se = do
-        (i, ru) <- M.toList $ get sNodes se
+        (i, ru) <- M.toList se.nodes
         guard (isFreshRule ru)
         return (ru, ((), i))  -- no need to merge equal rules
 
@@ -246,15 +246,15 @@ enforceFreshAndKuNodeUniqueness =
 enforceEdgeUniqueness :: Reduction ChangeIndicator
 enforceEdgeUniqueness = do
     se <- gets id
-    let edges = S.toList (get sEdges se)
-    (<>) <$> mergeNodes eSrc eTgt edges
-         <*> mergeNodes eTgt eSrc (filter (proveLinearConc se . eSrc) edges)
+    let edges = S.toList se.edges
+    (<>) <$> mergeNodes (.eSrc) (.eTgt) edges
+         <*> mergeNodes (.eTgt) (.eSrc) (filter (proveLinearConc se . (.eSrc)) edges)
   where
     -- | @proveLinearConc se (v,i)@ tries to prove that the @i@-th
     -- conclusion of node @v@ is a linear fact.
     proveLinearConc se (v, i) =
-        maybe False (isLinearFact . (get (rConc i))) $
-            M.lookup v $ get sNodes se
+        maybe False (isLinearFact . fromJust . preview (#concs % ix i.getConcIdx)) $
+            M.lookup v se.nodes
 
     -- merge the nodes on the 'mergeEnd' for edges that are equal on the
     -- 'compareEnd'
@@ -275,14 +275,14 @@ enforceEdgeUniqueness = do
 -- that are guaranteed not to result in case splits.
 solveUniqueActions :: Reduction ChangeIndicator
 solveUniqueActions = do
-    rules       <- nonSilentRules <$> askM pcRules
+    rules       <- nonSilentRules <$> asks (.rules)
     actionAtoms <- gets unsolvedActionAtoms
 
     -- FIXME: We might cache the result of this static computation in the
     -- proof-context, e.g., in the 'ClassifiedRules'.
     let uniqueActions = [ x | [x] <- group (sort ruleActions) ]
         ruleActions   = [ (tag, length ts)
-                        | ru <- rules, Fact tag _ ts <- get rActs ru ]
+                        | ru <- rules, Fact tag _ ts <- ru.acts ]
 
         isUnique (Fact tag _ ts) =
            (tag, length ts) `elem` uniqueActions
@@ -301,11 +301,11 @@ solveUniqueActions = do
 -- required to decompose the formula in the initial constraint system.
 reduceFormulas :: Reduction ChangeIndicator
 reduceFormulas = do
-    formulas <- getM sFormulas
+    formulas <- gets (.formulas)
     applyChangeList $ do
         fm <- S.toList formulas
         guard (reducibleFormula fm)
-        return $ do modM sFormulas $ S.delete fm
+        return $ do modifying #formulas $ S.delete fm
                     insertFormula fm
 
 -- | Try to simplify the atoms contained in the formulas. See
@@ -316,7 +316,7 @@ evalFormulaAtoms = do
     ctxt      <- ask
     verbose   <- getVerbose
     valuation <- gets (partialAtomValuation ctxt)
-    formulas  <- getM sFormulas
+    formulas  <- gets (.formulas)
     applyChangeList $ do
         fm <- S.toList formulas
         case simplifyGuarded valuation fm verbose of
@@ -324,8 +324,8 @@ evalFormulaAtoms = do
               case fm of
                 GDisj disj -> markGoalAsSolved "simplified" (DisjG disj)
                 _          -> return ()
-              modM sFormulas       $ S.delete fm
-              modM sSolvedFormulas $ S.insert fm
+              modifying #formulas       $ S.delete fm
+              modifying #solvedFormulas $ S.insert fm
               insertFormula fm'
           Nothing  -> []
 
@@ -345,30 +345,30 @@ partialAtomValuation :: ProofContext -> System -> LNAtom -> Maybe Bool
 partialAtomValuation ctxt sys =
     eval
   where
-    runMaude   = (`runReader` get pcMaudeHandle ctxt)
+    runMaude   = (`runReader` pcMaudeHandle ctxt)
     before     = alwaysBefore sys
     lessRel    = rawLessRel sys
     nodesAfter = \i -> filter (i /=) $ S.toList $ D.reachableSet [i] lessRel
-    reducible  = reducibleFunSyms $ mhMaudeSig $ get pcMaudeHandle ctxt
-    sst        = get sSubtermStore sys
+    reducible  = reducibleFunSyms $ mhMaudeSig $ pcMaudeHandle ctxt
+    sst        = sys.subtermStore
 
     -- | 'True' iff there in every solution to the system the two node-ids are
     -- instantiated to a different index *in* the trace.
     nonUnifiableNodes :: NodeId -> NodeId -> Bool
     nonUnifiableNodes i j = maybe False (not . runMaude) $
-        (unifiableRuleACInsts) <$> M.lookup i (get sNodes sys)
-                               <*> M.lookup j (get sNodes sys)
+        (unifiableRuleACInsts) <$> M.lookup i sys.nodes
+                               <*> M.lookup j sys.nodes
 
     -- | Try to evaluate the truth value of this atom in all models of the
     -- constraint system 'sys'.
     eval ato = case ato of
           Action (ltermNodeId' -> i) fa
-            | ActionG i fa `M.member` get sGoals sys -> Just True
+            | ActionG i fa `M.member` sys.goals -> Just True
             | otherwise ->
-                case M.lookup i (get sNodes sys) of
+                case M.lookup i sys.nodes of
                   Just ru
-                    | any (fa ==) (get rActs ru)                                -> Just True
-                    | all (not . runMaude . unifiableLNFacts fa) (get rActs ru) -> Just False
+                    | any (fa ==) ru.acts                                -> Just True
+                    | all (not . runMaude . unifiableLNFacts fa) ru.acts -> Just False
                   _                                                             -> Nothing
 
           Less (ltermNodeId' -> i) (ltermNodeId' -> j)
@@ -395,7 +395,7 @@ partialAtomValuation ctxt sys =
             | isLast sys i                       -> Just True
             | any (isInTrace sys) (nodesAfter i) -> Just False
             | otherwise ->
-                case get sLastAtom sys of
+                case sys.lastAtom of
                   Just j | nonUnifiableNodes i j -> Just False
                   _                              -> Nothing
 
@@ -409,11 +409,11 @@ insertImpliedFormulas = do
     sys <- gets id
     hnd <- getMaudeHandle
     applyChangeList $ do
-        clause  <- (S.toList $ get sFormulas sys) ++
-                   (S.toList $ get sLemmas sys)
+        clause  <- (S.toList sys.formulas) ++
+                   (S.toList sys.lemmas)
         implied <- impliedFormulas hnd sys clause
-        if ( implied `S.notMember` get sFormulas sys &&
-             implied `S.notMember` get sSolvedFormulas sys )
+        if ( implied `S.notMember` sys.formulas &&
+             implied `S.notMember` sys.solvedFormulas )
           then return (insertFormula implied)
           else []
 
@@ -432,13 +432,13 @@ freshOrdering :: Reduction ChangeIndicator
 freshOrdering = do
   ctxt <- ask
   sys <- gets id
-  let runMaude = (`runReader` get pcMaudeHandle ctxt)
-  let nonUnifiableNodes i j = maybe False (not . runMaude) $ unifiableRuleACInsts <$> M.lookup i (get sNodes sys) <*> M.lookup j (get sNodes sys)
+  let runMaude = (`runReader` pcMaudeHandle ctxt)
+  let nonUnifiableNodes i j = maybe False (not . runMaude) $ unifiableRuleACInsts <$> M.lookup i sys.nodes <*> M.lookup j sys.nodes
 
-  rawSubterms <- rawSubtermRel <$> getM sSubtermStore
+  rawSubterms <- rawSubtermRel <$> gets (.subtermStore)
   el <- elemNotBelowReducible . reducibleFunSyms . mhMaudeSig <$> getMaudeHandle
-  route <- getRoute <$> getM sNodes <*> getM sEdges
-  nodes <- M.assocs <$> getM sNodes
+  route <- getRoute <$> gets (.nodes) <*> gets (.edges)
+  nodes <- M.assocs <$> gets (.nodes)
   let freshVars = concatMap getFreshVars nodes  -- all (i,~x) where Fr(~x) is a premise of a node at position i
   let subterms = rawSubterms ++ [ (f,f) | (_,f) <- freshVars]  -- add a fake-subterm (f,f) for each freshVar f to the graph
   let graph = M.fromList $ map (\(_,x) -> (x, [ st | st <- subterms, x `el` fst st])) subterms  -- graph that has subterms (s,t) as nodes and edges (s,t) -> (u,v) if t `el` u
@@ -447,9 +447,9 @@ freshOrdering = do
   let enhancedLesses = [ LessAtom (last rs) j Fresh | (LessAtom i j _) <- newLesses, (frI, _) <- freshVars, i == frI, rs <- [route frI], length rs > 1, all (nonUnifiableNodes j) (tail rs)]  -- improved orderings according to routeOfFreshVar
   let allLesses = newLesses ++ enhancedLesses
 
-  oldLesses <- gets (get sLessAtoms)
+  oldLesses <- gets (.lessAtoms)
   mapM_ insertLess allLesses
-  modifiedLesses <- gets (get sLessAtoms)
+  modifiedLesses <- gets (.lessAtoms)
   return $ if oldLesses == modifiedLesses
     then Unchanged
     else Changed
@@ -457,8 +457,8 @@ freshOrdering = do
     where
       -- returns all (i,~x) where Fr(~x) is a premise of a node at position i
       getFreshVars :: (NodeId, RuleACInst) -> [(NodeId, LNTerm)]
-      getFreshVars (idx, get rPrems -> prems) = mapMaybe (\prem -> case factTag prem of
-          FreshFact -> Just (idx, head $ factTerms prem)
+      getFreshVars (idx, (.prems) -> prems) = mapMaybe (\prem -> case prem.factTag of
+          FreshFact -> Just (idx, head prem.factTerms)
           _         -> Nothing
         ) prems
 
@@ -467,7 +467,7 @@ freshOrdering = do
       getRoute nodeMap edges nid = plainRoute nid
         where
           edgeMap :: M.Map NodeConc NodeId
-          edgeMap = M.fromList [(eSrc edge, fst $ eTgt edge) | edge <- S.toList edges]
+          edgeMap = M.fromList [(edge.eSrc, fst edge.eTgt) | edge <- S.toList edges]
 
           plainRoute :: NodeId -> [NodeId]
           plainRoute i = case i `M.lookup` nodeMap of
@@ -481,8 +481,8 @@ freshOrdering = do
 
       connectNodeToFreshes :: (LNTerm -> LNTerm -> Bool) -> [((NodeId, LNTerm), [LNTerm])] -> RuleACInst -> [NodeId]
       connectNodeToFreshes _ [] _ = []
-      connectNodeToFreshes el (((nid,freshVar), containing):xs) r =
-          case listToMaybe [nid | t <- containing, t' <- concatMap factTerms (concatMap (`get` r) [rPrems, rActs]), t `el` t'] of
+      connectNodeToFreshes el (((nid, _freshVar), containing):xs) r =
+          case listToMaybe [nid | t <- containing, t' <- concatMap (.factTerms) (r.prems ++ r.acts), t `el` t'] of
             Just nid1 -> nid1 : connectNodeToFreshes el xs r
             _         ->        connectNodeToFreshes el xs r
       connectNodeToFreshes el (_:xs) r = connectNodeToFreshes el xs r
@@ -499,26 +499,26 @@ freshOrdering = do
 simpSubterms :: Reduction ChangeIndicator
 simpSubterms = do
     reducible <- reducibleFunSyms . mhMaudeSig <$> getMaudeHandle
-    sst <- getM sSubtermStore
+    sst <- gets (.subtermStore)
     (sst1, formulas, goals) <- simpSubtermStore reducible sst
 
     -- updateSubtermStore
-    setM sSubtermStore sst1
-    let ignoringOldSst1 = set oldNegSubterms (get oldNegSubterms sst) sst1
+    assign #subtermStore sst1
+    let ignoringOldSst1 = set #oldNegSubterms sst.oldNegSubterms sst1
     let changedStore = ignoringOldSst1 /= sst
 
     -- uptate goals
     changedGoals <- if null goals then return False else do  -- if goals = [] then goalsToRemove = [] holds because goals cannot disappear due to substitution
       oldOpenGoals <- gets plainOpenGoals
-      oldGoals <- M.toList <$> getM sGoals
+      oldGoals <- M.toList <$> gets (.goals)
       let goalsToRemove = [SubtermG st | (SubtermG st, _) <- oldOpenGoals] \\ goals
       let goalsToAdd = goals \\ [SubtermG st | (SubtermG st, _) <- oldGoals]
-      forM_ goalsToRemove (modM sGoals . M.delete)
+      forM_ goalsToRemove (modifying #goals . M.delete)
       forM_ goalsToAdd (`insertGoal` False)
       return ((length goalsToAdd + length goalsToRemove) > 0)
 
     -- insert formulas
-    allFormulas <- S.union <$> getM sSolvedFormulas <*> getM sFormulas
+    allFormulas <- S.union <$> gets (.solvedFormulas) <*> gets (.formulas)
     forM_ formulas insertFormula
     let changedFormulas = not $ all (`S.member` allFormulas) formulas
     return $ if changedStore || changedGoals || changedFormulas then Changed else Unchanged
@@ -547,15 +547,15 @@ simpSubterms = do
 simpInjectiveFactEqMon :: Reduction ChangeIndicator
 simpInjectiveFactEqMon = do
   -- get some values out of the reduction
-  inj <- S.toList <$> askM pcInjectiveFactInsts
-  nodes <- getM sNodes
+  inj <- S.toList <$> asks (.injectiveFactInsts)
+  nodes <- gets (.nodes)
   sys <- gets id
   reducible <- reducibleFunSyms . mhMaudeSig <$> getMaudeHandle
-  sst <- getM sSubtermStore
+  sst <- gets (.subtermStore)
   let triviallySmaller small big = Just True == isTrueFalse reducible (Just sst) (small, big)
   let triviallyNotSmaller small big = Just False == isTrueFalse reducible (Just sst) (small, big)
 
-  oldFormulas <- S.union <$> getM sFormulas <*> getM sSolvedFormulas
+  oldFormulas <- S.union <$> gets (.formulas) <*> gets (.solvedFormulas)
   let inequalities = S.fromList $ concatMap (\case
                     GGuarded All [] [EqE (bTermToLTerm->s) (bTermToLTerm->t)] gf | gf == gfalse -> [(s, t), (t, s)]
                     _                                                                           -> [])
@@ -590,7 +590,7 @@ simpInjectiveFactEqMon = do
                               newLesses
 
   -- check if anything changed
-  updatedFormulas <- S.union <$> getM sFormulas <*> getM sSolvedFormulas
+  updatedFormulas <- S.union <$> gets (.formulas) <*> gets (.solvedFormulas)
   return $ if
       updatedFormulas == oldFormulas &&
       null newLesses
@@ -629,7 +629,7 @@ simpInjectiveFactEqMon = do
           -- E.g., For behaviour/shape = [[=, <]] and a bare variable
           -- trimmedPairTerms S(~id, x) = Nothing
           trimmedPairTerms :: LNFact -> Maybe (LNTerm, [(MonotonicBehaviour, LNTerm)])
-          trimmedPairTerms (factTerms -> firstTerm:terms) = do
+          trimmedPairTerms ((.factTerms) -> firstTerm:terms) = do
             shaped <- sequence $ zipWith (\behaviour term -> shapeTerm (length behaviour) term) behaviours terms
             return (firstTerm, concat $ zipWith zip behaviours shaped)
           trimmedPairTerms _ = error "a fact with no terms cannot be injective"
@@ -638,7 +638,7 @@ simpInjectiveFactEqMon = do
           -- and compute the pairs via 'trimmedPairTerms', skipping fact instances whose
           -- terms do not yet match the inferred shape.
           behaviourTerms :: M.Map NodeId [(LNTerm, [(MonotonicBehaviour, LNTerm)])]
-          behaviourTerms = M.map (mapMaybe trimmedPairTerms . filter (\x -> factTag x == tag) . get rPrems) nodes  --all node premises with the matching tag
+          behaviourTerms = M.map (mapMaybe trimmedPairTerms . filter (\x -> x.factTag == tag) . (.prems)) nodes  --all node premises with the matching tag
 
           -- Returns a list of pairs (i, s), (j, t) together with the behaviour b
           -- between s and t. i and j are the time points where the fact instances
@@ -672,28 +672,28 @@ simpInjectiveFactEqMon = do
 --    -  i<j & f(t,...) occurs at j concs, then k<j.
 nonInjectiveFactInstances :: ProofContext -> System -> [(NodeId, NodeId)]
 nonInjectiveFactInstances ctxt se = do
-    Edge c@(i, _) (k, _) <- S.toList $ get sEdges se
+    Edge c@(i, _) (k, _) <- S.toList se.edges
     let kFaPrem            = nodeConcFact c se
-        kTag               = factTag kFaPrem
+        kTag               = kFaPrem.factTag
         kTerm              = firstTerm kFaPrem
-        conflictingFact fa = factTag fa == kTag && firstTerm fa == kTerm
-        injFacts           = get pcInjectiveFactInsts ctxt
+        conflictingFact fa = fa.factTag == kTag && firstTerm fa == kTerm
+        injFacts           = ctxt.injectiveFactInsts
     guard (kTag `S.member` S.map fst injFacts)
 --    j <- S.toList $ D.reachableSet [i] less
-    (j, _) <- M.toList $ get sNodes se
+    (j, _) <- M.toList se.nodes
     -- check that j<k
     guard  (k `S.member` D.reachableSet [j] less)
     let isCounterExample checkRule = (j /= i) && (j /= k) &&
-                           maybe False checkRule (M.lookup j $ get sNodes se)
+                           maybe False checkRule (M.lookup j se.nodes)
         checkRuleJK jRu    = (
                            -- check that f(t,...) occurs at j in prems and j<k
-                           any conflictingFact (get rPrems jRu ++ get rConcs jRu) &&
+                           any conflictingFact (jRu.prems ++ jRu.concs) &&
                            (k `S.member` D.reachableSet [j] less) &&
                             nonUnifiableNodes j i
                            )
         checkRuleIJ jRu    = (
                            -- check that f(t,...) occurs at j in concs and i<j
-                           any conflictingFact (get rPrems jRu ++  get rConcs jRu) &&
+                           any conflictingFact (jRu.prems ++ jRu.concs) &&
                            (j `S.member` D.reachableSet [i] less) &&
                             nonUnifiableNodes k j
                            )
@@ -707,12 +707,12 @@ nonInjectiveFactInstances ctxt se = do
 --    return (i, j, k) -- counter-example to unique fact instances
   where
     less      = rawLessRel se
-    firstTerm = headMay . factTerms
-    runMaude   = (`runReader` get pcMaudeHandle ctxt)
+    firstTerm = headMay . (.factTerms)
+    runMaude   = (`runReader` pcMaudeHandle ctxt)
     nonUnifiableNodes :: NodeId -> NodeId -> Bool
     nonUnifiableNodes i j = maybe False (not . runMaude) $
-        (unifiableRuleACInsts) <$> M.lookup i (get sNodes se)
-                               <*> M.lookup j (get sNodes se)
+        (unifiableRuleACInsts) <$> M.lookup i se.nodes
+                               <*> M.lookup j se.nodes
 
 addNonInjectiveFactInstances :: Reduction ()
 addNonInjectiveFactInstances = do

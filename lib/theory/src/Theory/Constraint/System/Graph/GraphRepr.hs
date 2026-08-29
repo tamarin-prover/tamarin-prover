@@ -1,6 +1,10 @@
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE TypeOperators   #-}
 {-# LANGUAGE ViewPatterns #-}
+{-# LANGUAGE DataKinds #-}
+{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE UndecidableInstances #-}
+
 -- |
 -- Copyright   : (c) 2010, 2011 Simon Meier
 -- License     : GPL v3 (see LICENSE)
@@ -10,18 +14,10 @@
 -- Representation of a graph as a collection of nodes, edges and clusters that can be used for rendering a System.
 module Theory.Constraint.System.Graph.GraphRepr (
       GraphRepr(..)
-    , grNodes
-    , grClusters
-    , grEdges
     , Node(..)
-    , nNodeType
-    , nNodeId
     , NodeType(..)
     , Edge(..)
     , Cluster(..)
-    , cName
-    , cNodes
-    , cEdges
     , toEdgeList
     , extractRole
     , getNodeRole
@@ -33,7 +29,8 @@ module Theory.Constraint.System.Graph.GraphRepr (
     , getRuleNameByNode
   ) where
 
-import           Extension.Data.Label
+import Optics.Core (set)
+import Optics.TH (makeFieldLabelsNoPrefix)
 import qualified Theory.Constraint.System as Sys
 import qualified Theory.Model             as M
 import qualified Theory                   as Th
@@ -49,8 +46,8 @@ import Data.Maybe
 -- | All nodes are identified by their NodeId.
 -- Then we have different types of nodes depending on what data of the System they use.
 data Node = Node {
-    _nNodeId    :: M.NodeId,
-    _nNodeType  :: NodeType
+    nodeId    :: M.NodeId,
+    nodeType  :: NodeType
   }
   deriving( Eq, Ord, Show )
 
@@ -72,33 +69,35 @@ data Edge =
 
 -- | A cluster contains nodes, edges, and a name, which is the common prefix of the contained nodes.
 data Cluster = Cluster {
-    _cName  :: String
-  , _cNodes :: [Node]
-  , _cEdges :: [Edge]
+    name  :: String
+  , nodes :: [Node]
+  , edges :: [Edge]
   }
   deriving( Eq, Ord, Show )
 
 -- | A graph consists of nodes, edges and clusters which are only one level deep to represent a collection of derivation rules with the same prefix.
 data GraphRepr = GraphRepr {
-    _grClusters :: [Cluster]
-  , _grNodes    :: [Node]
-  , _grEdges    :: [Edge]
+    clusters :: [Cluster]
+  , nodes    :: [Node]
+  , edges    :: [Edge]
   }
   deriving ( Eq, Ord, Show )
 
-$(mkLabels [''GraphRepr, ''Node, ''Cluster])
+makeFieldLabelsNoPrefix ''GraphRepr
+makeFieldLabelsNoPrefix ''Node
+makeFieldLabelsNoPrefix ''Cluster
 
 -- | Conversion function to a list of edges as used by Data.Graph.
 toEdgeList :: GraphRepr -> [(Node, M.NodeId, [M.NodeId])]
 toEdgeList repr =
-  let allNodes = get grNodes repr ++ concatMap (get cNodes) (get grClusters repr)
-      allEdges = get grEdges repr ++ concatMap (get cEdges) (get grClusters repr) in
-  map (\node -> (node, get nNodeId node, findSinkIndices allEdges node)) allNodes
+  let allNodes = repr.nodes ++ concatMap (.nodes) repr.clusters
+      allEdges = repr.edges ++ concatMap (.edges) repr.clusters in
+  map (\node -> (node, node.nodeId, findSinkIndices allEdges node)) allNodes
   where
     -- | For each node, find all connected nodes using allEdges and return their NodeId's.
     findSinkIndices :: [Edge] -> Node -> [M.NodeId]
     findSinkIndices allEdges node =
-      let srcId = get nNodeId node in
+      let srcId = node.nodeId in
       mapMaybe (findEdgeTarget srcId) allEdges
 
     -- | For a given source node id and an edge, check if the edge belongs to the node and return the target node id.
@@ -116,25 +115,25 @@ toEdgeList repr =
 -- Function to add clusters to a GraphRepr
 addCluster :: GraphRepr -> Map.Map String [Node] -> String -> GraphRepr
 addCluster repr nodesByGroup nameSuffix =
-    let edges = get grEdges repr
+    let edges = repr.edges
         createSubClusters name nodes =
             let connectedComponents = findConnectedComponents nodes (filterEdgesForCluster nodes edges)
             in zipWith (\i component -> createCluster (name ++ nameSuffix ++ show (i :: Integer)) component (filterEdgesForCluster component edges)) [1..] connectedComponents
         subClusters = concatMap (uncurry createSubClusters) (Map.toList nodesByGroup)
-        clusterEdges = concatMap (get cEdges) subClusters
-        clusteredNodes = concatMap (get cNodes) subClusters
+        clusterEdges = concatMap (.edges) subClusters
+        clusteredNodes = concatMap (.nodes) subClusters
         remainingEdges = filter (`notElem` clusterEdges) edges
-        remainingNodes = filter (`notElem` clusteredNodes) (get grNodes repr)
-    in set grClusters subClusters $
-       set grEdges remainingEdges $
-       set grNodes remainingNodes repr
+        remainingNodes = filter (`notElem` clusteredNodes) repr.nodes
+    in set #clusters subClusters $
+       set #edges remainingEdges $
+       set #nodes remainingNodes repr
 
 ----------------------------------------------------
 -- Clusturing by role name
 ----------------------------------------------------
 
 extractRole :: Th.RuleACInst -> Maybe String
-extractRole ru = Th.role (Th.ruleAttributes ru)
+extractRole ru = (Th.ruleAttributes ru).role
 
 groupNodesByRole :: [Node] -> Map.Map String [Node]
 groupNodesByRole = foldr groupByRole Map.empty
@@ -145,10 +144,10 @@ groupNodesByRole = foldr groupByRole Map.empty
 
 
 getNodeName :: Node -> String
-getNodeName node = "node" ++ show (get nNodeId node)
+getNodeName node = "node" ++ show node.nodeId
 
 getNodeRole :: Node -> Maybe String
-getNodeRole node = case get nNodeType node of
+getNodeRole node = case node.nodeType of
   SystemNode ru -> extractRole ru
   _             -> Nothing
 
@@ -160,7 +159,7 @@ createCluster = Cluster
 -- Filters edges to include only those relevant for the nodes of a cluster
 filterEdgesForCluster :: [Node] -> [Edge] -> [Edge]
 filterEdgesForCluster nodes edges =
-    let nodeIds = S.fromList (map (get nNodeId) nodes)
+    let nodeIds = S.fromList (map (.nodeId) nodes)
     in filter (\edge -> case edge of
                             SystemEdge ((srcNode, _), (tgtNode, _)) -> srcNode `S.member` nodeIds && tgtNode `S.member` nodeIds
                             UnsolvedChain ((srcNode, _), (tgtNode, _)) -> srcNode `S.member` nodeIds && tgtNode `S.member` nodeIds
@@ -173,21 +172,21 @@ findConnectedComponents nodes edges = go nodes []
     -- Recursive function to find all nodes connected from a given node
     expandCluster :: Node -> S.Set Th.NodeId -> [Node] -> [Edge] -> S.Set Th.NodeId
     expandCluster node visited allNodes allEdges =
-      let nodeId = get nNodeId node
+      let nodeId = node.nodeId
           connectedNodes = [ tgt | SystemEdge ((src, _), (tgt, _)) <- allEdges, src == nodeId, tgt `S.notMember` visited ] ++
                            [ src | SystemEdge ((src, _), (tgt, _)) <- allEdges, tgt == nodeId, src `S.notMember` visited ]
           newVisited = S.insert nodeId visited
       in foldr (\nid acc -> if nid `S.member` visited then acc else expandCluster (findNodeById nid allNodes) newVisited allNodes allEdges `S.union` acc) (S.singleton nodeId) connectedNodes
 
     findNodeById :: Th.NodeId -> [Node] -> Node
-    findNodeById nodeId allNodes = head $ filter (\n -> get nNodeId n == nodeId) allNodes
+    findNodeById nodeId allNodes = head $ filter (\n -> n.nodeId == nodeId) allNodes
 
     -- Main function to find all connected components
     go :: [Node] -> [[Node]] -> [[Node]]
     go [] components = components
     go (n:ns) components =
       let componentIds = S.toList $ expandCluster n S.empty (n:ns) edges
-          component = filter (\node -> get nNodeId node `elem` componentIds) (n:ns)
+          component = filter (\node -> node.nodeId `elem` componentIds) (n:ns)
           remainingNodes = filter (`notElem` component) ns
       in go remainingNodes (component : components)
 
@@ -195,7 +194,7 @@ findConnectedComponents nodes edges = go nodes []
 -- Function to add sub-clusters by role
 addClusterByRole :: GraphRepr -> GraphRepr
 addClusterByRole repr =
-    let nodesByRole = groupNodesByRole (get grNodes repr)
+    let nodesByRole = groupNodesByRole repr.nodes
     in addCluster repr nodesByRole "_Session_"
 
 
@@ -207,7 +206,7 @@ addClusterByRole repr =
 -- Function to get the rule name from a node
 getRuleNameByNode :: Node -> Maybe String
 getRuleNameByNode node =
-    case _nNodeType node of
+    case node.nodeType of
         SystemNode ru -> case Th.ruleName ru of
                            Th.ProtoInfo _ -> Just (Th.showRuleCaseName ru)
                            _ -> Nothing
@@ -237,5 +236,5 @@ groupBySimilarName nodes =
 -- Function to add intelligent clusters using similar rule names
 addIntelligentClusterUsingSimilarNames :: GraphRepr -> GraphRepr
 addIntelligentClusterUsingSimilarNames repr =
-    let nodesBySimilarName = groupBySimilarName (get grNodes repr)
+    let nodesBySimilarName = groupBySimilarName repr.nodes
     in addCluster repr nodesBySimilarName "_Session_"

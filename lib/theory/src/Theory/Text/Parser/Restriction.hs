@@ -22,7 +22,6 @@ where
 ------------------------------------------------------------------------------
 -- ParseRestriction datatype and functions to parse diff restrictions
 ------------------------------------------------------------------------------
-import           Prelude                    hiding (id, (.))
 import           Data.Foldable              (asum)
 -- import           Data.Monoid                hiding (Last)
 import           Text.Parsec                hiding ((<|>))
@@ -35,22 +34,22 @@ import Theory.Text.Parser.Formula
 -- | A restriction describes a property that must hold for all traces.
 -- | Restrictions are always used as lemmas in proofs.
 data ParseRestriction = ParseRestriction
-       { pRstrName       :: String
-       , pRstrAttributes :: [RestrictionAttribute]
-       , pRstrFormula    :: LNFormula
-       , pRstrOgFormula  :: Maybe LNFormula
+       { name       :: String
+       , attributes :: [RestrictionAttribute]
+       , formula    :: LNFormula
+       , originalFormula :: Maybe LNFormula
        }
        deriving( Eq, Ord, Show )
 
 -- | True iff the restriction is a LHS restriction.
 isLeftRestriction :: ParseRestriction -> Bool
 isLeftRestriction rstr =
-     LHSRestriction `elem` pRstrAttributes rstr
+     LHSRestriction `elem` rstr.attributes
 
 -- | True iff the restriction is a RHS restriction.
 isRightRestriction :: ParseRestriction -> Bool
 isRightRestriction rstr =
-     RHSRestriction `elem` pRstrAttributes rstr
+     RHSRestriction `elem` rstr.attributes
 
 -- -- | True iff the restriction is a Both restriction.
 -- isBothRestriction :: ParseRestriction -> Bool
@@ -59,7 +58,7 @@ isRightRestriction rstr =
 
 -- | Converts ParseRestrictions to Restrictions
 toRestriction :: ParseRestriction -> Restriction
-toRestriction rstr = Restriction (pRstrName rstr) (pRstrFormula rstr) (pRstrOgFormula rstr)
+toRestriction rstr = Restriction rstr.name rstr.formula rstr.originalFormula
 
 -- | Parse a lemma for an open theory from a string.
 parseRestriction :: String -> Either ParseError SyntacticRestriction

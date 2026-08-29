@@ -138,7 +138,7 @@ freesSapicFact = foldMap freesSapicTerm
 
 -- conversion functions for sapic types
 toLVar:: SapicLVar -> LVar
-toLVar = slvar
+toLVar = (.slvar)
 
 toLNTerm:: SapicTerm -> LNTerm
 toLNTerm = fmap f

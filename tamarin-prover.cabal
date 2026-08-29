@@ -141,6 +141,7 @@ executable tamarin-prover
       , githash
       , http-types
       , mtl
+      , optics-core
       , parsec
       , process
       , resourcet
@@ -191,6 +192,7 @@ executable tamarin-prover
       DuplicateRecordFields
       LambdaCase
       NoFieldSelectors
+      OverloadedLabels
       OverloadedRecordDot
       OverloadedStrings
       TemplateHaskell

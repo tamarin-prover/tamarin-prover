@@ -28,7 +28,6 @@ import Data.List as List
 import Data.Map qualified as M
 import Data.Maybe
 import Data.Set qualified as S
-import Extension.Data.Label qualified as L
 import ProVerifHeader
 import RuleTranslation
 import Sapic.Annotation
@@ -414,7 +413,7 @@ ppPubName (NameId n) = text $ case n of
 ------------------------------------------------------------------------------
 loadQueries :: Theory sig c b p TranslationElement -> [Doc]
 loadQueries thy =
-  map (text . (._eText)) (lookupExportInfo "queries" thy)
+  map (text . (.text)) (lookupExportInfo "queries" thy)
 
 ------------------------------------------------------------------------------
 -- Core ProVerif Equivalence Export
@@ -487,7 +486,7 @@ prettyDeepSecTheory repBound thy = do
 ------------------------------------------------------------------------------
 loadRequests :: Theory sig c b p TranslationElement -> [Doc]
 loadRequests thy =
-  map (text . (._eText)) (lookupExportInfo "requests" thy)
+  map (text . (.text)) (lookupExportInfo "requests" thy)
 
 ------------------------------------------------------------------------------
 -- Term Printers
@@ -1079,7 +1078,7 @@ loadMacroProcs :: TranslationContext -> OpenTheory -> [ProcessDef] -> ([Doc], S.
 loadMacroProcs _ _ [] = ([text ""], S.empty)
 loadMacroProcs tc thy (p : q) =
   let (docs, heads) = loadMacroProcs tc3 thy q
-   in case p._pVars of
+   in case p.vars of
         -- TODO bugfix, this is probably wrong when the macro does not have any parameter
         Nothing -> (docs, hd `S.union` heads)
         Just pvars ->
@@ -1088,14 +1087,14 @@ loadMacroProcs tc thy (p : q) =
               headers = headersOfType $ map extractType pvars
               macroDef =
                 text "let "
-                  <> text p._pName
+                  <> text p.name
                   <> vrs
                   <> text "="
                   $$ nest 4 newText
                   <> text "."
            in (macroDef : docs, hd `S.union` newHeads `S.union` heads `S.union` headers)
   where
-    mainProc = makeAnnotations thy p._pBody
+    mainProc = makeAnnotations thy p.body
     extractType (SapicLVar _ ty) = ty
     hasStates = hasBoundUnboundStates mainProc
     (tc2, hd) = case attackerChannel tc of
@@ -1466,7 +1465,7 @@ ppLemma ruleIdEvents te p =
      then subformulas $$ text ""
      else subformulas $$ text "" $$ reconstructionComment
   where
-    simplifiedFormula = simplifyFormula p._lFormula
+    simplifiedFormula = simplifyFormula p.formula
     -- Apply rewriting transformations FIRST before time splitting
     -- This ensures De Bruijn indices remain correct when quantifiers are moved
     rewrittenFormula = applyRewriteTransformations simplifiedFormula
@@ -1510,7 +1509,7 @@ ppLemma ruleIdEvents te p =
           -- Now this only handles not(Ex...) at top level or in conclusion, not in premise
           fm1b = convertNegExWithTimeConstraint fm1a
           fm2 = fm1b
-          shape = classifyFormulaShape p._lTraceQuantifier fm2
+          shape = classifyFormulaShape p.traceQuantifier fm2
           transformed = applyRewriteForShape shape fm2
           -- Note: transformWithPullNots was removed as it can undo implication conversion
           -- Apply pnf to flatten nested quantifiers in the conclusion
@@ -1563,11 +1562,11 @@ ppLemma ruleIdEvents te p =
        in Precise.evalFresh (ppRestrictFormula ridNames ruleIdEvents te f' useInduction) (avoidPrecise f')
 
     -- Lemma name comment (always shown)
-    lemmaNameComment = text "(*" <> text p._lName <> text "*)"
+    lemmaNameComment = text "(*" <> text p.name <> text "*)"
 
     -- For soem reason, "use_induction" attribute is named InvariantLemma.
     useInduction
-      | InvariantLemma `elem` p._lAttributes = "[induction]"
+      | InvariantLemma `elem` p.attributes = "[induction]"
       | otherwise = ""
 
     -- assuming all formulas we are concerned with have quantifiers at their top level (after splitTopLvlConns)
@@ -1591,13 +1590,13 @@ ppLemma ruleIdEvents te p =
               checkAllImpliesNot _ = False
           notExists = isNegatedExistsWithConjunction fm
           existsConj = isExistsWithNegatedExistentials fm
-          hadLeadingNegation = hasLeadingNotEx || hasAllImpliesFalse || notExists || (existsConj && p._lTraceQuantifier == ExistsTrace)
+          hadLeadingNegation = hasLeadingNotEx || hasAllImpliesFalse || notExists || (existsConj && p.traceQuantifier == ExistsTrace)
           -- Apply final cleanup (constraint movement, negated action movement, simplification, and expand negated timepoint comparisons)
           -- moveNegatedActionsToConclusion transforms: (A & not(B)) ==> C into A ==> (C | B)
           -- After moving negated actions, apply shape-based transformation to handle patterns like A ==> (not(B) | C)
           movedToConclusion = moveNegatedActionsToConclusion $ moveConstraintsToConclusion fm
           -- Apply shape-based transformation to move negated disjuncts from conclusion to premise
-          shape = classifyFormulaShape p._lTraceQuantifier movedToConclusion
+          shape = classifyFormulaShape p.traceQuantifier movedToConclusion
           shapeTranformed = applyRewriteForShape shape movedToConclusion
           finalFormula = simplifyFormula $ expandNegatedTimepointComparisons shapeTranformed
           hasLeadingNegationAfterTransform = case finalFormula of
@@ -1609,7 +1608,7 @@ ppLemma ruleIdEvents te p =
       in finalHadLeadingNegation `seq` result  -- Force evaluation of finalHadLeadingNegation
 
     -- Split top-level connectives for the formula
-    (fms', comments, _) = splitTopLvlConns p._lTraceQuantifier 1 formulaForProcessing
+    (fms', comments, _) = splitTopLvlConns p.traceQuantifier 1 formulaForProcessing
 
     -- Render a single subformula with appropriate comments
     renderSubformula :: (LNFormula, Bool) -> Doc
@@ -1622,7 +1621,7 @@ ppLemma ruleIdEvents te p =
           -- ProVerif will check if it's reachable; if "true" (not reachable), the original property holds
           (fmToTranslate, isExistentialNegation) = case fm of
             Not fm'@(Qua Ex _ _) -> (fm', True)  -- Strip Not for any Not(Ex...) pattern
-            Not fm' | isAllImpliesExists fm' && p._lTraceQuantifier == ExistsTrace -> (fm', True)
+            Not fm' | isAllImpliesExists fm' && p.traceQuantifier == ExistsTrace -> (fm', True)
             _ -> (fm, False)
           -- Check for existentially quantified K facts (not supported in ProVerif)
           hasExistentialK = hasExistentiallyQuantifiedKFact fmToTranslate
@@ -1658,7 +1657,7 @@ ppLemma ruleIdEvents te p =
     reconstructionComment =
       if isEmpty comments
       then text ""
-      else text "(* To reconstruct lemma " <> text p._lName <> text ":"
+      else text "(* To reconstruct lemma " <> text p.name <> text ":"
            $$ comments
            $$ text "*)" $$ text ""
 
@@ -2592,7 +2591,7 @@ formulaUsesRuleIdEvents ruleIdEvents =
 -- Returns a set of fact tag names that need rule IDs.
 detectSharedTimepointEvents :: [ProtoLemma LNFormula ProofSkeleton] -> S.Set String
 detectSharedTimepointEvents lemmas =
-  S.unions $ map (analyze . L.get lFormula) lemmas
+  S.unions $ map (analyze . (.formula)) lemmas
   where
     -- Definite temporal equalities are eliminated by unifying the equated
     -- timepoints, turning them into shared timepoints; equalities that
@@ -2630,7 +2629,7 @@ loadLemmas sharedEventTags hasSpecificLemmas lemSel tc te thy = (axiomDocs, quer
     -- Translate queries using existing ppLemma
     queryDocs = map (ppLemma sharedEventTags te) queryLemmas
 
-    allFacts = concatMap (formulaFacts . L.get lFormula) allIncludedLemmas
+    allFacts = concatMap (formulaFacts . (.formula)) allIncludedLemmas
     headers = makeEventHeaders sharedEventTags allFacts
 
 -- | Classify how a lemma should be translated based on selector and attributes
@@ -2671,14 +2670,14 @@ classifyLemma hasSpecificLemmas tc lemSel lem
   | otherwise = AsQuery
   where
     shouldSkipHelperLemma l =
-      (skipReuseLemmas tc && ReuseLemma `elem` l._lAttributes)
-        || (skipSourceLemmas tc && SourceLemma `elem` l._lAttributes)
+      (skipReuseLemmas tc && ReuseLemma `elem` l.attributes)
+        || (skipSourceLemmas tc && SourceLemma `elem` l.attributes)
 
     isReuseOrSource l =
-      ReuseLemma `elem` l._lAttributes || SourceLemma `elem` l._lAttributes
+      ReuseLemma `elem` l.attributes || SourceLemma `elem` l.attributes
 
     moduleCondition l =
-      let modules = concat [ls | LemmaModule ls <- l._lAttributes]
+      let modules = concat [ls | LemmaModule ls <- l.attributes]
        in null modules || exportModule (trans tc) `elem` modules
 
 ------------------------------------------------------------------------------
@@ -2715,7 +2714,7 @@ loadHeaders ruleIdEvents tc thy typeEnv = do
       `S.union` eqHeaders
       `S.union` eventHeaders
   where
-    sig = thy._thySignature._sigMaudeInfo
+    sig = thy.signature.maudeInfo
     builtins' x = case builtins x of
       AccurateBuiltin y -> y
       BestEffortBuiltin y -> translationWarning ("Using best-effort translation for " ++ x) y
@@ -3585,22 +3584,22 @@ ppRestrictFormulaR pe ridNames ruleIdEvents te frm attrs =
 ppRestr :: S.Set String -> TypingEnvironment -> Restriction -> Doc
 ppRestr ruleIdEvents te rstr =
   timepointComment
-    $$ text "(*" <> text rstr._rstrName <> text "*)"
+    $$ text "(*" <> text rstr.name <> text "*)"
     $$ case tryRewriteNegatedRestriction fm of
          Just rewritten ->
            -- Successfully rewrote the negated restriction
-           text "(* Original: " <> prettyLNFormula rstr._rstrFormula <> text " *)"
+           text "(* Original: " <> prettyLNFormula rstr.formula <> text " *)"
            $$ Precise.evalFresh (ppRestrictFormulaR R (ridNamesFor rewritten) ruleIdEvents te rewritten "") (avoidPrecise rewritten)
          Nothing ->
            -- Check for unsupported patterns
            if hasNestedImplicationInConjunction fm
-           then text "(* " <> prettyLNFormula rstr._rstrFormula <> text " *)"
+           then text "(* " <> prettyLNFormula rstr.formula <> text " *)"
                 $$ text "(* Formula has nested implications inside conjunctions (e.g., A => ((B => C) & D))."
                 $$ text "   This pattern cannot be soundly transformed to ProVerif's supported fragment."
                 $$ text "   The formula is outside the supported ProVerif fragment. *)"
                 $$ text ""
            else if hasVariableCaptureInNestedImplication fm
-           then text "(* " <> prettyLNFormula rstr._rstrFormula <> text " *)"
+           then text "(* " <> prettyLNFormula rstr.formula <> text " *)"
                 $$ text "(* Formula has variable capture in nested quantified implications (e.g., A(x) => (All x. B => C))."
                 $$ text "   Flattening would change the semantics. *)"
                 $$ text ""
@@ -3630,7 +3629,7 @@ ppRestr ruleIdEvents te rstr =
         $ moveNegatedActionsToConclusion
         $ moveConstraintsToConclusion
         $ eliminateTemporalEqualities
-        $ simplifyFormula rstr._rstrFormula
+        $ simplifyFormula rstr.formula
     needsRuleId = formulaHasSharedTimepoints simplifiedFormula
     timepointComment = if needsRuleId
                        then text "(* Timepoints in restriction have been split *)"
@@ -3678,22 +3677,22 @@ ppAxiomLemma :: S.Set String -> TypingEnvironment -> Lemma ProofSkeleton -> Doc
 ppAxiomLemma ruleIdEvents te l =
   timepointComment
     $$ text "(*"
-    <> text l._lName
+    <> text l.name
     <> text " [reuse/source lemma translated as axiom]"
     <> text "*)"
     $$ if hasNestedImplicationInConjunction fm
-       then text "(* " <> prettyLNFormula l._lFormula <> text " *)"
+       then text "(* " <> prettyLNFormula l.formula <> text " *)"
             $$ text "(* Formula has nested implications inside conjunctions (e.g., A => ((B => C) & D))."
             $$ text "   This pattern cannot be soundly transformed to ProVerif's supported fragment."
             $$ text "   The formula is outside the supported ProVerif fragment. *)"
             $$ text ""
        else if hasVariableCaptureInNestedImplication fm
-       then text "(* " <> prettyLNFormula l._lFormula <> text " *)"
+       then text "(* " <> prettyLNFormula l.formula <> text " *)"
             $$ text "(* Formula has variable capture in nested quantified implications (e.g., A(x) => (All x. B => C))."
             $$ text "   Flattening would change the semantics. *)"
             $$ text ""
        else if hasNegatedEventInFormula fm
-       then text "(* " <> prettyLNFormula l._lFormula <> text " *)"
+       then text "(* " <> prettyLNFormula l.formula <> text " *)"
             $$ text "(* Axiom has negated event (not(...event...)) which is not supported in ProVerif. *)"
             $$ text ""
        else Precise.evalFresh (ppRestrictFormulaR RSL ridNames ruleIdEvents te fm "") (avoidPrecise fm)
@@ -3718,7 +3717,7 @@ ppAxiomLemma ruleIdEvents te l =
         $ transformWithPullNots
         $ moveConstraintsToConclusion
         $ moveNegatedActionsToConclusion
-        $ eliminateTemporalEqualities l._lFormula
+        $ eliminateTemporalEqualities l.formula
     needsRuleId = formulaHasSharedTimepoints simplifiedFormula
     timepointComment = if needsRuleId
                        then text "(* Timepoints in lemma have been split *)\n"
@@ -3806,7 +3805,7 @@ loadRestrictions :: S.Set String -> TranslationContext -> TypingEnvironment -> O
 loadRestrictions sharedEventTags _ te thy =
   let rs = theoryRestrictions thy
       docs = map (ppRestr sharedEventTags te) rs
-      allFacts = concatMap (formulaFacts . L.get rstrFormula) rs
+      allFacts = concatMap (formulaFacts . (.formula)) rs
       validFacts =
         [ f | f@(Fact tag _ _) <- allFacts, factTagName tag `notElem` ["OnlyOnce", "DistinctFact"]
         ]
@@ -3816,4 +3815,4 @@ loadRestrictions sharedEventTags _ te thy =
 -- | Detect events that share timepoints in restrictions
 detectSharedTimepointEventsRestrictions :: [Restriction] -> S.Set String
 detectSharedTimepointEventsRestrictions restrictions =
-  S.unions $ map (eventsSharingTimepoints . eliminateTemporalEqualities . _rstrFormula) restrictions
+  S.unions $ map (eventsSharingTimepoints . eliminateTemporalEqualities . (.formula)) restrictions

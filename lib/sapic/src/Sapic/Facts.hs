@@ -1,4 +1,8 @@
 {-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE DataKinds #-}
+{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 -- Copyright   : (c) 2019 Robert Künnemann
 -- License     : GPL v3 (see LICENSE)
@@ -46,6 +50,7 @@ import Data.Char
 import Data.Color
 import Data.List qualified as List
 import Data.Set qualified as S
+import Optics.TH (makeFieldLabelsNoPrefix)
 import Sapic.Annotation
 import Theory
 import Theory.Sapic
@@ -124,6 +129,8 @@ data AnnotatedRule ann = AnnotatedRule
     index :: Int -- Index to distinguish multiple rules originating from the same process
   }
 
+makeFieldLabelsNoPrefix ''AnnotatedRule
+
 -- | Fact types used by the MSR to ProverIf translation.
 data FactType = GET | IN | NEW | EVENT | INSERT | OUT
   deriving (Eq)
@@ -171,7 +178,7 @@ multiplicity PSemiState = Persistent
 
 -- | map f to the name of a fact
 mapFactName :: (String -> String) -> Fact t -> Fact t
-mapFactName f fact = fact {factTag = f' (factTag fact)}
+mapFactName f fact = fact {factTag = f' fact.factTag}
   where
     f' (ProtoFact m s i) = ProtoFact m (f s) i
     f' ft = ft

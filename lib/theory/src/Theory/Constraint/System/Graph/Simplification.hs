@@ -19,8 +19,8 @@ import           Data.Maybe
 import qualified Data.Set                 as S
 import           Data.List                (foldl')
 import           Control.Basics
-import           Extension.Data.Label
 -- import           Theory.Constraint.System
+import           Optics.Core (over)
 import           Theory                   
 import qualified Data.DAG.Simple          as Dag
 import           Data.Monoid              (Any(..))
@@ -32,7 +32,7 @@ import           Data.Monoid              (Any(..))
 -- | Drop 'Less' atoms entailed by the edges of the 'System'.
 dropEntailedOrdConstraints :: System -> System
 dropEntailedOrdConstraints se =
-    modify sLessAtoms (S.filter (not . entailed)) se
+    over #lessAtoms (S.filter (not . entailed)) se
   where
     edges               = rawEdgeRel se
     entailed (LessAtom from to _) = to `S.member` Dag.reachableSet [from] edges
@@ -41,7 +41,7 @@ dropEntailedOrdConstraints se =
 -- knows nodes.
 compressSystem :: System -> System
 compressSystem se0 =
-    foldl' (flip tryHideNodeId) se (frees (get sLessAtoms se, get sNodes se))
+    foldl' (flip tryHideNodeId) se (frees (se.lessAtoms, se.nodes))
   where
     se = dropEntailedOrdConstraints se0
 
@@ -62,10 +62,10 @@ transitiveReduction :: System -> Bool -> System
 transitiveReduction sys totalRed=
     if Dag.cyclic oldLesses
         then sys
-        else   modify sLessAtoms
+        else over #lessAtoms
             ( S.intersection ( S.fromList newLesses) ) sys
     where
-        oldLessesWithR = S.toList $ get sLessAtoms sys
+        oldLessesWithR = S.toList sys.lessAtoms
         oldLesses = rawLessRel sys
         newLesses = if totalRed
             then [ la | la@(LessAtom x y _) <- oldLessesWithR,
@@ -86,11 +86,11 @@ tryHideNodeId :: NodeId -> System -> System
 tryHideNodeId v se = fromMaybe se $ do
     guard $  (lvarSort v == LSortNode)
           && notOccursIn unsolvedChains
-          && notOccursIn (get sFormulas)
-    maybe hideAction hideRule (M.lookup v $ get sNodes se)
+          && notOccursIn (.formulas)
+    maybe hideAction hideRule (M.lookup v se.nodes)
   where
-    selectPart :: (System :-> S.Set a) -> (a -> Bool) -> [a]
-    selectPart l p = filter p $ S.toList $ get l se
+    selectPart :: (System -> S.Set a) -> (a -> Bool) -> [a]
+    selectPart l p = filter p $ S.toList $ l se
 
     notOccursIn :: HasFrees a => (System -> a) -> Bool
     notOccursIn proj = not $ getAny $ foldFrees (Any . (v ==)) $ proj se
@@ -101,14 +101,14 @@ tryHideNodeId v se = fromMaybe se $ do
               && all eligibleTerm kuActions
               && all (\(LessAtom i j _) -> i /= j) lNews
               && notOccursIn standardActionAtoms
-              && notOccursIn (get sLastAtom)
-              && notOccursIn (get sEdges)
+              && notOccursIn (.lastAtom)
+              && notOccursIn (.edges)
 
-        return $ modify sLessAtoms ( (`S.union` S.fromList lNews)
-                                   . (`S.difference` S.fromList lIns)
-                                   . (`S.difference` S.fromList lOuts)
-                                   )
-               $ modify sGoals (\m -> foldl' removeAction m kuActions)
+        return $ over #lessAtoms ( (`S.union` S.fromList lNews)
+                                 . (`S.difference` S.fromList lIns)
+                                 . (`S.difference` S.fromList lOuts)
+                                 )
+               $ over #goals (\m -> foldl' removeAction m kuActions)
                $ se
       where
         kuActions            = [ x | x@(i,_,_) <- kuActionAtoms se, i == v ]
@@ -117,36 +117,36 @@ tryHideNodeId v se = fromMaybe se $ do
 
         removeAction m (i, fa, _) = M.delete (ActionG i fa) m
 
-        lIns  = selectPart sLessAtoms ((v ==) . get laLarger)
-        lOuts = selectPart sLessAtoms ((v ==) . get laSmaller)
+        lIns  = selectPart (.lessAtoms) ((v ==) . (.larger))
+        lOuts = selectPart (.lessAtoms) ((v ==) . (.smaller))
         lNews = [ LessAtom i j r | (LessAtom i _ _) <- lIns, (LessAtom _ j r) <- lOuts ]
 
     -- hide a rule, if it is not "too complicated"
     hideRule :: RuleACInst -> Maybe System
     hideRule ru = do
         guard $  eligibleRule
-              && ( length eIns  == length (get rPrems ru) )
-              && ( length eOuts == length (get rConcs ru) )
+              && ( length eIns  == length ru.prems )
+              && ( length eOuts == length ru.concs )
               && ( all (not . selfEdge) eNews             )
-              && notOccursIn (get sLastAtom)
-              && notOccursIn (get sLessAtoms)
+              && notOccursIn (.lastAtom)
+              && notOccursIn (.lessAtoms)
               && notOccursIn (unsolvedActionAtoms)
 
-        return $ modify sEdges ( (`S.union` S.fromList eNews)
-                               . (`S.difference` S.fromList eIns)
-                               . (`S.difference` S.fromList eOuts)
-                               )
-               $ modify sNodes (M.delete v)
+        return $ over #edges ( (`S.union` S.fromList eNews)
+                             . (`S.difference` S.fromList eIns)
+                             . (`S.difference` S.fromList eOuts)
+                             )
+               $ over #nodes (M.delete v)
                $ se
       where
-        eIns  = selectPart sEdges ((v ==) . nodePremNode . eTgt)
-        eOuts = selectPart sEdges ((v ==) . nodeConcNode . eSrc)
+        eIns  = selectPart (.edges) ((v ==) . nodePremNode . (.eTgt))
+        eOuts = selectPart (.edges) ((v ==) . nodeConcNode . (.eSrc))
         eNews = [ Edge cIn pOut | Edge cIn _ <- eIns, Edge _ pOut <- eOuts ]
 
         selfEdge (Edge cIn pOut) = nodeConcNode cIn == nodePremNode pOut
 
         eligibleRule =
              any ($ ru) [isISendRule, isIRecvRule, isCoerceRule, isFreshRule]
-          || ( null (get rActs ru) &&
-               all (\l -> length (get l ru) <= 1) [rPrems, rConcs]
+          || ( null ru.acts &&
+               all (\l -> length (l ru) <= 1) [(.prems), (.concs)]
              )

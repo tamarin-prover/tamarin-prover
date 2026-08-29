@@ -43,11 +43,11 @@ sameName _ _ = False
 
 -- get all rules with premice the given fact
 getPremRules:: Fact LNTerm ->  [Rule ProtoRuleEInfo] -> ([Rule ProtoRuleEInfo],[Rule ProtoRuleEInfo])
-getPremRules fact = List.partition  (List.any (sameName fact) . (._rPrems))
+getPremRules fact = List.partition  (List.any (sameName fact) . (.prems))
 
 -- get all rules producing the given fact
 getConcsRules:: Fact LNTerm ->  [Rule ProtoRuleEInfo] -> ([Rule ProtoRuleEInfo],[Rule ProtoRuleEInfo])
-getConcsRules fact = List.partition  (List.any (sameName fact) . (._rConcs))
+getConcsRules fact = List.partition  (List.any (sameName fact) . (.concs))
 
 -- Get the list of all state facts produced by a rule
 getProducedFacts :: [Rule ProtoRuleEInfo] -> S.Set (Fact LNTerm)
