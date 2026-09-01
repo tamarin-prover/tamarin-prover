@@ -59,9 +59,11 @@
 module Theory.Tools.Wellformedness (
 
   -- * Wellformedness checking
-    WfErrorReport
+    ActionFactInfo
+  , WfErrorReport
   , checkWellformedness
   , checkWellformednessDiff
+  , processActionFactInfos
 
   , prettyWfErrorReport
   , underlineTopic
@@ -112,6 +114,7 @@ import Term.SubtermRule ( CtxtStRule, prettyCtxtStRule, filterNonSubtermCtxtRule
 type Topic         = String
 type WfError       = (Topic, Doc)
 type WfErrorReport = [WfError]
+type ActionFactInfo = (FactTag, Int, Multiplicity)
 type RuleAndFact   = (String, LNFact) -- String : name of rule where the fact is
                                       -- LNFact : the rule
 
@@ -171,8 +174,18 @@ underlineTopic topic = topic ++"\n" ++
                       ++"\n"
 
 -- | To get the informations of a fact
-factInfo :: Fact t -> (FactTag, Int, Multiplicity)
+factInfo :: Fact t -> ActionFactInfo
 factInfo fa    = (factTag fa, factArity fa, factMultiplicity fa)
+
+-- | Action facts declared directly by a SAPIC process. These actions exist in
+-- the source theory even in output modes that consume the process without
+-- translating it to multiset-rewrite rules first.
+processActionFactInfos :: OpenTheory -> [ActionFactInfo]
+processActionFactInfos = concatMap (pfoldMap actionFactInfos) . theoryProcesses
+  where
+    actionFactInfos (ProcessAction (Event fa) _ _) = [factInfo fa]
+    actionFactInfos (ProcessAction (MSR _ acts _ _ _) _ _) = map factInfo acts
+    actionFactInfos _ = []
 
 -- | To bind a list of premise facts with their most similar conclusion facts. The most similar fact
 -- | has the minimual editing distance and the value of the distance must be
@@ -575,12 +588,13 @@ freshFactArguments' rules = do
         text ("rule " ++ quote (showRuleCaseName ru)) <->
         text "fact:" <-> prettyLNFact fa
 
--- | Report on facts usage. Skip checks on non-existant actions if `incompleteMSRs` is True.
-factReports :: Bool -> OpenTranslatedTheory -> WfErrorReport
-factReports incompleteMSRs thy =
-    concat  [ reservedReport, reservedFactNameRules, freshFactArguments, specialFactsUsage
-    , factUsage, factLhsOccurNoRhs]
-    ++ concat [ inexistentActions ++ inexistentActionsRestrictions | incompleteMSRs ]
+-- | Report on facts usage. SAPIC process actions supplement actions from MSR
+-- rules when the selected output mode does not translate the process first.
+factReports :: [ActionFactInfo] -> OpenTranslatedTheory -> WfErrorReport
+factReports processActions thy = concat
+    [ reservedReport, reservedFactNameRules, freshFactArguments, specialFactsUsage
+    , factUsage, factLhsOccurNoRhs, inexistentActions, inexistentActionsRestrictions
+    ]
   where
     ruleFacts ru =
       ( "Rule " ++ quote (showRuleCaseName ru)
@@ -692,12 +706,14 @@ factReports incompleteMSRs thy =
     -- Check that every fact referenced in a formula is present as an action
     -- of a protocol rule. We have to add the linear "K/1" fact, as the
     -- WF-check cannot rely on a loaded intruder theory.
-    ruleActions = S.fromList $ map factInfo $
-          kLogFact undefined
-        : dedLogFact undefined
-        : kuFact undefined
-        : (do ru <- thyProtoRules thy; get rActs ru)
-          ++ (do RuleItem ru <- get thyItems thy; racs <- get oprRuleAC ru; get rActs racs)
+    ruleActions = S.fromList $
+        processActions ++ map factInfo
+          ( kLogFact undefined
+          : dedLogFact undefined
+          : kuFact undefined
+          : (do ru <- thyProtoRules thy; get rActs ru)
+            ++ (do RuleItem ru <- get thyItems thy; racs <- get oprRuleAC ru; get rActs racs)
+          )
 
     -- Report a protocol fact occurs in an LHS but not in any RHS
     factLhsOccurNoRhs :: WfErrorReport
@@ -1264,18 +1280,18 @@ checkWellformednessDiff thy sig = -- trace ("checkWellformednessDiff: " ++ show 
     , natWellSortedReportDiff
     ] ++ (if not (isUserMarkedConvergentDiff thy) then checkDiffEquationsSubtermConvergence thy else [])
 
--- | Returns a list of errors, if there are any. `incompleteMSR`, if true, indicates
--- that the MSRs are incomplete (e.g., when we export to ProVerif) and that
--- checks that rely on that should not be performed.
-checkWellformedness :: Bool -> OpenTranslatedTheory -> SignatureWithMaude -> WfErrorReport
-checkWellformedness incompleteMSRs thy sig = concatMap ($ thy) (
+-- | Returns a list of errors, if there are any. The supplied action facts come
+-- from SAPIC processes that may not have been translated to MSR rules in the
+-- selected output mode.
+checkWellformedness :: [ActionFactInfo] -> OpenTranslatedTheory -> SignatureWithMaude -> WfErrorReport
+checkWellformedness processActions thy sig = concatMap ($ thy) (
     [ checkIfLemmasInTheory
     , unboundReport
     , freshNamesReport
     , publicNamesReport
     , ruleSortsReport
     , ruleVariantsReport sig
-    , factReports incompleteMSRs
+    , factReports processActions
     , formulaReports
     , lemmaAttributeReport
     , multRestrictedReport

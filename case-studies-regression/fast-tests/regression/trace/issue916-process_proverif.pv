@@ -1,0 +1,42 @@
+set preciseActions = true.
+free att:channel.
+fun fst(bitstring):bitstring.
+fun pair(bitstring,bitstring):bitstring.
+fun snd(bitstring):bitstring.
+event eProcessAction().
+equation forall x_1:bitstring, x_2:bitstring;   fst((x_1, x_2)) = x_1.
+equation forall x_1:bitstring, x_2:bitstring;   snd((x_1, x_2)) = x_2.
+
+(* Restrictions *)
+
+
+(*process_restriction_action*)
+(* ¬(∃ #i. ProcessAction( ) @ #i) *)
+(* Restriction has negated event which is not supported in ProVerif. *)
+
+
+
+(* Lemmas (queries) *)
+
+(*process_action*)
+query i:time; event(eProcessAction( ))@i.
+
+
+
+
+(* Process *)
+
+process
+    event eProcessAction( )
+
+(*
+All wellformedness checks were successful.
+*)
+
+(*
+Generated from:
+Tamarin version 1.13.0
+Maude version 3.4
+Git revision: 48a968e3595e7a17441ea77a87f0269b52d5ac31 (with uncommited changes), branch: fix/inexistent-action-warnings
+Compiled at: 2026-08-12 11:28:07.89975 UTC
+*)

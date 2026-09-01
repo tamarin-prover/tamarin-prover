@@ -1,5 +1,5 @@
 from html import parser
-import subprocess, sys, re, os, argparse, logging, datetime, shutil
+import subprocess, sys, re, os, argparse, logging, datetime, shutil, difflib
 
 
 class colors:
@@ -33,13 +33,39 @@ def getColorQuality(valueA, valueB):
 
 
 def iterFolder(folder):
-	""" Yields all files in the folder that have a .spthy ending. """
+	"""Yields all theory and export regression artifacts in the folder."""
 	for dname, dirs, files in os.walk(folder):
 		for fname in files:
 			fpath = os.path.join(dname, fname)
-			if not fpath.endswith(".spthy"):
+			if not fpath.endswith((".spthy", ".pv")):
 				continue
 			yield fpath
+
+def stripGeneratedMetadata(output):
+	"""Removes build-specific metadata from a generated ProVerif export."""
+	return re.sub(r"\n\(\*\nGenerated from:\n.*?\n\*\)\s*$", "\n", output, flags=re.DOTALL)
+
+def compareExportFile(pathB):
+	"""Compares a generated ProVerif export with its regression reference."""
+	pathA = settings.folderA + pathB.split(settings.folderB, 1)[-1]
+	try:
+		with open(pathA, 'r') as expectedFile:
+			expected = stripGeneratedMetadata(expectedFile.read())
+		with open(pathB, 'r') as actualFile:
+			actual = stripGeneratedMetadata(actualFile.read())
+	except Exception as ex:
+		return False, f"There was an error while reading an export regression artifact: {ex}"
+
+	if expected == actual:
+		return True, ""
+
+	diff = difflib.unified_diff(
+		expected.splitlines(keepends=True),
+		actual.splitlines(keepends=True),
+		fromfile=pathA,
+		tofile=pathB,
+	)
+	return False, "".join(diff)
 
 ## functions for cutting and parsing part of the proof ##
 def parseTest(lines, tester):
@@ -316,6 +342,14 @@ def compare():
 	parseTestsTotal, parseTestsFailed = 0, 0
 	
 	for pathB in iterFolder(settings.folderB):
+		if pathB.endswith(".pv"):
+			exportsMatch, exportDiff = compareExportFile(pathB)
+			if not exportsMatch:
+				logging.error(color(colors.RED + colors.BOLD, f"The ProVerif export changed for {pathB}"))
+				if settings.verbose >= 6:
+					logging.error(exportDiff)
+				majorDifferences = True
+			continue
 
 		## Tamarin parse testing for the output file##
 		if not settings.no_output_parse_test:

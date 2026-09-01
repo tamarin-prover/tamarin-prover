@@ -554,12 +554,13 @@ checkTranslatedTheory ::
   (MonadIO m, MonadError TheoryLoadError m) =>
   TheoryLoadOptions ->
   SignatureWithMaude ->
+  [ActionFactInfo] ->
   Either OpenTranslatedTheory OpenDiffTheory ->
   m (WfErrorReport, SignatureWithMaude, Either OpenTranslatedTheory OpenDiffTheory)
-checkTranslatedTheory thyOpts sign thy = do
+checkTranslatedTheory thyOpts sign processActions thy = do
   let transReport =
         either
-          (\openThy -> checkWellformedness incompleteMSRs openThy sign)
+          (\openThy -> checkWellformedness processActions openThy sign)
           (`checkWellformednessDiff` sign)
           thy
 
@@ -599,7 +600,6 @@ checkTranslatedTheory thyOpts sign thy = do
   pure (report, signWithMaude, deducThy)
   where
     mh = sign._sigMaudeInfo
-    incompleteMSRs = False -- TODO how do we know if we do not have all MSRs due to translation?
     autoSources = thyOpts.autoSources
     derivChecks = thyOpts.derivationChecks
     derivTimeoutMsg =
@@ -724,8 +724,9 @@ closeTheory ::
   m (WfErrorReport, Either ClosedTheory ClosedDiffTheory)
 closeTheory version loadedThyOpts sign srcThy = do
   (preReport, transThy) <- translateTheory thyOpts srcThy
-  let removedThy = first removeTranslationItems transThy
-  (postReport, sign', checkedThy) <- checkTranslatedTheory thyOpts sign removedThy
+  let processActions = either processActionFactInfos (const []) transThy
+      removedThy = first removeTranslationItems transThy
+  (postReport, sign', checkedThy) <- checkTranslatedTheory thyOpts sign processActions removedThy
   closedThy <- closeTranslatedTheory thyOpts sign' checkedThy
   finalThy <- withVersionAndReport version thyOpts (preReport ++ postReport) closedThy
 
@@ -774,8 +775,9 @@ translateAndCheckTheory ::
   m (WfErrorReport, Either OpenTheory OpenDiffTheory)
 translateAndCheckTheory version thyOpts sign srcThy = do
   (preReport, transThy) <- translateTheory thyOpts srcThy
-  let removedThy = first removeTranslationItems transThy
-  (postReport, _, _) <- checkTranslatedTheory thyOpts sign removedThy
+  let processActions = either processActionFactInfos (const []) transThy
+      removedThy = first removeTranslationItems transThy
+  (postReport, _, _) <- checkTranslatedTheory thyOpts sign processActions removedThy
   finalThy <- withVersionAndReport version thyOpts (preReport ++ postReport) transThy
   pure (preReport ++ postReport, finalThy)
 

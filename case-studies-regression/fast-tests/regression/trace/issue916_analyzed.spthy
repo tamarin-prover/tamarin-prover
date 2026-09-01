@@ -1,0 +1,76 @@
+theory issue916
+
+begin
+
+// Function signature and definition of the equational theory E
+
+functions: fst/1, pair/2, snd/1
+equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
+
+rule (modulo E) ExistingAction:
+   [ ] --[ ExistingAction( ) ]-> [ ]
+
+  /* has exactly the trivial AC variant */
+
+lemma missing_action:
+  exists-trace "∃ #i. MissingAction( ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #i. (MissingAction( ) @ #i)"
+*/
+simplify
+by solve( MissingAction( ) @ #i )
+
+restriction missing_restriction_action:
+  "∀ #i. (MissingRestrictionAction( ) @ #i) ⇒ (⊥)"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ #i. (MissingRestrictionAction( ) @ #i) ⇒ (⊥)"
+  */
+
+/*
+WARNING: the following wellformedness checks failed!
+
+Inexistent lemma actions
+========================
+
+  Lemma `missing_action' references action 
+    fact "MissingAction" (arity 0, Linear) 
+  but no rule has such an action.
+
+Inexistent restriction actions
+==============================
+
+  Restriction `missing_restriction_action' references action 
+    fact "MissingRestrictionAction" (arity 0, Linear) 
+  but no rule has such an action.
+*/
+
+/*
+Generated from:
+Tamarin version 1.13.0
+Maude version 3.4
+Git revision: 48a968e3595e7a17441ea77a87f0269b52d5ac31 (with uncommited changes), branch: fix/inexistent-action-warnings
+Compiled at: 2026-08-12 11:28:07.89975 UTC
+*/
+
+end
+/* Output
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/regression/trace/issue916.spthy
+
+  output:          examples/regression/trace/issue916.spthy.tmp
+  processing time: 0.07s
+  
+  WARNING: 2 wellformedness check failed!
+           The analysis results might be wrong!
+  
+  missing_action (exists-trace): falsified - no trace found (2 steps)
+
+==============================================================================
+*/

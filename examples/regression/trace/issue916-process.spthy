@@ -1,0 +1,13 @@
+theory issue916_process
+begin
+
+process:
+  event ProcessAction()
+
+lemma process_action: exists-trace
+  "Ex #i. ProcessAction() @ i"
+
+restriction process_restriction_action:
+  "All #i. ProcessAction() @ i ==> F"
+
+end

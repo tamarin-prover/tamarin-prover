@@ -1,0 +1,13 @@
+theory issue916
+begin
+
+rule ExistingAction:
+  [] --[ ExistingAction() ]-> []
+
+lemma missing_action: exists-trace
+  "Ex #i. MissingAction() @ i"
+
+restriction missing_restriction_action:
+  "All #i. MissingRestrictionAction() @ i ==> F"
+
+end

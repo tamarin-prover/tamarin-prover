@@ -153,6 +153,12 @@ case-studies$(SUBDIR)%_analyzed.spthy:	examples/%.spthy $(TAMARIN)
 	mv $<.tmp $@
 	\rm -f $<.out
 
+# ProVerif exports used as regression artifacts.
+case-studies$(SUBDIR)%_proverif.pv:	examples/%.spthy $(TAMARIN)
+	mkdir -p $(dir $@)
+	$(TAMARIN) $< --output-module=proverif >$@.tmp
+	mv $@.tmp $@
+
 # individual case studies, special case with auto-sources
 case-studies$(SUBDIR)%_analyzed-auto-sources.spthy:	examples/%.spthy $(TAMARIN)
 	mkdir -p $(dir $@)
@@ -482,8 +488,11 @@ accountability-case-studies:	$(ACCOUNTABILITY_CS_TARGETS)
 ## Regression (old issues)
 ##########################
 
-FAST_REGRESSION_CASE_STUDIES=issue446-1.spthy issue446-2.spthy issue753-4.spthy issue753-5.spthy issue753-6.spthy issue834.spthy issue777.spthy issue770.spthy
+FAST_REGRESSION_CASE_STUDIES=issue446-1.spthy issue446-2.spthy issue753-4.spthy issue753-5.spthy issue753-6.spthy issue834.spthy issue777.spthy issue770.spthy issue916.spthy
 FAST_REGRESSION_TARGETS=$(subst .spthy,_analyzed.spthy,$(addprefix case-studies$(SUBDIR)regression/trace/,$(FAST_REGRESSION_CASE_STUDIES)))
+
+FAST_PROVERIF_REGRESSION_CASE_STUDIES=issue916-process.spthy
+FAST_PROVERIF_REGRESSION_TARGETS=$(subst .spthy,_proverif.pv,$(addprefix case-studies$(SUBDIR)regression/trace/,$(FAST_PROVERIF_REGRESSION_CASE_STUDIES)))
 
 
 REGRESSION_CASE_STUDIES=issue216.spthy issue193.spthy issue310.spthy issue519.spthy issue527.spthy issue515.spthy
@@ -594,7 +603,7 @@ case-studies: 	case-studies$(SUBDIR)system.info $(CS_TARGETS)
 ## Fast case studies
 ####################
 
-FAST_CS_TARGETS = case-studies$(SUBDIR)Tutorial_analyzed.spthy $(CCS15_PCS_TARGETS) $(TESTOBSEQ_TARGETS) $(FEATURES_CS_TARGETS) $(REGRESSION_OBSEQ_TARGETS) $(CSF12_CS_TARGETS) $(IND_CS_TARGETS) $(CCS15_CS_TARGETS) $(XOR_TRACE_TARGETS) $(POST17_TRACE_TARGETS) $(CLASSIC_CS_TARGETS) $(AKE_BP_CS_TARGETS) $(SEQDFS_TARGETS) $(DEFAULTORACLE_CASE_TARGETS) $(FAST_REGRESSION_TARGETS) $(XOR_DIFF_OBSEQONLY_TARGETS) $(DERIVATION_CHECK_CS_TARGETS) $(FAST_AC_CS_TARGETS) $(FAST_AC_DIFF_CS_TARGETS)
+FAST_CS_TARGETS = case-studies$(SUBDIR)Tutorial_analyzed.spthy $(CCS15_PCS_TARGETS) $(TESTOBSEQ_TARGETS) $(FEATURES_CS_TARGETS) $(REGRESSION_OBSEQ_TARGETS) $(CSF12_CS_TARGETS) $(IND_CS_TARGETS) $(CCS15_CS_TARGETS) $(XOR_TRACE_TARGETS) $(POST17_TRACE_TARGETS) $(CLASSIC_CS_TARGETS) $(AKE_BP_CS_TARGETS) $(SEQDFS_TARGETS) $(DEFAULTORACLE_CASE_TARGETS) $(FAST_REGRESSION_TARGETS) $(FAST_PROVERIF_REGRESSION_TARGETS) $(XOR_DIFF_OBSEQONLY_TARGETS) $(DERIVATION_CHECK_CS_TARGETS) $(FAST_AC_CS_TARGETS) $(FAST_AC_DIFF_CS_TARGETS)
 
 fast-case-studies: case-studies$(SUBDIR)system.info $(FAST_CS_TARGETS)
 	mkdir -p case-studies$(SUBDIR)
