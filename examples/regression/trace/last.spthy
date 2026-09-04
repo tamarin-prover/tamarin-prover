@@ -3,7 +3,11 @@ theory LastUsed begin
 rule R: [] --[ P() ]-> []
 
 // Restrictions must not use last atoms.
-restriction Illegal:
+restriction IllegalR:
+  "All #i. P() @ #i ==> last(#i)"
+
+// Lemmas must not use last atoms.
+lemma IllegalL:
   "All #i. P() @ #i ==> last(#i)"
 
 end
