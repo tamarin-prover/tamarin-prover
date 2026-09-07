@@ -1041,9 +1041,9 @@ htmlThyPath renderUrl renderImgUrl info path lPlaintext = case path of
           <noscript>
             <div class="warning">
               Warning: JavaScript must be enabled for the
-              <span class="tamarin">Tamarin</span>
+              <span class="tamarin">Tamarin
               prover GUI to function properly.
-          <p>
+          <div>
             <ul .wrap-text>
               <li>
                Modifying the lemma in the box above and clicking the submit button will attempt to modify the lemma in the current theory.
@@ -1084,9 +1084,9 @@ htmlThyPath renderUrl renderImgUrl info path lPlaintext = case path of
       <noscript>
         <div class="warning">
           Warning: JavaScript must be enabled for the
-          <span class="tamarin">Tamarin</span>
+          <span class="tamarin">Tamarin
           prover GUI to function properly.
-      <p>
+      <div>
         <ul .wrap-text>
           <li>
            Clicking on the button above will delete the lemma from the loaded theory.
@@ -1119,9 +1119,9 @@ htmlThyPath renderUrl renderImgUrl info path lPlaintext = case path of
         <noscript>
           <div class="warning">
             Warning: JavaScript must be enabled for the
-            <span class="tamarin">Tamarin</span>
+            <span class="tamarin">Tamarin
             prover GUI to function properly.
-        <p>
+        <div>
           <ul .wrap-text>
             <li>
              Adds the lemma in the current position in the theory, but will throw an error if a lemma with the same name exists, the parsing fails, or the lemma isn't well-formed.
@@ -1197,97 +1197,96 @@ helpHtml theoryName info renderUrl = [hamlet|
     Theory: #{theoryName}
     \ (Loaded at #{formatTime defaultTimeLocale "%T" info.time}
     \ from #{show info.origin})
-    \ #{preEscapedToMarkup info.errorsHtml}
+  \ #{preEscapedToMarkup info.errorsHtml}
   <div id="help">
     <h3>Quick introduction
     <noscript>
       <div class="warning">
         Warning: JavaScript must be enabled for the
-        <span class="tamarin">Tamarin</span>
+        <span class="tamarin">Tamarin
         prover GUI to function properly.
     <p>
       <em>Left pane: Proof scripts display.
-      <ul>
-        <li>
-          When a theory is initially loaded, there will be a line at the
-          \ end of each theorem stating #
-          <tt>"by sorry // not yet proven"
-          .  Click on #
-          <tt>sorry
-          \ to inspect the proof state.
-        <li>
-          Right-click to show further options, such as autoprove.
+    <ul>
+      <li>
+        When a theory is initially loaded, there will be a line at the
+        \ end of each theorem stating #
+        <tt>"by sorry // not yet proven"
+        .  Click on #
+        <tt>sorry
+        \ to inspect the proof state.
+      <li>
+        Right-click to show further options, such as autoprove.
     <p>
       <em>Right pane: Visualization.
-      <ul>
-        <li>
-          Visualization and information display relating to the
-          \ currently selected item.
+    <ul>
+      <li>
+        Visualization and information display relating to the
+        \ currently selected item.
 
   <h3>Keyboard shortcuts
-  <p>
-    <div id="shortcuts">
-      <table>
-        <tr>
-          <td>
-            <span class="keys">j/k
-          <td>
-            Jump to the next/previous proof path within the currently
-            \ focused lemma.
-        <tr>
-          <td>
-            <span class="keys">J/K
-          <td>
-            Jump to the next/previous open constraint within the currently
-            \ focused lemma, or to the next/previous lemma if there are no
-            \ more #
-            <tt>sorry
-            \ steps in the proof of the current lemma.
-        <tr>
-          <td>
-            <span class="keys">1-9
-          <td>
-            Apply the proof method with the given number as shown in the
-            \ applicable proof method section in the main view.
-        <tr>
-          <td>
-            <span class="keys">a/A
-          <td>
-            Apply the autoprove method to the focused proof step.
-            \ <span class="keys">a</span>
-            \ stops after finding a solution, and
-            \ <span class="keys">A</span>
-            \ searches for all solutions.
-            \ Needs to have a #
-            <tt>sorry
-            \ selected to work.
-        <tr>
-          <td>
-            <span class="keys">b/B
-          <td>
-            Apply a bounded-depth version of the autoprove method to the
-            \ focused proof step.
-            \ <span class="keys">b</span>
-            \ stops after finding a solution, and
-            \ <span class="keys">B</span>
-            \ searches for all solutions.
-            \ Needs to have a #
-            <tt>sorry
-            \ selected to work.
-        <tr>
-          <td>
-            <span class="keys">s/S
-          <td>
-            Apply the autoprove method to all lemmas.
-            \ <span class="keys">s</span>
-            \ stops after finding a solution, and
-            \ <span class="keys">S</span>
-            \ searches for all solutions.
-        <tr>
-          <td>
-            <span class="keys">?
-          <td>
-            Display this help message.
+  <div id="shortcuts">
+    <table>
+      <tr>
+        <td>
+          <span class="keys">j/k
+        <td>
+          Jump to the next/previous proof path within the currently
+          \ focused lemma.
+      <tr>
+        <td>
+          <span class="keys">J/K
+        <td>
+          Jump to the next/previous open constraint within the currently
+          \ focused lemma, or to the next/previous lemma if there are no
+          \ more #
+          <tt>sorry
+          \ steps in the proof of the current lemma.
+      <tr>
+        <td>
+          <span class="keys">1-9
+        <td>
+          Apply the proof method with the given number as shown in the
+          \ applicable proof method section in the main view.
+      <tr>
+        <td>
+          <span class="keys">a/A
+        <td>
+          Apply the autoprove method to the focused proof step.
+          \ <span class="keys">a</span>
+          \ stops after finding a solution, and
+          \ <span class="keys">A</span>
+          \ searches for all solutions.
+          \ Needs to have a #
+          <tt>sorry
+          \ selected to work.
+      <tr>
+        <td>
+          <span class="keys">b/B
+        <td>
+          Apply a bounded-depth version of the autoprove method to the
+          \ focused proof step.
+          \ <span class="keys">b</span>
+          \ stops after finding a solution, and
+          \ <span class="keys">B</span>
+          \ searches for all solutions.
+          \ Needs to have a #
+          <tt>sorry
+          \ selected to work.
+      <tr>
+        <td>
+          <span class="keys">s/S
+        <td>
+          Apply the autoprove method to all lemmas.
+          \ <span class="keys">s</span>
+          \ stops after finding a solution, and
+          \ <span class="keys">S</span>
+          \ searches for all solutions.
+      <tr>
+        <td>
+          <span class="keys">?
+        <td>
+          Display this help message.
 |] renderUrl
 
 {-
