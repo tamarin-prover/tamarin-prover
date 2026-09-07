@@ -703,7 +703,7 @@ defaultLayout' w = do
   withUrlRenderer [hamlet|
     $newline never
     !!!
-    <html>
+    <html lang=en>
       <head>
         <title>#{pageTitle page}
         <link rel=stylesheet href=/static/css/intdot-style.css>
@@ -804,7 +804,7 @@ intdotLayout includeAbstractToggle w = do
   withUrlRenderer [hamlet|
     $newline never
     !!!
-    <html>
+    <html lang=en>
       <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
