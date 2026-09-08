@@ -54,6 +54,8 @@ library
       , mtl
       , process
       , safe
+      , async
+      , stm
 
       , tamarin-prover-utils
 
