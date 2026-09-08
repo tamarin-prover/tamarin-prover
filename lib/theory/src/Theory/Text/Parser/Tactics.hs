@@ -45,7 +45,7 @@ goalRankingPresort :: Bool -> Parser (GoalRanking ProofContext)
 goalRankingPresort diff = regularRanking <?> "proof method ranking"
    where
        regularRanking = do
-           name <- (:) <$> letter <*> manyTill letter (lookAhead $ notFollowedBy letter *> anyChar)
+           name <- many1 letter
            case toGoalRanking name of
                Just ranking -> ranking <$ skipMany (char ' ')
                Nothing      -> fail $ "Unknown proof method ranking '" ++ name
