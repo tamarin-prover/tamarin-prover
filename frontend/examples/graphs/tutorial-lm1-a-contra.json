@@ -1,0 +1,722 @@
+{
+  "graphs": [
+    {
+      "jgAbbrevs": [
+        {
+          "jgaAbbrev": {
+            "jgnConst": "AE1"
+          },
+          "jgaExpansion": {
+            "jgnFunct": "aenc",
+            "jgnParams": [
+              {
+                "jgnFunct": "pair",
+                "jgnParams": [
+                  {
+                    "jgnConst": "'1'"
+                  },
+                  {
+                    "jgnConst": "~k"
+                  }
+                ],
+                "jgnShow": "pair('1',~k)"
+              },
+              {
+                "jgnFunct": "pk",
+                "jgnParams": [
+                  {
+                    "jgnConst": "~ltk"
+                  }
+                ],
+                "jgnShow": "pk(~ltk)"
+              }
+            ],
+            "jgnShow": "aenc(pair('1',~k),pk(~ltk))"
+          },
+          "jgaTerm": {
+            "jgnFunct": "aenc",
+            "jgnParams": [
+              {
+                "jgnFunct": "pair",
+                "jgnParams": [
+                  {
+                    "jgnConst": "'1'"
+                  },
+                  {
+                    "jgnConst": "~k"
+                  }
+                ],
+                "jgnShow": "pair('1',~k)"
+              },
+              {
+                "jgnFunct": "pk",
+                "jgnParams": [
+                  {
+                    "jgnConst": "~ltk"
+                  }
+                ],
+                "jgnShow": "pk(~ltk)"
+              }
+            ],
+            "jgnShow": "aenc(pair('1',~k),pk(~ltk))"
+          }
+        }
+      ],
+      "jgClusters": [],
+      "jgDirected": true,
+      "jgEdges": [
+        {
+          "jgeRelation": "default",
+          "jgeSource": "#vf:c0",
+          "jgeTarget": "#i:p1"
+        },
+        {
+          "jgeRelation": "ProtoFact",
+          "jgeSource": "#vr:c0",
+          "jgeTarget": "#i:p0"
+        },
+        {
+          "jgeRelation": "KFact",
+          "jgeSource": "#vr:c1",
+          "jgeTarget": "#vr.2:p0"
+        },
+        {
+          "jgeRelation": "PersistentFact",
+          "jgeSource": "#vr.1:c0",
+          "jgeTarget": "#vr.4:p0"
+        },
+        {
+          "jgeRelation": "PersistentFact",
+          "jgeSource": "#vr.1:c1",
+          "jgeTarget": "#vr:p1"
+        },
+        {
+          "jgeRelation": "KFact",
+          "jgeSource": "#vr.2:c0",
+          "jgeTarget": "#vk:p0"
+        },
+        {
+          "jgeRelation": "KFact",
+          "jgeSource": "#vr.4:c0",
+          "jgeTarget": "#vk.1:p0"
+        },
+        {
+          "jgeRelation": "LessAtoms",
+          "jgeSource": "#vk",
+          "jgeTarget": "#j"
+        },
+        {
+          "jgeRelation": "LessAtoms",
+          "jgeSource": "#vr",
+          "jgeTarget": "#vf"
+        },
+        {
+          "jgeRelation": "LessAtoms",
+          "jgeSource": "#vk.1",
+          "jgeTarget": "#vr.2"
+        },
+        {
+          "jgeRelation": "LessAtoms",
+          "jgeSource": "#vk.2",
+          "jgeTarget": "#vf"
+        }
+      ],
+      "jgLabel": "Theory: Tutorial Lemma: Client_session_key_secrecy",
+      "jgNodes": [
+        {
+          "jgnId": "#i",
+          "jgnLabel": "Client_2",
+          "jgnMetadata": {
+            "jgnActs": [
+              {
+                "jgnFactId": "action",
+                "jgnFactMult": "",
+                "jgnFactName": "SessKeyC",
+                "jgnFactShow": "SessKeyC( $S, ~k )",
+                "jgnFactTag": "ProtoFact",
+                "jgnFactTerms": [
+                  {
+                    "jgnConst": "$S"
+                  },
+                  {
+                    "jgnConst": "~k"
+                  }
+                ]
+              }
+            ],
+            "jgnConcs": [],
+            "jgnPrems": [
+              {
+                "jgnFactId": "#i:p0",
+                "jgnFactMult": "",
+                "jgnFactName": "Client_1",
+                "jgnFactShow": "Client_1( $S, ~k )",
+                "jgnFactTag": "ProtoFact",
+                "jgnFactTerms": [
+                  {
+                    "jgnConst": "$S"
+                  },
+                  {
+                    "jgnConst": "~k"
+                  }
+                ]
+              },
+              {
+                "jgnFactId": "#i:p1",
+                "jgnFactMult": "",
+                "jgnFactName": "In",
+                "jgnFactShow": "In( h(~k) )",
+                "jgnFactTag": "InFact",
+                "jgnFactTerms": [
+                  {
+                    "jgnFunct": "h",
+                    "jgnParams": [
+                      {
+                        "jgnConst": "~k"
+                      }
+                    ],
+                    "jgnShow": "h(~k)"
+                  }
+                ]
+              }
+            ]
+          },
+          "jgnType": "isProtocolRule"
+        },
+        {
+          "jgnId": "#j",
+          "jgnLabel": "Send",
+          "jgnMetadata": {
+            "jgnActs": [
+              {
+                "jgnFactId": "action",
+                "jgnFactMult": "",
+                "jgnFactName": "K",
+                "jgnFactShow": "K( ~k )",
+                "jgnFactTag": "ProtoFact",
+                "jgnFactTerms": [
+                  {
+                    "jgnConst": "~k"
+                  }
+                ]
+              }
+            ],
+            "jgnConcs": [
+              {
+                "jgnFactId": "#j:c0",
+                "jgnFactMult": "",
+                "jgnFactName": "In",
+                "jgnFactShow": "In( ~k )",
+                "jgnFactTag": "InFact",
+                "jgnFactTerms": [
+                  {
+                    "jgnConst": "~k"
+                  }
+                ]
+              }
+            ],
+            "jgnPrems": [
+              {
+                "jgnFactId": "#j:p0",
+                "jgnFactMult": "!",
+                "jgnFactName": "!KU",
+                "jgnFactShow": "!KU( ~k )",
+                "jgnFactTag": "KUFact",
+                "jgnFactTerms": [
+                  {
+                    "jgnConst": "~k"
+                  }
+                ]
+              }
+            ]
+          },
+          "jgnType": "isIntruderRule"
+        },
+        {
+          "jgnId": "#vf",
+          "jgnLabel": "Send",
+          "jgnMetadata": {
+            "jgnActs": [
+              {
+                "jgnFactId": "action",
+                "jgnFactMult": "",
+                "jgnFactName": "K",
+                "jgnFactShow": "K( h(~k) )",
+                "jgnFactTag": "ProtoFact",
+                "jgnFactTerms": [
+                  {
+                    "jgnFunct": "h",
+                    "jgnParams": [
+                      {
+                        "jgnConst": "~k"
+                      }
+                    ],
+                    "jgnShow": "h(~k)"
+                  }
+                ]
+              }
+            ],
+            "jgnConcs": [
+              {
+                "jgnFactId": "#vf:c0",
+                "jgnFactMult": "",
+                "jgnFactName": "In",
+                "jgnFactShow": "In( h(~k) )",
+                "jgnFactTag": "InFact",
+                "jgnFactTerms": [
+                  {
+                    "jgnFunct": "h",
+                    "jgnParams": [
+                      {
+                        "jgnConst": "~k"
+                      }
+                    ],
+                    "jgnShow": "h(~k)"
+                  }
+                ]
+              }
+            ],
+            "jgnPrems": [
+              {
+                "jgnFactId": "#vf:p0",
+                "jgnFactMult": "!",
+                "jgnFactName": "!KU",
+                "jgnFactShow": "!KU( h(~k) )",
+                "jgnFactTag": "KUFact",
+                "jgnFactTerms": [
+                  {
+                    "jgnFunct": "h",
+                    "jgnParams": [
+                      {
+                        "jgnConst": "~k"
+                      }
+                    ],
+                    "jgnShow": "h(~k)"
+                  }
+                ]
+              }
+            ]
+          },
+          "jgnType": "isIntruderRule"
+        },
+        {
+          "jgnId": "#vk",
+          "jgnLabel": "Coerce",
+          "jgnMetadata": {
+            "jgnActs": [
+              {
+                "jgnFactId": "action",
+                "jgnFactMult": "!",
+                "jgnFactName": "!KU",
+                "jgnFactShow": "!KU( ~k )",
+                "jgnFactTag": "KUFact",
+                "jgnFactTerms": [
+                  {
+                    "jgnConst": "~k"
+                  }
+                ]
+              }
+            ],
+            "jgnConcs": [
+              {
+                "jgnFactId": "#vk:c0",
+                "jgnFactMult": "!",
+                "jgnFactName": "!KU",
+                "jgnFactShow": "!KU( ~k )",
+                "jgnFactTag": "KUFact",
+                "jgnFactTerms": [
+                  {
+                    "jgnConst": "~k"
+                  }
+                ]
+              }
+            ],
+            "jgnPrems": [
+              {
+                "jgnFactId": "#vk:p0",
+                "jgnFactMult": "!",
+                "jgnFactName": "!KD",
+                "jgnFactShow": "!KD( ~k )",
+                "jgnFactTag": "KDFact",
+                "jgnFactTerms": [
+                  {
+                    "jgnConst": "~k"
+                  }
+                ]
+              }
+            ]
+          },
+          "jgnType": "isIntruderRule"
+        },
+        {
+          "jgnId": "#vr",
+          "jgnLabel": "Client_1",
+          "jgnMetadata": {
+            "jgnActs": [],
+            "jgnConcs": [
+              {
+                "jgnFactId": "#vr:c0",
+                "jgnFactMult": "",
+                "jgnFactName": "Client_1",
+                "jgnFactShow": "Client_1( $S, ~k )",
+                "jgnFactTag": "ProtoFact",
+                "jgnFactTerms": [
+                  {
+                    "jgnConst": "$S"
+                  },
+                  {
+                    "jgnConst": "~k"
+                  }
+                ]
+              },
+              {
+                "jgnFactId": "#vr:c1",
+                "jgnFactMult": "",
+                "jgnFactName": "Out",
+                "jgnFactShow": "Out( aenc(<'1', ~k>, pk(~ltk)) )",
+                "jgnFactTag": "OutFact",
+                "jgnFactTerms": [
+                  {
+                    "jgnFunct": "aenc",
+                    "jgnParams": [
+                      {
+                        "jgnFunct": "pair",
+                        "jgnParams": [
+                          {
+                            "jgnConst": "'1'"
+                          },
+                          {
+                            "jgnConst": "~k"
+                          }
+                        ],
+                        "jgnShow": "pair('1',~k)"
+                      },
+                      {
+                        "jgnFunct": "pk",
+                        "jgnParams": [
+                          {
+                            "jgnConst": "~ltk"
+                          }
+                        ],
+                        "jgnShow": "pk(~ltk)"
+                      }
+                    ],
+                    "jgnShow": "aenc(pair('1',~k),pk(~ltk))"
+                  }
+                ]
+              }
+            ],
+            "jgnPrems": [
+              {
+                "jgnFactId": "#vr:p0",
+                "jgnFactMult": "",
+                "jgnFactName": "Fr",
+                "jgnFactShow": "Fr( ~k )",
+                "jgnFactTag": "FreshFact",
+                "jgnFactTerms": [
+                  {
+                    "jgnConst": "~k"
+                  }
+                ]
+              },
+              {
+                "jgnFactId": "#vr:p1",
+                "jgnFactMult": "!",
+                "jgnFactName": "!Pk",
+                "jgnFactShow": "!Pk( $S, pk(~ltk) )",
+                "jgnFactTag": "ProtoFact",
+                "jgnFactTerms": [
+                  {
+                    "jgnConst": "$S"
+                  },
+                  {
+                    "jgnFunct": "pk",
+                    "jgnParams": [
+                      {
+                        "jgnConst": "~ltk"
+                      }
+                    ],
+                    "jgnShow": "pk(~ltk)"
+                  }
+                ]
+              }
+            ]
+          },
+          "jgnType": "isProtocolRule"
+        },
+        {
+          "jgnId": "#vk.1",
+          "jgnLabel": "Coerce",
+          "jgnMetadata": {
+            "jgnActs": [
+              {
+                "jgnFactId": "action",
+                "jgnFactMult": "!",
+                "jgnFactName": "!KU",
+                "jgnFactShow": "!KU( ~ltk )",
+                "jgnFactTag": "KUFact",
+                "jgnFactTerms": [
+                  {
+                    "jgnConst": "~ltk"
+                  }
+                ]
+              }
+            ],
+            "jgnConcs": [
+              {
+                "jgnFactId": "#vk.1:c0",
+                "jgnFactMult": "!",
+                "jgnFactName": "!KU",
+                "jgnFactShow": "!KU( ~ltk )",
+                "jgnFactTag": "KUFact",
+                "jgnFactTerms": [
+                  {
+                    "jgnConst": "~ltk"
+                  }
+                ]
+              }
+            ],
+            "jgnPrems": [
+              {
+                "jgnFactId": "#vk.1:p0",
+                "jgnFactMult": "!",
+                "jgnFactName": "!KD",
+                "jgnFactShow": "!KD( ~ltk )",
+                "jgnFactTag": "KDFact",
+                "jgnFactTerms": [
+                  {
+                    "jgnConst": "~ltk"
+                  }
+                ]
+              }
+            ]
+          },
+          "jgnType": "isIntruderRule"
+        },
+        {
+          "jgnId": "#vr.1",
+          "jgnLabel": "Register_pk",
+          "jgnMetadata": {
+            "jgnActs": [],
+            "jgnConcs": [
+              {
+                "jgnFactId": "#vr.1:c0",
+                "jgnFactMult": "!",
+                "jgnFactName": "!Ltk",
+                "jgnFactShow": "!Ltk( $S, ~ltk )",
+                "jgnFactTag": "ProtoFact",
+                "jgnFactTerms": [
+                  {
+                    "jgnConst": "$S"
+                  },
+                  {
+                    "jgnConst": "~ltk"
+                  }
+                ]
+              },
+              {
+                "jgnFactId": "#vr.1:c1",
+                "jgnFactMult": "!",
+                "jgnFactName": "!Pk",
+                "jgnFactShow": "!Pk( $S, pk(~ltk) )",
+                "jgnFactTag": "ProtoFact",
+                "jgnFactTerms": [
+                  {
+                    "jgnConst": "$S"
+                  },
+                  {
+                    "jgnFunct": "pk",
+                    "jgnParams": [
+                      {
+                        "jgnConst": "~ltk"
+                      }
+                    ],
+                    "jgnShow": "pk(~ltk)"
+                  }
+                ]
+              }
+            ],
+            "jgnPrems": [
+              {
+                "jgnFactId": "#vr.1:p0",
+                "jgnFactMult": "",
+                "jgnFactName": "Fr",
+                "jgnFactShow": "Fr( ~ltk )",
+                "jgnFactTag": "FreshFact",
+                "jgnFactTerms": [
+                  {
+                    "jgnConst": "~ltk"
+                  }
+                ]
+              }
+            ]
+          },
+          "jgnType": "isProtocolRule"
+        },
+        {
+          "jgnId": "#vr.2",
+          "jgnLabel": "Destrd_0_adec",
+          "jgnMetadata": {
+            "jgnActs": [],
+            "jgnConcs": [
+              {
+                "jgnFactId": "#vr.2:c0",
+                "jgnFactMult": "!",
+                "jgnFactName": "!KD",
+                "jgnFactShow": "!KD( <'1', ~k> )",
+                "jgnFactTag": "KDFact",
+                "jgnFactTerms": [
+                  {
+                    "jgnFunct": "pair",
+                    "jgnParams": [
+                      {
+                        "jgnConst": "'1'"
+                      },
+                      {
+                        "jgnConst": "~k"
+                      }
+                    ],
+                    "jgnShow": "pair('1',~k)"
+                  }
+                ]
+              }
+            ],
+            "jgnPrems": [
+              {
+                "jgnFactId": "#vr.2:p0",
+                "jgnFactMult": "!",
+                "jgnFactName": "!KD",
+                "jgnFactShow": "!KD( aenc(<'1', ~k>, pk(~ltk)) )",
+                "jgnFactTag": "KDFact",
+                "jgnFactTerms": [
+                  {
+                    "jgnFunct": "aenc",
+                    "jgnParams": [
+                      {
+                        "jgnFunct": "pair",
+                        "jgnParams": [
+                          {
+                            "jgnConst": "'1'"
+                          },
+                          {
+                            "jgnConst": "~k"
+                          }
+                        ],
+                        "jgnShow": "pair('1',~k)"
+                      },
+                      {
+                        "jgnFunct": "pk",
+                        "jgnParams": [
+                          {
+                            "jgnConst": "~ltk"
+                          }
+                        ],
+                        "jgnShow": "pk(~ltk)"
+                      }
+                    ],
+                    "jgnShow": "aenc(pair('1',~k),pk(~ltk))"
+                  }
+                ]
+              },
+              {
+                "jgnFactId": "#vr.2:p1",
+                "jgnFactMult": "!",
+                "jgnFactName": "!KU",
+                "jgnFactShow": "!KU( ~ltk )",
+                "jgnFactTag": "KUFact",
+                "jgnFactTerms": [
+                  {
+                    "jgnConst": "~ltk"
+                  }
+                ]
+              }
+            ]
+          },
+          "jgnType": "isIntruderRule"
+        },
+        {
+          "jgnId": "#vr.4",
+          "jgnLabel": "Reveal_ltk",
+          "jgnMetadata": {
+            "jgnActs": [
+              {
+                "jgnFactId": "action",
+                "jgnFactMult": "",
+                "jgnFactName": "LtkReveal",
+                "jgnFactShow": "LtkReveal( $S )",
+                "jgnFactTag": "ProtoFact",
+                "jgnFactTerms": [
+                  {
+                    "jgnConst": "$S"
+                  }
+                ]
+              }
+            ],
+            "jgnConcs": [
+              {
+                "jgnFactId": "#vr.4:c0",
+                "jgnFactMult": "",
+                "jgnFactName": "Out",
+                "jgnFactShow": "Out( ~ltk )",
+                "jgnFactTag": "OutFact",
+                "jgnFactTerms": [
+                  {
+                    "jgnConst": "~ltk"
+                  }
+                ]
+              }
+            ],
+            "jgnPrems": [
+              {
+                "jgnFactId": "#vr.4:p0",
+                "jgnFactMult": "!",
+                "jgnFactName": "!Ltk",
+                "jgnFactShow": "!Ltk( $S, ~ltk )",
+                "jgnFactTag": "ProtoFact",
+                "jgnFactTerms": [
+                  {
+                    "jgnConst": "$S"
+                  },
+                  {
+                    "jgnConst": "~ltk"
+                  }
+                ]
+              }
+            ]
+          },
+          "jgnType": "isProtocolRule"
+        },
+        {
+          "jgnId": "#vk.2",
+          "jgnLabel": "!KU( h(~k) )",
+          "jgnMetadata": {
+            "jgnActs": [
+              {
+                "jgnFactId": "action",
+                "jgnFactMult": "!",
+                "jgnFactName": "!KU",
+                "jgnFactShow": "!KU( h(~k) )",
+                "jgnFactTag": "KUFact",
+                "jgnFactTerms": [
+                  {
+                    "jgnFunct": "h",
+                    "jgnParams": [
+                      {
+                        "jgnConst": "~k"
+                      }
+                    ],
+                    "jgnShow": "h(~k)"
+                  }
+                ]
+              }
+            ],
+            "jgnConcs": [],
+            "jgnPrems": []
+          },
+          "jgnType": "unsolvedActionAtom"
+        }
+      ],
+      "jgType": "Tamarin prover constraint system"
+    }
+  ]
+}

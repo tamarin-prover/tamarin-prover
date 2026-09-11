@@ -1638,6 +1638,18 @@ solve( (∃ matchingSession #i3 matchingRole matchingCom.
             solve( Sid( ~ex, <$A.1, $A.2, (matchingCom add rest), role, proto>
                    ) @ #i1 )
               case Init_DHKEA_2_case_1
+              solve( Sid( matchingSession,
+                          <$B, $A, <'1', 'g'^h1(<~ex, ~ea>)>, matchingRole, 'DHKEA'>
+                     ) @ #i3.1 )
+                case Init_DHKEA_1
+                by contradiction /* from formulas */
+              qed
+            next
+              case Init_DHKEA_2_case_2
+              by solve( Sid( matchingSession, <$B, $A, <'2', Y>, matchingRole, 'DHKEA'>
+                        ) @ #i3.1 )
+            next
+              case Init_DHKEA_2_case_3
               by solve( Sid( matchingSession,
                              <$B, $A, 
                               <'3', $A, 
@@ -1647,39 +1659,7 @@ solve( (∃ matchingSession #i3 matchingRole matchingCom.
                               matchingRole, 'DHKEA'>
                         ) @ #i3.1 )
             next
-              case Init_DHKEA_2_case_2
-              by solve( Sid( matchingSession,
-                             <$B, $A, 
-                              (<'2', Y> add 
-                               <'3', $A, 
-                                h2(<first(h(<z, $A, $B, 'g'^h1(<~ex, ~ea>), Y, 'DHKEA'>)), z.1, 'I', $A, 
-                                    $B, 'g'^h1(<~ex, ~ea>), Y, 'DHKEA'>)
-                               >
-                              ), 
-                              matchingRole, 'DHKEA'>
-                        ) @ #i3.1 )
-            next
-              case Init_DHKEA_2_case_3
-              by solve( Sid( matchingSession,
-                             <$B, $A, 
-                              (<'1', 'g'^h1(<~ex, ~ea>)> add 
-                               <'3', $A, 
-                                h2(<first(h(<z, $A, $B, 'g'^h1(<~ex, ~ea>), Y, 'DHKEA'>)), z.1, 'I', $A, 
-                                    $B, 'g'^h1(<~ex, ~ea>), Y, 'DHKEA'>)
-                               >
-                              ), 
-                              matchingRole, 'DHKEA'>
-                        ) @ #i3.1 )
-            next
               case Init_DHKEA_2_case_4
-              solve( Sid( matchingSession,
-                          <$B, $A, <'1', 'g'^h1(<~ex, ~ea>)>, matchingRole, 'DHKEA'>
-                     ) @ #i3.1 )
-                case Init_DHKEA_1
-                by contradiction /* from formulas */
-              qed
-            next
-              case Init_DHKEA_2_case_5
               solve( Sid( matchingSession,
                           <$B, $A, (<'1', 'g'^h1(<~ex, ~ea>)> add <'2', Y>), matchingRole, 'DHKEA'>
                      ) @ #i3.1 )
@@ -1745,8 +1725,28 @@ solve( (∃ matchingSession #i3 matchingRole matchingCom.
                 qed
               qed
             next
+              case Init_DHKEA_2_case_5
+              by solve( Sid( matchingSession,
+                             <$B, $A, 
+                              (<'1', 'g'^h1(<~ex, ~ea>)> add 
+                               <'3', $A, 
+                                h2(<first(h(<z, $A, $B, 'g'^h1(<~ex, ~ea>), Y, 'DHKEA'>)), z.1, 'I', $A, 
+                                    $B, 'g'^h1(<~ex, ~ea>), Y, 'DHKEA'>)
+                               >
+                              ), 
+                              matchingRole, 'DHKEA'>
+                        ) @ #i3.1 )
+            next
               case Init_DHKEA_2_case_6
-              by solve( Sid( matchingSession, <$B, $A, <'2', Y>, matchingRole, 'DHKEA'>
+              by solve( Sid( matchingSession,
+                             <$B, $A, 
+                              (<'2', Y> add 
+                               <'3', $A, 
+                                h2(<first(h(<z, $A, $B, 'g'^h1(<~ex, ~ea>), Y, 'DHKEA'>)), z.1, 'I', $A, 
+                                    $B, 'g'^h1(<~ex, ~ea>), Y, 'DHKEA'>)
+                               >
+                              ), 
+                              matchingRole, 'DHKEA'>
                         ) @ #i3.1 )
             qed
           next
@@ -1764,6 +1764,19 @@ solve( (∃ matchingSession #i3 matchingRole matchingCom.
             solve( Sid( ~ex, <$A.1, $A.2, (matchingCom add rest), role, proto>
                    ) @ #i1 )
               case Init_NAXOS_2_case_1
+              solve( Sid( matchingSession,
+                          <$B, $A, <'1', 'g'^h1(<~ex, ~ea>)>, matchingRole, 'NAXOS_C'>
+                     ) @ #i3.1 )
+                case Init_NAXOS_1
+                by contradiction /* from formulas */
+              qed
+            next
+              case Init_NAXOS_2_case_2
+              by solve( Sid( matchingSession,
+                             <$B, $A, <'2', Y>, matchingRole, 'NAXOS_C'>
+                        ) @ #i3.1 )
+            next
+              case Init_NAXOS_2_case_3
               by solve( Sid( matchingSession,
                              <$B, $A, 
                               <'3', $A, 
@@ -1775,43 +1788,7 @@ solve( (∃ matchingSession #i3 matchingRole matchingCom.
                               matchingRole, 'NAXOS_C'>
                         ) @ #i3.1 )
             next
-              case Init_NAXOS_2_case_2
-              by solve( Sid( matchingSession,
-                             <$B, $A, 
-                              (<'2', Y> add 
-                               <'3', $A, 
-                                h2(<
-                                    first(h(<z, 'g'^(~ea.1*h1(<~ex, ~ea>)), z.1, $A, $B, 'g'^h1(<~ex, ~ea>), 
-                                             Y, 'NAXOS_C'>)), 
-                                    'I', $A, $B, 'g'^h1(<~ex, ~ea>), Y, 'NAXOS_C'>)
-                               >
-                              ), 
-                              matchingRole, 'NAXOS_C'>
-                        ) @ #i3.1 )
-            next
-              case Init_NAXOS_2_case_3
-              by solve( Sid( matchingSession,
-                             <$B, $A, 
-                              (<'1', 'g'^h1(<~ex, ~ea>)> add 
-                               <'3', $A, 
-                                h2(<
-                                    first(h(<z, 'g'^(~ea.1*h1(<~ex, ~ea>)), z.1, $A, $B, 'g'^h1(<~ex, ~ea>), 
-                                             Y, 'NAXOS_C'>)), 
-                                    'I', $A, $B, 'g'^h1(<~ex, ~ea>), Y, 'NAXOS_C'>)
-                               >
-                              ), 
-                              matchingRole, 'NAXOS_C'>
-                        ) @ #i3.1 )
-            next
               case Init_NAXOS_2_case_4
-              solve( Sid( matchingSession,
-                          <$B, $A, <'1', 'g'^h1(<~ex, ~ea>)>, matchingRole, 'NAXOS_C'>
-                     ) @ #i3.1 )
-                case Init_NAXOS_1
-                by contradiction /* from formulas */
-              qed
-            next
-              case Init_NAXOS_2_case_5
               solve( Sid( matchingSession,
                           <$B, $A, (<'1', 'g'^h1(<~ex, ~ea>)> add <'2', Y>), matchingRole, 
                            'NAXOS_C'>
@@ -1960,9 +1937,32 @@ solve( (∃ matchingSession #i3 matchingRole matchingCom.
                 qed
               qed
             next
+              case Init_NAXOS_2_case_5
+              by solve( Sid( matchingSession,
+                             <$B, $A, 
+                              (<'1', 'g'^h1(<~ex, ~ea>)> add 
+                               <'3', $A, 
+                                h2(<
+                                    first(h(<z, 'g'^(~ea.1*h1(<~ex, ~ea>)), z.1, $A, $B, 'g'^h1(<~ex, ~ea>), 
+                                             Y, 'NAXOS_C'>)), 
+                                    'I', $A, $B, 'g'^h1(<~ex, ~ea>), Y, 'NAXOS_C'>)
+                               >
+                              ), 
+                              matchingRole, 'NAXOS_C'>
+                        ) @ #i3.1 )
+            next
               case Init_NAXOS_2_case_6
               by solve( Sid( matchingSession,
-                             <$B, $A, <'2', Y>, matchingRole, 'NAXOS_C'>
+                             <$B, $A, 
+                              (<'2', Y> add 
+                               <'3', $A, 
+                                h2(<
+                                    first(h(<z, 'g'^(~ea.1*h1(<~ex, ~ea>)), z.1, $A, $B, 'g'^h1(<~ex, ~ea>), 
+                                             Y, 'NAXOS_C'>)), 
+                                    'I', $A, $B, 'g'^h1(<~ex, ~ea>), Y, 'NAXOS_C'>)
+                               >
+                              ), 
+                              matchingRole, 'NAXOS_C'>
                         ) @ #i3.1 )
             qed
           next
@@ -1978,45 +1978,6 @@ solve( (∃ matchingSession #i3 matchingRole matchingCom.
           solve( Sid( ~ey, <$A.1, $A.2, (matchingCom add rest), role, proto>
                  ) @ #i1 )
             case Resp_DHKEA_2_case_1
-            by solve( Sid( matchingSession,
-                           <$A, $B, 
-                            <'3', $A, 
-                             h2(<first(h(<z, $A, $B, X, 'g'^h1(<~ey, ~ea>), 'DHKEA'>)), 
-                                 'g'^(~ea.1*h1(<~ey, ~ea>)), 'I', $A, $B, X, 'g'^h1(<~ey, ~ea>), 'DHKEA'>)
-                            >, 
-                            matchingRole, 'DHKEA'>
-                      ) @ #i3.1 )
-          next
-            case Resp_DHKEA_2_case_2
-            by solve( Sid( matchingSession,
-                           <$A, $B, 
-                            (<'1', X> add 
-                             <'3', $A, 
-                              h2(<first(h(<z, $A, $B, X, 'g'^h1(<~ey, ~ea>), 'DHKEA'>)), 
-                                  'g'^(~ea.1*h1(<~ey, ~ea>)), 'I', $A, $B, X, 'g'^h1(<~ey, ~ea>), 'DHKEA'>)
-                             >
-                            ), 
-                            matchingRole, 'DHKEA'>
-                      ) @ #i3.1 )
-          next
-            case Resp_DHKEA_2_case_3
-            by solve( Sid( matchingSession,
-                           <$A, $B, 
-                            (<'2', 'g'^h1(<~ey, ~ea>)> add 
-                             <'3', $A, 
-                              h2(<first(h(<z, $A, $B, X, 'g'^h1(<~ey, ~ea>), 'DHKEA'>)), 
-                                  'g'^(~ea.1*h1(<~ey, ~ea>)), 'I', $A, $B, X, 'g'^h1(<~ey, ~ea>), 'DHKEA'>)
-                             >
-                            ), 
-                            matchingRole, 'DHKEA'>
-                      ) @ #i3.1 )
-          next
-            case Resp_DHKEA_2_case_4
-            by solve( Sid( matchingSession,
-                           <$A, $B, <'2', 'g'^h1(<~ey, ~ea>)>, matchingRole, 'DHKEA'>
-                      ) @ #i3.1 )
-          next
-            case Resp_DHKEA_2_case_5
             solve( Sid( matchingSession, <$A, $B, <'1', X>, matchingRole, 'DHKEA'>
                    ) @ #i3.1 )
               case Init_DHKEA_1
@@ -2078,13 +2039,52 @@ solve( (∃ matchingSession #i3 matchingRole matchingCom.
               qed
             qed
           next
-            case Resp_DHKEA_2_case_6
+            case Resp_DHKEA_2_case_2
+            by solve( Sid( matchingSession,
+                           <$A, $B, <'2', 'g'^h1(<~ey, ~ea>)>, matchingRole, 'DHKEA'>
+                      ) @ #i3.1 )
+          next
+            case Resp_DHKEA_2_case_3
+            by solve( Sid( matchingSession,
+                           <$A, $B, 
+                            <'3', $A, 
+                             h2(<first(h(<z, $A, $B, X, 'g'^h1(<~ey, ~ea>), 'DHKEA'>)), 
+                                 'g'^(~ea.1*h1(<~ey, ~ea>)), 'I', $A, $B, X, 'g'^h1(<~ey, ~ea>), 'DHKEA'>)
+                            >, 
+                            matchingRole, 'DHKEA'>
+                      ) @ #i3.1 )
+          next
+            case Resp_DHKEA_2_case_4
             solve( Sid( matchingSession,
                         <$A, $B, (<'1', X> add <'2', 'g'^h1(<~ey, ~ea>)>), matchingRole, 'DHKEA'>
                    ) @ #i3.1 )
               case Resp_DHKEA_1
               by contradiction /* from formulas */
             qed
+          next
+            case Resp_DHKEA_2_case_5
+            by solve( Sid( matchingSession,
+                           <$A, $B, 
+                            (<'1', X> add 
+                             <'3', $A, 
+                              h2(<first(h(<z, $A, $B, X, 'g'^h1(<~ey, ~ea>), 'DHKEA'>)), 
+                                  'g'^(~ea.1*h1(<~ey, ~ea>)), 'I', $A, $B, X, 'g'^h1(<~ey, ~ea>), 'DHKEA'>)
+                             >
+                            ), 
+                            matchingRole, 'DHKEA'>
+                      ) @ #i3.1 )
+          next
+            case Resp_DHKEA_2_case_6
+            by solve( Sid( matchingSession,
+                           <$A, $B, 
+                            (<'2', 'g'^h1(<~ey, ~ea>)> add 
+                             <'3', $A, 
+                              h2(<first(h(<z, $A, $B, X, 'g'^h1(<~ey, ~ea>), 'DHKEA'>)), 
+                                  'g'^(~ea.1*h1(<~ey, ~ea>)), 'I', $A, $B, X, 'g'^h1(<~ey, ~ea>), 'DHKEA'>)
+                             >
+                            ), 
+                            matchingRole, 'DHKEA'>
+                      ) @ #i3.1 )
           qed
         next
           case Resp_DHKEA_1_case_2
@@ -2098,51 +2098,6 @@ solve( (∃ matchingSession #i3 matchingRole matchingCom.
           solve( Sid( ~ey, <$A.1, $A.2, (matchingCom add rest), role, proto>
                  ) @ #i1 )
             case Resp_NAXOS_2_case_1
-            by solve( Sid( matchingSession,
-                           <$A, $B, 
-                            <'3', $A, 
-                             h2(<
-                                 first(h(<'g'^(~ea.1*h1(<~ey, ~ea>)), z, z.1, $A, $B, X, 
-                                          'g'^h1(<~ey, ~ea>), 'NAXOS_C'>)), 
-                                 'I', $A, $B, X, 'g'^h1(<~ey, ~ea>), 'NAXOS_C'>)
-                            >, 
-                            matchingRole, 'NAXOS_C'>
-                      ) @ #i3.1 )
-          next
-            case Resp_NAXOS_2_case_2
-            by solve( Sid( matchingSession,
-                           <$A, $B, 
-                            (<'1', X> add 
-                             <'3', $A, 
-                              h2(<
-                                  first(h(<'g'^(~ea.1*h1(<~ey, ~ea>)), z, z.1, $A, $B, X, 
-                                           'g'^h1(<~ey, ~ea>), 'NAXOS_C'>)), 
-                                  'I', $A, $B, X, 'g'^h1(<~ey, ~ea>), 'NAXOS_C'>)
-                             >
-                            ), 
-                            matchingRole, 'NAXOS_C'>
-                      ) @ #i3.1 )
-          next
-            case Resp_NAXOS_2_case_3
-            by solve( Sid( matchingSession,
-                           <$A, $B, 
-                            (<'2', 'g'^h1(<~ey, ~ea>)> add 
-                             <'3', $A, 
-                              h2(<
-                                  first(h(<'g'^(~ea.1*h1(<~ey, ~ea>)), z, z.1, $A, $B, X, 
-                                           'g'^h1(<~ey, ~ea>), 'NAXOS_C'>)), 
-                                  'I', $A, $B, X, 'g'^h1(<~ey, ~ea>), 'NAXOS_C'>)
-                             >
-                            ), 
-                            matchingRole, 'NAXOS_C'>
-                      ) @ #i3.1 )
-          next
-            case Resp_NAXOS_2_case_4
-            by solve( Sid( matchingSession,
-                           <$A, $B, <'2', 'g'^h1(<~ey, ~ea>)>, matchingRole, 'NAXOS_C'>
-                      ) @ #i3.1 )
-          next
-            case Resp_NAXOS_2_case_5
             solve( Sid( matchingSession, <$A, $B, <'1', X>, matchingRole, 'NAXOS_C'>
                    ) @ #i3.1 )
               case Init_NAXOS_1
@@ -2257,7 +2212,24 @@ solve( (∃ matchingSession #i3 matchingRole matchingCom.
               qed
             qed
           next
-            case Resp_NAXOS_2_case_6
+            case Resp_NAXOS_2_case_2
+            by solve( Sid( matchingSession,
+                           <$A, $B, <'2', 'g'^h1(<~ey, ~ea>)>, matchingRole, 'NAXOS_C'>
+                      ) @ #i3.1 )
+          next
+            case Resp_NAXOS_2_case_3
+            by solve( Sid( matchingSession,
+                           <$A, $B, 
+                            <'3', $A, 
+                             h2(<
+                                 first(h(<'g'^(~ea.1*h1(<~ey, ~ea>)), z, z.1, $A, $B, X, 
+                                          'g'^h1(<~ey, ~ea>), 'NAXOS_C'>)), 
+                                 'I', $A, $B, X, 'g'^h1(<~ey, ~ea>), 'NAXOS_C'>)
+                            >, 
+                            matchingRole, 'NAXOS_C'>
+                      ) @ #i3.1 )
+          next
+            case Resp_NAXOS_2_case_4
             solve( Sid( matchingSession,
                         <$A, $B, (<'1', X> add <'2', 'g'^h1(<~ey, ~ea>)>), matchingRole, 
                          'NAXOS_C'>
@@ -2265,6 +2237,34 @@ solve( (∃ matchingSession #i3 matchingRole matchingCom.
               case Resp_NAXOS_1
               by contradiction /* from formulas */
             qed
+          next
+            case Resp_NAXOS_2_case_5
+            by solve( Sid( matchingSession,
+                           <$A, $B, 
+                            (<'1', X> add 
+                             <'3', $A, 
+                              h2(<
+                                  first(h(<'g'^(~ea.1*h1(<~ey, ~ea>)), z, z.1, $A, $B, X, 
+                                           'g'^h1(<~ey, ~ea>), 'NAXOS_C'>)), 
+                                  'I', $A, $B, X, 'g'^h1(<~ey, ~ea>), 'NAXOS_C'>)
+                             >
+                            ), 
+                            matchingRole, 'NAXOS_C'>
+                      ) @ #i3.1 )
+          next
+            case Resp_NAXOS_2_case_6
+            by solve( Sid( matchingSession,
+                           <$A, $B, 
+                            (<'2', 'g'^h1(<~ey, ~ea>)> add 
+                             <'3', $A, 
+                              h2(<
+                                  first(h(<'g'^(~ea.1*h1(<~ey, ~ea>)), z, z.1, $A, $B, X, 
+                                           'g'^h1(<~ey, ~ea>), 'NAXOS_C'>)), 
+                                  'I', $A, $B, X, 'g'^h1(<~ey, ~ea>), 'NAXOS_C'>)
+                             >
+                            ), 
+                            matchingRole, 'NAXOS_C'>
+                      ) @ #i3.1 )
           qed
         next
           case Resp_NAXOS_1_case_2
@@ -4533,8 +4533,8 @@ qed
 Generated from:
 Tamarin version 1.13.0
 Maude version 3.5.1
-Git revision: abcb0ff3eca770d7b7f58a583b2616eafe845e15, branch: fix-derivation-check-warnings
-Compiled at: 2026-07-22 11:02:46.6864 UTC
+Git revision: 41bc81379b23681e7057314a5cf66a25c45e1986, branch: canonicalise-subst
+Compiled at: 2026-07-27 16:11:34.947223 UTC
 */
 
 end
@@ -4546,7 +4546,7 @@ summary of summaries:
 analyzed: examples/csf26-ac/fast/DHKEA_NAXOS_C_eCK_PFS_keyreg_partially_matching.spthy
 
   output:          examples/csf26-ac/fast/DHKEA_NAXOS_C_eCK_PFS_keyreg_partially_matching.spthy.tmp
-  processing time: 19.46s
+  processing time: 18.73s
   
   execution_match_same_key_NAXOS (exists-trace): verified (13 steps)
   eCK_key_secrecy (all-traces): verified (809 steps)

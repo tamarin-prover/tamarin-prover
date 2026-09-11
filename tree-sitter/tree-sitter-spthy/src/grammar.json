@@ -855,74 +855,64 @@
       ]
     },
     "predicates": {
-      "type": "SEQ",
-      "members": [
-        {
-          "type": "CHOICE",
-          "members": [
-            {
-              "type": "STRING",
-              "value": "predicate"
-            },
-            {
-              "type": "STRING",
-              "value": "predicates"
+      "type": "PREC_RIGHT",
+      "value": 0,
+      "content": {
+        "type": "SEQ",
+        "members": [
+          {
+            "type": "CHOICE",
+            "members": [
+              {
+                "type": "STRING",
+                "value": "predicate"
+              },
+              {
+                "type": "STRING",
+                "value": "predicates"
+              }
+            ]
+          },
+          {
+            "type": "STRING",
+            "value": ":"
+          },
+          {
+            "type": "SYMBOL",
+            "name": "predicate"
+          },
+          {
+            "type": "REPEAT",
+            "content": {
+              "type": "SEQ",
+              "members": [
+                {
+                  "type": "STRING",
+                  "value": ","
+                },
+                {
+                  "type": "SYMBOL",
+                  "name": "predicate"
+                }
+              ]
             }
-          ]
-        },
-        {
-          "type": "STRING",
-          "value": ":"
-        },
-        {
-          "type": "SYMBOL",
-          "name": "predicate"
-        },
-        {
-          "type": "REPEAT",
-          "content": {
-            "type": "SEQ",
+          },
+          {
+            "type": "CHOICE",
             "members": [
               {
                 "type": "STRING",
                 "value": ","
               },
               {
-                "type": "SYMBOL",
-                "name": "predicate"
+                "type": "BLANK"
               }
             ]
           }
-        }
-      ]
+        ]
+      }
     },
     "predicate": {
-      "type": "SEQ",
-      "members": [
-        {
-          "type": "ALIAS",
-          "content": {
-            "type": "SYMBOL",
-            "name": "predicate_def"
-          },
-          "named": false,
-          "value": ""
-        },
-        {
-          "type": "STRING",
-          "value": "<=>"
-        },
-        {
-          "type": "FIELD",
-          "name": "formula",
-          "content": {
-            "type": "SYMBOL",
-            "name": "_formula"
-          }
-        }
-      ]
-    },
-    "predicate_def": {
       "type": "SEQ",
       "members": [
         {
@@ -952,6 +942,18 @@
         {
           "type": "STRING",
           "value": ")"
+        },
+        {
+          "type": "STRING",
+          "value": "<=>"
+        },
+        {
+          "type": "FIELD",
+          "name": "formula",
+          "content": {
+            "type": "SYMBOL",
+            "name": "_formula"
+          }
         }
       ]
     },
@@ -1502,7 +1504,7 @@
         },
         {
           "type": "SYMBOL",
-          "name": "_nested_process"
+          "name": "nested_process"
         },
         {
           "type": "SYMBOL",
@@ -1678,7 +1680,7 @@
         ]
       }
     },
-    "_nested_process": {
+    "nested_process": {
       "type": "SEQ",
       "members": [
         {
@@ -2457,11 +2459,7 @@
         },
         {
           "type": "SYMBOL",
-          "name": "lesser_check"
-        },
-        {
-          "type": "SYMBOL",
-          "name": "predicate_ref"
+          "name": "_formula"
         }
       ]
     },
@@ -2469,17 +2467,8 @@
       "type": "SEQ",
       "members": [
         {
-          "type": "CHOICE",
-          "members": [
-            {
-              "type": "SYMBOL",
-              "name": "mset_term"
-            },
-            {
-              "type": "SYMBOL",
-              "name": "_formula"
-            }
-          ]
+          "type": "SYMBOL",
+          "name": "mset_term"
         },
         {
           "type": "TOKEN",
@@ -2491,41 +2480,6 @@
               "value": "="
             }
           }
-        },
-        {
-          "type": "CHOICE",
-          "members": [
-            {
-              "type": "SYMBOL",
-              "name": "mset_term"
-            },
-            {
-              "type": "SYMBOL",
-              "name": "_formula"
-            }
-          ]
-        }
-      ]
-    },
-    "lesser_check": {
-      "type": "SEQ",
-      "members": [
-        {
-          "type": "SYMBOL",
-          "name": "mset_term"
-        },
-        {
-          "type": "CHOICE",
-          "members": [
-            {
-              "type": "STRING",
-              "value": "(<)"
-            },
-            {
-              "type": "STRING",
-              "value": "<<"
-            }
-          ]
         },
         {
           "type": "SYMBOL",
@@ -3376,37 +3330,53 @@
       ]
     },
     "macros": {
-      "type": "SEQ",
-      "members": [
-        {
-          "type": "STRING",
-          "value": "macros"
-        },
-        {
-          "type": "STRING",
-          "value": ":"
-        },
-        {
-          "type": "SYMBOL",
-          "name": "macro"
-        },
-        {
-          "type": "REPEAT",
-          "content": {
-            "type": "SEQ",
+      "type": "PREC_RIGHT",
+      "value": 0,
+      "content": {
+        "type": "SEQ",
+        "members": [
+          {
+            "type": "STRING",
+            "value": "macros"
+          },
+          {
+            "type": "STRING",
+            "value": ":"
+          },
+          {
+            "type": "SYMBOL",
+            "name": "macro"
+          },
+          {
+            "type": "REPEAT",
+            "content": {
+              "type": "SEQ",
+              "members": [
+                {
+                  "type": "STRING",
+                  "value": ","
+                },
+                {
+                  "type": "SYMBOL",
+                  "name": "macro"
+                }
+              ]
+            }
+          },
+          {
+            "type": "CHOICE",
             "members": [
               {
                 "type": "STRING",
                 "value": ","
               },
               {
-                "type": "SYMBOL",
-                "name": "macro"
+                "type": "BLANK"
               }
             ]
           }
-        }
-      ]
+        ]
+      }
     },
     "macro": {
       "type": "SEQ",
@@ -3603,35 +3573,33 @@
       "type": "CHOICE",
       "members": [
         {
-          "type": "ALIAS",
-          "content": {
-            "type": "SYMBOL",
-            "name": "fact"
-          },
-          "named": true,
-          "value": "linear_fact"
+          "type": "SYMBOL",
+          "name": "linear_fact"
         },
         {
-          "type": "SEQ",
-          "members": [
-            {
-              "type": "STRING",
-              "value": "!"
-            },
-            {
-              "type": "ALIAS",
-              "content": {
-                "type": "SYMBOL",
-                "name": "fact"
-              },
-              "named": true,
-              "value": "persistent_fact"
-            }
-          ]
+          "type": "SYMBOL",
+          "name": "persistent_fact"
         }
       ]
     },
-    "fact": {
+    "linear_fact": {
+      "type": "SYMBOL",
+      "name": "_base_fact"
+    },
+    "persistent_fact": {
+      "type": "SEQ",
+      "members": [
+        {
+          "type": "STRING",
+          "value": "!"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "_base_fact"
+        }
+      ]
+    },
+    "_base_fact": {
       "type": "PREC_LEFT",
       "value": 0,
       "content": {
@@ -5951,6 +5919,10 @@
         },
         {
           "type": "SYMBOL",
+          "name": "lesser_check"
+        },
+        {
+          "type": "SYMBOL",
           "name": "quantified_formula"
         },
         {
@@ -6364,6 +6336,35 @@
         ]
       }
     },
+    "lesser_check": {
+      "type": "PREC",
+      "value": "ATOM",
+      "content": {
+        "type": "SEQ",
+        "members": [
+          {
+            "type": "FIELD",
+            "name": "left",
+            "content": {
+              "type": "SYMBOL",
+              "name": "mset_term"
+            }
+          },
+          {
+            "type": "STRING",
+            "value": "(<)"
+          },
+          {
+            "type": "FIELD",
+            "name": "right",
+            "content": {
+              "type": "SYMBOL",
+              "name": "mset_term"
+            }
+          }
+        ]
+      }
+    },
     "quantified_formula": {
       "type": "PREC",
       "value": "QUANTIFIER",
@@ -6743,7 +6744,7 @@
       "predicate_ref"
     ],
     [
-      "fact",
+      "_base_fact",
       "_term_ident"
     ],
     [

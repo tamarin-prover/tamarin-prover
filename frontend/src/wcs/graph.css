@@ -2,6 +2,10 @@ dot-graph-viz g.node.clickable {
   cursor: pointer;
 }
 
+dot-graph-viz g.node ellipse {
+  pointer-events: all;
+}
+
 dot-graph-viz g.highlighted>g.active {
   opacity: 1;
 }
@@ -28,4 +32,75 @@ dot-graph-viz>svg{
   width: 100%;
   height: 100%;
   display: block;
+}
+
+.graph-render-error {
+  margin: 1em;
+  padding: 0.75em 1em;
+  border: 1px solid #c0392b;
+  border-radius: 4px;
+  background-color: #fdecea;
+  color: #922b21;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 14px;
+  max-width: 40em;
+}
+
+/* styles for the legend box
+ *
+ * Scoped under `.graph-page`, the top-level container wrapping the whole
+ * graph page -- the floating Options bar (pop-out window only), the graph
+ * itself and its abbreviation legend (see `intdotLayout` in
+ * Web/Types.hs). This page also loads the shared tamarin-prover-ui.css
+ * (for the Options menu styling), which defines generic `table`/`th`/`td`
+ * rules meant for the main theory window's own tables. Resetting those
+ * properties here -- with the extra `.graph-page` class giving these
+ * rules higher specificity -- keeps the legend table's look
+ * self-contained regardless of what tamarin-prover-ui.css defines,
+ * instead of requiring one-off overrides whenever another property leaks
+ * through. */
+
+.graph-page table,
+.graph-page table th,
+.graph-page table td {
+  border: none;
+  background: transparent;
+  padding: 0;
+  text-align: inherit;
+}
+
+.graph-page .lgd-container {
+  position: fixed;
+  bottom: 10px;
+  right: 10px;
+  border: 1px solid black;
+  width: fit-content;
+  max-width: 30%;
+  max-height: 30vh;
+  overflow-y: auto;
+  background-color: white;
+}
+
+.graph-page .lgd-container > table {
+  border-collapse: collapse;
+}
+.graph-page .lgd-container td {
+    white-space: pre-wrap;
+}
+
+.graph-page tr.lgd-item > td {
+  padding: 4px;
+  font-size: 12px;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+.graph-page tr.lgd-item:hover {
+  background-color: grey;
+  color: white;
+  cursor: pointer;
+}
+
+.graph-page tr.lgd-item.active {
+  background-color: yellow;
+  color: black;
 }

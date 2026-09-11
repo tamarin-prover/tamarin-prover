@@ -330,7 +330,11 @@ Export features{#sec:translation}
 It is possible to export processes defined in .spthy files into the formats
 used by other protocol verifiers, making it possible to switch between tools.
 One can even translate lemmas in one tool to assumptions in other to combine
-these results. The correctness of the translation is proven in [@sapicplus].
+these results. A correctness result for the process translation is given in
+[@sapicplus]. The translation of Tamarin trace properties into ProVerif
+formulas has a separate assurance boundary: it relies on the correspondence
+between the two tools' formula semantics and is only performed for the
+supported property fragments described by exporter diagnostics.
 
 The `-m` flag selects an output module:
 ```

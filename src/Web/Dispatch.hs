@@ -41,7 +41,7 @@ import System.Directory
 import System.Exit
 import System.FilePath
 import Main.Console (renderDoc)
-import Main.TheoryLoader (TheoryLoadError(ParserError, WarningError), TheoryLoadOptions(..))
+import Main.TheoryLoader (TheoryLoadError(ExportTranslationError, ParserError, WarningError), TheoryLoadOptions(..))
 import Theory
 import Theory.Tools.Wellformedness
 import Text.PrettyPrint.Class qualified as Pretty
@@ -86,10 +86,12 @@ withWebUI
   -- ^ together with indication of choice "dot", "json", ...
   -> ImageFormat           -- ^ The preferred image format
   -> AutoProver            -- ^ The default autoprover.
+  -> Maybe JSONGraphs      -- ^ Graphs loaded from an externally exported JSON file, if any.
   -> (Application -> IO b) -- ^ Function to execute
   -> IO b
 withWebUI readyMsg cacheDir workDir enableLogging loadState autosave thyOpts
-          loadThy closeThy debug outputCmd imageFormat defaultAutoProver f = do
+          loadThy closeThy debug outputCmd imageFormat defaultAutoProver
+          loadedJsonGraphs f = do
   thy <- getTheos
   threadVar <- newMVar M.empty
   theoryVar <- newMVar thy
@@ -116,6 +118,7 @@ withWebUI readyMsg cacheDir workDir enableLogging loadState autosave thyOpts
                     , imageFormat
                     , defaultAutoProver
                     , debug
+                    , loadedJsonGraphs
                     }
       in if enableLogging then
         toWaiApp webUI
@@ -176,6 +179,9 @@ loadTheories thOpts readyMsg thDir thLoad thClose autoProver = do
         Left (WarningError report) -> do
           putStrLn $ renderDoc $ ppInteractive report path
           die "quit-on-warning mode selected - aborting on wellformedness errors."
+        Left exportError@(ExportTranslationError _) -> do
+          putStrLn $ "Export error while loading " ++ path ++ ": " ++ show exportError
+          pure Nothing
         Right (report, thy) -> do
           time <- getZonedTime
           let wfErrors = if null report
