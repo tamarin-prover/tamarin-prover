@@ -34,6 +34,8 @@ module Web.Theory
   , applyDiffProverAtPath
   , applyProverAtPathDiff
   , dotGraphString
+  , graphJsonThyPath
+  , graphJsonDiffThyPath
   )
 where
 
@@ -56,6 +58,8 @@ import System.Directory
 import System.FilePath
 
 import Text.Blaze.Html (preEscapedToMarkup, toHtml)
+import Data.ByteString.Lazy qualified as BL
+import Data.ByteString.Lazy.Char8 qualified as BC (unpack)
 import Text.Dot qualified as D
 import Text.Hamlet (Html, hamlet)
 import Text.PrettyPrint.Html
@@ -72,6 +76,8 @@ import TheoryObject (theoryMacros, prettyTactic, diffTheoryMacros, diffTheorySid
 
 import Web.Settings
 import Web.Types
+import           Web.Utils
+import qualified Control.Monad.State.Lazy     as State
 
 ------------------------------------------------------------------------------
 -- Various other functions
@@ -1035,33 +1041,33 @@ htmlThyPath renderUrl renderImgUrl info path lPlaintext = case path of
           <noscript>
             <div class="warning">
               Warning: JavaScript must be enabled for the
-              <span class="tamarin">Tamarin</span>
+              <span class="tamarin">Tamarin
               prover GUI to function properly.
-          <p>
+          <div>
             <ul .wrap-text>
               <li>
                Modifying the lemma in the box above and clicking the submit button will attempt to modify the lemma in the current theory.
-               <br>&zwnj;
+               <br>
+               \ &zwnj;
               <li>
                Failures in parsing the lemma or verifying its well-formedness will result in an error, and the lemma will NOT be modified.
                However, your changes will be kept on this page until you leave this right panel.
-               <br>&zwnj;
+               <br>
+               \ &zwnj;
               <li>
                Editing a lemma will NOT modify the file it was loaded from, but clicking on "Append modified lemmas to file" in the Actions menu adds all modified lemmas as a comment at the end of the file on disk they were loaded from.
-               <br>&zwnj;
+               <br>
+               \ &zwnj;
               <li>
                Clicking on "Download source" in the Actions menu will download the modified version of the theory (including the modified lemmas), but not modify the file on disk.
-               <br>&zwnj;
+               <br>
+               \ &zwnj;
               <li>
                Modifying a reuse lemma will invalidate all subsequent proofs.
-               <br>&zwnj;
+               <br>
+               \ &zwnj;
               <li>
                Modifying a sources lemma is not supported and will result in an error.
-            <style>
-               .wrap-text li {
-                   white-space: normal;
-                   word-wrap: break-word;
-               }
     |] renderUrl
     where textHeight = 2 + length (filter (=='\n') lPlaintext)
 
@@ -1078,26 +1084,24 @@ htmlThyPath renderUrl renderImgUrl info path lPlaintext = case path of
       <noscript>
         <div class="warning">
           Warning: JavaScript must be enabled for the
-          <span class="tamarin">Tamarin</span>
+          <span class="tamarin">Tamarin
           prover GUI to function properly.
-      <p>
+      <div>
         <ul .wrap-text>
           <li>
            Clicking on the button above will delete the lemma from the loaded theory.
-           <br>&zwnj;
+           <br>
+           \ &zwnj;
           <li>
            Deleting a lemma will NOT modify the file it was loaded from, but clicking on "Download source" in the Actions menu will download the modified version of the theory (so without the deleted lemmas).
-           <br>&zwnj;
+           <br>
+           \ &zwnj;
           <li>
            Deleting a reuse lemma will invalidate all subsequent proofs.
-           <br>&zwnj;
+           <br>
+           \ &zwnj;
           <li>
            Deleting a source lemma is not supported and will result in an error.
-         <style>
-             .wrap-text li {
-                 white-space: normal;
-                 word-wrap: break-word;
-             }
          |] renderUrl
 
   TheoryAdd name -> do
@@ -1113,23 +1117,20 @@ htmlThyPath renderUrl renderImgUrl info path lPlaintext = case path of
         <noscript>
           <div class="warning">
             Warning: JavaScript must be enabled for the
-            <span class="tamarin">Tamarin</span>
+            <span class="tamarin">Tamarin
             prover GUI to function properly.
-        <p>
+        <div>
           <ul .wrap-text>
             <li>
              Adds the lemma in the current position in the theory, but will throw an error if a lemma with the same name exists, the parsing fails, or the lemma isn't well-formed.
-             <br>&zwnj;
+             <br>
+             \ &zwnj;
             <li>
              Adding a lemma will NOT modify the loaded source file, but clicking on "Append modified lemmas to file" in the Actions menu appends all added lemmas as a comment at the end of the current theory file.
-             <br>&zwnj;
+             <br>
+             \ &zwnj;
             <li>
              Clicking on "Download source" in the Actions menu will download the modified version of the theory (including the added lemmas).
-          <style>
-              .wrap-text li {
-                  white-space: normal;
-                  word-wrap: break-word;
-              }
           |] renderUrl
 
   TheoryHelp -> helpHtml info.theory._thyName info renderUrl
@@ -1191,97 +1192,96 @@ helpHtml theoryName info renderUrl = [hamlet|
     Theory: #{theoryName}
     \ (Loaded at #{formatTime defaultTimeLocale "%T" info.time}
     \ from #{show info.origin})
-    \ #{preEscapedToMarkup info.errorsHtml}
+  \ #{preEscapedToMarkup info.errorsHtml}
   <div id="help">
     <h3>Quick introduction
     <noscript>
       <div class="warning">
         Warning: JavaScript must be enabled for the
-        <span class="tamarin">Tamarin</span>
+        <span class="tamarin">Tamarin
         prover GUI to function properly.
     <p>
       <em>Left pane: Proof scripts display.
-      <ul>
-        <li>
-          When a theory is initially loaded, there will be a line at the
-          \ end of each theorem stating #
-          <tt>"by sorry // not yet proven"
-          .  Click on #
-          <tt>sorry
-          \ to inspect the proof state.
-        <li>
-          Right-click to show further options, such as autoprove.
+    <ul>
+      <li>
+        When a theory is initially loaded, there will be a line at the
+        \ end of each theorem stating #
+        <code>"by sorry // not yet proven"
+        .  Click on #
+        <code>sorry
+        \ to inspect the proof state.
+      <li>
+        Right-click to show further options, such as autoprove.
     <p>
       <em>Right pane: Visualization.
-      <ul>
-        <li>
-          Visualization and information display relating to the
-          \ currently selected item.
+    <ul>
+      <li>
+        Visualization and information display relating to the
+        \ currently selected item.
 
   <h3>Keyboard shortcuts
-  <p>
-    <div id="shortcuts">
-      <table>
-        <tr>
-          <td>
-            <span class="keys">j/k
-          <td>
-            Jump to the next/previous proof path within the currently
-            \ focused lemma.
-        <tr>
-          <td>
-            <span class="keys">J/K
-          <td>
-            Jump to the next/previous open constraint within the currently
-            \ focused lemma, or to the next/previous lemma if there are no
-            \ more #
-            <tt>sorry
-            \ steps in the proof of the current lemma.
-        <tr>
-          <td>
-            <span class="keys">1-9
-          <td>
-            Apply the proof method with the given number as shown in the
-            \ applicable proof method section in the main view.
-        <tr>
-          <td>
-            <span class="keys">a/A
-          <td>
-            Apply the autoprove method to the focused proof step.
-            \ <span class="keys">a</span>
-            \ stops after finding a solution, and
-            \ <span class="keys">A</span>
-            \ searches for all solutions.
-            \ Needs to have a #
-            <tt>sorry
-            \ selected to work.
-        <tr>
-          <td>
-            <span class="keys">b/B
-          <td>
-            Apply a bounded-depth version of the autoprove method to the
-            \ focused proof step.
-            \ <span class="keys">b</span>
-            \ stops after finding a solution, and
-            \ <span class="keys">B</span>
-            \ searches for all solutions.
-            \ Needs to have a #
-            <tt>sorry
-            \ selected to work.
-        <tr>
-          <td>
-            <span class="keys">s/S
-          <td>
-            Apply the autoprove method to all lemmas.
-            \ <span class="keys">s</span>
-            \ stops after finding a solution, and
-            \ <span class="keys">S</span>
-            \ searches for all solutions.
-        <tr>
-          <td>
-            <span class="keys">?
-          <td>
-            Display this help message.
+  <div id="shortcuts">
+    <table>
+      <tr>
+        <td>
+          <span class="keys">j/k
+        <td>
+          Jump to the next/previous proof path within the currently
+          \ focused lemma.
+      <tr>
+        <td>
+          <span class="keys">J/K
+        <td>
+          Jump to the next/previous open constraint within the currently
+          \ focused lemma, or to the next/previous lemma if there are no
+          \ more #
+          <code>sorry
+          \ steps in the proof of the current lemma.
+      <tr>
+        <td>
+          <span class="keys">1-9
+        <td>
+          Apply the proof method with the given number as shown in the
+          \ applicable proof method section in the main view.
+      <tr>
+        <td>
+          <span class="keys">a/A
+        <td>
+          Apply the autoprove method to the focused proof step.
+          \ <span class="keys">a</span>
+          \ stops after finding a solution, and
+          \ <span class="keys">A</span>
+          \ searches for all solutions.
+          \ Needs to have a #
+          <code>sorry
+          \ selected to work.
+      <tr>
+        <td>
+          <span class="keys">b/B
+        <td>
+          Apply a bounded-depth version of the autoprove method to the
+          \ focused proof step.
+          \ <span class="keys">b</span>
+          \ stops after finding a solution, and
+          \ <span class="keys">B</span>
+          \ searches for all solutions.
+          \ Needs to have a #
+          <code>sorry
+          \ selected to work.
+      <tr>
+        <td>
+          <span class="keys">s/S
+        <td>
+          Apply the autoprove method to all lemmas.
+          \ <span class="keys">s</span>
+          \ stops after finding a solution, and
+          \ <span class="keys">S</span>
+          \ searches for all solutions.
+      <tr>
+        <td>
+          <span class="keys">?
+        <td>
+          Display this help message.
 |] renderUrl
 
 {-
@@ -1297,6 +1297,93 @@ htmlThyDbgPath thy path = go path
       prettySystem <$> psInfo (root proof)
     go _ = Nothing
 -}
+-- | Send the constraint system and the legend as JSON
+graphJsonThyPath :: FilePath       -- ^ Tamarin's cache directory
+                 -> (String -> System -> BL.ByteString)
+                                   -- ^ Function to convert constraint system to JSON
+                 -> Bool           -- ^ True iff we want abbreviation
+                 -> ClosedTheory
+                 -> TheoryPath
+                 -> IO FilePath
+graphJsonThyPath cacheDir_ showJsonGraphFunct abbreviate thy path = go path
+  where
+    go (TheorySource k i j) = renderJson $ casesCode k i j
+    go (TheoryProof l p)    = renderJson $ proofPathCode l p
+    go _                    = error "Unhandled theory path. This is a bug."
+
+    casesCode :: SourceKind -> Int -> Int -> BL.ByteString
+    casesCode k i j =
+      showJsonGraphFunct ("Theory: " ++ thy._thyName ++ " Case: " ++ show i ++ ":" ++ show j) (snd $ cases !! (i-1) !! (j-1))
+      where
+        cases = map (getDisj . (._cdCases)) (getSource k thy)
+
+    proofPathCode :: String -> ProofPath -> BL.ByteString
+    proofPathCode lemma proofPath   =
+      fromMaybe BL.empty $ do
+        subProof <- resolveProofPath thy lemma proofPath
+        sequent <- psInfo $ root subProof
+        let (sys, legend) = State.evalState (Web.Utils.abbrev abbreviate 30 sequent) M.empty
+            jsonGraph = showJsonGraphFunct ("Theory: " ++ thy._thyName ++ " Lemma: " ++ lemma) sys
+        return jsonGraph
+
+    renderJson :: BL.ByteString -> IO FilePath
+    renderJson str = do
+      let graphPath = cacheDir_ </> getGraphPath OutJSON (BC.unpack str)
+          jsonPath = addExtension graphPath ("json")
+      createDirectoryIfMissing True (takeDirectory jsonPath)
+      BL.writeFile jsonPath str
+      return jsonPath
+
+-- | Send the constraint system and the legend as JSON for diff theory and given path.
+graphJsonDiffThyPath :: FilePath                    -- ^ Tamarin's cache directory
+                    -> (String -> System -> BL.ByteString)  -- ^ Function to convert constraint system to JSON
+                    -> Bool                          -- ^ True iff we want abbreviation
+                    -> ClosedDiffTheory
+                    -> DiffTheoryPath
+                    -> Bool                          -- ^ True if we want the mirror graph
+                    -> IO FilePath
+graphJsonDiffThyPath cacheDir_ showJsonGraphFunct abbreviate thy path mirror = go path
+  where
+    go (DiffTheorySource s k d i j) = renderJson $ casesCode s k i j d
+    go (DiffTheoryProof s l p)      = renderJson $ proofPathCode s l p
+    go (DiffTheoryDiffProof l p)    = renderJson $ proofPathCodeDiff l p mirror
+    go _                            = error "Unhandled theory path. This is a bug."
+
+    casesCode s k i j isdiff =
+      showJsonGraphFunct ("Theory: " ++ thy._diffThyName ++ " Case: " ++ show i ++ ":" ++ show j)
+                         (snd $ cases !! (i-1) !! (j-1))
+      where
+        cases = map (getDisj . (._cdCases)) (getDiffSource s isdiff k thy)
+
+    proofPathCode s lemma proofPath =
+      fromMaybe BL.empty $ do
+        subProof <- resolveProofPathDiff thy s lemma proofPath
+        sequent <- psInfo $ root subProof
+        let (sys, _) = State.evalState (Web.Utils.abbrev abbreviate 30 sequent) M.empty
+        return $ showJsonGraphFunct ("Theory: " ++ thy._diffThyName ++ " Lemma: " ++ lemma) sys
+
+    proofPathCodeDiff lemma proofPath mir =
+      fromMaybe BL.empty $ do
+        subProof <- resolveProofPathDiffLemma thy lemma proofPath
+        diffSequent <- dpsInfo $ root subProof
+        sys <- if mir
+          then do
+            lem <- lookupDiffLemma lemma thy
+            let ctxt = getDiffProofContext lem thy
+            side <- diffSequent._dsSide
+            let isSolved s sys' = null $ rankProofMethods GoalNrRanking [defaultTactic] (eitherProofContext ctxt s) sys'
+            nsequent <- diffSequent._dsSystem
+            let sequentList = snd $ getMirrorDGandEvaluateRestrictions ctxt diffSequent (isSolved side nsequent)
+            if null sequentList then Nothing else Just $ head sequentList
+          else diffSequent._dsSystem
+        return $ showJsonGraphFunct ("Theory: " ++ thy._diffThyName ++ " Lemma: " ++ lemma) sys
+
+    renderJson str = do
+      let graphPath = cacheDir_ </> getGraphPath OutJSON (BC.unpack str)
+          jsonPath = addExtension graphPath "json"
+      createDirectoryIfMissing True (takeDirectory jsonPath)
+      BL.writeFile jsonPath str
+      return jsonPath
 
 -- | Output either JSON or an image corresponding to the given theory path and return the generated file's path.
 -- Returns Nothing if there was an error during the image generation.
@@ -1304,7 +1391,7 @@ imgThyPath :: ImageFormat                  -- ^ The preferred image output forma
            -> OutputCommand                -- ^ Choice and command for rendering.
            -> FilePath                     -- ^ Tamarin's cache directory
            -> (System -> D.Dot ())         -- ^ Function to render a System to Graphviz dot format.
-           -> (String -> System -> String) -- ^ Function to render a System to JSON.
+           -> (String -> System -> BL.ByteString) -- ^ Function to render a System to JSON.
            -> ClosedTheory                 -- ^ Theory from which to extract the 'System'.
            -> TheoryPath                   -- ^ Path of the 'System' in the theory.
            -> IO (Maybe FilePath)          -- ^ Path to the generated file.
@@ -1313,8 +1400,8 @@ imgThyPath imageFormat outputCommand cacheDir_ toDot toJSON thy thyPath =
       Nothing -> return Nothing
       Just (jsonLabel, system) -> do
         let code = case outputCommand.ocFormat  of
-                     OutDot -> prefixedShowDot $ toDot system
-                     OutJSON -> toJSON jsonLabel system
+                     OutDot -> Left $ prefixedShowDot $ toDot system
+                     OutJSON -> Right $ toJSON jsonLabel system
         renderGraphCode code
   where
     thyPathSystem :: TheoryPath -> Maybe (String, System)
@@ -1345,9 +1432,9 @@ imgThyPath imageFormat outputCommand cacheDir_ toDot toJSON thy thyPath =
         ruleList :: HasRuleName (Rule i) => [Rule i] -> String
         ruleList = intercalate ", " . nub . map showRuleCaseName
 
-    -- Render a piece of dot or JSON code
+    -- Render a piece of dot (Left, textual) or JSON (Right, UTF-8 bytes) code
     renderGraphCode code = do
-      let graphPath = cacheDir_ </> getGraphPath outputCommand.ocFormat code
+      let graphPath = cacheDir_ </> getGraphPath outputCommand.ocFormat (either id BC.unpack code)
           imgPath = addExtension graphPath $ show imageFormat
 
           -- A busy wait loop with a maximal number of iterations
@@ -1372,7 +1459,7 @@ imgThyPath imageFormat outputCommand cacheDir_ toDot toJSON thy thyPath =
           renderedOrRendering 50,
           -- create dot-file and render to image
           do
-            writeFile graphPath code
+            either (writeFile graphPath) (BL.writeFile graphPath) code
             -- select the correct command to generate img
             case outputCommand.ocFormat of
               OutDot  -> dotToImg "dot" graphPath imgPath

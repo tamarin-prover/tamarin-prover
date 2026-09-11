@@ -994,10 +994,10 @@ solve( PState( $A, ($B add $C), ~ekA ) ▶₀ #i )
         solve( !KU( sign(<$B, ($A add $C), XC>, ~ltk.1) ) @ #vk.5 )
           case Proto1
           solve( !KU( em('P', 'P')^(~ekA*~ekA.1*~ekA.2) ) @ #vk.6 )
-            case Proto1_case_1
+            case Proto1_case_2
             solve( !KU( ~ekA ) @ #vk.9 )
               case EphkRev
-              solve( !KU( ~ekA.1 ) @ #vk.10 )
+              solve( !KU( ~ekA.2 ) @ #vk.10 )
                 case EphkRev
                 solve( splitEqs(3) )
                   case split
@@ -1007,10 +1007,10 @@ solve( PState( $A, ($B add $C), ~ekA ) ▶₀ #i )
                       case split
                       solve( !KU( pmult(~ekA.1, 'P') ) @ #vk.8 )
                         case Proto1
-                        solve( splitEqs(10) )
-                          case split
-                          solve( !KU( pmult(~ekA.2, 'P') ) @ #vk.9 )
-                            case Proto1
+                        solve( !KU( pmult(~ekA.2, 'P') ) @ #vk.9 )
+                          case Proto1
+                          solve( splitEqs(12) )
+                            case split
                             SOLVED // trace found
                           qed
                         qed
@@ -1033,8 +1033,8 @@ qed
 Generated from:
 Tamarin version 1.13.0
 Maude version 3.5.1
-Git revision: abcb0ff3eca770d7b7f58a583b2616eafe845e15, branch: fix-derivation-check-warnings
-Compiled at: 2026-07-22 11:02:46.6864 UTC
+Git revision: 41bc81379b23681e7057314a5cf66a25c45e1986, branch: canonicalise-subst
+Compiled at: 2026-07-27 16:11:34.947223 UTC
 */
 
 end
@@ -1046,7 +1046,7 @@ summary of summaries:
 analyzed: examples/csf26-ac/fast/Joux_EphkRev.spthy
 
   output:          examples/csf26-ac/fast/Joux_EphkRev.spthy.tmp
-  processing time: 8.90s
+  processing time: 8.56s
   
   session_key_establish (exists-trace): verified (25 steps)
   Session_Key_Secrecy_PFS (all-traces): falsified - found trace (16 steps)

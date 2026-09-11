@@ -125,13 +125,13 @@ solve( Init_1( ~ekI, $I, $R, ~lkI, ~ekI ) ▶₀ #i1 )
         qed
       next
         case generate_ltk_case_1
-        solve( !KU( ~lkI ) @ #vk.10 )
+        solve( !KU( ~lkR ) @ #vk.10 )
           case Ltk_reveal
           by contradiction /* from formulas */
         qed
       next
         case generate_ltk_case_2
-        solve( !KU( ~lkR ) @ #vk.10 )
+        solve( !KU( ~lkI ) @ #vk.10 )
           case Ltk_reveal
           by contradiction /* from formulas */
         qed
@@ -192,13 +192,13 @@ solve( !Ltk( $R, ~lkR ) ▶₂ #i1 )
         qed
       next
         case generate_ltk_case_1
-        solve( !KU( ~lkI ) @ #vk.10 )
+        solve( !KU( ~lkR ) @ #vk.10 )
           case Ltk_reveal
           by contradiction /* from formulas */
         qed
       next
         case generate_ltk_case_2
-        solve( !KU( ~lkR ) @ #vk.10 )
+        solve( !KU( ~lkI ) @ #vk.10 )
           case Ltk_reveal
           by contradiction /* from formulas */
         qed
@@ -213,8 +213,8 @@ qed
 Generated from:
 Tamarin version 1.13.0
 Maude version 3.5.1
-Git revision: abcb0ff3eca770d7b7f58a583b2616eafe845e15, branch: fix-derivation-check-warnings
-Compiled at: 2026-07-22 11:02:46.6864 UTC
+Git revision: 41bc81379b23681e7057314a5cf66a25c45e1986, branch: canonicalise-subst
+Compiled at: 2026-07-27 16:11:34.947223 UTC
 */
 
 end
@@ -226,7 +226,7 @@ summary of summaries:
 analyzed: examples/csf12/JKL_TS1_2008_KI.spthy
 
   output:          examples/csf12/JKL_TS1_2008_KI.spthy.tmp
-  processing time: 0.08s
+  processing time: 0.07s
   
   JKL2008_1_initiator_key (all-traces): verified (15 steps)
   JKL2008_1_responder_key (all-traces): verified (15 steps)

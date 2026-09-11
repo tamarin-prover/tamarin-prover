@@ -29,7 +29,10 @@ module Web.Handler
   , getTheoryPathDiffMR
   -- , getTheoryPathDR
   , getTheoryGraphR
+  , getTheoryGraphJsonR
   , getTheoryInteractiveGraphR
+  , getTheoryGraphJsonDiffR
+  , getTheoryGraphJsonMirrorDiffR
   , getTheoryGraphDiffR
   , getTheoryMirrorDiffR
   , getTheoryInteractiveGraphDiffR
@@ -57,6 +60,9 @@ module Web.Handler
   , postReloadTheoryDiffR
   , getUnloadTheoryR
   , getUnloadTheoryDiffR
+  , getLoadJsonR
+  , getLoadJsonViewR
+  , getLoadJsonDataR
   )
 where
 
@@ -411,6 +417,9 @@ reloadTheoryFromFile filePath idx isDiff replaceTrace replaceDiff successRoute =
       ++ filePath ++ "\n\n" ++
       show (length report) ++ " error(s) found" ++ (if isDiff then " in diff theory" else "") ++
       ":\n\n" ++ renderHtmlDoc (htmlDoc $ prettyWfErrorReport report)
+
+    Left exportError@(ExportTranslationError _) ->
+      mkAlert $ "Export error while reloading " ++ typeName ++ ":\n\n" ++ show exportError
     
     Right (report, thy, _wfErrors) -> case (thy, isDiff) of
         (Left _, True) -> mkAlert "Expected diff theory but file contains standard theory"
@@ -897,8 +906,8 @@ getInteractiveOverviewR idx path = withTheory idx ( \ti -> do
 getInteractiveDotGraphR :: TheoryIdx -> TheoryPath -> Handler Html
 getInteractiveDotGraphR idx path = withTheory idx ( \ti -> do
   renderF <- getUrlRender
-  let dotPath = T.unpack $ renderF (TheoryInteractiveGraphR idx path)
-  intdotLayout $ do 
+  let dotPath = T.unpack $ renderF (TheoryGraphJsonR idx path)
+  intdotLayout True $ do 
       setTitle (toHtml $ "Theory: " ++ ti.theory._thyName)
       toWidget
         [hamlet|
@@ -908,8 +917,8 @@ getInteractiveDotGraphR idx path = withTheory idx ( \ti -> do
 getInteractiveDotGraphDiffR :: TheoryIdx -> DiffTheoryPath -> Handler Html
 getInteractiveDotGraphDiffR idx path = withDiffTheory idx (\ti -> do
   renderF <- getUrlRender
-  let dotPath = T.unpack $ renderF (TheoryInteractiveGraphDiffR idx path)
-  intdotLayout $ do 
+  let dotPath = T.unpack $ renderF (TheoryGraphJsonDiffR idx path)
+  intdotLayout False $ do
       setTitle (toHtml $ "DiffTheory: " ++ ti.theory._diffThyName)
       toWidget
         [hamlet|
@@ -919,13 +928,72 @@ getInteractiveDotGraphDiffR idx path = withDiffTheory idx (\ti -> do
 getInteractiveDotGraphMirrorDiffR :: TheoryIdx -> DiffTheoryPath -> Handler Html
 getInteractiveDotGraphMirrorDiffR idx path = withDiffTheory idx (\ti -> do
   renderF <- getUrlRender
-  let dotPath = T.unpack $ renderF (TheoryInteractiveMirrorDiffR idx path)
-  intdotLayout $ do 
+  let dotPath = T.unpack $ renderF (TheoryGraphJsonMirrorDiffR idx path)
+  intdotLayout False $ do
       setTitle (toHtml $ "DiffTheory: " ++ ti.theory._diffThyName)
       toWidget
         [hamlet|
             <dot-graph-viz dotsrc="#{dotPath}">
         |])
+
+-- | Show a list of the graphs contained in an externally loaded JSON file
+-- (see --load-json), or redirect directly to the graph if there is only one.
+getLoadJsonR :: Handler Html
+getLoadJsonR = do
+  jsonGraphs <- getLoadedJsonGraphs
+  case jsonGraphs.graphs of
+    [_singleGraph] -> redirect (LoadJsonViewR 0)
+    gs -> defaultLayout $ do
+      let indexedGraphs = zip [0 :: Int ..] gs
+      setTitle "Loaded JSON graphs"
+      [whamlet|
+          $newline never
+          <h1>Loaded JSON graphs
+          <ul>
+            $forall (idx, g) <- indexedGraphs
+              <li>
+                <a href=@{LoadJsonViewR idx}>#{g.jgLabel}
+      |]
+
+-- | Show one graph from an externally loaded JSON file.
+getLoadJsonViewR :: Int -> Handler Html
+getLoadJsonViewR idx = do
+  g <- getLoadedJsonGraph idx
+  renderF <- getUrlRender
+  let dotPath = T.unpack $ renderF (LoadJsonDataR idx)
+  intdotLayout True $ do
+      setTitle (toHtml $ "Loaded graph: " ++ g.jgLabel)
+      toWidget
+        [hamlet|
+            <dot-graph-viz dotsrc="#{dotPath}">
+        |]
+
+-- | Serve a single graph from an externally loaded JSON file, wrapped back
+-- into the multi-graph JSON schema expected by <dot-graph-viz>.
+getLoadJsonDataR :: Int -> Handler RepJson
+getLoadJsonDataR idx = do
+  g <- getLoadedJsonGraph idx
+  pure $ RepJson $ toContent $ toJSON (JSONGraphs [g])
+
+-- | Look up the externally loaded JSON graphs (see --load-json),
+-- or fail with 404 if none were loaded.
+getLoadedJsonGraphs :: Handler JSONGraphs
+getLoadedJsonGraphs = do
+  yesod <- getYesod
+  case yesod.loadedJsonGraphs of
+    Nothing  -> notFound
+    Just jgs -> pure jgs
+
+-- | Look up a single graph by index from the externally loaded JSON file.
+getLoadedJsonGraph :: Int -> Handler JSONGraph
+getLoadedJsonGraph idx = do
+  jsonGraphs <- getLoadedJsonGraphs
+  -- Guard against negative indices explicitly: 'drop' on a negative count is
+  -- a no-op (returns the whole list) rather than failing, which would
+  -- otherwise make e.g. '/loadjson/-1' silently show graph 0 instead of 404.
+  case if idx < 0 then Nothing else listToMaybe (drop idx jsonGraphs.graphs) of
+    Nothing -> notFound
+    Just g  -> pure g
 
 -- | Show overview over diff theory (framed layout).
 getOverviewDiffR :: TheoryIdx -> DiffTheoryPath -> Handler Html
@@ -1365,6 +1433,35 @@ getTheoryGraphR idx path = withTheory idx $ \ti -> do
   case img' of
     Nothing -> notFound
     Just img -> sendFile (fromString . imageFormatMIME $ yesod.imageFormat) img
+
+-- | Get the graph as JSON for theory and given path.
+getTheoryGraphJsonR :: TheoryIdx -> TheoryPath -> Handler ()
+getTheoryGraphJsonR idx path = withTheory idx (\ti -> do
+    yesod <- getYesod
+    (graphOptions, dotOptions) <- getOptions
+    -- abbreviate is False iff "abbreviate-in-backend" is not set
+    abbreviate <- isJust <$> lookupGetParam "abbrevInBackend"
+    jsonStr <- liftIO $ traceExceptions "getTheoryGraphJsonR" $
+        graphJsonThyPath (yesod.cacheDir) (\label system -> sequentsToJSONPretty graphOptions [(label, system)]) abbreviate (ti.theory) path
+
+    sendFile (fromString ".json") jsonStr)
+
+-- | Get the graph as JSON for diff theory and given path.
+getTheoryGraphJsonDiffR :: TheoryIdx -> DiffTheoryPath -> Handler ()
+getTheoryGraphJsonDiffR idx path = getTheoryGraphJsonDiffR' idx path False
+
+-- | Get the mirror graph as JSON for diff theory and given path.
+getTheoryGraphJsonMirrorDiffR :: TheoryIdx -> DiffTheoryPath -> Handler ()
+getTheoryGraphJsonMirrorDiffR idx path = getTheoryGraphJsonDiffR' idx path True
+
+getTheoryGraphJsonDiffR' :: TheoryIdx -> DiffTheoryPath -> Bool -> Handler ()
+getTheoryGraphJsonDiffR' idx path mirror = withDiffTheory idx $ \ti -> do
+    yesod <- getYesod
+    (graphOptions, dotOptions) <- getOptions
+    abbreviate <- isJust <$> lookupGetParam "abbrevInBackend"
+    jsonStr <- liftIO $ traceExceptions "getTheoryGraphJsonDiffR" $
+        graphJsonDiffThyPath (yesod.cacheDir) (\label system -> sequentsToJSONPretty graphOptions [(label, system)]) abbreviate (ti.theory) path mirror
+    sendFile (fromString ".json") jsonStr
 
 -- | Get rendered interactive dot graph for theory and given path.
 getTheoryInteractiveGraphR:: TheoryIdx -> TheoryPath -> Handler T.Text

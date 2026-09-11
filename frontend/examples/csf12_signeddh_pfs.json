@@ -1,0 +1,1154 @@
+{
+    "graphs": [
+        {
+            "jgAbbrevs": [
+                {
+                    "jgaAbbrev": {
+                        "jgnConst": "DH1"
+                    },
+                    "jgaExpansion": {
+                        "jgnFunct": "DH_neutral",
+                        "jgnParams": [],
+                        "jgnShow": "DH_neutral"
+                    },
+                    "jgaTerm": {
+                        "jgnFunct": "DH_neutral",
+                        "jgnParams": [],
+                        "jgnShow": "DH_neutral"
+                    }
+                },
+                {
+                    "jgaAbbrev": {
+                        "jgnConst": "SI1"
+                    },
+                    "jgaExpansion": {
+                        "jgnFunct": "sign",
+                        "jgnParams": [
+                            {
+                                "jgnFunct": "pair",
+                                "jgnParams": [
+                                    {
+                                        "jgnConst": "'1'"
+                                    },
+                                    {
+                                        "jgnFunct": "pair",
+                                        "jgnParams": [
+                                            {
+                                                "jgnConst": "$I"
+                                            },
+                                            {
+                                                "jgnFunct": "pair",
+                                                "jgnParams": [
+                                                    {
+                                                        "jgnConst": "$R"
+                                                    },
+                                                    {
+                                                        "jgnConst": "DH1"
+                                                    }
+                                                ],
+                                                "jgnShow": "pair($R,DH1)"
+                                            }
+                                        ],
+                                        "jgnShow": "pair($I,pair($R,DH1))"
+                                    }
+                                ],
+                                "jgnShow": "pair('1',pair($I,pair($R,DH1)))"
+                            },
+                            {
+                                "jgnConst": "~ltk"
+                            }
+                        ],
+                        "jgnShow": "sign(pair('1',pair($I,pair($R,DH1))),~ltk)"
+                    },
+                    "jgaTerm": {
+                        "jgnFunct": "sign",
+                        "jgnParams": [
+                            {
+                                "jgnFunct": "pair",
+                                "jgnParams": [
+                                    {
+                                        "jgnConst": "'1'"
+                                    },
+                                    {
+                                        "jgnFunct": "pair",
+                                        "jgnParams": [
+                                            {
+                                                "jgnConst": "$I"
+                                            },
+                                            {
+                                                "jgnFunct": "pair",
+                                                "jgnParams": [
+                                                    {
+                                                        "jgnConst": "$R"
+                                                    },
+                                                    {
+                                                        "jgnFunct": "DH_neutral",
+                                                        "jgnParams": [],
+                                                        "jgnShow": "DH_neutral"
+                                                    }
+                                                ],
+                                                "jgnShow": "pair($R,DH_neutral)"
+                                            }
+                                        ],
+                                        "jgnShow": "pair($I,pair($R,DH_neutral))"
+                                    }
+                                ],
+                                "jgnShow": "pair('1',pair($I,pair($R,DH_neutral)))"
+                            },
+                            {
+                                "jgnConst": "~ltk"
+                            }
+                        ],
+                        "jgnShow": "sign(pair('1',pair($I,pair($R,DH_neutral))),~ltk)"
+                    }
+                }
+            ],
+            "jgClusters": [],
+            "jgDirected": true,
+            "jgEdges": [
+                {
+                    "jgeColor": "gray50",
+                    "jgeRelation": "PersistentFact",
+                    "jgeSource": "#vr:c0",
+                    "jgeTarget": "#vr.2:p0"
+                },
+                {
+                    "jgeColor": "gray50",
+                    "jgeRelation": "PersistentFact",
+                    "jgeSource": "#vr:c1",
+                    "jgeTarget": "#i:p0"
+                },
+                {
+                    "jgeColor": "gray30",
+                    "jgeRelation": "default",
+                    "jgeSource": "#vf.1:c0",
+                    "jgeTarget": "#i:p3"
+                },
+                {
+                    "jgeColor": "gray50",
+                    "jgeRelation": "PersistentFact",
+                    "jgeSource": "#vr.1:c0",
+                    "jgeTarget": "#i:p1"
+                },
+                {
+                    "jgeColor": "orangered2",
+                    "jgeRelation": "KFact",
+                    "jgeSource": "#vr.2:c0",
+                    "jgeTarget": "#vk.1:p0"
+                },
+                {
+                    "jgeColor": "red",
+                    "jgeRelation": "LessAtoms",
+                    "jgeSource": "#vk",
+                    "jgeTarget": "#vf.1"
+                },
+                {
+                    "jgeColor": "red",
+                    "jgeRelation": "LessAtoms",
+                    "jgeSource": "#vk.1",
+                    "jgeTarget": "#vk"
+                },
+                {
+                    "jgeColor": "red",
+                    "jgeRelation": "LessAtoms",
+                    "jgeSource": "#vk.3",
+                    "jgeTarget": "#k"
+                },
+                {
+                    "jgeColor": "red",
+                    "jgeRelation": "LessAtoms",
+                    "jgeSource": "#vk.3",
+                    "jgeTarget": "#vk"
+                },
+                {
+                    "jgeColor": "red",
+                    "jgeRelation": "LessAtoms",
+                    "jgeSource": "#vk.3",
+                    "jgeTarget": "#vf.1"
+                }
+            ],
+            "jgLabel": "Theory: SignedDH_PFS Lemma: Perfect_Forward_Secrecy",
+            "jgNodes": [
+                {
+                    "jgnColor": "#d5d897",
+                    "jgnId": "#i",
+                    "jgnLabel": "Resp",
+                    "jgnMetadata": {
+                        "jgnActs": [
+                            {
+                                "jgnFactId": "action",
+                                "jgnFactMult": "",
+                                "jgnFactName": "SessionKey",
+                                "jgnFactShow": "SessionKey( $I, $R, DH_neutral )",
+                                "jgnFactTag": "ProtoFact",
+                                "jgnFactTerms": [
+                                    {
+                                        "jgnConst": "$I"
+                                    },
+                                    {
+                                        "jgnConst": "$R"
+                                    },
+                                    {
+                                        "jgnFunct": "DH_neutral",
+                                        "jgnParams": [],
+                                        "jgnShow": "DH_neutral"
+                                    }
+                                ]
+                            }
+                        ],
+                        "jgnConcs": [
+                            {
+                                "jgnFactId": "#i:c0",
+                                "jgnFactMult": "",
+                                "jgnFactName": "Out",
+                                "jgnFactShow": "Out( <$R, $I, 'g'^~ekR, sign(<'2', $R, $I, 'g'^~ekR>, ~ltk.1)> )",
+                                "jgnFactTag": "OutFact",
+                                "jgnFactTerms": [
+                                    {
+                                        "jgnFunct": "pair",
+                                        "jgnParams": [
+                                            {
+                                                "jgnConst": "$R"
+                                            },
+                                            {
+                                                "jgnFunct": "pair",
+                                                "jgnParams": [
+                                                    {
+                                                        "jgnConst": "$I"
+                                                    },
+                                                    {
+                                                        "jgnFunct": "pair",
+                                                        "jgnParams": [
+                                                            {
+                                                                "jgnFunct": "exp",
+                                                                "jgnParams": [
+                                                                    {
+                                                                        "jgnConst": "'g'"
+                                                                    },
+                                                                    {
+                                                                        "jgnConst": "~ekR"
+                                                                    }
+                                                                ],
+                                                                "jgnShow": "exp('g',~ekR)"
+                                                            },
+                                                            {
+                                                                "jgnFunct": "sign",
+                                                                "jgnParams": [
+                                                                    {
+                                                                        "jgnFunct": "pair",
+                                                                        "jgnParams": [
+                                                                            {
+                                                                                "jgnConst": "'2'"
+                                                                            },
+                                                                            {
+                                                                                "jgnFunct": "pair",
+                                                                                "jgnParams": [
+                                                                                    {
+                                                                                        "jgnConst": "$R"
+                                                                                    },
+                                                                                    {
+                                                                                        "jgnFunct": "pair",
+                                                                                        "jgnParams": [
+                                                                                            {
+                                                                                                "jgnConst": "$I"
+                                                                                            },
+                                                                                            {
+                                                                                                "jgnFunct": "exp",
+                                                                                                "jgnParams": [
+                                                                                                    {
+                                                                                                        "jgnConst": "'g'"
+                                                                                                    },
+                                                                                                    {
+                                                                                                        "jgnConst": "~ekR"
+                                                                                                    }
+                                                                                                ],
+                                                                                                "jgnShow": "exp('g',~ekR)"
+                                                                                            }
+                                                                                        ],
+                                                                                        "jgnShow": "pair($I,exp('g',~ekR))"
+                                                                                    }
+                                                                                ],
+                                                                                "jgnShow": "pair($R,pair($I,exp('g',~ekR)))"
+                                                                            }
+                                                                        ],
+                                                                        "jgnShow": "pair('2',pair($R,pair($I,exp('g',~ekR))))"
+                                                                    },
+                                                                    {
+                                                                        "jgnConst": "~ltk.1"
+                                                                    }
+                                                                ],
+                                                                "jgnShow": "sign(pair('2',pair($R,pair($I,exp('g',~ekR)))),~ltk.1)"
+                                                            }
+                                                        ],
+                                                        "jgnShow": "pair(exp('g',~ekR),sign(pair('2',pair($R,pair($I,exp('g',~ekR)))),~ltk.1))"
+                                                    }
+                                                ],
+                                                "jgnShow": "pair($I,pair(exp('g',~ekR),sign(pair('2',pair($R,pair($I,exp('g',~ekR)))),~ltk.1)))"
+                                            }
+                                        ],
+                                        "jgnShow": "pair($R,pair($I,pair(exp('g',~ekR),sign(pair('2',pair($R,pair($I,exp('g',~ekR)))),~ltk.1))))"
+                                    }
+                                ]
+                            }
+                        ],
+                        "jgnPrems": [
+                            {
+                                "jgnFactId": "#i:p0",
+                                "jgnFactMult": "!",
+                                "jgnFactName": "!Pk",
+                                "jgnFactShow": "!Pk( $I, pk(~ltk) )",
+                                "jgnFactTag": "ProtoFact",
+                                "jgnFactTerms": [
+                                    {
+                                        "jgnConst": "$I"
+                                    },
+                                    {
+                                        "jgnFunct": "pk",
+                                        "jgnParams": [
+                                            {
+                                                "jgnConst": "~ltk"
+                                            }
+                                        ],
+                                        "jgnShow": "pk(~ltk)"
+                                    }
+                                ]
+                            },
+                            {
+                                "jgnFactId": "#i:p1",
+                                "jgnFactMult": "!",
+                                "jgnFactName": "!Ltk",
+                                "jgnFactShow": "!Ltk( $R, ~ltk.1 )",
+                                "jgnFactTag": "ProtoFact",
+                                "jgnFactTerms": [
+                                    {
+                                        "jgnConst": "$R"
+                                    },
+                                    {
+                                        "jgnConst": "~ltk.1"
+                                    }
+                                ]
+                            },
+                            {
+                                "jgnFactId": "#i:p2",
+                                "jgnFactMult": "",
+                                "jgnFactName": "Fr",
+                                "jgnFactShow": "Fr( ~ekR )",
+                                "jgnFactTag": "FreshFact",
+                                "jgnFactTerms": [
+                                    {
+                                        "jgnConst": "~ekR"
+                                    }
+                                ]
+                            },
+                            {
+                                "jgnFactId": "#i:p3",
+                                "jgnFactMult": "",
+                                "jgnFactName": "In",
+                                "jgnFactShow": "In( <$I, $R, DH_neutral, sign(<'1', $I, $R, DH_neutral>, ~ltk)> )",
+                                "jgnFactTag": "InFact",
+                                "jgnFactTerms": [
+                                    {
+                                        "jgnFunct": "pair",
+                                        "jgnParams": [
+                                            {
+                                                "jgnConst": "$I"
+                                            },
+                                            {
+                                                "jgnFunct": "pair",
+                                                "jgnParams": [
+                                                    {
+                                                        "jgnConst": "$R"
+                                                    },
+                                                    {
+                                                        "jgnFunct": "pair",
+                                                        "jgnParams": [
+                                                            {
+                                                                "jgnFunct": "DH_neutral",
+                                                                "jgnParams": [],
+                                                                "jgnShow": "DH_neutral"
+                                                            },
+                                                            {
+                                                                "jgnFunct": "sign",
+                                                                "jgnParams": [
+                                                                    {
+                                                                        "jgnFunct": "pair",
+                                                                        "jgnParams": [
+                                                                            {
+                                                                                "jgnConst": "'1'"
+                                                                            },
+                                                                            {
+                                                                                "jgnFunct": "pair",
+                                                                                "jgnParams": [
+                                                                                    {
+                                                                                        "jgnConst": "$I"
+                                                                                    },
+                                                                                    {
+                                                                                        "jgnFunct": "pair",
+                                                                                        "jgnParams": [
+                                                                                            {
+                                                                                                "jgnConst": "$R"
+                                                                                            },
+                                                                                            {
+                                                                                                "jgnFunct": "DH_neutral",
+                                                                                                "jgnParams": [],
+                                                                                                "jgnShow": "DH_neutral"
+                                                                                            }
+                                                                                        ],
+                                                                                        "jgnShow": "pair($R,DH_neutral)"
+                                                                                    }
+                                                                                ],
+                                                                                "jgnShow": "pair($I,pair($R,DH_neutral))"
+                                                                            }
+                                                                        ],
+                                                                        "jgnShow": "pair('1',pair($I,pair($R,DH_neutral)))"
+                                                                    },
+                                                                    {
+                                                                        "jgnConst": "~ltk"
+                                                                    }
+                                                                ],
+                                                                "jgnShow": "sign(pair('1',pair($I,pair($R,DH_neutral))),~ltk)"
+                                                            }
+                                                        ],
+                                                        "jgnShow": "pair(DH_neutral,sign(pair('1',pair($I,pair($R,DH_neutral))),~ltk))"
+                                                    }
+                                                ],
+                                                "jgnShow": "pair($R,pair(DH_neutral,sign(pair('1',pair($I,pair($R,DH_neutral))),~ltk)))"
+                                            }
+                                        ],
+                                        "jgnShow": "pair($I,pair($R,pair(DH_neutral,sign(pair('1',pair($I,pair($R,DH_neutral))),~ltk))))"
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    "jgnType": "isProtocolRule"
+                },
+                {
+                    "jgnColor": "#c3a6ed",
+                    "jgnId": "#k",
+                    "jgnLabel": "Send",
+                    "jgnMetadata": {
+                        "jgnActs": [
+                            {
+                                "jgnFactId": "action",
+                                "jgnFactMult": "",
+                                "jgnFactName": "K",
+                                "jgnFactShow": "K( DH_neutral )",
+                                "jgnFactTag": "ProtoFact",
+                                "jgnFactTerms": [
+                                    {
+                                        "jgnFunct": "DH_neutral",
+                                        "jgnParams": [],
+                                        "jgnShow": "DH_neutral"
+                                    }
+                                ]
+                            }
+                        ],
+                        "jgnConcs": [
+                            {
+                                "jgnFactId": "#k:c0",
+                                "jgnFactMult": "",
+                                "jgnFactName": "In",
+                                "jgnFactShow": "In( DH_neutral )",
+                                "jgnFactTag": "InFact",
+                                "jgnFactTerms": [
+                                    {
+                                        "jgnFunct": "DH_neutral",
+                                        "jgnParams": [],
+                                        "jgnShow": "DH_neutral"
+                                    }
+                                ]
+                            }
+                        ],
+                        "jgnPrems": [
+                            {
+                                "jgnFactId": "#k:p0",
+                                "jgnFactMult": "!",
+                                "jgnFactName": "!KU",
+                                "jgnFactShow": "!KU( DH_neutral )",
+                                "jgnFactTag": "KUFact",
+                                "jgnFactTerms": [
+                                    {
+                                        "jgnFunct": "DH_neutral",
+                                        "jgnParams": [],
+                                        "jgnShow": "DH_neutral"
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    "jgnType": "isISendRule"
+                },
+                {
+                    "jgnColor": "#9ee1c3",
+                    "jgnId": "#vk",
+                    "jgnLabel": "Constrc_sign",
+                    "jgnMetadata": {
+                        "jgnActs": [
+                            {
+                                "jgnFactId": "action",
+                                "jgnFactMult": "!",
+                                "jgnFactName": "!KU",
+                                "jgnFactShow": "!KU( sign(<'1', $I, $R, DH_neutral>, ~ltk) )",
+                                "jgnFactTag": "KUFact",
+                                "jgnFactTerms": [
+                                    {
+                                        "jgnFunct": "sign",
+                                        "jgnParams": [
+                                            {
+                                                "jgnFunct": "pair",
+                                                "jgnParams": [
+                                                    {
+                                                        "jgnConst": "'1'"
+                                                    },
+                                                    {
+                                                        "jgnFunct": "pair",
+                                                        "jgnParams": [
+                                                            {
+                                                                "jgnConst": "$I"
+                                                            },
+                                                            {
+                                                                "jgnFunct": "pair",
+                                                                "jgnParams": [
+                                                                    {
+                                                                        "jgnConst": "$R"
+                                                                    },
+                                                                    {
+                                                                        "jgnFunct": "DH_neutral",
+                                                                        "jgnParams": [],
+                                                                        "jgnShow": "DH_neutral"
+                                                                    }
+                                                                ],
+                                                                "jgnShow": "pair($R,DH_neutral)"
+                                                            }
+                                                        ],
+                                                        "jgnShow": "pair($I,pair($R,DH_neutral))"
+                                                    }
+                                                ],
+                                                "jgnShow": "pair('1',pair($I,pair($R,DH_neutral)))"
+                                            },
+                                            {
+                                                "jgnConst": "~ltk"
+                                            }
+                                        ],
+                                        "jgnShow": "sign(pair('1',pair($I,pair($R,DH_neutral))),~ltk)"
+                                    }
+                                ]
+                            }
+                        ],
+                        "jgnConcs": [
+                            {
+                                "jgnFactId": "#vk:c0",
+                                "jgnFactMult": "!",
+                                "jgnFactName": "!KU",
+                                "jgnFactShow": "!KU( sign(<'1', $I, $R, DH_neutral>, ~ltk) )",
+                                "jgnFactTag": "KUFact",
+                                "jgnFactTerms": [
+                                    {
+                                        "jgnFunct": "sign",
+                                        "jgnParams": [
+                                            {
+                                                "jgnFunct": "pair",
+                                                "jgnParams": [
+                                                    {
+                                                        "jgnConst": "'1'"
+                                                    },
+                                                    {
+                                                        "jgnFunct": "pair",
+                                                        "jgnParams": [
+                                                            {
+                                                                "jgnConst": "$I"
+                                                            },
+                                                            {
+                                                                "jgnFunct": "pair",
+                                                                "jgnParams": [
+                                                                    {
+                                                                        "jgnConst": "$R"
+                                                                    },
+                                                                    {
+                                                                        "jgnFunct": "DH_neutral",
+                                                                        "jgnParams": [],
+                                                                        "jgnShow": "DH_neutral"
+                                                                    }
+                                                                ],
+                                                                "jgnShow": "pair($R,DH_neutral)"
+                                                            }
+                                                        ],
+                                                        "jgnShow": "pair($I,pair($R,DH_neutral))"
+                                                    }
+                                                ],
+                                                "jgnShow": "pair('1',pair($I,pair($R,DH_neutral)))"
+                                            },
+                                            {
+                                                "jgnConst": "~ltk"
+                                            }
+                                        ],
+                                        "jgnShow": "sign(pair('1',pair($I,pair($R,DH_neutral))),~ltk)"
+                                    }
+                                ]
+                            }
+                        ],
+                        "jgnPrems": [
+                            {
+                                "jgnFactId": "#vk:p0",
+                                "jgnFactMult": "!",
+                                "jgnFactName": "!KU",
+                                "jgnFactShow": "!KU( <'1', $I, $R, DH_neutral> )",
+                                "jgnFactTag": "KUFact",
+                                "jgnFactTerms": [
+                                    {
+                                        "jgnFunct": "pair",
+                                        "jgnParams": [
+                                            {
+                                                "jgnConst": "'1'"
+                                            },
+                                            {
+                                                "jgnFunct": "pair",
+                                                "jgnParams": [
+                                                    {
+                                                        "jgnConst": "$I"
+                                                    },
+                                                    {
+                                                        "jgnFunct": "pair",
+                                                        "jgnParams": [
+                                                            {
+                                                                "jgnConst": "$R"
+                                                            },
+                                                            {
+                                                                "jgnFunct": "DH_neutral",
+                                                                "jgnParams": [],
+                                                                "jgnShow": "DH_neutral"
+                                                            }
+                                                        ],
+                                                        "jgnShow": "pair($R,DH_neutral)"
+                                                    }
+                                                ],
+                                                "jgnShow": "pair($I,pair($R,DH_neutral))"
+                                            }
+                                        ],
+                                        "jgnShow": "pair('1',pair($I,pair($R,DH_neutral)))"
+                                    }
+                                ]
+                            },
+                            {
+                                "jgnFactId": "#vk:p1",
+                                "jgnFactMult": "!",
+                                "jgnFactName": "!KU",
+                                "jgnFactShow": "!KU( ~ltk )",
+                                "jgnFactTag": "KUFact",
+                                "jgnFactTerms": [
+                                    {
+                                        "jgnConst": "~ltk"
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    "jgnType": "isConstrRule"
+                },
+                {
+                    "jgnColor": "#b4db99",
+                    "jgnId": "#vr",
+                    "jgnLabel": "Register_pk",
+                    "jgnMetadata": {
+                        "jgnActs": [],
+                        "jgnConcs": [
+                            {
+                                "jgnFactId": "#vr:c0",
+                                "jgnFactMult": "!",
+                                "jgnFactName": "!Ltk",
+                                "jgnFactShow": "!Ltk( $I, ~ltk )",
+                                "jgnFactTag": "ProtoFact",
+                                "jgnFactTerms": [
+                                    {
+                                        "jgnConst": "$I"
+                                    },
+                                    {
+                                        "jgnConst": "~ltk"
+                                    }
+                                ]
+                            },
+                            {
+                                "jgnFactId": "#vr:c1",
+                                "jgnFactMult": "!",
+                                "jgnFactName": "!Pk",
+                                "jgnFactShow": "!Pk( $I, pk(~ltk) )",
+                                "jgnFactTag": "ProtoFact",
+                                "jgnFactTerms": [
+                                    {
+                                        "jgnConst": "$I"
+                                    },
+                                    {
+                                        "jgnFunct": "pk",
+                                        "jgnParams": [
+                                            {
+                                                "jgnConst": "~ltk"
+                                            }
+                                        ],
+                                        "jgnShow": "pk(~ltk)"
+                                    }
+                                ]
+                            }
+                        ],
+                        "jgnPrems": [
+                            {
+                                "jgnFactId": "#vr:p0",
+                                "jgnFactMult": "",
+                                "jgnFactName": "Fr",
+                                "jgnFactShow": "Fr( ~ltk )",
+                                "jgnFactTag": "FreshFact",
+                                "jgnFactTerms": [
+                                    {
+                                        "jgnConst": "~ltk"
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    "jgnType": "isProtocolRule"
+                },
+                {
+                    "jgnColor": "#c3a6ed",
+                    "jgnId": "#vf.1",
+                    "jgnLabel": "Send",
+                    "jgnMetadata": {
+                        "jgnActs": [
+                            {
+                                "jgnFactId": "action",
+                                "jgnFactMult": "",
+                                "jgnFactName": "K",
+                                "jgnFactShow": "K( <$I, $R, DH_neutral, sign(<'1', $I, $R, DH_neutral>, ~ltk)> )",
+                                "jgnFactTag": "ProtoFact",
+                                "jgnFactTerms": [
+                                    {
+                                        "jgnFunct": "pair",
+                                        "jgnParams": [
+                                            {
+                                                "jgnConst": "$I"
+                                            },
+                                            {
+                                                "jgnFunct": "pair",
+                                                "jgnParams": [
+                                                    {
+                                                        "jgnConst": "$R"
+                                                    },
+                                                    {
+                                                        "jgnFunct": "pair",
+                                                        "jgnParams": [
+                                                            {
+                                                                "jgnFunct": "DH_neutral",
+                                                                "jgnParams": [],
+                                                                "jgnShow": "DH_neutral"
+                                                            },
+                                                            {
+                                                                "jgnFunct": "sign",
+                                                                "jgnParams": [
+                                                                    {
+                                                                        "jgnFunct": "pair",
+                                                                        "jgnParams": [
+                                                                            {
+                                                                                "jgnConst": "'1'"
+                                                                            },
+                                                                            {
+                                                                                "jgnFunct": "pair",
+                                                                                "jgnParams": [
+                                                                                    {
+                                                                                        "jgnConst": "$I"
+                                                                                    },
+                                                                                    {
+                                                                                        "jgnFunct": "pair",
+                                                                                        "jgnParams": [
+                                                                                            {
+                                                                                                "jgnConst": "$R"
+                                                                                            },
+                                                                                            {
+                                                                                                "jgnFunct": "DH_neutral",
+                                                                                                "jgnParams": [],
+                                                                                                "jgnShow": "DH_neutral"
+                                                                                            }
+                                                                                        ],
+                                                                                        "jgnShow": "pair($R,DH_neutral)"
+                                                                                    }
+                                                                                ],
+                                                                                "jgnShow": "pair($I,pair($R,DH_neutral))"
+                                                                            }
+                                                                        ],
+                                                                        "jgnShow": "pair('1',pair($I,pair($R,DH_neutral)))"
+                                                                    },
+                                                                    {
+                                                                        "jgnConst": "~ltk"
+                                                                    }
+                                                                ],
+                                                                "jgnShow": "sign(pair('1',pair($I,pair($R,DH_neutral))),~ltk)"
+                                                            }
+                                                        ],
+                                                        "jgnShow": "pair(DH_neutral,sign(pair('1',pair($I,pair($R,DH_neutral))),~ltk))"
+                                                    }
+                                                ],
+                                                "jgnShow": "pair($R,pair(DH_neutral,sign(pair('1',pair($I,pair($R,DH_neutral))),~ltk)))"
+                                            }
+                                        ],
+                                        "jgnShow": "pair($I,pair($R,pair(DH_neutral,sign(pair('1',pair($I,pair($R,DH_neutral))),~ltk))))"
+                                    }
+                                ]
+                            }
+                        ],
+                        "jgnConcs": [
+                            {
+                                "jgnFactId": "#vf.1:c0",
+                                "jgnFactMult": "",
+                                "jgnFactName": "In",
+                                "jgnFactShow": "In( <$I, $R, DH_neutral, sign(<'1', $I, $R, DH_neutral>, ~ltk)> )",
+                                "jgnFactTag": "InFact",
+                                "jgnFactTerms": [
+                                    {
+                                        "jgnFunct": "pair",
+                                        "jgnParams": [
+                                            {
+                                                "jgnConst": "$I"
+                                            },
+                                            {
+                                                "jgnFunct": "pair",
+                                                "jgnParams": [
+                                                    {
+                                                        "jgnConst": "$R"
+                                                    },
+                                                    {
+                                                        "jgnFunct": "pair",
+                                                        "jgnParams": [
+                                                            {
+                                                                "jgnFunct": "DH_neutral",
+                                                                "jgnParams": [],
+                                                                "jgnShow": "DH_neutral"
+                                                            },
+                                                            {
+                                                                "jgnFunct": "sign",
+                                                                "jgnParams": [
+                                                                    {
+                                                                        "jgnFunct": "pair",
+                                                                        "jgnParams": [
+                                                                            {
+                                                                                "jgnConst": "'1'"
+                                                                            },
+                                                                            {
+                                                                                "jgnFunct": "pair",
+                                                                                "jgnParams": [
+                                                                                    {
+                                                                                        "jgnConst": "$I"
+                                                                                    },
+                                                                                    {
+                                                                                        "jgnFunct": "pair",
+                                                                                        "jgnParams": [
+                                                                                            {
+                                                                                                "jgnConst": "$R"
+                                                                                            },
+                                                                                            {
+                                                                                                "jgnFunct": "DH_neutral",
+                                                                                                "jgnParams": [],
+                                                                                                "jgnShow": "DH_neutral"
+                                                                                            }
+                                                                                        ],
+                                                                                        "jgnShow": "pair($R,DH_neutral)"
+                                                                                    }
+                                                                                ],
+                                                                                "jgnShow": "pair($I,pair($R,DH_neutral))"
+                                                                            }
+                                                                        ],
+                                                                        "jgnShow": "pair('1',pair($I,pair($R,DH_neutral)))"
+                                                                    },
+                                                                    {
+                                                                        "jgnConst": "~ltk"
+                                                                    }
+                                                                ],
+                                                                "jgnShow": "sign(pair('1',pair($I,pair($R,DH_neutral))),~ltk)"
+                                                            }
+                                                        ],
+                                                        "jgnShow": "pair(DH_neutral,sign(pair('1',pair($I,pair($R,DH_neutral))),~ltk))"
+                                                    }
+                                                ],
+                                                "jgnShow": "pair($R,pair(DH_neutral,sign(pair('1',pair($I,pair($R,DH_neutral))),~ltk)))"
+                                            }
+                                        ],
+                                        "jgnShow": "pair($I,pair($R,pair(DH_neutral,sign(pair('1',pair($I,pair($R,DH_neutral))),~ltk))))"
+                                    }
+                                ]
+                            }
+                        ],
+                        "jgnPrems": [
+                            {
+                                "jgnFactId": "#vf.1:p0",
+                                "jgnFactMult": "!",
+                                "jgnFactName": "!KU",
+                                "jgnFactShow": "!KU( <$I, $R, DH_neutral, sign(<'1', $I, $R, DH_neutral>, ~ltk)> )",
+                                "jgnFactTag": "KUFact",
+                                "jgnFactTerms": [
+                                    {
+                                        "jgnFunct": "pair",
+                                        "jgnParams": [
+                                            {
+                                                "jgnConst": "$I"
+                                            },
+                                            {
+                                                "jgnFunct": "pair",
+                                                "jgnParams": [
+                                                    {
+                                                        "jgnConst": "$R"
+                                                    },
+                                                    {
+                                                        "jgnFunct": "pair",
+                                                        "jgnParams": [
+                                                            {
+                                                                "jgnFunct": "DH_neutral",
+                                                                "jgnParams": [],
+                                                                "jgnShow": "DH_neutral"
+                                                            },
+                                                            {
+                                                                "jgnFunct": "sign",
+                                                                "jgnParams": [
+                                                                    {
+                                                                        "jgnFunct": "pair",
+                                                                        "jgnParams": [
+                                                                            {
+                                                                                "jgnConst": "'1'"
+                                                                            },
+                                                                            {
+                                                                                "jgnFunct": "pair",
+                                                                                "jgnParams": [
+                                                                                    {
+                                                                                        "jgnConst": "$I"
+                                                                                    },
+                                                                                    {
+                                                                                        "jgnFunct": "pair",
+                                                                                        "jgnParams": [
+                                                                                            {
+                                                                                                "jgnConst": "$R"
+                                                                                            },
+                                                                                            {
+                                                                                                "jgnFunct": "DH_neutral",
+                                                                                                "jgnParams": [],
+                                                                                                "jgnShow": "DH_neutral"
+                                                                                            }
+                                                                                        ],
+                                                                                        "jgnShow": "pair($R,DH_neutral)"
+                                                                                    }
+                                                                                ],
+                                                                                "jgnShow": "pair($I,pair($R,DH_neutral))"
+                                                                            }
+                                                                        ],
+                                                                        "jgnShow": "pair('1',pair($I,pair($R,DH_neutral)))"
+                                                                    },
+                                                                    {
+                                                                        "jgnConst": "~ltk"
+                                                                    }
+                                                                ],
+                                                                "jgnShow": "sign(pair('1',pair($I,pair($R,DH_neutral))),~ltk)"
+                                                            }
+                                                        ],
+                                                        "jgnShow": "pair(DH_neutral,sign(pair('1',pair($I,pair($R,DH_neutral))),~ltk))"
+                                                    }
+                                                ],
+                                                "jgnShow": "pair($R,pair(DH_neutral,sign(pair('1',pair($I,pair($R,DH_neutral))),~ltk)))"
+                                            }
+                                        ],
+                                        "jgnShow": "pair($I,pair($R,pair(DH_neutral,sign(pair('1',pair($I,pair($R,DH_neutral))),~ltk))))"
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    "jgnType": "isISendRule"
+                },
+                {
+                    "jgnColor": "#a0e4e4",
+                    "jgnId": "#vk.1",
+                    "jgnLabel": "Coerce",
+                    "jgnMetadata": {
+                        "jgnActs": [
+                            {
+                                "jgnFactId": "action",
+                                "jgnFactMult": "!",
+                                "jgnFactName": "!KU",
+                                "jgnFactShow": "!KU( ~ltk )",
+                                "jgnFactTag": "KUFact",
+                                "jgnFactTerms": [
+                                    {
+                                        "jgnConst": "~ltk"
+                                    }
+                                ]
+                            }
+                        ],
+                        "jgnConcs": [
+                            {
+                                "jgnFactId": "#vk.1:c0",
+                                "jgnFactMult": "!",
+                                "jgnFactName": "!KU",
+                                "jgnFactShow": "!KU( ~ltk )",
+                                "jgnFactTag": "KUFact",
+                                "jgnFactTerms": [
+                                    {
+                                        "jgnConst": "~ltk"
+                                    }
+                                ]
+                            }
+                        ],
+                        "jgnPrems": [
+                            {
+                                "jgnFactId": "#vk.1:p0",
+                                "jgnFactMult": "!",
+                                "jgnFactName": "!KD",
+                                "jgnFactShow": "!KD( ~ltk )",
+                                "jgnFactTag": "KDFact",
+                                "jgnFactTerms": [
+                                    {
+                                        "jgnConst": "~ltk"
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    "jgnType": "isConstrRule"
+                },
+                {
+                    "jgnColor": "#b4db99",
+                    "jgnId": "#vr.1",
+                    "jgnLabel": "Register_pk",
+                    "jgnMetadata": {
+                        "jgnActs": [],
+                        "jgnConcs": [
+                            {
+                                "jgnFactId": "#vr.1:c0",
+                                "jgnFactMult": "!",
+                                "jgnFactName": "!Ltk",
+                                "jgnFactShow": "!Ltk( $R, ~ltk.1 )",
+                                "jgnFactTag": "ProtoFact",
+                                "jgnFactTerms": [
+                                    {
+                                        "jgnConst": "$R"
+                                    },
+                                    {
+                                        "jgnConst": "~ltk.1"
+                                    }
+                                ]
+                            },
+                            {
+                                "jgnFactId": "#vr.1:c1",
+                                "jgnFactMult": "!",
+                                "jgnFactName": "!Pk",
+                                "jgnFactShow": "!Pk( $R, pk(~ltk.1) )",
+                                "jgnFactTag": "ProtoFact",
+                                "jgnFactTerms": [
+                                    {
+                                        "jgnConst": "$R"
+                                    },
+                                    {
+                                        "jgnFunct": "pk",
+                                        "jgnParams": [
+                                            {
+                                                "jgnConst": "~ltk.1"
+                                            }
+                                        ],
+                                        "jgnShow": "pk(~ltk.1)"
+                                    }
+                                ]
+                            }
+                        ],
+                        "jgnPrems": [
+                            {
+                                "jgnFactId": "#vr.1:p0",
+                                "jgnFactMult": "",
+                                "jgnFactName": "Fr",
+                                "jgnFactShow": "Fr( ~ltk.1 )",
+                                "jgnFactTag": "FreshFact",
+                                "jgnFactTerms": [
+                                    {
+                                        "jgnConst": "~ltk.1"
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    "jgnType": "isProtocolRule"
+                },
+                {
+                    "jgnColor": "#a9dc9a",
+                    "jgnId": "#vr.2",
+                    "jgnLabel": "Reveal_ltk",
+                    "jgnMetadata": {
+                        "jgnActs": [
+                            {
+                                "jgnFactId": "action",
+                                "jgnFactMult": "",
+                                "jgnFactName": "LtkReveal",
+                                "jgnFactShow": "LtkReveal( $I )",
+                                "jgnFactTag": "ProtoFact",
+                                "jgnFactTerms": [
+                                    {
+                                        "jgnConst": "$I"
+                                    }
+                                ]
+                            }
+                        ],
+                        "jgnConcs": [
+                            {
+                                "jgnFactId": "#vr.2:c0",
+                                "jgnFactMult": "",
+                                "jgnFactName": "Out",
+                                "jgnFactShow": "Out( ~ltk )",
+                                "jgnFactTag": "OutFact",
+                                "jgnFactTerms": [
+                                    {
+                                        "jgnConst": "~ltk"
+                                    }
+                                ]
+                            }
+                        ],
+                        "jgnPrems": [
+                            {
+                                "jgnFactId": "#vr.2:p0",
+                                "jgnFactMult": "!",
+                                "jgnFactName": "!Ltk",
+                                "jgnFactShow": "!Ltk( $I, ~ltk )",
+                                "jgnFactTag": "ProtoFact",
+                                "jgnFactTerms": [
+                                    {
+                                        "jgnConst": "$I"
+                                    },
+                                    {
+                                        "jgnConst": "~ltk"
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    "jgnType": "isProtocolRule"
+                },
+                {
+                    "jgnId": "#vk.3",
+                    "jgnLabel": "!KU( DH_neutral )",
+                    "jgnMetadata": {
+                        "jgnActs": [
+                            {
+                                "jgnFactId": "action",
+                                "jgnFactMult": "!",
+                                "jgnFactName": "!KU",
+                                "jgnFactShow": "!KU( DH_neutral )",
+                                "jgnFactTag": "KUFact",
+                                "jgnFactTerms": [
+                                    {
+                                        "jgnFunct": "DH_neutral",
+                                        "jgnParams": [],
+                                        "jgnShow": "DH_neutral"
+                                    }
+                                ]
+                            }
+                        ],
+                        "jgnConcs": [],
+                        "jgnPrems": []
+                    },
+                    "jgnType": "unsolvedActionAtom"
+                }
+            ],
+            "jgType": "Tamarin prover constraint system"
+        }
+    ]
+}

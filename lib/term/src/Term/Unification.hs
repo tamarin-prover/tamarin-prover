@@ -151,8 +151,18 @@ unifyLNTerm :: [Equal LNTerm] -> WithMaude [SubstVFresh Name LVar]
 unifyLNTerm = unifyLTerm sortOfName
 
 -- | 'True' iff the terms are unifiable.
+--
+-- Fast path: syntactically equal terms are trivially unifiable (the identity
+-- substitution), so there is no need to ship a reflexive @t =? t@ query to
+-- Maude.  Only the boolean is observed here (the unifier is discarded by
+-- @not . null@), so this cannot change any downstream substitution.  On
+-- AC-heavy theories contradiction- and ordering-checks ('nonUnifiableNodes')
+-- revisit the same term pairs on essentially every solver step, so this removes
+-- the large majority of unification round-trips.
 unifiableLNTerms :: LNTerm -> LNTerm -> WithMaude Bool
-unifiableLNTerms t1 t2 = (not . null) <$> unifyLNTerm [Equal t1 t2]
+unifiableLNTerms t1 t2
+  | t1 == t2  = return True
+  | otherwise = (not . null) <$> unifyLNTerm [Equal t1 t2]
 
 -- | Flatten a factored substitution to a list of substitutions.
 flattenUnif :: IsConst c => (LSubst c, [LSubstVFresh c]) -> [LSubstVFresh c]

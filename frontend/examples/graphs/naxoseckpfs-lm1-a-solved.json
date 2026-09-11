@@ -1,0 +1,2787 @@
+{
+  "graphs": [
+    {
+      "jgAbbrevs": [
+        {
+          "jgaAbbrev": {
+            "jgnConst": "EX1"
+          },
+          "jgaExpansion": {
+            "jgnFunct": "exp",
+            "jgnParams": [
+              {
+                "jgnConst": "'g'"
+              },
+              {
+                "jgnConst": "H4"
+              }
+            ],
+            "jgnShow": "exp('g',H4)"
+          },
+          "jgaTerm": {
+            "jgnFunct": "exp",
+            "jgnParams": [
+              {
+                "jgnConst": "'g'"
+              },
+              {
+                "jgnFunct": "h1",
+                "jgnParams": [
+                  {
+                    "jgnFunct": "pair",
+                    "jgnParams": [
+                      {
+                        "jgnConst": "~eskI"
+                      },
+                      {
+                        "jgnConst": "~lkI"
+                      }
+                    ],
+                    "jgnShow": "pair(~eskI,~lkI)"
+                  }
+                ],
+                "jgnShow": "h1(pair(~eskI,~lkI))"
+              }
+            ],
+            "jgnShow": "exp('g',h1(pair(~eskI,~lkI)))"
+          }
+        },
+        {
+          "jgaAbbrev": {
+            "jgnConst": "EX2"
+          },
+          "jgaExpansion": {
+            "jgnFunct": "exp",
+            "jgnParams": [
+              {
+                "jgnConst": "'g'"
+              },
+              {
+                "jgnFunct": "Mult",
+                "jgnParams": [
+                  {
+                    "jgnConst": "~x"
+                  },
+                  {
+                    "jgnConst": "H4"
+                  }
+                ],
+                "jgnShow": "Mult(~x,H4)"
+              }
+            ],
+            "jgnShow": "exp('g',Mult(~x,H4))"
+          },
+          "jgaTerm": {
+            "jgnFunct": "exp",
+            "jgnParams": [
+              {
+                "jgnConst": "'g'"
+              },
+              {
+                "jgnFunct": "Mult",
+                "jgnParams": [
+                  {
+                    "jgnConst": "~x"
+                  },
+                  {
+                    "jgnFunct": "h1",
+                    "jgnParams": [
+                      {
+                        "jgnFunct": "pair",
+                        "jgnParams": [
+                          {
+                            "jgnConst": "~eskI"
+                          },
+                          {
+                            "jgnConst": "~lkI"
+                          }
+                        ],
+                        "jgnShow": "pair(~eskI,~lkI)"
+                      }
+                    ],
+                    "jgnShow": "h1(pair(~eskI,~lkI))"
+                  }
+                ],
+                "jgnShow": "Mult(~x,h1(pair(~eskI,~lkI)))"
+              }
+            ],
+            "jgnShow": "exp('g',Mult(~x,h1(pair(~eskI,~lkI))))"
+          }
+        },
+        {
+          "jgaAbbrev": {
+            "jgnConst": "H4"
+          },
+          "jgaExpansion": {
+            "jgnFunct": "h1",
+            "jgnParams": [
+              {
+                "jgnFunct": "pair",
+                "jgnParams": [
+                  {
+                    "jgnConst": "~eskI"
+                  },
+                  {
+                    "jgnConst": "~lkI"
+                  }
+                ],
+                "jgnShow": "pair(~eskI,~lkI)"
+              }
+            ],
+            "jgnShow": "h1(pair(~eskI,~lkI))"
+          },
+          "jgaTerm": {
+            "jgnFunct": "h1",
+            "jgnParams": [
+              {
+                "jgnFunct": "pair",
+                "jgnParams": [
+                  {
+                    "jgnConst": "~eskI"
+                  },
+                  {
+                    "jgnConst": "~lkI"
+                  }
+                ],
+                "jgnShow": "pair(~eskI,~lkI)"
+              }
+            ],
+            "jgnShow": "h1(pair(~eskI,~lkI))"
+          }
+        },
+        {
+          "jgaAbbrev": {
+            "jgnConst": "H3"
+          },
+          "jgaExpansion": {
+            "jgnFunct": "h2",
+            "jgnParams": [
+              {
+                "jgnFunct": "pair",
+                "jgnParams": [
+                  {
+                    "jgnFunct": "exp",
+                    "jgnParams": [
+                      {
+                        "jgnConst": "'g'"
+                      },
+                      {
+                        "jgnConst": "~lkI"
+                      }
+                    ],
+                    "jgnShow": "exp('g',~lkI)"
+                  },
+                  {
+                    "jgnFunct": "pair",
+                    "jgnParams": [
+                      {
+                        "jgnConst": "EX2"
+                      },
+                      {
+                        "jgnFunct": "pair",
+                        "jgnParams": [
+                          {
+                            "jgnConst": "EX1"
+                          },
+                          {
+                            "jgnFunct": "pair",
+                            "jgnParams": [
+                              {
+                                "jgnConst": "$I"
+                              },
+                              {
+                                "jgnConst": "$R"
+                              }
+                            ],
+                            "jgnShow": "pair($I,$R)"
+                          }
+                        ],
+                        "jgnShow": "pair(EX1,pair($I,$R))"
+                      }
+                    ],
+                    "jgnShow": "pair(EX2,pair(EX1,pair($I,$R)))"
+                  }
+                ],
+                "jgnShow": "pair(exp('g',~lkI),pair(EX2,pair(EX1,pair($I,$R))))"
+              }
+            ],
+            "jgnShow": "h2(pair(exp('g',~lkI),pair(EX2,pair(EX1,pair($I,$R)))))"
+          },
+          "jgaTerm": {
+            "jgnFunct": "h2",
+            "jgnParams": [
+              {
+                "jgnFunct": "pair",
+                "jgnParams": [
+                  {
+                    "jgnFunct": "exp",
+                    "jgnParams": [
+                      {
+                        "jgnConst": "'g'"
+                      },
+                      {
+                        "jgnConst": "~lkI"
+                      }
+                    ],
+                    "jgnShow": "exp('g',~lkI)"
+                  },
+                  {
+                    "jgnFunct": "pair",
+                    "jgnParams": [
+                      {
+                        "jgnFunct": "exp",
+                        "jgnParams": [
+                          {
+                            "jgnConst": "'g'"
+                          },
+                          {
+                            "jgnFunct": "Mult",
+                            "jgnParams": [
+                              {
+                                "jgnConst": "~x"
+                              },
+                              {
+                                "jgnFunct": "h1",
+                                "jgnParams": [
+                                  {
+                                    "jgnFunct": "pair",
+                                    "jgnParams": [
+                                      {
+                                        "jgnConst": "~eskI"
+                                      },
+                                      {
+                                        "jgnConst": "~lkI"
+                                      }
+                                    ],
+                                    "jgnShow": "pair(~eskI,~lkI)"
+                                  }
+                                ],
+                                "jgnShow": "h1(pair(~eskI,~lkI))"
+                              }
+                            ],
+                            "jgnShow": "Mult(~x,h1(pair(~eskI,~lkI)))"
+                          }
+                        ],
+                        "jgnShow": "exp('g',Mult(~x,h1(pair(~eskI,~lkI))))"
+                      },
+                      {
+                        "jgnFunct": "pair",
+                        "jgnParams": [
+                          {
+                            "jgnFunct": "exp",
+                            "jgnParams": [
+                              {
+                                "jgnConst": "'g'"
+                              },
+                              {
+                                "jgnFunct": "h1",
+                                "jgnParams": [
+                                  {
+                                    "jgnFunct": "pair",
+                                    "jgnParams": [
+                                      {
+                                        "jgnConst": "~eskI"
+                                      },
+                                      {
+                                        "jgnConst": "~lkI"
+                                      }
+                                    ],
+                                    "jgnShow": "pair(~eskI,~lkI)"
+                                  }
+                                ],
+                                "jgnShow": "h1(pair(~eskI,~lkI))"
+                              }
+                            ],
+                            "jgnShow": "exp('g',h1(pair(~eskI,~lkI)))"
+                          },
+                          {
+                            "jgnFunct": "pair",
+                            "jgnParams": [
+                              {
+                                "jgnConst": "$I"
+                              },
+                              {
+                                "jgnConst": "$R"
+                              }
+                            ],
+                            "jgnShow": "pair($I,$R)"
+                          }
+                        ],
+                        "jgnShow": "pair(exp('g',h1(pair(~eskI,~lkI))),pair($I,$R))"
+                      }
+                    ],
+                    "jgnShow": "pair(exp('g',Mult(~x,h1(pair(~eskI,~lkI)))),pair(exp('g',h1(pair(~eskI,~lkI))),pair($I,$R)))"
+                  }
+                ],
+                "jgnShow": "pair(exp('g',~lkI),pair(exp('g',Mult(~x,h1(pair(~eskI,~lkI)))),pair(exp('g',h1(pair(~eskI,~lkI))),pair($I,$R))))"
+              }
+            ],
+            "jgnShow": "h2(pair(exp('g',~lkI),pair(exp('g',Mult(~x,h1(pair(~eskI,~lkI)))),pair(exp('g',h1(pair(~eskI,~lkI))),pair($I,$R)))))"
+          }
+        }
+      ],
+      "jgClusters": [],
+      "jgDirected": true,
+      "jgEdges": [
+        {
+          "jgeRelation": "default",
+          "jgeSource": "#vf:c0",
+          "jgeTarget": "#i1:p2"
+        },
+        {
+          "jgeRelation": "KFact",
+          "jgeSource": "#vl:c0",
+          "jgeTarget": "#vr.3:p0"
+        },
+        {
+          "jgeRelation": "KFact",
+          "jgeSource": "#vl:c0",
+          "jgeTarget": "#vk.5:p0"
+        },
+        {
+          "jgeRelation": "ProtoFact",
+          "jgeSource": "#vr:c0",
+          "jgeTarget": "#i1:p0"
+        },
+        {
+          "jgeRelation": "default",
+          "jgeSource": "#vr:c2",
+          "jgeTarget": "#vl:p0"
+        },
+        {
+          "jgeRelation": "PersistentFact",
+          "jgeSource": "#vr.1:c0",
+          "jgeTarget": "#vr:p1"
+        },
+        {
+          "jgeRelation": "PersistentFact",
+          "jgeSource": "#vr.1:c0",
+          "jgeTarget": "#vr.5:p0"
+        },
+        {
+          "jgeRelation": "PersistentFact",
+          "jgeSource": "#vr.2:c0",
+          "jgeTarget": "#vr.4:p0"
+        },
+        {
+          "jgeRelation": "PersistentFact",
+          "jgeSource": "#vr.2:c1",
+          "jgeTarget": "#i1:p1"
+        },
+        {
+          "jgeRelation": "KFact",
+          "jgeSource": "#vr.3:c0",
+          "jgeTarget": "#vk.1:p0"
+        },
+        {
+          "jgeRelation": "KFact",
+          "jgeSource": "#vr.4:c0",
+          "jgeTarget": "#vk.2:p0"
+        },
+        {
+          "jgeRelation": "KFact",
+          "jgeSource": "#vr.5:c0",
+          "jgeTarget": "#vk.4:p0"
+        },
+        {
+          "jgeRelation": "LessAtoms",
+          "jgeSource": "#i1",
+          "jgeTarget": "#vr.4"
+        },
+        {
+          "jgeRelation": "LessAtoms",
+          "jgeSource": "#vk",
+          "jgeTarget": "#i2"
+        },
+        {
+          "jgeRelation": "LessAtoms",
+          "jgeSource": "#vk.1",
+          "jgeTarget": "#vk"
+        },
+        {
+          "jgeRelation": "LessAtoms",
+          "jgeSource": "#vk.2",
+          "jgeTarget": "#vr.3"
+        },
+        {
+          "jgeRelation": "LessAtoms",
+          "jgeSource": "#vk.3",
+          "jgeTarget": "#vk"
+        },
+        {
+          "jgeRelation": "LessAtoms",
+          "jgeSource": "#vk.4",
+          "jgeTarget": "#vk.3"
+        },
+        {
+          "jgeRelation": "LessAtoms",
+          "jgeSource": "#vk.5",
+          "jgeTarget": "#vk"
+        }
+      ],
+      "jgLabel": "Theory: NAXOS_eCK_PFS Lemma: eCK_PFS_key_secrecy",
+      "jgNodes": [
+        {
+          "jgnId": "#i1",
+          "jgnLabel": "Init_2",
+          "jgnMetadata": {
+            "jgnActs": [
+              {
+                "jgnFactId": "action",
+                "jgnFactMult": "",
+                "jgnFactName": "Accept",
+                "jgnFactShow": "Accept( ~eskI, $I, $R, h2(<'g'^~lkI, 'g'^(~x*h1(<~eskI, ~lkI>)), 'g'^h1(<~eskI, ~lkI>), $I, $R>))",
+                "jgnFactTag": "ProtoFact",
+                "jgnFactTerms": [
+                  {
+                    "jgnConst": "~eskI"
+                  },
+                  {
+                    "jgnConst": "$I"
+                  },
+                  {
+                    "jgnConst": "$R"
+                  },
+                  {
+                    "jgnFunct": "h2",
+                    "jgnParams": [
+                      {
+                        "jgnFunct": "pair",
+                        "jgnParams": [
+                          {
+                            "jgnFunct": "exp",
+                            "jgnParams": [
+                              {
+                                "jgnConst": "'g'"
+                              },
+                              {
+                                "jgnConst": "~lkI"
+                              }
+                            ],
+                            "jgnShow": "exp('g',~lkI)"
+                          },
+                          {
+                            "jgnFunct": "pair",
+                            "jgnParams": [
+                              {
+                                "jgnFunct": "exp",
+                                "jgnParams": [
+                                  {
+                                    "jgnConst": "'g'"
+                                  },
+                                  {
+                                    "jgnFunct": "Mult",
+                                    "jgnParams": [
+                                      {
+                                        "jgnConst": "~x"
+                                      },
+                                      {
+                                        "jgnFunct": "h1",
+                                        "jgnParams": [
+                                          {
+                                            "jgnFunct": "pair",
+                                            "jgnParams": [
+                                              {
+                                                "jgnConst": "~eskI"
+                                              },
+                                              {
+                                                "jgnConst": "~lkI"
+                                              }
+                                            ],
+                                            "jgnShow": "pair(~eskI,~lkI)"
+                                          }
+                                        ],
+                                        "jgnShow": "h1(pair(~eskI,~lkI))"
+                                      }
+                                    ],
+                                    "jgnShow": "Mult(~x,h1(pair(~eskI,~lkI)))"
+                                  }
+                                ],
+                                "jgnShow": "exp('g',Mult(~x,h1(pair(~eskI,~lkI))))"
+                              },
+                              {
+                                "jgnFunct": "pair",
+                                "jgnParams": [
+                                  {
+                                    "jgnFunct": "exp",
+                                    "jgnParams": [
+                                      {
+                                        "jgnConst": "'g'"
+                                      },
+                                      {
+                                        "jgnFunct": "h1",
+                                        "jgnParams": [
+                                          {
+                                            "jgnFunct": "pair",
+                                            "jgnParams": [
+                                              {
+                                                "jgnConst": "~eskI"
+                                              },
+                                              {
+                                                "jgnConst": "~lkI"
+                                              }
+                                            ],
+                                            "jgnShow": "pair(~eskI,~lkI)"
+                                          }
+                                        ],
+                                        "jgnShow": "h1(pair(~eskI,~lkI))"
+                                      }
+                                    ],
+                                    "jgnShow": "exp('g',h1(pair(~eskI,~lkI)))"
+                                  },
+                                  {
+                                    "jgnFunct": "pair",
+                                    "jgnParams": [
+                                      {
+                                        "jgnConst": "$I"
+                                      },
+                                      {
+                                        "jgnConst": "$R"
+                                      }
+                                    ],
+                                    "jgnShow": "pair($I,$R)"
+                                  }
+                                ],
+                                "jgnShow": "pair(exp('g',h1(pair(~eskI,~lkI))),pair($I,$R))"
+                              }
+                            ],
+                            "jgnShow": "pair(exp('g',Mult(~x,h1(pair(~eskI,~lkI)))),pair(exp('g',h1(pair(~eskI,~lkI))),pair($I,$R)))"
+                          }
+                        ],
+                        "jgnShow": "pair(exp('g',~lkI),pair(exp('g',Mult(~x,h1(pair(~eskI,~lkI)))),pair(exp('g',h1(pair(~eskI,~lkI))),pair($I,$R))))"
+                      }
+                    ],
+                    "jgnShow": "h2(pair(exp('g',~lkI),pair(exp('g',Mult(~x,h1(pair(~eskI,~lkI)))),pair(exp('g',h1(pair(~eskI,~lkI))),pair($I,$R)))))"
+                  }
+                ]
+              },
+              {
+                "jgnFactId": "action",
+                "jgnFactMult": "",
+                "jgnFactName": "Sid",
+                "jgnFactShow": "Sid( ~eskI, <'Init', $I, $R, 'g'^h1(<~eskI, ~lkI>), 'g'> )",
+                "jgnFactTag": "ProtoFact",
+                "jgnFactTerms": [
+                  {
+                    "jgnConst": "~eskI"
+                  },
+                  {
+                    "jgnFunct": "pair",
+                    "jgnParams": [
+                      {
+                        "jgnConst": "'Init'"
+                      },
+                      {
+                        "jgnFunct": "pair",
+                        "jgnParams": [
+                          {
+                            "jgnConst": "$I"
+                          },
+                          {
+                            "jgnFunct": "pair",
+                            "jgnParams": [
+                              {
+                                "jgnConst": "$R"
+                              },
+                              {
+                                "jgnFunct": "pair",
+                                "jgnParams": [
+                                  {
+                                    "jgnFunct": "exp",
+                                    "jgnParams": [
+                                      {
+                                        "jgnConst": "'g'"
+                                      },
+                                      {
+                                        "jgnFunct": "h1",
+                                        "jgnParams": [
+                                          {
+                                            "jgnFunct": "pair",
+                                            "jgnParams": [
+                                              {
+                                                "jgnConst": "~eskI"
+                                              },
+                                              {
+                                                "jgnConst": "~lkI"
+                                              }
+                                            ],
+                                            "jgnShow": "pair(~eskI,~lkI)"
+                                          }
+                                        ],
+                                        "jgnShow": "h1(pair(~eskI,~lkI))"
+                                      }
+                                    ],
+                                    "jgnShow": "exp('g',h1(pair(~eskI,~lkI)))"
+                                  },
+                                  {
+                                    "jgnConst": "'g'"
+                                  }
+                                ],
+                                "jgnShow": "pair(exp('g',h1(pair(~eskI,~lkI))),'g')"
+                              }
+                            ],
+                            "jgnShow": "pair($R,pair(exp('g',h1(pair(~eskI,~lkI))),'g'))"
+                          }
+                        ],
+                        "jgnShow": "pair($I,pair($R,pair(exp('g',h1(pair(~eskI,~lkI))),'g')))"
+                      }
+                    ],
+                    "jgnShow": "pair('Init',pair($I,pair($R,pair(exp('g',h1(pair(~eskI,~lkI))),'g'))))"
+                  }
+                ]
+              },
+              {
+                "jgnFactId": "action",
+                "jgnFactMult": "",
+                "jgnFactName": "Match",
+                "jgnFactShow": "Match( ~eskI, <'Resp', $R, $I, 'g'^h1(<~eskI, ~lkI>), 'g'> )",
+                "jgnFactTag": "ProtoFact",
+                "jgnFactTerms": [
+                  {
+                    "jgnConst": "~eskI"
+                  },
+                  {
+                    "jgnFunct": "pair",
+                    "jgnParams": [
+                      {
+                        "jgnConst": "'Resp'"
+                      },
+                      {
+                        "jgnFunct": "pair",
+                        "jgnParams": [
+                          {
+                            "jgnConst": "$R"
+                          },
+                          {
+                            "jgnFunct": "pair",
+                            "jgnParams": [
+                              {
+                                "jgnConst": "$I"
+                              },
+                              {
+                                "jgnFunct": "pair",
+                                "jgnParams": [
+                                  {
+                                    "jgnFunct": "exp",
+                                    "jgnParams": [
+                                      {
+                                        "jgnConst": "'g'"
+                                      },
+                                      {
+                                        "jgnFunct": "h1",
+                                        "jgnParams": [
+                                          {
+                                            "jgnFunct": "pair",
+                                            "jgnParams": [
+                                              {
+                                                "jgnConst": "~eskI"
+                                              },
+                                              {
+                                                "jgnConst": "~lkI"
+                                              }
+                                            ],
+                                            "jgnShow": "pair(~eskI,~lkI)"
+                                          }
+                                        ],
+                                        "jgnShow": "h1(pair(~eskI,~lkI))"
+                                      }
+                                    ],
+                                    "jgnShow": "exp('g',h1(pair(~eskI,~lkI)))"
+                                  },
+                                  {
+                                    "jgnConst": "'g'"
+                                  }
+                                ],
+                                "jgnShow": "pair(exp('g',h1(pair(~eskI,~lkI))),'g')"
+                              }
+                            ],
+                            "jgnShow": "pair($I,pair(exp('g',h1(pair(~eskI,~lkI))),'g'))"
+                          }
+                        ],
+                        "jgnShow": "pair($R,pair($I,pair(exp('g',h1(pair(~eskI,~lkI))),'g')))"
+                      }
+                    ],
+                    "jgnShow": "pair('Resp',pair($R,pair($I,pair(exp('g',h1(pair(~eskI,~lkI))),'g'))))"
+                  }
+                ]
+              }
+            ],
+            "jgnConcs": [
+              {
+                "jgnFactId": "#i1:c0",
+                "jgnFactMult": "!",
+                "jgnFactName": "!Sessk",
+                "jgnFactShow": "!Sessk( ~eskI, h2(<'g'^~lkI, 'g'^(~x*h1(<~eskI, ~lkI>)), 'g'^h1(<~eskI, ~lkI>), $I, $R>))",
+                "jgnFactTag": "ProtoFact",
+                "jgnFactTerms": [
+                  {
+                    "jgnConst": "~eskI"
+                  },
+                  {
+                    "jgnFunct": "h2",
+                    "jgnParams": [
+                      {
+                        "jgnFunct": "pair",
+                        "jgnParams": [
+                          {
+                            "jgnFunct": "exp",
+                            "jgnParams": [
+                              {
+                                "jgnConst": "'g'"
+                              },
+                              {
+                                "jgnConst": "~lkI"
+                              }
+                            ],
+                            "jgnShow": "exp('g',~lkI)"
+                          },
+                          {
+                            "jgnFunct": "pair",
+                            "jgnParams": [
+                              {
+                                "jgnFunct": "exp",
+                                "jgnParams": [
+                                  {
+                                    "jgnConst": "'g'"
+                                  },
+                                  {
+                                    "jgnFunct": "Mult",
+                                    "jgnParams": [
+                                      {
+                                        "jgnConst": "~x"
+                                      },
+                                      {
+                                        "jgnFunct": "h1",
+                                        "jgnParams": [
+                                          {
+                                            "jgnFunct": "pair",
+                                            "jgnParams": [
+                                              {
+                                                "jgnConst": "~eskI"
+                                              },
+                                              {
+                                                "jgnConst": "~lkI"
+                                              }
+                                            ],
+                                            "jgnShow": "pair(~eskI,~lkI)"
+                                          }
+                                        ],
+                                        "jgnShow": "h1(pair(~eskI,~lkI))"
+                                      }
+                                    ],
+                                    "jgnShow": "Mult(~x,h1(pair(~eskI,~lkI)))"
+                                  }
+                                ],
+                                "jgnShow": "exp('g',Mult(~x,h1(pair(~eskI,~lkI))))"
+                              },
+                              {
+                                "jgnFunct": "pair",
+                                "jgnParams": [
+                                  {
+                                    "jgnFunct": "exp",
+                                    "jgnParams": [
+                                      {
+                                        "jgnConst": "'g'"
+                                      },
+                                      {
+                                        "jgnFunct": "h1",
+                                        "jgnParams": [
+                                          {
+                                            "jgnFunct": "pair",
+                                            "jgnParams": [
+                                              {
+                                                "jgnConst": "~eskI"
+                                              },
+                                              {
+                                                "jgnConst": "~lkI"
+                                              }
+                                            ],
+                                            "jgnShow": "pair(~eskI,~lkI)"
+                                          }
+                                        ],
+                                        "jgnShow": "h1(pair(~eskI,~lkI))"
+                                      }
+                                    ],
+                                    "jgnShow": "exp('g',h1(pair(~eskI,~lkI)))"
+                                  },
+                                  {
+                                    "jgnFunct": "pair",
+                                    "jgnParams": [
+                                      {
+                                        "jgnConst": "$I"
+                                      },
+                                      {
+                                        "jgnConst": "$R"
+                                      }
+                                    ],
+                                    "jgnShow": "pair($I,$R)"
+                                  }
+                                ],
+                                "jgnShow": "pair(exp('g',h1(pair(~eskI,~lkI))),pair($I,$R))"
+                              }
+                            ],
+                            "jgnShow": "pair(exp('g',Mult(~x,h1(pair(~eskI,~lkI)))),pair(exp('g',h1(pair(~eskI,~lkI))),pair($I,$R)))"
+                          }
+                        ],
+                        "jgnShow": "pair(exp('g',~lkI),pair(exp('g',Mult(~x,h1(pair(~eskI,~lkI)))),pair(exp('g',h1(pair(~eskI,~lkI))),pair($I,$R))))"
+                      }
+                    ],
+                    "jgnShow": "h2(pair(exp('g',~lkI),pair(exp('g',Mult(~x,h1(pair(~eskI,~lkI)))),pair(exp('g',h1(pair(~eskI,~lkI))),pair($I,$R)))))"
+                  }
+                ]
+              }
+            ],
+            "jgnPrems": [
+              {
+                "jgnFactId": "#i1:p0",
+                "jgnFactMult": "",
+                "jgnFactName": "Init_1",
+                "jgnFactShow": "Init_1( ~eskI, $I, $R, ~lkI, 'g'^h1(<~eskI, ~lkI>) )",
+                "jgnFactTag": "ProtoFact",
+                "jgnFactTerms": [
+                  {
+                    "jgnConst": "~eskI"
+                  },
+                  {
+                    "jgnConst": "$I"
+                  },
+                  {
+                    "jgnConst": "$R"
+                  },
+                  {
+                    "jgnConst": "~lkI"
+                  },
+                  {
+                    "jgnFunct": "exp",
+                    "jgnParams": [
+                      {
+                        "jgnConst": "'g'"
+                      },
+                      {
+                        "jgnFunct": "h1",
+                        "jgnParams": [
+                          {
+                            "jgnFunct": "pair",
+                            "jgnParams": [
+                              {
+                                "jgnConst": "~eskI"
+                              },
+                              {
+                                "jgnConst": "~lkI"
+                              }
+                            ],
+                            "jgnShow": "pair(~eskI,~lkI)"
+                          }
+                        ],
+                        "jgnShow": "h1(pair(~eskI,~lkI))"
+                      }
+                    ],
+                    "jgnShow": "exp('g',h1(pair(~eskI,~lkI)))"
+                  }
+                ]
+              },
+              {
+                "jgnFactId": "#i1:p1",
+                "jgnFactMult": "!",
+                "jgnFactName": "!Pk",
+                "jgnFactShow": "!Pk( $R, 'g'^~x )",
+                "jgnFactTag": "ProtoFact",
+                "jgnFactTerms": [
+                  {
+                    "jgnConst": "$R"
+                  },
+                  {
+                    "jgnFunct": "exp",
+                    "jgnParams": [
+                      {
+                        "jgnConst": "'g'"
+                      },
+                      {
+                        "jgnConst": "~x"
+                      }
+                    ],
+                    "jgnShow": "exp('g',~x)"
+                  }
+                ]
+              },
+              {
+                "jgnFactId": "#i1:p2",
+                "jgnFactMult": "",
+                "jgnFactName": "In",
+                "jgnFactShow": "In( 'g' )",
+                "jgnFactTag": "InFact",
+                "jgnFactTerms": [
+                  {
+                    "jgnConst": "'g'"
+                  }
+                ]
+              }
+            ]
+          },
+          "jgnType": "isProtocolRule"
+        },
+        {
+          "jgnId": "#i2",
+          "jgnLabel": "Send",
+          "jgnMetadata": {
+            "jgnActs": [
+              {
+                "jgnFactId": "action",
+                "jgnFactMult": "",
+                "jgnFactName": "K",
+                "jgnFactShow": "K( h2(<'g'^~lkI, 'g'^(~x*h1(<~eskI, ~lkI>)), 'g'^h1(<~eskI, ~lkI>), $I, $R>))",
+                "jgnFactTag": "ProtoFact",
+                "jgnFactTerms": [
+                  {
+                    "jgnFunct": "h2",
+                    "jgnParams": [
+                      {
+                        "jgnFunct": "pair",
+                        "jgnParams": [
+                          {
+                            "jgnFunct": "exp",
+                            "jgnParams": [
+                              {
+                                "jgnConst": "'g'"
+                              },
+                              {
+                                "jgnConst": "~lkI"
+                              }
+                            ],
+                            "jgnShow": "exp('g',~lkI)"
+                          },
+                          {
+                            "jgnFunct": "pair",
+                            "jgnParams": [
+                              {
+                                "jgnFunct": "exp",
+                                "jgnParams": [
+                                  {
+                                    "jgnConst": "'g'"
+                                  },
+                                  {
+                                    "jgnFunct": "Mult",
+                                    "jgnParams": [
+                                      {
+                                        "jgnConst": "~x"
+                                      },
+                                      {
+                                        "jgnFunct": "h1",
+                                        "jgnParams": [
+                                          {
+                                            "jgnFunct": "pair",
+                                            "jgnParams": [
+                                              {
+                                                "jgnConst": "~eskI"
+                                              },
+                                              {
+                                                "jgnConst": "~lkI"
+                                              }
+                                            ],
+                                            "jgnShow": "pair(~eskI,~lkI)"
+                                          }
+                                        ],
+                                        "jgnShow": "h1(pair(~eskI,~lkI))"
+                                      }
+                                    ],
+                                    "jgnShow": "Mult(~x,h1(pair(~eskI,~lkI)))"
+                                  }
+                                ],
+                                "jgnShow": "exp('g',Mult(~x,h1(pair(~eskI,~lkI))))"
+                              },
+                              {
+                                "jgnFunct": "pair",
+                                "jgnParams": [
+                                  {
+                                    "jgnFunct": "exp",
+                                    "jgnParams": [
+                                      {
+                                        "jgnConst": "'g'"
+                                      },
+                                      {
+                                        "jgnFunct": "h1",
+                                        "jgnParams": [
+                                          {
+                                            "jgnFunct": "pair",
+                                            "jgnParams": [
+                                              {
+                                                "jgnConst": "~eskI"
+                                              },
+                                              {
+                                                "jgnConst": "~lkI"
+                                              }
+                                            ],
+                                            "jgnShow": "pair(~eskI,~lkI)"
+                                          }
+                                        ],
+                                        "jgnShow": "h1(pair(~eskI,~lkI))"
+                                      }
+                                    ],
+                                    "jgnShow": "exp('g',h1(pair(~eskI,~lkI)))"
+                                  },
+                                  {
+                                    "jgnFunct": "pair",
+                                    "jgnParams": [
+                                      {
+                                        "jgnConst": "$I"
+                                      },
+                                      {
+                                        "jgnConst": "$R"
+                                      }
+                                    ],
+                                    "jgnShow": "pair($I,$R)"
+                                  }
+                                ],
+                                "jgnShow": "pair(exp('g',h1(pair(~eskI,~lkI))),pair($I,$R))"
+                              }
+                            ],
+                            "jgnShow": "pair(exp('g',Mult(~x,h1(pair(~eskI,~lkI)))),pair(exp('g',h1(pair(~eskI,~lkI))),pair($I,$R)))"
+                          }
+                        ],
+                        "jgnShow": "pair(exp('g',~lkI),pair(exp('g',Mult(~x,h1(pair(~eskI,~lkI)))),pair(exp('g',h1(pair(~eskI,~lkI))),pair($I,$R))))"
+                      }
+                    ],
+                    "jgnShow": "h2(pair(exp('g',~lkI),pair(exp('g',Mult(~x,h1(pair(~eskI,~lkI)))),pair(exp('g',h1(pair(~eskI,~lkI))),pair($I,$R)))))"
+                  }
+                ]
+              }
+            ],
+            "jgnConcs": [
+              {
+                "jgnFactId": "#i2:c0",
+                "jgnFactMult": "",
+                "jgnFactName": "In",
+                "jgnFactShow": "In( h2(<'g'^~lkI, 'g'^(~x*h1(<~eskI, ~lkI>)), 'g'^h1(<~eskI, ~lkI>), $I, $R>))",
+                "jgnFactTag": "InFact",
+                "jgnFactTerms": [
+                  {
+                    "jgnFunct": "h2",
+                    "jgnParams": [
+                      {
+                        "jgnFunct": "pair",
+                        "jgnParams": [
+                          {
+                            "jgnFunct": "exp",
+                            "jgnParams": [
+                              {
+                                "jgnConst": "'g'"
+                              },
+                              {
+                                "jgnConst": "~lkI"
+                              }
+                            ],
+                            "jgnShow": "exp('g',~lkI)"
+                          },
+                          {
+                            "jgnFunct": "pair",
+                            "jgnParams": [
+                              {
+                                "jgnFunct": "exp",
+                                "jgnParams": [
+                                  {
+                                    "jgnConst": "'g'"
+                                  },
+                                  {
+                                    "jgnFunct": "Mult",
+                                    "jgnParams": [
+                                      {
+                                        "jgnConst": "~x"
+                                      },
+                                      {
+                                        "jgnFunct": "h1",
+                                        "jgnParams": [
+                                          {
+                                            "jgnFunct": "pair",
+                                            "jgnParams": [
+                                              {
+                                                "jgnConst": "~eskI"
+                                              },
+                                              {
+                                                "jgnConst": "~lkI"
+                                              }
+                                            ],
+                                            "jgnShow": "pair(~eskI,~lkI)"
+                                          }
+                                        ],
+                                        "jgnShow": "h1(pair(~eskI,~lkI))"
+                                      }
+                                    ],
+                                    "jgnShow": "Mult(~x,h1(pair(~eskI,~lkI)))"
+                                  }
+                                ],
+                                "jgnShow": "exp('g',Mult(~x,h1(pair(~eskI,~lkI))))"
+                              },
+                              {
+                                "jgnFunct": "pair",
+                                "jgnParams": [
+                                  {
+                                    "jgnFunct": "exp",
+                                    "jgnParams": [
+                                      {
+                                        "jgnConst": "'g'"
+                                      },
+                                      {
+                                        "jgnFunct": "h1",
+                                        "jgnParams": [
+                                          {
+                                            "jgnFunct": "pair",
+                                            "jgnParams": [
+                                              {
+                                                "jgnConst": "~eskI"
+                                              },
+                                              {
+                                                "jgnConst": "~lkI"
+                                              }
+                                            ],
+                                            "jgnShow": "pair(~eskI,~lkI)"
+                                          }
+                                        ],
+                                        "jgnShow": "h1(pair(~eskI,~lkI))"
+                                      }
+                                    ],
+                                    "jgnShow": "exp('g',h1(pair(~eskI,~lkI)))"
+                                  },
+                                  {
+                                    "jgnFunct": "pair",
+                                    "jgnParams": [
+                                      {
+                                        "jgnConst": "$I"
+                                      },
+                                      {
+                                        "jgnConst": "$R"
+                                      }
+                                    ],
+                                    "jgnShow": "pair($I,$R)"
+                                  }
+                                ],
+                                "jgnShow": "pair(exp('g',h1(pair(~eskI,~lkI))),pair($I,$R))"
+                              }
+                            ],
+                            "jgnShow": "pair(exp('g',Mult(~x,h1(pair(~eskI,~lkI)))),pair(exp('g',h1(pair(~eskI,~lkI))),pair($I,$R)))"
+                          }
+                        ],
+                        "jgnShow": "pair(exp('g',~lkI),pair(exp('g',Mult(~x,h1(pair(~eskI,~lkI)))),pair(exp('g',h1(pair(~eskI,~lkI))),pair($I,$R))))"
+                      }
+                    ],
+                    "jgnShow": "h2(pair(exp('g',~lkI),pair(exp('g',Mult(~x,h1(pair(~eskI,~lkI)))),pair(exp('g',h1(pair(~eskI,~lkI))),pair($I,$R)))))"
+                  }
+                ]
+              }
+            ],
+            "jgnPrems": [
+              {
+                "jgnFactId": "#i2:p0",
+                "jgnFactMult": "!",
+                "jgnFactName": "!KU",
+                "jgnFactShow": "!KU( h2(<'g'^~lkI, 'g'^(~x*h1(<~eskI, ~lkI>)), 'g'^h1(<~eskI, ~lkI>), $I, $R>))",
+                "jgnFactTag": "KUFact",
+                "jgnFactTerms": [
+                  {
+                    "jgnFunct": "h2",
+                    "jgnParams": [
+                      {
+                        "jgnFunct": "pair",
+                        "jgnParams": [
+                          {
+                            "jgnFunct": "exp",
+                            "jgnParams": [
+                              {
+                                "jgnConst": "'g'"
+                              },
+                              {
+                                "jgnConst": "~lkI"
+                              }
+                            ],
+                            "jgnShow": "exp('g',~lkI)"
+                          },
+                          {
+                            "jgnFunct": "pair",
+                            "jgnParams": [
+                              {
+                                "jgnFunct": "exp",
+                                "jgnParams": [
+                                  {
+                                    "jgnConst": "'g'"
+                                  },
+                                  {
+                                    "jgnFunct": "Mult",
+                                    "jgnParams": [
+                                      {
+                                        "jgnConst": "~x"
+                                      },
+                                      {
+                                        "jgnFunct": "h1",
+                                        "jgnParams": [
+                                          {
+                                            "jgnFunct": "pair",
+                                            "jgnParams": [
+                                              {
+                                                "jgnConst": "~eskI"
+                                              },
+                                              {
+                                                "jgnConst": "~lkI"
+                                              }
+                                            ],
+                                            "jgnShow": "pair(~eskI,~lkI)"
+                                          }
+                                        ],
+                                        "jgnShow": "h1(pair(~eskI,~lkI))"
+                                      }
+                                    ],
+                                    "jgnShow": "Mult(~x,h1(pair(~eskI,~lkI)))"
+                                  }
+                                ],
+                                "jgnShow": "exp('g',Mult(~x,h1(pair(~eskI,~lkI))))"
+                              },
+                              {
+                                "jgnFunct": "pair",
+                                "jgnParams": [
+                                  {
+                                    "jgnFunct": "exp",
+                                    "jgnParams": [
+                                      {
+                                        "jgnConst": "'g'"
+                                      },
+                                      {
+                                        "jgnFunct": "h1",
+                                        "jgnParams": [
+                                          {
+                                            "jgnFunct": "pair",
+                                            "jgnParams": [
+                                              {
+                                                "jgnConst": "~eskI"
+                                              },
+                                              {
+                                                "jgnConst": "~lkI"
+                                              }
+                                            ],
+                                            "jgnShow": "pair(~eskI,~lkI)"
+                                          }
+                                        ],
+                                        "jgnShow": "h1(pair(~eskI,~lkI))"
+                                      }
+                                    ],
+                                    "jgnShow": "exp('g',h1(pair(~eskI,~lkI)))"
+                                  },
+                                  {
+                                    "jgnFunct": "pair",
+                                    "jgnParams": [
+                                      {
+                                        "jgnConst": "$I"
+                                      },
+                                      {
+                                        "jgnConst": "$R"
+                                      }
+                                    ],
+                                    "jgnShow": "pair($I,$R)"
+                                  }
+                                ],
+                                "jgnShow": "pair(exp('g',h1(pair(~eskI,~lkI))),pair($I,$R))"
+                              }
+                            ],
+                            "jgnShow": "pair(exp('g',Mult(~x,h1(pair(~eskI,~lkI)))),pair(exp('g',h1(pair(~eskI,~lkI))),pair($I,$R)))"
+                          }
+                        ],
+                        "jgnShow": "pair(exp('g',~lkI),pair(exp('g',Mult(~x,h1(pair(~eskI,~lkI)))),pair(exp('g',h1(pair(~eskI,~lkI))),pair($I,$R))))"
+                      }
+                    ],
+                    "jgnShow": "h2(pair(exp('g',~lkI),pair(exp('g',Mult(~x,h1(pair(~eskI,~lkI)))),pair(exp('g',h1(pair(~eskI,~lkI))),pair($I,$R)))))"
+                  }
+                ]
+              }
+            ]
+          },
+          "jgnType": "isIntruderRule"
+        },
+        {
+          "jgnId": "#vf",
+          "jgnLabel": "Send",
+          "jgnMetadata": {
+            "jgnActs": [
+              {
+                "jgnFactId": "action",
+                "jgnFactMult": "",
+                "jgnFactName": "K",
+                "jgnFactShow": "K( 'g' )",
+                "jgnFactTag": "ProtoFact",
+                "jgnFactTerms": [
+                  {
+                    "jgnConst": "'g'"
+                  }
+                ]
+              }
+            ],
+            "jgnConcs": [
+              {
+                "jgnFactId": "#vf:c0",
+                "jgnFactMult": "",
+                "jgnFactName": "In",
+                "jgnFactShow": "In( 'g' )",
+                "jgnFactTag": "InFact",
+                "jgnFactTerms": [
+                  {
+                    "jgnConst": "'g'"
+                  }
+                ]
+              }
+            ],
+            "jgnPrems": [
+              {
+                "jgnFactId": "#vf:p0",
+                "jgnFactMult": "!",
+                "jgnFactName": "!KU",
+                "jgnFactShow": "!KU( 'g' )",
+                "jgnFactTag": "KUFact",
+                "jgnFactTerms": [
+                  {
+                    "jgnConst": "'g'"
+                  }
+                ]
+              }
+            ]
+          },
+          "jgnType": "isIntruderRule"
+        },
+        {
+          "jgnId": "#vk",
+          "jgnLabel": "Constrc_h2",
+          "jgnMetadata": {
+            "jgnActs": [
+              {
+                "jgnFactId": "action",
+                "jgnFactMult": "!",
+                "jgnFactName": "!KU",
+                "jgnFactShow": "!KU( h2(<'g'^~lkI, 'g'^(~x*h1(<~eskI, ~lkI>)), 'g'^h1(<~eskI, ~lkI>), $I, $R>))",
+                "jgnFactTag": "KUFact",
+                "jgnFactTerms": [
+                  {
+                    "jgnFunct": "h2",
+                    "jgnParams": [
+                      {
+                        "jgnFunct": "pair",
+                        "jgnParams": [
+                          {
+                            "jgnFunct": "exp",
+                            "jgnParams": [
+                              {
+                                "jgnConst": "'g'"
+                              },
+                              {
+                                "jgnConst": "~lkI"
+                              }
+                            ],
+                            "jgnShow": "exp('g',~lkI)"
+                          },
+                          {
+                            "jgnFunct": "pair",
+                            "jgnParams": [
+                              {
+                                "jgnFunct": "exp",
+                                "jgnParams": [
+                                  {
+                                    "jgnConst": "'g'"
+                                  },
+                                  {
+                                    "jgnFunct": "Mult",
+                                    "jgnParams": [
+                                      {
+                                        "jgnConst": "~x"
+                                      },
+                                      {
+                                        "jgnFunct": "h1",
+                                        "jgnParams": [
+                                          {
+                                            "jgnFunct": "pair",
+                                            "jgnParams": [
+                                              {
+                                                "jgnConst": "~eskI"
+                                              },
+                                              {
+                                                "jgnConst": "~lkI"
+                                              }
+                                            ],
+                                            "jgnShow": "pair(~eskI,~lkI)"
+                                          }
+                                        ],
+                                        "jgnShow": "h1(pair(~eskI,~lkI))"
+                                      }
+                                    ],
+                                    "jgnShow": "Mult(~x,h1(pair(~eskI,~lkI)))"
+                                  }
+                                ],
+                                "jgnShow": "exp('g',Mult(~x,h1(pair(~eskI,~lkI))))"
+                              },
+                              {
+                                "jgnFunct": "pair",
+                                "jgnParams": [
+                                  {
+                                    "jgnFunct": "exp",
+                                    "jgnParams": [
+                                      {
+                                        "jgnConst": "'g'"
+                                      },
+                                      {
+                                        "jgnFunct": "h1",
+                                        "jgnParams": [
+                                          {
+                                            "jgnFunct": "pair",
+                                            "jgnParams": [
+                                              {
+                                                "jgnConst": "~eskI"
+                                              },
+                                              {
+                                                "jgnConst": "~lkI"
+                                              }
+                                            ],
+                                            "jgnShow": "pair(~eskI,~lkI)"
+                                          }
+                                        ],
+                                        "jgnShow": "h1(pair(~eskI,~lkI))"
+                                      }
+                                    ],
+                                    "jgnShow": "exp('g',h1(pair(~eskI,~lkI)))"
+                                  },
+                                  {
+                                    "jgnFunct": "pair",
+                                    "jgnParams": [
+                                      {
+                                        "jgnConst": "$I"
+                                      },
+                                      {
+                                        "jgnConst": "$R"
+                                      }
+                                    ],
+                                    "jgnShow": "pair($I,$R)"
+                                  }
+                                ],
+                                "jgnShow": "pair(exp('g',h1(pair(~eskI,~lkI))),pair($I,$R))"
+                              }
+                            ],
+                            "jgnShow": "pair(exp('g',Mult(~x,h1(pair(~eskI,~lkI)))),pair(exp('g',h1(pair(~eskI,~lkI))),pair($I,$R)))"
+                          }
+                        ],
+                        "jgnShow": "pair(exp('g',~lkI),pair(exp('g',Mult(~x,h1(pair(~eskI,~lkI)))),pair(exp('g',h1(pair(~eskI,~lkI))),pair($I,$R))))"
+                      }
+                    ],
+                    "jgnShow": "h2(pair(exp('g',~lkI),pair(exp('g',Mult(~x,h1(pair(~eskI,~lkI)))),pair(exp('g',h1(pair(~eskI,~lkI))),pair($I,$R)))))"
+                  }
+                ]
+              }
+            ],
+            "jgnConcs": [
+              {
+                "jgnFactId": "#vk:c0",
+                "jgnFactMult": "!",
+                "jgnFactName": "!KU",
+                "jgnFactShow": "!KU( h2(<'g'^~lkI, 'g'^(~x*h1(<~eskI, ~lkI>)), 'g'^h1(<~eskI, ~lkI>), $I, $R>))",
+                "jgnFactTag": "KUFact",
+                "jgnFactTerms": [
+                  {
+                    "jgnFunct": "h2",
+                    "jgnParams": [
+                      {
+                        "jgnFunct": "pair",
+                        "jgnParams": [
+                          {
+                            "jgnFunct": "exp",
+                            "jgnParams": [
+                              {
+                                "jgnConst": "'g'"
+                              },
+                              {
+                                "jgnConst": "~lkI"
+                              }
+                            ],
+                            "jgnShow": "exp('g',~lkI)"
+                          },
+                          {
+                            "jgnFunct": "pair",
+                            "jgnParams": [
+                              {
+                                "jgnFunct": "exp",
+                                "jgnParams": [
+                                  {
+                                    "jgnConst": "'g'"
+                                  },
+                                  {
+                                    "jgnFunct": "Mult",
+                                    "jgnParams": [
+                                      {
+                                        "jgnConst": "~x"
+                                      },
+                                      {
+                                        "jgnFunct": "h1",
+                                        "jgnParams": [
+                                          {
+                                            "jgnFunct": "pair",
+                                            "jgnParams": [
+                                              {
+                                                "jgnConst": "~eskI"
+                                              },
+                                              {
+                                                "jgnConst": "~lkI"
+                                              }
+                                            ],
+                                            "jgnShow": "pair(~eskI,~lkI)"
+                                          }
+                                        ],
+                                        "jgnShow": "h1(pair(~eskI,~lkI))"
+                                      }
+                                    ],
+                                    "jgnShow": "Mult(~x,h1(pair(~eskI,~lkI)))"
+                                  }
+                                ],
+                                "jgnShow": "exp('g',Mult(~x,h1(pair(~eskI,~lkI))))"
+                              },
+                              {
+                                "jgnFunct": "pair",
+                                "jgnParams": [
+                                  {
+                                    "jgnFunct": "exp",
+                                    "jgnParams": [
+                                      {
+                                        "jgnConst": "'g'"
+                                      },
+                                      {
+                                        "jgnFunct": "h1",
+                                        "jgnParams": [
+                                          {
+                                            "jgnFunct": "pair",
+                                            "jgnParams": [
+                                              {
+                                                "jgnConst": "~eskI"
+                                              },
+                                              {
+                                                "jgnConst": "~lkI"
+                                              }
+                                            ],
+                                            "jgnShow": "pair(~eskI,~lkI)"
+                                          }
+                                        ],
+                                        "jgnShow": "h1(pair(~eskI,~lkI))"
+                                      }
+                                    ],
+                                    "jgnShow": "exp('g',h1(pair(~eskI,~lkI)))"
+                                  },
+                                  {
+                                    "jgnFunct": "pair",
+                                    "jgnParams": [
+                                      {
+                                        "jgnConst": "$I"
+                                      },
+                                      {
+                                        "jgnConst": "$R"
+                                      }
+                                    ],
+                                    "jgnShow": "pair($I,$R)"
+                                  }
+                                ],
+                                "jgnShow": "pair(exp('g',h1(pair(~eskI,~lkI))),pair($I,$R))"
+                              }
+                            ],
+                            "jgnShow": "pair(exp('g',Mult(~x,h1(pair(~eskI,~lkI)))),pair(exp('g',h1(pair(~eskI,~lkI))),pair($I,$R)))"
+                          }
+                        ],
+                        "jgnShow": "pair(exp('g',~lkI),pair(exp('g',Mult(~x,h1(pair(~eskI,~lkI)))),pair(exp('g',h1(pair(~eskI,~lkI))),pair($I,$R))))"
+                      }
+                    ],
+                    "jgnShow": "h2(pair(exp('g',~lkI),pair(exp('g',Mult(~x,h1(pair(~eskI,~lkI)))),pair(exp('g',h1(pair(~eskI,~lkI))),pair($I,$R)))))"
+                  }
+                ]
+              }
+            ],
+            "jgnPrems": [
+              {
+                "jgnFactId": "#vk:p0",
+                "jgnFactMult": "!",
+                "jgnFactName": "!KU",
+                "jgnFactShow": "!KU( <'g'^~lkI, 'g'^(~x*h1(<~eskI, ~lkI>)), 'g'^h1(<~eskI, ~lkI>), $I, $R>)",
+                "jgnFactTag": "KUFact",
+                "jgnFactTerms": [
+                  {
+                    "jgnFunct": "pair",
+                    "jgnParams": [
+                      {
+                        "jgnFunct": "exp",
+                        "jgnParams": [
+                          {
+                            "jgnConst": "'g'"
+                          },
+                          {
+                            "jgnConst": "~lkI"
+                          }
+                        ],
+                        "jgnShow": "exp('g',~lkI)"
+                      },
+                      {
+                        "jgnFunct": "pair",
+                        "jgnParams": [
+                          {
+                            "jgnFunct": "exp",
+                            "jgnParams": [
+                              {
+                                "jgnConst": "'g'"
+                              },
+                              {
+                                "jgnFunct": "Mult",
+                                "jgnParams": [
+                                  {
+                                    "jgnConst": "~x"
+                                  },
+                                  {
+                                    "jgnFunct": "h1",
+                                    "jgnParams": [
+                                      {
+                                        "jgnFunct": "pair",
+                                        "jgnParams": [
+                                          {
+                                            "jgnConst": "~eskI"
+                                          },
+                                          {
+                                            "jgnConst": "~lkI"
+                                          }
+                                        ],
+                                        "jgnShow": "pair(~eskI,~lkI)"
+                                      }
+                                    ],
+                                    "jgnShow": "h1(pair(~eskI,~lkI))"
+                                  }
+                                ],
+                                "jgnShow": "Mult(~x,h1(pair(~eskI,~lkI)))"
+                              }
+                            ],
+                            "jgnShow": "exp('g',Mult(~x,h1(pair(~eskI,~lkI))))"
+                          },
+                          {
+                            "jgnFunct": "pair",
+                            "jgnParams": [
+                              {
+                                "jgnFunct": "exp",
+                                "jgnParams": [
+                                  {
+                                    "jgnConst": "'g'"
+                                  },
+                                  {
+                                    "jgnFunct": "h1",
+                                    "jgnParams": [
+                                      {
+                                        "jgnFunct": "pair",
+                                        "jgnParams": [
+                                          {
+                                            "jgnConst": "~eskI"
+                                          },
+                                          {
+                                            "jgnConst": "~lkI"
+                                          }
+                                        ],
+                                        "jgnShow": "pair(~eskI,~lkI)"
+                                      }
+                                    ],
+                                    "jgnShow": "h1(pair(~eskI,~lkI))"
+                                  }
+                                ],
+                                "jgnShow": "exp('g',h1(pair(~eskI,~lkI)))"
+                              },
+                              {
+                                "jgnFunct": "pair",
+                                "jgnParams": [
+                                  {
+                                    "jgnConst": "$I"
+                                  },
+                                  {
+                                    "jgnConst": "$R"
+                                  }
+                                ],
+                                "jgnShow": "pair($I,$R)"
+                              }
+                            ],
+                            "jgnShow": "pair(exp('g',h1(pair(~eskI,~lkI))),pair($I,$R))"
+                          }
+                        ],
+                        "jgnShow": "pair(exp('g',Mult(~x,h1(pair(~eskI,~lkI)))),pair(exp('g',h1(pair(~eskI,~lkI))),pair($I,$R)))"
+                      }
+                    ],
+                    "jgnShow": "pair(exp('g',~lkI),pair(exp('g',Mult(~x,h1(pair(~eskI,~lkI)))),pair(exp('g',h1(pair(~eskI,~lkI))),pair($I,$R))))"
+                  }
+                ]
+              }
+            ]
+          },
+          "jgnType": "isIntruderRule"
+        },
+        {
+          "jgnId": "#vl",
+          "jgnLabel": "Recv",
+          "jgnMetadata": {
+            "jgnActs": [],
+            "jgnConcs": [
+              {
+                "jgnFactId": "#vl:c0",
+                "jgnFactMult": "!",
+                "jgnFactName": "!KD",
+                "jgnFactShow": "!KD( 'g'^h1(<~eskI, ~lkI>) )",
+                "jgnFactTag": "KDFact",
+                "jgnFactTerms": [
+                  {
+                    "jgnFunct": "exp",
+                    "jgnParams": [
+                      {
+                        "jgnConst": "'g'"
+                      },
+                      {
+                        "jgnFunct": "h1",
+                        "jgnParams": [
+                          {
+                            "jgnFunct": "pair",
+                            "jgnParams": [
+                              {
+                                "jgnConst": "~eskI"
+                              },
+                              {
+                                "jgnConst": "~lkI"
+                              }
+                            ],
+                            "jgnShow": "pair(~eskI,~lkI)"
+                          }
+                        ],
+                        "jgnShow": "h1(pair(~eskI,~lkI))"
+                      }
+                    ],
+                    "jgnShow": "exp('g',h1(pair(~eskI,~lkI)))"
+                  }
+                ]
+              }
+            ],
+            "jgnPrems": [
+              {
+                "jgnFactId": "#vl:p0",
+                "jgnFactMult": "",
+                "jgnFactName": "Out",
+                "jgnFactShow": "Out( 'g'^h1(<~eskI, ~lkI>) )",
+                "jgnFactTag": "OutFact",
+                "jgnFactTerms": [
+                  {
+                    "jgnFunct": "exp",
+                    "jgnParams": [
+                      {
+                        "jgnConst": "'g'"
+                      },
+                      {
+                        "jgnFunct": "h1",
+                        "jgnParams": [
+                          {
+                            "jgnFunct": "pair",
+                            "jgnParams": [
+                              {
+                                "jgnConst": "~eskI"
+                              },
+                              {
+                                "jgnConst": "~lkI"
+                              }
+                            ],
+                            "jgnShow": "pair(~eskI,~lkI)"
+                          }
+                        ],
+                        "jgnShow": "h1(pair(~eskI,~lkI))"
+                      }
+                    ],
+                    "jgnShow": "exp('g',h1(pair(~eskI,~lkI)))"
+                  }
+                ]
+              }
+            ]
+          },
+          "jgnType": "isIntruderRule"
+        },
+        {
+          "jgnId": "#vr",
+          "jgnLabel": "Init_1",
+          "jgnMetadata": {
+            "jgnActs": [],
+            "jgnConcs": [
+              {
+                "jgnFactId": "#vr:c0",
+                "jgnFactMult": "",
+                "jgnFactName": "Init_1",
+                "jgnFactShow": "Init_1( ~eskI, $I, $R, ~lkI, 'g'^h1(<~eskI, ~lkI>) )",
+                "jgnFactTag": "ProtoFact",
+                "jgnFactTerms": [
+                  {
+                    "jgnConst": "~eskI"
+                  },
+                  {
+                    "jgnConst": "$I"
+                  },
+                  {
+                    "jgnConst": "$R"
+                  },
+                  {
+                    "jgnConst": "~lkI"
+                  },
+                  {
+                    "jgnFunct": "exp",
+                    "jgnParams": [
+                      {
+                        "jgnConst": "'g'"
+                      },
+                      {
+                        "jgnFunct": "h1",
+                        "jgnParams": [
+                          {
+                            "jgnFunct": "pair",
+                            "jgnParams": [
+                              {
+                                "jgnConst": "~eskI"
+                              },
+                              {
+                                "jgnConst": "~lkI"
+                              }
+                            ],
+                            "jgnShow": "pair(~eskI,~lkI)"
+                          }
+                        ],
+                        "jgnShow": "h1(pair(~eskI,~lkI))"
+                      }
+                    ],
+                    "jgnShow": "exp('g',h1(pair(~eskI,~lkI)))"
+                  }
+                ]
+              },
+              {
+                "jgnFactId": "#vr:c1",
+                "jgnFactMult": "!",
+                "jgnFactName": "!Ephk",
+                "jgnFactShow": "!Ephk( ~eskI, ~eskI )",
+                "jgnFactTag": "ProtoFact",
+                "jgnFactTerms": [
+                  {
+                    "jgnConst": "~eskI"
+                  },
+                  {
+                    "jgnConst": "~eskI"
+                  }
+                ]
+              },
+              {
+                "jgnFactId": "#vr:c2",
+                "jgnFactMult": "",
+                "jgnFactName": "Out",
+                "jgnFactShow": "Out( 'g'^h1(<~eskI, ~lkI>) )",
+                "jgnFactTag": "OutFact",
+                "jgnFactTerms": [
+                  {
+                    "jgnFunct": "exp",
+                    "jgnParams": [
+                      {
+                        "jgnConst": "'g'"
+                      },
+                      {
+                        "jgnFunct": "h1",
+                        "jgnParams": [
+                          {
+                            "jgnFunct": "pair",
+                            "jgnParams": [
+                              {
+                                "jgnConst": "~eskI"
+                              },
+                              {
+                                "jgnConst": "~lkI"
+                              }
+                            ],
+                            "jgnShow": "pair(~eskI,~lkI)"
+                          }
+                        ],
+                        "jgnShow": "h1(pair(~eskI,~lkI))"
+                      }
+                    ],
+                    "jgnShow": "exp('g',h1(pair(~eskI,~lkI)))"
+                  }
+                ]
+              }
+            ],
+            "jgnPrems": [
+              {
+                "jgnFactId": "#vr:p0",
+                "jgnFactMult": "",
+                "jgnFactName": "Fr",
+                "jgnFactShow": "Fr( ~eskI )",
+                "jgnFactTag": "FreshFact",
+                "jgnFactTerms": [
+                  {
+                    "jgnConst": "~eskI"
+                  }
+                ]
+              },
+              {
+                "jgnFactId": "#vr:p1",
+                "jgnFactMult": "!",
+                "jgnFactName": "!Ltk",
+                "jgnFactShow": "!Ltk( $I, ~lkI )",
+                "jgnFactTag": "ProtoFact",
+                "jgnFactTerms": [
+                  {
+                    "jgnConst": "$I"
+                  },
+                  {
+                    "jgnConst": "~lkI"
+                  }
+                ]
+              }
+            ]
+          },
+          "jgnType": "isProtocolRule"
+        },
+        {
+          "jgnId": "#vk.1",
+          "jgnLabel": "Coerce",
+          "jgnMetadata": {
+            "jgnActs": [
+              {
+                "jgnFactId": "action",
+                "jgnFactMult": "!",
+                "jgnFactName": "!KU",
+                "jgnFactShow": "!KU( 'g'^(~x*h1(<~eskI, ~lkI>)) )",
+                "jgnFactTag": "KUFact",
+                "jgnFactTerms": [
+                  {
+                    "jgnFunct": "exp",
+                    "jgnParams": [
+                      {
+                        "jgnConst": "'g'"
+                      },
+                      {
+                        "jgnFunct": "Mult",
+                        "jgnParams": [
+                          {
+                            "jgnConst": "~x"
+                          },
+                          {
+                            "jgnFunct": "h1",
+                            "jgnParams": [
+                              {
+                                "jgnFunct": "pair",
+                                "jgnParams": [
+                                  {
+                                    "jgnConst": "~eskI"
+                                  },
+                                  {
+                                    "jgnConst": "~lkI"
+                                  }
+                                ],
+                                "jgnShow": "pair(~eskI,~lkI)"
+                              }
+                            ],
+                            "jgnShow": "h1(pair(~eskI,~lkI))"
+                          }
+                        ],
+                        "jgnShow": "Mult(~x,h1(pair(~eskI,~lkI)))"
+                      }
+                    ],
+                    "jgnShow": "exp('g',Mult(~x,h1(pair(~eskI,~lkI))))"
+                  }
+                ]
+              }
+            ],
+            "jgnConcs": [
+              {
+                "jgnFactId": "#vk.1:c0",
+                "jgnFactMult": "!",
+                "jgnFactName": "!KU",
+                "jgnFactShow": "!KU( 'g'^(~x*h1(<~eskI, ~lkI>)) )",
+                "jgnFactTag": "KUFact",
+                "jgnFactTerms": [
+                  {
+                    "jgnFunct": "exp",
+                    "jgnParams": [
+                      {
+                        "jgnConst": "'g'"
+                      },
+                      {
+                        "jgnFunct": "Mult",
+                        "jgnParams": [
+                          {
+                            "jgnConst": "~x"
+                          },
+                          {
+                            "jgnFunct": "h1",
+                            "jgnParams": [
+                              {
+                                "jgnFunct": "pair",
+                                "jgnParams": [
+                                  {
+                                    "jgnConst": "~eskI"
+                                  },
+                                  {
+                                    "jgnConst": "~lkI"
+                                  }
+                                ],
+                                "jgnShow": "pair(~eskI,~lkI)"
+                              }
+                            ],
+                            "jgnShow": "h1(pair(~eskI,~lkI))"
+                          }
+                        ],
+                        "jgnShow": "Mult(~x,h1(pair(~eskI,~lkI)))"
+                      }
+                    ],
+                    "jgnShow": "exp('g',Mult(~x,h1(pair(~eskI,~lkI))))"
+                  }
+                ]
+              }
+            ],
+            "jgnPrems": [
+              {
+                "jgnFactId": "#vk.1:p0",
+                "jgnFactMult": "!",
+                "jgnFactName": "!KD",
+                "jgnFactShow": "!KD( 'g'^(~x*h1(<~eskI, ~lkI>)) )",
+                "jgnFactTag": "KDFact",
+                "jgnFactTerms": [
+                  {
+                    "jgnFunct": "exp",
+                    "jgnParams": [
+                      {
+                        "jgnConst": "'g'"
+                      },
+                      {
+                        "jgnFunct": "Mult",
+                        "jgnParams": [
+                          {
+                            "jgnConst": "~x"
+                          },
+                          {
+                            "jgnFunct": "h1",
+                            "jgnParams": [
+                              {
+                                "jgnFunct": "pair",
+                                "jgnParams": [
+                                  {
+                                    "jgnConst": "~eskI"
+                                  },
+                                  {
+                                    "jgnConst": "~lkI"
+                                  }
+                                ],
+                                "jgnShow": "pair(~eskI,~lkI)"
+                              }
+                            ],
+                            "jgnShow": "h1(pair(~eskI,~lkI))"
+                          }
+                        ],
+                        "jgnShow": "Mult(~x,h1(pair(~eskI,~lkI)))"
+                      }
+                    ],
+                    "jgnShow": "exp('g',Mult(~x,h1(pair(~eskI,~lkI))))"
+                  }
+                ]
+              }
+            ]
+          },
+          "jgnType": "isIntruderRule"
+        },
+        {
+          "jgnId": "#vr.1",
+          "jgnLabel": "generate_ltk",
+          "jgnMetadata": {
+            "jgnActs": [
+              {
+                "jgnFactId": "action",
+                "jgnFactMult": "",
+                "jgnFactName": "RegKey",
+                "jgnFactShow": "RegKey( $I )",
+                "jgnFactTag": "ProtoFact",
+                "jgnFactTerms": [
+                  {
+                    "jgnConst": "$I"
+                  }
+                ]
+              }
+            ],
+            "jgnConcs": [
+              {
+                "jgnFactId": "#vr.1:c0",
+                "jgnFactMult": "!",
+                "jgnFactName": "!Ltk",
+                "jgnFactShow": "!Ltk( $I, ~lkI )",
+                "jgnFactTag": "ProtoFact",
+                "jgnFactTerms": [
+                  {
+                    "jgnConst": "$I"
+                  },
+                  {
+                    "jgnConst": "~lkI"
+                  }
+                ]
+              },
+              {
+                "jgnFactId": "#vr.1:c1",
+                "jgnFactMult": "!",
+                "jgnFactName": "!Pk",
+                "jgnFactShow": "!Pk( $I, 'g'^~lkI )",
+                "jgnFactTag": "ProtoFact",
+                "jgnFactTerms": [
+                  {
+                    "jgnConst": "$I"
+                  },
+                  {
+                    "jgnFunct": "exp",
+                    "jgnParams": [
+                      {
+                        "jgnConst": "'g'"
+                      },
+                      {
+                        "jgnConst": "~lkI"
+                      }
+                    ],
+                    "jgnShow": "exp('g',~lkI)"
+                  }
+                ]
+              },
+              {
+                "jgnFactId": "#vr.1:c2",
+                "jgnFactMult": "",
+                "jgnFactName": "Out",
+                "jgnFactShow": "Out( 'g'^~lkI )",
+                "jgnFactTag": "OutFact",
+                "jgnFactTerms": [
+                  {
+                    "jgnFunct": "exp",
+                    "jgnParams": [
+                      {
+                        "jgnConst": "'g'"
+                      },
+                      {
+                        "jgnConst": "~lkI"
+                      }
+                    ],
+                    "jgnShow": "exp('g',~lkI)"
+                  }
+                ]
+              }
+            ],
+            "jgnPrems": [
+              {
+                "jgnFactId": "#vr.1:p0",
+                "jgnFactMult": "",
+                "jgnFactName": "Fr",
+                "jgnFactShow": "Fr( ~lkI )",
+                "jgnFactTag": "FreshFact",
+                "jgnFactTerms": [
+                  {
+                    "jgnConst": "~lkI"
+                  }
+                ]
+              }
+            ]
+          },
+          "jgnType": "isProtocolRule"
+        },
+        {
+          "jgnId": "#vk.2",
+          "jgnLabel": "Coerce",
+          "jgnMetadata": {
+            "jgnActs": [
+              {
+                "jgnFactId": "action",
+                "jgnFactMult": "!",
+                "jgnFactName": "!KU",
+                "jgnFactShow": "!KU( ~x )",
+                "jgnFactTag": "KUFact",
+                "jgnFactTerms": [
+                  {
+                    "jgnConst": "~x"
+                  }
+                ]
+              }
+            ],
+            "jgnConcs": [
+              {
+                "jgnFactId": "#vk.2:c0",
+                "jgnFactMult": "!",
+                "jgnFactName": "!KU",
+                "jgnFactShow": "!KU( ~x )",
+                "jgnFactTag": "KUFact",
+                "jgnFactTerms": [
+                  {
+                    "jgnConst": "~x"
+                  }
+                ]
+              }
+            ],
+            "jgnPrems": [
+              {
+                "jgnFactId": "#vk.2:p0",
+                "jgnFactMult": "!",
+                "jgnFactName": "!KD",
+                "jgnFactShow": "!KD( ~x )",
+                "jgnFactTag": "KDFact",
+                "jgnFactTerms": [
+                  {
+                    "jgnConst": "~x"
+                  }
+                ]
+              }
+            ]
+          },
+          "jgnType": "isIntruderRule"
+        },
+        {
+          "jgnId": "#vr.2",
+          "jgnLabel": "generate_ltk",
+          "jgnMetadata": {
+            "jgnActs": [
+              {
+                "jgnFactId": "action",
+                "jgnFactMult": "",
+                "jgnFactName": "RegKey",
+                "jgnFactShow": "RegKey( $R )",
+                "jgnFactTag": "ProtoFact",
+                "jgnFactTerms": [
+                  {
+                    "jgnConst": "$R"
+                  }
+                ]
+              }
+            ],
+            "jgnConcs": [
+              {
+                "jgnFactId": "#vr.2:c0",
+                "jgnFactMult": "!",
+                "jgnFactName": "!Ltk",
+                "jgnFactShow": "!Ltk( $R, ~x )",
+                "jgnFactTag": "ProtoFact",
+                "jgnFactTerms": [
+                  {
+                    "jgnConst": "$R"
+                  },
+                  {
+                    "jgnConst": "~x"
+                  }
+                ]
+              },
+              {
+                "jgnFactId": "#vr.2:c1",
+                "jgnFactMult": "!",
+                "jgnFactName": "!Pk",
+                "jgnFactShow": "!Pk( $R, 'g'^~x )",
+                "jgnFactTag": "ProtoFact",
+                "jgnFactTerms": [
+                  {
+                    "jgnConst": "$R"
+                  },
+                  {
+                    "jgnFunct": "exp",
+                    "jgnParams": [
+                      {
+                        "jgnConst": "'g'"
+                      },
+                      {
+                        "jgnConst": "~x"
+                      }
+                    ],
+                    "jgnShow": "exp('g',~x)"
+                  }
+                ]
+              },
+              {
+                "jgnFactId": "#vr.2:c2",
+                "jgnFactMult": "",
+                "jgnFactName": "Out",
+                "jgnFactShow": "Out( 'g'^~x )",
+                "jgnFactTag": "OutFact",
+                "jgnFactTerms": [
+                  {
+                    "jgnFunct": "exp",
+                    "jgnParams": [
+                      {
+                        "jgnConst": "'g'"
+                      },
+                      {
+                        "jgnConst": "~x"
+                      }
+                    ],
+                    "jgnShow": "exp('g',~x)"
+                  }
+                ]
+              }
+            ],
+            "jgnPrems": [
+              {
+                "jgnFactId": "#vr.2:p0",
+                "jgnFactMult": "",
+                "jgnFactName": "Fr",
+                "jgnFactShow": "Fr( ~x )",
+                "jgnFactTag": "FreshFact",
+                "jgnFactTerms": [
+                  {
+                    "jgnConst": "~x"
+                  }
+                ]
+              }
+            ]
+          },
+          "jgnType": "isProtocolRule"
+        },
+        {
+          "jgnId": "#vk.3",
+          "jgnLabel": "Constrc_exp",
+          "jgnMetadata": {
+            "jgnActs": [
+              {
+                "jgnFactId": "action",
+                "jgnFactMult": "!",
+                "jgnFactName": "!KU",
+                "jgnFactShow": "!KU( 'g'^~lkI )",
+                "jgnFactTag": "KUFact",
+                "jgnFactTerms": [
+                  {
+                    "jgnFunct": "exp",
+                    "jgnParams": [
+                      {
+                        "jgnConst": "'g'"
+                      },
+                      {
+                        "jgnConst": "~lkI"
+                      }
+                    ],
+                    "jgnShow": "exp('g',~lkI)"
+                  }
+                ]
+              }
+            ],
+            "jgnConcs": [
+              {
+                "jgnFactId": "#vk.3:c0",
+                "jgnFactMult": "!",
+                "jgnFactName": "!KU",
+                "jgnFactShow": "!KU( 'g'^~lkI )",
+                "jgnFactTag": "KUFact",
+                "jgnFactTerms": [
+                  {
+                    "jgnFunct": "exp",
+                    "jgnParams": [
+                      {
+                        "jgnConst": "'g'"
+                      },
+                      {
+                        "jgnConst": "~lkI"
+                      }
+                    ],
+                    "jgnShow": "exp('g',~lkI)"
+                  }
+                ]
+              }
+            ],
+            "jgnPrems": [
+              {
+                "jgnFactId": "#vk.3:p0",
+                "jgnFactMult": "!",
+                "jgnFactName": "!KU",
+                "jgnFactShow": "!KU( 'g' )",
+                "jgnFactTag": "KUFact",
+                "jgnFactTerms": [
+                  {
+                    "jgnConst": "'g'"
+                  }
+                ]
+              },
+              {
+                "jgnFactId": "#vk.3:p1",
+                "jgnFactMult": "!",
+                "jgnFactName": "!KU",
+                "jgnFactShow": "!KU( ~lkI )",
+                "jgnFactTag": "KUFact",
+                "jgnFactTerms": [
+                  {
+                    "jgnConst": "~lkI"
+                  }
+                ]
+              }
+            ]
+          },
+          "jgnType": "isIntruderRule"
+        },
+        {
+          "jgnId": "#vr.3",
+          "jgnLabel": "Destrd_exp",
+          "jgnMetadata": {
+            "jgnActs": [],
+            "jgnConcs": [
+              {
+                "jgnFactId": "#vr.3:c0",
+                "jgnFactMult": "!",
+                "jgnFactName": "!KD",
+                "jgnFactShow": "!KD( 'g'^(~x*h1(<~eskI, ~lkI>)) )",
+                "jgnFactTag": "KDFact",
+                "jgnFactTerms": [
+                  {
+                    "jgnFunct": "exp",
+                    "jgnParams": [
+                      {
+                        "jgnConst": "'g'"
+                      },
+                      {
+                        "jgnFunct": "Mult",
+                        "jgnParams": [
+                          {
+                            "jgnConst": "~x"
+                          },
+                          {
+                            "jgnFunct": "h1",
+                            "jgnParams": [
+                              {
+                                "jgnFunct": "pair",
+                                "jgnParams": [
+                                  {
+                                    "jgnConst": "~eskI"
+                                  },
+                                  {
+                                    "jgnConst": "~lkI"
+                                  }
+                                ],
+                                "jgnShow": "pair(~eskI,~lkI)"
+                              }
+                            ],
+                            "jgnShow": "h1(pair(~eskI,~lkI))"
+                          }
+                        ],
+                        "jgnShow": "Mult(~x,h1(pair(~eskI,~lkI)))"
+                      }
+                    ],
+                    "jgnShow": "exp('g',Mult(~x,h1(pair(~eskI,~lkI))))"
+                  }
+                ]
+              }
+            ],
+            "jgnPrems": [
+              {
+                "jgnFactId": "#vr.3:p0",
+                "jgnFactMult": "!",
+                "jgnFactName": "!KD",
+                "jgnFactShow": "!KD( 'g'^h1(<~eskI, ~lkI>) )",
+                "jgnFactTag": "KDFact",
+                "jgnFactTerms": [
+                  {
+                    "jgnFunct": "exp",
+                    "jgnParams": [
+                      {
+                        "jgnConst": "'g'"
+                      },
+                      {
+                        "jgnFunct": "h1",
+                        "jgnParams": [
+                          {
+                            "jgnFunct": "pair",
+                            "jgnParams": [
+                              {
+                                "jgnConst": "~eskI"
+                              },
+                              {
+                                "jgnConst": "~lkI"
+                              }
+                            ],
+                            "jgnShow": "pair(~eskI,~lkI)"
+                          }
+                        ],
+                        "jgnShow": "h1(pair(~eskI,~lkI))"
+                      }
+                    ],
+                    "jgnShow": "exp('g',h1(pair(~eskI,~lkI)))"
+                  }
+                ]
+              },
+              {
+                "jgnFactId": "#vr.3:p1",
+                "jgnFactMult": "!",
+                "jgnFactName": "!KU",
+                "jgnFactShow": "!KU( ~x )",
+                "jgnFactTag": "KUFact",
+                "jgnFactTerms": [
+                  {
+                    "jgnConst": "~x"
+                  }
+                ]
+              }
+            ]
+          },
+          "jgnType": "isIntruderRule"
+        },
+        {
+          "jgnId": "#vk.4",
+          "jgnLabel": "Coerce",
+          "jgnMetadata": {
+            "jgnActs": [
+              {
+                "jgnFactId": "action",
+                "jgnFactMult": "!",
+                "jgnFactName": "!KU",
+                "jgnFactShow": "!KU( ~lkI )",
+                "jgnFactTag": "KUFact",
+                "jgnFactTerms": [
+                  {
+                    "jgnConst": "~lkI"
+                  }
+                ]
+              }
+            ],
+            "jgnConcs": [
+              {
+                "jgnFactId": "#vk.4:c0",
+                "jgnFactMult": "!",
+                "jgnFactName": "!KU",
+                "jgnFactShow": "!KU( ~lkI )",
+                "jgnFactTag": "KUFact",
+                "jgnFactTerms": [
+                  {
+                    "jgnConst": "~lkI"
+                  }
+                ]
+              }
+            ],
+            "jgnPrems": [
+              {
+                "jgnFactId": "#vk.4:p0",
+                "jgnFactMult": "!",
+                "jgnFactName": "!KD",
+                "jgnFactShow": "!KD( ~lkI )",
+                "jgnFactTag": "KDFact",
+                "jgnFactTerms": [
+                  {
+                    "jgnConst": "~lkI"
+                  }
+                ]
+              }
+            ]
+          },
+          "jgnType": "isIntruderRule"
+        },
+        {
+          "jgnId": "#vr.4",
+          "jgnLabel": "Ltk_reveal",
+          "jgnMetadata": {
+            "jgnActs": [
+              {
+                "jgnFactId": "action",
+                "jgnFactMult": "",
+                "jgnFactName": "LtkRev",
+                "jgnFactShow": "LtkRev( $R )",
+                "jgnFactTag": "ProtoFact",
+                "jgnFactTerms": [
+                  {
+                    "jgnConst": "$R"
+                  }
+                ]
+              }
+            ],
+            "jgnConcs": [
+              {
+                "jgnFactId": "#vr.4:c0",
+                "jgnFactMult": "",
+                "jgnFactName": "Out",
+                "jgnFactShow": "Out( ~x )",
+                "jgnFactTag": "OutFact",
+                "jgnFactTerms": [
+                  {
+                    "jgnConst": "~x"
+                  }
+                ]
+              }
+            ],
+            "jgnPrems": [
+              {
+                "jgnFactId": "#vr.4:p0",
+                "jgnFactMult": "!",
+                "jgnFactName": "!Ltk",
+                "jgnFactShow": "!Ltk( $R, ~x )",
+                "jgnFactTag": "ProtoFact",
+                "jgnFactTerms": [
+                  {
+                    "jgnConst": "$R"
+                  },
+                  {
+                    "jgnConst": "~x"
+                  }
+                ]
+              }
+            ]
+          },
+          "jgnType": "isProtocolRule"
+        },
+        {
+          "jgnId": "#vk.5",
+          "jgnLabel": "Coerce",
+          "jgnMetadata": {
+            "jgnActs": [
+              {
+                "jgnFactId": "action",
+                "jgnFactMult": "!",
+                "jgnFactName": "!KU",
+                "jgnFactShow": "!KU( 'g'^h1(<~eskI, ~lkI>) )",
+                "jgnFactTag": "KUFact",
+                "jgnFactTerms": [
+                  {
+                    "jgnFunct": "exp",
+                    "jgnParams": [
+                      {
+                        "jgnConst": "'g'"
+                      },
+                      {
+                        "jgnFunct": "h1",
+                        "jgnParams": [
+                          {
+                            "jgnFunct": "pair",
+                            "jgnParams": [
+                              {
+                                "jgnConst": "~eskI"
+                              },
+                              {
+                                "jgnConst": "~lkI"
+                              }
+                            ],
+                            "jgnShow": "pair(~eskI,~lkI)"
+                          }
+                        ],
+                        "jgnShow": "h1(pair(~eskI,~lkI))"
+                      }
+                    ],
+                    "jgnShow": "exp('g',h1(pair(~eskI,~lkI)))"
+                  }
+                ]
+              }
+            ],
+            "jgnConcs": [
+              {
+                "jgnFactId": "#vk.5:c0",
+                "jgnFactMult": "!",
+                "jgnFactName": "!KU",
+                "jgnFactShow": "!KU( 'g'^h1(<~eskI, ~lkI>) )",
+                "jgnFactTag": "KUFact",
+                "jgnFactTerms": [
+                  {
+                    "jgnFunct": "exp",
+                    "jgnParams": [
+                      {
+                        "jgnConst": "'g'"
+                      },
+                      {
+                        "jgnFunct": "h1",
+                        "jgnParams": [
+                          {
+                            "jgnFunct": "pair",
+                            "jgnParams": [
+                              {
+                                "jgnConst": "~eskI"
+                              },
+                              {
+                                "jgnConst": "~lkI"
+                              }
+                            ],
+                            "jgnShow": "pair(~eskI,~lkI)"
+                          }
+                        ],
+                        "jgnShow": "h1(pair(~eskI,~lkI))"
+                      }
+                    ],
+                    "jgnShow": "exp('g',h1(pair(~eskI,~lkI)))"
+                  }
+                ]
+              }
+            ],
+            "jgnPrems": [
+              {
+                "jgnFactId": "#vk.5:p0",
+                "jgnFactMult": "!",
+                "jgnFactName": "!KD",
+                "jgnFactShow": "!KD( 'g'^h1(<~eskI, ~lkI>) )",
+                "jgnFactTag": "KDFact",
+                "jgnFactTerms": [
+                  {
+                    "jgnFunct": "exp",
+                    "jgnParams": [
+                      {
+                        "jgnConst": "'g'"
+                      },
+                      {
+                        "jgnFunct": "h1",
+                        "jgnParams": [
+                          {
+                            "jgnFunct": "pair",
+                            "jgnParams": [
+                              {
+                                "jgnConst": "~eskI"
+                              },
+                              {
+                                "jgnConst": "~lkI"
+                              }
+                            ],
+                            "jgnShow": "pair(~eskI,~lkI)"
+                          }
+                        ],
+                        "jgnShow": "h1(pair(~eskI,~lkI))"
+                      }
+                    ],
+                    "jgnShow": "exp('g',h1(pair(~eskI,~lkI)))"
+                  }
+                ]
+              }
+            ]
+          },
+          "jgnType": "isIntruderRule"
+        },
+        {
+          "jgnId": "#vr.5",
+          "jgnLabel": "Ltk_reveal",
+          "jgnMetadata": {
+            "jgnActs": [
+              {
+                "jgnFactId": "action",
+                "jgnFactMult": "",
+                "jgnFactName": "LtkRev",
+                "jgnFactShow": "LtkRev( $I )",
+                "jgnFactTag": "ProtoFact",
+                "jgnFactTerms": [
+                  {
+                    "jgnConst": "$I"
+                  }
+                ]
+              }
+            ],
+            "jgnConcs": [
+              {
+                "jgnFactId": "#vr.5:c0",
+                "jgnFactMult": "",
+                "jgnFactName": "Out",
+                "jgnFactShow": "Out( ~lkI )",
+                "jgnFactTag": "OutFact",
+                "jgnFactTerms": [
+                  {
+                    "jgnConst": "~lkI"
+                  }
+                ]
+              }
+            ],
+            "jgnPrems": [
+              {
+                "jgnFactId": "#vr.5:p0",
+                "jgnFactMult": "!",
+                "jgnFactName": "!Ltk",
+                "jgnFactShow": "!Ltk( $I, ~lkI )",
+                "jgnFactTag": "ProtoFact",
+                "jgnFactTerms": [
+                  {
+                    "jgnConst": "$I"
+                  },
+                  {
+                    "jgnConst": "~lkI"
+                  }
+                ]
+              }
+            ]
+          },
+          "jgnType": "isProtocolRule"
+        }
+      ],
+      "jgType": "Tamarin prover constraint system"
+    }
+  ]
+}

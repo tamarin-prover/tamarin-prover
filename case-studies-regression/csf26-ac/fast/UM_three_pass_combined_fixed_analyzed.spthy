@@ -3112,7 +3112,7 @@ next
                   case c_h
                   solve( !KU( 'g'^(~ea*~x) ) @ #vk.21 )
                     case Register_key_honest_case_1
-                    solve( !KU( ~ea ) @ #vk.23 )
+                    solve( !KU( ~x ) @ #vk.23 )
                       case Corrupt_Ltk
                       solve( Expire( <'UM3', $A, $B, 
                                       (<'1', 'g'^~ex> add 
@@ -3172,7 +3172,7 @@ next
                     qed
                   next
                     case Register_key_honest_case_2
-                    solve( !KU( ~x ) @ #vk.23 )
+                    solve( !KU( ~ea ) @ #vk.23 )
                       case Corrupt_Ltk
                       solve( Expire( <'UM3', $A, $B, 
                                       (<'1', 'g'^~ex> add 
@@ -3336,7 +3336,7 @@ next
                     case c_h
                     solve( !KU( 'g'^(~eb*~x) ) @ #vk.20 )
                       case Register_key_honest_case_1
-                      solve( !KU( ~eb ) @ #vk.22 )
+                      solve( !KU( ~x ) @ #vk.22 )
                         case Corrupt_Ltk
                         solve( Expire( <'UM3', $B, $A, 
                                         (<'1', X> add 
@@ -3390,7 +3390,7 @@ next
                       qed
                     next
                       case Register_key_honest_case_2
-                      solve( !KU( ~x ) @ #vk.22 )
+                      solve( !KU( ~eb ) @ #vk.22 )
                         case Corrupt_Ltk
                         solve( Expire( <'UM3', $B, $A, 
                                         (<'1', X> add 
@@ -4707,12 +4707,9 @@ next
                       by solve( !KU( ~ey ) @ #vk.23 )
                     next
                       case R_Activate_case_2
-                      by solve( !KU( ~ey ) @ #vk.24 )
-                    next
-                      case R_Activate_case_3
                       solve( !KU( 'g'^(~eb*~x.1) ) @ #vk.20 )
                         case Register_key_honest_case_1
-                        solve( !KU( ~eb ) @ #vk.23 )
+                        solve( !KU( ~x.1 ) @ #vk.23 )
                           case Corrupt_Ltk
                           solve( Expire( <'UM3', $B, $A, 
                                           (<'1', 'g'^x> add 
@@ -4778,7 +4775,7 @@ next
                         qed
                       next
                         case Register_key_honest_case_2
-                        solve( !KU( ~x.1 ) @ #vk.23 )
+                        solve( !KU( ~eb ) @ #vk.23 )
                           case Corrupt_Ltk
                           solve( Expire( <'UM3', $B, $A, 
                                           (<'1', 'g'^x> add 
@@ -4910,6 +4907,9 @@ next
                         qed
                       qed
                     next
+                      case R_Activate_case_3
+                      by solve( !KU( ~ey ) @ #vk.24 )
+                    next
                       case Register_key_honest_case_1
                       by solve( !KU( ~ey ) @ #vk.22 )
                     next
@@ -4962,7 +4962,7 @@ next
                     case c_h
                     solve( !KU( 'g'^(~eb*~x) ) @ #vk.19 )
                       case Register_key_honest_case_1
-                      solve( !KU( ~eb ) @ #vk.21 )
+                      solve( !KU( ~x ) @ #vk.21 )
                         case Corrupt_Ltk
                         solve( Expire( <'UM3', $B, $A, 
                                         (<'1', DH_neutral> add 
@@ -5022,7 +5022,7 @@ next
                       qed
                     next
                       case Register_key_honest_case_2
-                      solve( !KU( ~x ) @ #vk.21 )
+                      solve( !KU( ~eb ) @ #vk.21 )
                         case Corrupt_Ltk
                         solve( Expire( <'UM3', $B, $A, 
                                         (<'1', DH_neutral> add 
@@ -5330,13 +5330,13 @@ solve( (¬(role = 'I'))  ∥
               case c_h
               solve( !KU( 'g'^(~eb*~x) ) @ #vk.6 )
                 case Register_key_honest_case_1
-                solve( !KU( ~eb ) @ #vk.14 )
+                solve( !KU( ~x ) @ #vk.14 )
                   case Corrupt_Ltk
                   by contradiction /* from formulas */
                 qed
               next
                 case Register_key_honest_case_2
-                solve( !KU( ~x ) @ #vk.14 )
+                solve( !KU( ~eb ) @ #vk.14 )
                   case Corrupt_Ltk
                   by contradiction /* from formulas */
                 qed
@@ -5630,13 +5630,13 @@ next
               case c_h
               solve( !KU( 'g'^(~eb*~x) ) @ #vk.6 )
                 case Register_key_honest_case_1
-                solve( !KU( ~eb ) @ #vk.14 )
+                solve( !KU( ~x ) @ #vk.14 )
                   case Corrupt_Ltk
                   by contradiction /* from formulas */
                 qed
               next
                 case Register_key_honest_case_2
-                solve( !KU( ~x ) @ #vk.14 )
+                solve( !KU( ~eb ) @ #vk.14 )
                   case Corrupt_Ltk
                   by contradiction /* from formulas */
                 qed
@@ -5661,8 +5661,8 @@ qed
 Generated from:
 Tamarin version 1.13.0
 Maude version 3.5.1
-Git revision: abcb0ff3eca770d7b7f58a583b2616eafe845e15, branch: fix-derivation-check-warnings
-Compiled at: 2026-07-22 11:02:46.6864 UTC
+Git revision: 41bc81379b23681e7057314a5cf66a25c45e1986, branch: canonicalise-subst
+Compiled at: 2026-07-27 16:11:34.947223 UTC
 */
 
 end
@@ -5674,7 +5674,7 @@ summary of summaries:
 analyzed: examples/csf26-ac/fast/UM_three_pass_combined_fixed.spthy
 
   output:          examples/csf26-ac/fast/UM_three_pass_combined_fixed.spthy.tmp
-  processing time: 7.83s
+  processing time: 7.85s
   
   key_agreement_reachable (exists-trace): verified (14 steps)
   CK_secure_UM3 (all-traces): verified (497 steps)
