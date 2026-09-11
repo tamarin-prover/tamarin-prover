@@ -589,8 +589,9 @@ def main():
 		output = subprocess.check_output(["stack", "install"], stderr=subprocess.STDOUT, text=True)
 		logging.debug(output)
 
-	settings.tamarin = getTamarinExecutable()
-	logging.debug(f"using Tamarin executable '{settings.tamarin}'")
+	if not settings.no_make or not settings.no_output_parse_test:
+		settings.tamarin = getTamarinExecutable()
+		logging.debug(f"using Tamarin executable '{settings.tamarin}'")
 
 	## test the spthy parser
 	parsingSuccessful = True
