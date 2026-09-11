@@ -24,7 +24,7 @@ module.exports = grammar({
       [$.nary_app, $.predicate_ref],
 
       // Conflict between fact identifiers (uppercase) and general identifiers
-      [$.fact, $._term_ident],
+      [$._base_fact, $._term_ident],
 
       // Conflict since parser cannot decide how to parse ident
       [$.nullary_fun, $.nary_app, $.msg_var_or_nullary_fun]
@@ -285,23 +285,20 @@ module.exports = grammar({
       ),
 
       // Predicates:
-      predicates: $ => seq(
+      predicates: $ => prec.right(seq(
           choice('predicate', 'predicates'), ':',
           $.predicate,
           repeat(seq(
               ',', $.predicate
-          ))
-      ),
+          )),
+          optional(',')
+      )),
 
       predicate: $ => seq(
-          alias($.predicate_def, ''),
+          field('predicate_identifier', $.ident),
+          '(', optional($.arguments), ')',
           '<=>',
           field('formula', $._formula)
-      ),
-
-      predicate_def: $ => seq(
-          field('predicate_identifier', $.ident),
-          '(', optional($.arguments), ')'
       ),
 
       // Options:
@@ -446,7 +443,7 @@ module.exports = grammar({
           $._extended_process,
           $._stateful_process,
           $.inline_msr_process,
-          $._nested_process,
+          $.nested_process,
           $.location_process,
           $.predefined_process
 
@@ -493,8 +490,7 @@ module.exports = grammar({
           optional(seq(';', $._process))
       )),
 
-      // represents processes that have been defined and named in let-blocks:
-      _nested_process: $ => seq(
+      nested_process: $ => seq(
           '(', $._process, ')'
       ),
 
@@ -598,16 +594,11 @@ module.exports = grammar({
 
       _condition: $ => choice(
           $.equality_check,
-          $.lesser_check,
-          $.predicate_ref
+          $._formula
       ),
 
       equality_check: $ => seq(
-          choice($.mset_term, $._formula), token(prec(1, '=')), choice($.mset_term, $._formula)
-      ),
-
-      lesser_check: $ => seq(
-          $.mset_term, choice('(<)', '<<'), $.mset_term
+          $.mset_term, token(prec(1, '=')), $.mset_term
       ),
 
 
@@ -778,15 +769,16 @@ module.exports = grammar({
           field('right', $.mset_term)
       ),
 
-      macros: $ => seq(
+      macros: $ => prec.right(seq(
           'macros',
           ':',
           $.macro,
           repeat(seq(
               ',',
               $.macro
-          ))
-      ),
+          )),
+          optional(',')
+      )),
 
       macro: $ => seq(
           field('macro_identifier', $.ident),
@@ -828,14 +820,15 @@ module.exports = grammar({
       )),
 
       _fact: $ => choice(
-          alias($.fact, $.linear_fact),
-          seq(
-              '!',
-              alias($.fact, $.persistent_fact)
-          )
+          $.linear_fact,
+          $.persistent_fact
       ),
 
-      fact: $ => prec.left(seq(
+      linear_fact: $ => $._base_fact,
+
+      persistent_fact: $ => seq('!', $._base_fact),
+
+      _base_fact: $ => prec.left(seq(
           field('fact_identifier', alias($.fact_identifier, $.ident)),
           '(',
           optional($.arguments),
@@ -1357,6 +1350,7 @@ module.exports = grammar({
           $.action_constraint,
           $.term_eq,
           $.subterm_rel,
+          $.lesser_check,
           $.quantified_formula,
           $.atom,
           $.predicate_ref,
@@ -1433,6 +1427,12 @@ module.exports = grammar({
       subterm_rel: $ => prec('ATOM', seq(
           field('left', $.mset_term),
           choice('<<', '⊏'),
+          field('right', $.mset_term)
+      )),
+
+      lesser_check: $ => prec('ATOM', seq(
+          field('left', $.mset_term),
+          '(<)',
           field('right', $.mset_term)
       )),
 

@@ -1,0 +1,15 @@
+theory export_constraint_scope
+begin
+
+rule EmitPair:
+  [ Fr(~u), Fr(~v) ]
+  --[ A2(~u, ~v), E2(~u, ~v) ]->
+  []
+
+lemma existential_constraint_scope:
+  "All u v #i. A2(u, v) @ i & (Ex x. x = u) ==> E2(u, v) @ i"
+
+lemma existential_constraint_scope_reversed:
+  "All v u #i. A2(u, v) @ i & (Ex x. x = u) ==> E2(u, v) @ i"
+
+end

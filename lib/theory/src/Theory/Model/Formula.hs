@@ -39,6 +39,8 @@ module Theory.Model.Formula (
   , quantify
   , openFormula
   , openFormulaPrefix
+  , rewrapBoundPrefix
+  , mapLits
   , toLNFormula
 --  , unquantify
 
@@ -49,6 +51,8 @@ module Theory.Model.Formula (
   , (.||.)
   , (.==>.)
   , (.<=>.)
+  , buildConjunction
+  , buildDisjunction
   , exists
   , forAll
   , hinted
@@ -248,6 +252,22 @@ lfalse = TF False
 (.||.)  = Conn Or
 (.==>.) = Conn Imp
 (.<=>.) = Conn Iff
+
+-- | Conjunction of a list of formulas; the empty list yields true.
+buildConjunction :: [ProtoFormula syn a s v] -> ProtoFormula syn a s v
+buildConjunction []       = ltrue
+buildConjunction formulas = foldr1 (.&&.) formulas
+
+-- | Disjunction of a list of formulas; the empty list yields false.
+buildDisjunction :: [ProtoFormula syn a s v] -> ProtoFormula syn a s v
+buildDisjunction []       = lfalse
+buildDisjunction formulas = foldr1 (.||.) formulas
+
+-- | Rewrap a stripped quantifier prefix around a formula body, with the
+-- binders given outermost first. Dual of 'openFormulaPrefix'.
+rewrapBoundPrefix :: Quantifier -> [a] -> ProtoFormula syn a s v -> ProtoFormula syn a s v
+rewrapBoundPrefix _ [] body       = body
+rewrapBoundPrefix q (v : vs) body = Qua q v (rewrapBoundPrefix q vs body)
 
 ------------------------------------------------------------------------------
 -- Dealing with bound variables

@@ -36,84 +36,16 @@ solve( State_111111111121211111( cu, pc, pw, share, skV, cypher, signed
        ) ▶₀ #t1 )
   case ifaencadeccypherskVpkskVcheckrepsignedloc_0_11111111112121111
   solve( splitEqs(0) )
-    case split_case_1
-    solve( !KU( shared(<cypher, 
-                        rep(aenc(adec(cypher, ~n.3), pk(~n.3)), 'loc')>)
-           ) @ #vk )
-      case c_shared
-      solve( !KU( rep(aenc(adec(cypher, ~n.3), pk(~n.3)), 'loc') ) @ #vk.3 )
-        case ReportRule
-        by contradiction /* from formulas */
-      next
-        case outcdecode_0_11111111111111
-        solve( State_1111111111111( code, cu, pc, pw, skV ) ▶₀ #vr.25 )
-          case inpcchannelcode_1_111111111111_case_1
-          solve( (#vr.24, 0) ~~> (#vk.1, 0) )
-            case d_0_fst
-            by solve( State_1111111111111( code, ~n.1, pc, pw, skV ) ▶₀ #vr.37 )
-          next
-            case d_0_snd
-            by contradiction /* impossible chain */
-          qed
-        next
-          case inpcchannelcode_1_111111111111_case_2
-          by contradiction /* impossible chain */
-        qed
-      qed
-    next
-      case outcdecode_0_11111111111111
-      solve( State_1111111111111( code, cu, pc, pw, skV ) ▶₀ #vr.25 )
-        case inpcchannelcode_1_111111111111_case_1
-        solve( (#vr.24, 0) ~~> (#vk, 0) )
-          case d_0_fst
-          by solve( State_1111111111111( code, ~n.1, pc, pw, skV ) ▶₀ #vr.37 )
-        next
-          case d_0_snd
-          by contradiction /* impossible chain */
-        qed
-      next
-        case inpcchannelcode_1_111111111111_case_2
-        by contradiction /* impossible chain */
-      qed
-    qed
-  next
     case split_case_2
     solve( !KU( shared(<aenc(z, pk(~n.3)), rep(aenc(z, pk(~n.3)), 'loc')>)
            ) @ #vk )
       case c_shared
       solve( !KU( rep(aenc(z, pk(~n.3)), 'loc') ) @ #vk.3 )
-        case ReportRule
-        by contradiction /* from formulas */
-      next
-        case outcdecode_0_11111111111111
-        solve( State_1111111111111( code, cu, pc, pw, skV ) ▶₀ #vr.25 )
-          case inpcchannelcode_1_111111111111_case_1
-          solve( (#vr.24, 0) ~~> (#vk.1, 0) )
-            case d_0_fst
-            by solve( State_1111111111111( code, ~n.1, pc, pw, skV ) ▶₀ #vr.37 )
-          next
-            case d_0_snd
-            by contradiction /* impossible chain */
-          qed
-        next
-          case inpcchannelcode_1_111111111111_case_2
-          by contradiction /* impossible chain */
+        case outsharedaencsharedkpkskVrepaencsharedkpkskVloc_0_1111111111211111
+        solve( !KU( aenc(~n.3, pk(~n.4)) ) @ #vk.3 )
+          case outsharedaencsharedkpkskVrepaencsharedkpkskVloc_0_1111111111211111_case_1
+          SOLVED // trace found
         qed
-      qed
-    next
-      case outcdecode_0_11111111111111
-      solve( State_1111111111111( code, cu, pc, pw, skV ) ▶₀ #vr.25 )
-        case inpcchannelcode_1_111111111111_case_1
-        solve( (#vr.24, 0) ~~> (#vk, 0) )
-          case d_0_fst
-          by solve( State_1111111111111( code, ~n.1, pc, pw, skV ) ▶₀ #vr.37 )
-        next
-          case d_0_snd
-          by contradiction /* impossible chain */
-        qed
-      next
-        case inpcchannelcode_1_111111111111_case_2
-        by contradiction /* impossible chain */
       qed
     qed
   qed
@@ -226,6 +158,9 @@ solve( State_111111111121211111( cu, pc, pw, share, skV, cypher, signed
           case inpcchannelcode_1_111111111111_case_2
           by contradiction /* impossible chain */
         qed
+      next
+        case outsharedaencsharedkpkskVrepaencsharedkpkskVloc_0_1111111111211111
+        by contradiction /* from formulas */
       qed
     next
       case outcdecode_0_11111111111111
@@ -242,6 +177,9 @@ solve( State_111111111121211111( cu, pc, pw, share, skV, cypher, signed
         case inpcchannelcode_1_111111111111_case_2
         by contradiction /* impossible chain */
       qed
+    next
+      case outsharedaencsharedkpkskVrepaencsharedkpkskVloc_0_1111111111211111
+      by contradiction /* from formulas */
     qed
   qed
 qed
@@ -277,7 +215,10 @@ solve( State_111111111121211111( cu, pc, pw, share, skV, cypher, signed
           by solve( (#vr.31, 0) ~~> (#t2.1, 0) )
         qed
       next
-        case outsharedaencsharedkpkskVreportaencsharedkpkskV_0_1111111111211111
+        case outsharedaencsharedkpkskVrepaencsharedkpkskVloc_0_1111111111211111_case_1
+        by contradiction /* from formulas */
+      next
+        case outsharedaencsharedkpkskVrepaencsharedkpkskVloc_0_1111111111211111_case_2
         by contradiction /* from formulas */
       qed
     qed
@@ -362,6 +303,96 @@ solve( State_111111111121111111111111( cdcode, cu, cypher, pc, pw, k,
                 case inpcchannelcode_1_111111111111_case_2
                 by contradiction /* impossible chain */
               qed
+            next
+              case outsharedaencsharedkpkskVrepaencsharedkpkskVloc_0_1111111111211111
+              solve( !KU( senc(chal, ~n.1) ) @ #vk.2 )
+                case c_senc
+                solve( !KU( ~n.1 ) @ #vk.7 )
+                  case outcdecode_0_11111111111111
+                  solve( State_1111111111111( code, cu, pc, pw, skV ) ▶₀ #vr.68 )
+                    case inpcchannelcode_1_111111111111_case_1
+                    solve( (#vr.67, 0) ~~> (#vk.3, 0) )
+                      case d_0_fst
+                      by solve( State_1111111111111( code, ~n.2, pc, pw, skV ) ▶₀ #vr.80 )
+                    next
+                      case d_0_snd
+                      by solve( (#vr.81, 0) ~~> (#vk.3, 0) )
+                    qed
+                  next
+                    case inpcchannelcode_1_111111111111_case_2
+                    by solve( (#vr.67, 0) ~~> (#vk.3, 0) )
+                  qed
+                next
+                  case outsharedaencsharedkpkskVrepaencsharedkpkskVloc_0_1111111111211111_case_1
+                  by contradiction /* from formulas */
+                next
+                  case outsharedaencsharedkpkskVrepaencsharedkpkskVloc_0_1111111111211111_case_2
+                  by contradiction /* from formulas */
+                qed
+              next
+                case outcdecode_0_11111111111111
+                solve( State_1111111111111( code, cu, pc, pw, skV ) ▶₀ #vr.68 )
+                  case inpcchannelcode_1_111111111111_case_1
+                  solve( (#vr.67, 0) ~~> (#vk.2, 0) )
+                    case d_0_fst
+                    by solve( State_1111111111111( code, ~n.2, pc, pw, skV ) ▶₀ #vr.80 )
+                  next
+                    case d_0_snd
+                    by contradiction /* impossible chain */
+                  qed
+                next
+                  case inpcchannelcode_1_111111111111_case_2
+                  by contradiction /* impossible chain */
+                qed
+              next
+                case outsencchallengeadeccypherskV_0_11111111112121111111111111111
+                solve( State_111111111121111( cu, pc, pw, ~n.2, ~n.5 ) ▶₀ #t2.1 )
+                  case newsharedk_0_11111111112111
+                  solve( !KU( ~n.1 ) @ #t2.2 )
+                    case outcdecode_0_11111111111111
+                    solve( State_1111111111111( code, cu, pc, pw, skV ) ▶₀ #vr.97 )
+                      case inpcchannelcode_1_111111111111_case_1
+                      solve( (#vr.96, 0) ~~> (#t2.2, 0) )
+                        case d_0_fst
+                        by solve( State_1111111111111( code, ~n.3, pc, pw, skV ) ▶₀ #vr.109 )
+                      next
+                        case d_0_snd
+                        by solve( (#vr.110, 0) ~~> (#t2.2, 0) )
+                      qed
+                    next
+                      case inpcchannelcode_1_111111111111_case_2
+                      by solve( (#vr.96, 0) ~~> (#t2.2, 0) )
+                    qed
+                  next
+                    case outsencchallengeadeccypherskV_0_11111111112121111111111111111
+                    by contradiction /* from formulas */
+                  qed
+                qed
+              next
+                case outskosenckOTPadeccypherskV_0_1111111111212111111111111
+                solve( State_111111111121111( cu, pc, pw, ~n.2, ~n.5 ) ▶₀ #t2.1 )
+                  case newsharedk_0_11111111112111
+                  solve( !KU( ~n.1 ) @ #t2.2 )
+                    case outcdecode_0_11111111111111
+                    solve( State_1111111111111( code, cu, pc, pw, skV ) ▶₀ #vr.93 )
+                      case inpcchannelcode_1_111111111111_case_1
+                      solve( (#vr.92, 0) ~~> (#t2.2, 0) )
+                        case d_0_fst
+                        by solve( State_1111111111111( code, ~n.3, pc, pw, skV ) ▶₀ #vr.105 )
+                      next
+                        case d_0_snd
+                        by solve( (#vr.106, 0) ~~> (#t2.2, 0) )
+                      qed
+                    next
+                      case inpcchannelcode_1_111111111111_case_2
+                      by solve( (#vr.92, 0) ~~> (#t2.2, 0) )
+                    qed
+                  next
+                    case outskosenckOTPadeccypherskV_0_1111111111212111111111111
+                    by contradiction /* from formulas */
+                  qed
+                qed
+              qed
             qed
           next
             case outcdecode_0_11111111111111
@@ -377,6 +408,96 @@ solve( State_111111111121111111111111( cdcode, cu, cypher, pc, pw, k,
             next
               case inpcchannelcode_1_111111111111_case_2
               by contradiction /* impossible chain */
+            qed
+          next
+            case outsharedaencsharedkpkskVrepaencsharedkpkskVloc_0_1111111111211111
+            solve( !KU( senc(chal, ~n.1) ) @ #vk.1 )
+              case c_senc
+              solve( !KU( ~n.1 ) @ #vk.4 )
+                case outcdecode_0_11111111111111
+                solve( State_1111111111111( code, cu, pc, pw, skV ) ▶₀ #vr.66 )
+                  case inpcchannelcode_1_111111111111_case_1
+                  solve( (#vr.65, 0) ~~> (#vk.2, 0) )
+                    case d_0_fst
+                    by solve( State_1111111111111( code, ~n.2, pc, pw, skV ) ▶₀ #vr.78 )
+                  next
+                    case d_0_snd
+                    by solve( (#vr.79, 0) ~~> (#vk.2, 0) )
+                  qed
+                next
+                  case inpcchannelcode_1_111111111111_case_2
+                  by solve( (#vr.65, 0) ~~> (#vk.2, 0) )
+                qed
+              next
+                case outsharedaencsharedkpkskVrepaencsharedkpkskVloc_0_1111111111211111_case_1
+                by contradiction /* from formulas */
+              next
+                case outsharedaencsharedkpkskVrepaencsharedkpkskVloc_0_1111111111211111_case_2
+                by contradiction /* from formulas */
+              qed
+            next
+              case outcdecode_0_11111111111111
+              solve( State_1111111111111( code, cu, pc, pw, skV ) ▶₀ #vr.66 )
+                case inpcchannelcode_1_111111111111_case_1
+                solve( (#vr.65, 0) ~~> (#vk.1, 0) )
+                  case d_0_fst
+                  by solve( State_1111111111111( code, ~n.2, pc, pw, skV ) ▶₀ #vr.78 )
+                next
+                  case d_0_snd
+                  by contradiction /* impossible chain */
+                qed
+              next
+                case inpcchannelcode_1_111111111111_case_2
+                by contradiction /* impossible chain */
+              qed
+            next
+              case outsencchallengeadeccypherskV_0_11111111112121111111111111111
+              solve( State_111111111121111( cu, pc, pw, ~n.2, ~n.5 ) ▶₀ #t2.1 )
+                case newsharedk_0_11111111112111
+                solve( !KU( ~n.1 ) @ #t2.2 )
+                  case outcdecode_0_11111111111111
+                  solve( State_1111111111111( code, cu, pc, pw, skV ) ▶₀ #vr.95 )
+                    case inpcchannelcode_1_111111111111_case_1
+                    solve( (#vr.94, 0) ~~> (#t2.2, 0) )
+                      case d_0_fst
+                      by solve( State_1111111111111( code, ~n.3, pc, pw, skV ) ▶₀ #vr.107 )
+                    next
+                      case d_0_snd
+                      by solve( (#vr.108, 0) ~~> (#t2.2, 0) )
+                    qed
+                  next
+                    case inpcchannelcode_1_111111111111_case_2
+                    by solve( (#vr.94, 0) ~~> (#t2.2, 0) )
+                  qed
+                next
+                  case outsencchallengeadeccypherskV_0_11111111112121111111111111111
+                  by contradiction /* from formulas */
+                qed
+              qed
+            next
+              case outskosenckOTPadeccypherskV_0_1111111111212111111111111
+              solve( State_111111111121111( cu, pc, pw, ~n.2, ~n.5 ) ▶₀ #t2.1 )
+                case newsharedk_0_11111111112111
+                solve( !KU( ~n.1 ) @ #t2.2 )
+                  case outcdecode_0_11111111111111
+                  solve( State_1111111111111( code, cu, pc, pw, skV ) ▶₀ #vr.91 )
+                    case inpcchannelcode_1_111111111111_case_1
+                    solve( (#vr.90, 0) ~~> (#t2.2, 0) )
+                      case d_0_fst
+                      by solve( State_1111111111111( code, ~n.3, pc, pw, skV ) ▶₀ #vr.103 )
+                    next
+                      case d_0_snd
+                      by solve( (#vr.104, 0) ~~> (#t2.2, 0) )
+                    qed
+                  next
+                    case inpcchannelcode_1_111111111111_case_2
+                    by solve( (#vr.90, 0) ~~> (#t2.2, 0) )
+                  qed
+                next
+                  case outskosenckOTPadeccypherskV_0_1111111111212111111111111
+                  by contradiction /* from formulas */
+                qed
+              qed
             qed
           qed
         next
@@ -402,6 +523,96 @@ solve( State_111111111121111111111111( cdcode, cu, cypher, pc, pw, k,
                 case inpcchannelcode_1_111111111111_case_2
                 by contradiction /* impossible chain */
               qed
+            next
+              case outsharedaencsharedkpkskVrepaencsharedkpkskVloc_0_1111111111211111
+              solve( !KU( senc(chal, ~n.1) ) @ #vk.2 )
+                case c_senc
+                solve( !KU( ~n.1 ) @ #vk.7 )
+                  case outcdecode_0_11111111111111
+                  solve( State_1111111111111( code, cu, pc, pw, skV ) ▶₀ #vr.68 )
+                    case inpcchannelcode_1_111111111111_case_1
+                    solve( (#vr.67, 0) ~~> (#vk.3, 0) )
+                      case d_0_fst
+                      by solve( State_1111111111111( code, ~n.2, pc, pw, skV ) ▶₀ #vr.80 )
+                    next
+                      case d_0_snd
+                      by solve( (#vr.81, 0) ~~> (#vk.3, 0) )
+                    qed
+                  next
+                    case inpcchannelcode_1_111111111111_case_2
+                    by solve( (#vr.67, 0) ~~> (#vk.3, 0) )
+                  qed
+                next
+                  case outsharedaencsharedkpkskVrepaencsharedkpkskVloc_0_1111111111211111_case_1
+                  by contradiction /* from formulas */
+                next
+                  case outsharedaencsharedkpkskVrepaencsharedkpkskVloc_0_1111111111211111_case_2
+                  by contradiction /* from formulas */
+                qed
+              next
+                case outcdecode_0_11111111111111
+                solve( State_1111111111111( code, cu, pc, pw, skV ) ▶₀ #vr.68 )
+                  case inpcchannelcode_1_111111111111_case_1
+                  solve( (#vr.67, 0) ~~> (#vk.2, 0) )
+                    case d_0_fst
+                    by solve( State_1111111111111( code, ~n.2, pc, pw, skV ) ▶₀ #vr.80 )
+                  next
+                    case d_0_snd
+                    by contradiction /* impossible chain */
+                  qed
+                next
+                  case inpcchannelcode_1_111111111111_case_2
+                  by contradiction /* impossible chain */
+                qed
+              next
+                case outsencchallengeadeccypherskV_0_11111111112121111111111111111
+                solve( State_111111111121111( cu, pc, pw, ~n.2, ~n.5 ) ▶₀ #t2.1 )
+                  case newsharedk_0_11111111112111
+                  solve( !KU( ~n.1 ) @ #t2.2 )
+                    case outcdecode_0_11111111111111
+                    solve( State_1111111111111( code, cu, pc, pw, skV ) ▶₀ #vr.97 )
+                      case inpcchannelcode_1_111111111111_case_1
+                      solve( (#vr.96, 0) ~~> (#t2.2, 0) )
+                        case d_0_fst
+                        by solve( State_1111111111111( code, ~n.3, pc, pw, skV ) ▶₀ #vr.109 )
+                      next
+                        case d_0_snd
+                        by solve( (#vr.110, 0) ~~> (#t2.2, 0) )
+                      qed
+                    next
+                      case inpcchannelcode_1_111111111111_case_2
+                      by solve( (#vr.96, 0) ~~> (#t2.2, 0) )
+                    qed
+                  next
+                    case outsencchallengeadeccypherskV_0_11111111112121111111111111111
+                    by contradiction /* from formulas */
+                  qed
+                qed
+              next
+                case outskosenckOTPadeccypherskV_0_1111111111212111111111111
+                solve( State_111111111121111( cu, pc, pw, ~n.2, ~n.5 ) ▶₀ #t2.1 )
+                  case newsharedk_0_11111111112111
+                  solve( !KU( ~n.1 ) @ #t2.2 )
+                    case outcdecode_0_11111111111111
+                    solve( State_1111111111111( code, cu, pc, pw, skV ) ▶₀ #vr.93 )
+                      case inpcchannelcode_1_111111111111_case_1
+                      solve( (#vr.92, 0) ~~> (#t2.2, 0) )
+                        case d_0_fst
+                        by solve( State_1111111111111( code, ~n.3, pc, pw, skV ) ▶₀ #vr.105 )
+                      next
+                        case d_0_snd
+                        by solve( (#vr.106, 0) ~~> (#t2.2, 0) )
+                      qed
+                    next
+                      case inpcchannelcode_1_111111111111_case_2
+                      by solve( (#vr.92, 0) ~~> (#t2.2, 0) )
+                    qed
+                  next
+                    case outskosenckOTPadeccypherskV_0_1111111111212111111111111
+                    by contradiction /* from formulas */
+                  qed
+                qed
+              qed
             qed
           next
             case outcdecode_0_11111111111111
@@ -417,6 +628,96 @@ solve( State_111111111121111111111111( cdcode, cu, cypher, pc, pw, k,
             next
               case inpcchannelcode_1_111111111111_case_2
               by contradiction /* impossible chain */
+            qed
+          next
+            case outsharedaencsharedkpkskVrepaencsharedkpkskVloc_0_1111111111211111
+            solve( !KU( senc(chal, ~n.1) ) @ #vk.1 )
+              case c_senc
+              solve( !KU( ~n.1 ) @ #vk.4 )
+                case outcdecode_0_11111111111111
+                solve( State_1111111111111( code, cu, pc, pw, skV ) ▶₀ #vr.66 )
+                  case inpcchannelcode_1_111111111111_case_1
+                  solve( (#vr.65, 0) ~~> (#vk.2, 0) )
+                    case d_0_fst
+                    by solve( State_1111111111111( code, ~n.2, pc, pw, skV ) ▶₀ #vr.78 )
+                  next
+                    case d_0_snd
+                    by solve( (#vr.79, 0) ~~> (#vk.2, 0) )
+                  qed
+                next
+                  case inpcchannelcode_1_111111111111_case_2
+                  by solve( (#vr.65, 0) ~~> (#vk.2, 0) )
+                qed
+              next
+                case outsharedaencsharedkpkskVrepaencsharedkpkskVloc_0_1111111111211111_case_1
+                by contradiction /* from formulas */
+              next
+                case outsharedaencsharedkpkskVrepaencsharedkpkskVloc_0_1111111111211111_case_2
+                by contradiction /* from formulas */
+              qed
+            next
+              case outcdecode_0_11111111111111
+              solve( State_1111111111111( code, cu, pc, pw, skV ) ▶₀ #vr.66 )
+                case inpcchannelcode_1_111111111111_case_1
+                solve( (#vr.65, 0) ~~> (#vk.1, 0) )
+                  case d_0_fst
+                  by solve( State_1111111111111( code, ~n.2, pc, pw, skV ) ▶₀ #vr.78 )
+                next
+                  case d_0_snd
+                  by contradiction /* impossible chain */
+                qed
+              next
+                case inpcchannelcode_1_111111111111_case_2
+                by contradiction /* impossible chain */
+              qed
+            next
+              case outsencchallengeadeccypherskV_0_11111111112121111111111111111
+              solve( State_111111111121111( cu, pc, pw, ~n.2, ~n.5 ) ▶₀ #t2.1 )
+                case newsharedk_0_11111111112111
+                solve( !KU( ~n.1 ) @ #t2.2 )
+                  case outcdecode_0_11111111111111
+                  solve( State_1111111111111( code, cu, pc, pw, skV ) ▶₀ #vr.95 )
+                    case inpcchannelcode_1_111111111111_case_1
+                    solve( (#vr.94, 0) ~~> (#t2.2, 0) )
+                      case d_0_fst
+                      by solve( State_1111111111111( code, ~n.3, pc, pw, skV ) ▶₀ #vr.107 )
+                    next
+                      case d_0_snd
+                      by solve( (#vr.108, 0) ~~> (#t2.2, 0) )
+                    qed
+                  next
+                    case inpcchannelcode_1_111111111111_case_2
+                    by solve( (#vr.94, 0) ~~> (#t2.2, 0) )
+                  qed
+                next
+                  case outsencchallengeadeccypherskV_0_11111111112121111111111111111
+                  by contradiction /* from formulas */
+                qed
+              qed
+            next
+              case outskosenckOTPadeccypherskV_0_1111111111212111111111111
+              solve( State_111111111121111( cu, pc, pw, ~n.2, ~n.5 ) ▶₀ #t2.1 )
+                case newsharedk_0_11111111112111
+                solve( !KU( ~n.1 ) @ #t2.2 )
+                  case outcdecode_0_11111111111111
+                  solve( State_1111111111111( code, cu, pc, pw, skV ) ▶₀ #vr.91 )
+                    case inpcchannelcode_1_111111111111_case_1
+                    solve( (#vr.90, 0) ~~> (#t2.2, 0) )
+                      case d_0_fst
+                      by solve( State_1111111111111( code, ~n.3, pc, pw, skV ) ▶₀ #vr.103 )
+                    next
+                      case d_0_snd
+                      by solve( (#vr.104, 0) ~~> (#t2.2, 0) )
+                    qed
+                  next
+                    case inpcchannelcode_1_111111111111_case_2
+                    by solve( (#vr.90, 0) ~~> (#t2.2, 0) )
+                  qed
+                next
+                  case outskosenckOTPadeccypherskV_0_1111111111212111111111111
+                  by contradiction /* from formulas */
+                qed
+              qed
             qed
           qed
         qed
@@ -445,6 +746,48 @@ solve( State_111111111121111111111111( cdcode, cu, cypher, pc, pw, k,
                 case inpcchannelcode_1_111111111111_case_2
                 by contradiction /* impossible chain */
               qed
+            next
+              case outsharedaencsharedkpkskVrepaencsharedkpkskVloc_0_1111111111211111
+              solve( !KU( sdec(cypher, ~n.3) ) @ #t2.1 )
+                case c_sdec
+                solve( !KU( ~n.3 ) @ #vk.7 )
+                  case outcdecode_0_11111111111111
+                  solve( State_1111111111111( code, cu, pc, pw, skV ) ▶₀ #vr.68 )
+                    case inpcchannelcode_1_111111111111_case_1
+                    solve( (#vr.67, 0) ~~> (#vk.2, 0) )
+                      case d_0_fst
+                      by solve( State_1111111111111( code, ~n.1, pc, pw, skV ) ▶₀ #vr.80 )
+                    next
+                      case d_0_snd
+                      by solve( (#vr.81, 0) ~~> (#vk.2, 0) )
+                    qed
+                  next
+                    case inpcchannelcode_1_111111111111_case_2
+                    by solve( (#vr.67, 0) ~~> (#vk.2, 0) )
+                  qed
+                next
+                  case outsharedaencsharedkpkskVrepaencsharedkpkskVloc_0_1111111111211111_case_1
+                  by contradiction /* from formulas */
+                next
+                  case outsharedaencsharedkpkskVrepaencsharedkpkskVloc_0_1111111111211111_case_2
+                  by contradiction /* from formulas */
+                qed
+              next
+                case outcdecode_0_11111111111111
+                solve( State_1111111111111( code, cu, pc, pw, skV ) ▶₀ #vr.68 )
+                  case inpcchannelcode_1_111111111111_case_1
+                  solve( (#vr.67, 0) ~~> (#t2.1, 0) )
+                    case d_0_fst
+                    by solve( State_1111111111111( code, ~n.1, pc, pw, skV ) ▶₀ #vr.80 )
+                  next
+                    case d_0_snd
+                    by contradiction /* impossible chain */
+                  qed
+                next
+                  case inpcchannelcode_1_111111111111_case_2
+                  by contradiction /* impossible chain */
+                qed
+              qed
             qed
           next
             case outcdecode_0_11111111111111
@@ -460,6 +803,48 @@ solve( State_111111111121111111111111( cdcode, cu, cypher, pc, pw, k,
             next
               case inpcchannelcode_1_111111111111_case_2
               by contradiction /* impossible chain */
+            qed
+          next
+            case outsharedaencsharedkpkskVrepaencsharedkpkskVloc_0_1111111111211111
+            solve( !KU( sdec(cypher, ~n.3) ) @ #t2.1 )
+              case c_sdec
+              solve( !KU( ~n.3 ) @ #vk.4 )
+                case outcdecode_0_11111111111111
+                solve( State_1111111111111( code, cu, pc, pw, skV ) ▶₀ #vr.66 )
+                  case inpcchannelcode_1_111111111111_case_1
+                  solve( (#vr.65, 0) ~~> (#vk.1, 0) )
+                    case d_0_fst
+                    by solve( State_1111111111111( code, ~n.1, pc, pw, skV ) ▶₀ #vr.78 )
+                  next
+                    case d_0_snd
+                    by solve( (#vr.79, 0) ~~> (#vk.1, 0) )
+                  qed
+                next
+                  case inpcchannelcode_1_111111111111_case_2
+                  by solve( (#vr.65, 0) ~~> (#vk.1, 0) )
+                qed
+              next
+                case outsharedaencsharedkpkskVrepaencsharedkpkskVloc_0_1111111111211111_case_1
+                by contradiction /* from formulas */
+              next
+                case outsharedaencsharedkpkskVrepaencsharedkpkskVloc_0_1111111111211111_case_2
+                by contradiction /* from formulas */
+              qed
+            next
+              case outcdecode_0_11111111111111
+              solve( State_1111111111111( code, cu, pc, pw, skV ) ▶₀ #vr.66 )
+                case inpcchannelcode_1_111111111111_case_1
+                solve( (#vr.65, 0) ~~> (#t2.1, 0) )
+                  case d_0_fst
+                  by solve( State_1111111111111( code, ~n.1, pc, pw, skV ) ▶₀ #vr.78 )
+                next
+                  case d_0_snd
+                  by contradiction /* impossible chain */
+                qed
+              next
+                case inpcchannelcode_1_111111111111_case_2
+                by contradiction /* impossible chain */
+              qed
             qed
           qed
         next
@@ -485,6 +870,48 @@ solve( State_111111111121111111111111( cdcode, cu, cypher, pc, pw, k,
                 case inpcchannelcode_1_111111111111_case_2
                 by contradiction /* impossible chain */
               qed
+            next
+              case outsharedaencsharedkpkskVrepaencsharedkpkskVloc_0_1111111111211111
+              solve( !KU( sdec(cypher, ~n.3) ) @ #t2.1 )
+                case c_sdec
+                solve( !KU( ~n.3 ) @ #vk.7 )
+                  case outcdecode_0_11111111111111
+                  solve( State_1111111111111( code, cu, pc, pw, skV ) ▶₀ #vr.68 )
+                    case inpcchannelcode_1_111111111111_case_1
+                    solve( (#vr.67, 0) ~~> (#vk.2, 0) )
+                      case d_0_fst
+                      by solve( State_1111111111111( code, ~n.1, pc, pw, skV ) ▶₀ #vr.80 )
+                    next
+                      case d_0_snd
+                      by solve( (#vr.81, 0) ~~> (#vk.2, 0) )
+                    qed
+                  next
+                    case inpcchannelcode_1_111111111111_case_2
+                    by solve( (#vr.67, 0) ~~> (#vk.2, 0) )
+                  qed
+                next
+                  case outsharedaencsharedkpkskVrepaencsharedkpkskVloc_0_1111111111211111_case_1
+                  by contradiction /* from formulas */
+                next
+                  case outsharedaencsharedkpkskVrepaencsharedkpkskVloc_0_1111111111211111_case_2
+                  by contradiction /* from formulas */
+                qed
+              next
+                case outcdecode_0_11111111111111
+                solve( State_1111111111111( code, cu, pc, pw, skV ) ▶₀ #vr.68 )
+                  case inpcchannelcode_1_111111111111_case_1
+                  solve( (#vr.67, 0) ~~> (#t2.1, 0) )
+                    case d_0_fst
+                    by solve( State_1111111111111( code, ~n.1, pc, pw, skV ) ▶₀ #vr.80 )
+                  next
+                    case d_0_snd
+                    by contradiction /* impossible chain */
+                  qed
+                next
+                  case inpcchannelcode_1_111111111111_case_2
+                  by contradiction /* impossible chain */
+                qed
+              qed
             qed
           next
             case outcdecode_0_11111111111111
@@ -500,6 +927,48 @@ solve( State_111111111121111111111111( cdcode, cu, cypher, pc, pw, k,
             next
               case inpcchannelcode_1_111111111111_case_2
               by contradiction /* impossible chain */
+            qed
+          next
+            case outsharedaencsharedkpkskVrepaencsharedkpkskVloc_0_1111111111211111
+            solve( !KU( sdec(cypher, ~n.3) ) @ #t2.1 )
+              case c_sdec
+              solve( !KU( ~n.3 ) @ #vk.4 )
+                case outcdecode_0_11111111111111
+                solve( State_1111111111111( code, cu, pc, pw, skV ) ▶₀ #vr.66 )
+                  case inpcchannelcode_1_111111111111_case_1
+                  solve( (#vr.65, 0) ~~> (#vk.1, 0) )
+                    case d_0_fst
+                    by solve( State_1111111111111( code, ~n.1, pc, pw, skV ) ▶₀ #vr.78 )
+                  next
+                    case d_0_snd
+                    by solve( (#vr.79, 0) ~~> (#vk.1, 0) )
+                  qed
+                next
+                  case inpcchannelcode_1_111111111111_case_2
+                  by solve( (#vr.65, 0) ~~> (#vk.1, 0) )
+                qed
+              next
+                case outsharedaencsharedkpkskVrepaencsharedkpkskVloc_0_1111111111211111_case_1
+                by contradiction /* from formulas */
+              next
+                case outsharedaencsharedkpkskVrepaencsharedkpkskVloc_0_1111111111211111_case_2
+                by contradiction /* from formulas */
+              qed
+            next
+              case outcdecode_0_11111111111111
+              solve( State_1111111111111( code, cu, pc, pw, skV ) ▶₀ #vr.66 )
+                case inpcchannelcode_1_111111111111_case_1
+                solve( (#vr.65, 0) ~~> (#t2.1, 0) )
+                  case d_0_fst
+                  by solve( State_1111111111111( code, ~n.1, pc, pw, skV ) ▶₀ #vr.78 )
+                next
+                  case d_0_snd
+                  by contradiction /* impossible chain */
+                qed
+              next
+                case inpcchannelcode_1_111111111111_case_2
+                by contradiction /* impossible chain */
+              qed
             qed
           qed
         qed
@@ -1642,9 +2111,9 @@ rule (modulo E) eventSessionPpkskVsharedk_0_111111111121111[color=#80407b,
      [ State_1111111111211111( cu, pc, pw, shared_k, skV ) ]
   */
 
-rule (modulo E) outsharedaencsharedkpkskVreportaencsharedkpkskV_0_1111111111211111[color=#80407b,
+rule (modulo E) outsharedaencsharedkpkskVrepaencsharedkpkskVloc_0_1111111111211111[color=#80407b,
                                                                                    process="out(shared(<aenc(shared_k.1, pk(skV.1)), 
-        report(aenc(shared_k.1, pk(skV.1)))>));",
+        rep(aenc(shared_k.1, pk(skV.1)), 'loc')>));",
                                                                                    issapicrule,
                                                                                    role='enclave']:
    [ State_1111111111211111( cu.1, pc.1, pw.1, shared_k.1, skV.1 ) ]
@@ -1652,21 +2121,23 @@ rule (modulo E) outsharedaencsharedkpkskVreportaencsharedkpkskV_0_11111111112111
    [
    State_11111111112111111( cu.1, pc.1, pw.1, shared_k.1, skV.1 ),
    Out( shared(<aenc(shared_k.1, pk(skV.1)), 
-                report(aenc(shared_k.1, pk(skV.1)))>)
+                rep(aenc(shared_k.1, pk(skV.1)), 'loc')>)
    )
    ]
 
   /*
-  rule (modulo AC) outsharedaencsharedkpkskVreportaencsharedkpkskV_0_1111111111211111[color=#80407b,
+  rule (modulo AC) outsharedaencsharedkpkskVrepaencsharedkpkskVloc_0_1111111111211111[color=#80407b,
                                                                                       process="out(shared(<aenc(shared_k.1, pk(skV.1)), 
-        report(aenc(shared_k.1, pk(skV.1)))>));",
+        rep(aenc(shared_k.1, pk(skV.1)), 'loc')>));",
                                                                                       issapicrule,
                                                                                       role='enclave']:
      [ State_1111111111211111( cu, pc, pw, shared_k, skV ) ]
     -->
      [
      State_11111111112111111( cu, pc, pw, shared_k, skV ),
-     Out( shared(<aenc(shared_k, pk(skV)), report(aenc(shared_k, pk(skV)))>) )
+     Out( shared(<aenc(shared_k, pk(skV)), rep(aenc(shared_k, pk(skV)), 'loc')
+                 >)
+     )
      ]
   */
 
@@ -3181,8 +3652,8 @@ restriction single_session:
 Generated from:
 Tamarin version 1.13.0
 Maude version 3.5.1
-Git revision: 41bc81379b23681e7057314a5cf66a25c45e1986, branch: canonicalise-subst
-Compiled at: 2026-07-27 16:11:34.947223 UTC
+Git revision: c1fe108d23200a746bf6e1a82287edd921c94d4b, branch: fix-locations-report
+Compiled at: 2026-08-22 12:00:01.491656761 UTC
 */
 
 end
@@ -3194,14 +3665,14 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-locations/OTP.spthy
 
   output:          examples/sapic/fast/feature-locations/OTP.spthy.tmp
-  processing time: 35.89s
+  processing time: 90.01s
   
-  reachV (exists-trace): falsified - no trace found (29 steps)
+  reachV (exists-trace): verified (7 steps)
   secrecy_key (all-traces): verified (8 steps)
-  key_ex (all-traces): verified (29 steps)
-  secrecy_ex (all-traces): verified (11 steps)
+  key_ex (all-traces): verified (31 steps)
+  secrecy_ex (all-traces): verified (12 steps)
   unic (all-traces): verified (8 steps)
-  secrecy_chall (all-traces): verified (60 steps)
+  secrecy_chall (all-traces): verified (236 steps)
   valid (all-traces): verified (201 steps)
   unic_2 (all-traces): verified (8 steps)
 

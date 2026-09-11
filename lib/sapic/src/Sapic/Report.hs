@@ -47,55 +47,59 @@ opt_loc loc ann =
   Nothing -> loc
   Just x -> Just x
 
-reportMapTerms :: (Maybe SapicTerm -> SapicTerm -> SapicTerm)
-            -> Maybe SapicTerm
+-- | Rewrite the report terms of a process. @loc@ is the location in scope: a
+-- node's own location annotation replaces it for that node and its subtree.
+reportMapTerms :: Maybe SapicTerm
             -> LProcess (ProcessAnnotation LVar)
             -> LProcess (ProcessAnnotation LVar)
-reportMapTerms _ _  (ProcessNull ann)  = ProcessNull ann
-reportMapTerms f loc (ProcessAction ac ann p') = ProcessAction (reportMapTermsAction f (opt_loc loc ann) ac) ann
-  $ reportMapTerms f (opt_loc loc ann) p'
-reportMapTerms f loc (ProcessComb c ann pl pr) = ProcessComb (reportMapTermsComb f (opt_loc loc ann) c) ann
-  (reportMapTerms f (opt_loc loc ann) pl)
-  (reportMapTerms f (opt_loc loc ann) pr)
-reportMapTermsAction :: (Maybe SapicTerm -> SapicTerm -> SapicTerm)
-            -> Maybe SapicTerm
-  -> LSapicAction
+reportMapTerms _  (ProcessNull ann)  = ProcessNull ann
+reportMapTerms loc (ProcessAction ac ann p') = ProcessAction (reportMapTermsAction (opt_loc loc ann) ac) ann
+  $ reportMapTerms (opt_loc loc ann) p'
+reportMapTerms loc (ProcessComb c ann pl pr) = ProcessComb (reportMapTermsComb (opt_loc loc ann) c) ann
+  (reportMapTerms (opt_loc loc ann) pl)
+  (reportMapTerms (opt_loc loc ann) pr)
+reportMapTermsAction :: Maybe SapicTerm
             -> LSapicAction
-reportMapTermsAction f loc ac
-        | (New v) <- ac = New v -- (f loc) is always the identity over variables
-        | (ChIn  mt t vs) <- ac   = ChIn (fmap (f loc) mt) (f loc t) vs
-        | (ChOut mt t) <- ac   = ChOut (fmap (f loc) mt) (f loc t)
-        | (Insert t1 t2) <- ac = Insert (f loc t1) (f loc t2)
-        | (Delete t) <- ac     = Delete (f loc t)
-        | (Lock t) <- ac       = Lock (f loc t)
-        | (Unlock t) <- ac     = Unlock (f loc t)
-        | (Event fa) <- ac      = Event (fmap (f loc) fa)
-        | (MSR l a r rest vs) <- ac  = MSR (f2mapf l) (f2mapf a) (f2mapf r) (fmap formulaMap rest) vs
+            -> LSapicAction
+reportMapTermsAction loc ac
+        | (New v) <- ac = New v -- a name binding holds no term
+        | (ChIn  mt t vs) <- ac   = ChIn (fmap f mt) (f t) vs
+        | (ChOut mt t) <- ac   = ChOut (fmap f mt) (f t)
+        | (Insert t1 t2) <- ac = Insert (f t1) (f t2)
+        | (Delete t) <- ac     = Delete (f t)
+        | (Lock t) <- ac       = Lock (f t)
+        | (Unlock t) <- ac     = Unlock (f t)
+        | (Event fa) <- ac      = Event (fmap f fa)
+        | (MSR l a r rest vs) <- ac  = MSR (f2mapf l) (f2mapf a) (f2mapf r) (L.map (substFormula loc) rest) vs
         |  Rep <- ac            = Rep
         |  (ProcessCall _ _) <- ac  = ac
-            where f2mapf = fmap $ fmap (f loc)
-                  -- something like
-                  -- formulaMap = mapAtoms $ const $ fmap $ fmap f
-                  formulaMap = undefined
-reportMapTermsComb:: (Maybe SapicTerm -> SapicTerm -> SapicTerm)
-            -> Maybe SapicTerm
+            where f = subst loc
+                  f2mapf = L.map (fmap f)
+reportMapTermsComb :: Maybe SapicTerm
             -> ProcessCombinator SapicLVar
             -> ProcessCombinator SapicLVar
-reportMapTermsComb f loc c
-        | (Cond _) <- c = Cond $ undefined -- same problem as above
-        | (CondEq t1 t2) <- c = CondEq (f loc t1) (f loc t2)
-        | (Let t1 t2 vs) <- c = Let (f loc t1) (f loc t2) vs
-        | (Lookup t v) <- c = Lookup (f loc t) v
+reportMapTermsComb loc c
+        | (Cond fm) <- c = Cond (substFormula loc fm)
+        | (CondEq t1 t2) <- c = CondEq (f t1) (f t2)
+        | (Let t1 t2 vs) <- c = Let (f t1) (f t2) vs
+        | (Lookup t v) <- c = Lookup (f t) v
         | otherwise = c
+            where f = subst loc
 
-subst :: Maybe SapicTerm -> SapicTerm -> SapicTerm
+-- | Rewrite every @report(t)@ in a term to @rep(t, loc)@. Without a location
+-- the term is unchanged. Applications are rebuilt with @fApp@, which keeps an
+-- AC argument list in normal form.
+subst :: Ord l => Maybe (Term l) -> Term l -> Term l
 subst Nothing t = t
 subst (Just loc) t = case viewTerm t of
   Lit _ -> t
-  FApp (NoEq sym) [a] -> if sym == reportSym then
-                                termViewToTerm $ FApp (NoEq repSym)  [subst (Just loc) a, loc]
-                         else t
-  FApp k as -> termViewToTerm $ FApp k (L.map (subst (Just loc)) as)
+  FApp (NoEq sym) [a] | sym == reportSym -> fAppNoEq repSym [subst (Just loc) a, loc]
+  FApp k as -> fApp k (L.map (subst (Just loc)) as)
+
+-- | @subst@ on the terms of a formula. Formula terms have @BVar@ variables, so
+-- the location's variables are wrapped in @Free@.
+substFormula :: Maybe SapicTerm -> SapicFormula -> SapicFormula
+substFormula loc = mapAtoms (const (fmap (subst (fmap (fmap (fmap Free)) loc))))
 
 translateTermsReport :: LProcess (ProcessAnnotation LVar) -> LProcess (ProcessAnnotation LVar)
-translateTermsReport = reportMapTerms subst Nothing
+translateTermsReport = reportMapTerms Nothing

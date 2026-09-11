@@ -27,7 +27,16 @@ guarded formula characterizing all counter-examples:
 "∃ pka k #t1 #t2. (SessionV( pka, k ) @ #t1) ∧ (!KU( k ) @ #t2)"
 */
 simplify
-by solve( State_1211111111( init, skV, cypher, signed ) ▶₀ #t1 )
+solve( State_1211111111( init, skV, cypher, signed ) ▶₀ #t1 )
+  case eventVoutputaencadeccypherskVpkskVsigned_0_121111111
+  solve( !KU( ~k ) @ #t2 )
+    case outaencsharedkpkVrepaencsharedkpkVlocpkV_0_111111111_case_1
+    by solve( !KU( ~n.1 ) @ #vk.4 )
+  next
+    case outaencsharedkpkVrepaencsharedkpkVlocpkV_0_111111111_case_2
+    by solve( !KU( ~n.1 ) @ #vk.4 )
+  qed
+qed
 
 lemma Reach:
   exists-trace "∃ #t1 h. Voutput( h ) @ #t1"
@@ -38,12 +47,16 @@ guarded formula characterizing all satisfying traces:
 simplify
 solve( Voutput( h ) @ #t1 )
   case eventVoutputaencadeccypherskVpkskVsigned_0_121111111
-  by solve( State_121111111( init, skV, cypher, signed ) ▶₀ #t1 )
-next
-  case eventVoutputsencprogipoldioutputadeccypherskV_0_1211111111111111111111
-  by solve( State_1211111111111111111111( cypher2, init, lock, pr, skV,
-                                          storeV, cypher, ip, old_i, signed
-            ) ▶₀ #t1 )
+  solve( State_121111111( init, skV, cypher, signed ) ▶₀ #t1 )
+    case ifaencadeccypherskVpkskVcheckrepsignedlocpkskV_0_12111111
+    solve( !KU( aenc(~z, pk(~n.1)) ) @ #vk.2 )
+      case outaencsharedkpkVrepaencsharedkpkVlocpkV_0_111111111_case_1
+      solve( !KU( pk(~n.1) ) @ #vk.3 )
+        case outpkskV_0_121111
+        SOLVED // trace found
+      qed
+    qed
+  qed
 qed
 
 lemma attested_computation:
@@ -58,12 +71,36 @@ guarded formula characterizing all counter-examples:
 simplify
 solve( Voutput( h ) @ #t1 )
   case eventVoutputaencadeccypherskVpkskVsigned_0_121111111
-  by solve( State_121111111( init, skV, cypher, signed ) ▶₀ #t1 )
+  solve( State_121111111( init, skV, cypher, signed ) ▶₀ #t1 )
+    case ifaencadeccypherskVpkskVcheckrepsignedlocpkskV_0_12111111
+    by contradiction /* from formulas */
+  qed
 next
   case eventVoutputsencprogipoldioutputadeccypherskV_0_1211111111111111111111
-  by solve( State_1211111111111111111111( cypher2, init, lock, pr, skV,
-                                          storeV, cypher, ip, old_i, signed
-            ) ▶₀ #t1 )
+  solve( State_1211111111111111111111( cypher2, init, lock, pr, skV,
+                                       storeV, cypher, ip, old_i, signed
+         ) ▶₀ #t1 )
+    case ifprprogipoldi_0_121111111111111111111
+    solve( (#vr.11 < #t2)  ∥ (#vr.11 = #t2) )
+      case case_1
+      solve( !KU( senc(<prog(~n, old_i), 'output'>, ~z) ) @ #vk.2 )
+        case c_senc
+        by contradiction /* from formulas */
+      next
+        case outsencprogipoldioutputsharedk_0_111111111111111111
+        by contradiction /* from formulas */
+      qed
+    next
+      case case_2
+      solve( !KU( senc(<prog(~n, old_i), 'output'>, ~z) ) @ #vk.2 )
+        case c_senc
+        by contradiction /* from formulas */
+      next
+        case outsencprogipoldioutputsharedk_0_111111111111111111
+        by contradiction /* from formulas */
+      qed
+    qed
+  qed
 qed
 
 restriction Restr_ReportRule_1:
@@ -215,44 +252,55 @@ rule (modulo E) eventSessionPpkVsharedk_0_1111111[color=#408073,
      [ State_11111111( init, pkV, shared_k ) ]
   */
 
-rule (modulo E) eventPoutputaencsharedkpkVreportaencsharedkpkV_0_11111111[color=#408073,
-                                                                          process="event Poutput( <aenc(shared_k.1, pkV.1), report(aenc(shared_k.1, pkV.1))>
+rule (modulo E) eventPoutputaencsharedkpkVrepaencsharedkpkVlocpkV_0_11111111[color=#408073,
+                                                                             process="event Poutput( <aenc(shared_k.1, pkV.1), 
+          rep(aenc(shared_k.1, pkV.1), <'loc', pkV.1>)>
 );",
-                                                                          issapicrule, role='R']:
+                                                                             issapicrule, role='R']:
    [ State_11111111( init.1, pkV.1, shared_k.1 ) ]
-  --[ Poutput( <aenc(shared_k.1, pkV.1), report(aenc(shared_k.1, pkV.1))> )
+  --[
+  Poutput( <aenc(shared_k.1, pkV.1), 
+            rep(aenc(shared_k.1, pkV.1), <'loc', pkV.1>)>
+  )
   ]->
    [ State_111111111( init.1, pkV.1, shared_k.1 ) ]
 
   /*
-  rule (modulo AC) eventPoutputaencsharedkpkVreportaencsharedkpkV_0_11111111[color=#408073,
-                                                                             process="event Poutput( <aenc(shared_k.1, pkV.1), report(aenc(shared_k.1, pkV.1))>
+  rule (modulo AC) eventPoutputaencsharedkpkVrepaencsharedkpkVlocpkV_0_11111111[color=#408073,
+                                                                                process="event Poutput( <aenc(shared_k.1, pkV.1), 
+          rep(aenc(shared_k.1, pkV.1), <'loc', pkV.1>)>
 );",
-                                                                             issapicrule, role='R']:
+                                                                                issapicrule, role='R']:
      [ State_11111111( init, pkV, shared_k ) ]
-    --[ Poutput( <aenc(shared_k, pkV), report(aenc(shared_k, pkV))> ) ]->
+    --[
+    Poutput( <aenc(shared_k, pkV), rep(aenc(shared_k, pkV), <'loc', pkV>)> )
+    ]->
      [ State_111111111( init, pkV, shared_k ) ]
   */
 
-rule (modulo E) outaencsharedkpkVreportaencsharedkpkV_0_111111111[color=#408073,
-                                                                  process="out(<aenc(shared_k.1, pkV.1), report(aenc(shared_k.1, pkV.1))>);",
-                                                                  issapicrule, role='R']:
+rule (modulo E) outaencsharedkpkVrepaencsharedkpkVlocpkV_0_111111111[color=#408073,
+                                                                     process="out(<aenc(shared_k.1, pkV.1), 
+ rep(aenc(shared_k.1, pkV.1), <'loc', pkV.1>)>);",
+                                                                     issapicrule, role='R']:
    [ State_111111111( init.1, pkV.1, shared_k.1 ) ]
   -->
    [
    State_1111111111( init.1, pkV.1, shared_k.1 ),
-   Out( <aenc(shared_k.1, pkV.1), report(aenc(shared_k.1, pkV.1))> )
+   Out( <aenc(shared_k.1, pkV.1), 
+         rep(aenc(shared_k.1, pkV.1), <'loc', pkV.1>)>
+   )
    ]
 
   /*
-  rule (modulo AC) outaencsharedkpkVreportaencsharedkpkV_0_111111111[color=#408073,
-                                                                     process="out(<aenc(shared_k.1, pkV.1), report(aenc(shared_k.1, pkV.1))>);",
-                                                                     issapicrule, role='R']:
+  rule (modulo AC) outaencsharedkpkVrepaencsharedkpkVlocpkV_0_111111111[color=#408073,
+                                                                        process="out(<aenc(shared_k.1, pkV.1), 
+ rep(aenc(shared_k.1, pkV.1), <'loc', pkV.1>)>);",
+                                                                        issapicrule, role='R']:
      [ State_111111111( init, pkV, shared_k ) ]
     -->
      [
      State_1111111111( init, pkV, shared_k ),
-     Out( <aenc(shared_k, pkV), report(aenc(shared_k, pkV))> )
+     Out( <aenc(shared_k, pkV), rep(aenc(shared_k, pkV), <'loc', pkV>)> )
      ]
   */
 
@@ -1618,8 +1666,8 @@ restriction locking_1:
 Generated from:
 Tamarin version 1.13.0
 Maude version 3.5.1
-Git revision: 41bc81379b23681e7057314a5cf66a25c45e1986, branch: canonicalise-subst
-Compiled at: 2026-07-27 16:11:34.947223 UTC
+Git revision: c1fe108d23200a746bf6e1a82287edd921c94d4b, branch: fix-locations-report
+Compiled at: 2026-08-22 12:00:01.491656761 UTC
 */
 
 end
@@ -1631,11 +1679,11 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-locations/SOC.spthy
 
   output:          examples/sapic/fast/feature-locations/SOC.spthy.tmp
-  processing time: 2.09s
+  processing time: 6.47s
   
-  secrecy (all-traces): verified (2 steps)
-  Reach (exists-trace): falsified - no trace found (4 steps)
-  attested_computation (all-traces): verified (4 steps)
+  secrecy (all-traces): verified (5 steps)
+  Reach (exists-trace): verified (6 steps)
+  attested_computation (all-traces): verified (12 steps)
 
 ==============================================================================
 */

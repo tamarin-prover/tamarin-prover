@@ -196,7 +196,7 @@ case-studies$(SUBDIR)%_analyzed-seqdfs.spthy: examples/%.spthy $(TAMARIN)
 case-studies$(SUBDIR)%_analyzed-deforacle.spthy: examples/%.spthy $(TAMARIN)
 	mkdir -p $(dir $@)
 	# Use -N3, as the fourth core is used by the OS and the console
-	cd examples/regression/trace && $(TAMARIN) defaultoracle.spthy --prove -d=0 +RTS -N3 -RTS -odefaultoracle.spthy.tmp >defaultoracle.spthy.out
+	$(TAMARIN) $< --prove -d=0 +RTS -N3 -RTS -o$<.tmp >$<.out
 	# We only produce the target after the run, otherwise aborted
 	# runs already 'finish' the case.
 	printf "\n/* Output\n" >>$<.tmp
