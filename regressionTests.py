@@ -1,5 +1,5 @@
 from html import parser
-import subprocess, sys, re, os, argparse, logging, datetime, shutil
+import subprocess, sys, re, os, argparse, logging, datetime, shutil, shlex
 
 
 class colors:
@@ -259,14 +259,16 @@ def testOutputFileParsing(path):
 			"accountability"
 		])
   
-		flags = "--diff" if is_diff_file else ""
-		command = f"tamarin-prover --parse-only {flags} {path}"
-		
 		if is_sapic_or_accountability_file and settings.no_sapic_output_parse_test:
 			logging.warning(f"Skipping output parse test for {path} since it is a SAPIC or accountability file and the flag --no-sapic-output-parse-test is set.")
 			return True, None
 
-		process = subprocess.run(command, shell=True, capture_output=True, text=True)
+		command = [settings.tamarin, "--parse-only"]
+		if is_diff_file:
+			command.append("--diff")
+		command.append(path)
+
+		process = subprocess.run(command, capture_output=True, text=True)
 		if process.returncode == 0:
 			return True, None
 		else:
@@ -564,6 +566,15 @@ def getArguments():
 	logging.basicConfig(level=loglevel,format='%(message)s')
 
 
+def getTamarinExecutable():
+	"""Return the Tamarin executable installed by Stack."""
+	local_bin = subprocess.check_output(
+		["stack", "path", "--local-bin"],
+		text=True,
+	).strip()
+	return os.path.join(local_bin, "tamarin-prover")
+
+
 
 
 def main():
@@ -575,8 +586,11 @@ def main():
 	## stack install ##
 	if not settings.no_install:
 		logging.warning("running 'stack install' ...")
-		output = subprocess.check_output("stack install", shell=True, stderr=subprocess.STDOUT).decode("utf-8")
+		output = subprocess.check_output(["stack", "install"], stderr=subprocess.STDOUT, text=True)
 		logging.debug(output)
+
+	settings.tamarin = getTamarinExecutable()
+	logging.debug(f"using Tamarin executable '{settings.tamarin}'")
 
 	## test the spthy parser
 	parsingSuccessful = True
@@ -622,10 +636,10 @@ Parser test results:
 
 		## make case-studies ##
 		if not settings.no_make:
-			cases = "case-studies" if settings.slow else "fast-case-studies sapic-case-studies-fast FAST=y"
-			command = f"make -j {settings.jobs} {cases} 2>/dev/null"
-			logging.warning(f"running '{command}' ...")
-			output = subprocess.check_output(command, shell=True, stderr=subprocess.STDOUT).decode("utf-8")
+			cases = ["case-studies"] if settings.slow else ["fast-case-studies", "sapic-case-studies-fast", "FAST=y"]
+			command = ["make", "-j", str(settings.jobs), *cases, f"TAMARIN={settings.tamarin}"]
+			logging.warning(f"running '{shlex.join(command)}' ...")
+			output = subprocess.check_output(command, stderr=subprocess.DEVNULL, text=True)
 			logging.debug(output)
 
 		## compare time and steps ##
