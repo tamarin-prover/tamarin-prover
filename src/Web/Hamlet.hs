@@ -67,8 +67,7 @@ rootTpl theories = [whamlet|
                   \ #{showVersion version}
     \^{introTpl}
     <div class="intropage">
-      <p>
-        \^{theoriesTpl theories}
+      \^{theoriesTpl theories}
       <h2>Loading a new theory
       <p>
         You can load a new theory file from disk in order to work with it.
@@ -85,14 +84,15 @@ theoriesTpl :: TheoryMap -> Widget
 theoriesTpl thmap = [whamlet|
     $newline never
     $if M.null thmap
-      <strong>No theories loaded!</strong>
+      <strong>No theories loaded!
     $else
       <table>
         <thead>
-          <th>Theory name
-          <th>Time
-          <th>Version
-          <th>Origin
+          <tr>
+            <th>Theory name
+            <th>Time
+            <th>Version
+            <th>Origin
         $forall tgroup <- processMap thmap
           ^{theoryTpl (head tgroup)}
           $forall th <- ntail 4 tgroup

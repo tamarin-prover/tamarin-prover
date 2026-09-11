@@ -33,9 +33,41 @@ guarded formula characterizing all counter-examples:
   ∀ #t2. (Poutput( <o2, i2, o, list(i, 'init')> ) @ #t2) ⇒ ¬(#t2 < #t1)"
 */
 simplify
-by solve( State_1211111111111( StateChannel, lock, signedios, i2, o2,
-                               <<o, list(i, 'init')>, x>, state
-          ) ▶₀ #t1 )
+solve( State_1211111111111( StateChannel, lock, signedios, i2, o2,
+                            <<o, list(i, 'init')>, x>, state
+       ) ▶₀ #t1 )
+  case ifoipsndstcheckrepsignediosl_0_121111111111_case_1
+  solve( State_111111111( StateChannel, lock, st, state ) ▶₀ #vr.21 )
+    case lookupstateasst_0_11111111_case_2
+    solve( State_111111111( StateChannel, lock, st, ~n.7 ) ▶₀ #vr.32 )
+      case lookupstateasst_0_11111111_case_1
+      solve( L_PureState( ~n.4, <<o, list(i, 'init')>, succ(null)> ) ▶₁ #vr.3 )
+        case insertstateolistipfststsuccsndst_0_12111111111111_case_1
+        solve( State_111111111( StateChannel, lock, <z, null>, state
+               ) ▶₀ #vr.54 )
+          case lookupstateasst_0_11111111
+          solve( L_CellLocked( ~n.8, ~n.9 ) ▶₁ #vr.24 )
+            case lookupstateasst_0_11111111
+            solve( L_CellLocked( ~n.5, ~n.10 ) ▶₁ #vr.41 )
+              case lookupstateasst_0_121111111
+              solve( L_PureState( ~n.5, <'init', null> ) ▶₁ #vr.46 )
+                case insertstateinitnull_0_12111
+                solve( !KU( prog(~n.2, i2, <prog(~n.3, ip, 'init'), list(ip, 'init')>)
+                       ) @ #vk.4 )
+                  case outprogripfststrepprogripfststipsndstl_0_111111111111_case_1
+                  solve( !KU( prog(~n.4, i, 'init') ) @ #vk.7 )
+                    case outprogripfststrepprogripfststipsndstl_0_111111111111_case_1
+                    SOLVED // trace found
+                  qed
+                qed
+              qed
+            qed
+          qed
+        qed
+      qed
+    qed
+  qed
+qed
 
 restriction Restr_ReportRule_1:
   "∀ x #NOW. (Restr_ReportRule_1( x ) @ #NOW) ⇒ (¬(x = 'l'))"
@@ -262,38 +294,38 @@ rule (modulo E) eventPoutputprogripfststipfstst_0_11111111111[color=#405280,
        z     = x.9
   */
 
-rule (modulo E) outprogripfststreportprogripfststipsndst_0_111111111111[color=#405280,
-                                                                        process="out(<prog(r.1, ip.1, fst(st.1)), 
- report(<prog(r.1, ip.1, fst(st.1)), ip.1, snd(st.1)>)>);",
-                                                                        issapicrule, role='r']:
+rule (modulo E) outprogripfststrepprogripfststipsndstl_0_111111111111[color=#405280,
+                                                                      process="out(<prog(r.1, ip.1, fst(st.1)), 
+ rep(<prog(r.1, ip.1, fst(st.1)), ip.1, snd(st.1)>, 'l')>);",
+                                                                      issapicrule, role='r']:
    [ State_111111111111( StateChannel, lock, ip.1, r.1, st.1, state.1 ) ]
   -->
    [
    State_1111111111111( StateChannel, lock, ip.1, r.1, st.1, state.1 ),
    Out( <prog(r.1, ip.1, fst(st.1)), 
-         report(<prog(r.1, ip.1, fst(st.1)), ip.1, snd(st.1)>)>
+         rep(<prog(r.1, ip.1, fst(st.1)), ip.1, snd(st.1)>, 'l')>
    )
    ]
 
   /*
-  rule (modulo AC) outprogripfststreportprogripfststipsndst_0_111111111111[color=#405280,
-                                                                           process="out(<prog(r.1, ip.1, fst(st.1)), 
- report(<prog(r.1, ip.1, fst(st.1)), ip.1, snd(st.1)>)>);",
-                                                                           issapicrule, role='r']:
+  rule (modulo AC) outprogripfststrepprogripfststipsndstl_0_111111111111[color=#405280,
+                                                                         process="out(<prog(r.1, ip.1, fst(st.1)), 
+ rep(<prog(r.1, ip.1, fst(st.1)), ip.1, snd(st.1)>, 'l')>);",
+                                                                         issapicrule, role='r']:
      [ State_111111111111( StateChannel, lock, ip, r, st, state ) ]
     -->
      [
      State_1111111111111( StateChannel, lock, ip, r, st, state ),
-     Out( <prog(r, ip, z), report(<prog(r, ip, z), ip, z.1>)> )
+     Out( <prog(r, ip, z), rep(<prog(r, ip, z), ip, z.1>, 'l')> )
      ]
     variants (modulo AC)
     1. st    = st.11
        z     = fst(st.11)
        z.1   = snd(st.11)
     
-    2. st    = <x.10, x.11>
-       z     = x.10
-       z.1   = x.11
+    2. st    = <z.12, z.13>
+       z     = z.12
+       z.1   = z.13
   */
 
 rule (modulo E) insertstateprogripfststlistipfststsuccsndst_0_1111111111111[color=#405280,
@@ -871,8 +903,8 @@ Facts occur in the left-hand-side but not in any right-hand-side
 Generated from:
 Tamarin version 1.13.0
 Maude version 3.5.1
-Git revision: 41bc81379b23681e7057314a5cf66a25c45e1986, branch: canonicalise-subst
-Compiled at: 2026-07-27 16:11:34.947223 UTC
+Git revision: c1fe108d23200a746bf6e1a82287edd921c94d4b, branch: fix-locations-report
+Compiled at: 2026-08-22 12:00:01.491656761 UTC
 */
 
 end
@@ -884,12 +916,12 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-locations/AC_counter_with_attack.spthy
 
   output:          examples/sapic/fast/feature-locations/AC_counter_with_attack.spthy.tmp
-  processing time: 0.60s
+  processing time: 7.17s
   
   WARNING: 1 wellformedness check failed!
            The analysis results might be wrong!
   
-  attested_comput_second_step (all-traces): verified (2 steps)
+  attested_comput_second_step (all-traces): falsified - found trace (12 steps)
 
 ==============================================================================
 */

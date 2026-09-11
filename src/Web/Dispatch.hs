@@ -41,7 +41,7 @@ import System.Directory
 import System.Exit
 import System.FilePath
 import Main.Console (renderDoc)
-import Main.TheoryLoader (TheoryLoadError(ParserError, WarningError), TheoryLoadOptions(..))
+import Main.TheoryLoader (TheoryLoadError(ExportTranslationError, ParserError, WarningError), TheoryLoadOptions(..))
 import Theory
 import Theory.Tools.Wellformedness
 import Text.PrettyPrint.Class qualified as Pretty
@@ -179,6 +179,9 @@ loadTheories thOpts readyMsg thDir thLoad thClose autoProver = do
         Left (WarningError report) -> do
           putStrLn $ renderDoc $ ppInteractive report path
           die "quit-on-warning mode selected - aborting on wellformedness errors."
+        Left exportError@(ExportTranslationError _) -> do
+          putStrLn $ "Export error while loading " ++ path ++ ": " ++ show exportError
+          pure Nothing
         Right (report, thy) -> do
           time <- getZonedTime
           let wfErrors = if null report
