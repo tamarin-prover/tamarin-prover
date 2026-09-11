@@ -427,17 +427,19 @@ lemmaSelector thyOpts lem
     lemmaNames = thyOpts.lemmaNames
 
     lemmaMatches :: String -> Bool
-    lemmaMatches pattern
-      | lastMay pattern == Just '*' = init pattern `isPrefixOf` lem.lName
-      | otherwise = lem.lName == pattern
+    lemmaMatches namePattern
+      | lastMay namePattern == Just '*' = init namePattern `isPrefixOf` lem.lName
+      | otherwise = lem.lName == namePattern
 
 data TheoryLoadError
   = ParserError ParseError
   | WarningError WfErrorReport
+  | ExportTranslationError Export.ExportError
 
 instance Show TheoryLoadError where
   show (ParserError e) = show e
   show (WarningError e) = Pretty.render (prettyWfErrorReport e)
+  show (ExportTranslationError e) = e.exportErrorCode ++ ": " ++ e.exportErrorMessage
 
 -- | Load an open theory from a string with the given options.
 loadTheory ::
@@ -772,23 +774,49 @@ translateAndCheckTheory ::
   SignatureWithMaude ->
   Either OpenTheory OpenDiffTheory ->
   m (WfErrorReport, Either OpenTheory OpenDiffTheory)
-translateAndCheckTheory version thyOpts sign srcThy = do
+translateAndCheckTheory _version thyOpts sign srcThy = do
   (preReport, transThy) <- translateTheory thyOpts srcThy
   let removedThy = first removeTranslationItems transThy
   (postReport, _, _) <- checkTranslatedTheory thyOpts sign removedThy
-  finalThy <- withVersionAndReport version thyOpts (preReport ++ postReport) transThy
+  finalThy <-
+    case transThy of
+      Left _ -> pure transThy
+      Right _ -> withVersionAndReport _version thyOpts (preReport ++ postReport) transThy
   pure (preReport ++ postReport, finalThy)
 
 -- | Pretty print an open theory based on the specified output module.
-prettyOpenTheoryByModule :: TheoryLoadOptions -> OpenTheory -> IO Pretty.Doc
-prettyOpenTheoryByModule thyOpts = case  thyOpts.outputModule of
-  Nothing {- Same as ModuleMsr -} -> pure . prettyOpenTranslatedTheory . removeTranslationItems
-  Just ModuleSpthy -> pure . prettyOpenTheory
-  Just ModuleSpthyTyped -> pure . prettyOpenTheory
-  Just ModuleMsr -> pure . prettyOpenTranslatedTheory . removeTranslationItems
-  Just ModuleProVerifEquivalence -> Export.prettyProVerifEquivTheory <=< Sapic.typeTheoryEnv
-  Just ModuleProVerif -> Export.prettyProVerifTheory ModuleProVerif noReuseLemmas noSourceLemmas noRestrictions noMultiset noPrecise hasSpecificLemmas lemmas <=< Sapic.typeTheoryEnv
-  Just ModuleDeepSec -> Export.prettyDeepSecTheory replicationBound
+prettyOpenTheoryByModule ::
+  String ->
+  WfErrorReport ->
+  TheoryLoadOptions ->
+  OpenTheory ->
+  ExceptT TheoryLoadError IO Pretty.Doc
+prettyOpenTheoryByModule version report thyOpts thy = case thyOpts.outputModule of
+  Nothing {- Same as ModuleMsr -} -> finalizeTheory (prettyOpenTranslatedTheory . removeTranslationItems)
+  Just ModuleSpthy -> finalizeTheory prettyOpenTheory
+  Just ModuleSpthyTyped -> finalizeTheory prettyOpenTheory
+  Just ModuleMsr -> finalizeTheory (prettyOpenTranslatedTheory . removeTranslationItems)
+  Just ModuleProVerifEquivalence -> do
+    typedTheory <- liftIO (Sapic.typeTheoryEnv thy)
+    liftIO (Export.prettyProVerifEquivTheory typedTheory) >>= finishExport
+  Just ModuleProVerif -> do
+    typedTheory <- liftIO (Sapic.typeTheoryEnv thy)
+    liftIO
+      ( Export.prettyProVerifTheory
+          ModuleProVerif
+          Export.ProVerifOptions
+            { Export.omitReuseLemmas = noReuseLemmas,
+              Export.omitSourceLemmas = noSourceLemmas,
+              Export.omitRestrictions = noRestrictions,
+              Export.omitMultisetTranslation = noMultiset,
+              Export.omitPreciseActions = noPrecise,
+              Export.selectSpecificLemmas = hasSpecificLemmas
+            }
+          lemmas
+          typedTheory
+      )
+      >>= finishExport
+  Just ModuleDeepSec -> liftIO (Export.prettyDeepSecTheory replicationBound thy) >>= finishExport
   where
     lemmas = lemmaSelector thyOpts
     hasSpecificLemmas = not (null thyOpts.lemmaNames || thyOpts.lemmaNames == [""] || thyOpts.lemmaNames == ["", ""])
@@ -798,6 +826,38 @@ prettyOpenTheoryByModule thyOpts = case  thyOpts.outputModule of
     noMultiset = thyOpts.noMultiset
     noPrecise = thyOpts.noPrecise
     replicationBound = thyOpts.replicationBound
+    finalizeTheory renderer = do
+      when (thyOpts.quitOnWarning && not (null report)) (throwError $ WarningError report)
+      pure $ renderer $ addComment (Pretty.text version) $ addComment (wellformednessDoc report) thy
+    finishExport = \case
+      Left exportError -> throwError (ExportTranslationError exportError)
+      Right exportResult -> do
+        let exportWarnings = Export.diagnosticsToWfReport exportResult.exportDiagnostics
+            combinedReport = report ++ exportWarnings
+            diagnosticDocument = Export.renderExportDiagnostics exportResult.exportDiagnostics
+            -- The source wellformedness block may only claim success when the
+            -- export diagnostics are also clean; when only export diagnostics
+            -- exist, their own warning banner carries the verdict. The
+            -- version trailer always comes last so that stripping it never
+            -- removes a diagnostic.
+            reportBlocks =
+              [wellformednessDoc report | not (null report) || null combinedReport]
+                ++ [diagnosticDocument | not (Pretty.isEmpty diagnosticDocument)]
+        when (thyOpts.quitOnWarning && not (null combinedReport))
+          (throwError $ WarningError combinedReport)
+        pure $
+          foldl
+            (\docAcc block -> docAcc Pretty.$--$ targetComment block)
+            exportResult.exportDocument
+            (reportBlocks ++ [Pretty.text version])
+    targetComment document = Pretty.text "(*" Pretty.$$ document Pretty.$$ Pretty.text "*)"
+    wellformednessDoc rep
+      | null rep = Pretty.text "All wellformedness checks were successful."
+      | otherwise =
+          Pretty.vsep
+            [ Pretty.text "WARNING: the following wellformedness checks failed!",
+              prettyWfErrorReport rep
+            ]
 
 -- | Construct an 'AutoProver' from the given arguments (--bound, --stop-on-trace).
 constructAutoProver :: TheoryLoadOptions -> AutoProver
