@@ -127,8 +127,8 @@ If you are running the regression on a server you can run multiple case studies 
 python3 regressionTests.py -j 6
 ```
 
-For more details about `regressionTests.py`, have a look at `doc/READMEregressionTests.md`, in particular the section
-"Adding new files to test" to see where to put files to pass the CI (travis).
+For more details, including how to add a regression test, see
+[`doc/READMEregressionTests.md`](doc/READMEregressionTests.md#adding-new-files-to-test).
 
 Editor support
 --------------

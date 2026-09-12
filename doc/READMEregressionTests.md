@@ -72,9 +72,37 @@ optional arguments:
 
 ## Adding new files to test
 
-To add new files to test, you have to put a reference file in the `case-studies-regression` directory. This reference file **must** **be** an output of a make command.
+1. Add the input theory somewhere below `examples/`. The directories
+   `examples/regression/trace/` and `examples/regression/diff/` are intended
+   for trace and observational-equivalence tests that are not otherwise case
+   studies.
+2. Add a target for the theory to an appropriate case-study group in the
+   `Makefile`, or create a new group. Use the matching analysis rule and output
+   suffix (for example, `_analyzed.spthy` for a trace theory or
+   `_analyzed-diff.spthy` for a diff theory).
+3. If CI should run the test, make its target a dependency of
+   `fast-case-studies`, normally by adding it to one of the target variables in
+   `FAST_CS_TARGETS`. CI runs only `make fast-case-studies FAST=y`.
+4. Generate the output with the `Makefile`. Pass `FAST=y` for a fast test; for
+   example:
 
-If you want to add it in fast-tests (and so in Travis), you need to add a Target in the Makefile after `fast-case-studies` and to add the reference file in the `case-studies-regression/fast-tests` subdirectory. The CI offers the for download in the action "Store case-studies as artifacts".
+   ```
+   make FAST=y case-studies/fast-tests/regression/trace/example_analyzed.spthy
+   ```
+
+5. Copy the generated output to `case-studies-regression/`, preserving its
+   path relative to `case-studies/`. The example above becomes
+   `case-studies-regression/fast-tests/regression/trace/example_analyzed.spthy`.
+   Commit this expected-output file together with the example and `Makefile`
+   change.
+6. Run `python3 regressionTests.py -noi` to run the fast suite with the current
+   Tamarin installation and compare it with the expected outputs. Add `-j N`
+   to run `N` case studies in parallel if enough memory is available.
+
+`regressionTests.py` discovers generated and expected files recursively, so it
+does not need to be changed when adding a test. Besides lemma results, the
+default comparison checks rules, equations, functions, builtins, macros, and
+wellformedness warnings.
 
 
 
