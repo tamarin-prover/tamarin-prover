@@ -12,6 +12,7 @@ module Theory.Text.Parser.Token (
   -- * Symbols
   , symbol
   , symbol_
+  , reserved
   , dot
   , comma
   , colon
@@ -276,6 +277,11 @@ symbol sym = try (T.symbol spthy sym) <?> ("\"" ++ sym ++ "\"")
 symbol_ :: String -> Parser ()
 symbol_ = void . symbol
 
+-- | Parse a keyword, i.e. a symbol that must not be followed by an
+-- identifier character (so @end@ does not match a prefix of @endrule@).
+reserved :: String -> Parser ()
+reserved = T.reserved spthy
+
 -- | Between braces.
 braced :: Parser a -> Parser a
 braced = T.braces spthy
@@ -506,7 +512,11 @@ lvarNoSuffix = sortedLVarNoSuffix [minBound..]
 sapicvar :: Parser SapicLVar
 sapicvar = do
         v <- lvarNoSuffix
-        t <- option Nothing $ colon *> typep
+        -- node variables default to the node type so that a quantified
+        -- "#j" matches its occurrences parsed by sapicnodevar
+        let defaultType = if lvarSort v == LSortNode
+                            then defaultSapicNodeType else Nothing
+        t <- option defaultType $ colon *> typep
         return (SapicLVar v t)
 
 sapicpatternvar :: Parser PatternSapicLVar
