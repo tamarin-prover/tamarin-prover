@@ -40,6 +40,9 @@ module Theory.Constraint.System.Guarded (
   -- ** Transformation
   , simplifyGuarded
   , simplifyGuardedOrReturn
+  , normaliseGuarded
+  , normaliseStoredFormula
+  , normaliseDisjList
 
   , mapGuardedAtoms
 
@@ -390,6 +393,39 @@ closeGuarded qua vs as gf =
 
 type LNGuarded = Guarded (String,LSort) Name LVar
 
+-- | Rebuild a guarded formula bottom-up with the 'gconj' smart
+-- constructor, restoring the normal form that 'formulaToGuarded'
+-- establishes (flattened, duplicate-free conjunctions/disjunctions).
+--
+-- This is necessary because parsing renormalises goals. If two sides of
+-- a conjuct become identical during a proof (because of terms unifying,
+-- e.g. A ∧ B -> A ∧ A) then without normalisation this formula will be
+-- preserved and printed. When parsed later it is constructed via gconj
+-- below which nubs gconj [A, A] to [A], which would not match the
+-- unnormalised formula in the system and therefore be considered an invalid
+-- proof step.
+normaliseGuarded :: (Ord s, Ord c, Ord v) => Guarded s c v -> Guarded s c v
+normaliseGuarded = foldGuarded GAto (GDisj . normaliseDisj) (gconj . getConj) GGuarded
+
+-- | Flatten nested disjunctions and drop duplicate disjuncts.
+-- Note this works differently than gconj because disjunctions are
+-- also associated with a DisjG, so disjunctions have to be preserved.
+normaliseDisj :: (Ord s, Ord c, Ord v) => Disj (Guarded s c v) -> Disj (Guarded s c v)
+normaliseDisj (Disj gfs) =
+    Disj . nub . concatMap flat $ gfs
+  where
+    flat (GDisj (Disj ds)) = ds
+    flat gf                = [gf]
+
+normaliseDisjList :: (Ord s, Ord c, Ord v) => Disj (Guarded s c v) -> Disj (Guarded s c v)
+normaliseDisjList (Disj gfs) = normaliseDisj (Disj (map normaliseGuarded gfs))
+
+-- | Normalise a formula for storage in the constraint system.
+-- Disjunctions have to be preserved to match their associated DisjG goal.
+normaliseStoredFormula :: LNGuarded -> LNGuarded
+normaliseStoredFormula (GDisj d) = GDisj (normaliseDisjList d)
+normaliseStoredFormula gf        = normaliseGuarded gf
+
 instance Apply LNSubst LNGuarded where
   apply subst = mapGuardedAtoms (const $ apply subst)
 
@@ -413,11 +449,11 @@ gnotAtom a  = GGuarded All [] [a] gfalse
 
 -- | @gconj gfs@ smart constructor for the conjunction of gfs.
 gconj :: (Ord s, Ord c, Ord v) => [Guarded s c v] -> Guarded s c v
-gconj gfs0 = case concatMap flatten gfs0 of
+gconj gfs0 = case nub (concatMap flatten gfs0) of
     [gf]                      -> gf
     gfs | any (gfalse ==) gfs -> gfalse
         -- FIXME: See 'sortednub' below.
-        | otherwise           -> GConj $ Conj $ nub gfs
+        | otherwise           -> GConj $ Conj gfs
   where
     flatten (GConj conj) = concatMap flatten $ getConj conj
     flatten gf           = [gf]
