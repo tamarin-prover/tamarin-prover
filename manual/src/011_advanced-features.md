@@ -80,7 +80,11 @@ The syntax of the tactics will be detailed below in the part `Using a tactic`. H
   that runs independently of Tamarin and ranks the proof methods.
   The path of the program can be specified after the proof method ranking, e.g., `o "oracles/oracle-default"`
   to use the program `oracles/oracle-default` as the oracle.
-  If no path is specified, the default is `oracle`.
+  If no path is specified, Tamarin first looks in the protocol file's directory for an oracle with the
+  same base name as the protocol file and the `.oracle` extension. If that file does not exist, Tamarin
+  falls back to a file named `oracle` in the same directory. For example, if `models/MyProtocol.spthy`
+  contains `heuristic: o`, then running `tamarin-prover --prove models/MyProtocol.spthy` from the parent
+  directory uses `models/MyProtocol.oracle` if it exists, and otherwise uses `models/oracle`.
   The path of the program is relative to the directory of the protocol file containing the proof method ranking.
   If the heuristic is specified using the `--heuristic` option, the path can be given using the
   `--oraclename` command line option. In this case, the path is relative to the current working directory.

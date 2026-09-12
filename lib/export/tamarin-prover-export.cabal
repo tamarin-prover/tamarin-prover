@@ -51,8 +51,19 @@ library
     Export
 
   other-modules:
-    RuleTranslation
-    ProVerifHeader
+    Export.Types
+    Export.Diagnostic
+    Export.Name
+    Export.Sapic
+    Export.ProVerif
+    Export.ProVerif.Formula
+    Export.ProVerifEquivalence
+    Export.DeepSec
+    Export.ProVerif.Rule
+    Export.ProVerif.Header
+    Export.ProVerif.Instrumentation
+    Export.ProVerif.Property
+    Export.ProVerif.Render
 
   default-extensions:
     DuplicateRecordFields

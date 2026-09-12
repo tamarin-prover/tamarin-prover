@@ -217,7 +217,7 @@ run thisMode as
         --                   (modify diffThyItems (++ (DiffTextItem <$> formalComments thy')))
         --                   thy'
 
-        (, ppWf report) <$> either (liftIO . prettyOpenTheoryByModule thyLoadOptions)
+        (, ppWf report) <$> either (prettyOpenTheoryByModule versionData report thyLoadOptions)
                                    (pure . prettyOpenDiffTheory)
                                    thy'
 
@@ -234,6 +234,7 @@ run thisMode as
         isTranslateOnlyMode = isJust thyLoadOptions.outputModule
 
         handleError e@(ParserError _) = die $ show e
+        handleError e@(ExportTranslationError _) = die $ show e
         handleError (WarningError report) = do
           putStrLn $ renderDoc $ Pretty.vcat $ [ Pretty.text ""
                                                , Pretty.text "WARNING: the following wellformedness checks failed!" ]

@@ -26,8 +26,20 @@ guarded formula characterizing all satisfying traces:
 "∃ #i m. (Local( m, 'loc' ) @ #i)"
 */
 simplify
-by solve( State_1211111111111( StateChannel, lock, state2, i.1, lio, o, r
-          ) ▶₀ #i )
+solve( State_1211111111111( StateChannel, lock, state2, i.1, lio, o, r
+       ) ▶₀ #i )
+  case ifoiliocheckreprloc_0_121111111111_case_1
+  solve( State_111111111( StateChannel, lock, lio, state ) ▶₀ #vr.22 )
+    case lookupstateaslio_0_11111111_case_1
+    solve( L_PureState( ~n.2, 'init' ) ▶₁ #vr.2 )
+      case insertstateinit_0_12111
+      solve( !KU( prog(~n.3, i.1, 'init') ) @ #vk.4 )
+        case outprogriliorepprogrilioilioloc_0_1111111111111_case_1
+        SOLVED // trace found
+      qed
+    qed
+  qed
+qed
 
 lemma simp [reuse]:
   all-traces
@@ -41,6 +53,18 @@ simplify
 solve( !KU( rep(m, 'loc') ) @ #i )
   case ReportRule
   by contradiction /* from formulas */
+next
+  case outprogriliorepprogrilioilioloc_0_1111111111111_case_1
+  by contradiction /* from formulas */
+next
+  case outprogriliorepprogrilioilioloc_0_1111111111111_case_2
+  solve( State_111111111( StateChannel, lock, lio, state ) ▶₀ #vr.8 )
+    case lookupstateaslio_0_11111111_case_1
+    by contradiction /* forbidden KD-fact */
+  next
+    case lookupstateaslio_0_11111111_case_2
+    by solve( (#vr.4, 0) ~~> (#i, 0) )
+  qed
 qed
 
 lemma attested_comput:
@@ -51,8 +75,14 @@ guarded formula characterizing all counter-examples:
 "∃ #i m. (Local( m, 'loc' ) @ #i) ∧ ∀ #j. (Remote( m, 'loc' ) @ #j) ⇒ ⊥"
 */
 simplify
-by solve( State_1211111111111( StateChannel, lock, state2, i.1, lio, o, r
-          ) ▶₀ #i )
+solve( State_1211111111111( StateChannel, lock, state2, i.1, lio, o, r
+       ) ▶₀ #i )
+  case ifoiliocheckreprloc_0_121111111111_case_1
+  by contradiction /* from formulas */
+next
+  case ifoiliocheckreprloc_0_121111111111_case_2
+  by contradiction /* from formulas */
+qed
 
 restriction Restr_ReportRule_1:
   "∀ x #NOW. (Restr_ReportRule_1( x ) @ #NOW) ⇒ (¬(x = 'loc'))"
@@ -280,28 +310,29 @@ rule (modulo E) eventRemoteprogrilioilioloc_0_111111111111[color=#405280,
      [ State_1111111111111( StateChannel, lock, i, lio, r, state ) ]
   */
 
-rule (modulo E) outprogrilioreportprogrilioilio_0_1111111111111[color=#405280,
-                                                                process="out(<prog(r.1, i.1, lio.1), report(<prog(r.1, i.1, lio.1), i.1, lio.1>)
->);",
+rule (modulo E) outprogriliorepprogrilioilioloc_0_1111111111111[color=#405280,
+                                                                process="out(<prog(r.1, i.1, lio.1), 
+ rep(<prog(r.1, i.1, lio.1), i.1, lio.1>, 'loc')>);",
                                                                 issapicrule, role='r']:
    [ State_1111111111111( StateChannel, lock, i.1, lio.1, r.1, state.1 ) ]
   -->
    [
    State_11111111111111( StateChannel, lock, i.1, lio.1, r.1, state.1 ),
-   Out( <prog(r.1, i.1, lio.1), report(<prog(r.1, i.1, lio.1), i.1, lio.1>)>
+   Out( <prog(r.1, i.1, lio.1), 
+         rep(<prog(r.1, i.1, lio.1), i.1, lio.1>, 'loc')>
    )
    ]
 
   /*
-  rule (modulo AC) outprogrilioreportprogrilioilio_0_1111111111111[color=#405280,
-                                                                   process="out(<prog(r.1, i.1, lio.1), report(<prog(r.1, i.1, lio.1), i.1, lio.1>)
->);",
+  rule (modulo AC) outprogriliorepprogrilioilioloc_0_1111111111111[color=#405280,
+                                                                   process="out(<prog(r.1, i.1, lio.1), 
+ rep(<prog(r.1, i.1, lio.1), i.1, lio.1>, 'loc')>);",
                                                                    issapicrule, role='r']:
      [ State_1111111111111( StateChannel, lock, i, lio, r, state ) ]
     -->
      [
      State_11111111111111( StateChannel, lock, i, lio, r, state ),
-     Out( <prog(r, i, lio), report(<prog(r, i, lio), i, lio>)> )
+     Out( <prog(r, i, lio), rep(<prog(r, i, lio), i, lio>, 'loc')> )
      ]
   */
 
@@ -833,8 +864,8 @@ Facts occur in the left-hand-side but not in any right-hand-side
 Generated from:
 Tamarin version 1.13.0
 Maude version 3.5.1
-Git revision: 41bc81379b23681e7057314a5cf66a25c45e1986, branch: canonicalise-subst
-Compiled at: 2026-07-27 16:11:34.947223 UTC
+Git revision: c1fe108d23200a746bf6e1a82287edd921c94d4b, branch: fix-locations-report
+Compiled at: 2026-08-22 12:00:01.491656761 UTC
 */
 
 end
@@ -846,14 +877,14 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-locations/AC.spthy
 
   output:          examples/sapic/fast/feature-locations/AC.spthy.tmp
-  processing time: 0.30s
+  processing time: 1.93s
   
   WARNING: 1 wellformedness check failed!
            The analysis results might be wrong!
   
-  can_run_v (exists-trace): falsified - no trace found (2 steps)
-  simp (all-traces): verified (3 steps)
-  attested_comput (all-traces): verified (2 steps)
+  can_run_v (exists-trace): verified (6 steps)
+  simp (all-traces): verified (7 steps)
+  attested_comput (all-traces): verified (4 steps)
 
 ==============================================================================
 */
