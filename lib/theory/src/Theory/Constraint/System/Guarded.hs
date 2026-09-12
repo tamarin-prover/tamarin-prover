@@ -51,6 +51,7 @@ module Theory.Constraint.System.Guarded (
   , isDisjunction
   , isAllGuarded
   , isExGuarded
+  , containsLastAtom
   , isSafetyFormula
 
   , guardFactTags
@@ -148,6 +149,8 @@ isAllGuarded :: Guarded s c v -> Bool
 isAllGuarded (GGuarded All _ _ _) = True
 isAllGuarded _                    = False
 
+containsLastAtom :: LNGuarded -> Bool
+containsLastAtom = foldGuarded isLastAtom (or . getDisj) (or . getConj) (\_ _ as acc -> any isLastAtom as || acc)
 
 -- | Check whether the guarded formula is closed and does not contain an
 -- existential quantifier. This under-approximates the question whether the
@@ -157,7 +160,7 @@ isSafetyFormula :: HasFrees (Guarded s c v) => Guarded s c v -> Bool
 isSafetyFormula gf0 =
     null (frees [gf0]) && noExistential gf0
   where
-    noExistential (GAto _ )             = True
+    noExistential (GAto a)              = not $ isLastAtom a
     noExistential (GGuarded Ex _ _ _)   = False
     noExistential (GGuarded All _ _ gf) = noExistential gf
     noExistential (GDisj disj)          = all noExistential $ getDisj disj

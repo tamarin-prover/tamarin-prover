@@ -1,0 +1,68 @@
+theory LastUsed
+
+begin
+
+// Function signature and definition of the equational theory E
+
+functions: fst/1, pair/2, snd/1
+equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
+
+rule (modulo E) R:
+   [ ] --[ P( ) ]-> [ ]
+
+  /* has exactly the trivial AC variant */
+
+restriction IllegalR:
+  "∀ #i. (P( ) @ #i) ⇒ (last(#i))"
+
+  /*
+  expanded formula:
+  "∀ #i. (P( ) @ #i) ⇒ (last(#i))"
+  */
+
+lemma IllegalL:
+  all-traces "∀ #i. (P( ) @ #i) ⇒ (last(#i))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ #i. (P( ) @ #i) ∧ ¬(last(#i))"
+*/
+simplify
+SOLVED // trace found
+
+/*
+WARNING: the following wellformedness checks failed!
+
+Last atom usage
+===============
+
+  Lemma `IllegalL' contains last atom
+  
+  Restriction `IllegalR' contains last atom
+*/
+
+/*
+Generated from:
+Tamarin version 1.13.0
+Maude version 3.5.1
+Git revision: 120b58b59ea45aceacc7719fdefccdd9eb0a1fad (with uncommited changes), branch: no-last
+Compiled at: 2026-08-12 12:38:35.218395 UTC
+*/
+
+end
+/* Output
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/regression/trace/last.spthy
+
+  output:          examples/regression/trace/last.spthy.tmp
+  processing time: 0.02s
+  
+  WARNING: 2 wellformedness check failed!
+           The analysis results might be wrong!
+  
+  IllegalL (all-traces): falsified - found trace (2 steps)
+
+==============================================================================
+*/
