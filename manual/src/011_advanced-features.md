@@ -919,6 +919,12 @@ For JSON, the standard schema already defines a single top-level object with a
 "graphs" key that holds a list of the individual graphs, which we use to output
 the constrain systems.
 
+`--output-json` also supports `--diff` theories. For every found diff attack,
+the output contains the primary attack graph and, when a mirror graph is
+available, that graph as a separate entry in the same `"graphs"` list. These
+graphs can be viewed with `interactive` mode in the same way as dependency graphs
+from non-diff theories.
+
 Viewing exported JSON graphs in the interactive GUI {#sec:load-json}
 -------------------------------------------------------------------
 
