@@ -1,5 +1,5 @@
 from html import parser
-import subprocess, sys, re, os, argparse, logging, datetime, shutil
+import subprocess, sys, re, os, argparse, logging, datetime, shutil, tempfile
 
 
 class colors:
@@ -241,28 +241,31 @@ def parseFile(path):
 	except Exception as ex:
 		return f"Parse error - lemmas: {path}"
 	
+def isDiffOutputFile(path):
+	""" Whether the generated output file belongs to a diff (equivalence) theory. """
+	return any(pattern in path for pattern in [
+		"_analyzed-diff.spthy",
+		"_analyzed-diff-noprove.spthy",
+		"_analyzed-diff-obseqonly.spthy",
+		"_analyzed-diff-bfs.spthy"
+	])
+
+def isSapicOrAccountabilityFile(path):
+	""" Whether the file is a SAPIC or accountability theory. """
+	return any(pattern in path for pattern in [
+		"sapic",
+		"accountability"
+	])
+
 def testOutputFileParsing(path):
 	"""
 	Tests if a generated Tamarin output file can still be parsed.
 	"""
 	try:
-		# Determine file type based on filename patterns
-		is_diff_file = any(pattern in path for pattern in [
-			"_analyzed-diff.spthy", 
-			"_analyzed-diff-noprove.spthy",
-			"_analyzed-diff-obseqonly.spthy",
-			"_analyzed-diff-bfs.spthy"
-		])
-
-		is_sapic_or_accountability_file = any(pattern in path for pattern in [
-			"sapic",
-			"accountability"
-		])
-  
-		flags = "--diff" if is_diff_file else ""
+		flags = "--diff" if isDiffOutputFile(path) else ""
 		command = f"tamarin-prover --parse-only {flags} {path}"
 		
-		if is_sapic_or_accountability_file and settings.no_sapic_output_parse_test:
+		if isSapicOrAccountabilityFile(path) and settings.no_sapic_output_parse_test:
 			logging.warning(f"Skipping output parse test for {path} since it is a SAPIC or accountability file and the flag --no-sapic-output-parse-test is set.")
 			return True, None
 
@@ -271,6 +274,47 @@ def testOutputFileParsing(path):
 			return True, None
 		else:
 			return False, process.stderr
+	except Exception as ex:
+		return False, str(ex)
+
+def sourceOfOutputFile(pathB):
+	"""
+	Returns the path in examples/ of the theory from which the output file pathB
+	was generated, or None if there is no such file.
+	"""
+	rel = pathB.split(settings.folderB, 1)[-1].lstrip("/")
+	match = re.match(r"(?:fast-tests/)?(.*)_analyzed(?:-[\w-]+)?\.spthy$", rel)
+	if match is None:
+		return None
+	source = os.path.join("examples", match.group(1) + ".spthy")
+	return source if os.path.exists(source) else None
+
+def testParseOnlyRoundTrip(source, diff):
+	"""
+	Tests if the output of 'tamarin-prover --parse-only' on the theory file source
+	can be parsed again, and if doing so prints the same theory. The second check
+	catches output that the parser accepts but that denotes a different theory,
+	e.g. because a declaration is printed twice. diff runs Tamarin in --diff mode.
+	"""
+	try:
+		if isSapicOrAccountabilityFile(source) and settings.no_sapic_output_parse_test:
+			logging.warning(f"Skipping --parse-only round-trip test for {source} since it is a SAPIC or accountability file and the flag --no-sapic-output-parse-test is set.")
+			return True, None
+
+		flags = ["--diff"] if diff else []
+		first = subprocess.run(["tamarin-prover", "--parse-only", *flags, source], capture_output=True, encoding="utf-8")
+		if first.returncode != 0:
+			return False, first.stderr
+		with tempfile.TemporaryDirectory() as tmpDir:
+			tmpPath = os.path.join(tmpDir, os.path.basename(source))
+			with open(tmpPath, "w", encoding="utf-8") as tmpFile:
+				tmpFile.write(first.stdout)
+			second = subprocess.run(["tamarin-prover", "--parse-only", *flags, tmpPath], capture_output=True, encoding="utf-8")
+		if second.returncode != 0:
+			return False, f"The printed theory cannot be parsed again:\n{second.stderr}"
+		if second.stdout != first.stdout:
+			return False, "The printed theory changes when it is parsed and printed again"
+		return True, None
 	except Exception as ex:
 		return False, str(ex)
 
@@ -314,6 +358,8 @@ def compare():
 	majorDifferences = False
 	stepSumA, stepSumB, timeSumA, timeSumB = 0, 0, 0, 0
 	parseTestsTotal, parseTestsFailed = 0, 0
+	roundTripTestsTotal, roundTripTestsFailed = 0, 0
+	roundTripTested = set()
 	
 	for pathB in iterFolder(settings.folderB):
 
@@ -327,6 +373,21 @@ def compare():
 				majorDifferences = True
 				parseTestsFailed += 1		
   
+		## Tamarin round-trip testing of --parse-only on the source theory ##
+		if not settings.no_output_parse_test:
+			source = sourceOfOutputFile(pathB)
+			diff = isDiffOutputFile(pathB)
+			# The same source theory can produce several output files, so test it once per mode.
+			if source is not None and (source, diff) not in roundTripTested:
+				roundTripTested.add((source, diff))
+				roundTripTestsTotal += 1
+				roundTripSuccess, roundTripError = testParseOnlyRoundTrip(source, diff)
+				if not roundTripSuccess:
+					logging.error(color(colors.RED + colors.BOLD, f"--parse-only round-trip test failed for {source}"))
+					logging.error(color(colors.RED, roundTripError))
+					majorDifferences = True
+					roundTripTestsFailed += 1
+
 		## parse file ##
 		parsed = parseFiles(pathB)
 		if type(parsed) == str:
@@ -491,6 +552,11 @@ def compare():
 			logging.error(color(colors.RED + colors.BOLD, f"{parseTestsFailed} output files failed to parse!"))
 		else:
 			logging.warning("All output files successfully parsed")
+		if roundTripTestsFailed > 0:
+			logging.warning(f"--parse-only round-trip tests: {roundTripTestsTotal - roundTripTestsFailed}/{roundTripTestsTotal} successful")
+			logging.error(color(colors.RED + colors.BOLD, f"{roundTripTestsFailed} theories do not survive a --parse-only round trip!"))
+		else:
+			logging.warning("All theories survive a --parse-only round trip")
 		if settings.verbose >= 3:
 			logging.error(color(colors.RED + colors.BOLD, "There were differences in the results of the lemmas, or in the rules, or in the equations, or in the builtins, or in the functions, or in the warnings, or the files itself could not be parsed!"))
 		else: 
@@ -545,7 +611,7 @@ def getArguments():
 			"6: show diff output if the corresponding proofs changed"
 			, type=int, default=3)
 	parser.add_argument("-p", "--parser-test", help = "Run the parser tests.", action="store_true")
-	parser.add_argument("-nopt", "--no-output-parse-test", help="Skip testing if output files can be parsed again", action="store_true")
+	parser.add_argument("-nopt", "--no-output-parse-test", help="Skip the output parse tests and the --parse-only round-trip tests", action="store_true")
 	parser.add_argument("--no-sapic-output-parse-test", dest="no_sapic_output_parse_test", help="Disable SAPIC/accountability output parse tests", action="store_true")
 	
 
