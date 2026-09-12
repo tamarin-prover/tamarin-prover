@@ -1,0 +1,21 @@
+/*
+ * Regression test for issue #914.
+ * A user-defined AC operator binds more tightly than '^'.
+ * The printer must keep parentheses around a '^' argument.
+ * Without them, the stored theory reads back as a different
+ * theory, and the verdict flips from falsified to verified.
+ */
+theory Issue914
+begin
+
+builtins: diffie-hellman
+functions: add/2 [AC]
+
+rule Gen:
+  [ Fr(~e) ] --[ Secret( add('g'^~e, 'pad') ) ]-> [ Out( 'g'^~e ) ]
+
+lemma secrecy:
+  all-traces
+  "All m #i. Secret(m) @ #i ==> not (Ex #j. K(m) @ #j)"
+
+end
