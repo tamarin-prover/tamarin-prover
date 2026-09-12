@@ -14,6 +14,7 @@ module Sapic.Facts
     AnnotatedRule (..),
     FactType (..),
     mapAct,
+    stripNonAlphanumerical,
     StateKind (..),
     isSemiState,
     isState,
@@ -129,6 +130,10 @@ data FactType = GET | IN | NEW | EVENT | INSERT | OUT
   deriving (Eq)
 
 -- | applies function acting on rule tuple on annotated rule.
+-- | Keep only alphabetic characters of a string, for use in generated names.
+stripNonAlphanumerical :: String -> String
+stripNonAlphanumerical = filter isAlpha
+
 mapAct ::
   ( ([TransFact], [TransAction], [TransFact], [SyntacticLNFormula]) ->
     ([TransFact], [TransAction], [TransFact], [SyntacticLNFormula])
@@ -398,7 +403,6 @@ toRule AnnotatedRule {..} =
     r = map factToFact concs
     roleFromProcessNameList [] = "Process"
     roleFromProcessNameList nameList = List.intercalate "_" nameList
-    stripNonAlphanumerical = filter isAlpha
     unNull s = if null s then "p" else s
     isLookup (ProcessComb (Lookup _ _) _ _ _) = True
     isLookup _ = False
