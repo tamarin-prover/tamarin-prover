@@ -417,6 +417,9 @@ reloadTheoryFromFile filePath idx isDiff replaceTrace replaceDiff successRoute =
       ++ filePath ++ "\n\n" ++
       show (length report) ++ " error(s) found" ++ (if isDiff then " in diff theory" else "") ++
       ":\n\n" ++ renderHtmlDoc (htmlDoc $ prettyWfErrorReport report)
+
+    Left exportError@(ExportTranslationError _) ->
+      mkAlert $ "Export error while reloading " ++ typeName ++ ":\n\n" ++ show exportError
     
     Right (report, thy, _wfErrors) -> case (thy, isDiff) of
         (Left _, True) -> mkAlert "Expected diff theory but file contains standard theory"

@@ -1,0 +1,8 @@
+theory export_backend_characterization
+begin
+
+equivLemma:
+  new x; out(x)
+  new y; out(y)
+
+end

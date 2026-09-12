@@ -1,0 +1,48 @@
+theory export_property_instrumentation
+begin
+
+rule EmitTogether:
+  [ Fr(~x) ]
+  --[ Trigger(~x), Consequence(~x) ]->
+  []
+
+rule EmitFirst:
+  [ Fr(~x) ]
+  --[ First(~x) ]->
+  []
+
+rule EmitSecond:
+  [ Fr(~x) ]
+  --[ Second(~x) ]->
+  []
+
+lemma completion_required:
+  "All x #i. Trigger(x) @ i ==> Consequence(x) @ i"
+
+lemma completion_not_required_for_same_fact:
+  "All x #i. Trigger(x) @ i ==> Trigger(x) @ i"
+
+lemma temporal_equality_uses_rule_ids:
+  "not (Ex x #i #j. First(x) @ i & Second(x) @ j & #i < #j)"
+
+lemma induction_composite [use_induction]:
+  "All x #i. Trigger(x) @ i ==> (All #j. First(x) @ j ==> Consequence(x) @ i)"
+
+lemma split_queries_notice:
+  "(All x #i. Trigger(x) @ i ==> Consequence(x) @ i)
+    & (All y #j. First(y) @ j ==> First(y) @ j)"
+
+lemma independent_shadowed_binders:
+  "not (Ex z #k.
+      Trigger(z) @ k
+      & (Ex x #i. First(x) @ i)
+      & (Ex x #j. Second(x) @ j)
+      & not (Ex #l. Consequence(z) @ l))"
+
+lemma mixed_quantifier_negated_disjunct:
+  "All z #k. Trigger(z) @ k ==>
+      (not (Ex x #i. First(x) @ i
+          & (All y #j. Second(y) @ j ==> Consequence(y) @ j)))
+      | Consequence(z) @ k"
+
+end
