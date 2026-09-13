@@ -1,0 +1,5 @@
+// Regression for https://github.com/tamarin-prover/tamarin-prover/issues/907
+theory CornerGround begin
+functions: c/0
+equations: x = c
+end
