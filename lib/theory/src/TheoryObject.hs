@@ -898,7 +898,10 @@ prettyRestriction rstr =
             _ -> emptyDoc)
   where
     Restriction _ expandedFormula ogFormula = rstr
-    safety = isSafetyFormula $ formulaToGuarded_ $ expandedFormula
+    -- an unguardable formula is reported by the wellformedness checks; it
+    -- must not abort printing here
+    safety = either (const False :: Doc -> Bool) isSafetyFormula
+               (formulaToGuarded expandedFormula)
 
 -- | Pretty print an either restriction.
 prettyEitherRestriction :: (HighlightDocument d) => (Side, Restriction) -> d
@@ -913,7 +916,10 @@ prettyEitherRestriction (s, rstr) =
             _ -> emptyDoc
   where
     Restriction _ expandedFormula ogFormula = rstr
-    safety = isSafetyFormula $ formulaToGuarded_ $ expandedFormula
+    -- an unguardable formula is reported by the wellformedness checks; it
+    -- must not abort printing here
+    safety = either (const False :: Doc -> Bool) isSafetyFormula
+               (formulaToGuarded expandedFormula)
 
 
 

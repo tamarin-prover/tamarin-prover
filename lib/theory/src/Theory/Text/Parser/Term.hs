@@ -62,7 +62,7 @@ llitNoPub = asum [freshTerm <$> freshName, varTerm <$> msgvar]
 lookupArity :: String -> Parser (Int, Privacy,Constructability, ACstate, NDCstate)
 lookupArity op = do
     maudeSig <- sig <$> getState
-    case lookup (BC.pack op) (map extractName(S.toList (userDefinedFunSyms maudeSig) ++ map NoEqUser (S.toList (macroNames maudeSig) ++ [(emapSymString, (2,Public,Constructor,NotNDC))]))) of
+    case lookup (BC.pack op) (map extractName(S.toList (userDefinedFunSyms maudeSig) ++ map NoEqUser (S.toList (macroNames maudeSig) ++ [(emapSymString, (2,Public,Constructor,NotNDC)) | enableBP maudeSig]))) of
         Nothing                            -> fail $ "unknown operator `" ++ op ++ "'"
         Just (NoEqUser (_,(k,priv,cnstr,ndc))) -> return (k,priv,cnstr,NotAC,ndc)
         Just (ACfctUser (_,(priv,cnstr,ndc)))  -> return (2,priv,cnstr,IsAC,ndc)
@@ -91,6 +91,7 @@ naryOpApp eqn plit = do
     when (eqn && op `elem` reservedBuiltins)
       $ error $ "`" ++ show op ++ "` is a reserved function name for builtins."
     (k,priv,constr,acstate,ndcstate) <- lookupArity op
+    bpEnabled <- enableBP . sig <$> getState
     ts <- parens $ if k == 1
                      then return <$> tupleterm eqn plit
                      else commaSep (msetterm eqn plit)
@@ -100,7 +101,9 @@ naryOpApp eqn plit = do
                ", but here it is used with arity " ++ show k'
     --let app o = if BC.pack op == emapSymString then fAppC EMap else fAppNoEq o
     case (BC.pack op,(k,priv,constr,acstate)) of
-      (o,(_,_,_,_)) | o == emapSymString -> return $ fAppC EMap ts
+      -- em is the built-in bilinear e-map only when the bilinear-pairing
+      -- builtin is enabled; otherwise it is an ordinary function
+      (o,(2,_,_,_)) | o == emapSymString && bpEnabled -> return $ fAppC EMap ts
       (_,(_,_,_,NotAC)) -> return $ fAppNoEq (BC.pack op, (k,priv,constr,ndcstate)) ts
       (_,(_,_,_,IsAC)) -> return $ fAppAC (ACfct (BC.pack op, (priv,constr,ndcstate))) ts
     --return $ app (BC.pack op, (k,priv,constr)) ts

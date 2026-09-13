@@ -1,0 +1,129 @@
+theory R4
+
+begin
+
+// Function signature and definition of the equational theory E
+
+functions: fst/1, pair/2, snd/1
+equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
+
+heuristic: p
+
+lemma reachable:
+  exists-trace "∃ m #i. Ev( m ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ m #i. (Ev( m ) @ #i)"
+*/
+simplify
+solve( State_11( k, m ) ▶₀ #i )
+  case ink_0_1
+  SOLVED // trace found
+qed
+
+rule (modulo E) Init[color=#ffffff, process="in(m.1);", issapicrule,
+                     role='Process']:
+   [ ] --[ Init( ) ]-> [ State_( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) inm_0_[color=#ffffff, process="in(m.1);", issapicrule,
+                       role='Process']:
+   [ State_( ), In( m.1 ) ] --> [ State_1( m.1 ) ]
+
+  /*
+  rule (modulo AC) inm_0_[color=#ffffff, process="in(m.1);", issapicrule,
+                          role='Process']:
+     [ State_( ), In( m ) ] --> [ State_1( m ) ]
+  */
+
+rule (modulo E) ink_0_1[color=#ffffff, process="in(k.1);", issapicrule,
+                        role='Process']:
+   [ State_1( m.1 ), In( k.1 ) ] --> [ State_11( k.1, m.1 ) ]
+
+  /*
+  rule (modulo AC) ink_0_1[color=#ffffff, process="in(k.1);", issapicrule,
+                           role='Process']:
+     [ State_1( m ), In( k ) ] --> [ State_11( k, m ) ]
+  */
+
+restriction Restr_EvmrestrictjKkj_0_11_1:
+  "∀ x #NOW.
+    (Restr_EvmrestrictjKkj_0_11_1( x ) @ #NOW) ⇒ (∃ #j. K( x ) @ #j)"
+
+  /*
+  expanded formula:
+  "∀ x #NOW.
+    (Restr_EvmrestrictjKkj_0_11_1( x ) @ #NOW) ⇒ (∃ #j. K( x ) @ #j)"
+  */
+
+rule (modulo E) EvmrestrictjKkj_0_11[color=#ffffff,
+                                     process=" [ ] --[ Ev( m.1 ), _restrict(∃ #j. K( k.1 ) @ #j) ]-> [ ];",
+                                     issapicrule, role='Process']:
+   [ State_11( k.1, m.1 ) ]
+  --[ Ev( m.1 ), Restr_EvmrestrictjKkj_0_11_1( k.1 ) ]->
+   [ State_111( k.1, m.1 ) ]
+
+  /*
+  rule (modulo AC) EvmrestrictjKkj_0_11[color=#ffffff,
+                                        process=" [ ] --[ Ev( m.1 ), _restrict(∃ #j. K( k.1 ) @ #j) ]-> [ ];",
+                                        issapicrule, role='Process']:
+     [ State_11( k, m ) ]
+    --[ Ev( m ), Restr_EvmrestrictjKkj_0_11_1( k ) ]->
+     [ State_111( k, m ) ]
+  */
+
+rule (modulo E) outk_0_111[color=#ffffff, process="out(k.1);",
+                           issapicrule, role='Process']:
+   [ State_111( k.1, m.1 ) ] --> [ State_1111( k.1, m.1 ), Out( k.1 ) ]
+
+  /*
+  rule (modulo AC) outk_0_111[color=#ffffff, process="out(k.1);",
+                              issapicrule, role='Process']:
+     [ State_111( k, m ) ] --> [ State_1111( k, m ), Out( k ) ]
+  */
+
+rule (modulo E) p_0_1111[color=#ffffff, process="0", issapicrule,
+                         role='Process']:
+   [ State_1111( k.1, m.1 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_1111[color=#ffffff, process="0", issapicrule,
+                            role='Process']:
+     [ State_1111( k, m ) ] --> [ ]
+  */
+
+restriction single_session:
+  "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
+  */
+
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.13.0
+Maude version 3.5.1
+Git revision: 112ad1d3c06eb40e6451e9d3f37eee965162e037 (with uncommited changes), branch: 904-909-fixes
+Compiled at: 2026-09-13 16:11:31.605296528 UTC
+*/
+
+end
+/* Output
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/sapic/fast/regression-tests/issue909-temporal-restrict.spthy
+
+  output:          examples/sapic/fast/regression-tests/issue909-temporal-restrict.spthy.tmp
+  processing time: 0.07s
+  
+  reachable (exists-trace): verified (3 steps)
+
+==============================================================================
+*/

@@ -1,0 +1,48 @@
+theory Em3A
+
+begin
+
+// Function signature and definition of the equational theory E
+
+functions: em/3, fst/1, pair/2, snd/1
+equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
+
+rule (modulo E) Test:
+   [ ] --[ Test( em('g', 'h', 'k') ) ]-> [ ]
+
+  /* has exactly the trivial AC variant */
+
+lemma L1:
+  all-traces "∀ #i. (Test( em('g', 'h', 'k') ) @ #i) ⇒ (⊥)"
+/*
+guarded formula characterizing all counter-examples:
+"∃ #i. (Test( em('g', 'h', 'k') ) @ #i)"
+*/
+simplify
+SOLVED // trace found
+
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.13.0
+Maude version 3.5.1
+Git revision: 112ad1d3c06eb40e6451e9d3f37eee965162e037 (with uncommited changes), branch: 904-909-fixes
+Compiled at: 2026-09-13 16:11:31.605296528 UTC
+*/
+
+end
+/* Output
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/regression/trace/issue905.spthy
+
+  output:          examples/regression/trace/issue905.spthy.tmp
+  processing time: 0.04s
+  
+  L1 (all-traces): falsified - found trace (2 steps)
+
+==============================================================================
+*/

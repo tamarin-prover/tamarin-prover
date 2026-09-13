@@ -1,0 +1,9 @@
+// Regression for issue #904: an ordinary function name contains a Maude AC marker.
+theory MarkerSecrecy
+begin
+builtins: multiset
+functions: tamXCAfoo/1
+rule Gen: [ Fr(~s) ] --[ Secret(~s) ]-> [ Out(fst(<tamXCAfoo(~s), 'c'>) ++ 'c') ]
+lemma secret: "All s #i. Secret(s) @ i ==> not (Ex #j. K(s) @ j)"
+
+end
