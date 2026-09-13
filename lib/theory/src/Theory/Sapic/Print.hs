@@ -14,6 +14,7 @@ module Theory.Sapic.Print (
     , processAddAnnotation
     , pfoldMap
     , prettySapic
+    , prettySapicNoLoc
     , prettySapicAction
     , prettySapicComb
     , prettySapicTopLevel
@@ -49,8 +50,13 @@ rulePrinter l a r res mv = render $ prettyRuleRestrGen ppFact ppRes l' (toPat a)
 prettySapicAction :: LSapicAction -> String
 prettySapicAction = prettySapicAction' rulePrinter
 
-prettySapic :: (Document d) => LProcess ann -> d
-prettySapic = prettySapic' rulePrinter
+prettySapic :: (Document d, GoodAnnotation ann) => LProcess ann -> d
+prettySapic = prettySapic' rulePrinter (location . getProcessParsedAnnotation)
+
+-- | Like 'prettySapic', but drops location annotations. For call sites whose
+-- annotation type is not a 'GoodAnnotation'.
+prettySapicNoLoc :: (Document d) => LProcess ann -> d
+prettySapicNoLoc = prettySapic' rulePrinter (const Nothing)
 
 prettySapicTopLevel :: LProcess ann -> String
 prettySapicTopLevel = prettySapicTopLevel' rulePrinter
