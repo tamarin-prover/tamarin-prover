@@ -408,10 +408,14 @@ insertImpliedFormulas :: Reduction ChangeIndicator
 insertImpliedFormulas = do
     sys <- gets id
     hnd <- getMaudeHandle
+    let actionsByTag =
+            M.fromListWith (flip (++)) $ do
+                (i, fa) <- allActions sys
+                return (factTag fa, [(skolemizeTerm (varTerm i), skolemizeFact fa)])
     applyChangeList $ do
         clause  <- (S.toList $ get sFormulas sys) ++
                    (S.toList $ get sLemmas sys)
-        implied <- impliedFormulas hnd sys clause
+        implied <- impliedFormulasWithSkActions hnd actionsByTag clause
         if ( implied `S.notMember` get sFormulas sys &&
              implied `S.notMember` get sSolvedFormulas sys )
           then return (insertFormula implied)
