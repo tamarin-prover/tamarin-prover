@@ -1,0 +1,55 @@
+theory Issue914
+
+begin
+
+// Function signature and definition of the equational theory E
+
+builtins: diffie-hellman
+functions: fst/1, pair/2, snd/1, add/2 [AC]
+equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
+
+rule (modulo E) Gen:
+   [ Fr( ~e ) ] --[ Secret( ('pad' add ('g'^~e)) ) ]-> [ Out( 'g'^~e ) ]
+
+  /* has exactly the trivial AC variant */
+
+lemma secrecy:
+  all-traces "∀ m #i. (Secret( m ) @ #i) ⇒ (¬(∃ #j. K( m ) @ #j))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ m #i. (Secret( m ) @ #i) ∧ ∃ #j. (K( m ) @ #j)"
+*/
+simplify
+solve( !KU( ('pad' add ('g'^~e)) ) @ #vk )
+  case c_add
+  solve( !KU( 'g'^~e ) @ #vk.2 )
+    case Gen
+    SOLVED // trace found
+  qed
+qed
+
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.13.0
+Maude version 3.5.1
+Git revision: 7750cd6c604e737ec64f2891268a8fb904f3865a, branch: issue-914
+Compiled at: 2026-08-18 10:01:17.985278967 UTC
+*/
+
+end
+/* Output
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/regression/trace/issue914.spthy
+
+  output:          examples/regression/trace/issue914.spthy.tmp
+  processing time: 0.07s
+  
+  secrecy (all-traces): falsified - found trace (4 steps)
+
+==============================================================================
+*/
