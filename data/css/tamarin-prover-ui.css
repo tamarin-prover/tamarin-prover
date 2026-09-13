@@ -524,6 +524,14 @@ h2 {
     height: 90%;
 }
 
+/* Per-lemma and per-sub-proof wrappers enabling progressive sidebar updates:
+   identifiable in the DOM (a single block / sub-proof is replaced in place on a
+   proof step) but layout-transparent, so the sidebar looks exactly as before. */
+#proof .lemma-index,
+#proof .proof-subtree {
+    display: inline;
+}
+
 #ui-debug-display {
     font-size: 0.75em;
 }
