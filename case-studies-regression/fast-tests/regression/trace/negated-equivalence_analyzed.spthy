@@ -1,0 +1,76 @@
+theory NegatedEquivalence
+
+begin
+
+// Function signature and definition of the equational theory E
+
+functions: fst/1, pair/2, snd/1
+equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
+
+rule (modulo E) Step:
+   [ ] --[ Step( ) ]-> [ ]
+
+  /* has exactly the trivial AC variant */
+
+lemma negated_equivalence:
+  all-traces "¬((⊤) ⇔ (⊥))"
+/*
+guarded formula characterizing all counter-examples:
+"⊥"
+*/
+by contradiction /* from formulas */
+
+lemma expanded_equivalent:
+  all-traces "((⊤) ∧ (¬(⊥))) ∨ ((¬(⊤)) ∧ (⊥))"
+/*
+guarded formula characterizing all counter-examples:
+"⊥"
+*/
+by contradiction /* from formulas */
+
+lemma exists_negated_equivalence:
+  exists-trace "¬((⊤) ⇔ (⊥))"
+/*
+guarded formula characterizing all satisfying traces:
+"⊤"
+*/
+simplify
+SOLVED // trace found
+
+lemma exists_expanded_equivalent:
+  exists-trace "((⊤) ∧ (¬(⊥))) ∨ ((¬(⊤)) ∧ (⊥))"
+/*
+guarded formula characterizing all satisfying traces:
+"⊤"
+*/
+simplify
+SOLVED // trace found
+
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.13.0
+Maude version 3.5.1
+Git revision: 4cb83e49623320b2ffa79f6c6d84c74018f77809, branch: codex/fix-negated-equivalence
+Compiled at: 2026-09-14 19:09:56.182171733 UTC
+*/
+
+end
+/* Output
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/regression/trace/negated-equivalence.spthy
+
+  output:          examples/regression/trace/negated-equivalence.spthy.tmp
+  processing time: 0.03s
+
+  negated_equivalence (all-traces): verified (1 steps)
+  expanded_equivalent (all-traces): verified (1 steps)
+  exists_negated_equivalence (exists-trace): verified (2 steps)
+  exists_expanded_equivalent (exists-trace): verified (2 steps)
+
+==============================================================================
+*/

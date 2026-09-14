@@ -563,7 +563,8 @@ formulaToGuarded fmOrig =
                      ppFormula f0
 
     convert polarity (Conn Iff f1 f2) =
-        gconj <$> mapM (convert polarity) [Conn Imp f1 f2, Conn Imp f2 f1]
+        (if polarity then gdisj else gconj)
+          <$> mapM (convert polarity) [Conn Imp f1 f2, Conn Imp f2 f1]
 
 
 ------------------------------------------------------------------------------
