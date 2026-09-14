@@ -12,20 +12,12 @@ rule (modulo E) R:
 
   /* has exactly the trivial AC variant */
 
-restriction IllegalR1:
+restriction IllegalR:
   "∀ #i. (P( ) @ #i) ⇒ (last(#i))"
 
   /*
   expanded formula:
   "∀ #i. (P( ) @ #i) ⇒ (last(#i))"
-  */
-
-restriction IllegalR2:
-  "∀ #i. (P( ) @ #i) ⇒ (¬(last(#i)))"
-
-  /*
-  expanded formula:
-  "∀ #i. (P( ) @ #i) ⇒ (¬(last(#i)))"
   */
 
 lemma IllegalL:
@@ -35,27 +27,16 @@ guarded formula characterizing all counter-examples:
 "∃ #i. (P( ) @ #i) ∧ ¬(last(#i))"
 */
 simplify
-SOLVED // trace found
+by contradiction /* cyclic */
 
-/*
-WARNING: the following wellformedness checks failed!
-
-Last atom usage
-===============
-
-  Lemma `IllegalL' contains last atom
-  
-  Restriction `IllegalR1' contains last atom
-
-  Restriction `IllegalR2' contains last atom
-*/
+/* All wellformedness checks were successful. */
 
 /*
 Generated from:
 Tamarin version 1.13.0
 Maude version 3.5.1
-Git revision: df393c3709413c0e54425b94e9fce96f58050bc0 (with uncommited changes), branch: no-last
-Compiled at: 2026-09-14 08:34:31.033335 UTC
+Git revision: fdcb6d2c5f9d2cb73e9eeba71ce13411d17c7060, branch: no-last
+Compiled at: 2026-09-11 08:15:49.682891 UTC
 */
 
 end
@@ -67,12 +48,9 @@ summary of summaries:
 analyzed: examples/regression/trace/last.spthy
 
   output:          examples/regression/trace/last.spthy.tmp
-  processing time: 0.06s
+  processing time: 0.02s
   
-  WARNING: 3 wellformedness check failed!
-           The analysis results might be wrong!
-  
-  IllegalL (all-traces): falsified - found trace (2 steps)
+  IllegalL (all-traces): verified (2 steps)
 
 ==============================================================================
 */
