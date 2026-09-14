@@ -25,7 +25,7 @@ $ python3 regressionTests.py
 - it calls `stack install` (prevented by `-noi`)
 - it calls `make case-studies` (prevented by `-nom`) with the options
   - `-j` for parallel execution
-  - `fast-case-studies FAST=y` if not `-s` (slow) is given
+  - `fast-case-studies sapic-case-studies-fast FAST=y` if not `-s` (slow) is given
 - for each `.spthy` in the folder `case-studies`
   - it searches for the equivalent in `case-studies-regression` (or another folder specified by `-d`)
   - it parses the steps and times for both files
@@ -82,7 +82,9 @@ optional arguments:
    `_analyzed-diff.spthy` for a diff theory).
 3. If CI should run the test, make its target a dependency of
    `fast-case-studies`, normally by adding it to one of the target variables in
-   `FAST_CS_TARGETS`. CI runs only `make fast-case-studies FAST=y`.
+   `FAST_CS_TARGETS`. Ideally, `FAST_REGRESSION_CASE_STUDIES` for trace mode
+   regression tests, or `REGRESSION_OBSEQ_CASE_STUDIES` for diff mode regression
+   tests.
 4. Generate the output with the `Makefile`. Pass `FAST=y` for a fast test; for
    example:
 
@@ -117,7 +119,10 @@ To execute this script on Travis, you should think about two things:
 
 ## Makefile
 
-The Makefile is also important. To make the `fast-case-studies` (used in the script with the fast tests), you should use the command `make fast-case-studies FAST=y`. If you don't precise `FAST=y`, the files will be in the directory `case-studies` and not `case-studies/fast-tests` and the script won't work.
+The Makefile is also important. To run both fast test groups as the script does,
+use `make fast-case-studies sapic-case-studies-fast FAST=y`. Without `FAST=y`,
+the files will be in `case-studies` instead of `case-studies/fast-tests`, and
+the script will not find them in the expected location.
 
 
 
