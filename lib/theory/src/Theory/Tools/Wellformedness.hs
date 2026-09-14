@@ -286,7 +286,8 @@ boundTerms l (GDisj disj)             = concatMap (boundTerms l) disj
 boundTerms l (GConj conj)             = concatMap (boundTerms l) conj
 boundTerms l (GGuarded _ ss _ gf)     = boundTerms extendedVarAssignment gf
   where
-    extendedVarAssignment = zip [0..] [LVar name sort 0 | (name, sort) <- reverse ss] ++ l
+    extendedVarAssignment = zip [0..] [LVar name sort 0 | (name, sort) <- reverse ss]
+                         ++ [(i + fromIntegral (length ss), var) | (i, var) <- l]
 boundTerms _ _                        = [] --cannot happen
 
 -- | check nat-Sorting (i.e., below + is only nat)

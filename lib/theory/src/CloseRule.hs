@@ -55,7 +55,7 @@ import           GHC.IO (unsafePerformIO)
 -- the given theory.
 closeTheoryWithMaude :: SignatureWithMaude -> OpenTranslatedTheory -> Bool -> Bool -> ClosedTheory
 closeTheoryWithMaude sig thy0 autoSources showSaturation =
-  if autoSources && containsPartialDeconstructions (cache items)
+  if autoSources && containsPartialDeconstructions cachePre
     then
         proveTheory (const True) checkProofM
       $ Theory (L.get thyName thy0) (L.get thyInFile thy0) h t sig (cache items') items' (L.get thyOptions thy0)  (L.get thyIsSapic thy0)
@@ -109,7 +109,13 @@ closeTheoryWithMaude sig thy0 autoSources showSaturation =
     unfoldRules          (i:is) = i:unfoldRules is
     unfoldRules              [] = []
 
-    items' = addAutoSourcesLemma hnd lemmaName (cache itemsModAC) itemsModAC
+    -- The partial-deconstructions trigger check and the auto-sources lemma
+    -- share one preliminary cache. It must be built from the unfolded rule
+    -- variants because addAutoSourcesLemma matches its source systems
+    -- against the unfolded rules by name.
+    cachePre = cache itemsModAC
+
+    items' = addAutoSourcesLemma hnd lemmaName cachePre itemsModAC
 
     -- extract source restrictions and lemmas
     restrictions = do RestrictionItem rstr <- items

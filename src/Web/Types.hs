@@ -703,23 +703,23 @@ defaultLayout' w = do
   withUrlRenderer [hamlet|
     $newline never
     !!!
-    <html>
+    <html lang=en>
       <head>
         <title>#{pageTitle page}
         <link rel=stylesheet href=/static/css/intdot-style.css>
         <link rel=stylesheet href=/static/css/tamarin-prover-ui.css>
         <link rel=stylesheet href=/static/css/jquery-contextmenu.css>
         <link rel=stylesheet href=/static/css/smoothness/jquery-ui.css>
-        <script src=/static/js/jquery.js></script>
-        <script src=/static/js/jquery-ui.js></script>
-        <script src=/static/js/jquery-layout.js></script>
-        <script src=/static/js/jquery-cookie.js></script>
-        <script src=/static/js/jquery-superfish.js></script>
-        <script src=/static/js/jquery-contextmenu.js></script>
-        <script src=/static/js/tamarin-prover-ui.js></script>
-        <script type="module" src=/static/js/intdot-graph.es.js></script>
-        <script type="module" src=/static/js/intdot-staticgraph.es.js></script>
-        <script type="module" src=/static/js/intdot-dynamicgraph.es.js></script>
+        <script src=/static/js/jquery.js>
+        <script src=/static/js/jquery-ui.js>
+        <script src=/static/js/jquery-layout.js>
+        <script src=/static/js/jquery-cookie.js>
+        <script src=/static/js/jquery-superfish.js>
+        <script src=/static/js/jquery-contextmenu.js>
+        <script src=/static/js/tamarin-prover-ui.js>
+        <script type="module" src=/static/js/intdot-graph.es.js>
+        <script type="module" src=/static/js/intdot-staticgraph.es.js>
+        <script type="module" src=/static/js/intdot-dynamicgraph.es.js>
         ^{pageHead page}
       <body>
         $maybe msg <- message
@@ -732,7 +732,7 @@ defaultLayout' w = do
         <div#confirm-dialog>
         <ul#contextMenu>
           <li.autoprove>
-            <a href="#autoprove">Autoprove</a>
+            <a href="#autoprove">Autoprove
   |]
           -- <li.delstep>
             -- <a href="#del/path">Remove step</a>
@@ -804,7 +804,7 @@ intdotLayout includeAbstractToggle w = do
   withUrlRenderer [hamlet|
     $newline never
     !!!
-    <html>
+    <html lang=en>
       <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -812,12 +812,12 @@ intdotLayout includeAbstractToggle w = do
         <style> body,html{width: 100%; height: 100%; overflow: hidden; margin: 0; padding: 0; }
         <link rel=stylesheet href=/static/css/intdot-style.css>
         <link rel=stylesheet href=/static/css/tamarin-prover-ui.css>
-        <script src=/static/js/jquery.js></script>
-        <script src=/static/js/jquery-cookie.js></script>
-        <script src=/static/js/jquery-superfish.js></script>
-        <script>window.tamarinPopoutGraph = (window.self === window.top); if (!window.tamarinPopoutGraph) { document.documentElement.classList.add("graph-embedded"); }</script>
-        <script src=/static/js/tamarin-prover-ui.js></script>
-        <script type="module" src=/static/js/intdot-graph.es.js></script>
+        <script src=/static/js/jquery.js>
+        <script src=/static/js/jquery-cookie.js>
+        <script src=/static/js/jquery-superfish.js>
+        <script>window.tamarinPopoutGraph = (window.self === window.top); if (!window.tamarinPopoutGraph) { document.documentElement.classList.add("graph-embedded"); }
+        <script src=/static/js/tamarin-prover-ui.js>
+        <script type="module" src=/static/js/intdot-graph.es.js>
         ^{pageHead page}
       <body>
         ^{pageBody page}
