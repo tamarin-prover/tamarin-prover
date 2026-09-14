@@ -848,7 +848,7 @@ formulaToSystem restrictions kind traceQuantifier isdiff fm =
     $ L.set sFormulas (S.singleton gf2)
     $ (emptySystem kind isdiff)
   where
-    (safetyRestrictions, otherRestrictions) = partition isSafetyFormula $ filter (not . containsLastAtom) restrictions
+    (safetyRestrictions, otherRestrictions) = partition isSafetyFormula restrictions
     gf0 = formulaToGuarded_ fm
     gf1 = case traceQuantifier of
       ExistsSomeTrace -> gf0

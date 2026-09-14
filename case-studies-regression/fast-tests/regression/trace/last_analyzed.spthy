@@ -12,12 +12,20 @@ rule (modulo E) R:
 
   /* has exactly the trivial AC variant */
 
-restriction IllegalR:
+restriction IllegalR1:
   "∀ #i. (P( ) @ #i) ⇒ (last(#i))"
 
   /*
   expanded formula:
   "∀ #i. (P( ) @ #i) ⇒ (last(#i))"
+  */
+
+restriction IllegalR2:
+  "∀ #i. (P( ) @ #i) ⇒ (¬(last(#i)))"
+
+  /*
+  expanded formula:
+  "∀ #i. (P( ) @ #i) ⇒ (¬(last(#i)))"
   */
 
 lemma IllegalL:
@@ -37,15 +45,17 @@ Last atom usage
 
   Lemma `IllegalL' contains last atom
   
-  Restriction `IllegalR' contains last atom
+  Restriction `IllegalR1' contains last atom
+
+  Restriction `IllegalR2' contains last atom
 */
 
 /*
 Generated from:
 Tamarin version 1.13.0
 Maude version 3.5.1
-Git revision: 120b58b59ea45aceacc7719fdefccdd9eb0a1fad (with uncommited changes), branch: no-last
-Compiled at: 2026-08-12 12:38:35.218395 UTC
+Git revision: df393c3709413c0e54425b94e9fce96f58050bc0 (with uncommited changes), branch: no-last
+Compiled at: 2026-09-14 08:34:31.033335 UTC
 */
 
 end
@@ -57,9 +67,9 @@ summary of summaries:
 analyzed: examples/regression/trace/last.spthy
 
   output:          examples/regression/trace/last.spthy.tmp
-  processing time: 0.02s
+  processing time: 0.06s
   
-  WARNING: 2 wellformedness check failed!
+  WARNING: 3 wellformedness check failed!
            The analysis results might be wrong!
   
   IllegalL (all-traces): falsified - found trace (2 steps)
