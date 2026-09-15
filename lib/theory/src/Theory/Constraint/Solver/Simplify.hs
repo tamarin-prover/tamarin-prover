@@ -44,6 +44,7 @@ import           Safe                           (headMay)
 import           Extension.Data.Label               hiding (modify)
 import           Extension.Prelude
 
+import qualified Theory.Constraint.System.StoredFormulas as Stored
 import           Theory.Constraint.Solver.Goals
 import           Theory.Constraint.Solver.Reduction
 import           Theory.Constraint.System
@@ -306,9 +307,9 @@ reduceFormulas :: Reduction ChangeIndicator
 reduceFormulas = do
     formulas <- getM sFormulas
     applyChangeList $ do
-        fm <- S.toList formulas
+        fm <- Stored.toList formulas
         guard (reducibleFormula fm)
-        return $ do modM sFormulas $ S.delete fm
+        return $ do modM sFormulas $ Stored.delete fm
                     insertFormula fm
 
 -- | Try to simplify the atoms contained in the formulas. See
@@ -321,14 +322,14 @@ evalFormulaAtoms = do
     valuation <- gets (partialAtomValuation ctxt)
     formulas  <- getM sFormulas
     applyChangeList $ do
-        fm <- S.toList formulas
+        fm <- Stored.toList formulas
         case simplifyGuarded valuation fm verbose of
           Just fm' -> return $ do
               case fm of
                 GDisj disj -> markGoalAsSolved "simplified" (DisjG disj)
-                _          -> return ()
-              modM sFormulas       $ S.delete fm
-              modM sSolvedFormulas $ S.insert fm
+                _          -> do
+                    modM sFormulas       $ Stored.delete fm
+                    modM sSolvedFormulas $ Stored.insert fm
               insertFormula fm'
           Nothing  -> []
 
@@ -414,12 +415,12 @@ insertImpliedFormulas stable = do
     sys <- gets id
     hnd <- getMaudeHandle
     applyChangeList $ do
-        clause  <- (S.toList $ get sFormulas sys) ++
-                   (S.toList $ get sLemmas sys)
+        clause  <- (Stored.toList $ get sFormulas sys) ++
+                   (Stored.toList $ get sLemmas sys)
         guard (stable || not (hasExistential clause))
         implied <- map normaliseStoredFormula (impliedFormulas hnd sys clause)
-        if ( implied `S.notMember` get sFormulas sys &&
-             implied `S.notMember` get sSolvedFormulas sys )
+        if ( implied `Stored.notMember` get sFormulas sys &&
+             implied `Stored.notMember` get sSolvedFormulas sys )
           then return (insertFormula implied)
           else []
   where
@@ -529,9 +530,9 @@ simpSubterms = do
       return ((length goalsToAdd + length goalsToRemove) > 0)
 
     -- insert formulas
-    allFormulas <- S.union <$> getM sSolvedFormulas <*> getM sFormulas
+    allFormulas <- Stored.union <$> getM sSolvedFormulas <*> getM sFormulas
     forM_ formulas insertFormula
-    let changedFormulas = not $ all (`S.member` allFormulas) formulas
+    let changedFormulas = not $ all (`Stored.member` allFormulas) formulas
     return $ if changedStore || changedGoals || changedFormulas then Changed else Unchanged
     -- TODO take care acFormulas are not inserted twice with different newVar's (didn't happen so far)
     --          if z ⊏ x+y is substituted to z ⊏ x+y'+y'' then
@@ -566,11 +567,11 @@ simpInjectiveFactEqMon = do
   let triviallySmaller small big = Just True == isTrueFalse reducible (Just sst) (small, big)
   let triviallyNotSmaller small big = Just False == isTrueFalse reducible (Just sst) (small, big)
 
-  oldFormulas <- S.union <$> getM sFormulas <*> getM sSolvedFormulas
+  oldFormulas <- Stored.union <$> getM sFormulas <*> getM sSolvedFormulas
   let inequalities = S.fromList $ concatMap (\case
                     GGuarded All [] [EqE (bTermToLTerm->s) (bTermToLTerm->t)] gf | gf == gfalse -> [(s, t), (t, s)]
                     _                                                                           -> [])
-                      $ S.toList oldFormulas
+                      $ Stored.toList oldFormulas
   let notIneq s t = (s,t) `S.notMember` inequalities
   let ineq s t = (s,t) `S.member` inequalities
 
@@ -601,7 +602,7 @@ simpInjectiveFactEqMon = do
                               newLesses
 
   -- check if anything changed
-  updatedFormulas <- S.union <$> getM sFormulas <*> getM sSolvedFormulas
+  updatedFormulas <- Stored.union <$> getM sFormulas <*> getM sSolvedFormulas
   return $ if
       updatedFormulas == oldFormulas &&
       null newLesses

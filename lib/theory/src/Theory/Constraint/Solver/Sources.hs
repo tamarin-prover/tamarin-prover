@@ -55,6 +55,7 @@ import           Control.Parallel.Strategies
 import           Extension.Data.Label
 import           Extension.Prelude
 
+import qualified Theory.Constraint.System.StoredFormulas as Stored
 import           Theory.Constraint.Solver.Contradictions (contradictorySystem)
 import           Theory.Constraint.Solver.Goals
 import           Theory.Constraint.Solver.AnnotatedGoals
@@ -467,12 +468,12 @@ refineWithSourceAsms parameters assumptions ctxt cases0 =
   where
     modifySystems   = modify cdCases . fmap . second
     updateSystem se =
-        modify sFormulas (S.union (S.fromList assumptions)) $
+        modify sFormulas (Stored.union (Stored.fromList assumptions)) $
         set sSourceKind RefinedSource                       $ se
     removeFormulas =
         modify sGoals (M.filterWithKey isNoDisjGoal)
-      . set sFormulas S.empty
-      . set sSolvedFormulas S.empty
+      . set sFormulas Stored.empty
+      . set sSolvedFormulas Stored.empty
 
     isNoDisjGoal (DisjG _)  _ = False
     isNoDisjGoal _          _ = True

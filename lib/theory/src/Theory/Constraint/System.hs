@@ -226,6 +226,7 @@ module Theory.Constraint.System (
 
   -- ** Goals
   , GoalStatus(..)
+  , combineGoalStatus
   , gsSolved
   , gsLoopBreaker
   , gsNr
@@ -256,6 +257,7 @@ module Theory.Constraint.System (
 import           Prelude                              hiding (id, (.))
 
 import           GHC.Generics                         (Generic)
+import qualified GHC.Generics as Generic
 
 import           Data.Binary
 import qualified Data.ByteString.Char8                as BC
@@ -281,6 +283,7 @@ import qualified Extension.Data.Label                 as L
 import           GHC.IO                               (unsafePerformIO)
 
 import           Logic.Connectives
+import qualified Theory.Constraint.System.StoredFormulas as Stored
 import           Theory.Constraint.Solver.AnnotatedGoals
 import           Theory.Constraint.System.Constraints
 --import           Theory.Constraint.Solver.Heuristics
@@ -378,6 +381,12 @@ data GoalStatus = GoalStatus
     }
     deriving( Eq, Ord, Show, Generic, NFData, Binary )
 
+-- | Combine the status of two goals.
+combineGoalStatus :: GoalStatus -> GoalStatus -> GoalStatus
+combineGoalStatus (GoalStatus solved1 age1 loops1)
+                  (GoalStatus solved2 age2 loops2) =
+    GoalStatus (solved1 || solved2) (min age1 age2) (loops1 || loops2)
+
 -- | A constraint system.
 data System = System
     { _sNodes          :: M.Map NodeId RuleACInst
@@ -386,9 +395,9 @@ data System = System
     , _sLastAtom       :: Maybe NodeId
     , _sSubtermStore   :: SubtermStore
     , _sEqStore        :: EqStore
-    , _sFormulas       :: S.Set LNGuarded
-    , _sSolvedFormulas :: S.Set LNGuarded
-    , _sLemmas         :: S.Set LNGuarded
+    , _sFormulas       :: Stored.StoredFormulas
+    , _sSolvedFormulas :: Stored.StoredFormulas
+    , _sLemmas         :: Stored.StoredFormulas
     , _sGoals          :: M.Map Goal GoalStatus
     , _sNextGoalNr     :: Integer
     , _sSourceKind     :: SourceKind
@@ -397,7 +406,15 @@ data System = System
     -- NOTE: Don't forget to update 'substSystem' in
     -- "Constraint.Solver.Reduction" when adding further fields to the
     -- constraint system.
-    deriving( Eq, Ord, Generic, NFData, Binary )
+    deriving( Eq, Ord, Generic, NFData )
+
+-- Normalize goal keys along with decoded formula sets. Rebuild the map:
+-- normalization can change key order and merge previously distinct goals.
+instance Binary System where
+    get = do
+        sys <- Generic.to <$> gget
+        return sys { _sGoals = M.mapKeysWith combineGoalStatus
+            (apply (emptySubst :: LNSubst)) (_sGoals sys) }
 
 $(mkLabels [''System, ''GoalStatus])
 
@@ -822,12 +839,12 @@ $(mkLabels [''DiffSystem])
 emptySystem :: SourceKind -> Bool -> System
 emptySystem d isdiff = System
     M.empty S.empty S.empty Nothing emptySubtermStore emptyEqStore
-    S.empty S.empty S.empty
+    Stored.empty Stored.empty Stored.empty
     M.empty 0 d isdiff
 
 -- TODO: I do not like the second conjunct; this should be done cleaner
 isInitialSystem :: System -> Bool
-isInitialSystem sys = null (L.get sSolvedFormulas sys) && not (S.member bot (L.get sFormulas sys))
+isInitialSystem sys = Stored.null (L.get sSolvedFormulas sys) && not (Stored.member bot (L.get sFormulas sys))
   where bot = GDisj (Disj [])
 
 -- | The empty diff constraint system.
@@ -845,7 +862,7 @@ formulaToSystem :: [LNGuarded]           -- ^ Restrictions to add
                 -> System
 formulaToSystem restrictions kind traceQuantifier isdiff fm =
       insertLemmas safetyRestrictions
-    $ L.set sFormulas (S.singleton gf2)
+    $ L.set sFormulas (Stored.singleton gf2)
     $ (emptySystem kind isdiff)
   where
     (safetyRestrictions, otherRestrictions) = partition isSafetyFormula restrictions
@@ -863,7 +880,7 @@ insertLemma =
     go
   where
     go (GConj conj) = foldr (.) id $ map go $ getConj conj
-    go fm           = L.modify sLemmas (S.insert fm)
+    go fm           = L.modify sLemmas (Stored.insert fm)
 
 -- | Add lemmas / additional assumptions to a constraint system.
 insertLemmas :: [LNGuarded] -> System -> System
@@ -1532,7 +1549,7 @@ noCommonVarsInGoals goals =
 
 -- | Returns true if all formulas in the system are solved.
 allFormulasAreSolved :: System -> Bool
-allFormulasAreSolved sys = S.null $ L.get sFormulas sys
+allFormulasAreSolved sys = Stored.null $ L.get sFormulas sys
 
 -- | Returns true if all the depedency graph is not empty.
 dgIsNotEmpty :: System -> Bool
@@ -1674,12 +1691,12 @@ prettySystem se = vcat $
 prettyNonGraphSystem :: HighlightDocument d => System -> d
 prettyNonGraphSystem se = vsep $ map combine_ -- text $ show se
   [ ("last",            maybe (text "none") prettyNodeId $ L.get sLastAtom se)
-  , ("formulas",        vsep $ map prettyGuarded {-(text . show)-} $ S.toList $ L.get sFormulas se)
+  , ("formulas",        vsep $ map prettyGuarded {-(text . show)-} $ Stored.toList $ L.get sFormulas se)
   , ("subterms",        prettySubtermStore $ L.get sSubtermStore se)
   , ("equations",       prettyEqStore $ L.get sEqStore se)
-  , ("lemmas",          vsep $ map prettyGuarded $ S.toList $ L.get sLemmas se)
+  , ("lemmas",          vsep $ map prettyGuarded $ Stored.toList $ L.get sLemmas se)
   , ("allowed cases",   text $ show $ L.get sSourceKind se)
-  , ("solved formulas", vsep $ map prettyGuarded $ S.toList $ L.get sSolvedFormulas se)
+  , ("solved formulas", vsep $ map prettyGuarded $ Stored.toList $ L.get sSolvedFormulas se)
   , ("unsolved constraints", prettyGoals False se)
   , ("solved constraints", prettyGoals True se)
   ]
@@ -1755,7 +1772,7 @@ prettyGoals solved sys = vsep $ do
   where
     existingDeps = rawLessRel sys
     hasKUGuards  =
-        any ((KUFact `elem`) . guardFactTags) $ S.toList $ L.get sFormulas sys
+        any ((KUFact `elem`) . guardFactTags) $ Stored.toList $ L.get sFormulas sys
 
     checkTermLits :: (LSort -> Bool) -> LNTerm -> Bool
     checkTermLits p =
