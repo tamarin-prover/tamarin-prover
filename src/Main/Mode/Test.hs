@@ -18,6 +18,7 @@ import Main.Console
 import Main.Environment
 
 import Term.UnitTests qualified as Term (tests)
+import Test.ProofTests qualified as Proof (tests)
 import Data.Maybe (isJust)
 
 
@@ -89,11 +90,14 @@ run _thisMode as = do
   successTerm  <- runUnitTest =<< Term.tests (maudePath as)
 
   --------------------------------------------------------------------------
+  nextTopic "Testing proof state annotations"
+  successProof <- runUnitTest =<< Proof.tests (maudePath as)
+
   -- FIXME: Implement regression testing.
   --
 
   nextTopic "TEST SUMMARY"
-  let success = successMaude && successGraphVizDot && successTerm -- , successParser, successProver ]
+  let success = successMaude && successGraphVizDot && successTerm && successProof -- , successParser, successProver ]
   if success then do
     putStrLn "All tests successful."
     putStrLn $ "The " ++ programName ++ " should work as intended."

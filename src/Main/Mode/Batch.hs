@@ -162,6 +162,14 @@ run thisMode as
     thyLoadOptions = case mkTheoryLoadOptions as of
       Left (ArgumentError e) -> error e
       Right opts             -> opts
+        { proofStateRetention =
+            -- Ordinary batch output can release cached states: it only needs
+            -- proof methods and the presence of annotations. Trace exports
+            -- inspect the states themselves, so retain them.
+            if argExists "traceDot" as || argExists "traceJSON" as
+            then RetainProofStates
+            else ReleaseProofStates
+        }
 
     -- output generation
     --------------------
