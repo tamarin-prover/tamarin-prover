@@ -34,15 +34,9 @@ solve( State_1211( ~prog_, ~prog_121, k, m ) ▶₀ #t )
   case outcm_0_121
   solve( State_( ~prog_ ) ▶₀ #t.2 )
     case Init
-    solve( State_( ~prog_ ) ▶₀ #t.3 )
-      case Init
-      solve( State_1211( ~prog_.1, ~prog_121, k, m.1 ) ▶₀ #t.3 )
-        case outcm_0_121
-        solve( State_( ~prog_ ) ▶₀ #t.3 )
-          case Init
-          SOLVED // trace found
-        qed
-      qed
+    solve( State_1211( ~prog_.1, ~prog_121, k, m.1 ) ▶₀ #t.3 )
+      case outcm_0_121
+      SOLVED // trace found
     qed
   qed
 qed
@@ -212,8 +206,8 @@ restriction progressInit:
 Generated from:
 Tamarin version 1.13.0
 Maude version 3.5.1
-Git revision: 41bc81379b23681e7057314a5cf66a25c45e1986, branch: canonicalise-subst
-Compiled at: 2026-07-27 16:11:34.947223 UTC
+Git revision: c827ceb2418a7d5390dac6671f01a07f7f0ac087 (with uncommited changes), branch: HEAD
+Compiled at: 2026-09-15 17:34:25.020280498 UTC
 */
 
 end
@@ -225,10 +219,10 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-progress/mini2.spthy
 
   output:          examples/sapic/fast/feature-progress/mini2.spthy.tmp
-  processing time: 0.04s
+  processing time: 0.06s
   
   A_impossible (all-traces): verified (2 steps)
-  B_possible (exists-trace): verified (7 steps)
+  B_possible (exists-trace): verified (5 steps)
 
 ==============================================================================
 */
