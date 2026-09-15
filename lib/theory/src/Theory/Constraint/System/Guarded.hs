@@ -467,7 +467,9 @@ gdisj gfs0 = case concatMap flatten gfs0 of
         -- normalizaton for formulas. However, it also means that we loose
         -- invariance under renaming of free variables, as the order changes,
         -- when they are renamed.
-        | otherwise          -> GDisj $ Disj $ nub gfs
+        | otherwise          -> case nub gfs of
+            [gf] -> gf
+            gfs' -> GDisj $ Disj gfs'
   where
     flatten (GDisj disj) = concatMap flatten $ getDisj disj
     flatten gf           = [gf]
