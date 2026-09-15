@@ -41,11 +41,12 @@ import System.Directory
 import System.Exit
 import System.FilePath
 import Main.Console (renderDoc)
-import Main.TheoryLoader (TheoryLoadError(ExportTranslationError, ParserError, WarningError), TheoryLoadOptions(..))
+import Main.TheoryLoader (TheoryLoadError(ExportTranslationError, ParserError, StoreContextError, WarningError), TheoryLoadOptions(..))
 import Theory
 import Theory.Tools.Wellformedness
 import Text.PrettyPrint.Class qualified as Pretty
 import Text.PrettyPrint.Html
+import Web.Theory (restoreLemmaProofs)
 
 -- | Create YesodDispatch instance for the interface.
 -- mkYesodDispatch "WebUIDiff" resourcesWebUI
@@ -176,6 +177,9 @@ loadTheories thOpts readyMsg thDir thLoad thClose autoProver = do
         Left (ParserError e) -> do
           putStrLn $ renderDoc $ reportFailure e path
           pure Nothing
+        Left (StoreContextError message) -> do
+          putStrLn $ renderDoc $ reportFailure message path
+          pure Nothing
         Left (WarningError report) -> do
           putStrLn $ renderDoc $ ppInteractive report path
           die "quit-on-warning mode selected - aborting on wellformedness errors."
@@ -191,8 +195,10 @@ loadTheories thOpts readyMsg thDir thLoad thClose autoProver = do
                      <> "\n" <> (renderHtmlDoc . htmlDoc $ prettyWfErrorReport report)
                      <> "\n</div>"
           unless (null report) $ putStrLn $ renderDoc $ ppInteractive report path
+          -- Try to restore stored lemma proofs.
+          thy' <- either (fmap Left . restoreLemmaProofs) (pure . Right) thy
           let theoryInfo t = TheoryInfo idx t time Nothing True (Local path) autoProver wfErrors
-          pure $ Just (idx, either (Trace . theoryInfo) (Diff . theoryInfo) thy)
+          pure $ Just (idx, either (Trace . theoryInfo) (Diff . theoryInfo) thy')
       where
         reportFailure err inFile = Pretty.vcat $ Pretty.text <$>
           [ replicate 78 '-'

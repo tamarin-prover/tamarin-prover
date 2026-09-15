@@ -28,6 +28,8 @@ import Theory hiding (closeTheory)
 import Theory.Module
 import Theory.Tools.Wellformedness (prettyWfErrorReport)
 
+import Theory.Constraint.Solver.Store (initStore, closeStore)
+import Theory.Constraint.Solver.TreeExport (writeStoreExports)
 import Main.Console
 import Main.Environment
 import Main.TheoryLoader
@@ -65,6 +67,10 @@ batchMode = tamarinMode
 
               , flagNone ["precompute-only"] (addEmptyArg "precomputeOnly")
                   "Just run precomputation and show partial deconstructions"
+
+              , flagReq ["persist-proof-state-json"] (updateArg "persistProofStateJSON") "DIR"
+                  "write DIR/store.jsonl and lemma tree JSON files from DIR/store.bin"
+
               ] ++
               outputFlags ++
               toolFlags
@@ -87,6 +93,8 @@ batchMode = tamarinMode
 -- | Process a theory file.
 run :: TamarinMode -> Arguments -> IO ()
 run thisMode as
+  | Just exportDir <- findArg "persistProofStateJSON" as :: Maybe FilePath, null inFiles =
+      writeProofStateJSON exportDir
   | null inFiles = helpAndExit thisMode (Just "no input files given")
   | argExists "parseOnly" as = do
       res <- mapM (processThy "") inFiles
@@ -113,6 +121,7 @@ run thisMode as
         mapM_ (putStrLn . renderDoc) docs
   | otherwise = do
       versionData <- ensureMaudeAndGetVersion as
+      mapM_ initStore thyLoadOptions.persistProofStateDir
       resTimed <- mapM (timedIO . processThy versionData) inFiles
       let (docs, reps, times) = unzip3 $ fmap (\((d, r), t) -> (d, r, t)) resTimed
 
@@ -133,6 +142,9 @@ run thisMode as
         mapM_ (putStrLn . renderDoc) docs
         putStrLn $ renderDoc $ ppSummary summary
 
+      closeStore
+      mapM_ writeProofStateJSON (findArg "persistProofStateJSON" as :: Maybe FilePath)
+
   where
     ppSummary summary = Pretty.vcat [ Pretty.text ""
                                     , Pretty.text $ replicate 78 '='
@@ -141,6 +153,11 @@ run thisMode as
                                     , summary
                                     , Pretty.text ""
                                     , Pretty.text $ replicate 78 '=' ]
+
+    -- | Export every readable JSON artifact from one eviction store snapshot.
+    writeProofStateJSON :: FilePath -> IO ()
+    writeProofStateJSON dir =
+        writeStoreExports dir >>= mapM_ (putStrLn . ("wrote " ++))
 
     ppRep (inFile, outFile, time, summary) =
       Pretty.vcat
@@ -233,6 +250,7 @@ run thisMode as
         isTranslateOnlyMode = isJust thyLoadOptions.outputModule
 
         handleError e@(ParserError _) = die $ show e
+        handleError (StoreContextError message) = die message
         handleError e@(ExportTranslationError _) = die $ show e
         handleError (WarningError report) = do
           putStrLn $ renderDoc $ Pretty.vcat $ [ Pretty.text ""
@@ -283,7 +301,8 @@ run thisMode as
             -- | Collect all solved (i.e. a trace was found) systems of the theory along with their
             -- path in the proof.
             proofSystems :: IncrementalProof -> [(ProofPath, System)]
-            proofSystems (LNode (ProofStep (Finished Solved) (Just rootSystem)) _) =  [([], rootSystem)]
+            proofSystems (LNode (ProofStep (Finished Solved) (Just ref)) _)
+              | Just rootSystem <- getOrRestoreSystem ref = [([], rootSystem)]
             proofSystems (LNode (ProofStep _ _) children) =  
               [(l : ls, system) | (l, subProof) <- M.toList children 
                                 , (ls, system) <- proofSystems subProof ]

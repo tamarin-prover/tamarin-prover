@@ -50,12 +50,14 @@ library
     binary,
     bytestring,
     containers,
+    crypton,
     deepseq,
     directory,
     dlist,
     exceptions,
     fclabels,
     filepath,
+    memory,
     mtl,
     parallel,
     parsec,
@@ -69,7 +71,9 @@ library
     tamarin-prover-utils,
     text,
     transformers,
-    uniplate
+    uniplate,
+    unix,
+    unix-bytestring
 
   hs-source-dirs: src
   exposed-modules:
@@ -97,7 +101,10 @@ library
     Theory.Constraint.Solver.ProofMethod
     Theory.Constraint.Solver.Reduction
     Theory.Constraint.Solver.Simplify
+    Theory.Constraint.Solver.JSON
     Theory.Constraint.Solver.Sources
+    Theory.Constraint.Solver.Store
+    Theory.Constraint.Solver.TreeExport
     Theory.Constraint.System
     Theory.Constraint.System.Constraints
     Theory.Constraint.System.Dot

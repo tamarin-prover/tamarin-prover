@@ -288,7 +288,7 @@ deductionCheck ocLimit satLimit sig intrR fact terms =
      where
       f = forAllFormula (factAndD "i" .&&. factAndD "j" .&&. factAndD "k" .==>. factEq "i" "j" .||. factEq "i" "k" .||. factEq "j" "k" )
 
-    defaultProver = replaceSorryProver $ runAutoProver (AutoProver Nothing Nothing Nothing CutDFS False)
+    defaultProver = replaceSorryProver $ runAutoProver (AutoProver Nothing Nothing Nothing CutDFS False False)
 
     checkProofd (TraceFound:q) = checkProofd q
     checkProofd [] = True

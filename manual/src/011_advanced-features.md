@@ -690,6 +690,47 @@ complete input file, with an artificial protocol:
 ~~~~ {.tamarin include="code/TimingExample.spthy"}
 ~~~~
 
+Reducing Memory Usage and Persisting Proof State {#sec:persist-proof-state}
+------------------------------------------------
+
+The `--persist-proof-state=DIR` option writes proof states to disk. To try it
+with `FirstExample.spthy`, run:
+
+```shell
+# Prove the lemmas and store their proof states.
+tamarin-prover FirstExample.spthy --prove --persist-proof-state=proof-state
+
+# Inspect and continue the saved proofs in interactive mode.
+tamarin-prover interactive FirstExample.spthy --persist-proof-state=proof-state
+
+# Export the store to JSON without loading the theory.
+tamarin-prover --persist-proof-state-json=proof-state
+```
+
+This supports three uses:
+
+1. **Memory reduction.** Expanded nodes' constraint systems are written to
+   `DIR/store.bin` and replaced with small references. Generated but unvisited
+   children stay in memory. Keeping fewer systems can also reduce garbage
+   collection, although disk storage adds work and does not guarantee a faster run.
+2. **Restore.** Repeating the proof command with the same store reuses recorded
+   steps. After an interrupted run, Tamarin can continue from the steps fully
+   written to disk. Interactive proof changes are saved too.
+3. **Debugging and analysis.** Saved systems can be inspected in the web interface
+   or exported to JSON, even when the search is incomplete. The export contains
+   `store.jsonl` with the stored records and one `<lemma>.tree.json` file per
+   recorded lemma. JSON is written only when explicitly requested.
+
+Use one store directory per theory context. Tamarin checks the theory fingerprint
+and lemma roots before restoring; changes to the theory or prover configuration
+can require a fresh directory. Only one process can write to a store at a time.
+
+Precomputation, the proof-tree structure, and the store index remain in memory.
+Checking an existing proof script uses the normal checking path, without the same
+memory reduction. The store is append-only, has no compaction, and does not support
+diff theories.
+
+
 Configure the Number of Threads Used by Tamarin
 -----------------------------------------------
 
