@@ -81,6 +81,9 @@ simplifySystem = do
           -- changes as 'substSystem' is idempotent.
           void substSystem
           -- Perform one simplification pass.
+          -- Delay implications containing existentials until the other
+          -- reductions stabilize, so temporary duplicate nodes cannot keep
+          -- creating fresh witnesses for an already solved obligation.
           isdiff <- getM sDiffSystem
           -- In the diff case, we cannot enfore N4-N6.
           if isdiff
@@ -90,10 +93,10 @@ simplifySystem = do
               c5 <- solveUniqueActions
               c6 <- reduceFormulas
               c7 <- evalFormulaAtoms
-              c8 <- insertImpliedFormulas
               c9 <- freshOrdering
               c10 <- simpSubterms
               c11 <- simpInjectiveFactEqMon
+              c8 <- insertImpliedFormulas $ mconcat [c1,c3,c4,c5,c6,c7,c9,c10,c11] == Unchanged
 
               -- Report on looping behaviour if necessary
               let changes = filter ((Changed ==) . snd) $
@@ -110,7 +113,7 @@ simplifySystem = do
                     , ("equations and monotonicity from injective Facts", c11)
                     ]
                   traceIfLooping
-                    | n <= 10   = id
+                    | n <= 10 || null changes = id
                     | otherwise = trace $ render $ vsep
                         [ text "Simplifier iteration" <-> int n <> colon
                         , fsep $ text "The reduction-rules for" :
@@ -126,10 +129,10 @@ simplifySystem = do
               c5 <- solveUniqueActions
               c6 <- reduceFormulas
               c7 <- evalFormulaAtoms
-              c8 <- insertImpliedFormulas
               c9 <- freshOrdering
               c10 <- simpSubterms
               c11 <- simpInjectiveFactEqMon
+              c8 <- insertImpliedFormulas $ mconcat [c1,c2,c3,c4,c5,c6,c7,c9,c10,c11] == Unchanged
 
               -- Report on looping behaviour if necessary
               let changes = filter ((Changed ==) . snd) $
@@ -146,7 +149,7 @@ simplifySystem = do
                     , ("equations and monotonicity from injective Facts", c11)
                     ]
                   traceIfLooping
-                    | n <= 10   = id
+                    | n <= 10 || null changes = id
                     | otherwise = trace $ render $ vsep
                         [ text "Simplifier iteration" <-> int n <> colon
                         , fsep $ text "The reduction-rules for" :
@@ -404,18 +407,26 @@ partialAtomValuation ctxt sys =
 
 
 -- | CR-rule *S_∀*: insert all newly implied formulas.
-insertImpliedFormulas :: Reduction ChangeIndicator
-insertImpliedFormulas = do
+-- Implications without existentials cannot create fresh witnesses and need
+-- not wait for node merging to settle.
+insertImpliedFormulas :: Bool -> Reduction ChangeIndicator
+insertImpliedFormulas stable = do
     sys <- gets id
     hnd <- getMaudeHandle
     applyChangeList $ do
         clause  <- (S.toList $ get sFormulas sys) ++
                    (S.toList $ get sLemmas sys)
+        guard (stable || not (hasExistential clause))
         implied <- map normaliseStoredFormula (impliedFormulas hnd sys clause)
         if ( implied `S.notMember` get sFormulas sys &&
              implied `S.notMember` get sSolvedFormulas sys )
           then return (insertFormula implied)
           else []
+  where
+    hasExistential (GAto _) = False
+    hasExistential (GGuarded q _ _ body) = q == Ex || hasExistential body
+    hasExistential (GDisj disj) = any hasExistential $ getDisj disj
+    hasExistential (GConj conj) = any hasExistential $ getConj conj
 
 -- | CR-rule *S_fresh-order*:
 --
