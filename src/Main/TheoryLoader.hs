@@ -223,6 +223,7 @@ theoryLoadFlags =
 
 data TheoryLoadOptions = TheoryLoadOptions
   { proveMode :: Bool,
+    proofStateRetention :: ProofStateRetention, -- Internal policy; not a command-line option.
     lemmaNames :: [String],
     stopOnTrace :: Maybe SolutionExtractor,
     proofBound :: Maybe Int,
@@ -255,6 +256,7 @@ defaultTheoryLoadOptions :: TheoryLoadOptions
 defaultTheoryLoadOptions =
   TheoryLoadOptions
     { proveMode = False,
+      proofStateRetention = RetainProofStates,
       lemmaNames = [],
       stopOnTrace = Nothing,
       proofBound = Nothing,
@@ -296,6 +298,7 @@ mkTheoryLoadOptions :: (MonadError ArgumentError m) => Arguments -> m TheoryLoad
 mkTheoryLoadOptions as =
   TheoryLoadOptions
     <$> proveMode
+    <*> pure RetainProofStates
     <*> lemmaNames
     <*> stopOnTrace as
     <*> proofBound
@@ -705,11 +708,11 @@ closeTranslatedTheory thyOpts sign srcThy = do
     selector l = lemmaSelectorByModule thyOpts l && lemmaSelector thyOpts l
 
     prover
-      | thyOpts.proveMode = replaceSorryProver $ runAutoProver $ constructAutoProver thyOpts
+      | thyOpts.proveMode = replaceSorryProver $ runAutoProverWith thyOpts.proofStateRetention $ constructAutoProver thyOpts
       | otherwise = mempty
 
     diffProver
-      | thyOpts.proveMode = replaceDiffSorryProver $ runAutoDiffProver $ constructAutoProver thyOpts
+      | thyOpts.proveMode = replaceDiffSorryProver $ runAutoDiffProverWith thyOpts.proofStateRetention $ constructAutoProver thyOpts
       | otherwise = mempty
 
     withDiffTheory = bitraverse pure
