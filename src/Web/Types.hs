@@ -36,6 +36,7 @@ module Web.Types
   , DiffTheoryPath(..)
   , TheoryOrigin(..)
   , JsonResponse(..)
+  , JsonProgressData(..)
   , TheoryIdx
   , TheoryMap
   , ThreadMap
@@ -168,6 +169,23 @@ data JsonResponse
   = JsonHtml T.Text Content   -- ^ Title and HTML content
   | JsonAlert T.Text          -- ^ Alert/dialog box with message
   | JsonRedirect T.Text       -- ^ Redirect to given URL
+  | JsonProgress JsonProgressData
+      -- ^ Progressive (partial) update after a proof mutation: swap one piece
+      --   of the sidebar plus the main view in place, instead of reloading.
+
+-- | Payload for a progressive update (see 'JsonProgress'). After a proof step
+-- the mutated theory gets a new index; the client adopts that index and swaps
+-- only what changed.
+data JsonProgressData = JsonProgressData
+  { jpNewIdx     :: TheoryIdx     -- ^ Index of the newly created theory snapshot
+  , jpNewPath    :: T.Text        -- ^ Index-free theory-path suffix to make active
+  , jpTitle      :: T.Text        -- ^ Title for the main view
+  , jpMainHtml   :: Content       -- ^ Rendered @#ui-main-display@ content
+  , jpTargetId   :: Maybe T.Text  -- ^ DOM id to replace (a lemma block)
+  , jpSubtreeKey :: Maybe T.Text  -- ^ @data-subtree@ key to replace (one sub-proof)
+  , jpPartHtml   :: Content       -- ^ Replacement HTML: sub-proof, lemma block, or
+                                  --   the whole sidebar when neither key is set
+  }
 
 -- | Data type representing origin of theory.
 -- Command line with file path, upload with filename (not path),
