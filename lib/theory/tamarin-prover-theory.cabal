@@ -106,6 +106,7 @@ library
     Theory.Constraint.System.Graph.GraphRepr
     Theory.Constraint.System.Graph.Simplification
     Theory.Constraint.System.Guarded
+    Theory.Constraint.System.StoredFormulas
     Theory.Constraint.System.JSON
     Theory.Model
     Theory.Model.Atom
