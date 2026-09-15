@@ -12,12 +12,20 @@ rule (modulo E) R:
 
   /* has exactly the trivial AC variant */
 
-restriction IllegalR:
+restriction IllegalR1:
   "∀ #i. (P( ) @ #i) ⇒ (last(#i))"
 
   /*
   expanded formula:
   "∀ #i. (P( ) @ #i) ⇒ (last(#i))"
+  */
+
+restriction IllegalR2:
+  "∀ #i. (P( ) @ #i) ⇒ (¬(last(#i)))"
+
+  /*
+  expanded formula:
+  "∀ #i. (P( ) @ #i) ⇒ (¬(last(#i)))"
   */
 
 lemma IllegalL:
@@ -29,14 +37,25 @@ guarded formula characterizing all counter-examples:
 simplify
 by contradiction /* cyclic */
 
-/* All wellformedness checks were successful. */
+/*
+WARNING: the following wellformedness checks failed!
+
+Last atom usage
+===============
+
+  Lemma `IllegalL' contains last atom
+  
+  Restriction `IllegalR1' contains last atom
+  
+  Restriction `IllegalR2' contains last atom
+*/
 
 /*
 Generated from:
 Tamarin version 1.13.0
 Maude version 3.5.1
-Git revision: fdcb6d2c5f9d2cb73e9eeba71ce13411d17c7060, branch: no-last
-Compiled at: 2026-09-11 08:15:49.682891 UTC
+Git revision: 557a2e1464637c9502d30b8ab45767e296edda41 (with uncommited changes), branch: no-last
+Compiled at: 2026-09-14 10:48:42.705144 UTC
 */
 
 end
@@ -48,7 +67,10 @@ summary of summaries:
 analyzed: examples/regression/trace/last.spthy
 
   output:          examples/regression/trace/last.spthy.tmp
-  processing time: 0.02s
+  processing time: 0.03s
+  
+  WARNING: 3 wellformedness check failed!
+           The analysis results might be wrong!
   
   IllegalL (all-traces): verified (2 steps)
 
