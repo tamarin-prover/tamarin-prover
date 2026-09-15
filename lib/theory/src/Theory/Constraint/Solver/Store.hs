@@ -5,7 +5,7 @@
 -- |
 -- A content-addressed, append-only log for spilled proof state.
 --
---   > ["tamarin-store-v4\n"]
+--   > ["tamarin-store-v5\n"]
 --   > [kind : 1B][key : 32B][len : 8B BE][payload]
 --
 -- Values hash their payload. Method edges and lemma roots hash the subject
@@ -190,7 +190,9 @@ storePath dir = dir </> "store.bin"
 
 -- | Identifies the binary layout before any records are read.
 storeVersionHeader :: BS.ByteString
-storeVersionHeader = "tamarin-store-v4\n"
+-- Upstream added fields to function symbols and intruder rules, changing their
+-- Binary encodings. Reject older stores before attempting to decode them.
+storeVersionHeader = "tamarin-store-v5\n"
 
 storeVersionHeaderSize :: Word64
 storeVersionHeaderSize = fromIntegral (BS.length storeVersionHeader)

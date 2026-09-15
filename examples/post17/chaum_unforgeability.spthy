@@ -50,7 +50,7 @@ rule C_1:
     [ Out( blind(~x,~r) ), St_C_1( $C, ~x, ~r )]
 */
 
-rule B_1:
+rule B_1 [no_derivcheck]:
     [ In( blind(~x,r) ), !Bank_Ltk($B, ~ltkB) ]
   --[ Withdraw(~x) ]->
     [ Out( sign( blind(~x,r), ~ltkB) ) ]
@@ -67,7 +67,7 @@ rule C_2:
     [ Out( <~x,s> ) ]
 */
 
-rule S_1:
+rule S_1 [no_derivcheck]:
     [ In( <~x,sign(~x,~ltkB)> ), !Bank_Pk($B, pk(~ltkB)) ]
   --[  ]->
     [ Out( <~x,sign(~x,~ltkB)> ),St_S_1($B,~x) ]

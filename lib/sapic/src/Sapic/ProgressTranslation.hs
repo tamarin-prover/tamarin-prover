@@ -129,7 +129,7 @@ progressTransComb anP tComb comb an pos tx =  do
                 invPF <- pfInv anP
                 return (map (addProgressItems domPF invPF pos) rs0
                        ,extendVars domPF pos tx1
-                       ,extendVars domPF pos tx2)
+                       ,fmap (extendVars domPF pos) tx2)
 
 -- | Overall translation is a triple of the other translations.
 progressTrans :: (Show ann, Typeable ann, MonadCatch m2,

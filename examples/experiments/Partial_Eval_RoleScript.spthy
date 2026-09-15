@@ -24,7 +24,7 @@ builtins: asymmetric-encryption
 section{* The interpreter *}
 
 
-rule Eval_pgen:
+rule Eval_pgen [no_derivcheck]:
   [ Eval( pseq( pgen( n )
               , rest )
         )
@@ -33,7 +33,7 @@ rule Eval_pgen:
   -->
   [ Eval( rest ) ]
 
-rule Eval_psend:
+rule Eval_psend [no_derivcheck]:
   [ Eval( pseq( psend( m )
               , rest )
         )
@@ -43,7 +43,7 @@ rule Eval_psend:
   , Out(m)
   ]
 
-rule Eval_precv:
+rule Eval_precv [no_derivcheck]:
   [ Eval( pseq( precv( m )
               , rest )
         )
@@ -52,7 +52,7 @@ rule Eval_precv:
   -->
   [ Eval( rest ) ]
 
-rule Eval_psecret:
+rule Eval_psecret [no_derivcheck]:
   [ Eval( pseq( psecret(A,B,s)
               , rest )
         )
@@ -60,7 +60,7 @@ rule Eval_psecret:
   --[ Secret(A,B,s) ]->
   [ Eval( rest ) ]
 
-rule Eval_pgetPk:
+rule Eval_pgetPk [no_derivcheck]:
   [ Eval( pseq( pgetPk(A,pkA)
               , rest )
         )
@@ -69,7 +69,7 @@ rule Eval_pgetPk:
   -->
   [ Eval( rest ) ]
 
-rule Eval_pgetSk:
+rule Eval_pgetSk [no_derivcheck]:
   [ Eval( pseq( pgetSk(A,skA)
               , rest )
         )
@@ -94,7 +94,7 @@ rule Reveal_Ltk:
 
 section{* The NSL protocol *}
 
-rule Role_I:
+rule Role_I [no_derivcheck]:
   [] -->
   [ Eval(
          pseq( pgen(ni)
@@ -110,7 +110,7 @@ rule Role_I:
      )
   ]
 
-rule Role_R:
+rule Role_R [no_derivcheck]:
   [] -->
   [ Eval(
          pseq( pgetSk($R, skR)

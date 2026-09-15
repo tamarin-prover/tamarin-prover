@@ -44,9 +44,15 @@ tacticName = do
 goalRankingPresort :: Bool -> Parser (GoalRanking ProofContext)
 goalRankingPresort diff = regularRanking <?> "proof method ranking"
    where
-       regularRanking = toGoalRanking <$> many1 letter <* skipMany (char ' ')
+       regularRanking = do
+           name <- many1 letter
+           case toGoalRanking name of
+               Just ranking -> ranking <$ skipMany (char ' ')
+               Nothing      -> fail $ "Unknown proof method ranking '" ++ name
+                   ++ "'. Use one of the following:\n" ++ listGoalRankingsForMode
 
-       toGoalRanking = if diff then stringToGoalRankingDiff True else stringToGoalRanking True
+       toGoalRanking = if diff then stringToGoalRankingDiffMay True else stringToGoalRankingMay True
+       listGoalRankingsForMode = if diff then listGoalRankingsDiff True else listGoalRankings True
 
 -- Default heuristic
 selectedPreSort :: Bool -> Parser (GoalRanking ProofContext)

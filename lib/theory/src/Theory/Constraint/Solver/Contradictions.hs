@@ -34,7 +34,7 @@ import qualified Data.Foldable                  as F
 import           Data.Functor                   (($>))
 import           Data.List
 import qualified Data.Map                       as M
-import           Data.Maybe                     (fromMaybe, listToMaybe)
+import           Data.Maybe                     (fromMaybe, listToMaybe, mapMaybe)
 -- import           Data.Monoid
 import qualified Data.Set                       as S
 import           Safe                           (headMay)
@@ -54,7 +54,7 @@ import           Theory.Text.Pretty
 
 import           Term.Rewriting.Norm            (maybeNotNfSubterms, nf')
 
--- import           Debug.Trace
+import           Utils.Misc                     (fixpoint)
 
 ------------------------------------------------------------------------------
 -- Contradictions
@@ -71,6 +71,7 @@ data Contradiction =
   | ForbiddenKD                    -- ^ has forbidden KD-fact
   | ImpossibleChain                -- ^ has impossible chain
   | ForbiddenChain                 -- ^ has forbidden chain
+  | ForbiddenACConstrChain         -- ^ has forbidden AC Constructor chain
   | NonInjectiveFactInstance (NodeId, NodeId, NodeId)
     -- ^ Contradicts that certain facts have unique instances.
   | IncompatibleEqs                -- ^ Incompatible equalities.
@@ -106,6 +107,8 @@ contradictions ctxt sys = F.asum
     , guard (enableBP msig && hasForbiddenBP sys)   $> ForbiddenBP
     -- New CR-Rule *N6'*
     , guard (hasForbiddenChain sys)                 $> ForbiddenChain
+    -- New Constraint for AC constructors
+    , guard (hasForbiddenConstrChain sys)           $> ForbiddenACConstrChain
     -- CR-rules *S_≐* and *S_≈* are implemented via the equation store
     , guard (eqsIsFalse $ L.get sEqStore sys)       $> IncompatibleEqs
     -- CR-rules *S_⟂*, *S_{¬,last,1}*, *S_{¬,≐}*, *S_{¬,≈}*
@@ -300,6 +303,53 @@ hasForbiddenChain sys =
         ku_before       <- pure $ any (\(_, x) -> alwaysBefore sys x (fst c)) ku_start
         return (is_msg_var && is_not_equality && ku_before)
 
+-- | Detect non-normal chains chaining two instances of the constructor rule of an AC-symbol where both are "trivial"
+hasForbiddenConstrChain :: System -> Bool
+hasForbiddenConstrChain sys =
+    fst finalMap
+  where
+    -- list of linked AC-constructor rules 
+    extractedNodesAndRules :: [(NodeId, RuleACInst, NodeId, RuleACInst, FunSym)]
+    extractedNodesAndRules = mapMaybe extractNodesAndRules $ S.toList $ L.get sLessAtoms sys
+
+    -- initial map for union-find. Maps node ids to (root node id (initialized as ?), isTrivialKUFact, name of the AC-constructor rule)
+    initialMap :: M.Map NodeId (NodeId, S.Set NodeId, FunSym)
+    initialMap = M.fromList $ concatMap (\(n1, r1, n2, r2, n) -> [(n1, (n1, trivial r1 n n1, n)), (n2, (n2, trivial r2 n n2, n))]) extractedNodesAndRules
+      where
+        trivial r n iden = if any (\ x -> isTrivialKUFact x || isNearlyTrivialKUFact n x) (L.get rPrems r) then S.singleton iden else S.empty
+        
+    -- final map after union-find. Maps node ids to (root node id, isTrivialKUFact, name of the AC-constructor rule)
+    finalMap :: (Bool, M.Map NodeId (NodeId, S.Set NodeId, FunSym))
+    finalMap = fixpoint (\x -> foldr updateMap x extractedNodesAndRules) (False, initialMap) 
+      where
+        updateMap :: (NodeId, RuleACInst, NodeId, RuleACInst, FunSym) 
+                  -> (Bool, M.Map NodeId (NodeId, S.Set NodeId, FunSym)) -> (Bool, M.Map NodeId (NodeId, S.Set NodeId, FunSym))
+        updateMap (a, _, b, _, n) (t, m) = if t then (t, m) else case (M.lookup a m, M.lookup b m) of
+          (_               , Nothing)          -> (t, m)
+          (Just (_, t1, _) , Just (c, t2, n2)) -> if n == n2
+                                then case M.lookup c m of
+                                  Nothing -> error "finalMap: impossible case"
+                                  Just (_, t3, _) -> (t || (length nodes >= 2), M.insert c (c, nodes, n2) $ M.insert b (c, t2, n2) $ M.insert a (c, t1, n2) m)
+                                    where nodes = t1 `S.union` t2 `S.union` t3
+                                else (t, m)
+          (_               , _)                -> error "finalMap: impossible case"
+
+    -- Given a less-atom between two nodes, extract the node ids, the rule at the second node and the name of the AC-constructor rule if both nodes are AC-constructor rules with the same name
+    extractNodesAndRules :: LessAtom -> Maybe (NodeId, RuleACInst, NodeId, RuleACInst, FunSym)
+    extractNodesAndRules (LessAtom n1 n2 Adversary) = case r1' of 
+       Nothing -> Nothing -- n1 does not exist in the graph, return Nothing
+       Just r1 -> do
+        r2 <- nodeRuleSafe n2 sys
+        name1 <- isACConstrRule r1
+        name2 <- isACConstrRule r2
+        conc <- headMay (L.get rConcs r1)
+        guard $ name1 == name2 && conc `elem` L.get rPrems r2 -- both rules are AC-constructor rules with the same name and the conclusion of the first rule is a premise of the second rule
+        return (n1, r1, n2, r2, name1) -- both nodes exist, return n2 if they are both AC-constructor rules with the same name
+      where
+        r1' = nodeRuleSafe n1 sys
+    extractNodesAndRules _                          = Nothing
+
+
 -- Diffie-Hellman and Bilinear Pairing
 --------------------------------------
 
@@ -444,6 +494,7 @@ prettyContradiction contra = case contra of
     ForbiddenBP                  -> text "non-normal bilinear pairing rule instance"
     ForbiddenKD                  -> text "forbidden KD-fact"
     ForbiddenChain               -> text "forbidden chain"
+    ForbiddenACConstrChain       -> text "forbidden AC constructor chain"
     ImpossibleChain              -> text "impossible chain"
     NonInjectiveFactInstance cex -> text $ "non-injective facts " ++ show cex
     FormulasFalse                -> text "from formulas"

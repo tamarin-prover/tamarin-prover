@@ -1,0 +1,87 @@
+theory CRXOR begin
+
+// Function signature and definition of the equational theory E
+
+functions: fst/1, h/1, pair/2, snd/1, xorr/2 [AC], zeroo/0
+equations:
+    fst(<x.1, x.2>) = x.1,
+    snd(<x.1, x.2>) = x.2,
+    xorr(xorr(x, y), x) = y,
+    xorr(x, x) = zeroo,
+    xorr(x, zeroo) = x
+
+rule (modulo E) Setup:
+   [ Fr( ~k ) ] --[ OnlyOnce( ) ]-> [ !InitLTK( ~k ), !RespLTK( ~k ) ]
+
+rule (modulo E) initiator:
+   [ Fr( ~na ) ]
+  --[ Challenge( ~na ) ]->
+   [ Out( ~na ), Initiated( ~na ) ]
+
+rule (modulo E) responder:
+   [ In( na ), Fr( ~nb ), !RespLTK( ~k ) ]
+  --[ Response( ~k ), Neq( na, zeroo ), NeqForExec( na, zeroo ) ]->
+   [ Out( <h(xorr(~k, ~nb, na)), ~nb> ) ]
+
+rule (modulo E) initiator2:
+   [ Initiated( ~na ), !InitLTK( ~k ), In( <m, nb> ) ]
+  --[ Alive( ~na, ~k ), Eq( h(xorr(~k, ~na, nb)), m ) ]->
+   [ ]
+
+restriction equality:
+  "∀ x y #i. (Eq( x, y ) @ #i) ⇒ (x = y)"
+  // safety formula
+
+restriction unique:
+  "∀ #i #j. ((OnlyOnce( ) @ #i) ∧ (OnlyOnce( ) @ #j)) ⇒ (#i = #j)"
+  // safety formula
+
+restriction inequality:
+  "¬(∃ x #i. Neq( x, x ) @ #i)"
+  // safety formula
+
+lemma alive:
+  all-traces
+  "∀ x y #i. (Alive( x, y ) @ #i) ⇒ (∃ #j. Response( y ) @ #j)"
+/*
+guarded formula characterizing all counter-examples:
+"∃ x y #i. (Alive( x, y ) @ #i) ∧ ∀ #j. (Response( y ) @ #j) ⇒ ⊥"
+*/
+by sorry
+
+lemma recentalive_tag:
+  all-traces
+  "∀ x y #i.
+    (Alive( x, y ) @ #i) ⇒
+    (∃ #j #k.
+      (((Challenge( x ) @ #k) ∧ (Response( y ) @ #j)) ∧ (#k < #j)) ∧
+      (#j < #i))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ x y #i.
+  (Alive( x, y ) @ #i)
+ ∧
+  ∀ #j #k.
+   (Challenge( x ) @ #k) ∧ (Response( y ) @ #j)
+  ⇒
+   ((¬(#k < #j)) ∨ (¬(#j < #i)))"
+*/
+by sorry
+
+lemma executable:
+  exists-trace
+  "∃ x y #i #j.
+    (((Alive( x, y ) @ #i) ∧ (Response( y ) @ #j)) ∧
+     (¬(∃ #k. (Response( y ) @ #k) ∧ (¬(#j = #k))))) ∧
+    (¬(∃ #l. NeqForExec( x, x ) @ #l))"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ x y #i #j.
+  (Alive( x, y ) @ #i) ∧ (Response( y ) @ #j)
+ ∧
+  (∀ #k. (Response( y ) @ #k) ⇒ #j = #k) ∧
+  (∀ #l. (NeqForExec( x, x ) @ #l) ⇒ ⊥)"
+*/
+by sorry
+
+end

@@ -102,7 +102,7 @@ rule H_1:
 	[ AgSt_H1($H, <$D, $BB, $v>), Out_S($H,$D,$v)
 	]
 
-rule D_1:
+rule D_1 [no_derivcheck]:
 	[ AgSt_D0($D, <$H,$S,pkS,h($H,~x)>), In_S($H,$D,'empty') ]
 	--[  ]->
 	[ Out_S($D,$H, sg(encp('empty',~x,pkS),h($H,~x)) ) //use x as randomness for encrpytion
@@ -117,7 +117,7 @@ rule H_2:
  // don't send any ballot
 	]
 
-rule S_1:
+rule S_1 [no_derivcheck]:
 	[ AgSt_S0($S, <~skS, h($H,~x) >)
 // S does not receive any ballot from H, so it constructs ballot itself
         ]
@@ -148,7 +148,7 @@ rule BB:
 	, Out_A($BB, <'zkp', p >)
 	]
 	
-rule A_1:
+rule A_1 [no_derivcheck]:
 	[ AgSt_A0($A,<$S,$BB,pkS>)
 	// implicitly (by pattern matching) do verifyA1 since each ballot signed w/ exactly one valid verification key (also no duplicates) and since bPrime really b w/o signatures:
 	, In_A($BB, <'b', sg(bPrimea,sskDa) >)

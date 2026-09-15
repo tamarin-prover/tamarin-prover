@@ -1,0 +1,45 @@
+theory export_refactoring_regressions
+begin
+
+rule EmitShared:
+  [ Fr(~x) ]
+  --[ Anchor(~x), BranchB(~x), BranchC(~x), BranchD(~x) ]->
+  []
+
+rule EmitAxiomEvents:
+  [ Fr(~x) ]
+  --[ AxiomA(~x), AxiomB(~x), AxiomC(~x) ]->
+  []
+
+rule Collision:
+  [ In(rid_rCollision) ]
+  --[ CollisionA(rid_rCollision), CollisionB(rid_rCollision) ]->
+  []
+
+rule UserCompletion:
+  [ Fr(~x) ]
+  --[ RuleCompleted(~x), UserTrigger(~x), UserConsequence(~x) ]->
+  []
+
+restriction split_branch_preserves_origin:
+  "All x #i. Anchor(x) @ i
+    ==> not (Ex #j. BranchB(x) @ j & BranchC(x) @ j)
+      & not (Ex #j. BranchB(x) @ j & BranchD(x) @ j)"
+
+lemma identity_axiom_instruments_shared_timepoint [reuse]:
+  "All x #i.
+      AxiomA(x) @ i & AxiomB(x) @ i
+      ==> AxiomC(x) @ i"
+
+lemma generated_rule_id_avoids_source_variable:
+  "All x #i. CollisionA(x) @ i ==> CollisionB(x) @ i"
+
+lemma generated_query_id_avoids_source_variable:
+  "All rid #i.
+      AxiomA(rid) @ i & AxiomB(rid) @ i
+      ==> AxiomC(rid) @ i"
+
+lemma internal_completion_avoids_user_event:
+  "All x #i. UserTrigger(x) @ i ==> UserConsequence(x) @ i"
+
+end

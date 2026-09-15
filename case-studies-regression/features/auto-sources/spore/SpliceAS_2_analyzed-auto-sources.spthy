@@ -37,7 +37,7 @@ rule (modulo E) C_to_AS:
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) AS_send_key:
+rule (modulo E) AS_send_key[no_derivcheck]:
    [ In( <'Req', x, y, n> ), !Ltk( 'AS', ~ltkAS ), !Pk( y, pk(~ltkY) ) ]
   -->
    [
@@ -48,7 +48,7 @@ rule (modulo E) AS_send_key:
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) C_to_S:
+rule (modulo E) C_to_S[no_derivcheck]:
    [
    In( <'AS', $C, ~n1, $S, pkS, 
         sign(<'Key', 'AS', $C, ~n1, $S, pkS>, ~ltkAS)>
@@ -71,7 +71,7 @@ rule (modulo E) C_to_S:
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) S_to_AS:
+rule (modulo E) S_to_AS[no_derivcheck]:
    [
    In( <c, $S, t, l, aenc(<'4', n2>, pk(~ltkS)), 
         sign(<'3', c, t, l, aenc(<'4', n2>, pk(~ltkS))>, ltkC)>
@@ -92,7 +92,7 @@ rule (modulo E) S_to_AS:
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) S_to_C:
+rule (modulo E) S_to_C[no_derivcheck]:
    [
    In( <AS, $S, ~n3, c, pk(ltkC), 
         sign(<'Key', AS, $S, ~n3, c, pk(ltkC)>, ~ltkAS)>
@@ -119,14 +119,12 @@ rule (modulo E) C_from_S:
   /* has exactly the trivial AC variant */
 
 restriction OnlyOnce:
-  "∀ A B #i #j.
-    (((OnlyOnce( A ) @ #i) ∧ (OnlyOnce( B ) @ #j)) ∧ (A = B)) ⇒ (#i = #j)"
+  "∀ A #i #j. ((OnlyOnce( A ) @ #i) ∧ (OnlyOnce( A ) @ #j)) ⇒ (#i = #j)"
   // safety formula
 
   /*
   expanded formula:
-  "∀ A B #i #j.
-    (((OnlyOnce( A ) @ #i) ∧ (OnlyOnce( B ) @ #j)) ∧ (A = B)) ⇒ (#i = #j)"
+  "∀ A #i #j. ((OnlyOnce( A ) @ #i) ∧ (OnlyOnce( A ) @ #j)) ⇒ (#i = #j)"
   */
 
 lemma executability:
@@ -776,10 +774,10 @@ qed
 
 /*
 Generated from:
-Tamarin version 1.12.0
+Tamarin version 1.13.0
 Maude version 3.5.1
-Git revision: f1832c9bc70a2a165991a0802520f2e07c023227 (with uncommited changes), branch: prepare-release
-Compiled at: 2026-03-06 22:21:49.602637 UTC
+Git revision: 41bc81379b23681e7057314a5cf66a25c45e1986, branch: canonicalise-subst
+Compiled at: 2026-07-27 16:11:34.947223 UTC
 */
 
 end
@@ -791,7 +789,7 @@ summary of summaries:
 analyzed: examples/features/auto-sources/spore/SpliceAS_2.spthy
 
   output:          examples/features/auto-sources/spore/SpliceAS_2.spthy.tmp
-  processing time: 3.75s
+  processing time: 1.33s
   
   executability (exists-trace): verified (21 steps)
   Secrecy (all-traces): falsified - found trace (16 steps)

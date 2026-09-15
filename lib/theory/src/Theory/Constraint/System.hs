@@ -260,7 +260,7 @@ import           GHC.Generics                         (Generic)
 import           Data.Binary
 import qualified Data.ByteString.Char8                as BC
 import qualified Data.DAG.Simple                      as D
-import           Data.List                            (foldl', partition, intersect,find,intercalate, groupBy)
+import           Data.List                            (foldl', partition, intersect,find,intercalate)
 import qualified Data.Map                             as M
 import           Data.Maybe                           (fromMaybe,mapMaybe, isNothing)
 -- import           Data.Monoid                          (Monoid(..))
@@ -293,7 +293,6 @@ import           Theory.Tools.InjectiveFactInstances
 import           System.Directory                     (doesFileExist)
 import           System.FilePath
 import           Text.Show.Functions()
-import           Utils.Misc
 
 ----------------------------------------------------------------------
 -- ClassifiedRules
@@ -553,12 +552,14 @@ defaultOracleNames srcThyInFileName = map (mapOracleRanking remapOracle)
   where
     remapOracle o@(Oracle workDir relPath) =
       if isNothing relPath
-        then if unsafePerformIO (doesFileExist inFileOracleName)
-               then Oracle workDir (Just inFileOracleName)
-               else Oracle workDir (Just "oracle")
+        then
+          let oracleDir = fromMaybe (takeDirectory srcThyInFileName) workDir
+              mkOracle = Oracle (Just oracleDir) . Just
+          in if unsafePerformIO (doesFileExist (oracleDir </> inFileOracleName))
+               then mkOracle inFileOracleName
+               else mkOracle "oracle"
         else o
-    inFileOracleName =
-      last (groupBy (\_ b -> b /= '/') $ head $ groupBy (\_ b -> b /= '.') srcThyInFileName) ++ ".oracle"
+    inFileOracleName = takeBaseName srcThyInFileName <.> "oracle"
 
 maybeSetOracleWorkDir :: Maybe FilePath -> Oracle -> Oracle
 maybeSetOracleWorkDir p o = o{ oracleWorkDir = p }
@@ -992,8 +993,8 @@ protocolRuleWithName rules name = filter (\(Rule x _ _ _ _) -> case x of
 --   This respects the number of remaining consecutive rule applications.
 intruderRuleWithName :: [RuleAC] -> IntrRuleACInfo -> [RuleAC]
 intruderRuleWithName rules name = filter (\(Rule x _ _ _ _) -> case x of
-                                             IntrInfo  (DestrRule i _ _ _) -> case name of
-                                                                                 (DestrRule j _ _ _) -> i == j
+                                             IntrInfo  (DestrRule i _ _ _ _) -> case name of
+                                                                                 (DestrRule j _ _ _ _) -> i == j
                                                                                  _                   -> False
                                              IntrInfo  i -> i == name
                                              ProtoInfo _ -> False) rules
@@ -1005,11 +1006,11 @@ getOppositeRules ctxt side (Rule rule prem _ _ _) = case rule of
         [] -> error $ "No other rule found for protocol rule " ++ show (L.get praciName p) ++ show (getAllRulesOnOtherSide ctxt side)
         x  -> x
     IntrInfo  i -> case i of
-        (ConstrRule x) | x == BC.pack "_mult"     -> [(multRuleInstance (length prem))]
-        (ConstrRule x) | x == BC.pack "_union"    -> [(unionRuleInstance (length prem))]
-        (ConstrRule x) | x == BC.pack "_xor"      -> (xorRuleInstance (length prem)):
-                                                            (concat $ map (destrRuleToConstrRule (AC Xor) (length prem)) (intruderRuleWithName (getAllRulesOnOtherSide ctxt side) (DestrRule x 0 False False)))
-        (DestrRule x l s c) | x == BC.pack "_xor" -> (constrRuleToDestrRule (xorRuleInstance (length prem)) l s c)++(concat $ map destrRuleToDestrRule (intruderRuleWithName (getAllRulesOnOtherSide ctxt side) i))
+        (ConstrRule _ x) | x == AC Mult     -> [(multRuleInstance (length prem))]
+        (ConstrRule _ x) | x == AC Union    -> [(unionRuleInstance (length prem))]
+        (ConstrRule n x) | x == AC Xor      -> (xorRuleInstance (length prem)):
+                                                            (concat $ map (destrRuleToConstrRule (AC Xor) (length prem)) (intruderRuleWithName (getAllRulesOnOtherSide ctxt side) (DestrRule n 0 False False [x])))
+        (DestrRule n l s c (x:_)) | x == AC Xor -> (constrRuleToDestrRule (xorRuleInstance (length prem)) l s c)++(concat $ map destrRuleToDestrRule (intruderRuleWithName (getAllRulesOnOtherSide ctxt side) i))
         _                                         -> case intruderRuleWithName (getAllRulesOnOtherSide ctxt side) i of
                                                             [] -> error $ "No other rule found for intruder rule " ++ show i ++ show (getAllRulesOnOtherSide ctxt side)
                                                             x  -> x
@@ -1831,6 +1832,7 @@ instance HasFrees GoalStatus where
     mapFrees  = const pure
 
 instance HasFrees System where
+    {-# INLINABLE foldFrees #-}
     foldFrees fun (System a b c d e f g h i j k l m) =
         foldFrees fun a `mappend`
         foldFrees fun b `mappend`
@@ -1860,6 +1862,7 @@ instance HasFrees System where
         foldFreesCtx fun ("k":ctx') k -}
       where ctx' = "system":ctx
 
+    {-# INLINABLE mapFrees #-}
     mapFrees fun (System a b c d e f g h i j k l m) =
         System <$> mapFrees fun a
                <*> mapFrees fun b
@@ -1876,12 +1879,14 @@ instance HasFrees System where
                <*> mapFrees fun m
 
 instance HasFrees Source where
+    {-# INLINABLE foldFrees #-}
     foldFrees f th =
         foldFrees f (L.get cdGoal th)   `mappend`
         foldFrees f (L.get cdCases th)
 
     foldFreesOcc  _ _ = const mempty
 
+    {-# INLINABLE mapFrees #-}
     mapFrees f th = Source <$> mapFrees f (L.get cdGoal th)
                                     <*> mapFrees f (L.get cdCases th)
 

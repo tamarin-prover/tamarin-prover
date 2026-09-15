@@ -20,7 +20,7 @@ import Data.Maybe (mapMaybe, fromMaybe)
 import Control.Monad.Trans.Except (runExceptT)
 import Control.Monad.Trans.Class (lift)
 import Control.Monad.Trans.Reader
-import Main.TheoryLoader as L (closeTheory, loadTheory, defaultTheoryLoadOptions, maudePath, TheoryLoadError)
+import Main.TheoryLoader as L (closeTheory, loadTheory, defaultTheoryLoadOptions, TheoryLoadOptions(maudePath), TheoryLoadError)
 import Theory
 import Text.PrettyPrint.Class (render)
 

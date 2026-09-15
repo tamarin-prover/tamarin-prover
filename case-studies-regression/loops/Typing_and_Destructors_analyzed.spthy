@@ -100,6 +100,9 @@ next
       case Setup_Key
       solve( splitEqs(0) )
         case split_case_1
+        by contradiction /* from formulas */
+      next
+        case split_case_2
         solve( !KU( senc(x, ~k) ) @ #vk )
           case Initiator
           by contradiction /* non-normal terms */
@@ -129,9 +132,6 @@ next
           case c_senc
           by contradiction /* from formulas */
         qed
-      next
-        case split_case_2
-        by contradiction /* from formulas */
       next
         case split_case_3
         solve( !KU( senc(<z, pub>, ~k) ) @ #vk )
@@ -208,15 +208,9 @@ solve( !Key( key ) ▶₀ #i )
     qed
   next
     case split_case_2
-    solve( !KU( senc(<sec, z>, ~k) ) @ #vk )
+    solve( !KU( senc(x, ~k) ) @ #vk )
       case Initiator
-      solve( !KU( ~sec ) @ #vk.1 )
-        case Initiator
-        solve( !KU( ~k ) @ #vk.2 )
-          case Reveal_Key
-          by contradiction /* from formulas */
-        qed
-      qed
+      by contradiction /* non-normal terms */
     next
       case c_senc
       solve( !KU( ~k ) @ #vk.3 )
@@ -226,9 +220,15 @@ solve( !Key( key ) ▶₀ #i )
     qed
   next
     case split_case_3
-    solve( !KU( senc(x, ~k) ) @ #vk )
+    solve( !KU( senc(<sec, z>, ~k) ) @ #vk )
       case Initiator
-      by contradiction /* non-normal terms */
+      solve( !KU( ~sec ) @ #vk.1 )
+        case Initiator
+        solve( !KU( ~k ) @ #vk.2 )
+          case Reveal_Key
+          by contradiction /* from formulas */
+        qed
+      qed
     next
       case c_senc
       solve( !KU( ~k ) @ #vk.3 )
@@ -278,10 +278,10 @@ Formula terms
 
 /*
 Generated from:
-Tamarin version 1.12.0
+Tamarin version 1.13.0
 Maude version 3.5.1
-Git revision: f1832c9bc70a2a165991a0802520f2e07c023227 (with uncommited changes), branch: prepare-release
-Compiled at: 2026-03-06 22:21:49.602637 UTC
+Git revision: 41bc81379b23681e7057314a5cf66a25c45e1986, branch: canonicalise-subst
+Compiled at: 2026-07-27 16:11:34.947223 UTC
 */
 
 end
@@ -293,7 +293,7 @@ summary of summaries:
 analyzed: examples/loops/Typing_and_Destructors.spthy
 
   output:          examples/loops/Typing_and_Destructors.spthy.tmp
-  processing time: 0.11s
+  processing time: 0.07s
   
   WARNING: 1 wellformedness check failed!
            The analysis results might be wrong!

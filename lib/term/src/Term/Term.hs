@@ -53,11 +53,28 @@ module Term.Term (
     , CSym(..)
     , Privacy(..)
     , Constructability(..)
+    , ACstate(..)
+    , NDCstate(..)
+    , FctAttr(..)
+    , UserDefinedSym(..)
+    , ACfctSym
     , NoEqSym
+
+    , hasNDC
+    , hasNDCdiff
+    , isNDCFunSym
+    , isNDCDiffFunSym
+    , joinNDC
+    , setNDC
+    , addNDC
+    , setNDCNoEqSym
+    , setNDCACfctSym
 
     -- ** Signatures
     , FunSig
     , NoEqFunSig
+    , ACfctFunSig
+    , UserDefinedSig
 
     -- ** concrete symbols strings
     , diffSymString
@@ -70,6 +87,8 @@ module Term.Term (
     , natPlusSymString
     , natOneSymString
     , oneSymString
+    , fstSymString
+    , sndSymString
     , dhNeutralSymString
     , multSymString
     , zeroSymString
@@ -79,10 +98,16 @@ module Term.Term (
     , diffSym
     , expSym
     , pmultSym
+    , invSym
     , natOneSym
     , oneSym
     , zeroSym
     , dhNeutralSym
+    , fstSym
+    , sndSym
+    , pairSym
+    , fstDestSym
+    , sndDestSym
 
     -- ** concrete signatures
     , dhFunSig
@@ -193,11 +218,11 @@ isUnion _                       = False
 
 -- | 'True' iff the term is a nullary, public function.
 isNullaryPublicFunction :: Term a -> Bool
-isNullaryPublicFunction (viewTerm -> FApp (NoEq (_, (0, Public,_))) _) = True
+isNullaryPublicFunction (viewTerm -> FApp (NoEq (_, (0, Public,_,_))) _) = True
 isNullaryPublicFunction _                                            = False
 
 isPrivateFunction :: Term a -> Bool
-isPrivateFunction (viewTerm -> FApp (NoEq (_, (_,Private,_))) _) = True
+isPrivateFunction (viewTerm -> FApp (NoEq (_, (_,Private,_,_))) _) = True
 isPrivateFunction _                                            = False
 
 -- | 'True' iff the term is an AC-operator.
@@ -215,7 +240,7 @@ getSide dt (FAPP (NoEq o) [t1,t2]) = case dt of
     DiffLeft  | o == diffSym -> getSide dt t1
     DiffRight | o == diffSym -> getSide dt t2
     DiffBoth  | o == diffSym -> FAPP (NoEq o) [(getSide dt t1),(getSide dt t2)]
-    DiffNone  | o == diffSym -> error $ "getSide: illegal use of diff"
+    DiffNone  | o == diffSym -> error "getSide: illegal use of diff"
     _                        -> FAPP (NoEq o) [(getSide dt t1),(getSide dt t2)]
 getSide dt (FAPP sym ts) = FAPP sym (map (getSide dt) ts)
 
@@ -241,6 +266,10 @@ allProtSubterms _                                     = []
 
 -- | Is term @inner@ in term @outer@ and not below a reducible function symbol?
 -- This is used for the Subterm relation
+-- INLINABLE so the call site (the subterm store, at the concrete 'LNTerm'
+-- type in another package) can specialise away the @Eq@/@Ord FunSym@
+-- dictionaries and the per-level @any@ closure.
+{-# INLINABLE elemNotBelowReducible #-}
 elemNotBelowReducible :: Eq a => FunSig -> Term a -> Term a -> Bool
 elemNotBelowReducible _ inner outer
                       | inner == outer = True
@@ -255,10 +284,16 @@ elemNotBelowReducible _ _ _ = False
 
 -- | Convert a function symbol to its name.
 showFunSymName :: FunSym -> String
-showFunSymName (NoEq (bs, _)) = BC.unpack bs
-showFunSymName (AC op)        = show op
-showFunSymName (C op )           = show op
-showFunSymName List              = "List"
+showFunSymName (NoEq (bs, _))       = BC.unpack bs
+showFunSymName (AC (ACfct (bs, _))) = BC.unpack bs
+showFunSymName (AC op)              = BC.unpack $ case op of
+    Union   -> munSymString
+    Mult    -> multSymString
+    Xor     -> xorSymString
+    NatPlus -> natPlusSymString
+showFunSymName (C op )              = BC.unpack $ case op of
+    EMap    -> emapSymString
+showFunSymName List                 = "List"
 
 -- | Pretty print a term.
 prettyTerm :: (Document d, Show l) => (l -> d) -> Term l -> d
@@ -266,7 +301,12 @@ prettyTerm ppLit = ppTerm
   where
     ppTerm t = case viewTerm t of
         Lit l                                     -> ppLit l
-        FApp (AC o)            ts                 -> ppTerms (ppACOp o) 1 "(" ")" ts
+        FApp (AC (ACfct (f, _))) []               -> text (BC.unpack f)
+        FApp (AC (ACfct (f, _))) ts               -> ppTermsWith ppACArg (" " ++ BC.unpack f ++ " ") 1 "(" ")" ts
+        FApp (AC Mult)     ts                     -> ppTerms "*" 1 "(" ")" ts
+        FApp (AC Xor)      ts                     -> ppTerms "⊕" 1 "(" ")" ts
+        FApp (AC Union)    ts                     -> ppTerms "++" 1 "(" ")" ts
+        FApp (AC NatPlus)  ts                     -> ppTerms "%+" 1 "(" ")" ts
         FApp (NoEq s)   [t1,t2] | s == expSym     -> ppTerm t1 <> text "^" <> ppTerm t2
         FApp (NoEq s)   [t1,t2] | s == diffSym    -> text "diff" <> text "(" <> ppTerm t1 <> text ", " <> ppTerm t2 <> text ")"
         FApp (NoEq s)   []      | s == natOneSym  -> text "%1"
@@ -275,15 +315,21 @@ prettyTerm ppLit = ppTerm
         FApp (NoEq (f, _)) ts                     -> ppFun f ts
         FApp (C EMap)      ts                     -> ppFun emapSymString ts
         FApp List          ts                     -> ppFun "LIST" ts
-
-    ppACOp Mult    = "*"
-    ppACOp Xor     = "⊕"
-    ppACOp Union   = "++"
-    ppACOp NatPlus = "%+"
  
-    ppTerms sepa n lead finish ts =
+    ppTerms = ppTermsWith ppTerm
+
+    ppTermsWith pp sepa n lead finish ts =
         fcat . (text lead :) . (++[text finish]) .
-            map (nest n) . punctuate (text sepa) . map ppTerm $ ts
+            map (nest n) . punctuate (text sepa) . map pp $ ts
+
+    -- A user-defined AC operator binds more tightly than '^'. Print
+    -- parentheses around an exponentiation argument so that the parser
+    -- reads the term back unchanged. Exponentiation is the only form
+    -- that this printer writes infix without its own brackets. If you
+    -- add another such form, extend this guard.
+    ppACArg t = case viewTerm t of
+        FApp (NoEq s) [_,_] | s == expSym -> parens (ppTerm t)
+        _                                 -> ppTerm t
 
     split (viewTerm2 -> FPair t1 t2) = t1 : split t2
     split t                          = [t]

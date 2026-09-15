@@ -36,9 +36,9 @@ solve( Alive( x, 'Tag' ) @ #i )
     solve( !KU( lh((h(x)⊕rot(~id, h(x)))) ) @ #vk.2 )
       case outrlhhkrrrotidhkrr_0_11112111111
       solve( splitEqs(1) )
-        case split_case_7
+        case split_case_8
         solve( !KU( (~r1⊕x) ) @ #vk.2 )
-          case c_xor
+          case c_xor_case_1
           solve( splitEqs(2) )
             case split_case_1
             solve( !KU( ~r1 ) @ #vk.5 )
@@ -82,7 +82,7 @@ solve( Alive( x, 'Reader' ) @ #i )
       case c_rh
       solve( !KU( (h(x)⊕rot(~id, h(x))) ) @ #vk.2 )
         case c_xor
-        solve( !KU( rot(~id, h(x)) ) @ #vk.3 )
+        solve( !KU( rot(~id, h(x)) ) @ #vk.4 )
           case c_rot
           by solve( !KU( ~id ) @ #vk.5 )
         qed
@@ -90,7 +90,7 @@ solve( Alive( x, 'Reader' ) @ #i )
         case coerce
         solve( !KD( (h(x)⊕rot(~id, h(x))) ) ▶₀ #vk.1 )
           case outr_0_11111111
-          by contradiction /* impossible chain */
+          by solve( (#vl, 0) ~~> (#vk.1, 0) )
         next
           case outrhhkrrrotidhkrr_0_111111111111111
           by solve( (#vl, 0) ~~> (#vk.1, 0) )
@@ -98,7 +98,7 @@ solve( Alive( x, 'Reader' ) @ #i )
           case outrlhhkrrrotidhkrr_0_11112111111
           solve( (#vl, 0) ~~> (#vk.1, 0) )
             case d_0_fst
-            by contradiction /* impossible chain */
+            by solve( (#vr.17, 0) ~~> (#vk.1, 0) )
           next
             case d_0_snd
             by solve( (#vr.17, 0) ~~> (#vk.1, 0) )
@@ -111,7 +111,7 @@ solve( Alive( x, 'Reader' ) @ #i )
         case c_lh
         solve( !KU( (h(x.2)⊕rot(~id, h(x.2))) ) @ #vk.5 )
           case c_xor
-          solve( !KU( rot(~id, h(x.1)) ) @ #vk.6 )
+          solve( !KU( rot(~id, h(x.1)) ) @ #vk.7 )
             case c_rot
             by solve( !KU( ~id ) @ #vk.8 )
           qed
@@ -119,7 +119,7 @@ solve( Alive( x, 'Reader' ) @ #i )
           case coerce
           solve( !KD( (h(x.1)⊕rot(~id, h(x.1))) ) ▶₀ #vk.2 )
             case outr_0_11111111
-            by contradiction /* impossible chain */
+            by solve( (#vl.1, 0) ~~> (#vk.2, 0) )
           next
             case outrhhkrrrotidhkrr_0_111111111111111
             by solve( (#vl.1, 0) ~~> (#vk.2, 0) )
@@ -127,7 +127,7 @@ solve( Alive( x, 'Reader' ) @ #i )
             case outrlhhkrrrotidhkrr_0_11112111111
             solve( (#vl.1, 0) ~~> (#vk.2, 0) )
               case d_0_fst
-              by contradiction /* impossible chain */
+              by solve( (#vr.30, 0) ~~> (#vk.2, 0) )
             next
               case d_0_snd
               by solve( (#vr.30, 0) ~~> (#vk.2, 0) )
@@ -162,7 +162,7 @@ solve( Commit( <'T', 'R', t> ) @ #i )
       case c_rh
       solve( !KU( (h(x)⊕rot(~id, h(x))) ) @ #vk.2 )
         case c_xor
-        solve( !KU( rot(~id, h(x)) ) @ #vk.3 )
+        solve( !KU( rot(~id, h(x)) ) @ #vk.4 )
           case c_rot
           by solve( !KU( ~id ) @ #vk.5 )
         qed
@@ -170,7 +170,7 @@ solve( Commit( <'T', 'R', t> ) @ #i )
         case coerce
         solve( !KD( (h(x)⊕rot(~id, h(x))) ) ▶₀ #vk.1 )
           case outr_0_11111111
-          by contradiction /* impossible chain */
+          by solve( (#vl, 0) ~~> (#vk.1, 0) )
         next
           case outrhhkrrrotidhkrr_0_111111111111111
           by solve( (#vl, 0) ~~> (#vk.1, 0) )
@@ -178,7 +178,7 @@ solve( Commit( <'T', 'R', t> ) @ #i )
           case outrlhhkrrrotidhkrr_0_11112111111
           solve( (#vl, 0) ~~> (#vk.1, 0) )
             case d_0_fst
-            by contradiction /* impossible chain */
+            by solve( (#vr.18, 0) ~~> (#vk.1, 0) )
           next
             case d_0_snd
             by solve( (#vr.18, 0) ~~> (#vk.1, 0) )
@@ -191,7 +191,7 @@ solve( Commit( <'T', 'R', t> ) @ #i )
         case c_lh
         solve( !KU( (h(x.2)⊕rot(~id, h(x.2))) ) @ #vk.5 )
           case c_xor
-          solve( !KU( rot(~id, h(x.1)) ) @ #vk.6 )
+          solve( !KU( rot(~id, h(x.1)) ) @ #vk.7 )
             case c_rot
             by solve( !KU( ~id ) @ #vk.8 )
           qed
@@ -199,7 +199,7 @@ solve( Commit( <'T', 'R', t> ) @ #i )
           case coerce
           solve( !KD( (h(x.1)⊕rot(~id, h(x.1))) ) ▶₀ #vk.2 )
             case outr_0_11111111
-            by contradiction /* impossible chain */
+            by solve( (#vl.1, 0) ~~> (#vk.2, 0) )
           next
             case outrhhkrrrotidhkrr_0_111111111111111
             by solve( (#vl.1, 0) ~~> (#vk.2, 0) )
@@ -207,7 +207,7 @@ solve( Commit( <'T', 'R', t> ) @ #i )
             case outrlhhkrrrotidhkrr_0_11112111111
             solve( (#vl.1, 0) ~~> (#vk.2, 0) )
               case d_0_fst
-              by contradiction /* impossible chain */
+              by solve( (#vr.31, 0) ~~> (#vk.2, 0) )
             next
               case d_0_snd
               by solve( (#vr.31, 0) ~~> (#vk.2, 0) )
@@ -253,31 +253,10 @@ solve( Commit( <'T', 'R', t> ) @ #i )
           case split_case_6
           solve( !KU( (~k⊕~r2⊕z) ) @ #vk.3 )
             case c_xor_case_1
-            by contradiction /* cyclic */
+            by solve( !KU( ~k ) @ #vk.6 )
           next
             case c_xor_case_2
-            solve( !KU( (~r2⊕z) ) @ #vk.6 )
-              case c_xor
-              by contradiction /* cyclic */
-            next
-              case coerce
-              solve( !KD( (~r2⊕z) ) ▶₀ #vk.3 )
-                case outr_0_11111111
-                by contradiction /* impossible chain */
-              next
-                case outrhhkrrrotidhkrr_0_111111111111111
-                by solve( (#vl.2, 0) ~~> (#vk.3, 0) )
-              next
-                case outrlhhkrrrotidhkrr_0_11112111111
-                solve( (#vl.2, 0) ~~> (#vk.3, 0) )
-                  case d_0_fst
-                  by contradiction /* impossible chain */
-                next
-                  case d_0_snd
-                  by solve( (#vr.41, 0) ~~> (#vk.3, 0) )
-                qed
-              qed
-            qed
+            by contradiction /* cyclic */
           next
             case c_xor_case_3
             solve( !KU( (~k⊕~r2) ) @ #vk.7 )
@@ -287,7 +266,7 @@ solve( Commit( <'T', 'R', t> ) @ #i )
               case coerce
               solve( !KD( (~k⊕~r2) ) ▶₀ #vk.3 )
                 case outr_0_11111111
-                by contradiction /* impossible chain */
+                by solve( (#vl.2, 0) ~~> (#vk.3, 0) )
               next
                 case outrhhkrrrotidhkrr_0_111111111111111
                 by solve( (#vl.2, 0) ~~> (#vk.3, 0) )
@@ -295,7 +274,142 @@ solve( Commit( <'T', 'R', t> ) @ #i )
                 case outrlhhkrrrotidhkrr_0_11112111111
                 solve( (#vl.2, 0) ~~> (#vk.3, 0) )
                   case d_0_fst
-                  by contradiction /* impossible chain */
+                  by solve( (#vr.41, 0) ~~> (#vk.3, 0) )
+                next
+                  case d_0_snd
+                  by solve( (#vr.41, 0) ~~> (#vk.3, 0) )
+                qed
+              qed
+            qed
+          next
+            case c_xor_case_4
+            solve( !KU( (~k⊕~r2⊕x.1) ) @ #vk.7 )
+              case c_xor_case_1
+              by solve( !KU( ~k ) @ #vk.8 )
+            next
+              case c_xor_case_2
+              by contradiction /* cyclic */
+            next
+              case c_xor_case_3
+              by contradiction /* forbidden AC constructor chain */
+            next
+              case c_xor_case_4
+              by contradiction /* forbidden AC constructor chain */
+            next
+              case c_xor_case_5
+              solve( !KU( (~k⊕x.1) ) @ #vk.8 )
+                case c_xor_case_1
+                by contradiction /* forbidden AC constructor chain */
+              next
+                case c_xor_case_2
+                by contradiction /* forbidden AC constructor chain */
+              next
+                case coerce
+                solve( !KD( (~k⊕x.1) ) ▶₀ #vk.4 )
+                  case outr_0_11111111
+                  by solve( (#vl.2, 0) ~~> (#vk.4, 0) )
+                next
+                  case outrhhkrrrotidhkrr_0_111111111111111
+                  by solve( (#vl.2, 0) ~~> (#vk.4, 0) )
+                next
+                  case outrlhhkrrrotidhkrr_0_11112111111
+                  solve( (#vl.2, 0) ~~> (#vk.4, 0) )
+                    case d_0_fst
+                    by solve( (#vr.41, 0) ~~> (#vk.4, 0) )
+                  next
+                    case d_0_snd
+                    by solve( (#vr.41, 0) ~~> (#vk.4, 0) )
+                  qed
+                qed
+              qed
+            next
+              case coerce
+              solve( !KD( (~k⊕~r2⊕x.1) ) ▶₀ #vk.3 )
+                case outr_0_11111111
+                by solve( (#vl.2, 0) ~~> (#vk.3, 0) )
+              next
+                case outrhhkrrrotidhkrr_0_111111111111111
+                by solve( (#vl.2, 0) ~~> (#vk.3, 0) )
+              next
+                case outrlhhkrrrotidhkrr_0_11112111111
+                solve( (#vl.2, 0) ~~> (#vk.3, 0) )
+                  case d_0_fst
+                  by solve( (#vr.41, 0) ~~> (#vk.3, 0) )
+                next
+                  case d_0_snd
+                  by solve( (#vr.41, 0) ~~> (#vk.3, 0) )
+                qed
+              qed
+            qed
+          next
+            case c_xor_case_5
+            solve( !KU( (~k⊕x) ) @ #vk.6 )
+              case c_xor_case_1
+              solve( !KU( (~r2⊕x) ) @ #vk.7 )
+                case c_xor_case_1
+                by contradiction /* cyclic */
+              next
+                case c_xor_case_2
+                by contradiction /* forbidden AC constructor chain */
+              next
+                case coerce
+                solve( !KD( (~r2⊕x) ) ▶₀ #vk.4 )
+                  case outr_0_11111111
+                  by solve( (#vl.2, 0) ~~> (#vk.4, 0) )
+                next
+                  case outrhhkrrrotidhkrr_0_111111111111111
+                  by solve( (#vl.2, 0) ~~> (#vk.4, 0) )
+                next
+                  case outrlhhkrrrotidhkrr_0_11112111111
+                  solve( (#vl.2, 0) ~~> (#vk.4, 0) )
+                    case d_0_fst
+                    by solve( (#vr.41, 0) ~~> (#vk.4, 0) )
+                  next
+                    case d_0_snd
+                    by solve( (#vr.41, 0) ~~> (#vk.4, 0) )
+                  qed
+                qed
+              qed
+            next
+              case c_xor_case_2
+              solve( !KU( (~r2⊕x) ) @ #vk.7 )
+                case c_xor_case_1
+                by contradiction /* cyclic */
+              next
+                case c_xor_case_2
+                by contradiction /* forbidden AC constructor chain */
+              next
+                case coerce
+                solve( !KD( (~r2⊕x) ) ▶₀ #vk.4 )
+                  case outr_0_11111111
+                  by solve( (#vl.2, 0) ~~> (#vk.4, 0) )
+                next
+                  case outrhhkrrrotidhkrr_0_111111111111111
+                  by solve( (#vl.2, 0) ~~> (#vk.4, 0) )
+                next
+                  case outrlhhkrrrotidhkrr_0_11112111111
+                  solve( (#vl.2, 0) ~~> (#vk.4, 0) )
+                    case d_0_fst
+                    by solve( (#vr.41, 0) ~~> (#vk.4, 0) )
+                  next
+                    case d_0_snd
+                    by solve( (#vr.41, 0) ~~> (#vk.4, 0) )
+                  qed
+                qed
+              qed
+            next
+              case coerce
+              solve( !KD( (~k⊕x) ) ▶₀ #vk.3 )
+                case outr_0_11111111
+                by solve( (#vl.2, 0) ~~> (#vk.3, 0) )
+              next
+                case outrhhkrrrotidhkrr_0_111111111111111
+                by solve( (#vl.2, 0) ~~> (#vk.3, 0) )
+              next
+                case outrlhhkrrrotidhkrr_0_11112111111
+                solve( (#vl.2, 0) ~~> (#vk.3, 0) )
+                  case d_0_fst
+                  by solve( (#vr.41, 0) ~~> (#vk.3, 0) )
                 next
                   case d_0_snd
                   by solve( (#vr.41, 0) ~~> (#vk.3, 0) )
@@ -306,7 +420,7 @@ solve( Commit( <'T', 'R', t> ) @ #i )
             case coerce
             solve( !KD( (~k⊕~r2⊕z) ) ▶₀ #vk.2 )
               case outr_0_11111111
-              by contradiction /* impossible chain */
+              by solve( (#vl.2, 0) ~~> (#vk.2, 0) )
             next
               case outrhhkrrrotidhkrr_0_111111111111111
               by solve( (#vl.2, 0) ~~> (#vk.2, 0) )
@@ -314,7 +428,7 @@ solve( Commit( <'T', 'R', t> ) @ #i )
               case outrlhhkrrrotidhkrr_0_11112111111
               solve( (#vl.2, 0) ~~> (#vk.2, 0) )
                 case d_0_fst
-                by contradiction /* impossible chain */
+                by solve( (#vr.41, 0) ~~> (#vk.2, 0) )
               next
                 case d_0_snd
                 by solve( (#vr.41, 0) ~~> (#vk.2, 0) )
@@ -325,14 +439,41 @@ solve( Commit( <'T', 'R', t> ) @ #i )
           case split_case_7
           solve( splitEqs(3) )
             case split
-            solve( !KU( (~r2⊕x) ) @ #vk.3 )
-              case c_xor
-              by contradiction /* cyclic */
+            solve( !KU( (~k⊕x) ) @ #vk.3 )
+              case c_xor_case_1
+              by solve( !KU( ~k ) @ #vk.7 )
+            next
+              case c_xor_case_2
+              solve( !KU( (~k⊕x.1) ) @ #vk.7 )
+                case c_xor_case_1
+                by contradiction /* forbidden AC constructor chain */
+              next
+                case c_xor_case_2
+                by contradiction /* forbidden AC constructor chain */
+              next
+                case coerce
+                solve( !KD( (~k⊕x.1) ) ▶₀ #vk.3 )
+                  case outr_0_11111111
+                  by solve( (#vl.2, 0) ~~> (#vk.3, 0) )
+                next
+                  case outrhhkrrrotidhkrr_0_111111111111111
+                  by solve( (#vl.2, 0) ~~> (#vk.3, 0) )
+                next
+                  case outrlhhkrrrotidhkrr_0_11112111111
+                  solve( (#vl.2, 0) ~~> (#vk.3, 0) )
+                    case d_0_fst
+                    by solve( (#vr.41, 0) ~~> (#vk.3, 0) )
+                  next
+                    case d_0_snd
+                    by solve( (#vr.41, 0) ~~> (#vk.3, 0) )
+                  qed
+                qed
+              qed
             next
               case coerce
-              solve( !KD( (~r2⊕x) ) ▶₀ #vk.2 )
+              solve( !KD( (~k⊕x) ) ▶₀ #vk.2 )
                 case outr_0_11111111
-                by contradiction /* impossible chain */
+                by solve( (#vl.2, 0) ~~> (#vk.2, 0) )
               next
                 case outrhhkrrrotidhkrr_0_111111111111111
                 by solve( (#vl.2, 0) ~~> (#vk.2, 0) )
@@ -340,7 +481,7 @@ solve( Commit( <'T', 'R', t> ) @ #i )
                 case outrlhhkrrrotidhkrr_0_11112111111
                 solve( (#vl.2, 0) ~~> (#vk.2, 0) )
                   case d_0_fst
-                  by contradiction /* impossible chain */
+                  by solve( (#vr.41, 0) ~~> (#vk.2, 0) )
                 next
                   case d_0_snd
                   by solve( (#vr.41, 0) ~~> (#vk.2, 0) )
@@ -352,14 +493,41 @@ solve( Commit( <'T', 'R', t> ) @ #i )
           case split_case_8
           solve( splitEqs(3) )
             case split
-            solve( !KU( (~k⊕x) ) @ #vk.3 )
-              case c_xor
-              by solve( !KU( ~k ) @ #vk.7 )
+            solve( !KU( (~r2⊕x) ) @ #vk.3 )
+              case c_xor_case_1
+              by contradiction /* cyclic */
+            next
+              case c_xor_case_2
+              solve( !KU( (~r2⊕x.1) ) @ #vk.7 )
+                case c_xor_case_1
+                by contradiction /* cyclic */
+              next
+                case c_xor_case_2
+                by contradiction /* forbidden AC constructor chain */
+              next
+                case coerce
+                solve( !KD( (~r2⊕x.1) ) ▶₀ #vk.3 )
+                  case outr_0_11111111
+                  by solve( (#vl.2, 0) ~~> (#vk.3, 0) )
+                next
+                  case outrhhkrrrotidhkrr_0_111111111111111
+                  by solve( (#vl.2, 0) ~~> (#vk.3, 0) )
+                next
+                  case outrlhhkrrrotidhkrr_0_11112111111
+                  solve( (#vl.2, 0) ~~> (#vk.3, 0) )
+                    case d_0_fst
+                    by solve( (#vr.41, 0) ~~> (#vk.3, 0) )
+                  next
+                    case d_0_snd
+                    by solve( (#vr.41, 0) ~~> (#vk.3, 0) )
+                  qed
+                qed
+              qed
             next
               case coerce
-              solve( !KD( (~k⊕x) ) ▶₀ #vk.2 )
+              solve( !KD( (~r2⊕x) ) ▶₀ #vk.2 )
                 case outr_0_11111111
-                by contradiction /* impossible chain */
+                by solve( (#vl.2, 0) ~~> (#vk.2, 0) )
               next
                 case outrhhkrrrotidhkrr_0_111111111111111
                 by solve( (#vl.2, 0) ~~> (#vk.2, 0) )
@@ -367,7 +535,7 @@ solve( Commit( <'T', 'R', t> ) @ #i )
                 case outrlhhkrrrotidhkrr_0_11112111111
                 solve( (#vl.2, 0) ~~> (#vk.2, 0) )
                   case d_0_fst
-                  by contradiction /* impossible chain */
+                  by solve( (#vr.41, 0) ~~> (#vk.2, 0) )
                 next
                   case d_0_snd
                   by solve( (#vr.41, 0) ~~> (#vk.2, 0) )
@@ -401,7 +569,7 @@ solve( Commit( <'R', 'T', t> ) @ #i )
       case c_lh
       solve( !KU( (h(x)⊕rot(~id, h(x))) ) @ #vk.3 )
         case c_xor
-        solve( !KU( rot(~id, h(x)) ) @ #vk.4 )
+        solve( !KU( rot(~id, h(x)) ) @ #vk.5 )
           case c_rot
           by solve( !KU( ~id ) @ #vk.6 )
         qed
@@ -409,7 +577,7 @@ solve( Commit( <'R', 'T', t> ) @ #i )
         case coerce
         solve( !KD( (h(x)⊕rot(~id, h(x))) ) ▶₀ #vk.1 )
           case outr_0_11111111
-          by contradiction /* impossible chain */
+          by solve( (#vl, 0) ~~> (#vk.1, 0) )
         next
           case outrhhkrrrotidhkrr_0_111111111111111
           by solve( (#vl, 0) ~~> (#vk.1, 0) )
@@ -417,7 +585,7 @@ solve( Commit( <'R', 'T', t> ) @ #i )
           case outrlhhkrrrotidhkrr_0_11112111111
           solve( (#vl, 0) ~~> (#vk.1, 0) )
             case d_0_fst
-            by contradiction /* impossible chain */
+            by solve( (#vr.18, 0) ~~> (#vk.1, 0) )
           next
             case d_0_snd
             by solve( (#vr.18, 0) ~~> (#vk.1, 0) )
@@ -463,14 +631,44 @@ solve( Commit( <'R', 'T', t> ) @ #i )
         case split_case_6
         solve( !KU( (~k⊕~r1⊕x) ) @ #vk.2 )
           case c_xor_case_1
-          solve( !KU( (~k⊕x) ) @ #vk.4 )
-            case c_xor
+          by solve( !KU( ~k ) @ #vk.4 )
+        next
+          case c_xor_case_2
+          solve( !KU( (~k⊕x) ) @ #vk.5 )
+            case c_xor_case_1
             by solve( !KU( ~k ) @ #vk.7 )
+          next
+            case c_xor_case_2
+            solve( !KU( (~k⊕x.1) ) @ #vk.7 )
+              case c_xor_case_1
+              by contradiction /* forbidden AC constructor chain */
+            next
+              case c_xor_case_2
+              by contradiction /* forbidden AC constructor chain */
+            next
+              case coerce
+              solve( !KD( (~k⊕x.1) ) ▶₀ #vk.3 )
+                case outr_0_11111111
+                by solve( (#vl.1, 0) ~~> (#vk.3, 0) )
+              next
+                case outrhhkrrrotidhkrr_0_111111111111111
+                by solve( (#vl.1, 0) ~~> (#vk.3, 0) )
+              next
+                case outrlhhkrrrotidhkrr_0_11112111111
+                solve( (#vl.1, 0) ~~> (#vk.3, 0) )
+                  case d_0_fst
+                  by solve( (#vr.28, 0) ~~> (#vk.3, 0) )
+                next
+                  case d_0_snd
+                  by solve( (#vr.28, 0) ~~> (#vk.3, 0) )
+                qed
+              qed
+            qed
           next
             case coerce
             solve( !KD( (~k⊕x) ) ▶₀ #vk.2 )
               case outr_0_11111111
-              by contradiction /* impossible chain */
+              by solve( (#vl.1, 0) ~~> (#vk.2, 0) )
             next
               case outrhhkrrrotidhkrr_0_111111111111111
               by solve( (#vl.1, 0) ~~> (#vk.2, 0) )
@@ -478,31 +676,7 @@ solve( Commit( <'R', 'T', t> ) @ #i )
               case outrlhhkrrrotidhkrr_0_11112111111
               solve( (#vl.1, 0) ~~> (#vk.2, 0) )
                 case d_0_fst
-                by contradiction /* impossible chain */
-              next
-                case d_0_snd
                 by solve( (#vr.28, 0) ~~> (#vk.2, 0) )
-              qed
-            qed
-          qed
-        next
-          case c_xor_case_2
-          solve( !KU( (~r1⊕x) ) @ #vk.4 )
-            case c_xor
-            by solve( !KU( ~k ) @ #vk.5 )
-          next
-            case coerce
-            solve( !KD( (~r1⊕x) ) ▶₀ #vk.2 )
-              case outr_0_11111111
-              by contradiction /* impossible chain */
-            next
-              case outrhhkrrrotidhkrr_0_111111111111111
-              by solve( (#vl.1, 0) ~~> (#vk.2, 0) )
-            next
-              case outrlhhkrrrotidhkrr_0_11112111111
-              solve( (#vl.1, 0) ~~> (#vk.2, 0) )
-                case d_0_fst
-                by contradiction /* impossible chain */
               next
                 case d_0_snd
                 by solve( (#vr.28, 0) ~~> (#vk.2, 0) )
@@ -513,12 +687,12 @@ solve( Commit( <'R', 'T', t> ) @ #i )
           case c_xor_case_3
           solve( !KU( (~k⊕~r1) ) @ #vk.5 )
             case c_xor
-            by solve( !KU( ~k ) @ #vk.7 )
+            by solve( !KU( ~k ) @ #vk.6 )
           next
             case coerce
             solve( !KD( (~k⊕~r1) ) ▶₀ #vk.2 )
               case outr_0_11111111
-              by contradiction /* impossible chain */
+              by solve( (#vl.1, 0) ~~> (#vk.2, 0) )
             next
               case outrhhkrrrotidhkrr_0_111111111111111
               by solve( (#vl.1, 0) ~~> (#vk.2, 0) )
@@ -526,7 +700,166 @@ solve( Commit( <'R', 'T', t> ) @ #i )
               case outrlhhkrrrotidhkrr_0_11112111111
               solve( (#vl.1, 0) ~~> (#vk.2, 0) )
                 case d_0_fst
-                by contradiction /* impossible chain */
+                by solve( (#vr.28, 0) ~~> (#vk.2, 0) )
+              next
+                case d_0_snd
+                by solve( (#vr.28, 0) ~~> (#vk.2, 0) )
+              qed
+            qed
+          qed
+        next
+          case c_xor_case_4
+          solve( !KU( (~k⊕~r1⊕x.1) ) @ #vk.5 )
+            case c_xor_case_1
+            by solve( !KU( ~k ) @ #vk.6 )
+          next
+            case c_xor_case_2
+            solve( !KU( (~k⊕x.1) ) @ #vk.7 )
+              case c_xor_case_1
+              by contradiction /* forbidden AC constructor chain */
+            next
+              case c_xor_case_2
+              by contradiction /* forbidden AC constructor chain */
+            next
+              case coerce
+              solve( !KD( (~k⊕x.1) ) ▶₀ #vk.3 )
+                case outr_0_11111111
+                by solve( (#vl.1, 0) ~~> (#vk.3, 0) )
+              next
+                case outrhhkrrrotidhkrr_0_111111111111111
+                by solve( (#vl.1, 0) ~~> (#vk.3, 0) )
+              next
+                case outrlhhkrrrotidhkrr_0_11112111111
+                solve( (#vl.1, 0) ~~> (#vk.3, 0) )
+                  case d_0_fst
+                  by solve( (#vr.28, 0) ~~> (#vk.3, 0) )
+                next
+                  case d_0_snd
+                  by solve( (#vr.28, 0) ~~> (#vk.3, 0) )
+                qed
+              qed
+            qed
+          next
+            case c_xor_case_3
+            by contradiction /* forbidden AC constructor chain */
+          next
+            case c_xor_case_4
+            by contradiction /* forbidden AC constructor chain */
+          next
+            case c_xor_case_5
+            solve( !KU( (~k⊕x.1) ) @ #vk.6 )
+              case c_xor_case_1
+              by contradiction /* forbidden AC constructor chain */
+            next
+              case c_xor_case_2
+              by contradiction /* forbidden AC constructor chain */
+            next
+              case coerce
+              solve( !KD( (~k⊕x.1) ) ▶₀ #vk.3 )
+                case outr_0_11111111
+                by solve( (#vl.1, 0) ~~> (#vk.3, 0) )
+              next
+                case outrhhkrrrotidhkrr_0_111111111111111
+                by solve( (#vl.1, 0) ~~> (#vk.3, 0) )
+              next
+                case outrlhhkrrrotidhkrr_0_11112111111
+                solve( (#vl.1, 0) ~~> (#vk.3, 0) )
+                  case d_0_fst
+                  by solve( (#vr.28, 0) ~~> (#vk.3, 0) )
+                next
+                  case d_0_snd
+                  by solve( (#vr.28, 0) ~~> (#vk.3, 0) )
+                qed
+              qed
+            qed
+          next
+            case coerce
+            solve( !KD( (~k⊕~r1⊕x.1) ) ▶₀ #vk.2 )
+              case outr_0_11111111
+              by solve( (#vl.1, 0) ~~> (#vk.2, 0) )
+            next
+              case outrhhkrrrotidhkrr_0_111111111111111
+              by solve( (#vl.1, 0) ~~> (#vk.2, 0) )
+            next
+              case outrlhhkrrrotidhkrr_0_11112111111
+              solve( (#vl.1, 0) ~~> (#vk.2, 0) )
+                case d_0_fst
+                by solve( (#vr.28, 0) ~~> (#vk.2, 0) )
+              next
+                case d_0_snd
+                by solve( (#vr.28, 0) ~~> (#vk.2, 0) )
+              qed
+            qed
+          qed
+        next
+          case c_xor_case_5
+          solve( !KU( (~k⊕x) ) @ #vk.4 )
+            case c_xor_case_1
+            solve( !KU( (~r1⊕x) ) @ #vk.5 )
+              case c_xor_case_1
+              by contradiction /* forbidden AC constructor chain */
+            next
+              case c_xor_case_2
+              by contradiction /* forbidden AC constructor chain */
+            next
+              case coerce
+              solve( !KD( (~r1⊕x) ) ▶₀ #vk.3 )
+                case outr_0_11111111
+                by solve( (#vl.1, 0) ~~> (#vk.3, 0) )
+              next
+                case outrhhkrrrotidhkrr_0_111111111111111
+                by solve( (#vl.1, 0) ~~> (#vk.3, 0) )
+              next
+                case outrlhhkrrrotidhkrr_0_11112111111
+                solve( (#vl.1, 0) ~~> (#vk.3, 0) )
+                  case d_0_fst
+                  by solve( (#vr.28, 0) ~~> (#vk.3, 0) )
+                next
+                  case d_0_snd
+                  by solve( (#vr.28, 0) ~~> (#vk.3, 0) )
+                qed
+              qed
+            qed
+          next
+            case c_xor_case_2
+            solve( !KU( (~r1⊕x) ) @ #vk.5 )
+              case c_xor_case_1
+              by contradiction /* forbidden AC constructor chain */
+            next
+              case c_xor_case_2
+              by contradiction /* forbidden AC constructor chain */
+            next
+              case coerce
+              solve( !KD( (~r1⊕x) ) ▶₀ #vk.3 )
+                case outr_0_11111111
+                by solve( (#vl.1, 0) ~~> (#vk.3, 0) )
+              next
+                case outrhhkrrrotidhkrr_0_111111111111111
+                by solve( (#vl.1, 0) ~~> (#vk.3, 0) )
+              next
+                case outrlhhkrrrotidhkrr_0_11112111111
+                solve( (#vl.1, 0) ~~> (#vk.3, 0) )
+                  case d_0_fst
+                  by solve( (#vr.28, 0) ~~> (#vk.3, 0) )
+                next
+                  case d_0_snd
+                  by solve( (#vr.28, 0) ~~> (#vk.3, 0) )
+                qed
+              qed
+            qed
+          next
+            case coerce
+            solve( !KD( (~k⊕x) ) ▶₀ #vk.2 )
+              case outr_0_11111111
+              by solve( (#vl.1, 0) ~~> (#vk.2, 0) )
+            next
+              case outrhhkrrrotidhkrr_0_111111111111111
+              by solve( (#vl.1, 0) ~~> (#vk.2, 0) )
+            next
+              case outrlhhkrrrotidhkrr_0_11112111111
+              solve( (#vl.1, 0) ~~> (#vk.2, 0) )
+                case d_0_fst
+                by solve( (#vr.28, 0) ~~> (#vk.2, 0) )
               next
                 case d_0_snd
                 by solve( (#vr.28, 0) ~~> (#vk.2, 0) )
@@ -537,7 +870,7 @@ solve( Commit( <'R', 'T', t> ) @ #i )
           case coerce
           solve( !KD( (~k⊕~r1⊕x) ) ▶₀ #vk.1 )
             case outr_0_11111111
-            by contradiction /* impossible chain */
+            by solve( (#vl.1, 0) ~~> (#vk.1, 0) )
           next
             case outrhhkrrrotidhkrr_0_111111111111111
             by solve( (#vl.1, 0) ~~> (#vk.1, 0) )
@@ -545,7 +878,7 @@ solve( Commit( <'R', 'T', t> ) @ #i )
             case outrlhhkrrrotidhkrr_0_11112111111
             solve( (#vl.1, 0) ~~> (#vk.1, 0) )
               case d_0_fst
-              by contradiction /* impossible chain */
+              by solve( (#vr.28, 0) ~~> (#vk.1, 0) )
             next
               case d_0_snd
               by solve( (#vr.28, 0) ~~> (#vk.1, 0) )
@@ -556,23 +889,41 @@ solve( Commit( <'R', 'T', t> ) @ #i )
         case split_case_7
         solve( splitEqs(2) )
           case split
-          solve( !KU( (~r1⊕x) ) @ #vk.2 )
-            case c_xor
-            solve( splitEqs(3) )
-              case split_case_1
-              by contradiction /* from formulas */
+          solve( !KU( (~k⊕x) ) @ #vk.2 )
+            case c_xor_case_1
+            by solve( !KU( ~k ) @ #vk.5 )
+          next
+            case c_xor_case_2
+            solve( !KU( (~k⊕x.1) ) @ #vk.5 )
+              case c_xor_case_1
+              by contradiction /* forbidden AC constructor chain */
             next
-              case split_case_2
-              by contradiction /* from formulas */
+              case c_xor_case_2
+              by contradiction /* forbidden AC constructor chain */
             next
-              case split_case_3
-              by contradiction /* from formulas */
+              case coerce
+              solve( !KD( (~k⊕x.1) ) ▶₀ #vk.2 )
+                case outr_0_11111111
+                by solve( (#vl.1, 0) ~~> (#vk.2, 0) )
+              next
+                case outrhhkrrrotidhkrr_0_111111111111111
+                by solve( (#vl.1, 0) ~~> (#vk.2, 0) )
+              next
+                case outrlhhkrrrotidhkrr_0_11112111111
+                solve( (#vl.1, 0) ~~> (#vk.2, 0) )
+                  case d_0_fst
+                  by solve( (#vr.28, 0) ~~> (#vk.2, 0) )
+                next
+                  case d_0_snd
+                  by solve( (#vr.28, 0) ~~> (#vk.2, 0) )
+                qed
+              qed
             qed
           next
             case coerce
-            solve( !KD( (~r1⊕x) ) ▶₀ #vk.1 )
+            solve( !KD( (~k⊕x) ) ▶₀ #vk.1 )
               case outr_0_11111111
-              by contradiction /* impossible chain */
+              by solve( (#vl.1, 0) ~~> (#vk.1, 0) )
             next
               case outrhhkrrrotidhkrr_0_111111111111111
               by solve( (#vl.1, 0) ~~> (#vk.1, 0) )
@@ -580,7 +931,7 @@ solve( Commit( <'R', 'T', t> ) @ #i )
               case outrlhhkrrrotidhkrr_0_11112111111
               solve( (#vl.1, 0) ~~> (#vk.1, 0) )
                 case d_0_fst
-                by contradiction /* impossible chain */
+                by solve( (#vr.28, 0) ~~> (#vk.1, 0) )
               next
                 case d_0_snd
                 by solve( (#vr.28, 0) ~~> (#vk.1, 0) )
@@ -592,14 +943,50 @@ solve( Commit( <'R', 'T', t> ) @ #i )
         case split_case_8
         solve( splitEqs(2) )
           case split
-          solve( !KU( (~k⊕x) ) @ #vk.2 )
-            case c_xor
-            by solve( !KU( ~k ) @ #vk.5 )
+          solve( !KU( (~r1⊕x) ) @ #vk.2 )
+            case c_xor_case_1
+            solve( splitEqs(3) )
+              case split_case_1
+              by contradiction /* from formulas */
+            next
+              case split_case_2
+              by contradiction /* from formulas */
+            next
+              case split_case_3
+              by contradiction /* from formulas */
+            qed
+          next
+            case c_xor_case_2
+            solve( !KU( (~r1⊕x.1) ) @ #vk.5 )
+              case c_xor_case_1
+              by contradiction /* forbidden AC constructor chain */
+            next
+              case c_xor_case_2
+              by contradiction /* forbidden AC constructor chain */
+            next
+              case coerce
+              solve( !KD( (~r1⊕x.1) ) ▶₀ #vk.2 )
+                case outr_0_11111111
+                by solve( (#vl.1, 0) ~~> (#vk.2, 0) )
+              next
+                case outrhhkrrrotidhkrr_0_111111111111111
+                by solve( (#vl.1, 0) ~~> (#vk.2, 0) )
+              next
+                case outrlhhkrrrotidhkrr_0_11112111111
+                solve( (#vl.1, 0) ~~> (#vk.2, 0) )
+                  case d_0_fst
+                  by solve( (#vr.28, 0) ~~> (#vk.2, 0) )
+                next
+                  case d_0_snd
+                  by solve( (#vr.28, 0) ~~> (#vk.2, 0) )
+                qed
+              qed
+            qed
           next
             case coerce
-            solve( !KD( (~k⊕x) ) ▶₀ #vk.1 )
+            solve( !KD( (~r1⊕x) ) ▶₀ #vk.1 )
               case outr_0_11111111
-              by contradiction /* impossible chain */
+              by solve( (#vl.1, 0) ~~> (#vk.1, 0) )
             next
               case outrhhkrrrotidhkrr_0_111111111111111
               by solve( (#vl.1, 0) ~~> (#vk.1, 0) )
@@ -607,7 +994,7 @@ solve( Commit( <'R', 'T', t> ) @ #i )
               case outrlhhkrrrotidhkrr_0_11112111111
               solve( (#vl.1, 0) ~~> (#vk.1, 0) )
                 case d_0_fst
-                by contradiction /* impossible chain */
+                by solve( (#vr.28, 0) ~~> (#vk.1, 0) )
               next
                 case d_0_snd
                 by solve( (#vr.28, 0) ~~> (#vk.1, 0) )
@@ -734,18 +1121,14 @@ rule (modulo E) p_0_1111[color=#ffffff, process="|", issapicrule,
      [ State_11111( ~id, ~k ), State_11112( ~id, ~k ) ]
   */
 
-rule (modulo E) Reader_0_11111[color=#ffffff, process="Reader()",
+rule (modulo E) Reader_0_11111[color=#ffffff, process="Reader();",
                                issapicrule, role='Process']:
-   [ State_11111( ~id.1, ~k.1 ) ]
-  -->
-   [ State_111111( ~id.1, ~k.1 ), State_111112( ~id.1, ~k.1 ) ]
+   [ State_11111( ~id.1, ~k.1 ) ] --> [ State_111111( ~id.1, ~k.1 ) ]
 
   /*
-  rule (modulo AC) Reader_0_11111[color=#ffffff, process="Reader()",
+  rule (modulo AC) Reader_0_11111[color=#ffffff, process="Reader();",
                                   issapicrule, role='Process']:
-     [ State_11111( ~id, ~k ) ]
-    -->
-     [ State_111111( ~id, ~k ), State_111112( ~id, ~k ) ]
+     [ State_11111( ~id, ~k ) ] --> [ State_111111( ~id, ~k ) ]
   */
 
 rule (modulo E) newr_0_111111[color=#404480, process="new ~r1.1;",
@@ -1176,28 +1559,14 @@ rule (modulo E) p_0_11111111112[color=#404480, process="0", issapicrule,
      [ State_11111111112( ~id, ~k, ~r1, r2, x ) ] --> [ ]
   */
 
-rule (modulo E) p_0_111112[color=#ffffff, process="0", issapicrule,
-                           role='Process']:
-   [ State_111112( ~id.1, ~k.1 ) ] --> [ ]
-
-  /*
-  rule (modulo AC) p_0_111112[color=#ffffff, process="0", issapicrule,
-                              role='Process']:
-     [ State_111112( ~id, ~k ) ] --> [ ]
-  */
-
-rule (modulo E) Tag_0_11112[color=#ffffff, process="Tag()", issapicrule,
+rule (modulo E) Tag_0_11112[color=#ffffff, process="Tag();", issapicrule,
                             role='Process']:
-   [ State_11112( ~id.1, ~k.1 ) ]
-  -->
-   [ State_111121( ~id.1, ~k.1 ), State_111122( ~id.1, ~k.1 ) ]
+   [ State_11112( ~id.1, ~k.1 ) ] --> [ State_111121( ~id.1, ~k.1 ) ]
 
   /*
-  rule (modulo AC) Tag_0_11112[color=#ffffff, process="Tag()", issapicrule,
-                               role='Process']:
-     [ State_11112( ~id, ~k ) ]
-    -->
-     [ State_111121( ~id, ~k ), State_111122( ~id, ~k ) ]
+  rule (modulo AC) Tag_0_11112[color=#ffffff, process="Tag();",
+                               issapicrule, role='Process']:
+     [ State_11112( ~id, ~k ) ] --> [ State_111121( ~id, ~k ) ]
   */
 
 rule (modulo E) inr_0_111121[color=#40807c, process="in(r1.2);",
@@ -1543,16 +1912,6 @@ rule (modulo E) p_0_111121111111111[color=#40807c, process="0",
      [ State_111121111111111( ~id, ~k, ~r2, r1 ) ] --> [ ]
   */
 
-rule (modulo E) p_0_111122[color=#ffffff, process="0", issapicrule,
-                           role='Process']:
-   [ State_111122( ~id.1, ~k.1 ) ] --> [ ]
-
-  /*
-  rule (modulo AC) p_0_111122[color=#ffffff, process="0", issapicrule,
-                              role='Process']:
-     [ State_111122( ~id, ~k ) ] --> [ ]
-  */
-
 restriction predicate_eq:
   "∀ #i a b. (Pred_Eq( a, b ) @ #i) ⇒ (a = b)"
   // safety formula
@@ -1584,10 +1943,10 @@ restriction single_session:
 
 /*
 Generated from:
-Tamarin version 1.12.0
+Tamarin version 1.13.0
 Maude version 3.5.1
-Git revision: f1832c9bc70a2a165991a0802520f2e07c023227 (with uncommited changes), branch: prepare-release
-Compiled at: 2026-03-06 22:21:49.602637 UTC
+Git revision: 41bc81379b23681e7057314a5cf66a25c45e1986, branch: canonicalise-subst
+Compiled at: 2026-07-27 16:11:34.947223 UTC
 */
 
 end
@@ -1599,12 +1958,12 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-xor/CH07.spthy
 
   output:          examples/sapic/fast/feature-xor/CH07.spthy.tmp
-  processing time: 3.46s
+  processing time: 4.14s
   
   recentalive_tag_attack (exists-trace): verified (10 steps)
   recentalive_reader (all-traces): verified (24 steps)
-  noninjectiveagreement_tag (all-traces): verified (77 steps)
-  noninjectiveagreement_reader (all-traces): verified (77 steps)
+  noninjectiveagreement_tag (all-traces): verified (133 steps)
+  noninjectiveagreement_reader (all-traces): verified (150 steps)
   executable (exists-trace): verified (11 steps)
 
 ==============================================================================

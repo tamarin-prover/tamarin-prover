@@ -1,0 +1,206 @@
+theory CH07_UK3 begin
+
+// Function signature and definition of the equational theory E
+
+builtins: xor
+functions: fst/1, h/1, lh/1, pair/2, rh/1, rot/2, snd/1,
+           add/2 [AC], unionUD/1 [destructor]
+equations:
+    fst(<x.1, x.2>) = x.1,
+    snd(<x.1, x.2>) = x.2,
+    unionUD(add(x, y)) = x
+
+
+
+
+
+
+
+rule (modulo E) Setup:
+   [ Fr( ~k1 ), Fr( ~id1 ), Fr( ~k2 ), Fr( ~id2 ) ]
+  --[ OnlyOnce( ) ]->
+   [
+   Reader( add('1',
+               diff(add(<~k1, ~id1>, <~k2, ~id2>), add(<~k1, ~id1>, <~k1, ~id1>)))
+   ),
+   Tag( add('1',
+            diff(add(<~k1, ~id1>, <~k2, ~id2>), add(<~k1, ~id1>, <~k1, ~id1>)))
+   )
+   ]
+
+rule (modulo E) select_tag:
+   [ Tag( add(z, <~k, ~id>) ) ]
+  --[ Tag( add(z, <~k, ~id>) ) ]->
+   [ TagRun( ~k, ~id ), Tag( z ) ]
+
+rule (modulo E) select_reader:
+   [ Reader( add(z, <~k, ~id>) ) ]
+  --[ Reader( add(z, <~k, ~id>) ) ]->
+   [ ReaderRun( ~k, ~id ), Reader( z ) ]
+
+rule (modulo E) reader1:
+   [ Fr( ~r1 ) ]
+  --[ Challenge( ~r1, 'Reader' ) ]->
+   [ Out( ~r1 ), Initiated( ~r1 ) ]
+
+rule (modulo E) tag1:
+   [ In( r1 ), Fr( ~r2 ), TagRun( ~k, ~id ) ]
+  --[ Response( ~k, 'Tag' ), Challenge( ~r2, 'Tag' ) ]->
+   [
+   Out( <~r2, lh((h((~k⊕~r2⊕r1))⊕rot(~id, h((~k⊕~r2⊕r1)))))> ),
+   TagState( ~k, ~id, r1, ~r2, h((~k⊕~r2⊕r1)) )
+   ]
+
+rule (modulo E) reader2:
+   [
+   Initiated( ~r1 ), ReaderRun( ~k, ~id ),
+   In( <r2, lh((hash⊕rot(~id, hash)))> )
+   ]
+  --[
+  Alive( ~k, 'Tag' ), Response( ~k, 'Reader' ),
+  Eq( h((~k⊕~r1⊕r2)), hash )
+  ]->
+   [ Out( rh((hash⊕rot(~id, hash))) ) ]
+
+rule (modulo E) tag2:
+   [
+   In( rh((hash⊕rot(~id, hash))) ), TagState( ~k, ~id, r1, ~r2, hash )
+   ]
+  --[ Alive( ~k, 'Reader' ) ]->
+   [ ]
+
+restriction equality [right]:
+  "∀ x y #i. (Eq( x, y ) @ #i) ⇒ (x = y)"
+  // safety formula
+
+restriction equality [left]:
+  "∀ x y #i. (Eq( x, y ) @ #i) ⇒ (x = y)"
+  // safety formula
+
+restriction max_number_of_tags_tag [right]:
+  "∀ a b c d #i. (Tag( add(a, b, c, d) ) @ #i) ⇒ (⊥)"
+  // safety formula
+
+restriction max_number_of_tags_tag [left]:
+  "∀ a b c d #i. (Tag( add(a, b, c, d) ) @ #i) ⇒ (⊥)"
+  // safety formula
+
+restriction max_number_of_tags_tag_reader [right]:
+  "∀ a b c d #i. (Reader( add(a, b, c, d) ) @ #i) ⇒ (⊥)"
+  // safety formula
+
+restriction max_number_of_tags_tag_reader [left]:
+  "∀ a b c d #i. (Reader( add(a, b, c, d) ) @ #i) ⇒ (⊥)"
+  // safety formula
+
+restriction unique [right]:
+  "∀ #i #j. ((OnlyOnce( ) @ #i) ∧ (OnlyOnce( ) @ #j)) ⇒ (#i = #j)"
+  // safety formula
+
+restriction unique [left]:
+  "∀ #i #j. ((OnlyOnce( ) @ #i) ∧ (OnlyOnce( ) @ #j)) ⇒ (#i = #j)"
+  // safety formula
+
+lemma recentalive_tag [right]:
+  all-traces
+  "∀ x #i.
+    (Alive( x, 'Tag' ) @ #i) ⇒
+    (∃ y #j #k.
+      (((Challenge( y, 'Reader' ) @ #k) ∧ (Response( x, 'Tag' ) @ #j)) ∧
+       (#k < #j)) ∧
+      (#j < #i))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ x #i.
+  (Alive( x, 'Tag' ) @ #i)
+ ∧
+  ∀ y #j #k.
+   (Challenge( y, 'Reader' ) @ #k) ∧ (Response( x, 'Tag' ) @ #j)
+  ⇒
+   ((¬(#k < #j)) ∨ (¬(#j < #i)))"
+*/
+by sorry
+
+lemma recentalive_tag [left]:
+  all-traces
+  "∀ x #i.
+    (Alive( x, 'Tag' ) @ #i) ⇒
+    (∃ y #j #k.
+      (((Challenge( y, 'Reader' ) @ #k) ∧ (Response( x, 'Tag' ) @ #j)) ∧
+       (#k < #j)) ∧
+      (#j < #i))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ x #i.
+  (Alive( x, 'Tag' ) @ #i)
+ ∧
+  ∀ y #j #k.
+   (Challenge( y, 'Reader' ) @ #k) ∧ (Response( x, 'Tag' ) @ #j)
+  ⇒
+   ((¬(#k < #j)) ∨ (¬(#j < #i)))"
+*/
+by sorry
+
+lemma recentalive_reader [right]:
+  all-traces
+  "∀ x #i.
+    (Alive( x, 'Reader' ) @ #i) ⇒
+    (∃ y #j #k.
+      (((Challenge( y, 'Tag' ) @ #k) ∧ (Response( x, 'Reader' ) @ #j)) ∧
+       (#k < #j)) ∧
+      (#j < #i))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ x #i.
+  (Alive( x, 'Reader' ) @ #i)
+ ∧
+  ∀ y #j #k.
+   (Challenge( y, 'Tag' ) @ #k) ∧ (Response( x, 'Reader' ) @ #j)
+  ⇒
+   ((¬(#k < #j)) ∨ (¬(#j < #i)))"
+*/
+by sorry
+
+lemma recentalive_reader [left]:
+  all-traces
+  "∀ x #i.
+    (Alive( x, 'Reader' ) @ #i) ⇒
+    (∃ y #j #k.
+      (((Challenge( y, 'Tag' ) @ #k) ∧ (Response( x, 'Reader' ) @ #j)) ∧
+       (#k < #j)) ∧
+      (#j < #i))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ x #i.
+  (Alive( x, 'Reader' ) @ #i)
+ ∧
+  ∀ y #j #k.
+   (Challenge( y, 'Tag' ) @ #k) ∧ (Response( x, 'Reader' ) @ #j)
+  ⇒
+   ((¬(#k < #j)) ∨ (¬(#j < #i)))"
+*/
+by sorry
+
+lemma executable [right]:
+  exists-trace
+  "∃ x #i #j.
+    (Alive( x, 'Reader' ) @ #i) ∧ (Response( x, 'Tag' ) @ #j)"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ x #i #j.
+  (Alive( x, 'Reader' ) @ #i) ∧ (Response( x, 'Tag' ) @ #j)"
+*/
+by sorry
+
+lemma executable [left]:
+  exists-trace
+  "∃ x #i #j.
+    (Alive( x, 'Reader' ) @ #i) ∧ (Response( x, 'Tag' ) @ #j)"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ x #i #j.
+  (Alive( x, 'Reader' ) @ #i) ∧ (Response( x, 'Tag' ) @ #j)"
+*/
+by sorry
+
+end

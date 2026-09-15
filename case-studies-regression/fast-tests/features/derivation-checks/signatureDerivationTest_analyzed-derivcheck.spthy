@@ -181,10 +181,10 @@ Failed to derive Variable(s): sk
 
 /*
 Generated from:
-Tamarin version 1.12.0
+Tamarin version 1.13.0
 Maude version 3.5.1
-Git revision: f1832c9bc70a2a165991a0802520f2e07c023227 (with uncommited changes), branch: prepare-release
-Compiled at: 2026-03-06 22:21:49.602637 UTC
+Git revision: 41bc81379b23681e7057314a5cf66a25c45e1986, branch: canonicalise-subst
+Compiled at: 2026-07-27 16:11:34.947223 UTC
 */
 
 end
@@ -194,6 +194,8 @@ maude tool: 'maude'
  checking installation: OK.
 [Theory SignatureDerivationTests] Theory loaded
 [Theory SignatureDerivationTests] Theory translated
+[Theory SignatureDerivationTests] No Deconstruction Chain checks started
+[Theory SignatureDerivationTests] No Deconstruction Chain checks ended
 [Theory SignatureDerivationTests] Derivation checks started
 [Theory SignatureDerivationTests] Derivation checks ended
 [Theory SignatureDerivationTests] Theory closed
@@ -204,7 +206,7 @@ summary of summaries:
 analyzed: examples/features/derivation-checks/signatureDerivationTest.spthy
 
   output:          examples/features/derivation-checks/signatureDerivationTest.spthy.tmp
-  processing time: 0.20s
+  processing time: 0.10s
   
   WARNING: 1 wellformedness check failed!
            The analysis results might be wrong!

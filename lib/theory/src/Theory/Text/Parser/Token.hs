@@ -12,6 +12,7 @@ module Theory.Text.Parser.Token (
   -- * Symbols
   , symbol
   , symbol_
+  , reserved
   , dot
   , comma
   , colon
@@ -111,6 +112,7 @@ module Theory.Text.Parser.Token (
   , mkMacroStateSig
   , modifyStateSig
   , modifyStateFlag
+  , requireNaturalNumbers
 
     -- * Basic Parsing
   , Parser
@@ -186,6 +188,12 @@ modifyStateFlag ::  Monad m => (S.Set String -> S.Set String) -> ParsecT s Parse
 modifyStateFlag modifier = do
    st <- getState
    setState (st {flags = modifier $ flags st})
+
+requireNaturalNumbers :: String -> Parser ()
+requireNaturalNumbers what = do
+    st <- getState
+    unless (enableNat (sig st)) $
+        fail $ what ++ " requires the natural-numbers builtin"
 
 -- | Add macros to the signature so they're recognized as function symbols
 addMacrosToSignature :: [(B.ByteString, [LVar], Term (Lit Name LVar))] -> MaudeSig -> MaudeSig
@@ -268,6 +276,12 @@ symbol sym = try (T.symbol spthy sym) <?> ("\"" ++ sym ++ "\"")
 -- | Parse a symbol without returning the parsed string.
 symbol_ :: String -> Parser ()
 symbol_ = void . symbol
+
+-- | Parse a keyword or fixed symbol that must end at an identifier boundary,
+-- so that it does not match a prefix of a longer identifier. Identifiers may
+-- start with a digit, so this also guards number-like symbols such as "1".
+reserved :: String -> Parser ()
+reserved = T.reserved spthy
 
 -- | Between braces.
 braced :: Parser a -> Parser a
@@ -401,12 +415,18 @@ hexColor = T.lexeme spthy (singleQuoted hexCode <|> hexCode)
 -- | Parse a logical variable with the given sorts allowed.
 sortedLVar :: [LSort] -> Parser LVar
 sortedLVar ss =
-    asum $ map (try . mkSuffixParser) ss ++ map mkPrefixParser ss
+    asum $ mkSuffixParser : map mkPrefixParser ss
   where
-    mkSuffixParser s = do
-        (n, i) <- indexedIdentifier <* colon
-        symbol_ (sortSuffix s)
+    mkSuffixParser = do
+        (n, i) <- try (indexedIdentifier <* colon)
+        s <- asum $ map parseSuffix ss
+        when (s == LSortNat) $
+            requireNaturalNumbers "nat-sorted variables"
         return (LVar n s i)
+
+    parseSuffix s = do
+        try $ symbol_ (sortSuffix s)
+        return s
 
     mkPrefixParser s = do
         case s of
@@ -414,7 +434,8 @@ sortedLVar ss =
           LSortPub       -> void $ char '$'
           LSortFresh     -> void $ char '~'
           LSortNode      -> void $ char '#'
-          LSortNat       -> void $ char '%'
+          LSortNat       -> void $
+              char '%' *> requireNaturalNumbers "nat-sorted variables"
         (n, i) <- indexedIdentifier
         return (LVar n s i)
 
@@ -448,7 +469,10 @@ pubName = singleQuotedString
 
 -- | Parse a literal nat name, e.g. @%'n'@.
 natName :: Parser String
-natName = try (symbol "%" *> singleQuotedString)
+natName = do
+    _ <- try (symbol "%" <* lookAhead (char '\''))
+    requireNaturalNumbers "nat names"
+    singleQuotedString
 
 -- | Parse a Sapic Type
 typep :: Parser SapicType
@@ -476,7 +500,8 @@ sortedLVarNoSuffix ss =
           LSortPub       -> void $ char '$'
           LSortFresh     -> void $ char '~'
           LSortNode      -> void $ char '#'
-          LSortNat       -> void $ char '%'
+          LSortNat       -> void $
+              char '%' *> requireNaturalNumbers "nat-sorted variables"
         (n, i) <- indexedIdentifier
         return (LVar n s i)
 

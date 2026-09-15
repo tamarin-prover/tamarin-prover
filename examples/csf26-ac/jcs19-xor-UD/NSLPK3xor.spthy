@@ -1,0 +1,164 @@
+theory NSLPK3XOR begin
+
+// Function signature and definition of the equational theory E
+
+functions: adec/2, aenc/2, fst/1, pair/2, pk/1, snd/1, xorr/2 [AC],
+           zeroo/0
+equations:
+    adec(aenc(x.1, pk(x.2)), x.2) = x.1,
+    fst(<x.1, x.2>) = x.1,
+    snd(<x.1, x.2>) = x.2,
+    xorr(xorr(x, y), x) = y,
+    xorr(x, x) = zeroo,
+    xorr(x, zeroo) = x
+
+
+
+
+
+
+
+
+
+rule (modulo E) Register_pk:
+   [ Fr( ~ltkA ) ]
+  --[ Register( $A ) ]->
+   [ !Ltk( $A, ~ltkA ), !Pk( $A, pk(~ltkA) ), Out( pk(~ltkA) ) ]
+
+rule (modulo E) Reveal_ltk:
+   [ !Ltk( A, ltkA ) ] --[ RevLtk( A ) ]-> [ Out( ltkA ) ]
+
+rule (modulo E) I_1:
+   [ Fr( ~ni ), !Pk( $R, pkR ) ]
+  --[ OUT_I_1( aenc(<'1', ~ni, $I>, pkR) ) ]->
+   [ Out( aenc(<'1', ~ni, $I>, pkR) ), St_I_1( $I, $R, ~ni ) ]
+
+rule (modulo E) R_1:
+   [
+   !Ltk( $R, ltkR ), In( aenc(<'1', ni, I>, pk(ltkR)) ),
+   !Pk( I, pkI ), Fr( ~nr )
+   ]
+  --[
+  IN_R_1_ni( ni, aenc(<'1', ni, I>, pk(ltkR)) ),
+  OUT_R_1( aenc(<'2', ni, xorr($R, ~nr)>, pkI) ),
+  Running( I, $R, <'init', ni, ~nr> )
+  ]->
+   [
+   Out( aenc(<'2', ni, xorr($R, ~nr)>, pkI) ),
+   St_R_1( $R, I, ni, ~nr )
+   ]
+
+rule (modulo E) I_2:
+   [
+   St_I_1( I, R, ni ), !Ltk( I, ltkI ),
+   In( aenc(<'2', ni, x>, pk(ltkI)) ), !Pk( R, pkR )
+   ]
+  --[
+  IN_I_2_nr( xorr(R, x), aenc(<'2', ni, x>, pk(ltkI)) ),
+  Commit( I, R, <'init', ni, xorr(R, x)> ),
+  Running( R, I, <'resp', ni, xorr(R, x)> )
+  ]->
+   [
+   Out( aenc(<'3', xorr(R, x)>, pkR) ), Secret( I, R, xorr(R, x) ),
+   Secret( I, R, ni )
+   ]
+
+rule (modulo E) R_2:
+   [
+   St_R_1( R, I, ni, nr ), !Ltk( R, ltkR ),
+   In( aenc(<'3', nr>, pk(ltkR)) )
+   ]
+  --[ Commit( R, I, <'resp', ni, nr> ) ]->
+   [ Secret( R, I, nr ), Secret( R, I, ni ) ]
+
+rule (modulo E) Secrecy_claim:
+   [ Secret( A, B, m ) ] --[ Secret( A, B, m ) ]-> [ ]
+
+lemma types [sources]:
+  all-traces
+  "(∀ ni m1 #i.
+     (IN_R_1_ni( ni, m1 ) @ #i) ⇒
+     ((∃ #j. (!KU( ni ) @ #j) ∧ (#j < #i)) ∨
+      (∃ #j. OUT_I_1( m1 ) @ #j))) ∧
+   (∀ nr m2 #i.
+     (IN_I_2_nr( nr, m2 ) @ #i) ⇒
+     ((∃ #j. (!KU( nr ) @ #j) ∧ (#j < #i)) ∨
+      (∃ #j. OUT_R_1( m2 ) @ #j)))"
+/*
+guarded formula characterizing all counter-examples:
+"((∃ ni m1 #i.
+    (IN_R_1_ni( ni, m1 ) @ #i)
+   ∧
+    (∀ #j. (!KU( ni ) @ #j) ⇒ ¬(#j < #i)) ∧
+    (∀ #j. (OUT_I_1( m1 ) @ #j) ⇒ ⊥)) ∨
+  (∃ nr m2 #i.
+    (IN_I_2_nr( nr, m2 ) @ #i)
+   ∧
+    (∀ #j. (!KU( nr ) @ #j) ⇒ ¬(#j < #i)) ∧
+    (∀ #j. (OUT_R_1( m2 ) @ #j) ⇒ ⊥)))"
+*/
+by sorry
+
+restriction onekeypername:
+  "¬(∃ A #i #j.
+      ((Register( A ) @ #i) ∧ (Register( A ) @ #j)) ∧ (¬(#i = #j)))"
+  // safety formula
+
+lemma nonce_secrecy:
+  all-traces
+  "¬(∃ A B s #i.
+      (((Secret( A, B, s ) @ #i) ∧ (∃ #j. K( s ) @ #j)) ∧
+       (¬(∃ #r. RevLtk( A ) @ #r))) ∧
+      (¬(∃ #r. RevLtk( B ) @ #r)))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ A B s #i.
+  (Secret( A, B, s ) @ #i)
+ ∧
+  (∃ #j. (K( s ) @ #j)) ∧
+  (∀ #r. (RevLtk( A ) @ #r) ⇒ ⊥) ∧
+  (∀ #r. (RevLtk( B ) @ #r) ⇒ ⊥)"
+*/
+by sorry
+
+lemma injective_agree:
+  all-traces
+  "∀ actor peer params #i.
+    (Commit( actor, peer, params ) @ #i) ⇒
+    (((∃ #j.
+        ((Running( actor, peer, params ) @ #j) ∧ (#j < #i)) ∧
+        (¬(∃ actor2 peer2 #i2.
+            (Commit( actor2, peer2, params ) @ #i2) ∧ (¬(#i = #i2))))) ∨
+      (∃ #r. RevLtk( actor ) @ #r)) ∨
+     (∃ #r. RevLtk( peer ) @ #r))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ actor peer params #i.
+  (Commit( actor, peer, params ) @ #i)
+ ∧
+  (∀ #j.
+    (Running( actor, peer, params ) @ #j)
+   ⇒
+    ((¬(#j < #i)) ∨
+     (∃ actor2 peer2 #i2.
+       (Commit( actor2, peer2, params ) @ #i2) ∧ ¬(#i = #i2)))) ∧
+  (∀ #r. (RevLtk( actor ) @ #r) ⇒ ⊥) ∧
+  (∀ #r. (RevLtk( peer ) @ #r) ⇒ ⊥)"
+*/
+by sorry
+
+lemma session_key_setup_possible:
+  exists-trace
+  "∃ A B s #i.
+    ((Secret( A, B, s ) @ #i) ∧ (¬(∃ #r. RevLtk( A ) @ #r))) ∧
+    (¬(∃ #r. RevLtk( B ) @ #r))"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ A B s #i.
+  (Secret( A, B, s ) @ #i)
+ ∧
+  (∀ #r. (RevLtk( A ) @ #r) ⇒ ⊥) ∧ (∀ #r. (RevLtk( B ) @ #r) ⇒ ⊥)"
+*/
+by sorry
+
+end

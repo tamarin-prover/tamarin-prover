@@ -10,6 +10,8 @@
 module Term.SubtermRule (
       StRhs(..)
     , CtxtStRule(..)
+    , findSubterm
+    , findAllSubterms
     , filterNonSubtermCtxtRule
     , isSubtermConvergentCtxtRule
     , rRuleToCtxtStRule
@@ -112,6 +114,7 @@ isSubtermConvergentCtxtRule (CtxtStRule lhs (StRhs _ rhs))
 -- Checks if LNTerm is constant 
 isConstant :: LNTerm -> Bool
 isConstant term = null (frees term)
+
 ------------------------------------------------------------------------------
 -- Pretty Printing
 ------------------------------------------------------------------------------

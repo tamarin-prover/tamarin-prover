@@ -118,7 +118,7 @@ rule H_2:
 	  Out(eps)
 	]
 
-rule S_1a:
+rule S_1a [no_derivcheck]:
 	[ AgSt_S0($S,<$E,~skS, $H1,$D1,pk(~lskD1), $H2,$D2,pk(~lskD2) >)
  	, In(sg(encp(spkD1,rPrime1,pk(~skS)),~lskD1) )
 	, In(sg(encp(spkD2,rPrime2,pk(~skS)),~lskD2) )		
@@ -129,7 +129,7 @@ rule S_1a:
 	, Pi(spkD1 + spkD2 ) //generate random permutation of the pseudonyms
 	]
 
-rule S_1b:
+rule S_1b [no_derivcheck]:
 	[ AgSt_S1($S,<$E,~skS, $H1,$D1,pk(~lskD1), $H2,$D2,pk(~lskD2),spkD1, spkD2 >), 
 	  Pi(spkDa + spkDb) ] // pseudonyms are sent to BB in a random order
 	--[ 
@@ -181,7 +181,7 @@ rule environment_2:
 	[ Out_A($E,'2')]
 
 
-rule S_2a: 
+rule S_2a [no_derivcheck]: 
 	[ AgSt_S1b($S,<$E,~skS, $H1,$D1,pk(~lskD1), $H2,$D2,pk(~lskD2),spkD1, spkD2, spkDa,spkDb >),
 	  In_A($E,'1')
 	]
@@ -192,7 +192,7 @@ rule S_2a:
 	[ Out_A($S,<'SG',spkDa>)	// corresponds to [pk_D^SG] in thesis
 	] 
 
-rule S_2b: 
+rule S_2b [no_derivcheck]: 
 	[ AgSt_S1b($S,<$E,~skS, $H1,$D1,pk(~lskD1), $H2,$D2,pk(~lskD2),spkD1, spkD2, spkDa,spkDb >),
 	  In_A($E,'2')
 	]

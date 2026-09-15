@@ -275,7 +275,7 @@ rule H_2:
 	  Out(<'b', b>)
 	]
 
-rule S_1a: 
+rule S_1a [no_derivcheck]: 
 	[ AgSt_S0($S, <~skS, pk(~sskDa)>), 
 	  //implicitly (by pattern matching) only accept correct signatures
 	  In(sg(encp(va,ra,pk(~skS)),~sskDa)) ]
@@ -308,7 +308,7 @@ rule BB:
 	, Out_A($BB, <'zkp', p >)
 	]
 	
-rule A_1:
+rule A_1 [no_derivcheck]:
 	[ AgSt_A0($A,<$S,$BB,pkS>)
 	// implicitly (by pattern matching) do verifyA1 since each ballot signed w/ exactly one valid verification key and since bPrime really corresponds to b without signatures:
 	, In_A($BB, <'bs', sg(bPrimea,sskDa) >)

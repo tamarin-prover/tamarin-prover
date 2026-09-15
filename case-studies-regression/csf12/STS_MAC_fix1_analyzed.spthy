@@ -35,7 +35,7 @@ rule (modulo E) Init_1:
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) Init_2:
+rule (modulo E) Init_2[no_derivcheck]:
    [
    Init_1( $I, $R, ~ltkI, ~ekI ), !Pk( $R, pk(~ltkR) ),
    In( <$R, $I, Y, sign(<Y, 'g'^~ekI>, ~ltkR), 
@@ -51,7 +51,7 @@ rule (modulo E) Init_2:
    ]
 
   /*
-  rule (modulo AC) Init_2:
+  rule (modulo AC) Init_2[no_derivcheck]:
      [
      Init_1( $I, $R, ~ltkI, ~ekI ), !Pk( $R, pk(~ltkR) ),
      In( <$R, $I, Y, sign(<Y, 'g'^~ekI>, ~ltkR), 
@@ -127,7 +127,7 @@ rule (modulo E) Resp_1:
        z     = DH_neutral
   */
 
-rule (modulo E) Resp_2:
+rule (modulo E) Resp_2[no_derivcheck]:
    [
    !Pk( $I, pk(~ltkI) ), Resp_1( $I, $R, ~ltkR, ~ekR, X ),
    In( <$I, $R, sign(<X, 'g'^~ekR>, ~ltkI), 
@@ -138,7 +138,7 @@ rule (modulo E) Resp_2:
    [ !SessionKey( ~ekR, $I, $R, KDF(X^~ekR) ) ]
 
   /*
-  rule (modulo AC) Resp_2:
+  rule (modulo AC) Resp_2[no_derivcheck]:
      [
      !Pk( $I, pk(~ltkI) ), Resp_1( $I, $R, ~ltkR, ~ekR, X ),
      In( <$I, $R, sign(<X, 'g'^~ekR>, ~ltkI), 
@@ -259,10 +259,10 @@ solve( Init_1( $I, $R, ~ltkI, ~ekI ) ▶₀ #i1 )
               case c_mac
               solve( !KU( 'g'^(~ekI*~tid) ) @ #vk.20 )
                 case Init_1_case_1
-                by solve( !KU( ~ekI ) @ #vk.21 )
+                by solve( !KU( ~tid ) @ #vk.21 )
               next
                 case Init_1_case_2
-                by solve( !KU( ~tid ) @ #vk.21 )
+                by solve( !KU( ~ekI ) @ #vk.21 )
               next
                 case c_exp
                 by solve( !KU( ~ekI ) @ #vk.23 )
@@ -275,10 +275,10 @@ solve( Init_1( $I, $R, ~ltkI, ~ekI ) ▶₀ #i1 )
               case c_sign
               solve( !KU( 'g'^(~ekI*~ekI.1*inv(~tid)) ) @ #vk.27 )
                 case Init_1_case_1
-                by solve( !KU( ~ekI ) @ #vk.33 )
+                by solve( !KU( ~ekI.1 ) @ #vk.33 )
               next
                 case Init_1_case_2
-                by solve( !KU( ~ekI.1 ) @ #vk.33 )
+                by solve( !KU( ~ekI ) @ #vk.33 )
               next
                 case c_exp
                 by solve( !KU( ~ekI ) @ #vk.34 )
@@ -294,10 +294,10 @@ solve( Init_1( $I, $R, ~ltkI, ~ekI ) ▶₀ #i1 )
               case c_sign
               solve( !KU( 'g'^(~ekI*~ekI.1*inv(~tid)) ) @ #vk.28 )
                 case Init_1_case_1
-                by solve( !KU( ~ekI ) @ #vk.34 )
+                by solve( !KU( ~ekI.1 ) @ #vk.34 )
               next
                 case Init_1_case_2
-                by solve( !KU( ~ekI.1 ) @ #vk.34 )
+                by solve( !KU( ~ekI ) @ #vk.34 )
               next
                 case c_exp
                 by solve( !KU( ~ekI ) @ #vk.35 )
@@ -320,10 +320,10 @@ solve( Init_1( $I, $R, ~ltkI, ~ekI ) ▶₀ #i1 )
           case c_KDF
           solve( !KU( 'g'^(~ekI*~ekI.1) ) @ #vk.20 )
             case Init_1_case_1
-            by solve( !KU( ~ekI ) @ #vk.21 )
+            by solve( !KU( ~ekI.1 ) @ #vk.21 )
           next
             case Init_1_case_2
-            by solve( !KU( ~ekI.1 ) @ #vk.21 )
+            by solve( !KU( ~ekI ) @ #vk.21 )
           next
             case c_exp
             by solve( !KU( ~ekI ) @ #vk.23 )
@@ -741,10 +741,10 @@ next
               case c_sign
               solve( !KU( 'g'^(~ekR*~ekR.1*inv(~tid)) ) @ #vk.22 )
                 case Resp_1_case_1
-                by solve( !KU( ~ekR ) @ #vk.28 )
+                by solve( !KU( ~ekR.1 ) @ #vk.28 )
               next
                 case Resp_1_case_2
-                by solve( !KU( ~ekR.1 ) @ #vk.28 )
+                by solve( !KU( ~ekR ) @ #vk.28 )
               next
                 case c_exp
                 by solve( !KU( ~ekR ) @ #vk.29 )
@@ -760,10 +760,10 @@ next
               case c_sign
               solve( !KU( 'g'^(~ekR*~ekR.1*inv(~tid)) ) @ #vk.23 )
                 case Resp_1_case_1
-                by solve( !KU( ~ekR ) @ #vk.29 )
+                by solve( !KU( ~ekR.1 ) @ #vk.29 )
               next
                 case Resp_1_case_2
-                by solve( !KU( ~ekR.1 ) @ #vk.29 )
+                by solve( !KU( ~ekR ) @ #vk.29 )
               next
                 case c_exp
                 by solve( !KU( ~ekR ) @ #vk.30 )
@@ -799,10 +799,10 @@ next
                 case c_mac
                 solve( !KU( 'g'^(~ekR*~tid) ) @ #vk.19 )
                   case Resp_1_case_1
-                  by solve( !KU( ~ekR ) @ #vk.20 )
+                  by solve( !KU( ~tid ) @ #vk.20 )
                 next
                   case Resp_1_case_2
-                  by solve( !KU( ~tid ) @ #vk.20 )
+                  by solve( !KU( ~ekR ) @ #vk.20 )
                 next
                   case c_exp
                   by solve( !KU( ~ekR ) @ #vk.22 )
@@ -827,10 +827,10 @@ next
                 case c_mac
                 solve( !KU( 'g'^(~ekR*~tid) ) @ #vk.22 )
                   case Resp_1_case_1
-                  by solve( !KU( ~ekR ) @ #vk.23 )
+                  by solve( !KU( ~tid ) @ #vk.23 )
                 next
                   case Resp_1_case_2
-                  by solve( !KU( ~tid ) @ #vk.23 )
+                  by solve( !KU( ~ekR ) @ #vk.23 )
                 next
                   case c_exp
                   by solve( !KU( ~ekR ) @ #vk.25 )
@@ -845,10 +845,10 @@ next
           case c_KDF
           solve( !KU( 'g'^(~ekR*~ekR.1) ) @ #vk.15 )
             case Resp_1_case_1
-            by solve( !KU( ~ekR ) @ #vk.16 )
+            by solve( !KU( ~ekR.1 ) @ #vk.16 )
           next
             case Resp_1_case_2
-            by solve( !KU( ~ekR.1 ) @ #vk.16 )
+            by solve( !KU( ~ekR ) @ #vk.16 )
           next
             case c_exp
             by solve( !KU( ~ekR ) @ #vk.18 )
@@ -875,10 +875,10 @@ qed
 
 /*
 Generated from:
-Tamarin version 1.12.0
+Tamarin version 1.13.0
 Maude version 3.5.1
-Git revision: f1832c9bc70a2a165991a0802520f2e07c023227 (with uncommited changes), branch: prepare-release
-Compiled at: 2026-03-06 22:21:49.602637 UTC
+Git revision: 41bc81379b23681e7057314a5cf66a25c45e1986, branch: canonicalise-subst
+Compiled at: 2026-07-27 16:11:34.947223 UTC
 */
 
 end
@@ -890,7 +890,7 @@ summary of summaries:
 analyzed: examples/csf12/STS_MAC_fix1.spthy
 
   output:          examples/csf12/STS_MAC_fix1.spthy.tmp
-  processing time: 2.17s
+  processing time: 1.21s
   
   KI_Perfect_Forward_Secrecy_I (all-traces): verified (81 steps)
   KI_Perfect_Forward_Secrecy_R (all-traces): verified (126 steps)

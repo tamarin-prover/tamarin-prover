@@ -215,14 +215,14 @@ rule (modulo E) Resolve1:
                         pcs(sign(x.29, x.30), x.31, pk(skT.24)))
   */
 
-rule (modulo E) Witness_Aborted:
+rule (modulo E) Witness_Aborted[no_derivcheck]:
    [ In( sign(skT, pcs(sign(sk1, ct), pk(ysk), pk(skT))) ), !TTP( skT ) ]
   --[ AbortCert( ct ) ]->
    [ ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) Witness_Resolved:
+rule (modulo E) Witness_Resolved[no_derivcheck]:
    [ In( sign(skT, <sign(sk1, ct), sign(sk2, ct)>) ), !TTP( skT ) ]
   --[ ResolveCert( ct ) ]->
    [ ]
@@ -390,10 +390,10 @@ qed
 
 /*
 Generated from:
-Tamarin version 1.12.0
+Tamarin version 1.13.0
 Maude version 3.5.1
-Git revision: f1832c9bc70a2a165991a0802520f2e07c023227 (with uncommited changes), branch: prepare-release
-Compiled at: 2026-03-06 22:21:49.602637 UTC
+Git revision: 41bc81379b23681e7057314a5cf66a25c45e1986, branch: canonicalise-subst
+Compiled at: 2026-07-27 16:11:34.947223 UTC
 */
 
 end
@@ -405,7 +405,7 @@ summary of summaries:
 analyzed: examples/related_work/StatVerif_ARR_CSF11/StatVerif_GM_Contract_Signing.spthy
 
   output:          examples/related_work/StatVerif_ARR_CSF11/StatVerif_GM_Contract_Signing.spthy.tmp
-  processing time: 0.19s
+  processing time: 0.10s
   
   aborted_and_resolved_exclusive (all-traces): verified (7 steps)
   aborted_contract_reachable (exists-trace): verified (8 steps)

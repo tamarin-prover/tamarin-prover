@@ -1,0 +1,309 @@
+theory DHKEA_NAXOS_C_eCK_PFS_partially_matching begin
+
+// Function signature and definition of the equational theory E
+
+builtins: diffie-hellman
+functions: concat/2, first/1, fst/1, h/1, h1/1, h2/1, pair/2,
+           second/1, snd/1, add/2 [AC], unionUD/1 [destructor]
+equations:
+    concat(first(x), second(x)) = x,
+    fst(<x.1, x.2>) = x.1,
+    snd(<x.1, x.2>) = x.2,
+    unionUD(add(x, y)) = x
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+rule (modulo E) generate_ltk:
+   [ Fr( ~ea ) ]
+  --[ RegKey( $A ), Honest( $A ) ]->
+   [ !Ltk( $A, ~ea ), !Pk( $A, 'g'^~ea ), Out( 'g'^~ea ) ]
+
+rule (modulo E) Init_NAXOS_1:
+   [ Fr( ~ex ), !Ltk( $A, ~ea ) ]
+  --[
+  Sid( ~ex, <$A, $B, <'1', 'g'^h1(<~ex, ~ea>)>, 'Init', 'NAXOS_C'> )
+  ]->
+   [
+   Init_1( ~ex, $A, $B, ~ea, 'g'^h1(<~ex, ~ea>) ), !Ephk( ~ex, ~ex ),
+   Out( 'g'^h1(<~ex, ~ea>) )
+   ]
+
+rule (modulo E) Init_NAXOS_2:
+   [
+   Init_1( ~ex, $A, $B, ~ea, X ), !Pk( $B, KB ),
+   In( <$B, Y, 
+        h2(<
+            first(h(<Y^~ea, KB^h1(<~ex, ~ea>), Y^h1(<~ex, ~ea>), $A, $B, X, Y, 
+                     'NAXOS_C'>)), 
+            'R', $B, $A, Y, X, 'NAXOS_C'>)
+       >
+   )
+   ]
+  --[
+  Accept( ~ex,
+          second(h(<Y^~ea, KB^h1(<~ex, ~ea>), Y^h1(<~ex, ~ea>), $A, $B, X, 
+                    Y, 'NAXOS_C'>))
+  ),
+  Sid( ~ex,
+       <$A, $B, 
+        add(<'1', X>, <'2', Y>,
+            <'3', $A, 
+             h2(<
+                 first(h(<Y^~ea, KB^h1(<~ex, ~ea>), Y^h1(<~ex, ~ea>), $A, $B, X, Y, 
+                          'NAXOS_C'>)), 
+                 'I', $A, $B, X, Y, 'NAXOS_C'>)
+            >), 
+        'Init', 'NAXOS_C'>
+  )
+  ]->
+   [
+   Out( <$A, 
+         h2(<
+             first(h(<Y^~ea, KB^h1(<~ex, ~ea>), Y^h1(<~ex, ~ea>), $A, $B, X, Y, 
+                      'NAXOS_C'>)), 
+             'I', $A, $B, X, Y, 'NAXOS_C'>)
+        >
+   ),
+   !Sessk( ~ex,
+           second(h(<Y^~ea, KB^h1(<~ex, ~ea>), Y^h1(<~ex, ~ea>), $A, $B, X, 
+                     Y, 'NAXOS_C'>))
+   )
+   ]
+
+rule (modulo E) Resp_NAXOS_1:
+   [ Fr( ~ey ), !Ltk( $B, ~eb ), !Pk( $A, KA ), In( X ) ]
+  --[
+  Sid( ~ey,
+       <$B, $A, add(<'1', X>, <'2', 'g'^h1(<~ey, ~eb>)>), 'Respo', 
+        'NAXOS_C'>
+  )
+  ]->
+   [
+   Out( <$B, 'g'^h1(<~ey, ~eb>), 
+         h2(<
+             first(h(<KA^h1(<~ey, ~eb>), X^~eb, X^h1(<~ey, ~eb>), $A, $B, X, 
+                      'g'^h1(<~ey, ~eb>), 'NAXOS_C'>)), 
+             'R', $B, $A, 'g'^h1(<~ey, ~eb>), X, 'NAXOS_C'>)
+        >
+   ),
+   Resp_1( ~ey, $B, $A, 'g'^h1(<~ey, ~eb>), X,
+           h2(<
+               first(h(<KA^h1(<~ey, ~eb>), X^~eb, X^h1(<~ey, ~eb>), $A, $B, X, 
+                        'g'^h1(<~ey, ~eb>), 'NAXOS_C'>)), 
+               'I', $A, $B, X, 'g'^h1(<~ey, ~eb>), 'NAXOS_C'>),
+           second(h(<KA^h1(<~ey, ~eb>), X^~eb, X^h1(<~ey, ~eb>), $A, $B, X, 
+                     'g'^h1(<~ey, ~eb>), 'NAXOS_C'>))
+   ),
+   !Ephk( ~ey, ~ey )
+   ]
+
+rule (modulo E) Resp_NAXOS_2:
+   [ Resp_1( ~ey, $B, $A, Y, X, confA, key ), In( <$A, confA> ) ]
+  --[
+  Accept( ~ey, key ),
+  Sid( ~ey,
+       <$B, $A, add(<'1', X>, <'2', Y>, <'3', $A, confA>), 'Respo', 
+        'NAXOS_C'>
+  )
+  ]->
+   [ !Sessk( ~ey, key ) ]
+
+rule (modulo E) Init_DHKEA_1:
+   [ Fr( ~ex ), !Ltk( $A, ~ea ) ]
+  --[
+  Sid( ~ex, <$A, $B, <'1', 'g'^h1(<~ex, ~ea>)>, 'Init', 'DHKEA'> )
+  ]->
+   [
+   Init_DHKEA_1( ~ex, $A, $B, ~ea, 'g'^h1(<~ex, ~ea>) ),
+   !Ephk( ~ex, ~ex ), Out( 'g'^h1(<~ex, ~ea>) )
+   ]
+
+rule (modulo E) Init_DHKEA_2:
+   [
+   Init_DHKEA_1( ~ex, $A, $B, ~ea, X ), !Pk( $B, 'g'^~eb ),
+   In( <$B, Y, 
+        h2(<first(h(<Y^h1(<~ex, ~ea>), $A, $B, X, Y, 'DHKEA'>)), 
+            'g'^~eb^h1(<~ex, ~ea>), 'R', $B, $A, Y, X, 'DHKEA'>)
+       >
+   )
+   ]
+  --[
+  Accept( ~ex, second(h(<Y^h1(<~ex, ~ea>), $A, $B, X, Y, 'DHKEA'>))
+  ),
+  Sid( ~ex,
+       <$A, $B, 
+        add(<'1', X>, <'2', Y>,
+            <'3', $A, 
+             h2(<first(h(<Y^h1(<~ex, ~ea>), $A, $B, X, Y, 'DHKEA'>)), Y^~ea, 
+                 'I', $A, $B, X, Y, 'DHKEA'>)
+            >), 
+        'Init', 'DHKEA'>
+  )
+  ]->
+   [
+   Out( <$A, 
+         h2(<first(h(<Y^h1(<~ex, ~ea>), $A, $B, X, Y, 'DHKEA'>)), Y^~ea, 
+             'I', $A, $B, X, Y, 'DHKEA'>)
+        >
+   ),
+   !Sessk( ~ex, second(h(<Y^h1(<~ex, ~ea>), $A, $B, X, Y, 'DHKEA'>)) )
+   ]
+
+rule (modulo E) Resp_DHKEA_1:
+   [ Fr( ~ey ), !Ltk( $B, ~eb ), !Pk( $A, 'g'^~lkI ), In( X ) ]
+  --[
+  Sid( ~ey,
+       <$B, $A, add(<'1', X>, <'2', 'g'^h1(<~ey, ~eb>)>), 'Respo', 'DHKEA'
+       >
+  )
+  ]->
+   [
+   Out( <$B, 'g'^h1(<~ey, ~eb>), 
+         h2(<
+             first(h(<X^h1(<~ey, ~eb>), $A, $B, X, 'g'^h1(<~ey, ~eb>), 'DHKEA'
+                     >)), 
+             X^~eb, 'R', $B, $A, 'g'^h1(<~ey, ~eb>), X, 'DHKEA'>)
+        >
+   ),
+   Resp_DHKEA_1( ~ey, $B, $A, 'g'^h1(<~ey, ~eb>), X,
+                 h2(<
+                     first(h(<X^h1(<~ey, ~eb>), $A, $B, X, 'g'^h1(<~ey, ~eb>), 'DHKEA'
+                             >)), 
+                     'g'^~lkI^h1(<~ey, ~eb>), 'I', $A, $B, X, 'g'^h1(<~ey, ~eb>), 
+                     'DHKEA'>),
+                 second(h(<X^h1(<~ey, ~eb>), $A, $B, X, 'g'^h1(<~ey, ~eb>), 'DHKEA'
+                          >))
+   ),
+   !Ephk( ~ey, ~ey )
+   ]
+
+rule (modulo E) Resp_DHKEA_2:
+   [ Resp_DHKEA_1( ~ey, $B, $A, Y, X, confA, key ), In( <$A, confA> )
+   ]
+  --[
+  Accept( ~ey, key ),
+  Sid( ~ey,
+       <$B, $A, add(<'1', X>, <'2', Y>, <'3', $A, confA>), 'Respo', 
+        'DHKEA'>
+  )
+  ]->
+   [ !Sessk( ~ey, key ) ]
+
+rule (modulo E) Sessk_reveal:
+   [ !Sessk( ~s, k ) ] --[ RevealSessk( ~s ) ]-> [ Out( k ) ]
+
+rule (modulo E) Ltk_reveal:
+   [ !Ltk( $A, ea ) ] --[ RevealLtk( $A ) ]-> [ Out( ea ) ]
+
+rule (modulo E) Ephk_reveal:
+   [ !Ephk( ~s, ~ek ) ] --[ RevealEphk( ~s ) ]-> [ Out( ~ek ) ]
+
+restriction RegKeyUnique:
+  "∀ #i #j A. ((RegKey( A ) @ #i) ∧ (RegKey( A ) @ #j)) ⇒ (#i = #j)"
+  // safety formula
+
+lemma execution_match_same_key_NAXOS:
+  exists-trace
+  "∃ #i1 #i2 s1 s2 k A B com role1 role2.
+    ((((Accept( s1, k ) @ #i1) ∧ (Accept( s2, k ) @ #i2)) ∧
+      (Sid( s1, <A, B, com, role1, 'NAXOS_C'> ) @ #i1)) ∧
+     (Sid( s2, <B, A, com, role2, 'NAXOS_C'> ) @ #i2)) ∧
+    (¬(role1 = role2))"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #i1 #i2 s1 s2 k A B com role1 role2.
+  (Accept( s1, k ) @ #i1) ∧
+  (Accept( s2, k ) @ #i2) ∧
+  (Sid( s1, <A, B, com, role1, 'NAXOS_C'> ) @ #i1) ∧
+  (Sid( s2, <B, A, com, role2, 'NAXOS_C'> ) @ #i2)
+ ∧
+  ¬(role1 = role2)"
+*/
+by sorry
+
+lemma eCK_key_secrecy:
+  all-traces
+  "∀ #i1 #i2 #i3 #i4 test A B k com role proto.
+    (((((Accept( test, k ) @ #i1) ∧ (K( k ) @ #i2)) ∧
+       (Sid( test, <A, B, com, role, proto> ) @ #i1)) ∧
+      (Honest( A ) @ #i3)) ∧
+     (Honest( B ) @ #i4)) ⇒
+    ((((∃ #i3.1. RevealSessk( test ) @ #i3.1) ∨
+       (∃ #i5 #i6. (RevealLtk( A ) @ #i5) ∧ (RevealEphk( test ) @ #i6))) ∨
+      (∃ matchingSession #i3.1 matchingRole matchingCom.
+        ((((Sid( matchingSession, <B, A, matchingCom, matchingRole, proto>
+            ) @ #i3.1) ∧
+           (¬(matchingRole = role))) ∧
+          ((∃ rest. add(matchingCom, rest) = com) ∨ (matchingCom = com))) ∧
+         (¬(∃ #i4.1 sid.
+             (Sid( matchingSession, sid ) @ #i4.1) ∧ (#i3.1 < #i4.1)))) ∧
+        ((∃ #i5. RevealSessk( matchingSession ) @ #i5) ∨
+         (∃ #i5 #i6.
+           (RevealLtk( B ) @ #i5) ∧
+           (RevealEphk( matchingSession ) @ #i6))))) ∨
+     ((¬(∃ matchingSession #i3.1 matchingRole matchingCom.
+          (((Sid( matchingSession, <B, A, matchingCom, matchingRole, proto>
+             ) @ #i3.1) ∧
+            (¬(matchingRole = role))) ∧
+           ((∃ rest. add(matchingCom, rest) = com) ∨ (matchingCom = com))) ∧
+          (¬(∃ #i4.1 sid.
+              (Sid( matchingSession, sid ) @ #i4.1) ∧ (#i3.1 < #i4.1))))) ∧
+      (∃ #i5. (RevealLtk( B ) @ #i5) ∧ (#i5 < #i1))))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ #i1 #i2 #i3 #i4 test A B k com role proto.
+  (Accept( test, k ) @ #i1) ∧
+  (K( k ) @ #i2) ∧
+  (Sid( test, <A, B, com, role, proto> ) @ #i1) ∧
+  (Honest( A ) @ #i3) ∧
+  (Honest( B ) @ #i4)
+ ∧
+  (∀ #i3.1. (RevealSessk( test ) @ #i3.1) ⇒ ⊥) ∧
+  (∀ #i5 #i6.
+    (RevealLtk( A ) @ #i5) ∧ (RevealEphk( test ) @ #i6) ⇒ ⊥) ∧
+  (∀ matchingSession #i3.1 matchingRole matchingCom.
+    (Sid( matchingSession, <B, A, matchingCom, matchingRole, proto>
+     ) @ #i3.1)
+   ⇒
+    ((matchingRole = role) ∨
+     ((∀ rest. (add(matchingCom, rest) = com) ⇒ ⊥) ∧
+      (¬(matchingCom = com))) ∨
+     (∃ #i4.1 sid.
+       (Sid( matchingSession, sid ) @ #i4.1) ∧ #i3.1 < #i4.1) ∨
+     ((∀ #i5. (RevealSessk( matchingSession ) @ #i5) ⇒ ⊥) ∧
+      (∀ #i5 #i6.
+        (RevealLtk( B ) @ #i5) ∧ (RevealEphk( matchingSession ) @ #i6)
+       ⇒
+        ⊥)))) ∧
+  (((∃ matchingSession #i3.1 matchingRole matchingCom.
+      (Sid( matchingSession, <B, A, matchingCom, matchingRole, proto>
+       ) @ #i3.1)
+     ∧
+      (¬(matchingRole = role)) ∧
+      (((∃ rest. (add(matchingCom, rest) = com)) ∨
+        (matchingCom = com))) ∧
+      (∀ #i4.1 sid.
+        (Sid( matchingSession, sid ) @ #i4.1) ⇒ ¬(#i3.1 < #i4.1))) ∨
+    (∀ #i5. (RevealLtk( B ) @ #i5) ⇒ ¬(#i5 < #i1))))"
+*/
+by sorry
+
+end

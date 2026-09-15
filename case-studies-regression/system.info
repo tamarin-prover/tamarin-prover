@@ -86,6 +86,7 @@ hw.optional.arm.FEAT_SME_F64F64: 0
 hw.optional.arm.FEAT_SME_I16I64: 0
 hw.optional.arm.FEAT_SME_F16F16: 0
 hw.optional.arm.FEAT_SME_B16B16: 0
+hw.optional.arm.FEAT_SVE_B16B16: 0
 hw.optional.arm.FP_SyncExceptions: 1
 hw.optional.arm.FEAT_MTE_CANONICAL_TAGS: 0
 hw.optional.arm.FEAT_MTE_NO_ADDRESS_TAGS: 0
@@ -117,7 +118,7 @@ hw.cpu64bit_capable: 1
 hw.cpufamily: 1912690738
 hw.cpusubfamily: 5
 hw.cacheconfig: 14 1 4 0 0 0 0 0 0 0
-hw.cachesize: 3388981248 65536 4194304 0 0 0 0 0 0 0
+hw.cachesize: 3389276160 65536 4194304 0 0 0 0 0 0 0
 hw.pagesize: 16384
 hw.pagesize32: 16384
 hw.cachelinesize: 128
@@ -125,7 +126,7 @@ hw.l1icachesize: 131072
 hw.l1dcachesize: 65536
 hw.l2cachesize: 4194304
 hw.tbfrequency: 24000000
-hw.memsize_usable: 102173229056
+hw.memsize_usable: 102173523968
 hw.packages: 1
 hw.osenvironment: 
 hw.ephemeral_storage: 0
@@ -133,5 +134,6 @@ hw.use_recovery_securityd: 0
 hw.use_kernelmanagerd: 1
 hw.serialdebugmode: 0
 hw.nperflevels: 2
+hw.engineering_sample: 0
 hw.targettype: J514m
 hw.jetsam_properties_product_type: J514m

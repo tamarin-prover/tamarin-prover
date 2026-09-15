@@ -146,7 +146,7 @@ rule Client_LeakKey:
    The leaking of 'inv(PK)' is unrealistic as the server only learns the
    public key of new messages.
 */
-rule Server_RenewKey:
+rule Server_RenewKey [no_derivcheck]:
   let request = <'renew', A, pkNew>
   in
     [ In( <request, requestSig> )

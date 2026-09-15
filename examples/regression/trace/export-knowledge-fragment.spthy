@@ -1,0 +1,39 @@
+theory export_knowledge_fragment
+begin
+
+rule Emit:
+  [ Fr(~x) ]
+  --[ Seen(~x) ]->
+  []
+
+lemma supported_k:
+  "All x #i. Seen(x) @ i ==> not (Ex #j. K(x) @ j)"
+
+lemma rejected_ku:
+  "All x #i. Seen(x) @ i ==> not (Ex #j. KU(x) @ j)"
+
+lemma rejected_exists_k:
+  exists-trace "Ex x #i #j. Seen(x) @ i & K(x) @ j"
+
+lemma rejected_negative_k:
+  "All x #i. Seen(x) @ i ==> K(x) @ i"
+
+lemma supported_positive_k_axiom [reuse]:
+  "All x #i. Seen(x) @ i ==> K(x) @ i"
+
+lemma rejected_negative_k_axiom [reuse]:
+  "All x #i. K(x) @ i ==> Seen(x) @ i"
+
+lemma rejected_ku_axiom [reuse]:
+  "All x #i. Seen(x) @ i ==> KU(x) @ i"
+
+restriction supported_positive_k_restriction:
+  "All x #i. Seen(x) @ i ==> K(x) @ i"
+
+restriction rejected_negative_k_restriction:
+  "All x #i. K(x) @ i ==> Seen(x) @ i"
+
+restriction rejected_ku_restriction:
+  "All x #i. Seen(x) @ i ==> KU(x) @ i"
+
+end

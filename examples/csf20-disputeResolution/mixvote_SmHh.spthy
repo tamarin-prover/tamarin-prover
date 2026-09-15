@@ -389,7 +389,7 @@ rule P: // P is partially trusted to forward messages from H to S
 	]->
 	[  Out_IR_PS($P,$S,b) ]
 
-rule S_1a: // S is partially trusted to answer with a confirmation when receiving a valid ballot
+rule S_1a [no_derivcheck]: // S is partially trusted to answer with a confirmation when receiving a valid ballot
 	[ AgSt_S0($S, < ~skS, pk(~sskDa)>), 
 	  In_IR_PS($P,$S,sg(encp(va,ra,pk(~skS)),~sskDa)) ]
 	--[ Learn_S_ballot($S,sg(encp(va,ra,pk(~skS)),~sskDa)),
@@ -436,7 +436,7 @@ rule BB:
 	, Out_A($BB, <'zkp', p >)
 	]
 	
-rule A_1:
+rule A_1 [no_derivcheck]:
 	[ AgSt_A0($A,<$S,$BB,pkS>)
 	// implicitly do verifyA1 (by pattern matching) since each ballot signed w/ exactly one valid verification key (also no duplicates) and since bPrime really corresponds to b without signatures:
 	, In_A($BB, <'b', sg(bPrimea,sskDa) >)

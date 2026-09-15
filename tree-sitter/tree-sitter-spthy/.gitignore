@@ -12,11 +12,11 @@ node_modules/
 .build/
 
 # Go artifacts
-go.sum
 _obj/
 
 # Python artifacts
 .venv/
+__pycache__/
 dist/
 *.egg-info
 *.whl

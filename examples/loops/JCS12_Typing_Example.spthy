@@ -60,7 +60,6 @@ rule Client_2:
 rule Serv_1:
   let msg = adec(request, ~ltkS)
       tag = fst(msg)
-      C   = fst(snd(msg))
       k   = snd(snd(msg))
   in
     [ !Ltk($S, ~ltkS)
@@ -76,6 +75,7 @@ rule Serv_1:
                     // just forward messages to further servers.)
     , ReceivedKey(C, $S, k)
     , In_Serv_1(request, k)
+    , _restrict(C   = fst(snd(msg)))
     ]->
     [ Out( aenc{'2',k}pkC ) ]
 

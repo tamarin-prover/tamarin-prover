@@ -1,0 +1,11 @@
+theory ExtraComma
+
+// allow teminating commas in fact lists
+// the parser should accept the following rule
+
+begin
+
+rule r:
+    [ ] --[ A(),]-> [A(),B(),]
+
+end

@@ -1,0 +1,51 @@
+theory ReportLetLocation
+
+/*
+
+ A location given by a let-bound variable and by a process parameter, each
+ bound to a pair rather than to a name, so the translation has to substitute
+ a compound term into the location annotation.
+
+*/
+
+begin
+
+builtins: locations-report
+
+predicates:
+Report(x,y) <=> not (y = <'loc', 'p'>) & not (y = <'loc', 'q'>)
+
+let p(l) =                                     // The remote party, running at l
+	( in(x);
+	  event Remote(x,l);
+	  out(<x, report(x)>) )@l
+
+let q =                                        // The same party with a let-bound location
+	let m = <'loc', 'q'> in
+	( in(x);
+	  event Remote(x,m);
+	  out(<x, report(x)>) )@m
+
+let v =                                        // The verifier
+	in(<x,r>);
+	if x = check_rep(r,<'loc', 'p'>) then      // verification of the validity of the report
+		event Local(x,<'loc', 'p'>)
+
+process:
+ ( !p(<'loc', 'p'>) || !q || !v )
+
+lemma can_run_v: //for sanity
+	exists-trace
+	"Ex #i m . Local(m,<'loc', 'p'>)@i"
+
+lemma simp_p[reuse]:
+	"All #i m . KU(rep(m,<'loc', 'p'>))@i ==> (Ex #j . Remote(m,<'loc', 'p'>)@j)"
+
+lemma simp_q[reuse]:
+	"All #i m . KU(rep(m,<'loc', 'q'>))@i ==> (Ex #j . Remote(m,<'loc', 'q'>)@j)"
+
+// Attested computation theorem
+lemma attested_comput:
+	"All #i m . Local(m,<'loc', 'p'>)@i ==> (Ex #j . Remote(m,<'loc', 'p'>)@j)"
+
+end

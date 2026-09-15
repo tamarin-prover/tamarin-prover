@@ -1,0 +1,18 @@
+theory export_restriction_disjunction
+begin
+
+rule EmitLink:
+  [ Fr(~x), Fr(~y) ]
+  --[ Link(~x, ~y) ]->
+  []
+
+restriction no_link_chains:
+  "All x y #i.
+     Link(x, y) @ i
+     ==> not (Ex z #j. Link(y, z) @ j)
+       & not (Ex z #j. Link(z, x) @ j)"
+
+lemma no_link_chain:
+  "not (Ex x y z #i #j. Link(x, y) @ i & Link(y, z) @ j)"
+
+end

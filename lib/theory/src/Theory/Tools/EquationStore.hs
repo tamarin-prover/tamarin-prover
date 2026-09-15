@@ -48,6 +48,7 @@ module Theory.Tools.EquationStore (
   -- * Simplification
   , simp
   , simpDisjunction
+  , removePermutations
 
   -- ** Pretty printing
   , prettyEqStore
@@ -65,7 +66,6 @@ import           Extension.Prelude
 import           Utils.Misc
 
 import           Debug.Trace.Ignore
-
 import           Control.Basics
 import           Control.DeepSeq
 import           Control.Monad.State   hiding (get, modify, put)
@@ -153,9 +153,11 @@ instance Apply LNSubst SplitId where
     apply _ = id
 
 instance HasFrees EqStore where
+    {-# INLINABLE foldFrees #-}
     foldFrees f (EqStore subst substs nextSplitId) =
         foldFrees f subst <> foldFrees f substs <> foldFrees f nextSplitId
     foldFreesOcc  _ _ = const mempty
+    {-# INLINABLE mapFrees #-}
     mapFrees f (EqStore subst substs nextSplitId) =
         EqStore <$> mapFrees f subst
                 <*> mapFrees f substs
@@ -203,6 +205,24 @@ addDisj eqStore disj =
   where
     sid = L.get eqsNextSplitId eqStore
 
+-- | Enumerate a disjunction's cases in a canonical order. The disjunction is
+-- stored as a @Set LNSubstVFresh@, so @S.toList@ would enumerate the cases in
+-- the derived 'Ord' order of the substitutions. That order compares the
+-- substitutions' range terms, which contain the fresh witness variables
+-- introduced during back-conversion from Maude; their name hints and indices
+-- are an artifact of the fresh-variable allocation counter and are not in any
+-- canonical form. As a result the case order (and hence the positional
+-- @split_case_i@ labels in the emitted proof) could depend on the allocation
+-- history rather than on the structure of the unifiers, so a saved proof
+-- would fail to re-validate under a checker that allocates in a different
+-- order (because of threading, etc). Sorting on a key that renumbers the
+-- witnesses in a canonical order makes the enumeration reproducible across
+-- runs. Used by both 'performSplit' and 'prettyEqStore' so that the case
+-- order shown when displaying a system matches the case order a split
+-- produces.
+orderedSubsts :: S.Set LNSubstVFresh -> [LNSubstVFresh]
+orderedSubsts = sortOnMemo dropNameHintsLNSubstVFresh . S.toList
+
 -- | @performSplit eqs i@ performs a case-split on the first disjunction
 -- with the given 'SplitId'.
 performSplit :: EqStore -> SplitId -> Maybe [EqStore]
@@ -210,7 +230,7 @@ performSplit eqStore idx =
     case break ((idx ==) . fst) (getConj $ L.get eqsConj eqStore) of
         (_, [])                   -> Nothing
         (before, (_, disj):after) -> Just $
-            mkNewEqStore before after <$> S.toList disj
+            mkNewEqStore before after <$> orderedSubsts disj
   where
     mkNewEqStore before after subst =
         fst $ addDisj (set eqsConj (Conj (before ++ after)) eqStore)
@@ -558,6 +578,70 @@ foreachDisj hnd f =
               maybe (return ()) (\s -> MS.modify (applyEqStore hnd s)) msubst
               return True
 
+-- | Removes substitutions that are equal up to a permutation of the images of two given variables v1 and v2 (modulo a renaming of msg vars).
+removePermutations ::  MaudeHandle -> EqStore -> SplitId -> LVar -> LVar -> EqStore
+removePermutations hnd eqs splitId v1 v2 =
+      modify eqsConj removePerms eqs
+  where
+    removePerms (Conj disjs) = Conj $ map f disjs
+    
+    f (sid, substs) =
+      if sid == splitId
+        then (sid, S.fromList $ removePerm [] $ S.toList substs)
+        else (sid, substs)
+    
+    removePerm r []       = r
+    removePerm r (s:rest) = removePerm (s:filter (not . isPerm s) r) (filter (not . isPerm s) rest)
+      where
+        isPerm subst1 subst2 =
+          let lst1 = substToListVFresh subst1
+              lst2 = substToListVFresh subst2
+              t11 = fromMaybe (error $ "Missing image for v1: " ++ show v1 ++ " in subst1: " ++ show subst1) (imageOfVFresh subst1 v1)
+              t12 = fromMaybe (error $ "Missing image for v2: " ++ show v2 ++ " in subst1: " ++ show subst1) (imageOfVFresh subst1 v2)
+              t21 = fromMaybe (error $ "Missing image for v1: " ++ show v1 ++ " in subst2: " ++ show subst2) (imageOfVFresh subst2 v1)
+              t22 = fromMaybe (error $ "Missing image for v2: " ++ show v2 ++ " in subst2: " ++ show subst2) (imageOfVFresh subst2 v2)
+          in (length lst1 == length lst2 && (
+                  (all (\(x,t) -> (x == v1) || (x == v2) || (x,t) `elem` lst2) lst1 && (t11 == t22 && t12 == t21))
+                  || equalUpToRenaming True subst1 subst2
+                  || equalUpToRenaming False subst1 subst2
+                )
+              )
+
+        equalUpToRenaming :: Bool -> LNSubstVFresh -> LNSubstVFresh -> Bool
+        equalUpToRenaming perm subst1 subst2 = trace (show ("equalUpToRenaming", v1, v2, subst1, subst1', subst1'', matchs, subst2, subst2', subst2''', subst2'', matchers, g)) g
+          where
+            g = (not . null) matchers
+            
+            permute subst = substFromListVFresh $ map (\(v,t) -> if v == v1 then (v2,t) else if v == v2 then (v1,t) else (v,t)) (substToListVFresh subst)
+            
+            subst1' = substToListVFresh $ if perm then permute subst1 else subst1
+            subst2' = substToListVFresh subst2
+            
+            subst1''  = apply substFixing subst1'
+            subst2''' = apply substFixing subst2'
+
+            subst2'' = zip (map fst subst2''') $ renameAvoidingIgnoring (map snd subst2''') ([v1,v2],subst1'') (map fst subst2''')
+            
+            matchers = solveMatchLNTerm (mconcat matchs) `runReader` hnd
+            matchs :: [Match LNTerm]
+            matchs = zipWith matchWith (map snd subst1'') (map snd subst2'')
+            
+            substFixing = replaceNonMSGVarsWithConstant $ map fst $ concatMap (varOccurences .snd) (substToListVFresh subst1) ++ concatMap (varOccurences .snd) (substToListVFresh subst2) -- map fst $ varOccurences (t11, t12, t21, t22) -- vars
+            
+            replaceNonMSGVarsWithConstant :: [LVar] -> LNSubst
+            replaceNonMSGVarsWithConstant vs' = substFromList (map (\v -> (v, constant v)) vs)
+              where
+                vs = filter (\v -> lvarSort v /= LSortMsg) vs'
+
+            constant :: LVar -> LNTerm
+            constant v = constTerm (Name (pubOrFresh v) (NameId ("constVar_" ++ toConstName v)))
+              where
+                toConstName (LVar name vsort idx) = show vsort ++ "_" ++ show idx ++ "_" ++ name
+
+                pubOrFresh (LVar _ LSortFresh _) = FreshName
+                pubOrFresh (LVar _ _          _) = PubName
+
+
 ------------------------------------------------------------------------------
 -- Pretty printing
 ------------------------------------------------------------------------------
@@ -575,7 +659,7 @@ prettyEqStore eqs@(EqStore substFree (Conj disjs) _nextSplitId) = vcat $
     ppDisj (idx, substs) =
         text (show (unSplitId idx) ++ ".") <-> numbered' conjs
       where
-        conjs  = map ppSubst $ S.toList substs
+        conjs  = map ppSubst $ orderedSubsts substs
 
     ppEq (a,b) =
       prettyNTerm (lit (Var a)) $$ nest (6::Int) (opEqual <-> prettyNTerm b)

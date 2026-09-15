@@ -82,7 +82,7 @@ solve( splitEqs(0) )
         solve( (#vr, 0) ~~> (#vk, 0) )
           case d_xor_case_1
           solve( (#vr.1, 0) ~~> (#vk, 0) )
-            case Xor
+            case xor
             solve( !KU( (~b⊕~c) ) @ #vk.1 )
               case coerce
               solve( !KD( (~b⊕~c) ) ▶₀ #vk.1 )
@@ -90,7 +90,7 @@ solve( splitEqs(0) )
                 solve( (#vl, 0) ~~> (#vk.1, 0) )
                   case d_0_snd
                   solve( (#vr.2, 0) ~~> (#vk.1, 0) )
-                    case Xor
+                    case xor
                     SOLVED // trace found
                   qed
                 qed
@@ -107,10 +107,10 @@ qed
 
 /*
 Generated from:
-Tamarin version 1.12.0
+Tamarin version 1.13.0
 Maude version 3.5.1
-Git revision: f1832c9bc70a2a165991a0802520f2e07c023227 (with uncommited changes), branch: prepare-release
-Compiled at: 2026-03-06 22:21:49.602637 UTC
+Git revision: 41bc81379b23681e7057314a5cf66a25c45e1986, branch: canonicalise-subst
+Compiled at: 2026-07-27 16:11:34.947223 UTC
 */
 
 end
@@ -122,7 +122,7 @@ summary of summaries:
 analyzed: examples/features/xor/basicfunctionality/xor3.spthy
 
   output:          examples/features/xor/basicfunctionality/xor3.spthy.tmp
-  processing time: 0.15s
+  processing time: 0.10s
   
   secrecybroken (all-traces): falsified - found trace (12 steps)
 

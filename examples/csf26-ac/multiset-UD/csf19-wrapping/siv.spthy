@@ -1,0 +1,293 @@
+theory PKCS11_siv begin
+
+// Function signature and definition of the equational theory E
+
+functions: epsilon/0, fst/1, getIV/1, getTag/1, kdf/2, pair/2,
+           sdec/4, sdecSuc/4, senc/4, snd/1, true/0, add/2 [AC],
+           unionUD/1 [destructor]
+equations:
+    fst(<x.1, x.2>) = x.1,
+    getIV(senc(k, iv, t, m)) = iv,
+    getTag(senc(k, iv, t, m)) = t,
+    sdec(k, iv, t, senc(k, iv, t, m)) = m,
+    sdecSuc(k, iv, t, senc(k, iv, t, m)) = true,
+    snd(<x.1, x.2>) = x.2,
+    unionUD(add(x, y)) = x
+
+tactic: Counter_Monotonicity
+presort: C
+prio: {id}
+  regex"=" | regex"<" | regex"last\(" | regex"DCtrIs\(d,C"
+prio: {id}
+  regex"DCtr"
+
+
+tactic: IV_Uniqueness
+presort: C
+prio: {id}
+  regex"=" | regex"<" | regex"last\("
+prio: {id}
+  regex"IV\("
+
+
+tactic: Key_IntegrityAndConfidentiality
+presort: C
+prio: {id}
+  regex"CreateKey\(ek,"
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+restriction UniqueInteger:
+  "∀ n #i #j.
+    ((IsInteger( n ) @ #i) ∧ (IsInteger( n ) @ #j)) ⇒ (#i = #j)"
+  // safety formula
+
+restriction Lesser:
+  "∀ x y #i. (LessThan( x, y ) @ #i) ⇒ (∃ z. add(x, z) = y)"
+
+restriction TrueIsTrue:
+  "∀ x #i. (IsTrue( x ) @ #i) ⇒ (x = true)"
+  // safety formula
+
+restriction Equality:
+  "∀ x y #i. (Eq( x, y ) @ #i) ⇒ (x = y)"
+  // safety formula
+
+restriction Inequality:
+  "∀ x #i. (Neq( x, x ) @ #i) ⇒ (⊥)"
+  // safety formula
+
+rule (modulo E) One[color=#aaaaee]:
+   [ ] --[ IsInteger( '1' ) ]-> [ !Integer( '1' ) ]
+
+rule (modulo E) Suc[color=#ccccff]:
+   [ !Integer( n ), In( n ) ]
+  --[ IsInteger( add('1', n) ) ]->
+   [ !Integer( add('1', n) ) ]
+
+rule (modulo E) Device[color=#ffccff]:
+   [ Fr( ~device ), !Integer( '1' ) ]
+  --[ CreateDevice( ~device ), DCtrIs( ~device, '1' ) ]->
+   [ !Device( ~device ), DCtr( ~device, '1' ), Out( <~device, '1'> ) ]
+
+rule (modulo E) Key[color=#ccff99]:
+   [ !Device( device ), !Integer( lvl ), Fr( ~key ), Fr( ~handle ) ]
+  --[
+  CreateKey( ~key, ~handle, lvl ),
+  InitKey( device, ~key, ~handle, lvl )
+  ]->
+   [ !Store( device, ~handle, ~key, lvl ), Out( <~handle, lvl> ) ]
+
+rule (modulo E) SharedKey[color=#ccff99]:
+   [
+   !Integer( lvl ), !Device( ~device ), !Device( ~ecived ),
+   Fr( ~key ), Fr( ~h )
+   ]
+  --[
+  CreateKey( ~key, ~h, lvl ), ShareKey( ~key, lvl ),
+  InitKey( ~device, ~key, ~h, lvl ),
+  InitKey( ~ecived, ~key, ~h, lvl ),
+  LessThan( add('1', '1', '1'), lvl )
+  ]->
+   [
+   !Store( ~device, ~h, ~key, lvl ), !Store( ~ecived, ~h, ~key, lvl ),
+   Out( <~h, lvl> ), Out( <~h, lvl> )
+   ]
+
+rule (modulo E) Encrypt[color=#ffcc99]:
+   [
+   !Integer( add('1', ctr) ), !Device( device ),
+   !Store( device, H, key, lvl ), DCtr( device, ctr ), In( msg )
+   ]
+  --[
+  UseKey( device, key, H, lvl ), DCtrIs( device, add('1', ctr) ),
+  IV( <'1', 'none', device, ctr> )
+  ]->
+   [
+   DCtr( device, add('1', ctr) ),
+   Out( senc(key, <'1', 'none', device, ctr>, epsilon, msg) )
+   ]
+
+rule (modulo E) Wrap[color=#ff9999]:
+   [
+   !Integer( add('1', ctr) ), !Device( device ),
+   !Store( device, h, wk, wl ), !Store( device, ~eh, ek, el ),
+   DCtr( device, ctr )
+   ]
+  --[
+  UseKey( device, wk, h, wl ), DCtrIs( device, add('1', ctr) ),
+  IV( <el, ~eh, device, ctr> ), LessThan( el, wl )
+  ]->
+   [
+   DCtr( device, add('1', ctr) ),
+   Out( senc(wk, <el, ~eh, device, ctr>, epsilon, ek) )
+   ]
+
+rule (modulo E) Decrypt[color=#ffcc99]:
+   [ !Device( device ), !Store( device, H, key, lvl ), In( c ) ]
+  --[
+  UseKey( device, key, H, lvl ),
+  Decrypt( sdec(key, getIV(c), epsilon, c) ),
+  IsTrue( sdecSuc(key, getIV(c), epsilon, c) ),
+  Eq( fst(getIV(c)), '1' ), Eq( fst(snd(getIV(c))), 'none' )
+  ]->
+   [ Out( sdec(key, getIV(c), epsilon, c) ) ]
+
+rule (modulo E) Unwrap[color=#ff9999]:
+   [
+   !Integer( fst(getIV(c)) ), !Device( device ),
+   !Store( device, h, wk, wl ), In( c )
+   ]
+  --[
+  UseKey( device, wk, h, wl ),
+  ImportKey( device, sdec(wk, getIV(c), epsilon, c), fst(getIV(c)),
+             fst(snd(getIV(c)))
+  ),
+  InitKey( device, sdec(wk, getIV(c), epsilon, c),
+           fst(snd(getIV(c))), fst(getIV(c))
+  ),
+  IsTrue( sdecSuc(wk, getIV(c), epsilon, c) ),
+  Neq( fst(getIV(c)), '1' )
+  ]->
+   [
+   !Store( device, fst(snd(getIV(c))), sdec(wk, getIV(c), epsilon, c),
+           fst(getIV(c))
+   )
+   ]
+
+rule (modulo E) Derive[color=#ff9990]:
+   [
+   !Device( device ), !Store( device, h, k, add('1', '1') ), Fr( r ),
+   Fr( nh )
+   ]
+  --[
+  UseKey( device, k, h, add('1', '1') ),
+  InitKey( device, kdf(k, r), nh, add('1', '1') ),
+  CreateKey( kdf(k, r), nh, add('1', '1') )
+  ]->
+   [ !Store( device, nh, kdf(k, r), add('1', '1') ), Out( nh ) ]
+
+lemma origin [sources]:
+  all-traces
+  "(∀ m #decrypt.
+     (Decrypt( m ) @ #decrypt) ⇒
+     (∃ #mKU. (!KU( m ) @ #mKU) ∧ (#mKU < #decrypt))) ∧
+   (∀ d k l h #keyImport.
+     (ImportKey( d, k, l, h ) @ #keyImport) ⇒
+     ((∃ #keyCreate.
+        (CreateKey( k, h, l ) @ #keyCreate) ∧ (#keyCreate < #keyImport)) ∨
+      (∃ #keyKU. (!KU( k ) @ #keyKU) ∧ (#keyKU < #keyImport))))"
+/*
+guarded formula characterizing all counter-examples:
+"((∃ m #decrypt.
+    (Decrypt( m ) @ #decrypt)
+   ∧
+    ∀ #mKU. (!KU( m ) @ #mKU) ⇒ ¬(#mKU < #decrypt)) ∨
+  (∃ d k l h #keyImport.
+    (ImportKey( d, k, l, h ) @ #keyImport)
+   ∧
+    (∀ #keyCreate.
+      (CreateKey( k, h, l ) @ #keyCreate) ⇒ ¬(#keyCreate < #keyImport)) ∧
+    (∀ #keyKU. (!KU( k ) @ #keyKU) ⇒ ¬(#keyKU < #keyImport))))"
+*/
+by sorry
+
+lemma Counter_Monotonicity [heuristic={Counter_Monotonicity},
+                            use_induction, reuse]:
+  all-traces
+  "∀ d c C #before #later.
+    (((DCtrIs( d, c ) @ #before) ∧ (DCtrIs( d, C ) @ #later)) ∧
+     (#before < #later)) ⇒
+    (∃ z. C = add(c, z))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ d c C #before #later.
+  (DCtrIs( d, c ) @ #before) ∧ (DCtrIs( d, C ) @ #later)
+ ∧
+  (#before < #later) ∧ (∀ z. (C = add(c, z)) ⇒ ⊥)"
+*/
+by sorry
+
+lemma IV_Uniqueness [heuristic={IV_Uniqueness}]:
+  all-traces
+  "∀ iv #before #later.
+    ((IV( iv ) @ #before) ∧ (IV( iv ) @ #later)) ⇒ (#later = #before)"
+/*
+guarded formula characterizing all counter-examples:
+"∃ iv #before #later.
+  (IV( iv ) @ #before) ∧ (IV( iv ) @ #later) ∧ ¬(#later = #before)"
+*/
+by sorry
+
+lemma Key_UsageImpliesInitialization:
+  all-traces
+  "∀ d k l h #keyUse.
+    (UseKey( d, k, h, l ) @ #keyUse) ⇒
+    (∃ #keyInit.
+      (InitKey( d, k, h, l ) @ #keyInit) ∧ (#keyInit < #keyUse))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ d k l h #keyUse.
+  (UseKey( d, k, h, l ) @ #keyUse)
+ ∧
+  ∀ #keyInit.
+   (InitKey( d, k, h, l ) @ #keyInit) ⇒ ¬(#keyInit < #keyUse)"
+*/
+by sorry
+
+lemma Key_IntegrityAndConfidentiality [heuristic={Key_IntegrityAndConfidentiality},
+                                       use_induction, reuse]:
+  all-traces
+  "(¬(∃ k l h #keyCreate #keyKU.
+       (CreateKey( k, h, l ) @ #keyCreate) ∧ (!KU( k ) @ #keyKU))) ∧
+   (∀ d k l h #keyImport.
+     (ImportKey( d, k, l, h ) @ #keyImport) ⇒
+     (∃ #keyCreate.
+       (CreateKey( k, h, l ) @ #keyCreate) ∧ (#keyCreate < #keyImport)))"
+/*
+guarded formula characterizing all counter-examples:
+"((∃ k l h #keyCreate #keyKU.
+    (CreateKey( k, h, l ) @ #keyCreate) ∧ (!KU( k ) @ #keyKU)) ∨
+  (∃ d k l h #keyImport.
+    (ImportKey( d, k, l, h ) @ #keyImport)
+   ∧
+    ∀ #keyCreate.
+     (CreateKey( k, h, l ) @ #keyCreate) ⇒ ¬(#keyCreate < #keyImport)))"
+*/
+by sorry
+
+lemma Key_UniqueLevelandHandle [reuse]:
+  all-traces
+  "∀ d D k l L h H #i #j.
+    ((InitKey( d, k, h, l ) @ #i) ∧ (InitKey( D, k, H, L ) @ #j)) ⇒
+    ((l = L) ∧ (h = H))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ d D k l L h H #i #j.
+  (InitKey( d, k, h, l ) @ #i) ∧ (InitKey( D, k, H, L ) @ #j)
+ ∧
+  ((¬(l = L)) ∨ (¬(h = H)))"
+*/
+by sorry
+
+end

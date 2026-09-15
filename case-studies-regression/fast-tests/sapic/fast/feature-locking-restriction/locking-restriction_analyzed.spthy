@@ -32,9 +32,9 @@ rule (modulo E) lockP_0_[color=#ffffff, process="lock 'P';", issapicrule,
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) P_0_1[color=#ffffff, process="P()", issapicrule,
+rule (modulo E) P_0_1[color=#ffffff, process="P();", issapicrule,
                       role='Process']:
-   [ State_1( lock ) ] --> [ State_11( lock ), State_12( lock ) ]
+   [ State_1( lock ) ] --> [ State_11( lock ) ]
 
   /* has exactly the trivial AC variant */
 
@@ -63,12 +63,6 @@ rule (modulo E) unlockP_0_1111[color=#6c8040, process="unlock 'P';",
 rule (modulo E) p_0_11111[color=#6c8040, process="0", issapicrule,
                           role='P']:
    [ State_11111( lock, lock.1 ) ] --> [ ]
-
-  /* has exactly the trivial AC variant */
-
-rule (modulo E) p_0_12[color=#ffffff, process="0", issapicrule,
-                       role='Process']:
-   [ State_12( lock ) ] --> [ ]
 
   /* has exactly the trivial AC variant */
 
@@ -128,19 +122,14 @@ restriction locking_0:
     ((#t3 < #t1) ∨ (#t1 = #t3))"
   */
 
-/*
-WARNING: the following wellformedness checks failed!
-
-Wellformedness-error in Process
-  There is an unlock that cannot be matched with a lock.
-*/
+/* All wellformedness checks were successful. */
 
 /*
 Generated from:
-Tamarin version 1.12.0
+Tamarin version 1.13.0
 Maude version 3.5.1
-Git revision: f1832c9bc70a2a165991a0802520f2e07c023227 (with uncommited changes), branch: prepare-release
-Compiled at: 2026-03-06 22:21:49.602637 UTC
+Git revision: 41bc81379b23681e7057314a5cf66a25c45e1986, branch: canonicalise-subst
+Compiled at: 2026-07-27 16:11:34.947223 UTC
 */
 
 end
@@ -152,10 +141,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-locking-restriction/locking-restriction.spthy
 
   output:          examples/sapic/fast/feature-locking-restriction/locking-restriction.spthy.tmp
-  processing time: 0.04s
-  
-  WARNING: 1 wellformedness check failed!
-           The analysis results might be wrong!
+  processing time: 0.02s
   
   ANotReachable (all-traces): verified (2 steps)
 

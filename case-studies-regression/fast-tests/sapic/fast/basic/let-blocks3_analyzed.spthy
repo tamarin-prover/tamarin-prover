@@ -9,15 +9,15 @@ equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
 
 heuristic: p
 
-rule (modulo E) Init[color=#ffffff, process="P()", issapicrule,
+rule (modulo E) Init[color=#ffffff, process="P();", issapicrule,
                      role='Process']:
    [ ] --[ Init( ) ]-> [ State_( ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) P_0_[color=#ffffff, process="P()", issapicrule,
+rule (modulo E) P_0_[color=#ffffff, process="P();", issapicrule,
                      role='Process']:
-   [ State_( ) ] --> [ State_1( ), State_2( ) ]
+   [ State_( ) ] --> [ State_1( ) ]
 
   /* has exactly the trivial AC variant */
 
@@ -51,12 +51,6 @@ rule (modulo E) p_0_111[color=#6c8040, process="0", issapicrule,
      [ State_111( a ) ] --> [ ]
   */
 
-rule (modulo E) p_0_2[color=#ffffff, process="0", issapicrule,
-                      role='Process']:
-   [ State_2( ) ] --> [ ]
-
-  /* has exactly the trivial AC variant */
-
 restriction single_session:
   "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
   // safety formula
@@ -70,10 +64,10 @@ restriction single_session:
 
 /*
 Generated from:
-Tamarin version 1.12.0
+Tamarin version 1.13.0
 Maude version 3.5.1
-Git revision: f1832c9bc70a2a165991a0802520f2e07c023227 (with uncommited changes), branch: prepare-release
-Compiled at: 2026-03-06 22:21:49.602637 UTC
+Git revision: 41bc81379b23681e7057314a5cf66a25c45e1986, branch: canonicalise-subst
+Compiled at: 2026-07-27 16:11:34.947223 UTC
 */
 
 end
@@ -85,7 +79,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/basic/let-blocks3.spthy
 
   output:          examples/sapic/fast/basic/let-blocks3.spthy.tmp
-  processing time: 0.04s
+  processing time: 0.02s
   
 
 ==============================================================================

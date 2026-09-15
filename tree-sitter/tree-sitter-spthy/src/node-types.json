@@ -1,31 +1,5 @@
 [
   {
-    "type": "",
-    "named": false,
-    "fields": {
-      "predicate_identifier": {
-        "multiple": false,
-        "required": true,
-        "types": [
-          {
-            "type": "ident",
-            "named": true
-          }
-        ]
-      }
-    },
-    "children": {
-      "multiple": false,
-      "required": false,
-      "types": [
-        {
-          "type": "arguments",
-          "named": true
-        }
-      ]
-    }
-  },
-  {
     "type": "accountability_lemma",
     "named": true,
     "fields": {
@@ -55,6 +29,10 @@
           },
           {
             "type": "imp",
+            "named": true
+          },
+          {
+            "type": "lesser_check",
             "named": true
           },
           {
@@ -126,13 +104,9 @@
     "named": true,
     "fields": {
       "fact": {
-        "multiple": true,
+        "multiple": false,
         "required": true,
         "types": [
-          {
-            "type": "!",
-            "named": false
-          },
           {
             "type": "linear_fact",
             "named": true
@@ -376,6 +350,10 @@
           "named": true
         },
         {
+          "type": "nested_process",
+          "named": true
+        },
+        {
           "type": "non_deterministic_choice",
           "named": true
         },
@@ -537,6 +515,10 @@
           },
           {
             "type": "imp",
+            "named": true
+          },
+          {
+            "type": "lesser_check",
             "named": true
           },
           {
@@ -707,7 +689,31 @@
         "required": true,
         "types": [
           {
+            "type": "action_constraint",
+            "named": true
+          },
+          {
+            "type": "atom",
+            "named": true
+          },
+          {
+            "type": "conjunction",
+            "named": true
+          },
+          {
+            "type": "disjunction",
+            "named": true
+          },
+          {
             "type": "equality_check",
+            "named": true
+          },
+          {
+            "type": "iff",
+            "named": true
+          },
+          {
+            "type": "imp",
             "named": true
           },
           {
@@ -715,23 +721,51 @@
             "named": true
           },
           {
+            "type": "negation",
+            "named": true
+          },
+          {
+            "type": "nested_formula",
+            "named": true
+          },
+          {
+            "type": "pre_defined",
+            "named": true
+          },
+          {
             "type": "predicate_ref",
+            "named": true
+          },
+          {
+            "type": "quantified_formula",
+            "named": true
+          },
+          {
+            "type": "subterm_rel",
+            "named": true
+          },
+          {
+            "type": "temp_var_eq",
+            "named": true
+          },
+          {
+            "type": "temp_var_induction",
+            "named": true
+          },
+          {
+            "type": "temp_var_order",
+            "named": true
+          },
+          {
+            "type": "term_eq",
             "named": true
           }
         ]
       },
       "else": {
-        "multiple": true,
+        "multiple": false,
         "required": false,
         "types": [
-          {
-            "type": "(",
-            "named": false
-          },
-          {
-            "type": ")",
-            "named": false
-          },
           {
             "type": "binding",
             "named": true
@@ -762,6 +796,10 @@
           },
           {
             "type": "location_process",
+            "named": true
+          },
+          {
+            "type": "nested_process",
             "named": true
           },
           {
@@ -807,17 +845,9 @@
         ]
       },
       "then": {
-        "multiple": true,
+        "multiple": false,
         "required": true,
         "types": [
-          {
-            "type": "(",
-            "named": false
-          },
-          {
-            "type": ")",
-            "named": false
-          },
           {
             "type": "binding",
             "named": true
@@ -848,6 +878,10 @@
           },
           {
             "type": "location_process",
+            "named": true
+          },
+          {
+            "type": "nested_process",
             "named": true
           },
           {
@@ -927,6 +961,10 @@
             "named": true
           },
           {
+            "type": "lesser_check",
+            "named": true
+          },
+          {
             "type": "negation",
             "named": true
           },
@@ -994,6 +1032,10 @@
           },
           {
             "type": "imp",
+            "named": true
+          },
+          {
+            "type": "lesser_check",
             "named": true
           },
           {
@@ -1189,6 +1231,10 @@
           "named": true
         },
         {
+          "type": "nested_process",
+          "named": true
+        },
+        {
           "type": "non_deterministic_choice",
           "named": true
         },
@@ -1303,6 +1349,10 @@
           "named": true
         },
         {
+          "type": "nested_process",
+          "named": true
+        },
+        {
           "type": "non_deterministic_choice",
           "named": true
         },
@@ -1383,6 +1433,10 @@
         },
         {
           "type": "location_process",
+          "named": true
+        },
+        {
+          "type": "nested_process",
           "named": true
         },
         {
@@ -1577,6 +1631,10 @@
             "named": true
           },
           {
+            "type": "lesser_check",
+            "named": true
+          },
+          {
             "type": "negation",
             "named": true
           },
@@ -1644,6 +1702,10 @@
           },
           {
             "type": "imp",
+            "named": true
+          },
+          {
+            "type": "lesser_check",
             "named": true
           },
           {
@@ -1723,6 +1785,10 @@
             "named": true
           },
           {
+            "type": "lesser_check",
+            "named": true
+          },
+          {
             "type": "negation",
             "named": true
           },
@@ -1799,6 +1865,10 @@
             "named": true
           },
           {
+            "type": "lesser_check",
+            "named": true
+          },
+          {
             "type": "negation",
             "named": true
           },
@@ -1866,71 +1936,7 @@
       "required": true,
       "types": [
         {
-          "type": "action_constraint",
-          "named": true
-        },
-        {
-          "type": "atom",
-          "named": true
-        },
-        {
-          "type": "conjunction",
-          "named": true
-        },
-        {
-          "type": "disjunction",
-          "named": true
-        },
-        {
-          "type": "iff",
-          "named": true
-        },
-        {
-          "type": "imp",
-          "named": true
-        },
-        {
           "type": "mset_term",
-          "named": true
-        },
-        {
-          "type": "negation",
-          "named": true
-        },
-        {
-          "type": "nested_formula",
-          "named": true
-        },
-        {
-          "type": "pre_defined",
-          "named": true
-        },
-        {
-          "type": "predicate_ref",
-          "named": true
-        },
-        {
-          "type": "quantified_formula",
-          "named": true
-        },
-        {
-          "type": "subterm_rel",
-          "named": true
-        },
-        {
-          "type": "temp_var_eq",
-          "named": true
-        },
-        {
-          "type": "temp_var_induction",
-          "named": true
-        },
-        {
-          "type": "temp_var_order",
-          "named": true
-        },
-        {
-          "type": "term_eq",
           "named": true
         }
       ]
@@ -1982,17 +1988,9 @@
     "named": true,
     "fields": {
       "first": {
-        "multiple": true,
+        "multiple": false,
         "required": true,
         "types": [
-          {
-            "type": "(",
-            "named": false
-          },
-          {
-            "type": ")",
-            "named": false
-          },
           {
             "type": "binding",
             "named": true
@@ -2023,6 +2021,10 @@
           },
           {
             "type": "location_process",
+            "named": true
+          },
+          {
+            "type": "nested_process",
             "named": true
           },
           {
@@ -2068,17 +2070,9 @@
         ]
       },
       "second": {
-        "multiple": true,
+        "multiple": false,
         "required": true,
         "types": [
-          {
-            "type": "(",
-            "named": false
-          },
-          {
-            "type": ")",
-            "named": false
-          },
           {
             "type": "binding",
             "named": true
@@ -2109,6 +2103,10 @@
           },
           {
             "type": "location_process",
+            "named": true
+          },
+          {
+            "type": "nested_process",
             "named": true
           },
           {
@@ -2197,6 +2195,10 @@
         },
         {
           "type": "location_process",
+          "named": true
+        },
+        {
+          "type": "nested_process",
           "named": true
         },
         {
@@ -2602,120 +2604,221 @@
   {
     "type": "ifdef",
     "named": true,
-    "fields": {},
-    "children": {
-      "multiple": true,
-      "required": true,
-      "types": [
-        {
-          "type": "accountability_lemma",
-          "named": true
-        },
-        {
-          "type": "built_ins",
-          "named": true
-        },
-        {
-          "type": "case_test",
-          "named": true
-        },
-        {
-          "type": "diff_equiv_lemma",
-          "named": true
-        },
-        {
-          "type": "diff_lemma",
-          "named": true
-        },
-        {
-          "type": "diff_rule",
-          "named": true
-        },
-        {
-          "type": "equations",
-          "named": true
-        },
-        {
-          "type": "equiv_lemma",
-          "named": true
-        },
-        {
-          "type": "export",
-          "named": true
-        },
-        {
-          "type": "formal_comment",
-          "named": true
-        },
-        {
-          "type": "functions",
-          "named": true
-        },
-        {
-          "type": "global_heuristic",
-          "named": true
-        },
-        {
-          "type": "ident",
-          "named": true
-        },
-        {
-          "type": "ifdef_and",
-          "named": true
-        },
-        {
-          "type": "ifdef_nested",
-          "named": true
-        },
-        {
-          "type": "ifdef_not",
-          "named": true
-        },
-        {
-          "type": "ifdef_or",
-          "named": true
-        },
-        {
-          "type": "lemma",
-          "named": true
-        },
-        {
-          "type": "let",
-          "named": true
-        },
-        {
-          "type": "macros",
-          "named": true
-        },
-        {
-          "type": "options",
-          "named": true
-        },
-        {
-          "type": "predicates",
-          "named": true
-        },
-        {
-          "type": "preprocessor",
-          "named": true
-        },
-        {
-          "type": "process",
-          "named": true
-        },
-        {
-          "type": "restriction",
-          "named": true
-        },
-        {
-          "type": "rule",
-          "named": true
-        },
-        {
-          "type": "tactic",
-          "named": true
-        }
-      ]
+    "fields": {
+      "alternative": {
+        "multiple": true,
+        "required": false,
+        "types": [
+          {
+            "type": "accountability_lemma",
+            "named": true
+          },
+          {
+            "type": "built_ins",
+            "named": true
+          },
+          {
+            "type": "case_test",
+            "named": true
+          },
+          {
+            "type": "diff_equiv_lemma",
+            "named": true
+          },
+          {
+            "type": "diff_lemma",
+            "named": true
+          },
+          {
+            "type": "diff_rule",
+            "named": true
+          },
+          {
+            "type": "equations",
+            "named": true
+          },
+          {
+            "type": "equiv_lemma",
+            "named": true
+          },
+          {
+            "type": "export",
+            "named": true
+          },
+          {
+            "type": "formal_comment",
+            "named": true
+          },
+          {
+            "type": "functions",
+            "named": true
+          },
+          {
+            "type": "global_heuristic",
+            "named": true
+          },
+          {
+            "type": "lemma",
+            "named": true
+          },
+          {
+            "type": "let",
+            "named": true
+          },
+          {
+            "type": "macros",
+            "named": true
+          },
+          {
+            "type": "options",
+            "named": true
+          },
+          {
+            "type": "predicates",
+            "named": true
+          },
+          {
+            "type": "preprocessor",
+            "named": true
+          },
+          {
+            "type": "process",
+            "named": true
+          },
+          {
+            "type": "restriction",
+            "named": true
+          },
+          {
+            "type": "rule",
+            "named": true
+          },
+          {
+            "type": "tactic",
+            "named": true
+          }
+        ]
+      },
+      "condition": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "ident",
+            "named": true
+          },
+          {
+            "type": "ifdef_and",
+            "named": true
+          },
+          {
+            "type": "ifdef_nested",
+            "named": true
+          },
+          {
+            "type": "ifdef_not",
+            "named": true
+          },
+          {
+            "type": "ifdef_or",
+            "named": true
+          }
+        ]
+      },
+      "consequence": {
+        "multiple": true,
+        "required": false,
+        "types": [
+          {
+            "type": "accountability_lemma",
+            "named": true
+          },
+          {
+            "type": "built_ins",
+            "named": true
+          },
+          {
+            "type": "case_test",
+            "named": true
+          },
+          {
+            "type": "diff_equiv_lemma",
+            "named": true
+          },
+          {
+            "type": "diff_lemma",
+            "named": true
+          },
+          {
+            "type": "diff_rule",
+            "named": true
+          },
+          {
+            "type": "equations",
+            "named": true
+          },
+          {
+            "type": "equiv_lemma",
+            "named": true
+          },
+          {
+            "type": "export",
+            "named": true
+          },
+          {
+            "type": "formal_comment",
+            "named": true
+          },
+          {
+            "type": "functions",
+            "named": true
+          },
+          {
+            "type": "global_heuristic",
+            "named": true
+          },
+          {
+            "type": "lemma",
+            "named": true
+          },
+          {
+            "type": "let",
+            "named": true
+          },
+          {
+            "type": "macros",
+            "named": true
+          },
+          {
+            "type": "options",
+            "named": true
+          },
+          {
+            "type": "predicates",
+            "named": true
+          },
+          {
+            "type": "preprocessor",
+            "named": true
+          },
+          {
+            "type": "process",
+            "named": true
+          },
+          {
+            "type": "restriction",
+            "named": true
+          },
+          {
+            "type": "rule",
+            "named": true
+          },
+          {
+            "type": "tactic",
+            "named": true
+          }
+        ]
+      }
     }
   },
   {
@@ -2875,6 +2978,10 @@
             "named": true
           },
           {
+            "type": "lesser_check",
+            "named": true
+          },
+          {
             "type": "negation",
             "named": true
           },
@@ -2942,6 +3049,10 @@
           },
           {
             "type": "imp",
+            "named": true
+          },
+          {
+            "type": "lesser_check",
             "named": true
           },
           {
@@ -3021,6 +3132,10 @@
             "named": true
           },
           {
+            "type": "lesser_check",
+            "named": true
+          },
+          {
             "type": "negation",
             "named": true
           },
@@ -3088,6 +3203,10 @@
           },
           {
             "type": "imp",
+            "named": true
+          },
+          {
+            "type": "lesser_check",
             "named": true
           },
           {
@@ -3198,6 +3317,10 @@
           "named": true
         },
         {
+          "type": "nested_process",
+          "named": true
+        },
+        {
           "type": "non_deterministic_choice",
           "named": true
         },
@@ -3289,6 +3412,10 @@
           "named": true
         },
         {
+          "type": "nested_process",
+          "named": true
+        },
+        {
           "type": "non_deterministic_choice",
           "named": true
         },
@@ -3366,6 +3493,10 @@
           },
           {
             "type": "imp",
+            "named": true
+          },
+          {
+            "type": "lesser_check",
             "named": true
           },
           {
@@ -3507,16 +3638,27 @@
   {
     "type": "lesser_check",
     "named": true,
-    "fields": {},
-    "children": {
-      "multiple": true,
-      "required": true,
-      "types": [
-        {
-          "type": "mset_term",
-          "named": true
-        }
-      ]
+    "fields": {
+      "left": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "mset_term",
+            "named": true
+          }
+        ]
+      },
+      "right": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "mset_term",
+            "named": true
+          }
+        ]
+      }
     }
   },
   {
@@ -3568,6 +3710,10 @@
         },
         {
           "type": "location_process",
+          "named": true
+        },
+        {
+          "type": "nested_process",
           "named": true
         },
         {
@@ -3728,6 +3874,10 @@
         },
         {
           "type": "location_process",
+          "named": true
+        },
+        {
+          "type": "nested_process",
           "named": true
         },
         {
@@ -4081,6 +4231,10 @@
             "named": true
           },
           {
+            "type": "lesser_check",
+            "named": true
+          },
+          {
             "type": "negation",
             "named": true
           },
@@ -4157,6 +4311,10 @@
           "named": true
         },
         {
+          "type": "lesser_check",
+          "named": true
+        },
+        {
           "type": "negation",
           "named": true
         },
@@ -4194,6 +4352,93 @@
         },
         {
           "type": "term_eq",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "nested_process",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": false,
+      "required": true,
+      "types": [
+        {
+          "type": "binding",
+          "named": true
+        },
+        {
+          "type": "conditional",
+          "named": true
+        },
+        {
+          "type": "delete_state",
+          "named": true
+        },
+        {
+          "type": "deterministic_choice",
+          "named": true
+        },
+        {
+          "type": "event",
+          "named": true
+        },
+        {
+          "type": "inline_msr_process",
+          "named": true
+        },
+        {
+          "type": "input",
+          "named": true
+        },
+        {
+          "type": "location_process",
+          "named": true
+        },
+        {
+          "type": "nested_process",
+          "named": true
+        },
+        {
+          "type": "non_deterministic_choice",
+          "named": true
+        },
+        {
+          "type": "null",
+          "named": true
+        },
+        {
+          "type": "output",
+          "named": true
+        },
+        {
+          "type": "predefined_process",
+          "named": true
+        },
+        {
+          "type": "process_let",
+          "named": true
+        },
+        {
+          "type": "read_state",
+          "named": true
+        },
+        {
+          "type": "remove_lock",
+          "named": true
+        },
+        {
+          "type": "replication",
+          "named": true
+        },
+        {
+          "type": "set_lock",
+          "named": true
+        },
+        {
+          "type": "set_state",
           "named": true
         }
       ]
@@ -4252,6 +4497,10 @@
         },
         {
           "type": "location_process",
+          "named": true
+        },
+        {
+          "type": "nested_process",
           "named": true
         },
         {
@@ -4447,6 +4696,10 @@
           "named": true
         },
         {
+          "type": "nested_process",
+          "named": true
+        },
+        {
           "type": "non_deterministic_choice",
           "named": true
         },
@@ -4587,6 +4840,10 @@
             "named": true
           },
           {
+            "type": "lesser_check",
+            "named": true
+          },
+          {
             "type": "negation",
             "named": true
           },
@@ -4627,7 +4884,27 @@
             "named": true
           }
         ]
+      },
+      "predicate_identifier": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "ident",
+            "named": true
+          }
+        ]
       }
+    },
+    "children": {
+      "multiple": false,
+      "required": false,
+      "types": [
+        {
+          "type": "arguments",
+          "named": true
+        }
+      ]
     }
   },
   {
@@ -4827,6 +5104,10 @@
           "named": true
         },
         {
+          "type": "nested_process",
+          "named": true
+        },
+        {
           "type": "non_deterministic_choice",
           "named": true
         },
@@ -4874,17 +5155,9 @@
     "named": true,
     "fields": {
       "else": {
-        "multiple": true,
+        "multiple": false,
         "required": false,
         "types": [
-          {
-            "type": "(",
-            "named": false
-          },
-          {
-            "type": ")",
-            "named": false
-          },
           {
             "type": "binding",
             "named": true
@@ -4915,6 +5188,10 @@
           },
           {
             "type": "location_process",
+            "named": true
+          },
+          {
+            "type": "nested_process",
             "named": true
           },
           {
@@ -4960,17 +5237,9 @@
         ]
       },
       "in": {
-        "multiple": true,
+        "multiple": false,
         "required": true,
         "types": [
-          {
-            "type": "(",
-            "named": false
-          },
-          {
-            "type": ")",
-            "named": false
-          },
           {
             "type": "binding",
             "named": true
@@ -5001,6 +5270,10 @@
           },
           {
             "type": "location_process",
+            "named": true
+          },
+          {
+            "type": "nested_process",
             "named": true
           },
           {
@@ -5136,6 +5409,10 @@
             "named": true
           },
           {
+            "type": "lesser_check",
+            "named": true
+          },
+          {
             "type": "negation",
             "named": true
           },
@@ -5210,17 +5487,9 @@
     "named": true,
     "fields": {
       "else": {
-        "multiple": true,
+        "multiple": false,
         "required": false,
         "types": [
-          {
-            "type": "(",
-            "named": false
-          },
-          {
-            "type": ")",
-            "named": false
-          },
           {
             "type": "binding",
             "named": true
@@ -5251,6 +5520,10 @@
           },
           {
             "type": "location_process",
+            "named": true
+          },
+          {
+            "type": "nested_process",
             "named": true
           },
           {
@@ -5306,17 +5579,9 @@
         ]
       },
       "in": {
-        "multiple": true,
+        "multiple": false,
         "required": true,
         "types": [
-          {
-            "type": "(",
-            "named": false
-          },
-          {
-            "type": ")",
-            "named": false
-          },
           {
             "type": "binding",
             "named": true
@@ -5347,6 +5612,10 @@
           },
           {
             "type": "location_process",
+            "named": true
+          },
+          {
+            "type": "nested_process",
             "named": true
           },
           {
@@ -5455,6 +5724,10 @@
           "named": true
         },
         {
+          "type": "nested_process",
+          "named": true
+        },
+        {
           "type": "non_deterministic_choice",
           "named": true
         },
@@ -5542,6 +5815,10 @@
           "named": true
         },
         {
+          "type": "nested_process",
+          "named": true
+        },
+        {
           "type": "non_deterministic_choice",
           "named": true
         },
@@ -5625,6 +5902,10 @@
           "named": true
         },
         {
+          "type": "nested_process",
+          "named": true
+        },
+        {
           "type": "non_deterministic_choice",
           "named": true
         },
@@ -5697,6 +5978,10 @@
           },
           {
             "type": "imp",
+            "named": true
+          },
+          {
+            "type": "lesser_check",
             "named": true
           },
           {
@@ -5956,7 +6241,7 @@
     "fields": {
       "role_identifier": {
         "multiple": false,
-        "required": true,
+        "required": false,
         "types": [
           {
             "type": "ident",
@@ -6008,6 +6293,10 @@
         },
         {
           "type": "mset_term",
+          "named": true
+        },
+        {
+          "type": "nested_process",
           "named": true
         },
         {
@@ -6112,6 +6401,10 @@
         },
         {
           "type": "location_process",
+          "named": true
+        },
+        {
+          "type": "nested_process",
           "named": true
         },
         {
@@ -6550,7 +6843,7 @@
     "fields": {
       "left": {
         "multiple": false,
-        "required": true,
+        "required": false,
         "types": [
           {
             "type": "mset_term",
@@ -6789,6 +7082,14 @@
   },
   {
     "type": "F",
+    "named": false
+  },
+  {
+    "type": "NDC",
+    "named": false
+  },
+  {
+    "type": "NDC-diff",
     "named": false
   },
   {

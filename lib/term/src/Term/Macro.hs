@@ -27,7 +27,7 @@ type BNMacro = Macro Name (BVar LVar)
 
 -- | Change a Macro to a FunSym
 macroToFunSym :: Macro c v -> FunSym
-macroToFunSym (op, args, _) = NoEq (op, (length args, Private, Destructor))      
+macroToFunSym (op, args, _) = NoEq (op, (length args, Private, Destructor, NotNDC))      
 
 -- | Apply and substitute a single macro
 applyMacro :: IsConst c => IsVar v => FunSym -> [v] -> VTerm c v -> VTerm c v -> VTerm c v

@@ -41,7 +41,7 @@ rule Init_1:
   [ Init_1( $I, $R, ~ltkI, ~ekI )
   , Out( <$I, $R, epkI> ) ]
 
-rule Init_2:
+rule Init_2 [no_derivcheck]:
   let epkI = 'g'^~ekI
       sigI = sign{ '2', $I, $R, epkI, Y }~ltkI
       sigR = sign{ '1', $I, $R, Y, epkI }~ltkR
@@ -73,7 +73,7 @@ rule Resp_1:
     ]
 
 
-rule Resp_2:
+rule Resp_2 [no_derivcheck]:
   let epkR = 'g'^~ekR
       sigI = sign{ '2', $I, $R, X, epkR }~ltkI
       sigR = sign{ '1', $I, $R, epkR, X }~ltkR

@@ -22,14 +22,14 @@ rule (modulo E) Init_1:
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) Init_2:
+rule (modulo E) Init_2[no_derivcheck]:
    [ Init_1( ~ekI, $I, $R, ~lkI, ~ekI ), In( Y ), !Pk( $R, 'g'^~lkR ) ]
   --[ SidI_2( ~ekI, $I, $R, ~ekI, Y, h(<$I, $R, ~ekI, Y, 'g'^~lkR^~lkI>) )
   ]->
    [ !Sessk( ~ekI, h(<$I, $R, ~ekI, Y, 'g'^~lkR^~lkI>) ) ]
 
   /*
-  rule (modulo AC) Init_2:
+  rule (modulo AC) Init_2[no_derivcheck]:
      [ Init_1( ~ekI, $I, $R, ~lkI, ~ekI ), In( Y ), !Pk( $R, 'g'^~lkR ) ]
     --[
     SidI_2( ~ekI, $I, $R, ~ekI, Y, h(<$I, $R, ~ekI, Y, 'g'^(~lkI*~lkR)>) )
@@ -37,7 +37,7 @@ rule (modulo E) Init_2:
      [ !Sessk( ~ekI, h(<$I, $R, ~ekI, Y, 'g'^(~lkI*~lkR)>) ) ]
   */
 
-rule (modulo E) Resp_1:
+rule (modulo E) Resp_1[no_derivcheck]:
    [ In( X ), Fr( ~ekR ), !Ltk( $R, ~lkR ), !Pk( $I, 'g'^~lkI ) ]
   --[ SidR_1( ~ekR, $I, $R, X, ~ekR, h(<$I, $R, X, ~ekR, 'g'^~lkI^~lkR>) )
   ]->
@@ -47,7 +47,7 @@ rule (modulo E) Resp_1:
    ]
 
   /*
-  rule (modulo AC) Resp_1:
+  rule (modulo AC) Resp_1[no_derivcheck]:
      [ In( X ), Fr( ~ekR ), !Ltk( $R, ~lkR ), !Pk( $I, 'g'^~lkI ) ]
     --[
     SidR_1( ~ekR, $I, $R, X, ~ekR, h(<$I, $R, X, ~ekR, 'g'^(~lkI*~lkR)>) )
@@ -125,13 +125,13 @@ solve( Init_1( ~ekI, $I, $R, ~lkI, ~ekI ) ▶₀ #i1 )
         qed
       next
         case generate_ltk_case_1
-        solve( !KU( ~lkI ) @ #vk.10 )
+        solve( !KU( ~lkR ) @ #vk.10 )
           case Ltk_reveal
           by contradiction /* from formulas */
         qed
       next
         case generate_ltk_case_2
-        solve( !KU( ~lkR ) @ #vk.10 )
+        solve( !KU( ~lkI ) @ #vk.10 )
           case Ltk_reveal
           by contradiction /* from formulas */
         qed
@@ -192,13 +192,13 @@ solve( !Ltk( $R, ~lkR ) ▶₂ #i1 )
         qed
       next
         case generate_ltk_case_1
-        solve( !KU( ~lkI ) @ #vk.10 )
+        solve( !KU( ~lkR ) @ #vk.10 )
           case Ltk_reveal
           by contradiction /* from formulas */
         qed
       next
         case generate_ltk_case_2
-        solve( !KU( ~lkR ) @ #vk.10 )
+        solve( !KU( ~lkI ) @ #vk.10 )
           case Ltk_reveal
           by contradiction /* from formulas */
         qed
@@ -211,10 +211,10 @@ qed
 
 /*
 Generated from:
-Tamarin version 1.12.0
+Tamarin version 1.13.0
 Maude version 3.5.1
-Git revision: f1832c9bc70a2a165991a0802520f2e07c023227 (with uncommited changes), branch: prepare-release
-Compiled at: 2026-03-06 22:21:49.602637 UTC
+Git revision: 41bc81379b23681e7057314a5cf66a25c45e1986, branch: canonicalise-subst
+Compiled at: 2026-07-27 16:11:34.947223 UTC
 */
 
 end
@@ -226,7 +226,7 @@ summary of summaries:
 analyzed: examples/csf12/JKL_TS1_2008_KI.spthy
 
   output:          examples/csf12/JKL_TS1_2008_KI.spthy.tmp
-  processing time: 0.13s
+  processing time: 0.07s
   
   JKL2008_1_initiator_key (all-traces): verified (15 steps)
   JKL2008_1_responder_key (all-traces): verified (15 steps)

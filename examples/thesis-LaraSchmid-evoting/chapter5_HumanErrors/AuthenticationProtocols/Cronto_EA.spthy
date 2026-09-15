@@ -193,21 +193,21 @@ rule D_4:
  	--[D($D), Dfin()]-> 
 	[ Out_S($D,$H,'otpw',otpw(~r)) ]
 		
-rule S_2:
+rule S_2 [no_derivcheck]:
 	[ AgSt_S0($S,'S_0',< $H, $D, pw(~pw), $idH, ~kDS>), In($idH), Fr(~r) ]
 	--[ Sstart($S)]->
 	[ AgSt_S3($S,'S_3',< $H, $D, pw(~pw), $idH, ~kDS, ~r >), Out(senc(~r,~kDS)) ]
-rule S_7:
+rule S_7 [no_derivcheck]:
 	[ AgSt_S3($S,'S_3',< $H, $D, pw(~pw), $idH, ~kDS, ~r >), In(<pw(~pw),otpw(~r)>) ]
 	--[ Commit($S,$H,pw(~pw)), CommitCA($S,$H) ]->
 	[ ]
 
 /* human agent rules */
-rule H_1:
+rule H_1 [no_derivcheck]:
 	[ AgSt_H0($H,'H_0',< $D, $P, $S, pw(~pw), $idH >)  ]
 	--[H_role($H,'1'), Send($H,'S',$S), Send($H,'idH',$idH) ]->
 	[ AgSt_H1($H,'H_1',< $D, $P, $S, pw(~pw), $idH >), Out(< <'S','idH' >,<$S,$idH > >) ]
-rule H_5:           
+rule H_5 [no_derivcheck]:           
 	[ AgSt_H1($H,'H_1',< $D, $P, $S, pw(~pw), $idH >), In_S($D,$H,'otpw',otpw) ]
 	--[H_role($H,'5'),  Receive($H,'otpw',otpw), Send($H,'pw',pw(~pw)), Send($H,'otpw',otpw) ]->
 	[ Out(< <'pw','otpw'>,<pw(~pw),otpw> >)]

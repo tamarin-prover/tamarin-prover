@@ -1,0 +1,1204 @@
+theory AKIvfinalproofNoThreeUntrusted begin
+
+// Function signature and definition of the equational theory E
+
+functions: fst/1, h/1, pair/2, pk/1, sig/2, sign/2, snd/1, time/1,
+           true/0, verify/3, add/2 [AC], unionUD/1 [destructor]
+equations:
+    fst(<x.1, x.2>) = x.1,
+    snd(<x.1, x.2>) = x.2,
+    verify(sign(x.1, x.2), x.1, pk(x.2)) = true,
+    unionUD(add(x, y)) = x
+
+
+
+
+
+text{*
+  ARPKI model
+  There are now at least two different CAs involved in the registration 
+  process, regardless of the contents of CA_List. This is meant to ensure 
+  that at least three parties (CA1,CA2,ILS) sign off of the registration.
+  Authors: Cas Cremers <cas.cremers@cs.ox.ac.uk>
+           Ralf Sasse <ralf.sasse@inf.ethz.ch>
+  Date: May 2013 - June 2014
+  Status: Working
+*}
+
+
+
+
+
+
+
+
+
+
+
+
+
+rule (modulo E) PubFr:
+   [ Fr( ~x ) ] --> [ Out( ~x ), PubFr( ~x ) ]
+
+rule (modulo E) Generate_Keypair_trusted_COLOR00F_x:
+   [ Fr( ~ltk ) ]
+  --[ GEN_LTK( $A, ~ltk, 'trusted' ) ]->
+   [
+   !Ltk( $A, ~ltk ), F_CERT( $A, pk(~ltk) ), Out( pk(~ltk) ),
+   TrustedKey( $A, ~ltk )
+   ]
+
+rule (modulo E) Generate_Keypair_untrusted_COLORF00_x:
+   [ PubFr( ~ltk ) ]
+  --[ GEN_LTK( $A, ~ltk, 'untrusted' ) ]->
+   [
+   !Ltk( $A, ~ltk ), F_CERT( $A, pk(~ltk) ), Out( pk(~ltk) ),
+   UntrustedKey( $A )
+   ]
+
+rule (modulo E) A_Initialize_ILS:
+   [ !Ltk( $K, ~ltkK ), PubFr( ~t ) ]
+  --[
+  IsType( 'ILS', $K ), Clock( time(~t) ), OnlyOne( 'InitializeILS' )
+  ]->
+   [
+   L_ILStoAdd( ~ltkK, $K, 'nil' ), L_ILSlog( ~ltkK, $K, 'nil' ),
+   L_ILSIntegrity( ~ltkK, $K, <h('nil'), time(~t)> )
+   ]
+
+rule (modulo E) A_Create_Aki_Cert:
+   [ !Ltk( $A, ~ltkA ), F_CERT( $A, pk(~ltkA) ), PubFr( ~t ) ]
+  --[
+  IsType( 'Agent', $A ), IsType( 'ILS', $ILSk ),
+  IsType( 'CA', $CA1 ), IsType( 'CA', $CA2 ),
+  OnlyOne( 'A_Create_Aki_Cert' ), AskedForAKICert( $A, ~ltkA ),
+  Clock( time(~t) )
+  ]->
+   [
+   DomainCombineAKICertA( $A,
+                          sig(<'Cert', $A, pk(~ltkA), $ILSk, add($CA1, $CA2)>, ~ltkA), $CA1,
+                          $CA2
+   ),
+   Out( <$A, $CA1, 
+         sig(<'SignRequest', 
+              sig(<'Cert', $A, pk(~ltkA), $ILSk, add($CA1, $CA2)>, ~ltkA), 
+              time(~t)>,
+             ~ltkA)
+        >
+   ),
+   Out( <$A, $CA2, 
+         sig(<'SignRequest', 
+              sig(<'Cert', $A, pk(~ltkA), $ILSk, add($CA1, $CA2)>, ~ltkA), 
+              time(~t)>,
+             ~ltkA)
+        >
+   ),
+   Out( sig(<'Cert', $A, pk(~ltkA), $ILSk, add($CA1, $CA2)>, ~ltkA) )
+   ]
+
+rule (modulo E) CA_Sig_Acq_CA:
+   [
+   In( <$A, $CA1, 
+        sig(<'SignRequest', 
+             sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA), TA>,
+            ~ltkA)
+       >
+   ),
+   !Ltk( $CA1, ~ltkCA )
+   ]
+  --[
+  IsType( 'Agent', $A ), IsType( 'CA', $CA1 ), Clock( TA ),
+  IdentityProof( $A,
+                 sig(<'SignRequest', 
+                      sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA), TA>,
+                     ~ltkA)
+  )
+  ]->
+   [
+   Out( <$CA1, $A, 
+         sig(<'CACert', 
+              sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA)>,
+             ~ltkCA)
+        >
+   ),
+   Out( sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA) )
+   ]
+
+rule (modulo E) A_Receive_SignedCerts:
+   [
+   DomainCombineAKICertA( $A,
+                          sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA), $CA1, $CA2
+   ),
+   In( <$CA1, $A, 
+        sig(<'CACert', 
+             sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA)>,
+            ~ltkCAx1)
+       >
+   ),
+   In( <$CA2, $A, 
+        sig(<'CACert', 
+             sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA)>,
+            ~ltkCAx2)
+       >
+   )
+   ]
+  --[
+  NotEq( ~ltkCAx1, ~ltkCAx2 ), ReceivedCASignedAKICert( $A, ~ltkA )
+  ]->
+   [
+   F_DomainHasAKICertA( $A, $CA1,
+                        <sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA), 
+                         sig(<'CACert', 
+                              sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA)>,
+                             ~ltkCAx1), 
+                         sig(<'CACert', 
+                              sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA)>,
+                             ~ltkCAx2)
+                        >
+   ),
+   Out( sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA) )
+   ]
+
+rule (modulo E) ILS_Reg_A1:
+   [
+   F_DomainHasAKICertA( $A, $CA1,
+                        <sig(<'Cert', $A, pkA, $ILSk, add($CA1, $CA2)>, ~ltkA), 
+                         sig(<'CACert', 
+                              sig(<'Cert', $A, pkA, $ILSk, add($CA1, $CA2)>, ~ltkA)>,
+                             ~ltkCAx1), 
+                         sig(<'CACert', 
+                              sig(<'Cert', $A, pkA, $ILSk, add($CA1, $CA2)>, ~ltkA)>,
+                             ~ltkCAx2)
+                        >
+   ),
+   PubFr( ~t ), !Ltk( $A, ~ltkA ), !Ltk( $CA1, ~ltkCAx1 ),
+   !Ltk( $CA2, ~ltkCAx2 )
+   ]
+  --[ Clock( time(~t) ), OnlyOne( <'ILS_Reg_A1', ~ltkA> ) ]->
+   [
+   Out( <$A, $CA1, 
+         sig(<'RegistrationRequest', 
+              <sig(<'Cert', $A, pkA, $ILSk, add($CA1, $CA2)>, ~ltkA), 
+               sig(<'CACert', 
+                    sig(<'Cert', $A, pkA, $ILSk, add($CA1, $CA2)>, ~ltkA)>,
+                   ~ltkCAx1), 
+               sig(<'CACert', 
+                    sig(<'Cert', $A, pkA, $ILSk, add($CA1, $CA2)>, ~ltkA)>,
+                   ~ltkCAx2)
+              >, 
+              $CA1, $ILSk, $CA2, time(~t)>,
+             ~ltkA)
+        >
+   ),
+   F_DomainHasAKICertA( $A, $CA1,
+                        <sig(<'Cert', $A, pkA, $ILSk, add($CA1, $CA2)>, ~ltkA), 
+                         sig(<'CACert', 
+                              sig(<'Cert', $A, pkA, $ILSk, add($CA1, $CA2)>, ~ltkA)>,
+                             ~ltkCAx1), 
+                         sig(<'CACert', 
+                              sig(<'Cert', $A, pkA, $ILSk, add($CA1, $CA2)>, ~ltkA)>,
+                             ~ltkCAx2)
+                        >
+   )
+   ]
+
+rule (modulo E) ILS_Reg_CA1_Forward:
+   [
+   In( <$A, $CA1, 
+        sig(<'RegistrationRequest', 
+             <sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA), 
+              sig(<'CACert', 
+                   sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA)>,
+                  ~ltkCAx1), 
+              sig(<'CACert', 
+                   sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA)>,
+                  ~ltkCAx2)
+             >, 
+             $CA1, $ILSk, $CA2, TA>,
+            ~ltkA)
+       >
+   )
+   ]
+  --[
+  ExecutionTestComplete2( ),
+  ExecutionTestComplete2ARG( sig(<'RegistrationRequest', 
+                                  <sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA), 
+                                   sig(<'CACert', 
+                                        sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA)>,
+                                       ~ltkCAx1), 
+                                   sig(<'CACert', 
+                                        sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA)>,
+                                       ~ltkCAx2)
+                                  >, 
+                                  $CA1, $ILSk, $CA2, TA>,
+                                 ~ltkA)
+  )
+  ]->
+   [
+   Out( <$CA1, $ILSk, 
+         sig(<'RegistrationRequest', 
+              <sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA), 
+               sig(<'CACert', 
+                    sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA)>,
+                   ~ltkCAx1), 
+               sig(<'CACert', 
+                    sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA)>,
+                   ~ltkCAx2)
+              >, 
+              $CA1, $ILSk, $CA2, TA>,
+             ~ltkA)
+        >
+   ),
+   ContactCAStateILSReg( $A, $CA1,
+                         sig(<'RegistrationRequest', 
+                              <sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA), 
+                               sig(<'CACert', 
+                                    sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA)>,
+                                   ~ltkCAx1), 
+                               sig(<'CACert', 
+                                    sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA)>,
+                                   ~ltkCAx2)
+                              >, 
+                              $CA1, $ILSk, $CA2, TA>,
+                             ~ltkA)
+   )
+   ]
+
+rule (modulo E) ILS_Reg_ILS:
+   [
+   In( <$CA1, $ILSk, 
+        sig(<'RegistrationRequest', 
+             <sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA), 
+              sig(<'CACert', 
+                   sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA)>,
+                  ~ltkCAx1), 
+              sig(<'CACert', 
+                   sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA)>,
+                  ~ltkCAx2)
+             >, 
+             $CA1, $ILSk, $CA2, TA>,
+            ~ltkA)
+       >
+   ),
+   !Ltk( $ILSk, ~ltkK ), PubFr( ~t ), !Ltk( $CA1, ~ltkCAx1 ),
+   !Ltk( $CA2, ~ltkCAx2 ), L_ILStoAdd( ~ltkK, $ILSk, AddList ),
+   L_ILSlog( ~ltkK, $ILSk, Log )
+   ]
+  --[
+  Clock( time(~t) ), ExecutionTestComplete( ),
+  ExecutionTestCompleteARG( sig(<'RegistrationRequest', 
+                                 <sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA), 
+                                  sig(<'CACert', 
+                                       sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA)>,
+                                      ~ltkCAx1), 
+                                  sig(<'CACert', 
+                                       sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA)>,
+                                      ~ltkCAx2)
+                                 >, 
+                                 $CA1, $ILSk, $CA2, TA>,
+                                ~ltkA)
+  ),
+  OnlyOne( <'RegisterDomain', $A> )
+  ]->
+   [
+   Out( <$ILSk, $CA2, 
+         sig(<
+              sig(<'Accepted', 
+                   h(<sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA), 
+                      sig(<'CACert', 
+                           sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA)>,
+                          ~ltkCAx1), 
+                      sig(<'CACert', 
+                           sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA)>,
+                          ~ltkCAx2)
+                     >), 
+                   time(~t)>,
+                  ~ltkK), 
+              <sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA), 
+               sig(<'CACert', 
+                    sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA)>,
+                   ~ltkCAx1), 
+               sig(<'CACert', 
+                    sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA)>,
+                   ~ltkCAx2)
+              >, 
+              $CA1, 'TEMPCONST', $CA2>,
+             ~ltkK)
+        >
+   ),
+   L_ILStoAdd( ~ltkK, $ILSk,
+               add(AddList,
+                   <sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA), 
+                    sig(<'CACert', 
+                         sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA)>,
+                        ~ltkCAx1), 
+                    sig(<'CACert', 
+                         sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA)>,
+                        ~ltkCAx2)
+                   >)
+   ),
+   L_ILSlog( ~ltkK, $ILSk, Log )
+   ]
+
+rule (modulo E) ILS_Reg_CA2:
+   [
+   In( <K, $CA2, 
+        sig(<
+             sig(<'Accepted', 
+                  h(<sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA), 
+                     sig(<'CACert', 
+                          sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA)>,
+                         ~ltkCAx1), 
+                     sig(<'CACert', 
+                          sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA)>,
+                         ~ltkCAx2)
+                    >), 
+                  TILSk>,
+                 ~ltkK), 
+             <sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA), 
+              sig(<'CACert', 
+                   sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA)>,
+                  ~ltkCAx1), 
+              sig(<'CACert', 
+                   sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA)>,
+                  ~ltkCAx2)
+             >, 
+             $CA1, RESPONSESkA, $CA2>,
+            ~ltkK)
+       >
+   ),
+   !Ltk( $CA2, ~ltkCAx2 ), !Ltk( $ILSk, ~ltkK ),
+   !Ltk( $CA1, ~ltkCAx1 )
+   ]
+  --[ OnlyOne( <'RegisterDomainSecondCA', $A> ) ]->
+   [
+   Out( <$CA2, $CA1, 
+         sig(<
+              sig(<'OK1', 
+                   sig(<'Accepted', 
+                        h(<sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA), 
+                           sig(<'CACert', 
+                                sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA)>,
+                               ~ltkCAx1), 
+                           sig(<'CACert', 
+                                sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA)>,
+                               ~ltkCAx2)
+                          >), 
+                        TILSk>,
+                       ~ltkK)
+                  >,
+                  ~ltkCAx2), 
+              RESPONSESkA>,
+             ~ltkCAx2)
+        >
+   )
+   ]
+
+rule (modulo E) ILS_Reg_CA1:
+   [
+   In( <$CA2, $CA1, 
+        sig(<
+             sig(<'OK1', 
+                  sig(<'Accepted', 
+                       h(<sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA), 
+                          sig(<'CACert', 
+                               sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA)>,
+                              ~ltkCAx1), 
+                          sig(<'CACert', 
+                               sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA)>,
+                              ~ltkCAx2)
+                         >), 
+                       TILSk>,
+                      ~ltkK)
+                 >,
+                 ~ltkCAx2), 
+             RESPONSESkA>,
+            ~ltkCAx2)
+       >
+   ),
+   !Ltk( $CA1, ~ltkCAx1 ), !Ltk( $ILSk, ~ltkK ),
+   !Ltk( $CA2, ~ltkCAx2 ),
+   ContactCAStateILSReg( $A, $CA1,
+                         sig(<'RegistrationRequest', 
+                              <sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA), 
+                               sig(<'CACert', 
+                                    sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA)>,
+                                   ~ltkCAx1), 
+                               sig(<'CACert', 
+                                    sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA)>,
+                                   ~ltkCAx2)
+                              >, 
+                              $CA1, $ILSk, $CA2, TA>,
+                             ~ltkA)
+   )
+   ]
+  --[
+  OnlyOne( <'RegisterDomainFirstCA', $A> ),
+  AcceptedAKICert( $A, ~ltkA )
+  ]->
+   [
+   Out( <$CA1, $A, 
+         sig(<'OK2', 
+              sig(<'OK1', 
+                   sig(<'Accepted', 
+                        h(<sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA), 
+                           sig(<'CACert', 
+                                sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA)>,
+                               ~ltkCAx1), 
+                           sig(<'CACert', 
+                                sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA)>,
+                               ~ltkCAx2)
+                          >), 
+                        TILSk>,
+                       ~ltkK)
+                  >,
+                  ~ltkCAx2)
+             >,
+             ~ltkCAx1)
+        >
+   )
+   ]
+
+rule (modulo E) ILS_Reg_A2:
+   [
+   F_DomainHasAKICertA( $A, $CA1,
+                        <sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA), 
+                         sig(<'CACert', 
+                              sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA)>,
+                             ~ltkCAx1), 
+                         sig(<'CACert', 
+                              sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA)>,
+                             ~ltkCAx2)
+                        >
+   ),
+   !Ltk( $ILSk, ~ltkK ), !Ltk( $CA1, ~ltkCAx1 ),
+   !Ltk( $CA2, ~ltkCAx2 ),
+   In( <$CA1, $A, 
+        sig(<'OK2', 
+             sig(<'OK1', 
+                  sig(<'Accepted', 
+                       h(<sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA), 
+                          sig(<'CACert', 
+                               sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA)>,
+                              ~ltkCAx1), 
+                          sig(<'CACert', 
+                               sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA)>,
+                              ~ltkCAx2)
+                         >), 
+                       TILSk>,
+                      ~ltkK)
+                 >,
+                 ~ltkCAx2)
+            >,
+            ~ltkCAx1)
+       >
+   )
+   ]
+  --[
+  HasAKICertNoLog( $A, ~ltkA,
+                   <
+                    <sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA), 
+                     sig(<'CACert', 
+                          sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA)>,
+                         ~ltkCAx1), 
+                     sig(<'CACert', 
+                          sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA)>,
+                         ~ltkCAx2)
+                    >, 
+                    sig(<'OK2', 
+                         sig(<'OK1', 
+                              sig(<'Accepted', 
+                                   h(<sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA), 
+                                      sig(<'CACert', 
+                                           sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA)>,
+                                          ~ltkCAx1), 
+                                      sig(<'CACert', 
+                                           sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA)>,
+                                          ~ltkCAx2)
+                                     >), 
+                                   TILSk>,
+                                  ~ltkK)
+                             >,
+                             ~ltkCAx2)
+                        >,
+                        ~ltkCAx1)
+                   >
+  ),
+  NotEq( ~ltkCAx1, ~ltkCAx2 ), NotEq( ~ltkCAx1, ~ltkK ),
+  NotEq( ~ltkCAx2, ~ltkK ), ReceivedAKICert( $A, ~ltkA )
+  ]->
+   [
+   Out( <
+         <sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA), 
+          sig(<'CACert', 
+               sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA)>,
+              ~ltkCAx1), 
+          sig(<'CACert', 
+               sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA)>,
+              ~ltkCAx2)
+         >, 
+         sig(<'OK2', 
+              sig(<'OK1', 
+                   sig(<'Accepted', 
+                        h(<sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA), 
+                           sig(<'CACert', 
+                                sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA)>,
+                               ~ltkCAx1), 
+                           sig(<'CACert', 
+                                sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA)>,
+                               ~ltkCAx2)
+                          >), 
+                        TILSk>,
+                       ~ltkK)
+                  >,
+                  ~ltkCAx2)
+             >,
+             ~ltkCAx1)
+        >
+   ),
+   StoredAKICertA( $A,
+                   <sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA), 
+                    sig(<'CACert', 
+                         sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA)>,
+                        ~ltkCAx1), 
+                    sig(<'CACert', 
+                         sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA)>,
+                        ~ltkCAx2)
+                   >,
+                   <
+                    <sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA), 
+                     sig(<'CACert', 
+                          sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA)>,
+                         ~ltkCAx1), 
+                     sig(<'CACert', 
+                          sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA)>,
+                         ~ltkCAx2)
+                    >, 
+                    sig(<'OK2', 
+                         sig(<'OK1', 
+                              sig(<'Accepted', 
+                                   h(<sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA), 
+                                      sig(<'CACert', 
+                                           sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA)>,
+                                          ~ltkCAx1), 
+                                      sig(<'CACert', 
+                                           sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA)>,
+                                          ~ltkCAx2)
+                                     >), 
+                                   TILSk>,
+                                  ~ltkK)
+                             >,
+                             ~ltkCAx2)
+                        >,
+                        ~ltkCAx1)
+                   >
+   )
+   ]
+
+rule (modulo E) Reg_Ver_A1:
+   [
+   !Ltk( $A, ~ltkA ),
+   StoredAKICertA( $A,
+                   <sig(<'Cert', $A, pkA, $ILSk, add($CA1, $CA2)>, ~ltkA), 
+                    sig(<'CACert', 
+                         sig(<'Cert', $A, pkA, $ILSk, add($CA1, $CA2)>, ~ltkA)>,
+                        ~ltkCAx1), 
+                    sig(<'CACert', 
+                         sig(<'Cert', $A, pkA, $ILSk, add($CA1, $CA2)>, ~ltkA)>,
+                        ~ltkCAx2)
+                   >,
+                   AnyKindOfCert
+   ),
+   PubFr( ~t ), !Ltk( $CA1, ~ltkCAx1 ), !Ltk( $CA2, ~ltkCAx2 )
+   ]
+  --[ Clock( time(~t) ), OnlyOne( 'RegistrationVerification' ) ]->
+   [
+   Out( <$A, $CA1, 
+         sig(<'IntegrityValueRequest', 
+              <sig(<'Cert', $A, pkA, $ILSk, add($CA1, $CA2)>, ~ltkA), 
+               sig(<'CACert', 
+                    sig(<'Cert', $A, pkA, $ILSk, add($CA1, $CA2)>, ~ltkA)>,
+                   ~ltkCAx1), 
+               sig(<'CACert', 
+                    sig(<'Cert', $A, pkA, $ILSk, add($CA1, $CA2)>, ~ltkA)>,
+                   ~ltkCAx2)
+              >, 
+              $CA1, $ILSk, $CA2, time(~t)>,
+             ~ltkA)
+        >
+   ),
+   StoredAKICertA( $A,
+                   <sig(<'Cert', $A, pkA, $ILSk, add($CA1, $CA2)>, ~ltkA), 
+                    sig(<'CACert', 
+                         sig(<'Cert', $A, pkA, $ILSk, add($CA1, $CA2)>, ~ltkA)>,
+                        ~ltkCAx1), 
+                    sig(<'CACert', 
+                         sig(<'Cert', $A, pkA, $ILSk, add($CA1, $CA2)>, ~ltkA)>,
+                        ~ltkCAx2)
+                   >,
+                   AnyKindOfCert
+   )
+   ]
+
+rule (modulo E) Reg_Ver_CA1_Forward:
+   [
+   In( <$A, $CA1, 
+        sig(<'IntegrityValueRequest', 
+             <sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA), 
+              sig(<'CACert', 
+                   sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA)>,
+                  ~ltkCAx1), 
+              sig(<'CACert', 
+                   sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA)>,
+                  ~ltkCAx2)
+             >, 
+             $CA1, $ILSk, $CA2, TA>,
+            ~ltkA)
+       >
+   )
+   ]
+  -->
+   [
+   Out( <$CA1, $ILSk, 
+         sig(<'IntegrityValueRequest', 
+              <sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA), 
+               sig(<'CACert', 
+                    sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA)>,
+                   ~ltkCAx1), 
+               sig(<'CACert', 
+                    sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA)>,
+                   ~ltkCAx2)
+              >, 
+              $CA1, $ILSk, $CA2, TA>,
+             ~ltkA)
+        >
+   ),
+   ContactCAStateRegVer( $A, $CA1,
+                         sig(<'IntegrityValueRequest', 
+                              <sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA), 
+                               sig(<'CACert', 
+                                    sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA)>,
+                                   ~ltkCAx1), 
+                               sig(<'CACert', 
+                                    sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA)>,
+                                   ~ltkCAx2)
+                              >, 
+                              $CA1, $ILSk, $CA2, TA>,
+                             ~ltkA)
+   )
+   ]
+
+rule (modulo E) Reg_Ver_ILS:
+   [
+   In( <$CA1, $ILSk, 
+        sig(<'IntegrityValueRequest', 
+             <sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA), 
+              sig(<'CACert', 
+                   sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA)>,
+                  ~ltkCAx1), 
+              sig(<'CACert', 
+                   sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA)>,
+                  ~ltkCAx2)
+             >, 
+             $CA1, $ILSk, $CA2, TA>,
+            ~ltkA)
+       >
+   ),
+   !Ltk( $ILSk, ~ltkK ), PubFr( ~t ),
+   L_ILSlog( ~ltkK, $ILSk,
+             add(rest,
+                 <sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA), 
+                  sig(<'CACert', 
+                       sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA)>,
+                      ~ltkCAx1), 
+                  sig(<'CACert', 
+                       sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA)>,
+                      ~ltkCAx2)
+                 >)
+   ),
+   L_ILSIntegrity( ~ltkK, $ILSk,
+                   <
+                    h(add(rest,
+                          <sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA), 
+                           sig(<'CACert', 
+                                sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA)>,
+                               ~ltkCAx1), 
+                           sig(<'CACert', 
+                                sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA)>,
+                               ~ltkCAx2)
+                          >)), 
+                    Tup>
+   )
+   ]
+  --[ Clock( time(~t) ) ]->
+   [
+   Out( <$ILSk, $CA2, 
+         sig(<
+              sig(<'InLog', 
+                   <
+                    h(add(rest,
+                          <sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA), 
+                           sig(<'CACert', 
+                                sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA)>,
+                               ~ltkCAx1), 
+                           sig(<'CACert', 
+                                sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA)>,
+                               ~ltkCAx2)
+                          >)), 
+                    Tup>, 
+                   h(<sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA), 
+                      sig(<'CACert', 
+                           sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA)>,
+                          ~ltkCAx1), 
+                      sig(<'CACert', 
+                           sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA)>,
+                          ~ltkCAx2)
+                     >), 
+                   time(~t)>,
+                  ~ltkK), 
+              <sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA), 
+               sig(<'CACert', 
+                    sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA)>,
+                   ~ltkCAx1), 
+               sig(<'CACert', 
+                    sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA)>,
+                   ~ltkCAx2)
+              >, 
+              $CA1, $CA2>,
+             ~ltkK)
+        >
+   ),
+   L_ILSlog( ~ltkK, $ILSk,
+             add(rest,
+                 <sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA), 
+                  sig(<'CACert', 
+                       sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA)>,
+                      ~ltkCAx1), 
+                  sig(<'CACert', 
+                       sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA)>,
+                      ~ltkCAx2)
+                 >)
+   ),
+   L_ILSIntegrity( ~ltkK, $ILSk,
+                   <
+                    h(add(rest,
+                          <sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA), 
+                           sig(<'CACert', 
+                                sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA)>,
+                               ~ltkCAx1), 
+                           sig(<'CACert', 
+                                sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA)>,
+                               ~ltkCAx2)
+                          >)), 
+                    Tup>
+   )
+   ]
+
+rule (modulo E) Reg_Ver_CA2:
+   [
+   In( <$ILSk, $CA2, 
+        sig(<
+             sig(<'InLog', Hk, 
+                  h(<sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA), 
+                     sig(<'CACert', 
+                          sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA)>,
+                         ~ltkCAx1), 
+                     sig(<'CACert', 
+                          sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA)>,
+                         ~ltkCAx2)
+                    >), 
+                  TILSk>,
+                 ~ltkK), 
+             <sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA), 
+              sig(<'CACert', 
+                   sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA)>,
+                  ~ltkCAx1), 
+              sig(<'CACert', 
+                   sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA)>,
+                  ~ltkCAx2)
+             >, 
+             $CA1, $CA2>,
+            ~ltkK)
+       >
+   ),
+   !Ltk( $CA2, ~ltkCAx2 )
+   ]
+  -->
+   [
+   Out( <$CA2, $CA1, 
+         sig(<'RVOK1', 
+              sig(<'InLog', Hk, 
+                   h(<sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA), 
+                      sig(<'CACert', 
+                           sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA)>,
+                          ~ltkCAx1), 
+                      sig(<'CACert', 
+                           sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA)>,
+                          ~ltkCAx2)
+                     >), 
+                   TILSk>,
+                  ~ltkK)
+             >,
+             ~ltkCAx2)
+        >
+   )
+   ]
+
+rule (modulo E) Reg_Ver_CA1:
+   [
+   In( <$CA2, $CA1, 
+        sig(<'RVOK1', 
+             sig(<'InLog', Hk, 
+                  h(<sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA), 
+                     sig(<'CACert', 
+                          sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA)>,
+                         ~ltkCAx1), 
+                     sig(<'CACert', 
+                          sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA)>,
+                         ~ltkCAx2)
+                    >), 
+                  TILSk>,
+                 ~ltkK)
+            >,
+            ~ltkCAx2)
+       >
+   ),
+   !Ltk( $CA1, ~ltkCAx1 ),
+   ContactCAStateRegVer( $A, $CA1,
+                         sig(<'IntegrityValueRequest', 
+                              <sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA), 
+                               sig(<'CACert', 
+                                    sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA)>,
+                                   ~ltkCAx1), 
+                               sig(<'CACert', 
+                                    sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA)>,
+                                   ~ltkCAx2)
+                              >, 
+                              $CA1, $ILSk, $CA2, TA>,
+                             ~ltkA)
+   )
+   ]
+  -->
+   [
+   Out( <$CA1, $A, 
+         sig(<'RVOK2', 
+              sig(<'RVOK1', 
+                   sig(<'InLog', Hk, 
+                        h(<sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA), 
+                           sig(<'CACert', 
+                                sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA)>,
+                               ~ltkCAx1), 
+                           sig(<'CACert', 
+                                sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA)>,
+                               ~ltkCAx2)
+                          >), 
+                        TILSk>,
+                       ~ltkK)
+                  >,
+                  ~ltkCAx2)
+             >,
+             ~ltkCAx1)
+        >
+   )
+   ]
+
+rule (modulo E) Reg_Ver_A2:
+   [
+   In( <$CA1, $A, 
+        sig(<'RVOK2', 
+             sig(<'RVOK1', 
+                  sig(<'InLog', Hk, 
+                       h(<sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA), 
+                          sig(<'CACert', 
+                               sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA)>,
+                              ~ltkCAx1), 
+                          sig(<'CACert', 
+                               sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA)>,
+                              ~ltkCAx2)
+                         >), 
+                       TILSk>,
+                      ~ltkK)
+                 >,
+                 ~ltkCAx2)
+            >,
+            ~ltkCAx1)
+       >
+   ),
+   StoredAKICertA( $A,
+                   <sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA), 
+                    sig(<'CACert', 
+                         sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA)>,
+                        ~ltkCAx1), 
+                    sig(<'CACert', 
+                         sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA)>,
+                        ~ltkCAx2)
+                   >,
+                   AnyKindOfCert
+   )
+   ]
+  --[
+  HasAKICertInLog( $A, ~ltkA,
+                   <
+                    <sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA), 
+                     sig(<'CACert', 
+                          sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA)>,
+                         ~ltkCAx1), 
+                     sig(<'CACert', 
+                          sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA)>,
+                         ~ltkCAx2)
+                    >, 
+                    sig(<'RVOK2', 
+                         sig(<'RVOK1', 
+                              sig(<'InLog', Hk, 
+                                   h(<sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA), 
+                                      sig(<'CACert', 
+                                           sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA)>,
+                                          ~ltkCAx1), 
+                                      sig(<'CACert', 
+                                           sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA)>,
+                                          ~ltkCAx2)
+                                     >), 
+                                   TILSk>,
+                                  ~ltkK)
+                             >,
+                             ~ltkCAx2)
+                        >,
+                        ~ltkCAx1)
+                   >
+  ),
+  OnlyOne( 'Reg_Ver_A2' ), LoggedAKICert( $A, ~ltkA ),
+  NotEq( AnyKindOfCert,
+         <
+          <sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA), 
+           sig(<'CACert', 
+                sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA)>,
+               ~ltkCAx1), 
+           sig(<'CACert', 
+                sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA)>,
+               ~ltkCAx2)
+          >, 
+          sig(<'RVOK2', 
+               sig(<'RVOK1', 
+                    sig(<'InLog', Hk, 
+                         h(<sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA), 
+                            sig(<'CACert', 
+                                 sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA)>,
+                                ~ltkCAx1), 
+                            sig(<'CACert', 
+                                 sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA)>,
+                                ~ltkCAx2)
+                           >), 
+                         TILSk>,
+                        ~ltkK)
+                   >,
+                   ~ltkCAx2)
+              >,
+              ~ltkCAx1)
+         >
+  )
+  ]->
+   [
+   Out( <
+         <sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA), 
+          sig(<'CACert', 
+               sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA)>,
+              ~ltkCAx1), 
+          sig(<'CACert', 
+               sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA)>,
+              ~ltkCAx2)
+         >, 
+         sig(<'RVOK2', 
+              sig(<'RVOK1', 
+                   sig(<'InLog', Hk, 
+                        h(<sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA), 
+                           sig(<'CACert', 
+                                sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA)>,
+                               ~ltkCAx1), 
+                           sig(<'CACert', 
+                                sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA)>,
+                               ~ltkCAx2)
+                          >), 
+                        TILSk>,
+                       ~ltkK)
+                  >,
+                  ~ltkCAx2)
+             >,
+             ~ltkCAx1)
+        >
+   ),
+   StoredAKICertA( $A,
+                   <sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA), 
+                    sig(<'CACert', 
+                         sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA)>,
+                        ~ltkCAx1), 
+                    sig(<'CACert', 
+                         sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA)>,
+                        ~ltkCAx2)
+                   >,
+                   <
+                    <sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA), 
+                     sig(<'CACert', 
+                          sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA)>,
+                         ~ltkCAx1), 
+                     sig(<'CACert', 
+                          sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA)>,
+                         ~ltkCAx2)
+                    >, 
+                    sig(<'RVOK2', 
+                         sig(<'RVOK1', 
+                              sig(<'InLog', Hk, 
+                                   h(<sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA), 
+                                      sig(<'CACert', 
+                                           sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA)>,
+                                          ~ltkCAx1), 
+                                      sig(<'CACert', 
+                                           sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA)>,
+                                          ~ltkCAx2)
+                                     >), 
+                                   TILSk>,
+                                  ~ltkK)
+                             >,
+                             ~ltkCAx2)
+                        >,
+                        ~ltkCAx1)
+                   >
+   )
+   ]
+
+rule (modulo E) Update_ILS:
+   [
+   L_ILStoAdd( ~ltkK, $K, Add ), L_ILSlog( ~ltkK, $K, LL ),
+   L_ILSIntegrity( ~ltkK, $K, <h(LL), Tup> ), PubFr( ~t )
+   ]
+  --[
+  Update( ~ltkK, time(~t) ), NotEq( Add, 'nil' ), Clock( time(~t) )
+  ]->
+   [
+   L_ILStoAdd( ~ltkK, $K, 'nil' ),
+   L_ILSlog( ~ltkK, $K, add(Add, LL) ),
+   L_ILSIntegrity( ~ltkK, $K, <h(add(Add, LL)), time(~t)> )
+   ]
+
+rule (modulo E) Connection_B1:
+   [ ]
+  --[ OnlyOne( 'Connection_B1' ) ]->
+   [ Out( <$B, $A, 'ClientHello'> ), F_SSL_Conn_waiting_B( $B, $A ) ]
+
+rule (modulo E) Connection_A1:
+   [
+   In( <$B, $A, 'ClientHello'> ), !Ltk( $A, ~ltkA ),
+   StoredAKICertA( $A,
+                   <sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA), 
+                    sig(<'CACert', 
+                         sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA)>,
+                        ~ltkCAx1), 
+                    sig(<'CACert', 
+                         sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA)>,
+                        ~ltkCAx2)
+                   >,
+                   FullCert
+   ),
+   PubFr( ~t )
+   ]
+  --[
+  OnlyOne( 'Connection_A1' ), IsType( 'Agent', $A ),
+  IsType( 'Browser', $B ), Clock( time(~t) )
+  ]->
+   [ Out( <$A, $B, sig(<FullCert, time(~t)>, ~ltkA)> ) ]
+
+rule (modulo E) Connection_B2a:
+   [
+   PubFr( ~cid ), F_SSL_Conn_waiting_B( $B, $A ),
+   TrustedKey( $CA1, ~ltkCAx1 ), TrustedKey( $CA2, ~ltkCAx2 ),
+   TrustedKey( $ILSk, ~ltkK ), !Ltk( $CA1, ~ltkCAx1 ),
+   !Ltk( $CA2, ~ltkCAx2 ), !Ltk( $ILSk, ~ltkK ),
+   In( <$A, $B, 
+        sig(<
+             <
+              <sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA), 
+               sig(<'CACert', 
+                    sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA)>,
+                   ~ltkCAx1), 
+               sig(<'CACert', 
+                    sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA)>,
+                   ~ltkCAx2)
+              >, 
+              sig(<'OK2', 
+                   sig(<'OK1', 
+                        sig(<'Accepted', 
+                             h(<sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA), 
+                                sig(<'CACert', 
+                                     sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA)>,
+                                    ~ltkCAx1), 
+                                sig(<'CACert', 
+                                     sig(<'Cert', $A, pkA, ILSlist, add($CA1, $CA2)>, ~ltkA)>,
+                                    ~ltkCAx2)
+                               >), 
+                             TILSk>,
+                            ~ltkK)
+                       >,
+                       ~ltkCAx2)
+                  >,
+                  ~ltkCAx1)
+             >, 
+             TA>,
+            ~ltkA)
+       >
+   )
+   ]
+  --[ ConnectionAccepted( ~cid, $B, $A, 'Accept', ~ltkA ) ]->
+   [
+   TrustedKey( $CA1, ~ltkCAx1 ), TrustedKey( $CA2, ~ltkCAx2 ),
+   TrustedKey( $ILSk, ~ltkK )
+   ]
+
+restriction InEq:
+  "¬(∃ x #i. NotEq( x, x ) @ #i)"
+  // safety formula
+
+restriction OnlyOne:
+  "∀ x #i #j.
+    ((OnlyOne( x ) @ #i) ∧ (OnlyOne( x ) @ #j)) ⇒ (#i = #j)"
+  // safety formula
+
+restriction TypesDistinct:
+  "∀ t1 t2 x #i #j.
+    ((IsType( t1, x ) @ #i) ∧ (IsType( t2, x ) @ #j)) ⇒ (t1 = t2)"
+  // safety formula
+
+restriction SingleKeyPerName:
+  "∀ a ltk1 ltk2 tr1 tr2 #i #j.
+    ((GEN_LTK( a, ltk1, tr1 ) @ #i) ∧ (GEN_LTK( a, ltk2, tr2 ) @ #j)) ⇒
+    (#i = #j)"
+  // safety formula
+
+restriction MaxTwoCompromised:
+  "∀ x y z #i #j #k a b c.
+    (((GEN_LTK( a, x, 'untrusted' ) @ #i) ∧
+      (GEN_LTK( b, y, 'untrusted' ) @ #j)) ∧
+     (GEN_LTK( c, z, 'untrusted' ) @ #k)) ⇒
+    (((#i = #j) ∨ (#i = #k)) ∨ (#j = #k))"
+  // safety formula
+
+lemma main [heuristic=S]:
+  all-traces
+  "∀ cid a b reason oldkey key #i1 #i2 #i3 #i4.
+    (((((GEN_LTK( a, oldkey, 'trusted' ) @ #i1) ∧
+        (AskedForAKICert( a, oldkey ) @ #i2)) ∧
+       (ReceivedAKICert( a, oldkey ) @ #i3)) ∧
+      (ConnectionAccepted( cid, b, a, reason, key ) @ #i4)) ∧
+     (#i3 < #i4)) ⇒
+    (¬(∃ #j. !KU( key ) @ #j))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ cid a b reason oldkey key #i1 #i2 #i3 #i4.
+  (GEN_LTK( a, oldkey, 'trusted' ) @ #i1) ∧
+  (AskedForAKICert( a, oldkey ) @ #i2) ∧
+  (ReceivedAKICert( a, oldkey ) @ #i3) ∧
+  (ConnectionAccepted( cid, b, a, reason, key ) @ #i4)
+ ∧
+  (#i3 < #i4) ∧ (∃ #j. (!KU( key ) @ #j))"
+*/
+by sorry
+
+end

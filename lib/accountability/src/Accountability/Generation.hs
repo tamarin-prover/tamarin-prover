@@ -31,13 +31,7 @@ toLemma
   -> ProtoLemma SyntacticLNFormula ProofSkeleton
 toLemma accLemma quantifier suffix formula =
   skeletonLemma (accLemma._aName ++ suffix) "generation" False accLemma._aAttributes quantifier formula (unproven ())
--- -- <<<<<<< HEAD
---         skeletonLemma (L.get aName accLemma ++ suffix) "generation" False (L.get aAttributes accLemma) quantifier formula (unproven ())
--- ||||||| 75ecd7a0
---         skeletonLemma (L.get aName accLemma ++ suffix) (L.get aAttributes accLemma) quantifier formula (unproven ())
--- =======
 --   skeletonLemma (accLemma._aName ++ suffix) accLemma._aAttributes quantifier formula (unproven ())
--- >>>>>>> 9d54c5ff8517ae3549421d2c730a3e14ea5e5dfd
 
 -- | Quantify the given variables
 quantifyVars :: ((String, LSort) -> LVar -> SyntacticLNFormula -> SyntacticLNFormula) -> [LVar] -> SyntacticLNFormula -> SyntacticLNFormula
@@ -301,8 +295,8 @@ mergeQuantifiers = mergeQuantifiers1 [All, Ex]
       Conn And p q -> pullQuantifiers quans $ mergeQuantifiers1 quans p .&&.  mergeQuantifiers1 quans q
       Conn Or  p q -> pullQuantifiers quans $ mergeQuantifiers1 quans p .||.  mergeQuantifiers1 quans q
       Conn Imp p q -> pullQuantifiers quans $ mergeQuantifiers1 quans p .==>. mergeQuantifiers1 quans q
-      Conn Iff p q -> pullQuantifiers quans $ mergeQuantifiers1 quans p .==>. mergeQuantifiers1 quans q .&&.
-                                              mergeQuantifiers1 quans q .==>. mergeQuantifiers1 quans p
+      Conn Iff p q -> pullQuantifiers quans $ (mergeQuantifiers1 quans p .==>. mergeQuantifiers1 quans q) .&&.
+                                              (mergeQuantifiers1 quans q .==>. mergeQuantifiers1 quans p)
       _            -> fm
 
 

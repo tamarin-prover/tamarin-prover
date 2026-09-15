@@ -1,0 +1,393 @@
+theory anonymity_Responder_peer_revealed_psk_revealed_passive_trusted_pki_NX begin
+
+// Function signature and definition of the equational theory E
+
+builtins: diffie-hellman
+functions: aead/4, decrypt/3, fst/1, h/1, kdf1/1, kdf2/1, kdf3/1,
+           pair/2, snd/1, true/0, verify/4, add/2 [AC], unionUD/1 [destructor]
+equations:
+    decrypt(k, n, aead(k, n, a, p)) = p,
+    fst(<x.1, x.2>) = x.1,
+    snd(<x.1, x.2>) = x.2,
+    verify(k, n, a, aead(k, n, a, p)) = true,
+    unionUD(add(x, y)) = x
+
+tactic: equivalence
+presort: s
+prio: {id}
+  regex"^My"
+  regex"^I_"
+  regex"^R_"
+  regex"^St_"
+  regex"^!Transport_"
+  regex"^!SessionId\("
+  regex"^Ek"
+  regex"^Handshake"
+  regex"^Peer"
+prio: {id}
+  regex"~~>" | regex"^!KD"
+prio: {id}
+  regex"^!Pk\("
+prio: {id}
+  regex"^!KU\(*~.*\)"
+prio: {smallest}
+  dhreNoise"diff"
+prio: {smallest}
+  regex"Receivable\(.*'"
+  regex"Receivable\(.*\("
+  regex"Recv\(.*\("
+  regex"Recv\(.*'"
+prio: {id}
+  not regex"!KU\((\$?[a-zA-Z0-9.]+|'[^']+')\)"
+  not regex"!KU\((?!(one|true))[a-zA-Z0-9.]+\)"
+
+
+
+
+
+
+
+rule (modulo E) Init_Handshake_Initiator:
+   [ Init_Handshake_Initiator( id, prologue ) ]
+  -->
+   [ HandshakeState_Initiator_0( id, h(<'NX', prologue>), 'NX' ) ]
+
+rule (modulo E) Handshake_Initiator_Snd_1:
+   [
+   HandshakeState_Initiator_0( id, hash, ck ),
+   Handshake_Snd_1( id, payload ), Ek( ~e0 )
+   ]
+  --[ RawSnd( 'Initiator1', <'g'^~e0, payload> ) ]->
+   [
+   MyEk_Initiator( id, 'g'^~e0 ),
+   HandshakeState_Initiator_1( id, h(<h(<hash, 'g'^~e0>), payload>),
+                               ck, ~e0
+   ),
+   Send( <'g'^~e0, payload> )
+   ]
+
+rule (modulo E) Handshake_Initiator_Recv_2:
+   [
+   !Pk( something, 'g'^~rs4 )[no_precomp],
+   HandshakeState_Initiator_1( id, hash, ck, ~e ),
+   Recv( <'g'^~re0, 
+          aead(kdf2(<ck, 'g'^~re0^~e>), '0', h(<hash, 'g'^~re0>), 'g'^~rs4), 
+          aead(kdf2(<kdf1(<ck, 'g'^~re0^~e>), 'g'^~rs4^~e>), '0',
+               h(<h(<hash, 'g'^~re0>), 
+                  aead(kdf2(<ck, 'g'^~re0^~e>), '0', h(<hash, 'g'^~re0>), 'g'^~rs4)
+                 >),
+               payload)
+         >
+   )
+   ]
+  --[
+  RawRecv( 'Responder2',
+           <'g'^~re0, 
+            aead(kdf2(<ck, 'g'^~re0^~e>), '0', h(<hash, 'g'^~re0>), 'g'^~rs4), 
+            aead(kdf2(<kdf1(<ck, 'g'^~re0^~e>), 'g'^~rs4^~e>), '0',
+                 h(<h(<hash, 'g'^~re0>), 
+                    aead(kdf2(<ck, 'g'^~re0^~e>), '0', h(<hash, 'g'^~re0>), 'g'^~rs4)
+                   >),
+                 payload)
+           >
+  )
+  ]->
+   [
+   PeerEk_Initiator( id, 'g'^~re0 ),
+   PeerLtk_Initiator( id, 'g'^~rs4 ),
+   HandshakeState_Initiator_2( id,
+                               h(<
+                                  h(<h(<hash, 'g'^~re0>), 
+                                     aead(kdf2(<ck, 'g'^~re0^~e>), '0', h(<hash, 'g'^~re0>),
+                                          'g'^~rs4)
+                                    >), 
+                                  aead(kdf2(<kdf1(<ck, 'g'^~re0^~e>), 'g'^~rs4^~e>), '0',
+                                       h(<h(<hash, 'g'^~re0>), 
+                                          aead(kdf2(<ck, 'g'^~re0^~e>), '0', h(<hash, 'g'^~re0>),
+                                               'g'^~rs4)
+                                         >),
+                                       payload)
+                                 >),
+                               kdf1(<kdf1(<ck, 'g'^~re0^~e>), 'g'^~rs4^~e>),
+                               kdf2(<kdf1(<ck, 'g'^~re0^~e>), 'g'^~rs4^~e>), ~e, 'g'^~re0,
+                               'g'^~rs4
+   ),
+   Handshake_Recv_2( id, payload )
+   ]
+
+rule (modulo E) Initiator_to_transport_mode:
+   [ HandshakeState_Initiator_2( id, hash, ck, k, ~e, 'g'^re, 'g'^rs )
+   ]
+  -->
+   [
+   !Transport_Initiator( id, kdf1(ck), kdf2(ck) ),
+   !SessionId( id, hash )
+   ]
+
+rule (modulo E) Init_Handshake_Responder:
+   [ Init_Handshake_Responder( id, prologue, ~s ) ]
+  -->
+   [ HandshakeState_Responder_0( id, h(<'NX', prologue>), 'NX', ~s ) ]
+
+rule (modulo E) Handshake_Responder_Recv_1:
+   [
+   HandshakeState_Responder_0( id, hash, ck, ~s ),
+   Recv( <'g'^~re0, payload> )
+   ]
+  --[ RawRecv( 'Initiator1', <'g'^~re0, payload> ) ]->
+   [
+   PeerEk_Responder( id, 'g'^~re0 ),
+   HandshakeState_Responder_1( id, h(<h(<hash, 'g'^~re0>), payload>),
+                               ck, 'g'^~re0, ~s
+   ),
+   Handshake_Recv_1( id, payload )
+   ]
+
+rule (modulo E) Handshake_Responder_Snd_2:
+   [
+   HandshakeState_Responder_1( id, hash, ck, 'g'^~re, ~s ),
+   Handshake_Snd_2( id, payload ), Ek( ~e0 )
+   ]
+  --[
+  RawSnd( 'Responder2',
+          <'g'^~e0, 
+           aead(kdf2(<ck, 'g'^~re^~e0>), '0', h(<hash, 'g'^~e0>), 'g'^~s), 
+           aead(kdf2(<kdf1(<ck, 'g'^~re^~e0>), 'g'^~re^~s>), '0',
+                h(<h(<hash, 'g'^~e0>), 
+                   aead(kdf2(<ck, 'g'^~re^~e0>), '0', h(<hash, 'g'^~e0>), 'g'^~s)>),
+                payload)
+          >
+  )
+  ]->
+   [
+   MyEk_Responder( id, 'g'^~e0 ),
+   HandshakeState_Responder_2( id,
+                               h(<
+                                  h(<h(<hash, 'g'^~e0>), 
+                                     aead(kdf2(<ck, 'g'^~re^~e0>), '0', h(<hash, 'g'^~e0>), 'g'^~s)
+                                    >), 
+                                  aead(kdf2(<kdf1(<ck, 'g'^~re^~e0>), 'g'^~re^~s>), '0',
+                                       h(<h(<hash, 'g'^~e0>), 
+                                          aead(kdf2(<ck, 'g'^~re^~e0>), '0', h(<hash, 'g'^~e0>),
+                                               'g'^~s)
+                                         >),
+                                       payload)
+                                 >),
+                               kdf1(<kdf1(<ck, 'g'^~re^~e0>), 'g'^~re^~s>),
+                               kdf2(<kdf1(<ck, 'g'^~re^~e0>), 'g'^~re^~s>), ~e0, 'g'^~re, ~s
+   ),
+   Send( <'g'^~e0, 
+          aead(kdf2(<ck, 'g'^~re^~e0>), '0', h(<hash, 'g'^~e0>), 'g'^~s), 
+          aead(kdf2(<kdf1(<ck, 'g'^~re^~e0>), 'g'^~re^~s>), '0',
+               h(<h(<hash, 'g'^~e0>), 
+                  aead(kdf2(<ck, 'g'^~re^~e0>), '0', h(<hash, 'g'^~e0>), 'g'^~s)>),
+               payload)
+         >
+   )
+   ]
+
+rule (modulo E) Responder_to_transport_mode:
+   [ HandshakeState_Responder_2( id, hash, ck, k, ~e, 'g'^re, ~s ) ]
+  -->
+   [
+   !Transport_Responder( id, kdf1(ck), kdf2(ck) ),
+   !SessionId( id, hash )
+   ]
+
+rule (modulo E) I_Recv_from_R:
+   [
+   Recv( <n, aead(kr2i, n, '0', msg)> ),
+   !Transport_Initiator( id, ki2r, kr2i )
+   ]
+  --[ RawRecv( <'R', n>, <n, aead(kr2i, n, '0', msg)> ) ]->
+   [ I_Recv( id, n, msg ) ]
+
+rule (modulo E) R_Recv_from_I:
+   [
+   Recv( <n, aead(ki2r, n, '0', msg)> ),
+   !Transport_Responder( id, ki2r, kr2i )
+   ]
+  --[ RawRecv( <'I', n>, <n, aead(ki2r, n, '0', msg)> ) ]->
+   [ R_Recv( id, n, msg ) ]
+
+rule (modulo E) I_Snd_to_R:
+   [ I_Snd( id, n, msg ), !Transport_Initiator( id, ki2r, kr2i ) ]
+  --[ RawSnd( <'I', n>, <n, aead(ki2r, n, '0', msg)> ) ]->
+   [ Send( <n, aead(ki2r, n, '0', msg)> ) ]
+
+rule (modulo E) R_Snd_to_I:
+   [ R_Snd( id, n, msg ), !Transport_Responder( id, ki2r, kr2i ) ]
+  --[ RawSnd( <'R', n>, <n, aead(kr2i, n, '0', msg)> ) ]->
+   [ Send( <n, aead(kr2i, n, '0', msg)> ) ]
+
+rule (modulo E) channel_send:
+   [ Send( m ) ] --> [ Receivable( m ), Out( m ) ]
+
+rule (modulo E) channel_receive:
+   [ Receivable( m ) ] --> [ Recv( m ) ]
+
+restriction at_most_1 [right]:
+  "∀ tag #t0 #t1.
+    ((Bounded( tag ) @ #t0) ∧ (Bounded( tag ) @ #t1)) ⇒ (#t0 = #t1)"
+  // safety formula
+
+restriction at_most_1 [left]:
+  "∀ tag #t0 #t1.
+    ((Bounded( tag ) @ #t0) ∧ (Bounded( tag ) @ #t1)) ⇒ (#t0 = #t1)"
+  // safety formula
+
+rule (modulo E) test_agent_keygen:
+   [ Fr( ~a ), Fr( ~b ) ]
+  -->
+   [
+   !TestPk( diff(~a, ~b), diff('g'^~a, 'g'^~b) ), Out( 'g'^~a ),
+   Out( 'g'^~b ), !TestAlternatives( add(~a, ~b) )
+   ]
+
+rule (modulo E) test_common:
+   [ !TestAlternatives( add(~a, ~b) ) ]
+  -->
+   [ !Pk( ~a, 'g'^~a ), !Pk( ~b, 'g'^~b ) ]
+
+rule (modulo E) peer_keygen:
+   [ Fr( ~s ) ]
+  -->
+   [
+   !PeerPk( ~s, 'g'^~s ), !Pk( ~s, 'g'^~s ), !TestPk( ~s, 'g'^~s ),
+   Out( 'g'^~s )
+   ]
+
+rule (modulo E) peer_reveal:
+   [ !PeerPk( ~s, 'g'^~s ) ] --> [ Out( ~s ) ]
+
+rule (modulo E) ephemeral_keygen:
+   [ Fr( ~e ) ] --[ HonestEk( 'g'^~e ) ]-> [ Ek( ~e ), Out( 'g'^~e ) ]
+
+rule (modulo E) Create_Initiator:
+   [ Fr( ~id ), !PeerPk( ~ltk, me ) ]
+  --[ Create_Initiator( ), Bounded( 'Initiator' ) ]->
+   [
+   St_Initiator_0( ~id ), Init_Handshake_Initiator( ~id, 'prologue' )
+   ]
+
+rule (modulo E) Instrumentation_Initiator_1:
+   [ St_Initiator_0( ~id ) ]
+  -->
+   [ St_Initiator_1( ~id ), Handshake_Snd_1( ~id, $msg ) ]
+
+rule (modulo E) Instrumentation_Initiator_2:
+   [
+   St_Initiator_1( ~id ), MyEk_Initiator( ~id, e ),
+   Handshake_Recv_2( ~id, msg )
+   ]
+  -->
+   [ St_Initiator_2( ~id, e ) ]
+
+rule (modulo E) Instrumentation_Initiator_3:
+   [
+   St_Initiator_2( ~id, e ), PeerEk_Initiator( ~id, re ),
+   PeerLtk_Initiator( ~id, peer )
+   ]
+  -->
+   [ St_Initiator_3( ~id, e, re, peer ), I_Snd( ~id, '0', $msg ) ]
+
+rule (modulo E) Instrumentation_Initiator_4:
+   [ St_Initiator_3( ~id, e, re, peer ), I_Recv( ~id, '1', msg ) ]
+  --[ Finish( ) ]->
+   [ St_Initiator_4( ~id, e, re, peer ) ]
+
+rule (modulo E) Create_Responder:
+   [ Fr( ~id ), !TestPk( ~ltk, me ) ]
+  --[ Create_Responder( ), Bounded( 'Responder' ) ]->
+   [
+   St_Responder_0( ~id, me ),
+   Init_Handshake_Responder( ~id, 'prologue', ~ltk )
+   ]
+
+rule (modulo E) Instrumentation_Responder_1:
+   [ St_Responder_0( ~id, me ), Handshake_Recv_1( ~id, msg ) ]
+  -->
+   [ St_Responder_1( ~id, me ) ]
+
+rule (modulo E) Instrumentation_Responder_2:
+   [ St_Responder_1( ~id, me ), PeerEk_Responder( ~id, re ) ]
+  -->
+   [ St_Responder_2( ~id, me, re ), Handshake_Snd_2( ~id, $msg ) ]
+
+rule (modulo E) Instrumentation_Responder_3:
+   [
+   St_Responder_2( ~id, me, re ), MyEk_Responder( ~id, e ),
+   R_Recv( ~id, '0', msg )
+   ]
+  -->
+   [ St_Responder_3( ~id, e, me, re ) ]
+
+rule (modulo E) Instrumentation_Responder_4:
+   [ St_Responder_3( ~id, e, me, re ) ]
+  -->
+   [ St_Responder_4( ~id, e, me, re ), R_Snd( ~id, '1', $msg ) ]
+
+lemma executabilityPassiveAdv [right]:
+  exists-trace
+  "(∃ #i. Finish( ) @ #i) ∧
+   ((∀ id m #j.
+      (RawRecv( id, m ) @ #j) ⇒
+      (∃ #k. (RawSnd( id, m ) @ #k) ∧ (#k < #j))) ∧
+    ((∀ id m m2 #a #b.
+       ((RawSnd( id, m ) @ #a) ∧ (RawSnd( id, m2 ) @ #b)) ⇒ (#a = #b)) ∧
+     ((∀ #a #b.
+        ((Create_Initiator( ) @ #a) ∧ (Create_Initiator( ) @ #b)) ⇒
+        (#a = #b)) ∧
+      (∀ #a #b.
+        ((Create_Responder( ) @ #a) ∧ (Create_Responder( ) @ #b)) ⇒
+        (#a = #b)))))"
+/*
+guarded formula characterizing all satisfying traces:
+"(∃ #i. (Finish( ) @ #i)) ∧
+ (∀ id m #j.
+   (RawRecv( id, m ) @ #j) ⇒ ∃ #k. (RawSnd( id, m ) @ #k) ∧ #k < #j) ∧
+ (∀ id m m2 #a #b.
+   (RawSnd( id, m ) @ #a) ∧ (RawSnd( id, m2 ) @ #b) ⇒ #a = #b) ∧
+ (∀ #a #b.
+   (Create_Initiator( ) @ #a) ∧ (Create_Initiator( ) @ #b)
+  ⇒
+   #a = #b) ∧
+ (∀ #a #b.
+   (Create_Responder( ) @ #a) ∧ (Create_Responder( ) @ #b) ⇒ #a = #b)"
+*/
+by sorry
+
+lemma executabilityPassiveAdv [left]:
+  exists-trace
+  "(∃ #i. Finish( ) @ #i) ∧
+   ((∀ id m #j.
+      (RawRecv( id, m ) @ #j) ⇒
+      (∃ #k. (RawSnd( id, m ) @ #k) ∧ (#k < #j))) ∧
+    ((∀ id m m2 #a #b.
+       ((RawSnd( id, m ) @ #a) ∧ (RawSnd( id, m2 ) @ #b)) ⇒ (#a = #b)) ∧
+     ((∀ #a #b.
+        ((Create_Initiator( ) @ #a) ∧ (Create_Initiator( ) @ #b)) ⇒
+        (#a = #b)) ∧
+      (∀ #a #b.
+        ((Create_Responder( ) @ #a) ∧ (Create_Responder( ) @ #b)) ⇒
+        (#a = #b)))))"
+/*
+guarded formula characterizing all satisfying traces:
+"(∃ #i. (Finish( ) @ #i)) ∧
+ (∀ id m #j.
+   (RawRecv( id, m ) @ #j) ⇒ ∃ #k. (RawSnd( id, m ) @ #k) ∧ #k < #j) ∧
+ (∀ id m m2 #a #b.
+   (RawSnd( id, m ) @ #a) ∧ (RawSnd( id, m2 ) @ #b) ⇒ #a = #b) ∧
+ (∀ #a #b.
+   (Create_Initiator( ) @ #a) ∧ (Create_Initiator( ) @ #b)
+  ⇒
+   #a = #b) ∧
+ (∀ #a #b.
+   (Create_Responder( ) @ #a) ∧ (Create_Responder( ) @ #b) ⇒ #a = #b)"
+*/
+by sorry
+
+diffLemma Observational_equivalence[heuristic={equivalence}]:
+by sorry
+
+end

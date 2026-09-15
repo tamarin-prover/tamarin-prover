@@ -34,7 +34,7 @@ rule (modulo E) Reveal_master_key:
   /* has exactly the trivial AC variant */
 
 rule (modulo E) Reveal_session_key:
-   [ !Sessk( ~ey, kdf(sek) ) ] --[ SesskRev( ~ey ) ]-> [ Out( kdf(sek) ) ]
+   [ !Sessk( ~ey, sessKey ) ] --[ SesskRev( ~ey ) ]-> [ Out( sessKey ) ]
 
   /* has exactly the trivial AC variant */
 
@@ -50,7 +50,7 @@ rule (modulo E) Init_1:
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) Init_2:
+rule (modulo E) Init_2[no_derivcheck]:
    [
    Init( ~ex, $A, $B ), !MPK( pmult(~s2, 'P') ),
    !LTK( $A, pmult(~s1, hp($A)) ), In( Y )
@@ -71,7 +71,7 @@ rule (modulo E) Init_2:
    ]
 
   /*
-  rule (modulo AC) Init_2:
+  rule (modulo AC) Init_2[no_derivcheck]:
      [
      Init( ~ex, $A, $B ), !MPK( pmult(~x.1, 'P') ),
      !LTK( $A, pmult(~x, hp($A)) ), In( Y )
@@ -216,7 +216,7 @@ rule (modulo E) Init_2:
         z.1   = pmult((x.1242*inv(x.1243)), x.1244)
   */
 
-rule (modulo E) Resp_1:
+rule (modulo E) Resp_1[no_derivcheck]:
    [
    Fr( ~ey ), !LTK( $B, pmult(~msk, hp($B)) ), !MPK( pmult(~msk, 'P') ),
    In( X )
@@ -239,7 +239,7 @@ rule (modulo E) Resp_1:
    ]
 
   /*
-  rule (modulo AC) Resp_1:
+  rule (modulo AC) Resp_1[no_derivcheck]:
      [
      Fr( ~ey ), !LTK( $B, pmult(~x, hp($B)) ), !MPK( pmult(~x, 'P') ), In( X )
      ]
@@ -2502,10 +2502,10 @@ qed
 
 /*
 Generated from:
-Tamarin version 1.12.0
+Tamarin version 1.13.0
 Maude version 3.5.1
-Git revision: f1832c9bc70a2a165991a0802520f2e07c023227 (with uncommited changes), branch: prepare-release
-Compiled at: 2026-03-06 22:21:49.602637 UTC
+Git revision: 41bc81379b23681e7057314a5cf66a25c45e1986, branch: canonicalise-subst
+Compiled at: 2026-07-27 16:11:34.947223 UTC
 */
 
 end
@@ -2517,7 +2517,7 @@ summary of summaries:
 analyzed: examples/ake/bilinear/Chen_Kudla.spthy
 
   output:          examples/ake/bilinear/Chen_Kudla.spthy.tmp
-  processing time: 16.17s
+  processing time: 13.89s
   
   key_agreement_reachable (exists-trace): verified (13 steps)
   key_secrecy_ephemeral_no_WPFS (all-traces): verified (679 steps)

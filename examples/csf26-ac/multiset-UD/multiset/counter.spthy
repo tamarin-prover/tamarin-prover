@@ -1,0 +1,86 @@
+theory counter begin
+
+// Function signature and definition of the equational theory E
+
+functions: fst/1, h/1, pair/2, sdec/2, senc/2, snd/1, add/2 [AC],
+           unionUD/1 [destructor]
+equations:
+    fst(<x.1, x.2>) = x.1,
+    sdec(senc(x.1, x.2), x.2) = x.1,
+    snd(<x.1, x.2>) = x.2,
+    unionUD(add(x, y)) = x
+
+
+
+
+
+
+
+
+
+
+
+rule (modulo E) Create:
+   [ Fr( ~s ) ] --[ Start( ~s ) ]-> [ Counter( ~s, '1' ) ]
+
+rule (modulo E) Inc:
+   [ Counter( ~s, x ), In( x ) ]
+  --[ Counter( ~s, x ) ]->
+   [ Counter( ~s, add('1', x) ), Out( senc(x, ~s) ) ]
+
+lemma counters_linear_order [reuse, use_induction]:
+  all-traces
+  "∀ x y #i #j s.
+    ((Counter( s, x ) @ #i) ∧ (Counter( s, y ) @ #j)) ⇒
+    (((∃ z. add(x, z) = y) ∨ (∃ z. add(y, z) = x)) ∨ (y = x))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ x y #i #j s.
+  (Counter( s, x ) @ #i) ∧ (Counter( s, y ) @ #j)
+ ∧
+  (∀ z. (add(x, z) = y) ⇒ ⊥) ∧
+  (∀ z. (add(y, z) = x) ⇒ ⊥) ∧
+  (¬(y = x))"
+*/
+by sorry
+
+lemma counter_start [reuse, use_induction]:
+  all-traces
+  "∀ #i x s.
+    (Counter( s, x ) @ #i) ⇒ (∃ #j. (Start( s ) @ #j) ∧ (#j < #i))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ #i x s.
+  (Counter( s, x ) @ #i) ∧ ∀ #j. (Start( s ) @ #j) ⇒ ¬(#j < #i)"
+*/
+by sorry
+
+lemma counter_increases [reuse, use_induction]:
+  all-traces
+  "∀ x y #i #j s.
+    ((Counter( s, x ) @ #i) ∧ (Counter( s, y ) @ #j)) ⇒
+    ((#i < #j) ⇒ (∃ z. add(x, z) = y))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ x y #i #j s.
+  (Counter( s, x ) @ #i) ∧ (Counter( s, y ) @ #j)
+ ∧
+  (#i < #j) ∧ (∀ z. (add(x, z) = y) ⇒ ⊥)"
+*/
+by sorry
+
+lemma lesser_senc_secret [use_induction]:
+  all-traces
+  "∀ x y #i #j s.
+    ((Counter( s, x ) @ #i) ∧ (K( senc(h(y), s) ) @ #j)) ⇒
+    ((#i < #j) ∨ (∃ z. add(y, z) = x))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ x y #i #j s.
+  (Counter( s, x ) @ #i) ∧ (K( senc(h(y), s) ) @ #j)
+ ∧
+  (¬(#i < #j)) ∧ (∀ z. (add(y, z) = x) ⇒ ⊥)"
+*/
+by sorry
+
+end

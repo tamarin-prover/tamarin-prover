@@ -160,14 +160,41 @@ solve( Initiated( ~na ) ▶₀ #i )
         case c_h
         solve( !KU( (~k⊕~na⊕nb) ) @ #vk.3 )
           case c_xor_case_1
-          solve( !KU( (~k⊕nb) ) @ #vk.4 )
-            case c_xor
+          by solve( !KU( ~k ) @ #vk.4 )
+        next
+          case c_xor_case_2
+          solve( !KU( (~k⊕nb) ) @ #vk.5 )
+            case c_xor_case_1
             by solve( !KU( ~k ) @ #vk.6 )
+          next
+            case c_xor_case_2
+            solve( !KU( (~k⊕x.1) ) @ #vk.7 )
+              case c_xor_case_1
+              by contradiction /* forbidden AC constructor chain */
+            next
+              case c_xor_case_2
+              by contradiction /* forbidden AC constructor chain */
+            next
+              case coerce
+              solve( !KD( (~k⊕x.1) ) ▶₀ #vk.3 )
+                case initiator
+                by solve( (#vl, 0) ~~> (#vk.3, 0) )
+              next
+                case responder
+                solve( (#vl, 0) ~~> (#vk.3, 0) )
+                  case d_0_fst
+                  by solve( (#vr.3, 0) ~~> (#vk.3, 0) )
+                next
+                  case d_0_snd
+                  by solve( (#vr.3, 0) ~~> (#vk.3, 0) )
+                qed
+              qed
+            qed
           next
             case coerce
             solve( !KD( (~k⊕nb) ) ▶₀ #vk.2 )
               case initiator
-              by contradiction /* impossible chain */
+              by solve( (#vl, 0) ~~> (#vk.2, 0) )
             next
               case responder
               solve( (#vl, 0) ~~> (#vk.2, 0) )
@@ -175,23 +202,20 @@ solve( Initiated( ~na ) ▶₀ #i )
                 by solve( (#vr.3, 0) ~~> (#vk.2, 0) )
               next
                 case d_0_snd
-                by contradiction /* impossible chain */
+                by solve( (#vr.3, 0) ~~> (#vk.2, 0) )
               qed
             qed
           qed
         next
-          case c_xor_case_2
-          by solve( !KU( ~k ) @ #vk.5 )
-        next
           case c_xor_case_3
           solve( !KU( (~k⊕~na) ) @ #vk.4 )
             case c_xor
-            by solve( !KU( ~k ) @ #vk.6 )
+            by solve( !KU( ~k ) @ #vk.5 )
           next
             case coerce
             solve( !KD( (~k⊕~na) ) ▶₀ #vk.2 )
               case initiator
-              by contradiction /* impossible chain */
+              by solve( (#vl, 0) ~~> (#vk.2, 0) )
             next
               case responder
               solve( (#vl, 0) ~~> (#vk.2, 0) )
@@ -199,7 +223,127 @@ solve( Initiated( ~na ) ▶₀ #i )
                 by solve( (#vr.3, 0) ~~> (#vk.2, 0) )
               next
                 case d_0_snd
-                by contradiction /* impossible chain */
+                by solve( (#vr.3, 0) ~~> (#vk.2, 0) )
+              qed
+            qed
+          qed
+        next
+          case c_xor_case_4
+          solve( !KU( (~k⊕~na⊕x.1) ) @ #vk.5 )
+            case c_xor_case_1
+            by solve( !KU( ~k ) @ #vk.6 )
+          next
+            case c_xor_case_2
+            solve( !KU( (~k⊕x.1) ) @ #vk.7 )
+              case c_xor_case_1
+              by contradiction /* forbidden AC constructor chain */
+            next
+              case c_xor_case_2
+              by contradiction /* forbidden AC constructor chain */
+            next
+              case coerce
+              solve( !KD( (~k⊕x.1) ) ▶₀ #vk.3 )
+                case initiator
+                by solve( (#vl, 0) ~~> (#vk.3, 0) )
+              next
+                case responder
+                solve( (#vl, 0) ~~> (#vk.3, 0) )
+                  case d_0_fst
+                  by solve( (#vr.3, 0) ~~> (#vk.3, 0) )
+                next
+                  case d_0_snd
+                  by solve( (#vr.3, 0) ~~> (#vk.3, 0) )
+                qed
+              qed
+            qed
+          next
+            case c_xor_case_3
+            by contradiction /* forbidden AC constructor chain */
+          next
+            case c_xor_case_4
+            by contradiction /* forbidden AC constructor chain */
+          next
+            case c_xor_case_5
+            solve( !KU( (~k⊕x.1) ) @ #vk.6 )
+              case c_xor_case_1
+              by contradiction /* forbidden AC constructor chain */
+            next
+              case c_xor_case_2
+              by contradiction /* forbidden AC constructor chain */
+            next
+              case coerce
+              solve( !KD( (~k⊕x.1) ) ▶₀ #vk.3 )
+                case initiator
+                by solve( (#vl, 0) ~~> (#vk.3, 0) )
+              next
+                case responder
+                solve( (#vl, 0) ~~> (#vk.3, 0) )
+                  case d_0_fst
+                  by solve( (#vr.3, 0) ~~> (#vk.3, 0) )
+                next
+                  case d_0_snd
+                  by solve( (#vr.3, 0) ~~> (#vk.3, 0) )
+                qed
+              qed
+            qed
+          next
+            case coerce
+            solve( !KD( (~k⊕~na⊕x.1) ) ▶₀ #vk.2 )
+              case initiator
+              by solve( (#vl, 0) ~~> (#vk.2, 0) )
+            next
+              case responder
+              solve( (#vl, 0) ~~> (#vk.2, 0) )
+                case d_0_fst
+                by solve( (#vr.3, 0) ~~> (#vk.2, 0) )
+              next
+                case d_0_snd
+                by solve( (#vr.3, 0) ~~> (#vk.2, 0) )
+              qed
+            qed
+          qed
+        next
+          case c_xor_case_5
+          solve( !KU( (~k⊕x) ) @ #vk.4 )
+            case c_xor_case_1
+            by solve( !KU( ~k ) @ #vk.7 )
+          next
+            case c_xor_case_2
+            solve( !KU( (~na⊕x) ) @ #vk.5 )
+              case c_xor_case_1
+              by contradiction /* forbidden AC constructor chain */
+            next
+              case c_xor_case_2
+              by contradiction /* forbidden AC constructor chain */
+            next
+              case coerce
+              solve( !KD( (~na⊕x) ) ▶₀ #vk.3 )
+                case initiator
+                by solve( (#vl, 0) ~~> (#vk.3, 0) )
+              next
+                case responder
+                solve( (#vl, 0) ~~> (#vk.3, 0) )
+                  case d_0_fst
+                  by solve( (#vr.3, 0) ~~> (#vk.3, 0) )
+                next
+                  case d_0_snd
+                  by solve( (#vr.3, 0) ~~> (#vk.3, 0) )
+                qed
+              qed
+            qed
+          next
+            case coerce
+            solve( !KD( (~k⊕x) ) ▶₀ #vk.2 )
+              case initiator
+              by solve( (#vl, 0) ~~> (#vk.2, 0) )
+            next
+              case responder
+              solve( (#vl, 0) ~~> (#vk.2, 0) )
+                case d_0_fst
+                by solve( (#vr.3, 0) ~~> (#vk.2, 0) )
+              next
+                case d_0_snd
+                by solve( (#vr.3, 0) ~~> (#vk.2, 0) )
               qed
             qed
           qed
@@ -207,7 +351,7 @@ solve( Initiated( ~na ) ▶₀ #i )
           case coerce
           solve( !KD( (~k⊕~na⊕nb) ) ▶₀ #vk.1 )
             case initiator
-            by contradiction /* impossible chain */
+            by solve( (#vl, 0) ~~> (#vk.1, 0) )
           next
             case responder
             solve( (#vl, 0) ~~> (#vk.1, 0) )
@@ -215,7 +359,7 @@ solve( Initiated( ~na ) ▶₀ #i )
               by solve( (#vr.3, 0) ~~> (#vk.1, 0) )
             next
               case d_0_snd
-              by contradiction /* impossible chain */
+              by solve( (#vr.3, 0) ~~> (#vk.1, 0) )
             qed
           qed
         qed
@@ -229,12 +373,12 @@ solve( Initiated( ~na ) ▶₀ #i )
         case c_h
         solve( !KU( (~k⊕~na) ) @ #vk.3 )
           case c_xor
-          by solve( !KU( ~k ) @ #vk.5 )
+          by solve( !KU( ~k ) @ #vk.4 )
         next
           case coerce
           solve( !KD( (~k⊕~na) ) ▶₀ #vk.1 )
             case initiator
-            by contradiction /* impossible chain */
+            by solve( (#vl, 0) ~~> (#vk.1, 0) )
           next
             case responder
             solve( (#vl, 0) ~~> (#vk.1, 0) )
@@ -242,7 +386,7 @@ solve( Initiated( ~na ) ▶₀ #i )
               by solve( (#vr.3, 0) ~~> (#vk.1, 0) )
             next
               case d_0_snd
-              by contradiction /* impossible chain */
+              by solve( (#vr.3, 0) ~~> (#vk.1, 0) )
             qed
           qed
         qed
@@ -254,12 +398,12 @@ solve( Initiated( ~na ) ▶₀ #i )
       case split_case_5
       solve( !KU( (~k⊕~na) ) @ #vk.2 )
         case c_xor
-        by solve( !KU( ~k ) @ #vk.4 )
+        by solve( !KU( ~k ) @ #vk.3 )
       next
         case coerce
         solve( !KD( (~k⊕~na) ) ▶₀ #vk )
           case initiator
-          by contradiction /* impossible chain */
+          by solve( (#vl, 0) ~~> (#vk, 0) )
         next
           case responder
           solve( (#vl, 0) ~~> (#vk, 0) )
@@ -267,7 +411,7 @@ solve( Initiated( ~na ) ▶₀ #i )
             by solve( (#vr.3, 0) ~~> (#vk, 0) )
           next
             case d_0_snd
-            by contradiction /* impossible chain */
+            by solve( (#vr.3, 0) ~~> (#vk, 0) )
           qed
         qed
       qed
@@ -275,79 +419,25 @@ solve( Initiated( ~na ) ▶₀ #i )
       case split_case_6
       solve( !KU( (~k⊕~na⊕z) ) @ #vk.2 )
         case c_xor_case_1
-        solve( !KU( (~k⊕z) ) @ #vk.3 )
-          case c_xor
-          by solve( !KU( ~k ) @ #vk.6 )
-        next
-          case coerce
-          solve( !KD( (~k⊕z) ) ▶₀ #vk.1 )
-            case initiator
-            by contradiction /* impossible chain */
-          next
-            case responder
-            solve( (#vl, 0) ~~> (#vk.1, 0) )
-              case d_0_fst
-              by solve( (#vr.3, 0) ~~> (#vk.1, 0) )
-            next
-              case d_0_snd
-              by contradiction /* impossible chain */
-            qed
-          qed
-        qed
+        by solve( !KU( ~k ) @ #vk.3 )
       next
         case c_xor_case_2
-        by solve( !KU( ~k ) @ #vk.4 )
-      next
-        case c_xor_case_3
-        solve( !KU( (~k⊕~na) ) @ #vk.4 )
-          case c_xor
+        solve( !KU( (~k⊕z) ) @ #vk.4 )
+          case c_xor_case_1
           by solve( !KU( ~k ) @ #vk.6 )
         next
-          case coerce
-          solve( !KD( (~k⊕~na) ) ▶₀ #vk.1 )
-            case initiator
-            by contradiction /* impossible chain */
+          case c_xor_case_2
+          solve( !KU( (~k⊕x.1) ) @ #vk.6 )
+            case c_xor_case_1
+            by contradiction /* forbidden AC constructor chain */
           next
-            case responder
-            solve( (#vl, 0) ~~> (#vk.1, 0) )
-              case d_0_fst
-              by solve( (#vr.3, 0) ~~> (#vk.1, 0) )
-            next
-              case d_0_snd
-              by contradiction /* impossible chain */
-            qed
-          qed
-        qed
-      next
-        case coerce
-        solve( !KD( (~k⊕~na⊕z) ) ▶₀ #vk )
-          case initiator
-          by contradiction /* impossible chain */
-        next
-          case responder
-          solve( (#vl, 0) ~~> (#vk, 0) )
-            case d_0_fst
-            by solve( (#vr.3, 0) ~~> (#vk, 0) )
-          next
-            case d_0_snd
-            by contradiction /* impossible chain */
-          qed
-        qed
-      qed
-    next
-      case split_case_7
-      solve( !KU( h((~k⊕x)) ) @ #vk.1 )
-        case c_h
-        solve( !KU( (~na⊕x) ) @ #vk.2 )
-          case c_xor
-          solve( !KU( (~k⊕x) ) @ #vk.3 )
-            case c_xor
-            by solve( !KU( ~k ) @ #vk.6 )
+            case c_xor_case_2
+            by contradiction /* forbidden AC constructor chain */
           next
             case coerce
-            solve( !KD( (~k⊕x) ) ▶₀ #vk.2 )
+            solve( !KD( (~k⊕x.1) ) ▶₀ #vk.2 )
               case initiator
-              by contradiction /* impossible chain */
+              by solve( (#vl, 0) ~~> (#vk.2, 0) )
             next
               case responder
               solve( (#vl, 0) ~~> (#vk.2, 0) )
@@ -355,15 +445,15 @@ solve( Initiated( ~na ) ▶₀ #i )
                 by solve( (#vr.3, 0) ~~> (#vk.2, 0) )
               next
                 case d_0_snd
-                by contradiction /* impossible chain */
+                by solve( (#vr.3, 0) ~~> (#vk.2, 0) )
               qed
             qed
           qed
         next
           case coerce
-          solve( !KD( (~na⊕x) ) ▶₀ #vk.1 )
+          solve( !KD( (~k⊕z) ) ▶₀ #vk.1 )
             case initiator
-            by contradiction /* impossible chain */
+            by solve( (#vl, 0) ~~> (#vk.1, 0) )
           next
             case responder
             solve( (#vl, 0) ~~> (#vk.1, 0) )
@@ -371,7 +461,451 @@ solve( Initiated( ~na ) ▶₀ #i )
               by solve( (#vr.3, 0) ~~> (#vk.1, 0) )
             next
               case d_0_snd
-              by contradiction /* impossible chain */
+              by solve( (#vr.3, 0) ~~> (#vk.1, 0) )
+            qed
+          qed
+        qed
+      next
+        case c_xor_case_3
+        solve( !KU( (~k⊕~na) ) @ #vk.4 )
+          case c_xor
+          by solve( !KU( ~k ) @ #vk.5 )
+        next
+          case coerce
+          solve( !KD( (~k⊕~na) ) ▶₀ #vk.1 )
+            case initiator
+            by solve( (#vl, 0) ~~> (#vk.1, 0) )
+          next
+            case responder
+            solve( (#vl, 0) ~~> (#vk.1, 0) )
+              case d_0_fst
+              by solve( (#vr.3, 0) ~~> (#vk.1, 0) )
+            next
+              case d_0_snd
+              by solve( (#vr.3, 0) ~~> (#vk.1, 0) )
+            qed
+          qed
+        qed
+      next
+        case c_xor_case_4
+        solve( !KU( (~k⊕~na⊕x.1) ) @ #vk.4 )
+          case c_xor_case_1
+          by solve( !KU( ~k ) @ #vk.5 )
+        next
+          case c_xor_case_2
+          solve( !KU( (~k⊕x.1) ) @ #vk.6 )
+            case c_xor_case_1
+            by contradiction /* forbidden AC constructor chain */
+          next
+            case c_xor_case_2
+            by contradiction /* forbidden AC constructor chain */
+          next
+            case coerce
+            solve( !KD( (~k⊕x.1) ) ▶₀ #vk.2 )
+              case initiator
+              by solve( (#vl, 0) ~~> (#vk.2, 0) )
+            next
+              case responder
+              solve( (#vl, 0) ~~> (#vk.2, 0) )
+                case d_0_fst
+                by solve( (#vr.3, 0) ~~> (#vk.2, 0) )
+              next
+                case d_0_snd
+                by solve( (#vr.3, 0) ~~> (#vk.2, 0) )
+              qed
+            qed
+          qed
+        next
+          case c_xor_case_3
+          by contradiction /* forbidden AC constructor chain */
+        next
+          case c_xor_case_4
+          by contradiction /* forbidden AC constructor chain */
+        next
+          case c_xor_case_5
+          solve( !KU( (~k⊕x.1) ) @ #vk.5 )
+            case c_xor_case_1
+            by contradiction /* forbidden AC constructor chain */
+          next
+            case c_xor_case_2
+            by contradiction /* forbidden AC constructor chain */
+          next
+            case coerce
+            solve( !KD( (~k⊕x.1) ) ▶₀ #vk.2 )
+              case initiator
+              by solve( (#vl, 0) ~~> (#vk.2, 0) )
+            next
+              case responder
+              solve( (#vl, 0) ~~> (#vk.2, 0) )
+                case d_0_fst
+                by solve( (#vr.3, 0) ~~> (#vk.2, 0) )
+              next
+                case d_0_snd
+                by solve( (#vr.3, 0) ~~> (#vk.2, 0) )
+              qed
+            qed
+          qed
+        next
+          case coerce
+          solve( !KD( (~k⊕~na⊕x.1) ) ▶₀ #vk.1 )
+            case initiator
+            by solve( (#vl, 0) ~~> (#vk.1, 0) )
+          next
+            case responder
+            solve( (#vl, 0) ~~> (#vk.1, 0) )
+              case d_0_fst
+              by solve( (#vr.3, 0) ~~> (#vk.1, 0) )
+            next
+              case d_0_snd
+              by solve( (#vr.3, 0) ~~> (#vk.1, 0) )
+            qed
+          qed
+        qed
+      next
+        case c_xor_case_5
+        solve( !KU( (~k⊕x) ) @ #vk.3 )
+          case c_xor_case_1
+          by solve( !KU( ~k ) @ #vk.6 )
+        next
+          case c_xor_case_2
+          solve( !KU( (~na⊕x) ) @ #vk.4 )
+            case c_xor_case_1
+            by contradiction /* forbidden AC constructor chain */
+          next
+            case c_xor_case_2
+            by contradiction /* forbidden AC constructor chain */
+          next
+            case coerce
+            solve( !KD( (~na⊕x) ) ▶₀ #vk.2 )
+              case initiator
+              by solve( (#vl, 0) ~~> (#vk.2, 0) )
+            next
+              case responder
+              solve( (#vl, 0) ~~> (#vk.2, 0) )
+                case d_0_fst
+                by solve( (#vr.3, 0) ~~> (#vk.2, 0) )
+              next
+                case d_0_snd
+                by solve( (#vr.3, 0) ~~> (#vk.2, 0) )
+              qed
+            qed
+          qed
+        next
+          case coerce
+          solve( !KD( (~k⊕x) ) ▶₀ #vk.1 )
+            case initiator
+            by solve( (#vl, 0) ~~> (#vk.1, 0) )
+          next
+            case responder
+            solve( (#vl, 0) ~~> (#vk.1, 0) )
+              case d_0_fst
+              by solve( (#vr.3, 0) ~~> (#vk.1, 0) )
+            next
+              case d_0_snd
+              by solve( (#vr.3, 0) ~~> (#vk.1, 0) )
+            qed
+          qed
+        qed
+      next
+        case coerce
+        solve( !KD( (~k⊕~na⊕z) ) ▶₀ #vk )
+          case initiator
+          by solve( (#vl, 0) ~~> (#vk, 0) )
+        next
+          case responder
+          solve( (#vl, 0) ~~> (#vk, 0) )
+            case d_0_fst
+            by solve( (#vr.3, 0) ~~> (#vk, 0) )
+          next
+            case d_0_snd
+            by solve( (#vr.3, 0) ~~> (#vk, 0) )
+          qed
+        qed
+      qed
+    next
+      case split_case_7
+      solve( !KU( h((~na⊕x)) ) @ #vk.1 )
+        case c_h
+        solve( !KU( (~k⊕x) ) @ #vk.2 )
+          case c_xor_case_1
+          by solve( !KU( ~k ) @ #vk.5 )
+        next
+          case c_xor_case_2
+          solve( !KU( (~na⊕x⊕x.1) ) @ #vk.3 )
+            case c_xor_case_1
+            solve( !KU( (~k⊕x.1) ) @ #vk.5 )
+              case c_xor_case_1
+              by contradiction /* forbidden AC constructor chain */
+            next
+              case c_xor_case_2
+              by contradiction /* forbidden AC constructor chain */
+            next
+              case coerce
+              solve( !KD( (~k⊕x.1) ) ▶₀ #vk.3 )
+                case initiator
+                by solve( (#vl, 0) ~~> (#vk.3, 0) )
+              next
+                case responder
+                solve( (#vl, 0) ~~> (#vk.3, 0) )
+                  case d_0_fst
+                  by solve( (#vr.3, 0) ~~> (#vk.3, 0) )
+                next
+                  case d_0_snd
+                  by solve( (#vr.3, 0) ~~> (#vk.3, 0) )
+                qed
+              qed
+            qed
+          next
+            case c_xor_case_2
+            solve( !KU( (~k⊕x.1) ) @ #vk.5 )
+              case c_xor_case_1
+              by contradiction /* forbidden AC constructor chain */
+            next
+              case c_xor_case_2
+              by contradiction /* forbidden AC constructor chain */
+            next
+              case coerce
+              solve( !KD( (~k⊕x.1) ) ▶₀ #vk.3 )
+                case initiator
+                by solve( (#vl, 0) ~~> (#vk.3, 0) )
+              next
+                case responder
+                solve( (#vl, 0) ~~> (#vk.3, 0) )
+                  case d_0_fst
+                  by solve( (#vr.3, 0) ~~> (#vk.3, 0) )
+                next
+                  case d_0_snd
+                  by solve( (#vr.3, 0) ~~> (#vk.3, 0) )
+                qed
+              qed
+            qed
+          next
+            case c_xor_case_3
+            solve( !KU( (~k⊕x.1) ) @ #vk.5 )
+              case c_xor_case_1
+              by contradiction /* forbidden AC constructor chain */
+            next
+              case c_xor_case_2
+              by contradiction /* forbidden AC constructor chain */
+            next
+              case coerce
+              solve( !KD( (~k⊕x.1) ) ▶₀ #vk.3 )
+                case initiator
+                by solve( (#vl, 0) ~~> (#vk.3, 0) )
+              next
+                case responder
+                solve( (#vl, 0) ~~> (#vk.3, 0) )
+                  case d_0_fst
+                  by solve( (#vr.3, 0) ~~> (#vk.3, 0) )
+                next
+                  case d_0_snd
+                  by solve( (#vr.3, 0) ~~> (#vk.3, 0) )
+                qed
+              qed
+            qed
+          next
+            case c_xor_case_4
+            solve( !KU( (~k⊕x.1⊕x.2) ) @ #vk.5 )
+              case c_xor_case_1
+              by contradiction /* forbidden AC constructor chain */
+            next
+              case c_xor_case_2
+              by contradiction /* forbidden AC constructor chain */
+            next
+              case c_xor_case_3
+              by contradiction /* forbidden AC constructor chain */
+            next
+              case c_xor_case_4
+              by contradiction /* forbidden AC constructor chain */
+            next
+              case c_xor_case_5
+              by contradiction /* forbidden AC constructor chain */
+            next
+              case c_xor_case_6
+              by contradiction /* forbidden AC constructor chain */
+            next
+              case c_xor_case_7
+              by contradiction /* forbidden AC constructor chain */
+            next
+              case c_xor_case_8
+              by contradiction /* forbidden AC constructor chain */
+            next
+              case coerce
+              solve( !KD( (~k⊕x.1⊕x.2) ) ▶₀ #vk.3 )
+                case initiator
+                by solve( (#vl, 0) ~~> (#vk.3, 0) )
+              next
+                case responder
+                solve( (#vl, 0) ~~> (#vk.3, 0) )
+                  case d_0_fst
+                  by solve( (#vr.3, 0) ~~> (#vk.3, 0) )
+                next
+                  case d_0_snd
+                  by solve( (#vr.3, 0) ~~> (#vk.3, 0) )
+                qed
+              qed
+            qed
+          next
+            case c_xor_case_5
+            solve( !KU( (~k⊕x.1⊕x.2) ) @ #vk.5 )
+              case c_xor_case_1
+              by contradiction /* forbidden AC constructor chain */
+            next
+              case c_xor_case_2
+              by contradiction /* forbidden AC constructor chain */
+            next
+              case c_xor_case_3
+              by contradiction /* forbidden AC constructor chain */
+            next
+              case c_xor_case_4
+              by contradiction /* forbidden AC constructor chain */
+            next
+              case c_xor_case_5
+              by contradiction /* forbidden AC constructor chain */
+            next
+              case c_xor_case_6
+              by contradiction /* forbidden AC constructor chain */
+            next
+              case c_xor_case_7
+              by contradiction /* forbidden AC constructor chain */
+            next
+              case c_xor_case_8
+              by contradiction /* forbidden AC constructor chain */
+            next
+              case coerce
+              solve( !KD( (~k⊕x.1⊕x.2) ) ▶₀ #vk.3 )
+                case initiator
+                by solve( (#vl, 0) ~~> (#vk.3, 0) )
+              next
+                case responder
+                solve( (#vl, 0) ~~> (#vk.3, 0) )
+                  case d_0_fst
+                  by solve( (#vr.3, 0) ~~> (#vk.3, 0) )
+                next
+                  case d_0_snd
+                  by solve( (#vr.3, 0) ~~> (#vk.3, 0) )
+                qed
+              qed
+            qed
+          next
+            case c_xor_case_6
+            solve( !KU( (~k⊕x) ) @ #vk.5 )
+              case c_xor_case_1
+              by contradiction /* forbidden AC constructor chain */
+            next
+              case c_xor_case_2
+              by contradiction /* forbidden AC constructor chain */
+            next
+              case coerce
+              solve( !KD( (~k⊕x) ) ▶₀ #vk.3 )
+                case initiator
+                by solve( (#vl, 0) ~~> (#vk.3, 0) )
+              next
+                case responder
+                solve( (#vl, 0) ~~> (#vk.3, 0) )
+                  case d_0_fst
+                  by solve( (#vr.3, 0) ~~> (#vk.3, 0) )
+                next
+                  case d_0_snd
+                  by solve( (#vr.3, 0) ~~> (#vk.3, 0) )
+                qed
+              qed
+            qed
+          next
+            case c_xor_case_7
+            solve( !KU( (~k⊕x) ) @ #vk.5 )
+              case c_xor_case_1
+              by contradiction /* forbidden AC constructor chain */
+            next
+              case c_xor_case_2
+              by contradiction /* forbidden AC constructor chain */
+            next
+              case coerce
+              solve( !KD( (~k⊕x) ) ▶₀ #vk.3 )
+                case initiator
+                by solve( (#vl, 0) ~~> (#vk.3, 0) )
+              next
+                case responder
+                solve( (#vl, 0) ~~> (#vk.3, 0) )
+                  case d_0_fst
+                  by solve( (#vr.3, 0) ~~> (#vk.3, 0) )
+                next
+                  case d_0_snd
+                  by solve( (#vr.3, 0) ~~> (#vk.3, 0) )
+                qed
+              qed
+            qed
+          next
+            case c_xor_case_8
+            solve( !KU( (~k⊕x.2⊕x.3) ) @ #vk.5 )
+              case c_xor_case_1
+              by contradiction /* forbidden AC constructor chain */
+            next
+              case c_xor_case_2
+              by contradiction /* forbidden AC constructor chain */
+            next
+              case c_xor_case_3
+              by contradiction /* forbidden AC constructor chain */
+            next
+              case c_xor_case_4
+              by contradiction /* forbidden AC constructor chain */
+            next
+              case c_xor_case_5
+              by contradiction /* forbidden AC constructor chain */
+            next
+              case c_xor_case_6
+              by contradiction /* forbidden AC constructor chain */
+            next
+              case c_xor_case_7
+              by contradiction /* forbidden AC constructor chain */
+            next
+              case c_xor_case_8
+              by contradiction /* forbidden AC constructor chain */
+            next
+              case coerce
+              solve( !KD( (~k⊕x.2⊕x.3) ) ▶₀ #vk.3 )
+                case initiator
+                by solve( (#vl, 0) ~~> (#vk.3, 0) )
+              next
+                case responder
+                solve( (#vl, 0) ~~> (#vk.3, 0) )
+                  case d_0_fst
+                  by solve( (#vr.3, 0) ~~> (#vk.3, 0) )
+                next
+                  case d_0_snd
+                  by solve( (#vr.3, 0) ~~> (#vk.3, 0) )
+                qed
+              qed
+            qed
+          next
+            case coerce
+            solve( !KD( (~na⊕x⊕x.1) ) ▶₀ #vk.2 )
+              case initiator
+              by solve( (#vl, 0) ~~> (#vk.2, 0) )
+            next
+              case responder
+              solve( (#vl, 0) ~~> (#vk.2, 0) )
+                case d_0_fst
+                by solve( (#vr.3, 0) ~~> (#vk.2, 0) )
+              next
+                case d_0_snd
+                by solve( (#vr.3, 0) ~~> (#vk.2, 0) )
+              qed
+            qed
+          qed
+        next
+          case coerce
+          solve( !KD( (~k⊕x) ) ▶₀ #vk.1 )
+            case initiator
+            by solve( (#vl, 0) ~~> (#vk.1, 0) )
+          next
+            case responder
+            solve( (#vl, 0) ~~> (#vk.1, 0) )
+              case d_0_fst
+              by solve( (#vr.3, 0) ~~> (#vk.1, 0) )
+            next
+              case d_0_snd
+              by solve( (#vr.3, 0) ~~> (#vk.1, 0) )
             qed
           qed
         qed
@@ -381,16 +915,301 @@ solve( Initiated( ~na ) ▶₀ #i )
       qed
     next
       case split_case_8
-      solve( !KU( h((~na⊕x)) ) @ #vk.1 )
+      solve( !KU( h((~k⊕x)) ) @ #vk.1 )
         case c_h
-        solve( !KU( (~k⊕x) ) @ #vk.2 )
-          case c_xor
-          by solve( !KU( ~k ) @ #vk.5 )
+        solve( !KU( (~na⊕x) ) @ #vk.2 )
+          case c_xor_case_1
+          solve( !KU( (~k⊕x) ) @ #vk.3 )
+            case c_xor_case_1
+            by solve( !KU( ~k ) @ #vk.6 )
+          next
+            case c_xor_case_2
+            solve( !KU( (~k⊕x.1) ) @ #vk.7 )
+              case c_xor_case_1
+              by contradiction /* forbidden AC constructor chain */
+            next
+              case c_xor_case_2
+              by contradiction /* forbidden AC constructor chain */
+            next
+              case coerce
+              solve( !KD( (~k⊕x.1) ) ▶₀ #vk.3 )
+                case initiator
+                by solve( (#vl, 0) ~~> (#vk.3, 0) )
+              next
+                case responder
+                solve( (#vl, 0) ~~> (#vk.3, 0) )
+                  case d_0_fst
+                  by solve( (#vr.3, 0) ~~> (#vk.3, 0) )
+                next
+                  case d_0_snd
+                  by solve( (#vr.3, 0) ~~> (#vk.3, 0) )
+                qed
+              qed
+            qed
+          next
+            case coerce
+            solve( !KD( (~k⊕x) ) ▶₀ #vk.2 )
+              case initiator
+              by solve( (#vl, 0) ~~> (#vk.2, 0) )
+            next
+              case responder
+              solve( (#vl, 0) ~~> (#vk.2, 0) )
+                case d_0_fst
+                by solve( (#vr.3, 0) ~~> (#vk.2, 0) )
+              next
+                case d_0_snd
+                by solve( (#vr.3, 0) ~~> (#vk.2, 0) )
+              qed
+            qed
+          qed
+        next
+          case c_xor_case_2
+          solve( !KU( (~k⊕x⊕x.1) ) @ #vk.3 )
+            case c_xor_case_1
+            by solve( !KU( ~k ) @ #vk.6 )
+          next
+            case c_xor_case_2
+            solve( !KU( (~na⊕x.1) ) @ #vk.5 )
+              case c_xor_case_1
+              by contradiction /* forbidden AC constructor chain */
+            next
+              case c_xor_case_2
+              by contradiction /* forbidden AC constructor chain */
+            next
+              case coerce
+              solve( !KD( (~na⊕x.1) ) ▶₀ #vk.3 )
+                case initiator
+                by solve( (#vl, 0) ~~> (#vk.3, 0) )
+              next
+                case responder
+                solve( (#vl, 0) ~~> (#vk.3, 0) )
+                  case d_0_fst
+                  by solve( (#vr.3, 0) ~~> (#vk.3, 0) )
+                next
+                  case d_0_snd
+                  by solve( (#vr.3, 0) ~~> (#vk.3, 0) )
+                qed
+              qed
+            qed
+          next
+            case c_xor_case_3
+            solve( !KU( (~na⊕x.1) ) @ #vk.5 )
+              case c_xor_case_1
+              by contradiction /* forbidden AC constructor chain */
+            next
+              case c_xor_case_2
+              by contradiction /* forbidden AC constructor chain */
+            next
+              case coerce
+              solve( !KD( (~na⊕x.1) ) ▶₀ #vk.3 )
+                case initiator
+                by solve( (#vl, 0) ~~> (#vk.3, 0) )
+              next
+                case responder
+                solve( (#vl, 0) ~~> (#vk.3, 0) )
+                  case d_0_fst
+                  by solve( (#vr.3, 0) ~~> (#vk.3, 0) )
+                next
+                  case d_0_snd
+                  by solve( (#vr.3, 0) ~~> (#vk.3, 0) )
+                qed
+              qed
+            qed
+          next
+            case c_xor_case_4
+            solve( !KU( (~na⊕x.1⊕x.2) ) @ #vk.5 )
+              case c_xor_case_1
+              by contradiction /* forbidden AC constructor chain */
+            next
+              case c_xor_case_2
+              by contradiction /* forbidden AC constructor chain */
+            next
+              case c_xor_case_3
+              by contradiction /* forbidden AC constructor chain */
+            next
+              case c_xor_case_4
+              by contradiction /* forbidden AC constructor chain */
+            next
+              case c_xor_case_5
+              by contradiction /* forbidden AC constructor chain */
+            next
+              case c_xor_case_6
+              by contradiction /* forbidden AC constructor chain */
+            next
+              case c_xor_case_7
+              by contradiction /* forbidden AC constructor chain */
+            next
+              case c_xor_case_8
+              by contradiction /* forbidden AC constructor chain */
+            next
+              case coerce
+              solve( !KD( (~na⊕x.1⊕x.2) ) ▶₀ #vk.3 )
+                case initiator
+                by solve( (#vl, 0) ~~> (#vk.3, 0) )
+              next
+                case responder
+                solve( (#vl, 0) ~~> (#vk.3, 0) )
+                  case d_0_fst
+                  by solve( (#vr.3, 0) ~~> (#vk.3, 0) )
+                next
+                  case d_0_snd
+                  by solve( (#vr.3, 0) ~~> (#vk.3, 0) )
+                qed
+              qed
+            qed
+          next
+            case c_xor_case_5
+            solve( !KU( (~na⊕x.1⊕x.2) ) @ #vk.5 )
+              case c_xor_case_1
+              by contradiction /* forbidden AC constructor chain */
+            next
+              case c_xor_case_2
+              by contradiction /* forbidden AC constructor chain */
+            next
+              case c_xor_case_3
+              by contradiction /* forbidden AC constructor chain */
+            next
+              case c_xor_case_4
+              by contradiction /* forbidden AC constructor chain */
+            next
+              case c_xor_case_5
+              by contradiction /* forbidden AC constructor chain */
+            next
+              case c_xor_case_6
+              by contradiction /* forbidden AC constructor chain */
+            next
+              case c_xor_case_7
+              by contradiction /* forbidden AC constructor chain */
+            next
+              case c_xor_case_8
+              by contradiction /* forbidden AC constructor chain */
+            next
+              case coerce
+              solve( !KD( (~na⊕x.1⊕x.2) ) ▶₀ #vk.3 )
+                case initiator
+                by solve( (#vl, 0) ~~> (#vk.3, 0) )
+              next
+                case responder
+                solve( (#vl, 0) ~~> (#vk.3, 0) )
+                  case d_0_fst
+                  by solve( (#vr.3, 0) ~~> (#vk.3, 0) )
+                next
+                  case d_0_snd
+                  by solve( (#vr.3, 0) ~~> (#vk.3, 0) )
+                qed
+              qed
+            qed
+          next
+            case c_xor_case_6
+            solve( !KU( (~na⊕x) ) @ #vk.5 )
+              case c_xor_case_1
+              by contradiction /* forbidden AC constructor chain */
+            next
+              case c_xor_case_2
+              by contradiction /* forbidden AC constructor chain */
+            next
+              case coerce
+              solve( !KD( (~na⊕x) ) ▶₀ #vk.3 )
+                case initiator
+                by solve( (#vl, 0) ~~> (#vk.3, 0) )
+              next
+                case responder
+                solve( (#vl, 0) ~~> (#vk.3, 0) )
+                  case d_0_fst
+                  by solve( (#vr.3, 0) ~~> (#vk.3, 0) )
+                next
+                  case d_0_snd
+                  by solve( (#vr.3, 0) ~~> (#vk.3, 0) )
+                qed
+              qed
+            qed
+          next
+            case c_xor_case_7
+            solve( !KU( (~na⊕x) ) @ #vk.5 )
+              case c_xor_case_1
+              by contradiction /* forbidden AC constructor chain */
+            next
+              case c_xor_case_2
+              by contradiction /* forbidden AC constructor chain */
+            next
+              case coerce
+              solve( !KD( (~na⊕x) ) ▶₀ #vk.3 )
+                case initiator
+                by solve( (#vl, 0) ~~> (#vk.3, 0) )
+              next
+                case responder
+                solve( (#vl, 0) ~~> (#vk.3, 0) )
+                  case d_0_fst
+                  by solve( (#vr.3, 0) ~~> (#vk.3, 0) )
+                next
+                  case d_0_snd
+                  by solve( (#vr.3, 0) ~~> (#vk.3, 0) )
+                qed
+              qed
+            qed
+          next
+            case c_xor_case_8
+            solve( !KU( (~na⊕x.2⊕x.3) ) @ #vk.5 )
+              case c_xor_case_1
+              by contradiction /* forbidden AC constructor chain */
+            next
+              case c_xor_case_2
+              by contradiction /* forbidden AC constructor chain */
+            next
+              case c_xor_case_3
+              by contradiction /* forbidden AC constructor chain */
+            next
+              case c_xor_case_4
+              by contradiction /* forbidden AC constructor chain */
+            next
+              case c_xor_case_5
+              by contradiction /* forbidden AC constructor chain */
+            next
+              case c_xor_case_6
+              by contradiction /* forbidden AC constructor chain */
+            next
+              case c_xor_case_7
+              by contradiction /* forbidden AC constructor chain */
+            next
+              case c_xor_case_8
+              by contradiction /* forbidden AC constructor chain */
+            next
+              case coerce
+              solve( !KD( (~na⊕x.2⊕x.3) ) ▶₀ #vk.3 )
+                case initiator
+                by solve( (#vl, 0) ~~> (#vk.3, 0) )
+              next
+                case responder
+                solve( (#vl, 0) ~~> (#vk.3, 0) )
+                  case d_0_fst
+                  by solve( (#vr.3, 0) ~~> (#vk.3, 0) )
+                next
+                  case d_0_snd
+                  by solve( (#vr.3, 0) ~~> (#vk.3, 0) )
+                qed
+              qed
+            qed
+          next
+            case coerce
+            solve( !KD( (~k⊕x⊕x.1) ) ▶₀ #vk.2 )
+              case initiator
+              by solve( (#vl, 0) ~~> (#vk.2, 0) )
+            next
+              case responder
+              solve( (#vl, 0) ~~> (#vk.2, 0) )
+                case d_0_fst
+                by solve( (#vr.3, 0) ~~> (#vk.2, 0) )
+              next
+                case d_0_snd
+                by solve( (#vr.3, 0) ~~> (#vk.2, 0) )
+              qed
+            qed
+          qed
         next
           case coerce
-          solve( !KD( (~k⊕x) ) ▶₀ #vk.1 )
+          solve( !KD( (~na⊕x) ) ▶₀ #vk.1 )
             case initiator
-            by contradiction /* impossible chain */
+            by solve( (#vl, 0) ~~> (#vk.1, 0) )
           next
             case responder
             solve( (#vl, 0) ~~> (#vk.1, 0) )
@@ -398,7 +1217,7 @@ solve( Initiated( ~na ) ▶₀ #i )
               by solve( (#vr.3, 0) ~~> (#vk.1, 0) )
             next
               case d_0_snd
-              by contradiction /* impossible chain */
+              by solve( (#vr.3, 0) ~~> (#vk.1, 0) )
             qed
           qed
         qed
@@ -433,19 +1252,19 @@ solve( Initiated( ~na ) ▶₀ #i )
   solve( !InitLTK( ~k ) ▶₁ #i )
     case Setup
     solve( splitEqs(0) )
-      case split_case_7
+      case split_case_8
       solve( !KU( h((~k⊕x)) ) @ #vk.1 )
         case responder
         solve( splitEqs(2) )
           case split_case_2
           solve( !KU( (~na⊕~nb⊕na.1) ) @ #vk.2 )
             case c_xor_case_1
-            solve( !KU( (~na⊕na.1) ) @ #vk.4 )
-              case c_xor
-              solve( !KU( ~nb ) @ #vk.5 )
-                case responder
-                solve( !KU( ~na ) @ #vk.6 )
-                  case initiator
+            solve( !KU( (~nb⊕na.1) ) @ #vk.5 )
+              case c_xor_case_1
+              solve( !KU( ~na ) @ #vk.5 )
+                case initiator
+                solve( !KU( ~nb ) @ #vk.6 )
+                  case responder
                   SOLVED // trace found
                 qed
               qed
@@ -502,10 +1321,10 @@ qed
 
 /*
 Generated from:
-Tamarin version 1.12.0
+Tamarin version 1.13.0
 Maude version 3.5.1
-Git revision: f1832c9bc70a2a165991a0802520f2e07c023227 (with uncommited changes), branch: prepare-release
-Compiled at: 2026-03-06 22:21:49.602637 UTC
+Git revision: 41bc81379b23681e7057314a5cf66a25c45e1986, branch: canonicalise-subst
+Compiled at: 2026-07-27 16:11:34.947223 UTC
 */
 
 end
@@ -517,9 +1336,9 @@ summary of summaries:
 analyzed: examples/csf18-xor/CRxor.spthy
 
   output:          examples/csf18-xor/CRxor.spthy.tmp
-  processing time: 0.43s
+  processing time: 0.87s
   
-  alive (all-traces): verified (91 steps)
+  alive (all-traces): verified (364 steps)
   recentalive_tag (all-traces): falsified - found trace (11 steps)
   executable (exists-trace): verified (10 steps)
 

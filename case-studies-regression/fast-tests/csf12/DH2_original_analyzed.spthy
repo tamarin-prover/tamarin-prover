@@ -17,7 +17,7 @@ rule (modulo E) Register_pk:
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) Init_1:
+rule (modulo E) Init_1[no_derivcheck]:
    [ Fr( ~m1 ), !Ltk( $I, ~ltkI ), !Pk( $R, 'g'^~ltkR ) ]
   --[
   Sid( ~m1, $I, $R, <$I, $R, 'Init', 'g'^~ltkR^~m1> ), EphKey( ~m1, ~m1 )
@@ -28,7 +28,7 @@ rule (modulo E) Init_1:
    ]
 
   /*
-  rule (modulo AC) Init_1:
+  rule (modulo AC) Init_1[no_derivcheck]:
      [ Fr( ~m1 ), !Ltk( $I, ~ltkI ), !Pk( $R, 'g'^~ltkR ) ]
     --[
     Sid( ~m1, $I, $R, <$I, $R, 'Init', 'g'^(~ltkR*~m1)> ), EphKey( ~m1, ~m1 )
@@ -39,7 +39,7 @@ rule (modulo E) Init_1:
      ]
   */
 
-rule (modulo E) Resp_1:
+rule (modulo E) Resp_1[no_derivcheck]:
    [ Fr( ~m2 ), In( XB ), !Ltk( $R, ~ltkR ), !Pk( $I, 'g'^~ltkI ) ]
   --[
   Sid( ~m2, $R, $I, <$R, $I, 'Resp', 'g'^~ltkI^~m2, XB> ),
@@ -60,7 +60,7 @@ rule (modulo E) Resp_1:
    ]
 
   /*
-  rule (modulo AC) Resp_1:
+  rule (modulo AC) Resp_1[no_derivcheck]:
      [ Fr( ~m2 ), In( XB ), !Ltk( $R, ~ltkR ), !Pk( $I, 'g'^~x ) ]
     --[
     Sid( ~m2, $R, $I, <$R, $I, 'Resp', 'g'^(~m2*~x), XB> ),
@@ -1817,10 +1817,10 @@ qed
 
 /*
 Generated from:
-Tamarin version 1.12.0
+Tamarin version 1.13.0
 Maude version 3.5.1
-Git revision: f1832c9bc70a2a165991a0802520f2e07c023227 (with uncommited changes), branch: prepare-release
-Compiled at: 2026-03-06 22:21:49.602637 UTC
+Git revision: 41bc81379b23681e7057314a5cf66a25c45e1986, branch: canonicalise-subst
+Compiled at: 2026-07-27 16:11:34.947223 UTC
 */
 
 end
@@ -1832,7 +1832,7 @@ summary of summaries:
 analyzed: examples/csf12/DH2_original.spthy
 
   output:          examples/csf12/DH2_original.spthy.tmp
-  processing time: 9.18s
+  processing time: 5.25s
   
   KAS_key_secrecy (all-traces): verified (501 steps)
 

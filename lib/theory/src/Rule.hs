@@ -8,32 +8,19 @@ module Rule (
 
 import Items.RuleItem
 
-import           Prelude                             hiding (id, (.))
+import Prelude                             hiding (id, (.))
 
-import           Data.List
-
-import qualified Data.Set                            as S
-
-import           Control.Basics
-import           Control.Category
-import           Control.Monad.Reader
+import Control.Category
 
 import qualified Extension.Data.Label                as L
 
-import           Theory.Model
-import           Theory.Proof
-import           Theory.Tools.InjectiveFactInstances
-import           Theory.Tools.RuleVariants
-import           Theory.Tools.IntruderRules
+import Theory.Model
+import Theory.Proof
+import Theory.Tools.RuleVariants
 
-import           Term.Positions
-import           Term.Macro
+import Term.Macro
 import Theory.Constraint.Solver.Sources (IntegerParameters)
 import Data.Maybe (maybeToList)
-
-
-
-
 
 -- | Get an OpenProtoRule's name
 getOpenProtoRuleName :: OpenProtoRule -> String
@@ -97,83 +84,6 @@ closeProtoRule :: MaudeHandle -> [LNMacro] -> OpenProtoRule -> [ClosedProtoRule]
 closeProtoRule hnd []     (OpenProtoRule ruE [])   = ClosedProtoRule ruE <$> maybeToList (variantsProtoRule hnd ruE)
 closeProtoRule hnd macros (OpenProtoRule ruE [])   = ClosedProtoRule ruE <$> maybeToList (variantsProtoRule hnd (applyMacroInRule macros ruE))
 closeProtoRule _   _      (OpenProtoRule ruE ruAC) = map (ClosedProtoRule ruE) ruAC
-
--- | Close an intruder rule; i.e., compute maximum number of consecutive applications and variants
---   Should be parallelized like the variant computation for protocol rules (JD)
-closeIntrRule :: MaudeHandle -> IntrRuleAC -> [IntrRuleAC]
-closeIntrRule hnd (Rule (DestrRule name (-1) subterm constant) prems@((Fact KDFact _ [t]):_) concs@[Fact KDFact _ [rhs]] acts nvs) =
-  if subterm then [ru] else variantsIntruder hnd id False ru
-    where
-      ru = (Rule (DestrRule name (if runMaude (unifiableLNTerms rhs t)
-                              then (length (positions t)) - (if (isPrivateFunction t) then 1 else 2)
-                              -- We do not need to count t itself, hence - 1.
-                              -- If t is a private function symbol we need to permit one more rule
-                              -- application as there is no associated constructor.
-                              else 0) subterm constant) prems concs acts nvs)
-        where
-           runMaude = (`runReader` hnd)
-closeIntrRule hnd ir@(Rule (DestrRule _ _ False _) _ _ _ _) = variantsIntruder hnd id False ir
-closeIntrRule _   ir                                        = [ir]
-
-
--- | Close a rule cache. Hower, note that the
--- requires case distinctions are not computed here.
-closeRuleCache :: IntegerParameters  -- ^ Parameters for open chains and saturation limits
-               -> [LNGuarded]        -- ^ Restrictions to use.
-               -> [LNGuarded]        -- ^ Source lemmas to use.
-               -> S.Set FactTag      -- ^ Fact tags forced to be injective
-               -> SignatureWithMaude -- ^ Signature of theory.
-               -> [ClosedProtoRule]  -- ^ Protocol rules with variants.
-               -> OpenRuleCache      -- ^ Intruder rules modulo AC.
-               -> Bool               -- ^ Verbose option
-               -> Bool               -- ^ Diff or not
-               -> Bool               -- ^ isSapic or not
-               -> ClosedRuleCache    -- ^ Cached rules and case distinctions.
-closeRuleCache parameters restrictions typAsms forcedInjFacts sig protoRules intrRules verbose isdiff isSapic = -- trace ("closeRuleCache: " ++ show classifiedRules) $
-    ClosedRuleCache
-        classifiedRules rawSources refinedSources injFactInstances
-  where
-    ctxt0 = ProofContext
-        sig classifiedRules injFactInstances RawSource [] AvoidInduction Nothing Nothing 
-        (error "closeRuleCache: trace quantifier should not matter here")
-        (error "closeRuleCache: lemma name should not matter here") [] verbose isdiff
-        (all isSubtermRule {-- $ trace (show destr ++ " - " ++ show (map isSubtermRule destr))-} destr) (any isConstantRule destr)
-        isSapic
-
-    -- Maude handle
-    hnd = L.get sigmMaudeHandle sig
-    reducibles = reducibleFunSyms $ mhMaudeSig hnd
-
-    forcedInjFacts' = S.map (\x -> (x, replicate (factTagArity x) [Unspecified])) forcedInjFacts
-    -- inj fact instances
-    injFactInstances = forcedInjFacts' `S.union`
-        simpleInjectiveFactInstances reducibles (L.get cprRuleE <$> protoRules)
-
-    -- precomputing the case distinctions: we make sure to only add safety
-    -- restrictions. Otherwise, it wouldn't be sound to use the precomputed case
-    -- distinctions for properties proven using induction.
-    safetyRestrictions = filter isSafetyFormula restrictions
-    rawSources         = precomputeSources parameters ctxt0 safetyRestrictions
-    refinedSources     = refineWithSourceAsms parameters typAsms ctxt0 rawSources
-
-    -- close intruder rules
-    intrRulesAC = concat $ map (closeIntrRule hnd) intrRules
-
-    -- classifying the rules
-    rulesAC = (fmap IntrInfo                      <$> intrRulesAC) ++
-              ((fmap ProtoInfo . L.get cprRuleAC) <$> protoRules)
-
-    anyOf ps = partition (\x -> any ($ x) ps)
-
-    (nonProto, proto) = anyOf [isDestrRule, isConstrRule] rulesAC
-    (constr, destr)   = anyOf [isConstrRule] nonProto
-
-    -- and sort them into ClassifiedRules datastructure for later use in proofs
-    classifiedRules = ClassifiedRules
-      { _crConstruct  = constr
-      , _crDestruct   = destr
-      , _crProtocol   = proto
-      }
 
 
 -- | Returns true if the REFINED sources contain open chains.

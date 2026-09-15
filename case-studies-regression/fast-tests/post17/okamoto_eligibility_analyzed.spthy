@@ -4,7 +4,7 @@ begin
 
 // Function signature and definition of the equational theory E
 
-functions: blind/2, checksign/2, f/4, fst/1, open/2, pair/2, pk/1,
+functions: blind/2, checksign/2, f/4 [NDC], fst/1, open/2, pair/2, pk/1,
            sign/2, snd/1, tdcommit/3, unblind/2
 equations [convergent]:
     checksign(sign(m, sk), pk(sk)) = m,
@@ -43,14 +43,14 @@ rule (modulo E) V_1:
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) A_1:
+rule (modulo E) A_1[no_derivcheck]:
    [ In( <e, sign(e, ~ltkV)> ), !AdminLtk( A, ~ltkA ), !Pk( V, pk(~ltkV) ) ]
   --[ Registered( e ), In_A_1( e ) ]->
    [ Out( <e, sign(e, ~ltkA)> ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) V_2:
+rule (modulo E) V_2[no_derivcheck]:
    [
    In( <blind(tdcommit($vote, ~r, ~td), ~b), 
         sign(blind(tdcommit($vote, ~r, ~td), ~b), ~ltkA)>
@@ -65,7 +65,7 @@ rule (modulo E) V_2:
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) C_1:
+rule (modulo E) C_1[no_derivcheck]:
    [ In( <x, sign(x, ~ltkA)> ), !AdminPk( A, pk(~ltkA) ) ]
   -->
    [ Out( <x, sign(x, ~ltkA)> ) ]
@@ -118,18 +118,18 @@ next
           by contradiction /* from formulas */
         next
           case V_1_case_3
-          solve( !KU( ~b ) @ #vk.4 )
+          solve( !KU( ~b ) @ #vk.3 )
             case A_1
-            solve( (#vr.12, 0) ~~> (#vk.1, 0) )
+            solve( (#vr.10, 0) ~~> (#vk.1, 0) )
               case d_0_open
               by contradiction /* forbidden KD-fact */
             qed
           qed
         next
           case V_1_case_4
-          solve( !KU( ~b ) @ #vk.3 )
+          solve( !KU( ~b ) @ #vk.4 )
             case A_1
-            solve( (#vr.10, 0) ~~> (#vk.1, 0) )
+            solve( (#vr.12, 0) ~~> (#vk.1, 0) )
               case d_0_open
               by contradiction /* forbidden KD-fact */
             qed
@@ -202,10 +202,10 @@ qed
 
 /*
 Generated from:
-Tamarin version 1.12.0
+Tamarin version 1.13.0
 Maude version 3.5.1
-Git revision: f1832c9bc70a2a165991a0802520f2e07c023227 (with uncommited changes), branch: prepare-release
-Compiled at: 2026-03-06 22:21:49.602637 UTC
+Git revision: 41bc81379b23681e7057314a5cf66a25c45e1986, branch: canonicalise-subst
+Compiled at: 2026-07-27 16:11:34.947223 UTC
 */
 
 end
@@ -217,7 +217,7 @@ summary of summaries:
 analyzed: examples/post17/okamoto_eligibility.spthy
 
   output:          examples/post17/okamoto_eligibility.spthy.tmp
-  processing time: 0.33s
+  processing time: 0.28s
   
   types (all-traces): verified (22 steps)
   exec (exists-trace): verified (6 steps)

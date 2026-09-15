@@ -88,8 +88,9 @@ instance Semigroup (ProcessAnnotation v) where
 getProcessNames :: GoodAnnotation ann => ann -> [String]
 getProcessNames = processnames . getProcessParsedAnnotation
 
+-- | Replace the process names and keep the other parsed annotations.
 setProcessNames :: GoodAnnotation a => [String] -> a -> a
-setProcessNames pn = setProcessParsedAnnotation (mempty {processnames = pn})
+setProcessNames pn = mapProcessParsedAnnotation (\ann -> ann {processnames = pn})
 
 instance (Apply s SapicTerm) => (Apply s (ProcessAnnotation v)) where
     apply = applyAnn

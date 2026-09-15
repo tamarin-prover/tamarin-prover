@@ -5,7 +5,7 @@ begin
 // Function signature and definition of the equational theory E
 
 builtins: diffie-hellman
-functions: fst/1, g/0, mac/2, pair/2, shk/0[private,constructor], snd/1
+functions: fst/1, g/0, mac/2, pair/2, shk/0 [private,constructor], snd/1
 equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
 
 rule (modulo E) Step1:
@@ -78,10 +78,10 @@ solve( Step1( tid, A, B, ~x ) ▶₀ #i )
     case Step1
     solve( !KU( g^(~x*~x.1) ) @ #vk.3 )
       case Step1_case_1
-      by solve( !KU( ~x ) @ #vk.4 )
+      by solve( !KU( ~x.1 ) @ #vk.4 )
     next
       case Step1_case_2
-      by solve( !KU( ~x.1 ) @ #vk.4 )
+      by solve( !KU( ~x ) @ #vk.4 )
     next
       case c_exp
       by solve( !KU( ~x ) @ #vk.6 )
@@ -124,10 +124,10 @@ qed
 
 /*
 Generated from:
-Tamarin version 1.12.0
+Tamarin version 1.13.0
 Maude version 3.5.1
-Git revision: f1832c9bc70a2a165991a0802520f2e07c023227 (with uncommited changes), branch: prepare-release
-Compiled at: 2026-03-06 22:21:49.602637 UTC
+Git revision: 41bc81379b23681e7057314a5cf66a25c45e1986, branch: canonicalise-subst
+Compiled at: 2026-07-27 16:11:34.947223 UTC
 */
 
 end
@@ -139,7 +139,7 @@ summary of summaries:
 analyzed: examples/cav13/DH_example.spthy
 
   output:          examples/cav13/DH_example.spthy.tmp
-  processing time: 0.09s
+  processing time: 0.05s
   
   Accept_Secret (all-traces): verified (9 steps)
   Accept_Secret_Counter (all-traces): falsified - found trace (7 steps)

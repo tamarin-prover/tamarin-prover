@@ -37,7 +37,7 @@ equations: radec(raenc(m, r, pk(sk)), sk) = m
 
 
 // This rule from signature model:
-rule reSign:
+rule reSign [no_derivcheck]:
 [In(<sk1,r1>), In(sign(m,r2,sk2))]
 -->
 [Out(sign(m,r1,sk1))]
@@ -284,7 +284,7 @@ rule Browser_POIDC_Send_IdToken_to_URI_from_Binding[color=  #aed6f1]:
 
 
 //RP gets id-Token
-rule RP_gets_idToken:
+rule RP_gets_idToken [no_derivcheck]:
     let private_id_token = <'private_id_token'
         , <'iss', $IdP>
         , <'sub', $userID>

@@ -43,7 +43,7 @@ rule I_Activate:
 
 // UM3 session update for initiator:
 //    receive key confirmation and Y, compute key, check key confirmation.
-rule I_Complete:
+rule I_Complete [no_derivcheck]:
   let X       = 'g'^~ex                    // recompute X                                           
       pB      = 'g'^~eb                    // we do not model key registration by adversary,
                                            // hence key always of this form
@@ -74,7 +74,7 @@ rule I_Expire:
 
 /* Responder */
 // Session creation:
-rule R_Activate:
+rule R_Activate [no_derivcheck]:
   let pA  = 'g'^~ea                      // we do not model key registration by adversary,
                                          // hence key always of this form
       Y   = 'g'^~ey
@@ -98,7 +98,7 @@ rule R_Activate:
   ]
 
 // Session update:
-rule R_Complete:
+rule R_Complete [no_derivcheck]:
   let pA  = 'g'^~ea
       Y   = 'g'^~ey
       kstring = h(X^~ey, pA^~eb, $A, $B, X, Y )

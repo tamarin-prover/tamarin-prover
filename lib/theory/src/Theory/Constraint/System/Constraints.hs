@@ -108,8 +108,10 @@ instance Apply LNSubst Edge where
     apply subst (Edge from to) = Edge (apply subst from) (apply subst to)
 
 instance HasFrees Edge where
+    {-# INLINABLE foldFrees #-}
     foldFrees f (Edge x y) = foldFrees f x `mappend` foldFrees f y
     foldFreesOcc  f c (Edge x y) = foldFreesOcc f ("edge":c) (x, y)
+    {-# INLINABLE mapFrees #-}
     mapFrees  f (Edge x y) = Edge <$> mapFrees f x <*> mapFrees f y
 
 -- | A *⋖* constraint between 'NodeId's.
@@ -141,8 +143,10 @@ instance Apply LNSubst LessAtom where
     apply subst (LessAtom smaller larger r) = LessAtom (apply subst smaller) (apply subst larger) r
 
 instance HasFrees LessAtom where
+    {-# INLINABLE foldFrees #-}
     foldFrees f (LessAtom s l _) = foldFrees f s <> foldFrees f l
     foldFreesOcc f c (LessAtom s l _) = foldFreesOcc f ("lessAtom":c) (s, l)
+    {-# INLINABLE mapFrees #-}
     mapFrees f (LessAtom s l r) = LessAtom <$> mapFrees f s <*> mapFrees f l <*> pure r
 
 ------------------------------------------------------------------------------
@@ -204,6 +208,7 @@ isSubtermGoal _         = False
 ------------
 
 instance HasFrees Goal where
+    {-# INLINABLE foldFrees #-}
     foldFrees f goal = case goal of
         ActionG i fa  -> foldFrees f i <> foldFrees f fa
         PremiseG p fa -> foldFrees f p <> foldFrees f fa
@@ -217,6 +222,7 @@ instance HasFrees Goal where
         ChainG co p  -> foldFreesOcc f ("ChainG":c)  (co, p)
         _            -> mempty
 
+    {-# INLINABLE mapFrees #-}
     mapFrees f goal = case goal of
         ActionG i fa  -> ActionG  <$> mapFrees f i <*> mapFrees f fa
         PremiseG p fa -> PremiseG <$> mapFrees f p <*> mapFrees f fa

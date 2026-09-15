@@ -154,8 +154,10 @@ instance (Apply s t) => Apply s (SyntacticSugar t)
     apply subst (Pred fa) = Pred $ apply subst fa
 
 instance HasFrees t => HasFrees (Atom t) where
+    {-# INLINABLE foldFrees #-}
     foldFrees f = foldMap (foldFrees f)
     foldFreesOcc _ _ = const mempty -- we ignore occurences in atoms for now
+    {-# INLINABLE mapFrees #-}
     mapFrees  f = traverse (mapFrees f)
 
 instance (Apply s t, Apply s (syn t)) => Apply s (ProtoAtom syn t) where

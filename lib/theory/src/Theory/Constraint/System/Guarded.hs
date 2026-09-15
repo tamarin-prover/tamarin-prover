@@ -270,8 +270,10 @@ traverseGuarded f = foldGuarded (fmap GAto . traverse (traverseTerm (traverse (t
                                 (\qua ss as gf -> GGuarded qua ss <$> traverse (traverse (traverseTerm (traverse (traverse f)))) as <*> gf)
 
 instance Ord c => HasFrees (Guarded (String, LSort) c LVar) where
+    {-# INLINABLE foldFrees #-}
     foldFrees    f   = foldMap  (foldFrees f)
     foldFreesOcc _ _ = const mempty
+    {-# INLINABLE mapFrees #-}
     mapFrees     f   = traverseGuarded (mapFrees f)
 
 

@@ -43,7 +43,7 @@ rule I_Activate:
 
 // UM3 session update for initiator:
 //    receive key confirmation and Y, compute key, check key confirmation.
-rule I_Complete:
+rule I_Complete [no_derivcheck]:
   let X       = 'g'^~ex                    // recompute X                                           
       pB      = 'g'^~eb                    // we do not model key registration by adversary,
                                            // hence key always of this form
@@ -74,7 +74,7 @@ rule I_Expire:
 
 /* UM3_Responder */
 // Session creation:
-rule R_Activate:
+rule R_Activate [no_derivcheck]:
   let pA  = 'g'^~ea                      // we do not model key registration by adversary,
                                          // hence key always of this form
       Y   = 'g'^~ey
@@ -98,7 +98,7 @@ rule R_Activate:
   ]
 
 // Session update:
-rule R_Complete:
+rule R_Complete [no_derivcheck]:
   let pA  = 'g'^~ea
       Y   = 'g'^~ey
       kstring = h(X^~ey, pA^~eb, $A, $B, X, Y )
@@ -143,7 +143,7 @@ rule UM1_I_Activate:
   ]
 
 // Complete the session: send X, and compute key.
-rule UM1_I_Complete:
+rule UM1_I_Complete [no_derivcheck]:
   let X  = 'g'^~ex                         // recompute X
       sid = <$A, $B, X>                    // recompute sid
       pB = 'g'^~eb                         // we do not model key registration by adversary,
@@ -168,7 +168,7 @@ rule UM1_I_Expire:
 /* UM1 Responder */
 
 // R has no Activated state since there is no ephemeral key.
-rule UM1_R_Complete:
+rule UM1_R_Complete [no_derivcheck]:
   let pA  = 'g'^~ea                      // we do not model key registration by adversary,
                                          // hence key always of this form
       sid = <$B, $A, X>                  // sid is not unique because of initiator sessions with

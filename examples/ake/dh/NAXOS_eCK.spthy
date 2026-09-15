@@ -46,8 +46,7 @@ rule Init_1:
   , Out( X ) ]
 
 rule Init_2:
-  let KB  = 'g'^~eb
-      X = 'g'^h1(<~ex, ~ea >)
+  let X = 'g'^h1(<~ex, ~ea >)
       exp = h1(< ~ex, ~ea >)
       key = h2(< Y^~ea, KB^exp, Y^exp, $A, $B >) 
   in
@@ -60,8 +59,7 @@ rule Init_2:
 
 /* Responder */
 rule Resp_1:
-  let KA  = 'g'^~lkI
-      exp = h1(< ~ey, ~eb >)
+  let exp = h1(< ~ey, ~eb >)
       Y   = 'g'^exp
       key = h2(< KA^exp, X^~eb, X^exp, $A, $B >) 
   in

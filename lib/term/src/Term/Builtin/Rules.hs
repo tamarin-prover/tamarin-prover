@@ -10,6 +10,10 @@ module Term.Builtin.Rules (
   , dhRules
   , bpRules
   , msetRules
+  , fstRule
+  , sndRule
+  , fstDestRule
+  , sndDestRule
   , pairRules
   , xorRules
   , symEncRules
@@ -93,10 +97,13 @@ xorRules = S.fromList
     zero  = fAppZero
 
 -- | The rewriting rules for standard subterm operators that are builtin.
+fstRule, sndRule, fstDestRule, sndDestRule :: CtxtStRule
+fstRule = fAppFst (fAppPair (x1,x2)) `CtxtStRule` (StRhs [[0,0]] x1)
+sndRule = fAppSnd (fAppPair (x1,x2)) `CtxtStRule` (StRhs [[0,1]] x2)
+fstDestRule = fAppNoEq fstDestSym [fAppPair (x1,x2)] `CtxtStRule` (StRhs [[0,0]] x1)
+sndDestRule = fAppNoEq sndDestSym [fAppPair (x1,x2)] `CtxtStRule` (StRhs [[0,1]] x2)
 pairRules, symEncRules, asymEncRules, signatureRules, pairDestRules, symEncDestRules, asymEncDestRules, signatureDestRules, revealSignatureRules, locationReportRules :: Set (CtxtStRule)
-pairRules = S.fromList
-    [ fAppFst (fAppPair (x1,x2)) `CtxtStRule` (StRhs [[0,0]] x1)
-    , fAppSnd (fAppPair (x1,x2)) `CtxtStRule` (StRhs [[0,1]] x2) ]
+pairRules = S.fromList [ fstRule , sndRule ]
 symEncRules    = S.fromList [ sdec (senc (x1,x2), x2)     `CtxtStRule` (StRhs [[0,0]] x1) ]
 asymEncRules   = S.fromList [ adec (aenc (x1, pk x2), x2) `CtxtStRule` (StRhs [[0,0]] x1) ]
 signatureRules = S.fromList [ verify (sign (x1,x2), x1, pk x2) `CtxtStRule` (StRhs [[0,0]] trueC) ]
@@ -105,9 +112,7 @@ revealSignatureRules = S.fromList [ revealVerify (revealSign (x1,x2), x1, pk x2)
 locationReportRules = S.fromList [ check_rep (rep (x1,x2), x2) `CtxtStRule` (StRhs [[0,0]] x1),
                                    get_rep (rep (x1,x2)) `CtxtStRule` (StRhs [[0,0]] x1)
                                  ]
-pairDestRules = S.fromList
-    [ fAppNoEq fstDestSym [fAppPair (x1,x2)] `CtxtStRule` (StRhs [[0,0]] x1)
-    , fAppNoEq sndDestSym [fAppPair (x1,x2)] `CtxtStRule` (StRhs [[0,1]] x2) ]
+pairDestRules = S.fromList [ fstDestRule, sndDestRule ]
 symEncDestRules    = S.fromList [ fAppNoEq sdecDestSym [senc (x1,x2), x2]     `CtxtStRule` (StRhs [[0,0]] x1) ]
 asymEncDestRules   = S.fromList [ fAppNoEq adecDestSym [aenc (x1, pk x2), x2] `CtxtStRule` (StRhs [[0,0]] x1) ]
 signatureDestRules = S.fromList [ fAppNoEq verifyDestSym [sign (x1,x2), x1, pk x2] `CtxtStRule` (StRhs [[0,0]] trueC) ]

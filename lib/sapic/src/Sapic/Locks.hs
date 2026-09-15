@@ -110,5 +110,5 @@ checkLocks p = case run $ annotateLocks' $ toAnProcess p of
         run a = runExcept $ evalFreshT a 0
         checkUnmatchedUnlock = getAny . pfoldMap (Any . isUnmatchedUnlock)
         isUnmatchedUnlock (ProcessAction (Unlock _) annotation _)
-                | Nothing <- annotation.lock = True
+                | Nothing <- annotation.unlock = True
         isUnmatchedUnlock _ = False

@@ -29,9 +29,11 @@ module Theory.Model.Signature
     toSignatureWithMaude,
     toSignaturePure,
     sigmMaudeHandle,
+    joinNDCinSigWMaude,
 
     -- ** Pretty-printing
     prettySignaturePure,
+    prettySignaturePureExcept,
     prettySignatureWithMaude,
   )
 where
@@ -44,7 +46,7 @@ import Data.Set qualified as S
 import System.IO.Unsafe (unsafePerformIO)
 import Term.LTerm
 import Term.Maude.Process (MaudeHandle, mhFilePath, mhMaudeSig, startMaude)
-import Term.Maude.Signature (MaudeSig, minimalMaudeSig, prettyMaudeSig, prettyMaudeSigExcept)
+import Term.Maude.Signature (MaudeSig, minimalMaudeSig, prettyMaudeSig, prettyMaudeSigExcept, joinNDCinSig)
 import Theory.Text.Pretty
 
 -- | A theory signature.
@@ -111,6 +113,14 @@ toSignatureWithMaude maudePath sig = do
 toSignaturePure :: SignatureWithMaude -> SignaturePure
 toSignaturePure sig = sig {_sigMaudeInfo = mhMaudeSig $ L.get sigMaudeInfo sig}
 
+-- | Adds the given NDC state to a function symbol (by name) in the signature.
+joinNDCinSigWMaude :: SignatureWithMaude -> FunSym -> NDCstate -> SignatureWithMaude
+joinNDCinSigWMaude sig funSym ndcState = sig {_sigMaudeInfo = mh}
+  where
+    mh = (L.get sigMaudeInfo sig) {mhMaudeSig = joinNDCinSig (mhMaudeSig $ L.get sigMaudeInfo sig) funSym ndcState}
+    
+
+
 {- TODO: There should be a finalizer in place such that as soon as the
    MaudeHandle is garbage collected, the appropriate command is sent to Maude
 
@@ -163,6 +173,13 @@ instance NFData SignatureWithMaude where
 prettySignaturePure :: (HighlightDocument d) => SignaturePure -> d
 prettySignaturePure sig =
   prettyMaudeSig $ L.get sigpMaudeSig sig
+    
+-- | Pretty-print a pure signature, but omit given set of
+--   function symbols. Used for pretty-printing OpenTheories
+--   with typed function declarations
+prettySignaturePureExcept :: HighlightDocument d => S.Set UserDefinedSym -> SignaturePure -> d
+prettySignaturePureExcept exc sig  =
+  prettyMaudeSigExcept (L.get sigpMaudeSig sig) exc
 
 -- | Pretty-print a signature with maude.
 prettySignatureWithMaude :: (HighlightDocument d) => SignatureWithMaude -> d

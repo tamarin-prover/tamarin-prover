@@ -22,7 +22,7 @@ rule (modulo E) I_Activate:
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) I_Complete:
+rule (modulo E) I_Complete[no_derivcheck]:
    [ I_Act( ~ex, $A, $B ), !Ltk( $A, ~ea ), !Pk( $B, 'g'^~eb ) ]
   --[
   Complete( <$A, $B, 'g'^~ex>, 'I', h(<'g'^~eb^~ex, 'g'^~eb^~ea, $A, $B>) )
@@ -34,7 +34,7 @@ rule (modulo E) I_Complete:
    ]
 
   /*
-  rule (modulo AC) I_Complete:
+  rule (modulo AC) I_Complete[no_derivcheck]:
      [ I_Act( ~ex, $A, $B ), !Ltk( $A, ~ea ), !Pk( $B, 'g'^~eb ) ]
     --[
     Complete( <$A, $B, 'g'^~ex>, 'I',
@@ -54,7 +54,7 @@ rule (modulo E) I_Expire:
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) R_Complete:
+rule (modulo E) R_Complete[no_derivcheck]:
    [ In( X ), !Ltk( $B, ~eb ), !Pk( $A, 'g'^~ea ) ]
   --[
   Activate( <$B, $A, X> ),
@@ -66,7 +66,7 @@ rule (modulo E) R_Complete:
    ]
 
   /*
-  rule (modulo AC) R_Complete:
+  rule (modulo AC) R_Complete[no_derivcheck]:
      [ In( X ), !Ltk( $B, ~eb ), !Pk( $A, 'g'^~x ) ]
     --[
     Activate( <$B, $A, X> ),
@@ -446,13 +446,13 @@ solve( (¬(role = 'I'))  ∥
               case c_h
               solve( !KU( 'g'^(~eb*~x) ) @ #vk.5 )
                 case Register_key_honest_case_1
-                solve( !KU( ~eb ) @ #vk.9 )
+                solve( !KU( ~x ) @ #vk.9 )
                   case Corrupt_Ltk
                   by contradiction /* from formulas */
                 qed
               next
                 case Register_key_honest_case_2
-                solve( !KU( ~x ) @ #vk.9 )
+                solve( !KU( ~eb ) @ #vk.9 )
                   case Corrupt_Ltk
                   by contradiction /* from formulas */
                 qed
@@ -784,13 +784,13 @@ next
               case c_h
               solve( !KU( 'g'^(~eb*~x) ) @ #vk.5 )
                 case Register_key_honest_case_1
-                solve( !KU( ~eb ) @ #vk.9 )
+                solve( !KU( ~x ) @ #vk.9 )
                   case Corrupt_Ltk
                   by contradiction /* from formulas */
                 qed
               next
                 case Register_key_honest_case_2
-                solve( !KU( ~x ) @ #vk.9 )
+                solve( !KU( ~eb ) @ #vk.9 )
                   case Corrupt_Ltk
                   by contradiction /* from formulas */
                 qed
@@ -813,10 +813,10 @@ qed
 
 /*
 Generated from:
-Tamarin version 1.12.0
+Tamarin version 1.13.0
 Maude version 3.5.1
-Git revision: f1832c9bc70a2a165991a0802520f2e07c023227 (with uncommited changes), branch: prepare-release
-Compiled at: 2026-03-06 22:21:49.602637 UTC
+Git revision: 41bc81379b23681e7057314a5cf66a25c45e1986, branch: canonicalise-subst
+Compiled at: 2026-07-27 16:11:34.947223 UTC
 */
 
 end
@@ -828,7 +828,7 @@ summary of summaries:
 analyzed: examples/ake/dh/UM_one_pass_fix.spthy
 
   output:          examples/ake/dh/UM_one_pass_fix.spthy.tmp
-  processing time: 0.68s
+  processing time: 0.41s
   
   key_agreement_reachable (exists-trace): verified (10 steps)
   CK_secure (all-traces): verified (174 steps)

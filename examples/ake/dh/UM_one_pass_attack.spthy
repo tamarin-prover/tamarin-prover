@@ -47,7 +47,7 @@ rule I_Activate:
   ]
 
 // Complete the session: send X, and compute key.
-rule I_Complete:
+rule I_Complete [no_derivcheck]:
   let X  = 'g'^~ex                         // recompute X
       sid = <$A, $B, X>                    // recompute sid
       pB = 'g'^~eb                         // we do not model key registration by adversary,
@@ -72,7 +72,7 @@ rule I_Expire:
 /* Responder */
 
 // R has no Activated state since there is no ephemeral key.
-rule R_Complete:
+rule R_Complete [no_derivcheck]:
   let pA  = 'g'^~ea                      // we do not model key registration by adversary,
                                          // hence key always of this form
       sid = <$B, $A, X>                  // sid is not unique because of initiator sessions with

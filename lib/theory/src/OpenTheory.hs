@@ -544,7 +544,7 @@ addAutoSourcesLemma hnd lemmaName (ClosedRuleCache _ raw _ _) items =
 -- Open theory construction / modification
 ------------------------------------------------------------------------------
 defaultOption :: Option
-defaultOption = Option False False False False False False False False False S.empty [] 10 5
+defaultOption = Option False False False False False False False False False True S.empty [] 10 5
 
 -- | Default theory
 defaultOpenTheory :: Bool -> OpenTheory
@@ -866,22 +866,26 @@ prettyDiffRule (DiffProtoRule ruE (Just (ruL, ruR))) =
 prettyEitherRule :: (HighlightDocument d) => (Side, OpenProtoRule) -> d
 prettyEitherRule (_, p) = prettyProtoRuleE $ L.get oprRuleE p
 
--- | Pretty print an open theory.
+-- | Print the options a theory declares. Nothing is printed when no
+-- declarable option is set.
+prettyTheoryOptions :: (HighlightDocument d) => Option -> d
+prettyTheoryOptions opts
+    | null declared = emptyDoc
+    | otherwise = text "options" <> colon <-> fsep (punctuate comma (map text declared))
+  where
+    declared = [name | (name, l) <- declarableOptions, L.get l opts]
+
+-- | Pretty print an open theory. The declared options are printed after the
+-- signature, as they are not part of it.
 prettyOpenTheory :: (HighlightDocument d) => OpenTheory -> d
 prettyOpenTheory thy =
   prettyTheory
-    prettySignaturePure
+    (\sig -> prettySignaturePure sig $--$ prettyTheoryOptions (L.get thyOptions thy))
     (const emptyDoc)
     prettyOpenProtoRule
     prettyProof
     prettyTranslationElement
     thy
-  where
-    -- prettyIntrVariantsSection prettyOpenProtoRule prettyProof
-
-    funsyms = S.fromList $ map fst' $ theoryFunctionTypingInfos thy
-    -- function symbols that are printed by sapic printer already
-    fst' (a, _, _) = a
 
 -- | Pretty print an open theory.
 prettyOpenDiffTheory :: (HighlightDocument d) => OpenDiffTheory -> d
@@ -947,3 +951,9 @@ prettyDiffTheory ppSig ppCache ppRule ppDiffPrf ppPrf thy =
         prettyConfigBlock
     thyH = L.get diffThyHeuristic thy
     thyT = L.get diffThyTactic thy
+
+prettyOpenRuleCache :: HighlightDocument d => OpenRuleCache -> d
+prettyOpenRuleCache = vcat . map prettyIntrRuleAC
+
+prettyOpenRuleCacheWithLimitAndNDC :: HighlightDocument d => OpenRuleCache -> d
+prettyOpenRuleCacheWithLimitAndNDC = vcat . map prettyIntrRuleACWithLimitAndNDC

@@ -38,6 +38,7 @@ instance ToJSON   NameId
 instance ToJSON   ACSym
 instance ToJSON   Constructability
 instance ToJSON   Privacy
+instance ToJSON   NDCstate
 instance ToJSON   (ProtoAtom Unit2 (VTerm Name (BVar LVar)))
 instance ToJSON   (BVar LVar)
 instance ToJSON   (Term (Lit Name (BVar LVar)))

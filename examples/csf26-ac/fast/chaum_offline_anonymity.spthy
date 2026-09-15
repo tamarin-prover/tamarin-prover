@@ -1,0 +1,137 @@
+theory Chaum_Offline_Anonymity begin
+
+// Function signature and definition of the equational theory E
+
+functions: blind/2, checksign/2, fst/1, pair/2, pk/1, sign/2,
+           snd/1, unblind/2, xorr/2 [AC], zeroo/0
+equations:
+    checksign(sign(m, k), pk(k)) = m,
+    fst(<x.1, x.2>) = x.1,
+    snd(<x.1, x.2>) = x.2,
+    unblind(blind(m, r), r) = m,
+    unblind(sign(blind(m, r), k), r) = sign(m, k),
+    xorr(xorr(x, y), x) = y,
+    xorr(x, x) = zeroo,
+    xorr(x, zeroo) = x
+
+tactic: coins
+presort: s
+prio: {id}
+  regex"!St_C_1"
+prio: {id}
+  regex"!Bank_Pk"
+prio: {id}
+  regex"\(last"
+prio: {id}
+  regex"splitEqs"
+prio: {id}
+  regex"Mint"
+prio: {id}
+  regex"~~>"
+prio: {id}
+  regex"!KU\(~r"
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+rule (modulo E) Register_Corrupted_Bank_pk:
+   [ Fr( ~ltkB ) ]
+  --[ OnlyOnce( ) ]->
+   [ !Bank_Ltk( $B, ~ltkB ), !Bank_Pk( $B, pk(~ltkB) ), Out( ~ltkB ) ]
+
+rule (modulo E) regular_agent:
+   [ Fr( ~C ) ] --> [ !Customer( ~C ), Out( ~C ) ]
+
+rule (modulo E) test_subject:
+   [ Fr( ~C ) ] --[ TestSubject( ~C ) ]-> [ !Customer( ~C ) ]
+
+rule (modulo E) C_1:
+   [ Fr( ~x ), Fr( ~r ), !Customer( ~C ) ]
+  --[ Mint( xorr(~C, ~x), ~x, ~r ), Mint( ~x, ~x, ~r ) ]->
+   [
+   Out( <blind(xorr(~C, ~x), ~r), blind(~x, ~r)> ),
+   !St_C_1( ~C, ~x, ~r )
+   ]
+
+rule (modulo E) C_2:
+   [
+   !St_C_1( C, ~y, ~r ), In( sign(blind(x, ~r), ~skB) ),
+   !Bank_Pk( $B, pk(~skB) )
+   ]
+  --[ Coin( x, ~y, ~r ), Spend( C, ~y, ~r ) ]->
+   [ Out( <x, sign(x, ~skB)> ) ]
+
+restriction OnlyOnce:
+  "∀ #i #j. ((OnlyOnce( ) @ #i) ∧ (OnlyOnce( ) @ #j)) ⇒ (#i = #j)"
+  // safety formula
+
+lemma coins [sources, heuristic={coins}]:
+  all-traces
+  "∀ x y r #i. (Coin( x, y, r ) @ #i) ⇒ (∃ #j. Mint( x, y, r ) @ #j)"
+/*
+guarded formula characterizing all counter-examples:
+"∃ x y r #i.
+  (Coin( x, y, r ) @ #i) ∧ ∀ #j. (Mint( x, y, r ) @ #j) ⇒ ⊥"
+*/
+by sorry
+
+lemma exec:
+  exists-trace "∃ x y r #i. Spend( x, y, r ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ x y r #i. (Spend( x, y, r ) @ #i)"
+*/
+by sorry
+
+lemma anonymity:
+  all-traces
+  "∀ C #i.
+    (TestSubject( C ) @ #i) ⇒
+    ((¬(∃ #j. !KU( C ) @ #j)) ∨
+     (∃ x r #i.1 #j.
+       ((Spend( C, x, r ) @ #i.1) ∧ (Spend( C, x, r ) @ #j)) ∧
+       (¬(#i.1 = #j))))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ C #i.
+  (TestSubject( C ) @ #i)
+ ∧
+  (∃ #j. (!KU( C ) @ #j)) ∧
+  (∀ x r #i.1 #j.
+    (Spend( C, x, r ) @ #i.1) ∧ (Spend( C, x, r ) @ #j) ⇒ #i.1 = #j)"
+*/
+by sorry
+
+lemma caught:
+  exists-trace
+  "∃ C #j x r #i1 #i2 #k.
+    ((((TestSubject( C ) @ #j) ∧ (!KU( C ) @ #k)) ∧
+      (Spend( C, x, r ) @ #i1)) ∧
+     (Spend( C, x, r ) @ #i2)) ∧
+    (¬(#i1 = #i2))"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ C #j x r #i1 #i2 #k.
+  (TestSubject( C ) @ #j) ∧
+  (!KU( C ) @ #k) ∧
+  (Spend( C, x, r ) @ #i1) ∧
+  (Spend( C, x, r ) @ #i2)
+ ∧
+  ¬(#i1 = #i2)"
+*/
+by sorry
+
+end

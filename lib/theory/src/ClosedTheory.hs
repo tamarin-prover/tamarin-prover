@@ -54,7 +54,7 @@ type ClosedTheory =
 type ClosedDiffTheory =
     DiffTheory SignatureWithMaude ClosedRuleCache DiffProtoRule ClosedProtoRule IncrementalDiffProof IncrementalProof
 
--- | Either Therories can be Either a normal or a diff theory
+-- | Either Theories can be Either a normal or a diff theory
 type EitherClosedTheory = Either ClosedTheory ClosedDiffTheory
 
 -- querying
@@ -543,6 +543,11 @@ prettyClosedDiffSummary thy =
     proofStepSummary = proofStepStatus &&& const (Sum (1::Integer))
     diffProofStepSummary = diffProofStepStatus &&& const (Sum (1::Integer))
 
+checkProofStatuses :: ClosedTheory -> [ProofStatus]
+checkProofStatuses thy =  map (foldProof proofStepStatus . L.get lProof) $ theoryLemmas thy
+
+checkDiffProofStatuses :: ClosedDiffTheory -> [ProofStatus]
+checkDiffProofStatuses thy = map (foldProof proofStepStatus . L.get lProof . snd) $ diffTheoryLemmas thy
 
 -- | Render the results of the precomputations, for --precompute-only
 prettyPrecomputation ::  Document d => ClosedTheory -> d

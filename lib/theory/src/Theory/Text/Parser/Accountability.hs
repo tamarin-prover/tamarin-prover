@@ -1,3 +1,4 @@
+
 -- Copyright   : (c) 2021 Robert Künnemann, Kevin Morio & Yavor Ivanov
 -- License     : GPL v3 (see LICENSE)
 --
@@ -8,7 +9,7 @@
 
 module Theory.Text.Parser.Accountability(
         caseTest
-      , lemmaAcc 
+      , lemmaAcc
 )
 where
 

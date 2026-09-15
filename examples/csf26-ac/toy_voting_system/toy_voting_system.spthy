@@ -1,0 +1,201 @@
+theory toyVotingSystem 
+begin
+
+builtins: multiset
+
+functions: enc/3, dec/2, pk/1, sign/2, verify/3, true/0, radd/2 [AC], add/2 [AC], reenc/3, transform/1, comb/2, pdec/2
+
+equations: dec(enc(m,pk(k),r), k) = m,
+           verify(sign(m,k),m,pk(k)) = true,
+           reenc(enc(m, pk(sk), r1), r2, pk(sk)) = enc(m, pk(sk), radd(r1, r2)),
+           comb(pdec(c,sk1), pdec(c,sk2)) = pdec(c,add(sk1, sk2)),
+	         transform(pdec(c,k)) = dec(c,k)
+
+
+/* Key generation rules */
+
+rule gen:
+  [ Fr(~k1), Fr(~k2) ]
+--[ ]->
+  [ !Key(add(~k1,~k2)), !AuthKey1(~k1), !AuthKey2(~k2), Out(pk(add(~k1,~k2))) ]
+
+
+rule genVoterOther:
+  [Fr(~k)]
+--[]->
+  [!VoterKeyOther(~k), Out(pk(~k))]
+
+
+rule genVoterDiff:
+  [Fr(~k)]
+--[]->
+  [!VoterKeyDiff(~k), Out(pk(~k))]
+
+
+rule genMixnet:
+  [Fr(~k)]
+--[]->
+  [!MixnetKey(~k), Out(pk(~k))]
+
+
+/* Authenticated channel rules */
+
+
+rule authentic_channel_send:
+  [ AuthSend(A,B,m) ]
+--[ AuthChan_Out(A,B,m) ]->
+  [ !Auth(A,m), Out(m) ]
+
+
+rule authentic_channel_receive:
+  [ !Auth(A, m), In(B) ]
+--[ AuthChan_In(A,B,m) ]->
+  [ AuthRecv(A,B,m) ]
+
+
+/* Protocol rules : channel version */
+
+
+rule voteOther:
+  let votecand = diff('B','A')
+      vote = enc(votecand, pk(authorityk),~r1)
+      votesigned = <vote, sign(vote,~k)>
+  in
+  [ !Key(authorityk), Fr(~r1), !VoterKeyOther(~k) ]
+--[ VoterA(votesigned) ]->
+  [ Out(votesigned) ]
+
+
+rule voteDiff:
+  let votecand = diff('A','B')
+      vote = enc(votecand, pk(authorityk),~r1)
+      votesigned = <vote, sign(vote,~k)>
+  in
+  [ !Key(authorityk), Fr(~r1), !VoterKeyDiff(~k) ]
+--[ VoterB(votesigned) ]->
+  [ Out(votesigned) ]
+
+
+rule mixnet:
+  let voteAsigned = <voteA, sign(voteA,kA)>
+      voteBsigned = <voteB, sign(voteB,kB)>
+      X = reenc(voteA,~r11,pk(authorityk))
+      Y = reenc(voteB,~r12,pk(authorityk))
+  in
+  [ !VoterKeyOther(kA), !VoterKeyDiff(kB), !Key(authorityk), Fr(~r11), Fr(~r12),
+    In(< voteAsigned , voteBsigned  >) ]
+--[ Mixnet(X+Y), Registered(voteAsigned), Registered(voteBsigned) ]->
+  [ AuthSend('Mixnet','AuthK1',X+Y), AuthSend('Mixnet','AuthK2',X+Y)]
+
+
+rule authorityK1:
+  let Apartial = pdec(Amix,sk1)
+      Bpartial = pdec(Bmix,sk1)
+  in
+  [ !AuthKey1(sk1), AuthRecv('Mixnet','AuthK1',Amix+Bmix) ]
+--[PartialDec1(Apartial+Bpartial) ]->
+  [ AuthSend('AuthK1','AuthFinal',Apartial+Bpartial)]
+
+
+rule authorityK2:
+  let Apartial = pdec(Amix,sk2)
+      Bpartial = pdec(Bmix,sk2)
+  in
+  [ !AuthKey2(sk2), AuthRecv('Mixnet','AuthK2',Amix+Bmix)]
+--[ PartialDec2(Apartial+Bpartial) ]->
+  [ AuthSend('AuthK2','AuthFinal',Apartial+Bpartial) ]
+
+rule authority:
+  let k = add(k1,k2)
+      Apart1 = pdec(enc(voteA,pk(k),rA),k1)
+      Apart2 = pdec(enc(voteA,pk(k),rA),k2)
+      Bpart1 = pdec(enc(voteB,pk(k),rB),k1)
+      Bpart2 = pdec(enc(voteB,pk(k),rB),k2)
+  in
+  [ !Key(k), AuthRecv('AuthK1','AuthFinal',Apart1+Bpart1), AuthRecv('AuthK2','AuthFinal',Apart2+Bpart2) ]
+--[ Final(voteA+voteB), VotePublished(voteA), VotePublished(voteB)]->
+  [ Out(voteA+voteB) ]
+
+
+/* Protocol rules : signed version */
+
+// rule mixnet:
+//   let voteAsigned = <voteA, sign(voteA,kA)>
+//       voteBsigned = <voteB, sign(voteB,kB)>
+//       X = reenc(voteA,~r11,pk(authorityk))
+//       Xsigned = <X, sign(X,~k)>
+//       Y = reenc(voteB,~r12,pk(authorityk))
+//       Ysigned = <Y, sign(Y,~k)>
+//   in
+//   [ !VoterKeyOther(kA), !VoterKeyDiff(kB), !MixnetKey(~k), !Key(authorityk), Fr(~r11), Fr(~r12),
+//     In(< voteAsigned , voteBsigned  >) ]
+// --[ ]->
+//   [ Out(Xsigned+Ysigned) ]
+
+// rule authorityK1:
+//   let Asigned = <voteA, sign(voteA,kM)>
+//       Bsigned = <voteB, sign(voteB,kM)>
+//       Apartial = pdec(voteA,sk1)
+//       Bpartial = pdec(voteB,sk1)
+//   in
+//   [ !MixnetKey(kM), !AuthKey1(sk1),
+//     In(Asigned), In(Bsigned) ]
+// --[ ]->
+//   [ Out(Apartial+Bpartial) ]
+
+
+// rule authorityK2:
+//   let Asigned = <voteA, sign(voteA,kM)>
+//       Bsigned = <voteB, sign(voteB,kM)>
+//       Apartial = pdec(voteA,sk2)
+//       Bpartial = pdec(voteB,sk2)
+//   in
+//   [ !MixnetKey(kM), !AuthKey2(sk2),
+//     In(Asigned), In(Bsigned)]
+// --[ ]->
+//   [ Out(Apartial+Bpartial) ]
+
+// rule authority:
+//   let A = transform(comb(Apart1,Apart2))
+//       B = transform(comb(Bpart1,Bpart2))
+//   in
+//   [ !Key(k), In(Apart1), In(Bpart1), In(Apart2), In(Bpart2) ]
+// --[ ]->
+//   [ Out(A+B) ]
+
+
+/* Trace lemmas */
+
+
+lemma exec:
+  exists-trace
+  " Ex vA vB pak r1 r11 r2 r12 kA kB sk1 sk2 #g #hh #i #j #k #l. 
+  VoterA(<enc(vA, pak,r1),sign(enc(vA, pak,r1),kA)>) @g & 
+  VoterB(<enc(vB, pak,r2),sign(enc(vB, pak,r2),kB)>) @hh & 
+  Mixnet(enc(vA, pak,radd(r1,r11))+enc(vB, pak,radd(r2,r12))) @i & 
+  PartialDec1(pdec(enc(vA, pak,radd(r1,r11)),sk1)+pdec(enc(vB, pak,radd(r2,r12)),sk1)) @j & 
+  PartialDec2(pdec(enc(vA, pak,radd(r1,r11)),sk2)+pdec(enc(vB, pak,radd(r2,r12)),sk2)) @k & 
+  Final(vA+vB) @l & 
+  g < i & hh < i & i < j & i < k & j < l & k < l "
+
+
+lemma eligibility:
+  all-traces
+  " All vA #j. (VotePublished(vA) @j) ==> (Ex pak r1 kA #i. (Registered(<enc(vA, pak,r1),sign(enc(vA, pak,r1),kA)>) @i) & (i < j)) "
+
+tactic: sourceLemmas
+prio:
+  regex "^AUTO_OUT_TERM_.*" & not regex ".*KU\(.*\).*"
+prio:
+  regex ".*AUTO_OUT_TERM_.*"
+prio:
+  regex "AUTO_OUT_FACT_.*"
+prio:
+  regex "!Auth\(.*\).*"
+end
+
+
+// rule Register_pk:
+// [ Fr(~ltk) ]
+// --[ OnlyOnceV(<'key',$A>) ]>
+// [ !Ltk($A, ~ltk), !Pk($A, pk(~ltk)), Out(pk(~ltk)) ]

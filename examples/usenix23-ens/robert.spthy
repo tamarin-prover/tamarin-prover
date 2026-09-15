@@ -432,7 +432,6 @@ rule PhoneExposureStatusRequest:
  rule ServerExposureStatusRequest:
     let
         epochp = fst(sdec(~KS, ebid))
-        id = snd(sdec(~KS, ebid))
         m = <ebid, epoch, $t>
         esr_req = <m, mac(KauthP, m)>
     in
@@ -443,6 +442,7 @@ rule PhoneExposureStatusRequest:
     , !LEE($CC, id, epoch) ]
   --[ Time($t)
     , _restrict(epochp = epoch)
+    , _restrict(id = snd(sdec(~KS, ebid)))
     // This check is assumed to be implicit in the spec and only an artifect of our model.
     , _restrict(idS = id)
     , IsTrue(sdecSuc(~KS, ebid))
@@ -512,8 +512,6 @@ rule PhoneUploadHello:
 rule Backend:
     let
         epochp = fst(sdec(~KS, ebid))
-        id = snd(sdec(~KS, ebid))
-        CC2 = sdecIV(~KG, ebid, ecc)
         m = <ecc, ebid, time16>
         hello = <m, mac(KauthP, m)>
     in
@@ -525,6 +523,8 @@ rule Backend:
     , ValidToken($CC1, qr) ]
   --[  EpochAtTime(CC2, epochp, $time)
     , _restrict(time16 = trunc16($time))
+    , _restrict(CC2 = sdecIV(~KG, ebid, ecc))
+    , _restrict(id = snd(sdec(~KS, ebid)))
     , MarkPositive(idI, $time)
     , BackendForward($CC1, CC2)
     , IsTrue(sdecSuc(~KS, ebid))

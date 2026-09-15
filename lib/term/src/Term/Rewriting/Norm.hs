@@ -59,17 +59,19 @@ nfViaHaskell t0 = reader $ \hnd -> check hnd
       where
         go t = case viewTerm2 t of
             -- irreducible function symbols
-            FAppNoEq o ts | (NoEq o) `S.member` irreducible -> all go ts
-            FList ts                                        -> all go ts
-            FPair t1 t2                                     -> go t1 && go t2
-            FDiff t1 t2                                     -> go t1 && go t2
-            One                                             -> True
-            DHNeutral                                       -> True
-            Zero                                            -> True
-            NatOne                                          -> True
-            Lit2 _                                          -> True
+            FAppNoEq o ts  | (NoEq o) `S.member` irreducible  -> all go ts
+            FAppACfct o ts | AC (ACfct o) `S.member` irreducible -> all go ts
+            FList ts                                          -> all go ts
+            FPair t1 t2                                       -> go t1 && go t2
+            FDiff t1 t2                                       -> go t1 && go t2
+            One                                               -> True
+            DHNeutral                                         -> True
+            Zero                                              -> True
+            NatOne                                            -> True
+            Lit2 _                                            -> True
             -- subterm rules
-            FAppNoEq _ _ | setAny (struleApplicable t) strules -> False
+            FAppNoEq _ _  | setAny (struleApplicable t) strules -> False
+            FAppACfct _ _ | setAny (struleApplicable t) strules -> False
             -- exponentiation
             FExp (viewTerm2 -> FExp _ _) _                  -> False
             FExp _                       (viewTerm2 -> One) -> False
@@ -99,6 +101,7 @@ nfViaHaskell t0 = reader $ \hnd -> check hnd
             FUnion     ts    -> all go ts
             FNatPlus   ts    -> all go ts
             FAppNoEq _ ts    -> all go ts
+            FAppACfct _ ts   -> all go ts
             FAppC _    ts    -> all go ts
 
         struleApplicable t (CtxtStRule lhs rhs) =

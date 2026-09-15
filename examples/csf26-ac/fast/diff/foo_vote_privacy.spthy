@@ -1,0 +1,114 @@
+theory FOO_Vote_Privacy begin
+
+// Function signature and definition of the equational theory E
+
+functions: blind/2, checksign/2, commit/2, fst/1, open/2, pair/2,
+           pk/1, sign/2, snd/1, unblind/2, add/2 [AC], unionUD/1 [destructor]
+equations [convergent]:
+    checksign(sign(m, sk), pk(sk)) = m,
+    fst(<x.1, x.2>) = x.1,
+    open(commit(m, r), r) = m,
+    snd(<x.1, x.2>) = x.2,
+    unblind(blind(m, r), r) = m,
+    unblind(sign(blind(m, r), sk), r) = sign(m, sk),
+    unionUD(add(x, y)) = x
+
+
+
+
+
+
+
+rule (modulo E) Register_Voter_pk:
+   [ Fr( ~ltkV ) ]
+  -->
+   [ !Ltk( 'v1', ~ltkV ), !Pk( 'v1', pk(~ltkV) ), Out( pk(~ltkV) ) ]
+
+rule (modulo E) Register_Voter_pk2:
+   [ Fr( ~ltkV ) ]
+  -->
+   [ !Ltk( 'v2', ~ltkV ), !Pk( 'v2', pk(~ltkV) ), Out( pk(~ltkV) ) ]
+
+rule (modulo E) Register_Admin_pk:
+   [ Fr( ~ltkA ) ]
+  -->
+   [ !AdminLtk( $A, ~ltkA ), !AdminPk( $A, pk(~ltkA) ), Out( ~ltkA ) ]
+
+rule (modulo E) setup:
+   [ ]
+  --[ OnlyOnce( ) ]->
+   [ Vote( 'v1', diff($yes, $no) ), Vote( 'v2', diff($no, $yes) ) ]
+
+rule (modulo E) V_1:
+   [ Fr( ~r ), Fr( ~b ), Vote( V, $vote ), !Ltk( V, ~ltkV1 ) ]
+  --[ V_1( V ) ]->
+   [
+   Out( <blind(commit($vote, ~r), ~b), 
+         sign(blind(commit($vote, ~r), ~b), ~ltkV1)>
+   ),
+   St_V_1( V, $vote, ~r, ~b )
+   ]
+
+rule (modulo E) V_2:
+   [
+   In( <blind(commit($vote, ~r), ~b), 
+        sign(blind(commit($vote, ~r), ~b), ~ltkA)>
+   ),
+   St_V_1( V, $vote, ~r, ~b ), !AdminPk( A, pk(~ltkA) )
+   ]
+  --[ V_2( ) ]->
+   [ St_V_sync( V, pk(~ltkA), $vote, ~r ) ]
+
+rule (modulo E) V_2_sync:
+   [
+   St_V_sync( 'v1', pkA, $vote1, ~r1 ),
+   St_V_sync( 'v2', pkA, $vote2, ~r2 )
+   ]
+  --[ V_2_sync( ) ]->
+   [
+   Shuffle( add(<'v1', pkA, $vote1, ~r1>, <'v2', pkA, $vote2, ~r2>) )
+   ]
+
+rule (modulo E) shuffle_Vote:
+   [ Shuffle( add(x, y) ) ] --> [ St_V_2( x ), St_V_2( y ) ]
+
+rule (modulo E) V_3:
+   [ St_V_2( <V, pk(~ltkA), $vote, ~r> ), !AdminPk( A, pk(~ltkA) ) ]
+  --[ V_3( ) ]->
+   [
+   Out( <commit($vote, ~r), sign(commit($vote, ~r), ~ltkA)> ),
+   St_V_3( V, $vote, ~r )
+   ]
+
+rule (modulo E) V_4:
+   [ In( commit($vote, ~r) ), St_V_3( V, $vote, ~r ) ]
+  --[ V_4( ) ]->
+   [ Out( ~r ) ]
+
+restriction onlyOnce [right]:
+  "∀ #i #j. ((OnlyOnce( ) @ #i) ∧ (OnlyOnce( ) @ #j)) ⇒ (#i = #j)"
+  // safety formula
+
+restriction onlyOnce [left]:
+  "∀ #i #j. ((OnlyOnce( ) @ #i) ∧ (OnlyOnce( ) @ #j)) ⇒ (#i = #j)"
+  // safety formula
+
+lemma exec [right]:
+  exists-trace
+  "∃ #i #j. ((V_4( ) @ #i) ∧ (V_4( ) @ #j)) ∧ (¬(#i = #j))"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #i #j. (V_4( ) @ #i) ∧ (V_4( ) @ #j) ∧ ¬(#i = #j)"
+*/
+by sorry
+
+lemma exec [left]:
+  exists-trace
+  "∃ #i #j. ((V_4( ) @ #i) ∧ (V_4( ) @ #j)) ∧ (¬(#i = #j))"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #i #j. (V_4( ) @ #i) ∧ (V_4( ) @ #j) ∧ ¬(#i = #j)"
+*/
+by sorry
+
+end

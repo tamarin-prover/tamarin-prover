@@ -185,28 +185,28 @@ rule Setup:
   	]
 
 /* agent rules */
-rule D_3:
+rule D_3 [no_derivcheck]:
 	[ AgSt_D0($D,'D_0',< $H >), In_C($S,$D,'l',code(~c))]
 	--[Dfin(), D($D)]->
 	[ Out_S($D,$H,'code',code(~c)) ]
 
-rule S_2:
+rule S_2 [no_derivcheck]:
 	[ AgSt_S0($S,'S_0',< $H, $idH, $D, pw(~pw) >), In($idH), Fr(~c)] 
 	--[ Sstart($S) ]->
  	[ AgSt_S3($S,'S_3',< $H, $idH, $D, pw(~pw), code(~c) >), Out_C($S,$D,'l',code(~c))]
-rule S_6:
+rule S_6 [no_derivcheck]:
 	[ AgSt_S3($S,'S_3',< $H, $idH, $D, pw(~pw), code(~c) >), In(<code(~c),pw(~pw)>)]
 	--[Commit($S,$H,pw(~pw)), CommitCA($S,$H) ]->
 	[]
 
 
 /* human agent rules */
-rule H_1:
+rule H_1 [no_derivcheck]:
 	[ AgSt_H0($H,'H_0',< $P, $D, $S, pw(~pw), $idH >) ]
 	--[H_role($H,'1'), Send($H,'S',$S), Send($H,'idH',$idH), Send($H,'pw',pw(~pw)) ]->
 	[ AgSt_H1($H,'H_1',< $P, $D, $S, pw(~pw), $idH >), Out(< <'S','idH','pw' >,<$S,$idH,pw(~pw)> >)]
 
-rule H_4:
+rule H_4 [no_derivcheck]:
 	[ AgSt_H1($H,'H_1',< $P, $D, $S, pw(~pw), $idH >), In_S($D,$H,'code',code(~c))]
 	--[H_role($H,'4'), Receive($H,'code',code(~c)), Send($H,'S',$S), Send($H,'code',code(~c))]->
 	[ Out(< <'S','code'>,<$S,code(~c)> >)]

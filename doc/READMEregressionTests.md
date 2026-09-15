@@ -50,7 +50,7 @@ usage: regressionTests.py [-h] [-s] [-noi] [-nom] [-j JOBS] [-d DIRECTORY]
 
 optional arguments:
   -h, --help            show this help message and exit
-  -s, --slow            Run all (not only fast) tests
+  -s, --slow            Run slow tests (instead of fast tests)
   -noi, --no-install    Do not call 'stack install' before starting the tests
   -nom, --no-make       Do not run regression tests, i.e., do not call 'make case-studies'
   -j JOBS, --jobs JOBS  The amount of Tamarin instances used simultaneously. Each Tamarin instance should have 3 threads and 16GB RAM available

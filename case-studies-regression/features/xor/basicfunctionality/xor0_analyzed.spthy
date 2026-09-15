@@ -24,11 +24,11 @@ rule (modulo E) challenge:
        z     = zero
   */
 
-rule (modulo E) receive:
+rule (modulo E) receive[no_derivcheck]:
    [ In( (~a⊕~b) ) ] --[ Response( (~a⊕~b) ) ]-> [ ]
 
   /*
-  rule (modulo AC) receive:
+  rule (modulo AC) receive[no_derivcheck]:
      [ In( z ) ] --[ Response( z ) ]-> [ ]
     variants (modulo AC)
     1. z     = zero
@@ -47,9 +47,9 @@ solve( splitEqs(0) )
   case split
   solve( !KU( (~a⊕~b) ) @ #vk )
     case c_xor
-    solve( !KU( ~b ) @ #vk.1 )
+    solve( !KU( ~a ) @ #vk.1 )
       case challenge
-      solve( !KU( ~a ) @ #vk.2 )
+      solve( !KU( ~b ) @ #vk.2 )
         case challenge
         SOLVED // trace found
       qed
@@ -61,10 +61,10 @@ qed
 
 /*
 Generated from:
-Tamarin version 1.12.0
+Tamarin version 1.13.0
 Maude version 3.5.1
-Git revision: f1832c9bc70a2a165991a0802520f2e07c023227 (with uncommited changes), branch: prepare-release
-Compiled at: 2026-03-06 22:21:49.602637 UTC
+Git revision: 41bc81379b23681e7057314a5cf66a25c45e1986, branch: canonicalise-subst
+Compiled at: 2026-07-27 16:11:34.947223 UTC
 */
 
 end

@@ -14,11 +14,11 @@
     }
   ],
   "metadata": {
-    "version": "0.1.0",
+    "version": "0.2.0",
     "license": "MIT",
     "description": "Spthy grammar for tree-sitter",
     "links": {
-      "repository": "https://github.com/tamarin-prover/tamarin-prover/tree-sitter/tree-sitter-spthy"
+      "repository": "https://github.com/tamarin-prover/tamarin-prover/tree/develop/tree-sitter/tree-sitter-spthy"
     }
   },
   "bindings": {

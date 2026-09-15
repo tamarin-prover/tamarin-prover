@@ -25,7 +25,7 @@ where
 import Term.Maude.Signature
 import           Prelude
 import qualified Data.ByteString.Char8      as BC
-import           Data.Either
+import           Data.Either()
 -- import           Data.Monoid                hiding (Last)
 import qualified Data.Set                   as S
 import           Data.Maybe                 (fromMaybe)
@@ -50,6 +50,8 @@ import Data.Label.Total
 import Data.Label.Mono (Lens)
 import Theory.Sapic
 import qualified Data.Functor
+
+--import Debug.Trace
 
 
 
@@ -95,20 +97,36 @@ builtins thy0 =do
     setName thy name = modify thyItems (++ [TranslationItem (SignatureBuiltin name)]) thy
     setOption' thy (Nothing, name)  = setName thy name
     setOption' thy (Just l, name) = setOption l (setName thy name)
+    -- Check for conflicts between builtin functions and user defined functions, and fail with a helpful error message if any are found.
+    -- Otherwise, add the builtin signature to the state and add the reserved function names to the state.
     extendSig (name, Just msig, opt) = do
         _ <- symbol name
-        currSig <- sig <$> getState
+        st <- getState
         let builtinFuncs = S.toList $ stFunSyms msig
-        let existingFuncs = S.toList $ stFunSyms currSig
-        let conflicts = [ (fname, arity1, arity2)
-                        | (fname, arity1) <- builtinFuncs
-                        , (fname', arity2) <- existingFuncs
-                        , fname == fname'
-                        , arity1 /= arity2
-                        ]
-        unless (null conflicts) $ do
-            fail $ "Builtin '" ++ name ++ "' conflicts with existing function(s) (same name, different arity): " ++ 
-                  show [fname | (fname, _, _) <- conflicts] ++ ". Please remove these function definitions or use different names."
+        let macroSyms    = S.toList $ macroNames (sig st)
+        let macroFuncs   = S.fromList $ map (BC.unpack . fst) macroSyms
+        let currFuncs    = S.toList $ stFunSyms (sig st)
+
+        let functionConflicts = [ (BC.unpack fname, builtinArity, userArity)
+                                | (fname, builtinArity) <- builtinFuncs
+                                , (fname', userArity)   <- currFuncs
+                                , fname == fname'
+                                , userArity /= builtinArity
+                                ]
+
+        let macroConflicts = [ (BC.unpack fname, builtinArity, macroArity)
+                      | (fname, builtinArity) <- builtinFuncs
+                      , BC.unpack fname `S.member` macroFuncs
+                      , Just macroArity <- [lookup fname macroSyms]
+                      , macroArity /= builtinArity
+                      ]
+
+        unless (null functionConflicts || name == "dest-pairing") $ do
+            fail $ "Builtin '" ++ name ++ "' conflicts with existing function(s) (same name, different arity or function options): " ++ 
+                  show [fname | (fname, _, _) <- functionConflicts] ++ ". Please remove these function definitions or use different names."
+
+        unless (null macroConflicts) $ do
+            fail $ "Builtin '" ++ name ++ "' conflicts with existing macro '" ++ show [fname | (fname, _, _) <- macroConflicts] ++ "'"
         
         modifyStateSig (`mappend` msig)
         modifyState (\st -> st { reservedBuiltinNames = 
@@ -143,12 +161,14 @@ functionType = try (do
                     return (argTypes, outType)
                     )
 
--- | Parse a 'FunctionAttribute'.
-functionAttribute :: Parser (Either Privacy Constructability)
+functionAttribute :: Parser FctAttr
 functionAttribute = asum
-  [ symbol "private" Data.Functor.$> Left Private
-  , symbol "constructor" Data.Functor.$> Right Constructor
-  , symbol "destructor" Data.Functor.$> Right Destructor
+  [ symbol "private" Data.Functor.$> Privacy Private
+  , symbol "destructor" Data.Functor.$> Constructability Destructor
+  , symbol "constructor" Data.Functor.$> Constructability Constructor
+  , symbol "AC" Data.Functor.$> ACstate IsAC
+  , try (symbol "NDC-diff") Data.Functor.$> NDCstate IsNDCDiff
+  , symbol "NDC" Data.Functor.$> NDCstate IsNDC
   ]
 
 getReservedNames :: MaudeSig -> [String]
@@ -166,27 +186,43 @@ function = do
         (argTypes,outType) <- functionType
         atts <- option [] $ list functionAttribute
         st <- getState
-        let allReservedNames = reservedBuiltinNames st
-        when (BC.unpack f `elem` allReservedNames) $ do
-            let conflictingBuiltins = [b | (b, names) <- builtinReservedNames, 
-                                        BC.unpack f `elem` names]
-            fail $ "`" ++ BC.unpack f ++ "` is a reserved function name from " ++ 
-                   "the following builtins: " ++ show conflictingBuiltins
-        when (BC.unpack f `elem` reservedBuiltins) $ fail $ "`" ++ BC.unpack f ++ "` is a reserved function name for builtins."
         sign <- sig <$> getState
         let k = length argTypes
-        let priv = if Private `elem` lefts atts then Private else Public
-        let destr = if Destructor `elem` rights atts then Destructor else Constructor
+        let priv = if Privacy Private `elem` atts then Private else Public
+        let destr = if Constructability Destructor `elem` atts then Destructor else Constructor
+        let ac = if ACstate IsAC `elem` atts then IsAC else NotAC
+        -- The NDC attribute states the NDC property for the trace intruder rules, the NDC-diff
+        -- attribute for the diff intruder rules.
+        let ndc = joinNDC (if NDCstate IsNDC `elem` atts then IsNDC else NotNDC)
+                          (if NDCstate IsNDCDiff `elem` atts then IsNDCDiff else NotNDC)
+        let requested = (k, priv, destr, ndc)
+
+        -- Check specifically for conflicts with builtins to give a precise error message.
+        let allReservedNames = reservedBuiltinNames st
+        when (BC.unpack f `elem` allReservedNames) $ do
+          let conflictingBuiltins = [b | (b, names) <- builtinReservedNames, BC.unpack f `elem` names]
+          case lookup f (S.toList $ stFunSyms sign) of
+            Just builtinSig | builtinSig /= requested ->
+              fail $ "`" ++ BC.unpack f ++ "` conflicts with builtin(s) "
+                  ++ show conflictingBuiltins
+                  ++ " (builtin: " ++ show builtinSig ++ ", requested: " ++ show requested ++ ")"
+            _ -> return ()
+
+        -- Check for any conflict with existing functions.
         case lookup f (S.toList (stFunSyms sign) ++ S.toList(macroNames sign)) of
-          Just kp' | kp' /= (k,priv,destr) && BC.unpack f /= "fst" && BC.unpack f /= "snd" ->
-            fail $ "conflicting arities/private " ++
-                   show kp' ++ " and " ++ show (k,priv,destr) ++
-                   " for `" ++ BC.unpack f
+          Just kp' | kp' /= (k,priv,destr,ndc) && (BC.unpack f /= "fst" || k /= 1 || priv == Private) && (BC.unpack f /= "snd" || k /= 1 || priv == Private) ->
+            fail $ "conflicting arities/options " ++
+                   show kp' ++ " and " ++ show (k,priv,destr,ndc) ++
+                   " for `" ++ BC.unpack f ++ "`. Please choose a different name for this function."
           Just kp' | BC.unpack f == "fst" || BC.unpack f == "snd" -> do
-                return ((f,kp'),argTypes,outType)
-          _ -> do
-                modifyStateSig $ addFunSym (f,(k,priv,destr))
-                return ((f,(k,priv,destr)),argTypes,outType)
+                return (NoEqUser (f,kp'),argTypes,outType)
+          _ -> case ac of
+            IsAC -> if k /= 2 then fail "conflicting arity : AC function must be binary" else do
+                modifyStateSig $ addFunSym (ACfctUser (f,(priv,destr,ndc)))
+                return (ACfctUser (f,(priv,destr,ndc)),argTypes,outType)
+            NotAC -> do
+                modifyStateSig $ addFunSym (NoEqUser (f,(k,priv,destr,ndc)))
+                return (NoEqUser (f,(k,priv,destr,ndc)),argTypes,outType)
 
 
 functions :: Parser [SapicFunSym]
@@ -207,7 +243,7 @@ equations = do
     return ()
   where
     equation = do
-        rrule <- RRule <$> term llitNoPub True <*> (equalSign *> term llitNoPub True)
+        rrule <- RRule <$> acterm True llitNoPub <*> (equalSign *> acterm True llitNoPub)
         case rRuleToCtxtStRule rrule of
           Just str -> return str
           Nothing  -> fail $ "Not a correct equation: " ++ show rrule
@@ -217,20 +253,11 @@ options :: OpenTheory -> Parser OpenTheory
 options thy0 =do
             _  <- symbol "options"
             _  <- colon
-            l <- commaSep1 builtinTheory -- l is list of lenses to set options to true with
-                                         -- builtinTheory modifies signature in state.
-            return $ foldl setOption' thy0 l
+            ls <- commaSep1 optionName -- ls is the list of lenses to set to true
+            return $ foldl (flip setOption) thy0 ls
   where
-    setOption' thy Nothing  = thy
-    setOption' thy (Just l) = setOption l thy
-    builtinTheory = asum
-      [  try 
-         (symbol "translation-progress") Data.Functor.$> Just transProgress
-        , symbol "translation-allow-pattern-lookups" Data.Functor.$> Just transAllowPatternMatchinginLookup
-        , symbol "translation-state-optimisation" Data.Functor.$> Just stateChannelOpt
-        , symbol "translation-asynchronous-channels" Data.Functor.$> Just asynchronousChannels
-        , symbol "translation-compress-events" Data.Functor.$> Just compressEvents
-      ]
+    optionName = asum
+      [ symbol name Data.Functor.$> l | (name, l) <- declarableOptions ]
 
 predicate :: Parser Predicate
 predicate = do
@@ -253,7 +280,9 @@ export thy = do
                     _          <- try (symbol "export")
                     tag          <- identifier
                     _          <- colon
-                    text       <- doubleQuoted $ many bodyChar -- TODO Gotta use some kind of text.
+                    -- The opening quote must not be a lexeme: a lexeme would
+                    -- consume whitespace and comments that belong to the text.
+                    text       <- between (char '"') (symbol "\"") (many bodyChar)
                     let ei = ExportInfo tag text
                     return (addExportInfo ei thy)
                     <?> "export block"

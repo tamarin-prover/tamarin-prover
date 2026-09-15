@@ -69,7 +69,7 @@ rule Reveal_ltk:
 // ====================
 
 // 1.   A ->  B :   A, Na, B, Xa, {Ya}PK(B), {h(Na, B, Xa, {Ya}PK(B))}SK(A)
-rule A_send_1:
+rule A_send_1 [no_derivcheck]:
   let c  = aenc(~Ya, pk(~ltkB))
       m  = <~na, $B, ~xa, c>
       ha = h(m)
@@ -91,7 +91,7 @@ rule A_send_1:
 
 // 1.   A ->  B :   A, Na, B, Xa, {Ya}PK(B), {h(Na, B, Xa, {Ya}PK(B))}SK(A)
 // 2.   B ->  A :   B, Nb, A, Na, Xb, {Yb}PK(A), {h(B, Nb, A, Na, Xb, {Yb}PK(A))}SK(B)
-rule B_receive_1:
+rule B_receive_1 [no_derivcheck]:
   let c  = aenc(Ya,pk(~ltkB))
       m  = <na, $B, xa, c>
       ha = h(m)

@@ -77,11 +77,44 @@ Private functions can be used to model functions that implicitly use some secret
 that is shared between all (honest) users. To make a function private,
 simply add the attribute `[private]` after the function declaration. For example, the line
 
-    functions: f/3, g/2 [private], h/1
+    functions: f/3, g/2 [private], l/1
 
-defines the private function `g` and the public functions `f` and `h`.
+defines the private function `g` and the public functions `f` and `l`.
 We will describe in the next section how you can define equations that formalize
 properties of functions.
+
+Functions can be *associative and commutative* (AC), declared using the attribute `[AC]`:
+
+    functions: h/2 [AC]
+    
+In this case, `h` has the following properties:
+
+    h(x, h(y, z)) = h(h(x, y), z) (associativity)
+    h(x, y) = h(y, x) (commutativity)
+    
+Note that `AC` functions must necessarily be of arity 2, and can be written in infix 
+notation, for example, `h(x, y)` can be written as `x h y`.
+Function attributes can be combined, for example a function can be `AC` and `private`:
+
+    functions: k/2 [AC, private]
+
+A function can also have the *No Deconstruction Chain* (NDC) property (see [@DKK-csf26]
+for details). This property, which only depends on the functions and equational
+theory (and *not* the protocol model), allows Tamarin to eliminate certain branches
+in its internal reasoning. For all functions with non subterm-convergent equations,
+Tamarin automatically detects if a function has this property, and annotates such
+functions with the attribute `[NDC]` when exporting proofs.
+This avoids re-checking whether a function has the property when loading a file
+again. Functions can also be manually annotated, but note that incorrectly declaring
+a function to have the `NDC` property can lead to incorrect results.
+
+As the intruder rules can differ between trace and equivalence mode, Tamarin will do
+the same check in equivalence mode. If a function has the property in equivalence mode,
+it will be annotated with `[NDC-diff]`. Note that functions can be `NDC`, `NDC-diff`,
+or both.
+
+The automatic check whether functions have the `NDC` or `NDC-diff` property can be disabled using
+the `--no-ndc` flag in the command line.
 
 Equational theories {#sec:equational-theories}
 -------------------
@@ -98,16 +131,25 @@ used by Tamarin supports a certain class of user-defined equations, namely
 *convergent* equational theories that have the *finite variant property*
 [@Comon-LundhD05]. Note that Tamarin does *not* check whether the given equations
 belong to this class, so writing equations outside this class can cause
-non-termination or incorrect results *without any warning*.
+*non-termination or incorrect results*.
 
 Also note that Tamarin's reasoning is particularly efficient when considering only
-subterm-convergent equations, i.e., if the right-hand-side is either a ground
+*subterm-convergent* equations, i.e., if the right-hand-side is either a ground
 term (i.e., it does not contain any variables) or a proper subterm of the
 left-hand-side. These equations are thus preferred if they are sufficient to model
-the required properties. However, for example the equations modeled by the
-built-in message theories `diffie-hellman`, `bilinear-pairing`, `xor`, and `multiset`
-do not belong to this restricted class since they include for example
-associativity and commutativity. All other built-in message theories can
+the required properties, as moreover they have the finite variant 
+property and are convergent. Tamarin issues a warning if the equational theory is 
+*not* subterm-convergent to remind users that one needs to guarantee convergence 
+and the finite variant property in this case.
+
+Note that associativity and commutativity need to be specified by annotating the 
+concerned functions (see above) rather than by writing the corresponding equations.
+
+Some built-in message theories such as `diffie-hellman`, `bilinear-pairing`, 
+and `natural-numbers` include special features or optimizations, and cannot be 
+equivalently defined using functions and equations. For other theories such as 
+`xor` and  `multiset` it is often simpler to use the built-in to avoid 
+specification errors. All other built-in message theories can
 be equivalently defined by using `functions: ...` and `equations: ...`
 and we will see some examples of allowed equations in the next
 section.

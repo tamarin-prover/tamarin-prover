@@ -20041,9 +20041,9 @@ rule (modulo E) p_0_11111111[color=#ffffff, process="|", issapicrule,
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) create_0_111111111[color=#ffffff, process="create()",
+rule (modulo E) create_0_111111111[color=#ffffff, process="create();",
                                    issapicrule, role='Process']:
-   [ State_111111111( ) ] --> [ State_1111111111( ), State_1111111112( ) ]
+   [ State_111111111( ) ] --> [ State_1111111111( ) ]
 
   /* has exactly the trivial AC variant */
 
@@ -20818,15 +20818,9 @@ rule (modulo E) p_0_111111111111112[color=#638040, process="0",
      [ State_111111111111112( lock, L_h, atts, k, ptr ) ] --> [ ]
   */
 
-rule (modulo E) p_0_1111111112[color=#ffffff, process="0", issapicrule,
-                               role='Process']:
-   [ State_1111111112( ) ] --> [ ]
-
-  /* has exactly the trivial AC variant */
-
-rule (modulo E) decrypt_0_111111112[color=#ffffff, process="decrypt()",
+rule (modulo E) decrypt_0_111111112[color=#ffffff, process="decrypt();",
                                     issapicrule, role='Process']:
-   [ State_111111112( ) ] --> [ State_1111111121( ), State_1111111122( ) ]
+   [ State_111111112( ) ] --> [ State_1111111121( ) ]
 
   /* has exactly the trivial AC variant */
 
@@ -21130,15 +21124,9 @@ rule (modulo E) p_0_1111111121112[color=#414080, process="0",
      [ State_1111111121112( lock, m, L_h, k ) ] --> [ ]
   */
 
-rule (modulo E) p_0_1111111122[color=#ffffff, process="0", issapicrule,
-                               role='Process']:
-   [ State_1111111122( ) ] --> [ ]
-
-  /* has exactly the trivial AC variant */
-
-rule (modulo E) encrypt_0_11111112[color=#ffffff, process="encrypt()",
+rule (modulo E) encrypt_0_11111112[color=#ffffff, process="encrypt();",
                                    issapicrule, role='Process']:
-   [ State_11111112( ) ] --> [ State_111111121( ), State_111111122( ) ]
+   [ State_11111112( ) ] --> [ State_111111121( ) ]
 
   /* has exactly the trivial AC variant */
 
@@ -21406,15 +21394,9 @@ rule (modulo E) p_0_111111121112[color=#408075, process="0", issapicrule,
      [ State_111111121112( lock, m, L_h ) ] --> [ ]
   */
 
-rule (modulo E) p_0_111111122[color=#ffffff, process="0", issapicrule,
-                              role='Process']:
-   [ State_111111122( ) ] --> [ ]
-
-  /* has exactly the trivial AC variant */
-
-rule (modulo E) wrap_0_1111112[color=#ffffff, process="wrap()",
+rule (modulo E) wrap_0_1111112[color=#ffffff, process="wrap();",
                                issapicrule, role='Process']:
-   [ State_1111112( ) ] --> [ State_11111121( ), State_11111122( ) ]
+   [ State_1111112( ) ] --> [ State_11111121( ) ]
 
   /* has exactly the trivial AC variant */
 
@@ -22556,15 +22538,9 @@ rule (modulo E) p_0_11111121112[color=#806040, process="0", issapicrule,
      [ State_11111121112( h1, h2, lock ) ] --> [ ]
   */
 
-rule (modulo E) p_0_11111122[color=#ffffff, process="0", issapicrule,
-                             role='Process']:
-   [ State_11111122( ) ] --> [ ]
-
-  /* has exactly the trivial AC variant */
-
-rule (modulo E) unwrap_0_111112[color=#ffffff, process="unwrap()",
+rule (modulo E) unwrap_0_111112[color=#ffffff, process="unwrap();",
                                 issapicrule, role='Process']:
-   [ State_111112( ) ] --> [ State_1111121( ), State_1111122( ) ]
+   [ State_111112( ) ] --> [ State_1111121( ) ]
 
   /* has exactly the trivial AC variant */
 
@@ -23603,15 +23579,9 @@ rule (modulo E) p_0_1111121112[color=#7e8040, process="0", issapicrule,
      [ State_1111121112( atts, k, m, L_h, lock ) ] --> [ ]
   */
 
-rule (modulo E) p_0_1111122[color=#ffffff, process="0", issapicrule,
-                            role='Process']:
-   [ State_1111122( ) ] --> [ ]
-
-  /* has exactly the trivial AC variant */
-
 rule (modulo E) getkeyvalue_0_11112[color=#ffffff,
-                                    process="get_keyvalue()", issapicrule, role='Process']:
-   [ State_11112( ) ] --> [ State_111121( ), State_111122( ) ]
+                                    process="get_keyvalue();", issapicrule, role='Process']:
+   [ State_11112( ) ] --> [ State_111121( ) ]
 
   /* has exactly the trivial AC variant */
 
@@ -23871,12 +23841,6 @@ rule (modulo E) p_0_111121112[color=#805640, process="0", issapicrule,
                                  role='get_keyvalue']:
      [ State_111121112( L_h, lock ) ] --> [ ]
   */
-
-rule (modulo E) p_0_111122[color=#ffffff, process="0", issapicrule,
-                           role='Process']:
-   [ State_111122( ) ] --> [ ]
-
-  /* has exactly the trivial AC variant */
 
 restriction set_in:
   "∀ x y #t3.
@@ -24138,19 +24102,14 @@ restriction locking_5:
      (#t1 = #t3))"
   */
 
-/*
-WARNING: the following wellformedness checks failed!
-
-Wellformedness-error in Process
-  There is an unlock that cannot be matched with a lock.
-*/
+/* All wellformedness checks were successful. */
 
 /*
 Generated from:
-Tamarin version 1.12.0
+Tamarin version 1.13.0
 Maude version 3.5.1
-Git revision: f1832c9bc70a2a165991a0802520f2e07c023227 (with uncommited changes), branch: prepare-release
-Compiled at: 2026-03-06 22:21:49.602637 UTC
+Git revision: 41bc81379b23681e7057314a5cf66a25c45e1986, branch: canonicalise-subst
+Compiled at: 2026-07-27 16:11:34.947223 UTC
 */
 
 end
@@ -24162,10 +24121,7 @@ summary of summaries:
 analyzed: examples/sapic/slow/PKCS11/pkcs11-templates.spthy
 
   output:          examples/sapic/slow/PKCS11/pkcs11-templates.spthy.tmp
-  processing time: 97.37s
-  
-  WARNING: 1 wellformedness check failed!
-           The analysis results might be wrong!
+  processing time: 73.34s
   
   dec_limits (all-traces): verified (1402 steps)
   bad_keys (all-traces): verified (318 steps)

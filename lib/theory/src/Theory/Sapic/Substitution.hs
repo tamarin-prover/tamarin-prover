@@ -74,9 +74,8 @@ applyMProcessParsedAnnotation ::
 --     MonadThrow m) =>
 --     Map.Map SapicLVar (VTerm c SapicLVar)
 --     -> ProcessParsedAnnotation -> m ProcessParsedAnnotation
-applyMProcessParsedAnnotation subst ann = do
-        loc <- mapM (applyM subst) (location ann)
-        return ann {location = loc
+applyMProcessParsedAnnotation subst ann =
+        return ann {location = fmap (apply subst) (location ann)
                     -- , backSubstitution = undefined 
                     -- WARNING: we do not apply the substitution to the back
                     -- translation, as this is not always possible. If variables

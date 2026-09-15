@@ -36,7 +36,7 @@ setup(
             sources=[
                 "bindings/python/tree_sitter_spthy/binding.c",
                 "src/parser.c",
-                # NOTE: if your language uses an external scanner, add it here.
+                "src/scanner.c",
             ],
             extra_compile_args=[
                 "-std=c11",

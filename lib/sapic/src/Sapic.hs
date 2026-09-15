@@ -128,7 +128,9 @@ gen (trans_null, trans_action, trans_comb) anP p tildex = do
     ProcessComb c ann _ _ -> do
       (msrs, tildex'1, tildex'2) <- catch (trans_comb c ann p tildex) (handler proc')
       msrs_l <- gen trans anP (p++[1]) tildex'1
-      msrs_r <- gen trans anP (p++[2]) tildex'2
+      msrs_r <- maybe (return [])
+                    (gen trans anP (p++[2]))
+                    tildex'2
       return $ mapToAnnotatedRule proc' msrs ++ msrs_l ++ msrs_r
     ProcessAction ac ann _ -> do
       (msrs, tildex') <- catch (trans_action ac ann p tildex) (handler proc')

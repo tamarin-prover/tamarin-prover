@@ -4,8 +4,7 @@
 //! tree-sitter [Parser][], and then use the parser to parse some code:
 //!
 //! ```
-//! let code = r#"
-//! "#;
+//! let code = "theory Example\nbegin\nrule Empty: [] --> [Out(<>) ]\nend";
 //! let mut parser = tree_sitter::Parser::new();
 //! let language = tree_sitter_spthy::LANGUAGE;
 //! parser
@@ -44,10 +43,18 @@ pub const NODE_TYPES: &str = include_str!("../../src/node-types.json");
 #[cfg(test)]
 mod tests {
     #[test]
-    fn test_can_load_grammar() {
+    fn test_can_parse_grammar() {
         let mut parser = tree_sitter::Parser::new();
         parser
             .set_language(&super::LANGUAGE.into())
             .expect("Error loading Spthy parser");
+
+        let source = "theory Example\nbegin\n/* scanner comment */\nrule Empty: [] --> [Out(<>) ]\nend";
+        let tree = parser.parse(source, None).expect("Error parsing Spthy");
+        assert!(
+            !tree.root_node().has_error(),
+            "Unexpected parse errors: {}",
+            tree.root_node().to_sexp()
+        );
     }
 }

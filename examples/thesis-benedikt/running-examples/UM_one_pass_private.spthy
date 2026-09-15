@@ -27,7 +27,7 @@ rule Generate_key:
   --[ ]-> 
   [ !Ltk( $A, ~ea ), !Pk( $A, pkA ), Out( pkA ) ]
 
-rule Initiator:
+rule Initiator [no_derivcheck]:
   let pB = 'g'^~eb
       X  = 'g'^~ex
       sid = <$A, $B, X, 'I'>
@@ -37,7 +37,7 @@ rule Initiator:
   --[ Accept( sid, key ) ]->
   [ PChan( X ), !Ephk( sid, ~ex ) ]
 
-rule Responder:
+rule Responder [no_derivcheck]:
   let pA  = 'g'^~ea
       sid = <$B, $A, X, 'R'>
       key  = h(X^~eb, pA^~eb, $A, $B, X)

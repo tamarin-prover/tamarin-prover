@@ -40,7 +40,7 @@ rule (modulo E) Reveal_ephmeral_key:
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) Init_1:
+rule (modulo E) Init_1[no_derivcheck]:
    [ Fr( ~ex ), !LTK( $A, pmult(~s, hp($A)) ) ]
   -->
    [
@@ -49,7 +49,7 @@ rule (modulo E) Init_1:
    ]
 
   /*
-  rule (modulo AC) Init_1:
+  rule (modulo AC) Init_1[no_derivcheck]:
      [ Fr( ~ex ), !LTK( $A, pmult(~s, hp($A)) ) ]
     -->
      [
@@ -103,7 +103,7 @@ rule (modulo E) Init_2:
        z     = DH_neutral
   */
 
-rule (modulo E) Resp_1:
+rule (modulo E) Resp_1[no_derivcheck]:
    [ Fr( ~ey ), !LTK( $B, pmult(~s, hp($B)) ), In( X ) ]
   --[
   Accept( ~ey, $B, $A,
@@ -120,7 +120,7 @@ rule (modulo E) Resp_1:
    ]
 
   /*
-  rule (modulo AC) Resp_1:
+  rule (modulo AC) Resp_1[no_derivcheck]:
      [ Fr( ~ey ), !LTK( $B, pmult(~x, hp($B)) ), In( X ) ]
     --[
     Accept( ~ey, $B, $A, kdf(<z, $A, $B, X, em(hp($A), hp($B))^(~ey*~x)>) ),
@@ -261,10 +261,10 @@ qed
 
 /*
 Generated from:
-Tamarin version 1.12.0
+Tamarin version 1.13.0
 Maude version 3.5.1
-Git revision: f1832c9bc70a2a165991a0802520f2e07c023227 (with uncommited changes), branch: prepare-release
-Compiled at: 2026-03-06 22:21:49.602637 UTC
+Git revision: 41bc81379b23681e7057314a5cf66a25c45e1986, branch: canonicalise-subst
+Compiled at: 2026-07-27 16:11:34.947223 UTC
 */
 
 end
@@ -276,7 +276,7 @@ summary of summaries:
 analyzed: examples/ake/bilinear/Scott_EphkRev.spthy
 
   output:          examples/ake/bilinear/Scott_EphkRev.spthy.tmp
-  processing time: 7.96s
+  processing time: 4.30s
   
   key_agreement_reachable (exists-trace): verified (12 steps)
   key_secrecy (all-traces): falsified - found trace (8 steps)

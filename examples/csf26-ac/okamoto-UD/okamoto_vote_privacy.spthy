@@ -1,0 +1,149 @@
+theory Okamoto_Vote_Privacy begin
+
+// Function signature and definition of the equational theory E
+
+functions: blind/2, checksign/2, f/4, fst/1, open/2, pair/2, pk/1,
+           sign/2, snd/1, tdcommit/3, unblind/2, add/2 [AC],
+           unionUD/1 [destructor]
+equations:
+    checksign(sign(m, sk), pk(sk)) = m,
+    f(m1, f(m, r, td, m1), td, m2) = f(m, r, td, m2),
+    fst(<x.1, x.2>) = x.1,
+    open(tdcommit(m, r, td), r) = m,
+    open(tdcommit(m1, r, td), f(m1, r, td, m2)) = m2,
+    snd(<x.1, x.2>) = x.2,
+    tdcommit(m2, f(m1, r, td, m2), td) = tdcommit(m1, r, td),
+    unblind(blind(m, b), b) = m,
+    unblind(sign(blind(m, b), sk), b) = sign(m, sk),
+    unionUD(add(x, y)) = x
+
+
+
+
+
+
+
+rule (modulo E) Register_Voter_pk1:
+   [ Fr( ~ltkV ) ]
+  -->
+   [ !Ltk( 'v1', ~ltkV ), !Pk( 'v1', pk(~ltkV) ), Out( pk(~ltkV) ) ]
+
+rule (modulo E) Register_Voter_pk2:
+   [ Fr( ~ltkV ) ]
+  -->
+   [ !Ltk( 'v2', ~ltkV ), !Pk( 'v2', pk(~ltkV) ), Out( pk(~ltkV) ) ]
+
+rule (modulo E) Register_Admin_pk:
+   [ Fr( ~ltkA ) ]
+  -->
+   [ !AdminLtk( $A, ~ltkA ), !AdminPk( $A, pk(~ltkA) ), Out( ~ltkA ) ]
+
+rule (modulo E) setup:
+   [ ]
+  --[ OnlyOnce( ) ]->
+   [
+   Vote( 'v1', diff($candA, $candB) ),
+   Vote( 'v2', diff($candB, $candA) )
+   ]
+
+rule (modulo E) V_1:
+   [ Fr( ~r ), Fr( ~b ), Fr( ~td ), Vote( V, $vote ), !Ltk( V, ~ltkV )
+   ]
+  --[ V_1( V ) ]->
+   [
+   Out( <blind(tdcommit($vote, ~r, ~td), ~b), 
+         sign(blind(tdcommit($vote, ~r, ~td), ~b), ~ltkV)>
+   ),
+   St_V_1( V, $vote, ~r, ~b, ~td )
+   ]
+
+rule (modulo E) V_2:
+   [
+   In( <blind(tdcommit($vote, ~r, ~td), ~b), 
+        sign(blind(tdcommit($vote, ~r, ~td), ~b), ~ltkA)>
+   ),
+   St_V_1( V, $vote, ~r, ~b, ~td ), !AdminPk( A, pk(~ltkA) )
+   ]
+  --[ V_2( ) ]->
+   [ St_V_sync( V, pk(~ltkA), $vote, ~r, ~td ) ]
+
+rule (modulo E) V_2_sync:
+   [
+   St_V_sync( 'v1', pkA, $vote1, ~r1, ~td1 ),
+   St_V_sync( 'v2', pkA, $vote2, ~r2, ~td2 )
+   ]
+  --[ V_2_sync( ) ]->
+   [
+   St_V_3( 'v1', pkA, $vote1, ~r1, ~td1 ),
+   St_V_3( 'v2', pkA, $vote2, ~r2, ~td2 )
+   ]
+
+rule (modulo E) V_3:
+   [ St_V_3( V, pk(~ltkA), $vote, ~r, ~td ), !AdminPk( A, pk(~ltkA) )
+   ]
+  --[ V_3( ) ]->
+   [
+   Out( <tdcommit($vote, ~r, ~td), 
+         sign(tdcommit($vote, ~r, ~td), ~ltkA)>
+   ),
+   P_Ch_Timeliness( $vote, ~r, tdcommit($vote, ~r, ~td) )
+   ]
+
+rule (modulo E) T_1_sync:
+   [
+   P_Ch_Timeliness( $vote1, ~r1, x1 ),
+   P_Ch_Timeliness( $vote2, ~r2, x2 ), Fr( fr )
+   ]
+  --[ T_1_sync( ) ]->
+   [ Select_vote( add($vote1, $vote2, fr) ) ]
+
+rule (modulo E) select_vote:
+   [ Select_vote( add($v, z) ) ]
+  --[ Select_vote( add($v, z) ) ]->
+   [ Out( $v ), Select_vote( z ) ]
+
+restriction onlyOnce [right]:
+  "∀ #i #j. ((OnlyOnce( ) @ #i) ∧ (OnlyOnce( ) @ #j)) ⇒ (#i = #j)"
+  // safety formula
+
+restriction onlyOnce [left]:
+  "∀ #i #j. ((OnlyOnce( ) @ #i) ∧ (OnlyOnce( ) @ #j)) ⇒ (#i = #j)"
+  // safety formula
+
+restriction select_limited_votes [right]:
+  "∀ a b c d #i. (Select_vote( add(a, b, c, d) ) @ #i) ⇒ (⊥)"
+  // safety formula
+
+restriction select_limited_votes [left]:
+  "∀ a b c d #i. (Select_vote( add(a, b, c, d) ) @ #i) ⇒ (⊥)"
+  // safety formula
+
+lemma exec [right]:
+  exists-trace
+  "∃ x y #i #j.
+    ((Select_vote( add(x, y) ) @ #i) ∧ (Select_vote( x ) @ #j)) ∧
+    (¬(#i = #j))"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ x y #i #j.
+  (Select_vote( add(x, y) ) @ #i) ∧ (Select_vote( x ) @ #j)
+ ∧
+  ¬(#i = #j)"
+*/
+by sorry
+
+lemma exec [left]:
+  exists-trace
+  "∃ x y #i #j.
+    ((Select_vote( add(x, y) ) @ #i) ∧ (Select_vote( x ) @ #j)) ∧
+    (¬(#i = #j))"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ x y #i #j.
+  (Select_vote( add(x, y) ) @ #i) ∧ (Select_vote( x ) @ #j)
+ ∧
+  ¬(#i = #j)"
+*/
+by sorry
+
+end

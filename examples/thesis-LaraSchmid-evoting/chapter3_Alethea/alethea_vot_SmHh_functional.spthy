@@ -79,7 +79,7 @@ rule (modulo E) H_1:
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) D_1:
+rule (modulo E) D_1 [no_derivcheck]:
    [
    AgSt_D0( $D, <$H, $S, pkS, h(<$H, ~x>)> ), In_S( $H, $D, v ),
    Fr( ~r )
@@ -120,7 +120,7 @@ rule (modulo E) BB:
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) A_1:
+rule (modulo E) A_1 [no_derivcheck]:
    [
    AgSt_A0( $A, <$S, $BB, pkS> ),
    In_A( $BB, <'b', (sg(bPrimea, sskDa)+sg(bPrimeb, sskDb))> ),

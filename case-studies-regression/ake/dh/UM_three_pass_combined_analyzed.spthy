@@ -31,7 +31,7 @@ rule (modulo E) I_Activate:
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) I_Complete:
+rule (modulo E) I_Complete[no_derivcheck]:
    [
    I_Act( ~ex, $A, $B ),
    In( <Y, 
@@ -105,7 +105,7 @@ rule (modulo E) I_Complete:
    ]
 
   /*
-  rule (modulo AC) I_Complete:
+  rule (modulo AC) I_Complete[no_derivcheck]:
      [
      I_Act( ~ex, $A, $B ),
      In( <Y, 
@@ -211,7 +211,7 @@ rule (modulo E) I_Expire:
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) R_Activate:
+rule (modulo E) R_Activate[no_derivcheck]:
    [ Fr( ~ey ), In( X ), !Ltk( $B, ~eb ), !Pk( $A, 'g'^~ea ) ]
   --[
   Activate( <'UM3', $B, $A, 
@@ -254,7 +254,7 @@ rule (modulo E) R_Activate:
    ]
 
   /*
-  rule (modulo AC) R_Activate:
+  rule (modulo AC) R_Activate[no_derivcheck]:
      [ Fr( ~ey ), In( X ), !Ltk( $B, ~eb ), !Pk( $A, 'g'^~x ) ]
     --[
     Activate( <'UM3', $B, $A, 
@@ -308,7 +308,7 @@ rule (modulo E) R_Activate:
        z     = DH_neutral
   */
 
-rule (modulo E) R_Complete:
+rule (modulo E) R_Complete[no_derivcheck]:
    [
    R_Act( ~ey, $B, $A, X ),
    In( MAC(first(h(<X^~ey, 'g'^~ea^~eb, $A, $B, X, 'g'^~ey>)),
@@ -385,7 +385,7 @@ rule (modulo E) R_Complete:
    ]
 
   /*
-  rule (modulo AC) R_Complete:
+  rule (modulo AC) R_Complete[no_derivcheck]:
      [
      R_Act( ~ey, $B, $A, X ),
      In( MAC(first(h(<z, 'g'^(~eb*~x), $A, $B, X, 'g'^~ey>)),
@@ -501,7 +501,7 @@ rule (modulo E) UM1_I_Activate:
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) UM1_I_Complete:
+rule (modulo E) UM1_I_Complete[no_derivcheck]:
    [ UM1_I_Act( ~ex, $A, $B ), !Ltk( $A, ~ea ), !Pk( $B, 'g'^~eb ) ]
   --[
   UM1_Complete( <$A, $B, 'g'^~ex>, 'I',
@@ -516,7 +516,7 @@ rule (modulo E) UM1_I_Complete:
    ]
 
   /*
-  rule (modulo AC) UM1_I_Complete:
+  rule (modulo AC) UM1_I_Complete[no_derivcheck]:
      [ UM1_I_Act( ~ex, $A, $B ), !Ltk( $A, ~ea ), !Pk( $B, 'g'^~eb ) ]
     --[
     UM1_Complete( <$A, $B, 'g'^~ex>, 'I',
@@ -536,7 +536,7 @@ rule (modulo E) UM1_I_Expire:
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) UM1_R_Complete:
+rule (modulo E) UM1_R_Complete[no_derivcheck]:
    [ In( X ), !Ltk( $B, ~eb ), !Pk( $A, 'g'^~ea ) ]
   --[
   UM1_Activate( <$B, $A, X> ),
@@ -551,7 +551,7 @@ rule (modulo E) UM1_R_Complete:
    ]
 
   /*
-  rule (modulo AC) UM1_R_Complete:
+  rule (modulo AC) UM1_R_Complete[no_derivcheck]:
      [ In( X ), !Ltk( $B, ~eb ), !Pk( $A, 'g'^~x ) ]
     --[
     UM1_Activate( <$B, $A, X> ),
@@ -850,10 +850,10 @@ qed
 
 /*
 Generated from:
-Tamarin version 1.12.0
+Tamarin version 1.13.0
 Maude version 3.5.1
-Git revision: f1832c9bc70a2a165991a0802520f2e07c023227 (with uncommited changes), branch: prepare-release
-Compiled at: 2026-03-06 22:21:49.602637 UTC
+Git revision: 41bc81379b23681e7057314a5cf66a25c45e1986, branch: canonicalise-subst
+Compiled at: 2026-07-27 16:11:34.947223 UTC
 */
 
 end
@@ -865,7 +865,7 @@ summary of summaries:
 analyzed: examples/ake/dh/UM_three_pass_combined.spthy
 
   output:          examples/ake/dh/UM_three_pass_combined.spthy.tmp
-  processing time: 8.55s
+  processing time: 7.71s
   
   key_agreement_reachable (exists-trace): verified (14 steps)
   CK_secure_UM3 (all-traces): falsified - found trace (13 steps)

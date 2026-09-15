@@ -28,11 +28,13 @@ import           Data.Foldable
 -- import           Data.Monoid                hiding (Last)
 import qualified Data.Text                  as T
 import qualified Data.Text.Encoding         as TE
+import qualified Data.Set                   as S
 import           Data.Color
 import           Control.Applicative        hiding (empty, many, optional)
 import           Control.Category
 import           Control.Monad
 import           Text.Parsec                hiding ((<|>))
+import           Text.Read                  (readMaybe)
 import           Term.Substitution
 import           Theory
 import           Theory.Text.Parser.Token
@@ -154,19 +156,41 @@ protoRuleAC = do
 -- | Parse an intruder rule.
 intrRule :: Parser IntrRuleAC
 intrRule = do
-    info <- try (symbol "rule" *> moduloAC *> intrInfo <* colon)
+    (name, info)  <- try (symbol "rule" *> moduloAC *> intrInfo <* colon)
     (ps,as,cs,[]) <- genericRule msgvar nodevar -- intruder rules should not introduce restrictions.
     return $ Rule info ps cs as (newVariables ps cs)
   where
     intrInfo = do
-        name     <- identifier
-        limit    <- option 0 natural
--- FIXME: Parse whether we have a subterm rule or a constant rule
---        Currently we (wrongly) always assume that we have a subterm rule, this prohibits recomputing variants
+        name  <- identifier
+        limit <- option 0 natural
+        msig  <- sig <$> getState
+        let knownFuns = S.toList (funSyms msig)
+        -- FIXME: Parse whether we have a subterm rule or a constant rule
+        --        Currently we (wrongly) always assume that we have a subterm rule, this prohibits recomputing variants
         case name of
-          'c':cname -> return $ ConstrRule (BC.pack cname)
-          'd':dname -> return $ DestrRule (BC.pack dname) (fromIntegral limit) True False
-          _         -> fail $ "invalid intruder rule name '" ++ name ++ "'"
+          'c':cname -> return (cname, ConstrRule (BC.pack cname) (lookupFun knownFuns $ tail cname))
+          'd':dname -> return (dname, DestrRule (BC.pack dname) (fromIntegral limit) True False (map (lookupFun knownFuns) (constrNameFunc dname)))
+
+    lookupFun :: [FunSym] -> String -> FunSym
+    lookupFun knownFuns f = case find ((== f) . showFunSymName) knownFuns of
+        Just fun -> fun
+        Nothing  -> error $ "Failed parsing intruder rule name: no function named '" ++ f ++ "' found in the signature: " ++ show knownFuns
+
+    constrNameFunc :: String -> [String]
+    constrNameFunc name = case names of
+        [] -> error "Failed parsing intruder rule name: empty name"
+        _  -> names
+        where
+            names = supprPos (name_decompose name)
+            -- FIXME : there can be underscores in the name of a function
+            name_decompose = map T.unpack . tail . T.split (=='_') . T.pack
+
+            -- remove position information from the deconstruction rule name
+            supprPos :: [String] -> [String]
+            supprPos (n1:nq) = case readMaybe n1 :: Maybe Int of
+                Just _ -> supprPos nq
+                Nothing -> n1:nq
+            supprPos [] = []
 
 embeddedRestriction :: Parser a -> Parser a
 embeddedRestriction factParser = symbol "_restrict" *> parens factParser <?> "restriction"

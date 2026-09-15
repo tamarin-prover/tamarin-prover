@@ -1,0 +1,329 @@
+theory alethea_selectionphase_malS begin
+
+// Function signature and definition of the equational theory E
+
+functions: adec/2, aenc/2, fst/1, h/1, pair/2, pk/1, sdec/2,
+           senc/2, sign/2, snd/1, true/0, verify/3, add/2 [AC],
+           unionUD/1 [destructor]
+equations:
+    adec(aenc(x.1, pk(x.2)), x.2) = x.1,
+    fst(<x.1, x.2>) = x.1,
+    sdec(senc(x.1, x.2), x.2) = x.1,
+    snd(<x.1, x.2>) = x.2,
+    verify(sign(x.1, x.2), x.1, pk(x.2)) = true,
+    unionUD(add(x, y)) = x
+
+
+
+
+
+
+
+rule (modulo E) ChanOut_S:
+   [ Out_S( $A, $B, x ) ]
+  --[ ChanOut_S( $A, $B, x ) ]->
+   [ !Sec( $A, $B, x ) ]
+
+rule (modulo E) ChanIn_S:
+   [ !Sec( $A, $B, x ) ]
+  --[ ChanIn_S( $A, $B, x ) ]->
+   [ In_S( $A, $B, x ) ]
+
+rule (modulo E) ChanOut_A:
+   [ Out_A( $A, x ) ]
+  --[ ChanOut_A( $A, x ) ]->
+   [ !Auth( $A, x ), Out( <$A, x> ) ]
+
+rule (modulo E) ChanIn_A:
+   [ !Auth( $A, x ) ] --[ ChanIn_A( $A, x ) ]-> [ In_A( $A, x ) ]
+
+rule (modulo E) publickeyinfrastructure:
+   [ Fr( ~skX ) ]
+  --[ LongtermKey( $X, ~skX ) ]->
+   [ !Ltk( $X, ~skX ), !Pk( $X, pk(~skX) ), Out( pk(~skX) ) ]
+
+rule (modulo E) Setup:
+   [ Fr( ~x1 ), Fr( ~x2 ), !Ltk( 'D1', ~skD1 ), !Ltk( 'D2', ~skD2 ) ]
+  --[ Setup( ), H_x_no( 'H1', ~x1, '1' ), H_x_no( 'H2', ~x2, '2' )
+  ]->
+   [
+   AgSt_D0( 'D1', <~skD1, 'S', 'H1'> ),
+   AgSt_D0( 'D2', <~skD2, 'S', 'H2'> ),
+   Out( <'S', 'BB', 'E', 
+         add(<'H1', 'D1', pk(~skD1), ~x1, '1'>,
+             <'H2', 'D2', pk(~skD2), ~x2, '2'>)
+        >
+   ),
+   AgSt_H0( 'H1', <'D1', 'S', 'BB'> ),
+   AgSt_H0( 'H2', <'D2', 'S', 'BB'> ),
+   AgSt_A0( 'A', <'S', 'BB', 'E'> ), Env( 'E' ), AgSt_BB0( 'BB', 'S' )
+   ]
+
+rule (modulo E) BB_2:
+   [ AgSt_BB0( $BB, $S ), In( <$S, 'ys', add(<y1, no1>, <y2, no2>)> )
+   ]
+  --[ BB_Ys( $BB, 'ys', add(<y1, no1>, <y2, no2>) ) ]->
+   [
+   AgSt_BB2( $BB, <$S, 'ys', add(<y1, no1>, <y2, no2>)> ),
+   Out_A( $BB, <'ys', add(<y1, no1>, <y2, no2>)> ), YPublished( )
+   ]
+
+rule (modulo E) A_3:
+   [
+   AgSt_A0( $A, <$S, $BB, $E> ),
+   In_A( $BB, <'ys', add(<y1, no1>, <y2, no2>)> )
+   ]
+  --[ Learn_A_Ys( $A, $S, <'ys', add(<y1, no1>, <y2, no2>)> ) ]->
+   [ AgSt_A3( $A, <$S, $BB, $E, 'ys', add(<y1, no1>, <y2, no2>)> ) ]
+
+rule (modulo E) D_4:
+   [ AgSt_D0( $D, <~skD, $S, $H> ), In( <$S, aenc(x, pk(~skD))> ) ]
+  --[ Comm_D_Y( $D, h(<$H, x>) ), Commit( $D, $S, $H, x ) ]->
+   [ Out_S( $D, $H, h(<$H, x>) ) ]
+
+rule (modulo E) H_5:
+   [
+   AgSt_H0( $H, <$D, $S, $BB> ), In_S( $D, $H, yD ),
+   In_A( $BB, <'ys', add(<y1, no1>, <y2, no2>)> )
+   ]
+  --[
+  Learn_H_yD( $H, $D, yD ),
+  Learn_H_Ys( $H, $S, <'ys', add(<y1, no1>, <y2, no2>)> )
+  ]->
+   [ AgSt_H5( $H, <$D, $S, $BB, yD, y1, y2> ) ]
+
+rule (modulo E) environment_1:
+   [ Env( $E ), YPublished( ) ]
+  --[ Env_No( $E, '1' ) ]->
+   [ Out_A( $E, '1' ) ]
+
+rule (modulo E) environment_2:
+   [ Env( $E ), YPublished( ) ]
+  --[ Env_No( $E, '2' ) ]->
+   [ Out_A( $E, '2' ) ]
+
+rule (modulo E) BB_8:
+   [
+   AgSt_BB2( $BB, <$S, 'ys', add(<y1, no1>, <y2, no2>)> ),
+   In( <$S, 'ySG', ySG> )
+   ]
+  --[ BB_YSG( $BB, <'ySG', ySG> ) ]->
+   [ Out_A( $BB, <'ySG', ySG> ) ]
+
+rule (modulo E) H_9:
+   [
+   AgSt_H5( $H, <$D, $S, $BB, yD, y1, y2> ), In_A( $BB, <'ySG', ySG> )
+   ]
+  --[ Learn_H_ySG( $H, $S, <'ySG', ySG> ) ]->
+   [ ]
+
+rule (modulo E) A_9:
+   [
+   AgSt_A3( $A, <$S, $BB, $E, 'ys', add(<y1, no1>, <y2, no2>)> ),
+   In_A( $E, noSel ), In_A( $BB, <'ySG', ySG> )
+   ]
+  --[ Learn_A_noSel( $A, $E, noSel ), Learn_A_ySG( $A, $S, ySG ) ]->
+   [ ]
+
+restriction OneSetup:
+  "∀ #i #j. ((Setup( ) @ #i) ∧ (Setup( ) @ #j)) ⇒ (#i = #j)"
+  // safety formula
+
+lemma functional_env1:
+  exists-trace
+  "(∀ #s1 #s2. ((Setup( ) @ #s1) ∧ (Setup( ) @ #s2)) ⇒ (#s1 = #s2)) ∧
+   (∃ #s #j1 #j2 #k1 #k2 #e #m1 #m2 #a S HSel HNotsel xSel xNotsel
+      noSel noNotsel DSel DNotsel E A.
+     ((((((((((((((¬(HSel = HNotsel)) ∧
+                  (H_x_no( HSel, xSel, noSel ) @ #s)) ∧
+                 (H_x_no( HNotsel, xNotsel, noNotsel ) @ #s)) ∧
+                (Comm_D_Y( DSel, h(<HSel, xSel>) ) @ #j1)) ∧
+               (Comm_D_Y( DNotsel, h(<HNotsel, xNotsel>) ) @ #j2)) ∧
+              (Learn_H_yD( HSel, DSel, h(<HSel, xSel>) ) @ #k1)) ∧
+             (Learn_H_yD( HNotsel, DNotsel, h(<HNotsel, xNotsel>) ) @ #k2)) ∧
+            (Learn_H_Ys( HSel, S,
+                         <'ys', 
+                          add(<h(<HNotsel, xNotsel>), noNotsel>, <h(<HSel, xSel>), noSel>)>
+             ) @ #k1)) ∧
+           (Learn_H_Ys( HNotsel, S,
+                        <'ys', 
+                         add(<h(<HNotsel, xNotsel>), noNotsel>, <h(<HSel, xSel>), noSel>)>
+            ) @ #k2)) ∧
+          (Env_No( E, noSel ) @ #e)) ∧
+         (Env_No( E, '1' ) @ #e)) ∧
+        (Learn_H_ySG( HSel, S, <'ySG', h(<HSel, xSel>)> ) @ #m1)) ∧
+       (Learn_H_ySG( HNotsel, S, <'ySG', h(<HSel, xSel>)> ) @ #m2)) ∧
+      (Learn_A_noSel( A, E, noSel ) @ #a)) ∧
+     (Learn_A_ySG( A, S, h(<HSel, xSel>) ) @ #a))"
+/*
+guarded formula characterizing all satisfying traces:
+"(∀ #s1 #s2. (Setup( ) @ #s1) ∧ (Setup( ) @ #s2) ⇒ #s1 = #s2) ∧
+ (∃ #s #j1 #j2 #k1 #k2 #e #m1 #m2 #a S HSel HNotsel xSel xNotsel
+    noSel noNotsel DSel DNotsel E A.
+   (H_x_no( HSel, xSel, noSel ) @ #s) ∧
+   (H_x_no( HNotsel, xNotsel, noNotsel ) @ #s) ∧
+   (Comm_D_Y( DSel, h(<HSel, xSel>) ) @ #j1) ∧
+   (Comm_D_Y( DNotsel, h(<HNotsel, xNotsel>) ) @ #j2) ∧
+   (Learn_H_yD( HSel, DSel, h(<HSel, xSel>) ) @ #k1) ∧
+   (Learn_H_yD( HNotsel, DNotsel, h(<HNotsel, xNotsel>) ) @ #k2) ∧
+   (Learn_H_Ys( HSel, S,
+                <'ys', 
+                 add(<h(<HNotsel, xNotsel>), noNotsel>, <h(<HSel, xSel>), noSel>)>
+    ) @ #k1) ∧
+   (Learn_H_Ys( HNotsel, S,
+                <'ys', 
+                 add(<h(<HNotsel, xNotsel>), noNotsel>, <h(<HSel, xSel>), noSel>)>
+    ) @ #k2) ∧
+   (Env_No( E, noSel ) @ #e) ∧
+   (Env_No( E, '1' ) @ #e) ∧
+   (Learn_H_ySG( HSel, S, <'ySG', h(<HSel, xSel>)> ) @ #m1) ∧
+   (Learn_H_ySG( HNotsel, S, <'ySG', h(<HSel, xSel>)> ) @ #m2) ∧
+   (Learn_A_noSel( A, E, noSel ) @ #a) ∧
+   (Learn_A_ySG( A, S, h(<HSel, xSel>) ) @ #a)
+  ∧
+   ¬(HSel = HNotsel))"
+*/
+by sorry
+
+lemma functional_env2:
+  exists-trace
+  "(∀ #s1 #s2. ((Setup( ) @ #s1) ∧ (Setup( ) @ #s2)) ⇒ (#s1 = #s2)) ∧
+   (∃ #s #j1 #j2 #k1 #k2 #e #m1 #m2 #a S HSel HNotsel xSel xNotsel
+      noSel noNotsel DSel DNotsel E A.
+     ((((((((((((((¬(HSel = HNotsel)) ∧
+                  (H_x_no( HSel, xSel, noSel ) @ #s)) ∧
+                 (H_x_no( HNotsel, xNotsel, noNotsel ) @ #s)) ∧
+                (Comm_D_Y( DSel, h(<HSel, xSel>) ) @ #j1)) ∧
+               (Comm_D_Y( DNotsel, h(<HNotsel, xNotsel>) ) @ #j2)) ∧
+              (Learn_H_yD( HSel, DSel, h(<HSel, xSel>) ) @ #k1)) ∧
+             (Learn_H_yD( HNotsel, DNotsel, h(<HNotsel, xNotsel>) ) @ #k2)) ∧
+            (Learn_H_Ys( HSel, S,
+                         <'ys', 
+                          add(<h(<HNotsel, xNotsel>), noNotsel>, <h(<HSel, xSel>), noSel>)>
+             ) @ #k1)) ∧
+           (Learn_H_Ys( HNotsel, S,
+                        <'ys', 
+                         add(<h(<HNotsel, xNotsel>), noNotsel>, <h(<HSel, xSel>), noSel>)>
+            ) @ #k2)) ∧
+          (Env_No( E, noSel ) @ #e)) ∧
+         (Env_No( E, '2' ) @ #e)) ∧
+        (Learn_H_ySG( HSel, S, <'ySG', h(<HSel, xSel>)> ) @ #m1)) ∧
+       (Learn_H_ySG( HNotsel, S, <'ySG', h(<HSel, xSel>)> ) @ #m2)) ∧
+      (Learn_A_noSel( A, E, noSel ) @ #a)) ∧
+     (Learn_A_ySG( A, S, h(<HSel, xSel>) ) @ #a))"
+/*
+guarded formula characterizing all satisfying traces:
+"(∀ #s1 #s2. (Setup( ) @ #s1) ∧ (Setup( ) @ #s2) ⇒ #s1 = #s2) ∧
+ (∃ #s #j1 #j2 #k1 #k2 #e #m1 #m2 #a S HSel HNotsel xSel xNotsel
+    noSel noNotsel DSel DNotsel E A.
+   (H_x_no( HSel, xSel, noSel ) @ #s) ∧
+   (H_x_no( HNotsel, xNotsel, noNotsel ) @ #s) ∧
+   (Comm_D_Y( DSel, h(<HSel, xSel>) ) @ #j1) ∧
+   (Comm_D_Y( DNotsel, h(<HNotsel, xNotsel>) ) @ #j2) ∧
+   (Learn_H_yD( HSel, DSel, h(<HSel, xSel>) ) @ #k1) ∧
+   (Learn_H_yD( HNotsel, DNotsel, h(<HNotsel, xNotsel>) ) @ #k2) ∧
+   (Learn_H_Ys( HSel, S,
+                <'ys', 
+                 add(<h(<HNotsel, xNotsel>), noNotsel>, <h(<HSel, xSel>), noSel>)>
+    ) @ #k1) ∧
+   (Learn_H_Ys( HNotsel, S,
+                <'ys', 
+                 add(<h(<HNotsel, xNotsel>), noNotsel>, <h(<HSel, xSel>), noSel>)>
+    ) @ #k2) ∧
+   (Env_No( E, noSel ) @ #e) ∧
+   (Env_No( E, '2' ) @ #e) ∧
+   (Learn_H_ySG( HSel, S, <'ySG', h(<HSel, xSel>)> ) @ #m1) ∧
+   (Learn_H_ySG( HNotsel, S, <'ySG', h(<HSel, xSel>)> ) @ #m2) ∧
+   (Learn_A_noSel( A, E, noSel ) @ #a) ∧
+   (Learn_A_ySG( A, S, h(<HSel, xSel>) ) @ #a)
+  ∧
+   ¬(HSel = HNotsel))"
+*/
+by sorry
+
+lemma universalVerifiability_sel:
+  all-traces
+  "∀ #a1 #a2 #a3 S A y1 no1 y2 no2 E.
+    (((Learn_A_Ys( A, S, <'ys', add(<y1, no1>, <y2, no2>)> ) @ #a1) ∧
+      (Learn_A_noSel( A, E, no1 ) @ #a2)) ∧
+     (Learn_A_ySG( A, S, y1 ) @ #a3)) ⇒
+    (∃ BB #b1 #b2.
+      (BB_Ys( BB, 'ys', add(<y1, no1>, <y2, no2>) ) @ #b1) ∧
+      (BB_YSG( BB, <'ySG', y1> ) @ #b2))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ #a1 #a2 #a3 S A y1 no1 y2 no2 E.
+  (Learn_A_Ys( A, S, <'ys', add(<y1, no1>, <y2, no2>)> ) @ #a1) ∧
+  (Learn_A_noSel( A, E, no1 ) @ #a2) ∧
+  (Learn_A_ySG( A, S, y1 ) @ #a3)
+ ∧
+  ∀ BB #b1 #b2.
+   (BB_Ys( BB, 'ys', add(<y1, no1>, <y2, no2>) ) @ #b1) ∧
+   (BB_YSG( BB, <'ySG', y1> ) @ #b2)
+  ⇒
+   ⊥"
+*/
+by sorry
+
+lemma individualVerifiability_votercode:
+  all-traces
+  "∀ H D yD #h1 S yOther #h2 no1 noOther.
+    ((Learn_H_yD( H, D, yD ) @ #h1) ∧
+     (Learn_H_Ys( H, S, <'ys', add(<yD, no1>, <yOther, noOther>)>
+      ) @ #h2)) ⇒
+    (∃ x BB noA noB y2 #b1.
+      (BB_Ys( BB, 'ys', add(<y2, noB>, <yD, noA>) ) @ #b1) ∧
+      (yD = h(<H, x>)))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ H D yD #h1 S yOther #h2 no1 noOther.
+  (Learn_H_yD( H, D, yD ) @ #h1) ∧
+  (Learn_H_Ys( H, S, <'ys', add(<yD, no1>, <yOther, noOther>)>
+   ) @ #h2)
+ ∧
+  ∀ x BB noA noB y2 #b1.
+   (BB_Ys( BB, 'ys', add(<y2, noB>, <yD, noA>) ) @ #b1) ∧
+   (yD = h(<H, x>))
+  ⇒
+   ⊥"
+*/
+by sorry
+
+lemma individualVerifiability_sel:
+  all-traces
+  "∀ H D yD #h1 S #h2.
+    ((Learn_H_yD( H, D, yD ) @ #h1) ∧
+     (Learn_H_ySG( H, S, <'ySG', yD> ) @ #h2)) ⇒
+    (∃ x BB #b1. (BB_YSG( BB, <'ySG', yD> ) @ #b1) ∧ (yD = h(<H, x>)))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ H D yD #h1 S #h2.
+  (Learn_H_yD( H, D, yD ) @ #h1) ∧
+  (Learn_H_ySG( H, S, <'ySG', yD> ) @ #h2)
+ ∧
+  ∀ x BB #b1.
+   (BB_YSG( BB, <'ySG', yD> ) @ #b1) ∧ (yD = h(<H, x>)) ⇒ ⊥"
+*/
+by sorry
+
+lemma establishedIK:
+  all-traces
+  "∀ H D yD #h1 #h2 S no1 other #d x.
+    (((Learn_H_yD( H, D, yD ) @ #h1) ∧
+      (Learn_H_Ys( H, S, <'ys', add(other, <yD, no1>)> ) @ #h2)) ∧
+     (Commit( D, S, H, x ) @ #d)) ⇒
+    (∃ BB #b1 other2 no.
+      BB_Ys( BB, 'ys', add(other2, <h(<H, x>), no>) ) @ #b1)"
+/*
+guarded formula characterizing all counter-examples:
+"∃ H D yD #h1 #h2 S no1 other #d x.
+  (Learn_H_yD( H, D, yD ) @ #h1) ∧
+  (Learn_H_Ys( H, S, <'ys', add(other, <yD, no1>)> ) @ #h2) ∧
+  (Commit( D, S, H, x ) @ #d)
+ ∧
+  ∀ BB #b1 other2 no.
+   (BB_Ys( BB, 'ys', add(other2, <h(<H, x>), no>) ) @ #b1) ⇒ ⊥"
+*/
+by sorry
+
+end

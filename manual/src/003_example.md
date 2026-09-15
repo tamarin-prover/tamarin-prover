@@ -444,6 +444,12 @@ when we navigate through the proof steps (either by clicking at a certain proof
 step or using the `j` or `k` keys), the graph in the new window will change
 accordingly. This is especially useful when working with large proof graphs.
 
+The proof graph is zoomable using the mouse wheel; if the font size of the node
+contents becomes too small while zooming out, Tamarin will automatically
+replacing them with the corresponding rule name and action fact. We can
+deactivate this abstraction by turning off the `Abstract node content` toggle
+in the `Options` menu.
+
 To finish the proof at hand, we can either continue manually by selecting the
 constraint to resolve next, or by calling the `autoprove` command, which
 selects the next steps based on a heuristic. Here we have two constraints to
@@ -473,7 +479,7 @@ As you may have noticed, there can be lots of different types of arrows, which a
 There are normal (solid) arrows (in black or gray), which are used to represent the origins of protocol facts (for linear or persistent facts).
 There are also solid red orange arrows, which represent steps where the adversary extracts values from a message he received.
 
-Then there dashed arrows, representing ordering constraints between two actions, and their colors indicate the reasons for the constraint : 
+Then there are dashed arrows, representing ordering constraints between two actions, and their colors indicate the reasons for the constraint: 
 
 - Black dashed arrows represent an ordering constraint stemming from formulas, for example from the current lemma or a restriction.
 - Dark blue indicates an ordering constraint deduced from a fresh value: since fresh values are unique, all rule instances using a fresh value must appear after the instance that created the value.

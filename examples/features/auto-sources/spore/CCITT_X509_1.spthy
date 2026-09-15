@@ -93,7 +93,7 @@ rule A_send:
     Out(< $A, ~ta, ~na, $B, ~xa, aenc(~Ya,pkB), ha, sign(ha,ltkA)>)
   ]
 
-rule B_receive:
+rule B_receive [no_derivcheck]:
   let m  = <ta, na, $B, xa, aenc(Ya, pk(~ltkB))>
       ha = h(m)
   in

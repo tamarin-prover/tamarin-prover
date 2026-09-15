@@ -26,14 +26,14 @@ rule (modulo E) newsk_0_[color=#ffffff, process="new sk.1;", issapicrule,
      [ State_( ), Fr( sk ) ] --> [ State_1( sk ) ]
   */
 
-rule (modulo E) Clientsk_0_1[color=#ffffff, process="Client(sk.1)",
+rule (modulo E) Clientsk_0_1[color=#ffffff, process="Client(sk.1);",
                              issapicrule, role='Process']:
-   [ State_1( sk.1 ) ] --> [ State_11( sk.1 ), State_12( sk.1 ) ]
+   [ State_1( sk.1 ) ] --> [ State_11( sk.1 ) ]
 
   /*
-  rule (modulo AC) Clientsk_0_1[color=#ffffff, process="Client(sk.1)",
+  rule (modulo AC) Clientsk_0_1[color=#ffffff, process="Client(sk.1);",
                                 issapicrule, role='Process']:
-     [ State_1( sk ) ] --> [ State_11( sk ), State_12( sk ) ]
+     [ State_1( sk ) ] --> [ State_11( sk ) ]
   */
 
 rule (modulo E) newa_0_11[color=#518040, process="new a.1;", issapicrule,
@@ -304,16 +304,6 @@ rule (modulo E) p_0_111111[color=#518040, process="0", issapicrule,
      [ State_111111( a, gB, sk ) ] --> [ ]
   */
 
-rule (modulo E) p_0_12[color=#ffffff, process="0", issapicrule,
-                       role='Process']:
-   [ State_12( sk.1 ) ] --> [ ]
-
-  /*
-  rule (modulo AC) p_0_12[color=#ffffff, process="0", issapicrule,
-                          role='Process']:
-     [ State_12( sk ) ] --> [ ]
-  */
-
 restriction single_session:
   "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
   // safety formula
@@ -327,10 +317,10 @@ restriction single_session:
 
 /*
 Generated from:
-Tamarin version 1.12.0
+Tamarin version 1.13.0
 Maude version 3.5.1
-Git revision: f1832c9bc70a2a165991a0802520f2e07c023227 (with uncommited changes), branch: prepare-release
-Compiled at: 2026-03-06 22:21:49.602637 UTC
+Git revision: 41bc81379b23681e7057314a5cf66a25c45e1986, branch: canonicalise-subst
+Compiled at: 2026-07-27 16:11:34.947223 UTC
 */
 
 end
@@ -342,7 +332,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/regression-tests/issueX-translation-crash.spthy
 
   output:          examples/sapic/fast/regression-tests/issueX-translation-crash.spthy.tmp
-  processing time: 0.49s
+  processing time: 0.56s
   
 
 ==============================================================================

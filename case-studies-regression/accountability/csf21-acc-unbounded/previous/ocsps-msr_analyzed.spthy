@@ -5,7 +5,7 @@ begin
 // Function signature and definition of the equational theory E
 
 functions: extract/1, fst/1, id/1, pair/2, pk/1, sig/2,
-           sk/1[private,constructor], snd/1, true/0, verify/3
+           sk/1 [private,constructor], snd/1, true/0, verify/3
 equations:
     extract(sig(m, sk(i))) = m,
     fst(<x.1, x.2>) = x.1,
@@ -595,7 +595,7 @@ solve( C( ts, cert, 'revoked' ) ▶₀ #i )
   qed
 qed
 
-predicate: blamed( x )<=>∃ #i. Blame( x ) @ #i
+predicate: Blamed( x )<=>∃ #i. Blame( x ) @ #i
 
 /*
 WARNING: the following wellformedness checks failed!
@@ -616,10 +616,10 @@ Accountability (RP check)
 
 /*
 Generated from:
-Tamarin version 1.12.0
+Tamarin version 1.13.0
 Maude version 3.5.1
-Git revision: f1832c9bc70a2a165991a0802520f2e07c023227 (with uncommited changes), branch: prepare-release
-Compiled at: 2026-03-06 22:21:49.602637 UTC
+Git revision: 41bc81379b23681e7057314a5cf66a25c45e1986, branch: canonicalise-subst
+Compiled at: 2026-07-27 16:11:34.947223 UTC
 */
 
 end
@@ -631,7 +631,7 @@ summary of summaries:
 analyzed: examples/accountability/csf21-acc-unbounded/previous/ocsps-msr.spthy
 
   output:          examples/accountability/csf21-acc-unbounded/previous/ocsps-msr.spthy.tmp
-  processing time: 0.31s
+  processing time: 0.15s
   
   WARNING: 1 wellformedness check failed!
            The analysis results might be wrong!

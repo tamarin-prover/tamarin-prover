@@ -139,7 +139,7 @@ rule SendFirst:
   , WaitAccept( $gid, '1', $A, ~esk )
   ]
 
-rule RecvOthers:
+rule RecvOthers [no_derivcheck]:
   let q = < 'RecvOthers', $gid, i, j > in
   [ In ( q )
   , !Pstate( $gid, i, $A, ~esk)
@@ -155,7 +155,7 @@ rule RecvOthers:
     ]->
   [ !AO( $A, < $gid, i + '1', 'KeyFor', j, ('g'^y)^~esk> ) ]
 
-rule RecvRoundkey:
+rule RecvRoundkey [no_derivcheck]:
   let q = < 'RecvRoundkey', $gid, i> in
   [ In ( q )
   , !Pstate( $gid, i, $A, ~esk )
@@ -176,7 +176,7 @@ rule RecvRoundkey:
   , WaitAccept( $gid, i, $A, ~esk )
   ]
 
-rule RecvRoundkeyLast:
+rule RecvRoundkeyLast [no_derivcheck]:
   let q = < 'RecvRoundkeyLast', $gid > in
   [ In ( q )
   , !Pstate( $gid, k, $A, ~esk)
@@ -194,7 +194,7 @@ rule RecvRoundkeyLast:
     ]->
   [ ]
 
-rule Accept:
+rule Accept [no_derivcheck]:
   let q = < 'Accept', $gid, i > in
   [ In ( q )
   , WaitAccept( $gid, i, $A, ~esk)

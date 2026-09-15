@@ -23,6 +23,7 @@ module Term.Substitution.SubstVFree (
   , substFromList
   , substFromMap
   , emptySubst
+  , nullSubst
 
   -- * Composition of substitutions
   , compose
@@ -101,10 +102,39 @@ applyLit subst v@(Var i)  = fromMaybe (lit v) $ M.lookup i (sMap subst)
 applyLit _     c@(Con _)  = lit c
 
 -- | @applyVTerm subst t@ applies the substitution @subst@ to the term @t@.
+--
+-- This is one of the hottest functions in the constraint solver and is called
+-- almost exclusively at the concrete 'LNTerm' type from a different package
+-- (@theory@), so GHC seems to miss the change to specialise that case without
+-- an added hint here.
+{-# INLINABLE applyVTerm #-}
+{-# SPECIALIZE applyVTerm :: LNSubst -> LNTerm -> LNTerm #-}
 applyVTerm :: (IsConst c, IsVar v) => Subst c v -> VTerm c v -> VTerm c v
-applyVTerm = applyVTermProj applyLit
+applyVTerm (Subst smap)
+    | M.null smap = id
+    | otherwise   = \t -> fromMaybe t (go t)
+  where
+    -- 'go' returns 'Nothing' when the term is unchanged by the substitution, so
+    -- the caller can reuse the original term and share the untouched subtree.
+    -- 'Just t'' carries the rebuilt term. This avoids reallocating subterms the
+    -- substitution does not touch.
+    go t = case viewTerm t of
+        Lit (Var i)      -> M.lookup i smap
+        Lit (Con _)      -> Nothing
+        FApp (AC o)   ts -> fAppAC   o <$> goList ts
+        FApp (C o)    ts -> fAppC    o <$> goList ts
+        FApp (NoEq o) ts -> fAppNoEq o <$> goList ts
+        FApp List     ts -> fAppList   <$> goList ts
+
+    -- Map 'go' over the arguments. 'Nothing' means no element changed (so the
+    -- parent reuses the original term); 'Just ts'' is the rebuilt argument list.
+    goList []     = Nothing
+    goList (x:xs) = case go x of
+        Nothing -> (x :)             <$> goList xs
+        Just x' -> Just (x' : fromMaybe xs (goList xs))
 
 -- | Variant of @applyVTerm@ with custom function to apply literals
+{-# INLINABLE applyVTermProj #-}
 applyVTermProj :: Ord a => (t1 -> t2 -> Term a) -> t1 -> Term t2 -> Term a
 applyVTermProj f subst t = case viewTerm t of
     Lit l            -> f subst l
@@ -118,6 +148,7 @@ applyVTermProj f subst t = case viewTerm t of
 ----------------------------------------------------------------------
 
 -- | Convert a list to a substitution. The @x/x@ mappings are removed.
+{-# INLINABLE substFromList #-}
 substFromList :: IsVar v => [(v, VTerm c v)] -> Subst c v
 substFromList xs  =
     Subst (M.fromList [ (v,t) | (v,t) <- xs, not (equalToVar t v) ])
@@ -129,12 +160,19 @@ equalToVar _                          _ = False
 
 -- | Convert a map to a substitution. The @x/x@ mappings are removed.
 -- FIXME: implement directly, use substFromMap for substFromList.
+{-# INLINABLE substFromMap #-}
 substFromMap :: IsVar v => Map v (VTerm c v) -> Subst c v
 substFromMap = Subst . M.filterWithKey (\v t -> not $ equalToVar t v)
 
 -- | @emptySubVFree@ is the substitution with empty domain.
 emptySubst :: Subst c v
 emptySubst = Subst M.empty
+
+-- | @nullSubst subst@ is 'True' iff @subst@ has an empty domain, i.e. applying
+-- it is the identity. This is a cheap (O(1)) check used to skip no-op
+-- substitution passes.
+nullSubst :: Subst c v -> Bool
+nullSubst = M.null . sMap
 
 -- Composition
 ----------------------------------------------------------------------
@@ -219,8 +257,10 @@ instance Sized (Subst c v) where
 ------------
 
 instance Ord c => HasFrees (LSubst c) where
+    {-# INLINABLE foldFrees #-}
     foldFrees  f = foldFrees f . sMap
     foldFreesOcc = mempty -- we ignore occurences in substitutions for now
+    {-# INLINABLE mapFrees #-}
     mapFrees   f = (substFromList <$>) . mapFrees   f . substToList
 
 -- | Types that support the application of some type

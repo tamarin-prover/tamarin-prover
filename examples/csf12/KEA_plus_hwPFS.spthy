@@ -28,7 +28,7 @@ rule Init_1:
      !Ephk(~ekI),
      Out( 'g'^~ekI ) ]
 
-rule Init_2:
+rule Init_2 [no_derivcheck]:
    [ Init_1( ~ekI, $I, $R, ~lkI , hkI), In( Y ), !Pk( $R,'g'^~lkR ) ]
    --[SidI_2( ~ekI, $I, $R, hkI, Y,
        h( <Y^~lkI, ('g'^~lkR)^~ekI, $I, $R > ) ) ]->
@@ -36,7 +36,7 @@ rule Init_2:
        h( <Y^~lkI, ('g'^~lkR)^~ekI, $I, $R > ) ) ]
 
 
-rule Resp_1:
+rule Resp_1 [no_derivcheck]:
    [ In( X ), Fr( ~ekR ), !Ltk($R, ~lkR), !Pk($I, 'g'^~lkI) ]
    --[ SidR_1( ~ekR, $I, $R, X, 'g'^~ekR ,
        h( <('g'^~lkI)^~ekR, X^~lkR, $I, $R > ) ) ]->

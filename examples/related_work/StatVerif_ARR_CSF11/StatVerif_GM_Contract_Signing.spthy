@@ -125,13 +125,13 @@ rule Resolve1:
 
 
 // Witnessing aborted contracts.
-rule Witness_Aborted:
+rule Witness_Aborted [no_derivcheck]:
   let abortC = sign(skT, pcs(sign(sk1, ct), pk(ysk), pk(skT)))
   in
     [ In(abortC), !TTP(skT) ] --[ AbortCert(ct) ]-> []
 
 // Witnessing resolved contracts.
-rule Witness_Resolved:
+rule Witness_Resolved [no_derivcheck]:
   let resolveC = sign(skT, <sign(sk1, ct), sign(sk2, ct)>)
   in
     [ In(resolveC), !TTP(skT) ] --[ ResolveCert(ct) ]-> []

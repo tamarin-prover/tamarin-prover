@@ -74,6 +74,7 @@ data SapicAction v =
                  | Lock (SapicNTerm v)
                  | Unlock (SapicNTerm v)
                  | Event (SapicNFact v)
+                 | ProcessCall String [SapicNTerm v]
                  | MSR { iPrems :: [SapicNFact v]
                        , iActs :: [SapicNFact v]
                        , iConcs :: [SapicNFact v]
@@ -93,7 +94,6 @@ deriving instance (Data v, Generic v, Ord v) => Data (SapicAction v)
 data ProcessCombinator v = Parallel | NDC | Cond (SapicNFormula v)
         | CondEq (SapicNTerm v) (SapicNTerm v) | Lookup (SapicNTerm v) v
         | Let { letLeft :: SapicNTerm v, letRight :: SapicNTerm v, letMatch :: Set v}
-        | ProcessCall String [SapicNTerm v]
             deriving (Foldable)
 
 deriving instance (Show v) => Show (ProcessCombinator v)
@@ -151,6 +151,7 @@ mapTermsAction f ff fv ac
         | (Lock t) <- ac       = Lock (f t)
         | (Unlock t) <- ac     = Unlock (f t)
         | (Event fa) <- ac      = Event (fmap f fa)
+        | ProcessCall s ts <- ac = ProcessCall s (map f ts)
         | (MSR l a r rest mv) <- ac  = MSR (f2mapf l) (f2mapf a) (f2mapf r) (fmap ff rest) (Set.map fv mv)
         | Rep <- ac            = Rep
             where f2mapf = fmap $ fmap f
@@ -167,7 +168,6 @@ mapTermsComb f ff fv c
         | (Lookup t v) <- c = Lookup (f t) (fv v)
         | Parallel <- c = Parallel
         | NDC    <- c   = NDC
-        | ProcessCall s ts <- c = ProcessCall s (map f ts)
 
 -- | fold a process: apply @fNull@, @fAct@, @fComb@ on accumulator and action,
 -- annotation and nothing/action/combinator to obtain new accumulator to apply
@@ -264,6 +264,7 @@ traverseTermsAction ft ff fv ac
                      <*> traverse ff rest
                      <*> traverseSet fv mv
         | Rep <- ac            = pure Rep
+        | ProcessCall s ts <- ac = ProcessCall s <$> traverse ft ts
             where t2f = traverse (traverse ft)
 
 traverseTermsComb :: (Applicative f, Eq v) =>
@@ -279,7 +280,6 @@ traverseTermsComb ft ff fv c
         | (Lookup t v)   <- c = Lookup <$> ft t <*> fv v
         | Parallel       <- c = pure Parallel
         | NDC            <- c = pure NDC
-        | ProcessCall s ts <- c = ProcessCall s <$> traverse ft ts
 
 -- | folding on the process tree, used, e.g., for printing
 pfoldMap :: Monoid a => (Process ann v -> a) -> Process ann v -> a
@@ -466,6 +466,9 @@ prettySapicAction' _ (Lock t )  = "lock " ++ render (prettySapicTerm t)
 prettySapicAction' _ (Unlock t )  = "unlock " ++ render (prettySapicTerm t)
 prettySapicAction' _ (Event a )  = "event " ++ render (prettySapicFact a)
 prettySapicAction' prettyRule' (MSR p a c r mv) = prettyRule' p a c r mv
+prettySapicAction' _ (ProcessCall s ts) = s ++ "("++ p ts ++ ")"
+                                    where p pts = render $
+                                            fsep (punctuate comma (map prettySapicTerm pts))
 
 prettySapicComb :: ProcessCombinator SapicLVar -> String
 prettySapicComb Parallel = "|"
@@ -478,9 +481,6 @@ prettySapicComb (Let t t' vs) = "let "++ p' t ++ "=" ++ p t'
                                           p'= render . prettyPattern' vs
 prettySapicComb (Lookup t v) = "lookup "++ p t ++ " as " ++ show v
                                     where p = render . prettySapicTerm
-prettySapicComb (ProcessCall s ts) = s ++ "("++ p ts ++ ")"
-                                    where p pts = render $
-                                            fsep (punctuate comma (map prettySapicTerm pts))
 
 prettySapic' :: (Document d) => ([SapicNFact SapicLVar]
     -> [SapicNFact SapicLVar]
@@ -488,20 +488,89 @@ prettySapic' :: (Document d) => ([SapicNFact SapicLVar]
     -> [SapicNFormula SapicLVar]
     -> Set SapicLVar
     -> String)
+    -> (ann -> Maybe SapicTerm)
     -> Process ann SapicLVar -> d
-prettySapic' ppRR p
-    | (ProcessNull _) <- p = text "0"
-    | (ProcessComb c@ProcessCall {} _ _ _) <- p = text $ prettySapicComb c
-    | (ProcessComb c _ pl pr) <- p =  r pl <-> text (prettySapicComb c) <-> r pr
-    | (ProcessAction Rep _ p') <- p = ppAct Rep <> parens (r p')
-    | (ProcessAction a _ (ProcessNull _)) <- p = ppAct a
-    | (ProcessAction a _ p'@ProcessComb {}) <- p = ppAct a <> semi $-$ nest 1 (parens (r p'))
-    | (ProcessAction a _ p') <- p = ppAct a <> semi $-$ r p'
+prettySapic' ppRR ppLoc = pp
     where
-        r = prettySapic' ppRR -- recursion shortcut
+        -- Print a process that is not followed by further tokens.
+        pp p = case ppLoc (processGetAnnotation p) of
+            Just l  -> ppLocated l p
+            Nothing -> ppForm p
+
+        -- Print a process that is followed by further tokens. The printed
+        -- form must not be able to absorb them, so any form that is not
+        -- clearly delimited is parenthesized.
+        ppDelimited p = case ppLoc (processGetAnnotation p) of
+            -- the location term could absorb a following '+'
+            Just l -> parens (ppLocated l p)
+            Nothing
+                | delimited p -> ppForm p
+                | otherwise   -> parens (ppForm p)
+
+        -- Left operands of '|' and '+' may keep their own '|' and '+'
+        -- structure without parentheses: the parser is left-associative.
+        ppLeftOp p
+            | chainNode p = ppForm p
+            | otherwise   = ppDelimited p
+
+        ppLocated l p = parens (ppForm p) <> text "@" <> prettySapicTerm l
+
+        -- A '|' or '+' node without a location annotation. Only these
+        -- print as a bare chain; an annotated node prints as "(p)@term".
+        chainNode p
+            | ProcessComb c _ _ _ <- p
+            , Nothing <- ppLoc (processGetAnnotation p) = isParOrNDC c
+            | otherwise                                 = False
+
+        isParOrNDC Parallel = True
+        isParOrNDC NDC      = True
+        isParOrNDC _        = False
+
+        -- Printed forms that neither absorb a following token nor extend to
+        -- the right. Replication is excluded on purpose: '!' takes a whole
+        -- process, so it would swallow a following '|' or '+'.
+        delimited (ProcessNull _)                     = True
+        delimited (ProcessAction ProcessCall {} _ _)  = True
+        delimited (ProcessAction a _ (ProcessNull _)) = delimitedAction a
+        delimited _                                   = False
+
+        -- Actions that do not absorb a following token. Actions ending in a
+        -- term are excluded: the term could absorb a following '+'.
+        delimitedAction (New _)   = True
+        delimitedAction ChIn {}   = True
+        delimitedAction ChOut {}  = True
+        delimitedAction (Event _) = True
+        delimitedAction _         = False
+
+        -- The keyword between the head of a branching combinator and its
+        -- first branch.
+        branchKeyword c = case c of
+            Cond _     -> "then"
+            CondEq _ _ -> "then"
+            _          -> "in"  -- Let and Lookup
+
+        ppForm (ProcessNull _) = text "0"
+        ppForm (ProcessComb c _ pl pr)
+            | isParOrNDC c = ppLeftOp pl <-> text (prettySapicComb c) <-> ppDelimited pr
+            -- if, let and lookup, with an optional else branch
+            | (ProcessNull _) <- pr = hdr $-$ nest 4 (pp pl)
+            | otherwise = hdr $-$ nest 4 (ppDelimited pl) $-$ text "else" $-$ nest 4 (pp pr)
+            where
+                hdr = text (prettySapicComb c) <-> text (branchKeyword c)
+        ppForm (ProcessAction Rep _ p') = ppAct Rep <> parens (pp p')
+        ppForm (ProcessAction a@ProcessCall {} _ _ ) = ppAct a
+        ppForm (ProcessAction a _ (ProcessNull _)) = ppAct a
+        ppForm (ProcessAction a _ p') = ppAct a <> semi $-$ ppNext p'
+
+        -- Print the process behind a ';'. The grammar only allows an action
+        -- process there, so a '|' or '+' chain needs parentheses.
+        ppNext p'
+            | chainNode p' = nest 1 (parens (ppForm p'))
+            | otherwise    = pp p'
+
         ppAct a = text (prettySapicAction' ppRR a)
 
---- >>> render $ prettySapic' undefined (ProcessNull ())
+--- >>> render $ prettySapic' undefined (const Nothing) (ProcessNull ())
 -- "0"
 
 --- >>> render $ semi <> semi

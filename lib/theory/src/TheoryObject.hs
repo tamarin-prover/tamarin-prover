@@ -72,7 +72,11 @@ module TheoryObject
     expandRestriction,
     expandLemma,
     addRestriction,
+    addRestrictions,
+    addRules,
     addLemma,
+    addLemmas,
+    addDiffLemmas,
     addLemmaAtIndex,
     modifyLemma,
     addProcess,
@@ -451,12 +455,20 @@ addRestriction l thy = do
   guard (isNothing $ lookupRestriction (L.get rstrName l) thy)
   return $ modify thyItems (++ [RestrictionItem l]) thy
 
+addRestrictions :: [Restriction] -> Theory sig c r p s -> Theory sig c r p s
+addRestrictions rts thy = fromMaybe thy $ foldl ( \fm rest -> addRestriction rest (fromJust fm)) (Just thy) rts
+
 -- | Add a new lemma. Fails, if a lemma with the same name exists.
 addLemma :: Lemma p -> Theory sig c r p s -> Maybe (Theory sig c r p s)
 addLemma l thy = do
   guard (isNothing $ lookupLemma (L.get lName l) thy)
   return $ modify thyItems (++ [LemmaItem l]) thy
 
+addLemmas :: Foldable t =>t (Lemma p) -> Theory sig c r p s -> Theory sig c r p s
+addLemmas lemmas thy = fromMaybe thy $ foldl ( \fm lemma -> addLemma lemma (fromJust fm)) (Just thy) lemmas
+
+addRules :: [r] -> Theory sig c r p s -> Theory sig c r p s
+addRules rules = L.modify thyItems (++ map RuleItem rules)
 -- | Add a new lemma at a specific index. Fails, if a lemma with the same name exists.
 addLemmaAtIndex :: Lemma p -> Int -> Theory sig c r p s -> Maybe (Theory sig c r p s)
 addLemmaAtIndex l i thy = do
@@ -579,6 +591,9 @@ addDiffLemma l thy = do
   guard (isNothing $ lookupDiffLemma (L.get lDiffName l) thy)
   return $ modify diffThyItems (++ [DiffLemmaItem l]) thy
 
+addDiffLemmas :: Foldable t =>t (Lemma p2)-> DiffTheory sig c r r2 p p2 -> DiffTheory sig c r r2 p p2
+addDiffLemmas lemmas thy = fromMaybe thy $ foldl ( \fm lemma ->  addLemmaDiff LHS lemma (fromJust fm)) (Just thy) lemmas
+
 -- | Add a new default heuristic. Fails if a heuristic is already defined.
 addHeuristic :: [GoalRanking ProofContext] -> Theory sig c r p s -> Maybe (Theory sig c r p s)
 addHeuristic h (Theory n f [] t sig c i o sapic) = Just (Theory n f h t sig c i o sapic)
@@ -679,8 +694,8 @@ lookupProcessDef :: String -> Theory sig c r p TranslationElement -> Maybe (Proc
 lookupProcessDef name = find ((name ==) . L.get pName) . theoryProcessDefs
 
 -- | Find the function typing info for a given function symbol.
-lookupFunctionTypingInfo :: NoEqSym -> Theory sig c r p TranslationElement -> Maybe SapicFunSym
-lookupFunctionTypingInfo tag = find (\(fs, _, _) -> tag == fs) . theoryFunctionTypingInfos
+lookupFunctionTypingInfo :: UserDefinedSym -> Theory sig c r p TranslationElement -> Maybe SapicFunSym
+lookupFunctionTypingInfo tag = find (\(fs,_,_) -> tag == fs) . theoryFunctionTypingInfos
 
 -- | Find the export info for the given tag.
 lookupExportInfo :: String -> Theory sig c r p TranslationElement -> [ExportInfo]
@@ -770,34 +785,55 @@ prettyTheory ppSig ppCache ppRule ppPrf ppSap thy =
 prettyTranslationElement :: (HighlightDocument d) => TranslationElement -> d
 prettyTranslationElement (ProcessItem p) = text "process" <> colon $-$ (nest 2 $ prettyProcess p)
 prettyTranslationElement (DiffEquivLemma p) = text "diffEquivLemma" <> colon $-$ (nest 2 $ prettyProcess p)
-prettyTranslationElement (EquivLemma p1 p2) = text "equivLemma" <> colon $-$ (nest 2 $ prettyProcess p1) $$ (nest 2 $ prettyProcess p2)
+-- Both processes are parenthesized so that the first cannot absorb the second.
+prettyTranslationElement (EquivLemma p1 p2) = text "equivLemma" <> colon $-$ (nest 2 $ parens $ prettyProcess p1) $$ (nest 2 $ parens $ prettyProcess p2)
 prettyTranslationElement (AccLemmaItem a) = prettyAccLemma a
 prettyTranslationElement (CaseTestItem c) = prettyCaseTest c
-prettyTranslationElement (ProcessDefItem p) =
-  (text "let ")
-    <-> (text (L.get pName p))
-    <-> ( case L.get pVars p of
-            Nothing -> emptyDoc
-            Just l -> text ("(" ++ intercalate "," (map show l) ++ ")")
-        )
-    <-> (text "=")
-    <-> nest 2 (prettyProcess $ L.get pBody p)
-prettyTranslationElement (FunctionTypingInfo ((fsn, (_, priv, _)), intypes, outtype)) =
+prettyTranslationElement (ProcessDefItem p) = prettyProcessDef p
+-- Typing info with only default types is not printed: the signature's
+-- function declaration already covers it.
+prettyTranslationElement (FunctionTypingInfo (_, intypes, outtype))
+  | all isNothing (outtype : intypes) = emptyDoc
+-- The attributes go into a single bracketed list, spelled the way the
+-- parser's 'functionAttribute' reads them.
+prettyTranslationElement (FunctionTypingInfo (fsym, intypes, outtype)) =
   (text "function:")
     <-> text (unpack fsn)
     <-> parens (fsep $ punctuate comma $ map printType intypes)
     <-> text ":"
     <-> printType outtype
-    <-> text (showPriv priv)
+    <> text (showAttrs attrs)
   where
+    (fsn, attrs) = case fsym of
+      ACfctUser (f, (priv, constr, ndc)) ->
+        (f, showPriv priv ++ showConst constr ++ ["AC"] ++ showNDC ndc)
+      NoEqUser (f, (_, priv, constr, ndc)) ->
+        (f, showPriv priv ++ showConst constr ++ showNDC ndc)
     printType = maybe (text defaultSapicTypeS) text
-    showPriv Private = " [private]"
-    showPriv Public = ""
+    showPriv priv = ["private" | priv == Private]
+    showConst constr = ["destructor" | constr == Destructor]
+    showNDC ndc = ["NDC" | hasNDC ndc] ++ ["NDC-diff" | hasNDCdiff ndc]
+    showAttrs [] = ""
+    showAttrs as = " [" ++ intercalate "," as ++ "]"
 prettyTranslationElement (ExportInfoItem eInfo) =
-  (text "export: ")
+  (text "export")
     <-> text (L.get eTag eInfo)
-    <-> nest 2 (doubleQuotes $ text $ L.get eText eInfo)
-prettyTranslationElement (SignatureBuiltin s) = (text "builtin ") <-> (text s)
+    <-> colon
+    <-> nest 2 (doubleQuotes $ text $ concatMap escape $ L.get eText eInfo)
+  where
+    escape '\\' = "\\\\"
+    escape '"'  = "\\\""
+    escape c    = [c]
+-- Builtins that only consist of function symbols and equations are already
+-- printed as part of the signature. Builtins whose effect cannot be recovered
+-- from the signature must be printed: locations-report and reliable-channel
+-- set a translation option, and dest-pairing changes the attributes of the
+-- predefined fst and snd, which a function declaration cannot do.
+prettyTranslationElement (SignatureBuiltin s)
+  | s `elem` printedBuiltins = text "builtins" <> colon <-> text s
+  | otherwise                = emptyDoc
+  where
+    printedBuiltins = ["locations-report", "reliable-channel", "dest-pairing"]
 
 prettyPredicate :: (HighlightDocument d) => Predicate -> d
 prettyPredicate p = kwPredicate <> colon <-> text (factstr ++ "<=>" ++ formulastr)
@@ -808,8 +844,18 @@ prettyPredicate p = kwPredicate <> colon <-> text (factstr ++ "<=>" ++ formulast
 prettyProcess :: (HighlightDocument d) => PlainProcess -> d
 prettyProcess = prettySapic
 
+-- | Print a process definition as @let name(v1,...,vn) = body@. The parameter
+-- list is left out for a definition that has none.
 prettyProcessDef :: (HighlightDocument d) => ProcessDef -> d
-prettyProcessDef pDef = text "let " <-> text (L.get pName pDef) <-> text " = " <-> prettySapic (L.get pBody pDef)
+prettyProcessDef pDef =
+  (text "let ")
+    <-> (text (L.get pName pDef))
+    <-> ( case L.get pVars pDef of
+            Nothing -> emptyDoc
+            Just l -> text ("(" ++ intercalate "," (map show l) ++ ")")
+        )
+    <-> (text "=")
+    <-> nest 2 (prettyProcess $ L.get pBody pDef)
 
 -- | Pretty-print a comma, separated list of 'LVar's.
 prettyVarList :: (Document d) => [LVar] -> d

@@ -1,0 +1,838 @@
+{
+  "graphs": [
+    {
+      "jgAbbrevs": [
+        {
+          "jgaAbbrev": {
+            "jgnConst": "MA1"
+          },
+          "jgaExpansion": {
+            "jgnFunct": "mac",
+            "jgnParams": [
+              {
+                "jgnFunct": "shk",
+                "jgnParams": [],
+                "jgnShow": "shk"
+              },
+              {
+                "jgnFunct": "pair",
+                "jgnParams": [
+                  {
+                    "jgnConst": "Y"
+                  },
+                  {
+                    "jgnFunct": "pair",
+                    "jgnParams": [
+                      {
+                        "jgnConst": "$B"
+                      },
+                      {
+                        "jgnConst": "$A"
+                      }
+                    ],
+                    "jgnShow": "pair($B,$A)"
+                  }
+                ],
+                "jgnShow": "pair(Y,pair($B,$A))"
+              }
+            ],
+            "jgnShow": "mac(shk,pair(Y,pair($B,$A)))"
+          },
+          "jgaTerm": {
+            "jgnFunct": "mac",
+            "jgnParams": [
+              {
+                "jgnFunct": "shk",
+                "jgnParams": [],
+                "jgnShow": "shk"
+              },
+              {
+                "jgnFunct": "pair",
+                "jgnParams": [
+                  {
+                    "jgnConst": "Y"
+                  },
+                  {
+                    "jgnFunct": "pair",
+                    "jgnParams": [
+                      {
+                        "jgnConst": "$B"
+                      },
+                      {
+                        "jgnConst": "$A"
+                      }
+                    ],
+                    "jgnShow": "pair($B,$A)"
+                  }
+                ],
+                "jgnShow": "pair(Y,pair($B,$A))"
+              }
+            ],
+            "jgnShow": "mac(shk,pair(Y,pair($B,$A)))"
+          }
+        }
+      ],
+      "jgClusters": [],
+      "jgDirected": true,
+      "jgEdges": [
+        {
+          "jgeRelation": "default",
+          "jgeSource": "#vf:c0",
+          "jgeTarget": "#i:p1"
+        },
+        {
+          "jgeRelation": "ProtoFact",
+          "jgeSource": "#vr:c1",
+          "jgeTarget": "#i:p0"
+        },
+        {
+          "jgeRelation": "KFact",
+          "jgeSource": "#vr.1:c0",
+          "jgeTarget": "#vk.1:p0"
+        },
+        {
+          "jgeRelation": "LessAtoms",
+          "jgeSource": "#vk",
+          "jgeTarget": "#vf"
+        },
+        {
+          "jgeRelation": "LessAtoms",
+          "jgeSource": "#vk.1",
+          "jgeTarget": "#vk"
+        },
+        {
+          "jgeRelation": "LessAtoms",
+          "jgeSource": "#vk.3",
+          "jgeTarget": "#vf"
+        },
+        {
+          "jgeRelation": "LessAtoms",
+          "jgeSource": "#vk.3",
+          "jgeTarget": "#vk"
+        },
+        {
+          "jgeRelation": "LessAtoms",
+          "jgeSource": "#vk.5",
+          "jgeTarget": "#j"
+        }
+      ],
+      "jgLabel": "Theory: ex1 Lemma: Accept_Secret",
+      "jgNodes": [
+        {
+          "jgnId": "#i",
+          "jgnLabel": "Step2",
+          "jgnMetadata": {
+            "jgnActs": [
+              {
+                "jgnFactId": "action",
+                "jgnFactMult": "",
+                "jgnFactName": "Accept",
+                "jgnFactShow": "Accept( ~tid, key )",
+                "jgnFactTag": "ProtoFact",
+                "jgnFactTerms": [
+                  {
+                    "jgnConst": "~tid"
+                  },
+                  {
+                    "jgnConst": "key"
+                  }
+                ]
+              }
+            ],
+            "jgnConcs": [],
+            "jgnPrems": [
+              {
+                "jgnFactId": "#i:p0",
+                "jgnFactMult": "",
+                "jgnFactName": "Step1",
+                "jgnFactShow": "Step1( ~tid, $A, $B, ~x )",
+                "jgnFactTag": "ProtoFact",
+                "jgnFactTerms": [
+                  {
+                    "jgnConst": "~tid"
+                  },
+                  {
+                    "jgnConst": "$A"
+                  },
+                  {
+                    "jgnConst": "$B"
+                  },
+                  {
+                    "jgnConst": "~x"
+                  }
+                ]
+              },
+              {
+                "jgnFactId": "#i:p1",
+                "jgnFactMult": "",
+                "jgnFactName": "In",
+                "jgnFactShow": "In( <Y, mac(shk, <Y, $B, $A>)> )",
+                "jgnFactTag": "InFact",
+                "jgnFactTerms": [
+                  {
+                    "jgnFunct": "pair",
+                    "jgnParams": [
+                      {
+                        "jgnConst": "Y"
+                      },
+                      {
+                        "jgnFunct": "mac",
+                        "jgnParams": [
+                          {
+                            "jgnFunct": "shk",
+                            "jgnParams": [],
+                            "jgnShow": "shk"
+                          },
+                          {
+                            "jgnFunct": "pair",
+                            "jgnParams": [
+                              {
+                                "jgnConst": "Y"
+                              },
+                              {
+                                "jgnFunct": "pair",
+                                "jgnParams": [
+                                  {
+                                    "jgnConst": "$B"
+                                  },
+                                  {
+                                    "jgnConst": "$A"
+                                  }
+                                ],
+                                "jgnShow": "pair($B,$A)"
+                              }
+                            ],
+                            "jgnShow": "pair(Y,pair($B,$A))"
+                          }
+                        ],
+                        "jgnShow": "mac(shk,pair(Y,pair($B,$A)))"
+                      }
+                    ],
+                    "jgnShow": "pair(Y,mac(shk,pair(Y,pair($B,$A))))"
+                  }
+                ]
+              }
+            ]
+          },
+          "jgnType": "isProtocolRule"
+        },
+        {
+          "jgnId": "#j",
+          "jgnLabel": "Send",
+          "jgnMetadata": {
+            "jgnActs": [
+              {
+                "jgnFactId": "action",
+                "jgnFactMult": "",
+                "jgnFactName": "K",
+                "jgnFactShow": "K( key )",
+                "jgnFactTag": "ProtoFact",
+                "jgnFactTerms": [
+                  {
+                    "jgnConst": "key"
+                  }
+                ]
+              }
+            ],
+            "jgnConcs": [
+              {
+                "jgnFactId": "#j:c0",
+                "jgnFactMult": "",
+                "jgnFactName": "In",
+                "jgnFactShow": "In( key )",
+                "jgnFactTag": "InFact",
+                "jgnFactTerms": [
+                  {
+                    "jgnConst": "key"
+                  }
+                ]
+              }
+            ],
+            "jgnPrems": [
+              {
+                "jgnFactId": "#j:p0",
+                "jgnFactMult": "!",
+                "jgnFactName": "!KU",
+                "jgnFactShow": "!KU( key )",
+                "jgnFactTag": "KUFact",
+                "jgnFactTerms": [
+                  {
+                    "jgnConst": "key"
+                  }
+                ]
+              }
+            ]
+          },
+          "jgnType": "isIntruderRule"
+        },
+        {
+          "jgnId": "#vf",
+          "jgnLabel": "Send",
+          "jgnMetadata": {
+            "jgnActs": [
+              {
+                "jgnFactId": "action",
+                "jgnFactMult": "",
+                "jgnFactName": "K",
+                "jgnFactShow": "K( <Y, mac(shk, <Y, $B, $A>)> )",
+                "jgnFactTag": "ProtoFact",
+                "jgnFactTerms": [
+                  {
+                    "jgnFunct": "pair",
+                    "jgnParams": [
+                      {
+                        "jgnConst": "Y"
+                      },
+                      {
+                        "jgnFunct": "mac",
+                        "jgnParams": [
+                          {
+                            "jgnFunct": "shk",
+                            "jgnParams": [],
+                            "jgnShow": "shk"
+                          },
+                          {
+                            "jgnFunct": "pair",
+                            "jgnParams": [
+                              {
+                                "jgnConst": "Y"
+                              },
+                              {
+                                "jgnFunct": "pair",
+                                "jgnParams": [
+                                  {
+                                    "jgnConst": "$B"
+                                  },
+                                  {
+                                    "jgnConst": "$A"
+                                  }
+                                ],
+                                "jgnShow": "pair($B,$A)"
+                              }
+                            ],
+                            "jgnShow": "pair(Y,pair($B,$A))"
+                          }
+                        ],
+                        "jgnShow": "mac(shk,pair(Y,pair($B,$A)))"
+                      }
+                    ],
+                    "jgnShow": "pair(Y,mac(shk,pair(Y,pair($B,$A))))"
+                  }
+                ]
+              }
+            ],
+            "jgnConcs": [
+              {
+                "jgnFactId": "#vf:c0",
+                "jgnFactMult": "",
+                "jgnFactName": "In",
+                "jgnFactShow": "In( <Y, mac(shk, <Y, $B, $A>)> )",
+                "jgnFactTag": "InFact",
+                "jgnFactTerms": [
+                  {
+                    "jgnFunct": "pair",
+                    "jgnParams": [
+                      {
+                        "jgnConst": "Y"
+                      },
+                      {
+                        "jgnFunct": "mac",
+                        "jgnParams": [
+                          {
+                            "jgnFunct": "shk",
+                            "jgnParams": [],
+                            "jgnShow": "shk"
+                          },
+                          {
+                            "jgnFunct": "pair",
+                            "jgnParams": [
+                              {
+                                "jgnConst": "Y"
+                              },
+                              {
+                                "jgnFunct": "pair",
+                                "jgnParams": [
+                                  {
+                                    "jgnConst": "$B"
+                                  },
+                                  {
+                                    "jgnConst": "$A"
+                                  }
+                                ],
+                                "jgnShow": "pair($B,$A)"
+                              }
+                            ],
+                            "jgnShow": "pair(Y,pair($B,$A))"
+                          }
+                        ],
+                        "jgnShow": "mac(shk,pair(Y,pair($B,$A)))"
+                      }
+                    ],
+                    "jgnShow": "pair(Y,mac(shk,pair(Y,pair($B,$A))))"
+                  }
+                ]
+              }
+            ],
+            "jgnPrems": [
+              {
+                "jgnFactId": "#vf:p0",
+                "jgnFactMult": "!",
+                "jgnFactName": "!KU",
+                "jgnFactShow": "!KU( <Y, mac(shk, <Y, $B, $A>)> )",
+                "jgnFactTag": "KUFact",
+                "jgnFactTerms": [
+                  {
+                    "jgnFunct": "pair",
+                    "jgnParams": [
+                      {
+                        "jgnConst": "Y"
+                      },
+                      {
+                        "jgnFunct": "mac",
+                        "jgnParams": [
+                          {
+                            "jgnFunct": "shk",
+                            "jgnParams": [],
+                            "jgnShow": "shk"
+                          },
+                          {
+                            "jgnFunct": "pair",
+                            "jgnParams": [
+                              {
+                                "jgnConst": "Y"
+                              },
+                              {
+                                "jgnFunct": "pair",
+                                "jgnParams": [
+                                  {
+                                    "jgnConst": "$B"
+                                  },
+                                  {
+                                    "jgnConst": "$A"
+                                  }
+                                ],
+                                "jgnShow": "pair($B,$A)"
+                              }
+                            ],
+                            "jgnShow": "pair(Y,pair($B,$A))"
+                          }
+                        ],
+                        "jgnShow": "mac(shk,pair(Y,pair($B,$A)))"
+                      }
+                    ],
+                    "jgnShow": "pair(Y,mac(shk,pair(Y,pair($B,$A))))"
+                  }
+                ]
+              }
+            ]
+          },
+          "jgnType": "isIntruderRule"
+        },
+        {
+          "jgnId": "#vk",
+          "jgnLabel": "Constrc_mac",
+          "jgnMetadata": {
+            "jgnActs": [
+              {
+                "jgnFactId": "action",
+                "jgnFactMult": "!",
+                "jgnFactName": "!KU",
+                "jgnFactShow": "!KU( mac(shk, <Y, $B, $A>) )",
+                "jgnFactTag": "KUFact",
+                "jgnFactTerms": [
+                  {
+                    "jgnFunct": "mac",
+                    "jgnParams": [
+                      {
+                        "jgnFunct": "shk",
+                        "jgnParams": [],
+                        "jgnShow": "shk"
+                      },
+                      {
+                        "jgnFunct": "pair",
+                        "jgnParams": [
+                          {
+                            "jgnConst": "Y"
+                          },
+                          {
+                            "jgnFunct": "pair",
+                            "jgnParams": [
+                              {
+                                "jgnConst": "$B"
+                              },
+                              {
+                                "jgnConst": "$A"
+                              }
+                            ],
+                            "jgnShow": "pair($B,$A)"
+                          }
+                        ],
+                        "jgnShow": "pair(Y,pair($B,$A))"
+                      }
+                    ],
+                    "jgnShow": "mac(shk,pair(Y,pair($B,$A)))"
+                  }
+                ]
+              }
+            ],
+            "jgnConcs": [
+              {
+                "jgnFactId": "#vk:c0",
+                "jgnFactMult": "!",
+                "jgnFactName": "!KU",
+                "jgnFactShow": "!KU( mac(shk, <Y, $B, $A>) )",
+                "jgnFactTag": "KUFact",
+                "jgnFactTerms": [
+                  {
+                    "jgnFunct": "mac",
+                    "jgnParams": [
+                      {
+                        "jgnFunct": "shk",
+                        "jgnParams": [],
+                        "jgnShow": "shk"
+                      },
+                      {
+                        "jgnFunct": "pair",
+                        "jgnParams": [
+                          {
+                            "jgnConst": "Y"
+                          },
+                          {
+                            "jgnFunct": "pair",
+                            "jgnParams": [
+                              {
+                                "jgnConst": "$B"
+                              },
+                              {
+                                "jgnConst": "$A"
+                              }
+                            ],
+                            "jgnShow": "pair($B,$A)"
+                          }
+                        ],
+                        "jgnShow": "pair(Y,pair($B,$A))"
+                      }
+                    ],
+                    "jgnShow": "mac(shk,pair(Y,pair($B,$A)))"
+                  }
+                ]
+              }
+            ],
+            "jgnPrems": [
+              {
+                "jgnFactId": "#vk:p0",
+                "jgnFactMult": "!",
+                "jgnFactName": "!KU",
+                "jgnFactShow": "!KU( shk )",
+                "jgnFactTag": "KUFact",
+                "jgnFactTerms": [
+                  {
+                    "jgnFunct": "shk",
+                    "jgnParams": [],
+                    "jgnShow": "shk"
+                  }
+                ]
+              },
+              {
+                "jgnFactId": "#vk:p1",
+                "jgnFactMult": "!",
+                "jgnFactName": "!KU",
+                "jgnFactShow": "!KU( <Y, $B, $A> )",
+                "jgnFactTag": "KUFact",
+                "jgnFactTerms": [
+                  {
+                    "jgnFunct": "pair",
+                    "jgnParams": [
+                      {
+                        "jgnConst": "Y"
+                      },
+                      {
+                        "jgnFunct": "pair",
+                        "jgnParams": [
+                          {
+                            "jgnConst": "$B"
+                          },
+                          {
+                            "jgnConst": "$A"
+                          }
+                        ],
+                        "jgnShow": "pair($B,$A)"
+                      }
+                    ],
+                    "jgnShow": "pair(Y,pair($B,$A))"
+                  }
+                ]
+              }
+            ]
+          },
+          "jgnType": "isIntruderRule"
+        },
+        {
+          "jgnId": "#vr",
+          "jgnLabel": "Step1",
+          "jgnMetadata": {
+            "jgnActs": [],
+            "jgnConcs": [
+              {
+                "jgnFactId": "#vr:c0",
+                "jgnFactMult": "",
+                "jgnFactName": "Out",
+                "jgnFactShow": "Out( <g^~x, mac(shk, <g^~x, $A, $B>)> )",
+                "jgnFactTag": "OutFact",
+                "jgnFactTerms": [
+                  {
+                    "jgnFunct": "pair",
+                    "jgnParams": [
+                      {
+                        "jgnFunct": "exp",
+                        "jgnParams": [
+                          {
+                            "jgnFunct": "g",
+                            "jgnParams": [],
+                            "jgnShow": "g"
+                          },
+                          {
+                            "jgnConst": "~x"
+                          }
+                        ],
+                        "jgnShow": "exp(g,~x)"
+                      },
+                      {
+                        "jgnFunct": "mac",
+                        "jgnParams": [
+                          {
+                            "jgnFunct": "shk",
+                            "jgnParams": [],
+                            "jgnShow": "shk"
+                          },
+                          {
+                            "jgnFunct": "pair",
+                            "jgnParams": [
+                              {
+                                "jgnFunct": "exp",
+                                "jgnParams": [
+                                  {
+                                    "jgnFunct": "g",
+                                    "jgnParams": [],
+                                    "jgnShow": "g"
+                                  },
+                                  {
+                                    "jgnConst": "~x"
+                                  }
+                                ],
+                                "jgnShow": "exp(g,~x)"
+                              },
+                              {
+                                "jgnFunct": "pair",
+                                "jgnParams": [
+                                  {
+                                    "jgnConst": "$A"
+                                  },
+                                  {
+                                    "jgnConst": "$B"
+                                  }
+                                ],
+                                "jgnShow": "pair($A,$B)"
+                              }
+                            ],
+                            "jgnShow": "pair(exp(g,~x),pair($A,$B))"
+                          }
+                        ],
+                        "jgnShow": "mac(shk,pair(exp(g,~x),pair($A,$B)))"
+                      }
+                    ],
+                    "jgnShow": "pair(exp(g,~x),mac(shk,pair(exp(g,~x),pair($A,$B))))"
+                  }
+                ]
+              },
+              {
+                "jgnFactId": "#vr:c1",
+                "jgnFactMult": "",
+                "jgnFactName": "Step1",
+                "jgnFactShow": "Step1( ~tid, $A, $B, ~x )",
+                "jgnFactTag": "ProtoFact",
+                "jgnFactTerms": [
+                  {
+                    "jgnConst": "~tid"
+                  },
+                  {
+                    "jgnConst": "$A"
+                  },
+                  {
+                    "jgnConst": "$B"
+                  },
+                  {
+                    "jgnConst": "~x"
+                  }
+                ]
+              }
+            ],
+            "jgnPrems": [
+              {
+                "jgnFactId": "#vr:p0",
+                "jgnFactMult": "",
+                "jgnFactName": "Fr",
+                "jgnFactShow": "Fr( ~tid )",
+                "jgnFactTag": "FreshFact",
+                "jgnFactTerms": [
+                  {
+                    "jgnConst": "~tid"
+                  }
+                ]
+              },
+              {
+                "jgnFactId": "#vr:p1",
+                "jgnFactMult": "",
+                "jgnFactName": "Fr",
+                "jgnFactShow": "Fr( ~x )",
+                "jgnFactTag": "FreshFact",
+                "jgnFactTerms": [
+                  {
+                    "jgnConst": "~x"
+                  }
+                ]
+              }
+            ]
+          },
+          "jgnType": "isProtocolRule"
+        },
+        {
+          "jgnId": "#vk.1",
+          "jgnLabel": "Coerce",
+          "jgnMetadata": {
+            "jgnActs": [
+              {
+                "jgnFactId": "action",
+                "jgnFactMult": "!",
+                "jgnFactName": "!KU",
+                "jgnFactShow": "!KU( shk )",
+                "jgnFactTag": "KUFact",
+                "jgnFactTerms": [
+                  {
+                    "jgnFunct": "shk",
+                    "jgnParams": [],
+                    "jgnShow": "shk"
+                  }
+                ]
+              }
+            ],
+            "jgnConcs": [
+              {
+                "jgnFactId": "#vk.1:c0",
+                "jgnFactMult": "!",
+                "jgnFactName": "!KU",
+                "jgnFactShow": "!KU( shk )",
+                "jgnFactTag": "KUFact",
+                "jgnFactTerms": [
+                  {
+                    "jgnFunct": "shk",
+                    "jgnParams": [],
+                    "jgnShow": "shk"
+                  }
+                ]
+              }
+            ],
+            "jgnPrems": [
+              {
+                "jgnFactId": "#vk.1:p0",
+                "jgnFactMult": "!",
+                "jgnFactName": "!KD",
+                "jgnFactShow": "!KD( shk )",
+                "jgnFactTag": "KDFact",
+                "jgnFactTerms": [
+                  {
+                    "jgnFunct": "shk",
+                    "jgnParams": [],
+                    "jgnShow": "shk"
+                  }
+                ]
+              }
+            ]
+          },
+          "jgnType": "isIntruderRule"
+        },
+        {
+          "jgnId": "#vr.1",
+          "jgnLabel": "RevealKey",
+          "jgnMetadata": {
+            "jgnActs": [
+              {
+                "jgnFactId": "action",
+                "jgnFactMult": "",
+                "jgnFactName": "Reveal",
+                "jgnFactShow": "Reveal( )",
+                "jgnFactTag": "ProtoFact",
+                "jgnFactTerms": []
+              }
+            ],
+            "jgnConcs": [
+              {
+                "jgnFactId": "#vr.1:c0",
+                "jgnFactMult": "",
+                "jgnFactName": "Out",
+                "jgnFactShow": "Out( shk )",
+                "jgnFactTag": "OutFact",
+                "jgnFactTerms": [
+                  {
+                    "jgnFunct": "shk",
+                    "jgnParams": [],
+                    "jgnShow": "shk"
+                  }
+                ]
+              }
+            ],
+            "jgnPrems": []
+          },
+          "jgnType": "isProtocolRule"
+        },
+        {
+          "jgnId": "#vk.3",
+          "jgnLabel": "!KU( Y )",
+          "jgnMetadata": {
+            "jgnActs": [
+              {
+                "jgnFactId": "action",
+                "jgnFactMult": "!",
+                "jgnFactName": "!KU",
+                "jgnFactShow": "!KU( Y )",
+                "jgnFactTag": "KUFact",
+                "jgnFactTerms": [
+                  {
+                    "jgnConst": "Y"
+                  }
+                ]
+              }
+            ],
+            "jgnConcs": [],
+            "jgnPrems": []
+          },
+          "jgnType": "unsolvedActionAtom"
+        },
+        {
+          "jgnId": "#vk.5",
+          "jgnLabel": "!KU( key )",
+          "jgnMetadata": {
+            "jgnActs": [
+              {
+                "jgnFactId": "action",
+                "jgnFactMult": "!",
+                "jgnFactName": "!KU",
+                "jgnFactShow": "!KU( key )",
+                "jgnFactTag": "KUFact",
+                "jgnFactTerms": [
+                  {
+                    "jgnConst": "key"
+                  }
+                ]
+              }
+            ],
+            "jgnConcs": [],
+            "jgnPrems": []
+          },
+          "jgnType": "unsolvedActionAtom"
+        }
+      ],
+      "jgType": "Tamarin prover constraint system"
+    }
+  ]
+}

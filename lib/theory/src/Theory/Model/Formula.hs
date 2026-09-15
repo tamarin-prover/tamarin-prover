@@ -39,6 +39,8 @@ module Theory.Model.Formula (
   , quantify
   , openFormula
   , openFormulaPrefix
+  , rewrapBoundPrefix
+  , mapLits
   , toLNFormula
 --  , unquantify
 
@@ -49,6 +51,8 @@ module Theory.Model.Formula (
   , (.||.)
   , (.==>.)
   , (.<=>.)
+  , buildConjunction
+  , buildDisjunction
   , exists
   , forAll
   , hinted
@@ -70,6 +74,9 @@ module Theory.Model.Formula (
   -- ** Pretty-Printing
   , prettyLNFormula
   , prettySyntacticLNFormula
+
+  , existFormula
+  , forAllFormula
 
   ) where
 
@@ -246,6 +253,22 @@ lfalse = TF False
 (.==>.) = Conn Imp
 (.<=>.) = Conn Iff
 
+-- | Conjunction of a list of formulas; the empty list yields true.
+buildConjunction :: [ProtoFormula syn a s v] -> ProtoFormula syn a s v
+buildConjunction []       = ltrue
+buildConjunction formulas = foldr1 (.&&.) formulas
+
+-- | Disjunction of a list of formulas; the empty list yields false.
+buildDisjunction :: [ProtoFormula syn a s v] -> ProtoFormula syn a s v
+buildDisjunction []       = lfalse
+buildDisjunction formulas = foldr1 (.||.) formulas
+
+-- | Rewrap a stripped quantifier prefix around a formula body, with the
+-- binders given outermost first. Dual of 'openFormulaPrefix'.
+rewrapBoundPrefix :: Quantifier -> [a] -> ProtoFormula syn a s v -> ProtoFormula syn a s v
+rewrapBoundPrefix _ [] body       = body
+rewrapBoundPrefix q (v : vs) body = Qua q v (rewrapBoundPrefix q vs body)
+
 ------------------------------------------------------------------------------
 -- Dealing with bound variables
 ------------------------------------------------------------------------------
@@ -316,13 +339,17 @@ applyMacroInFormula macros fm = mapAtoms (const (fmap (applyMacros (lnMacrosToBN
 ------------
 
 instance HasFrees LNFormula where
+    {-# INLINABLE foldFrees #-}
     foldFrees  f = foldMap  (foldFrees  f)
     foldFreesOcc _ _ = const mempty -- we ignore occurences in Formulas for now
+    {-# INLINABLE mapFrees #-}
     mapFrees   f = traverseFormula (mapFrees   f)
 
 instance HasFrees SyntacticLNFormula where
+    {-# INLINABLE foldFrees #-}
     foldFrees  f = foldMap  (foldFrees  f)
     foldFreesOcc _ _ = const mempty -- we ignore occurences in Formulas for now
+    {-# INLINABLE mapFrees #-}
     mapFrees   f = traverseFormula (mapFrees   f)
 
 instance Apply LNSubst LNFormula where
@@ -517,3 +544,15 @@ prettySyntacticLNFormula :: HighlightDocument d => SyntacticLNFormula -> d
 prettySyntacticLNFormula fm =
     Precise.evalFresh (prettyLFormula prettySyntacticNAtom fm) (avoidPrecise fm)
 
+
+------------------------------------------------------------------------------
+-- Generate Formula
+------------------------------------------------------------------------------
+
+-- Exists-quantifies every non-time LVar of a formula
+existFormula ::  LNFormula -> LNFormula
+existFormula fm = foldl (\formula var -> exists (lvarName var, lvarSort var) var formula) fm (frees fm)
+
+-- Exists-quantifies every non-time LVar of a formula
+forAllFormula ::  LNFormula -> LNFormula
+forAllFormula fm = foldl (\formula var -> forAll (lvarName var, lvarSort var) var formula) fm (frees fm)

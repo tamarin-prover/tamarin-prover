@@ -141,18 +141,22 @@ refineSource ctxt proofStep th =
 -- repeatedly simplifying the proof state.
 --
 -- Returns the names of the steps applied.
-solveAllSafeGoals :: [Source] -> Integer -> Reduction [String]
-solveAllSafeGoals ths' openChainsLimit =
-    solve ths' [] Nothing openChainsLimit
+solveAllSafeGoals :: [Source] -> IntegerParameters -> Reduction [String]
+solveAllSafeGoals ths' parameters =
+    solve ths' [] Nothing (get paramOpenChainsLimit parameters)
   where
 --    extensiveSplitting = unsafePerformIO $
 --      (getEnv "TAMARIN_EXTENSIVE_SPLIT" >> return True) `catchIOError` \_ -> return False
+    traceChainLimit = if get showSaturationSteps parameters
+        then trace ("[Open Chains] Too many chain constraints, stopping precomputation. Open Chains limits (can be changed with -c=): "
+                    ++ show (get paramOpenChainsLimit parameters))
+        else id
     safeGoal _       _          (_,   (_, LoopBreaker)) = False
     safeGoal doSplit chainsLeft (goal, _              ) =
       case goal of
         ChainG _ _    -> if (chainsLeft > 0)
                             then True
-                            else trace ("[Open Chains] Too many chain constraints, stopping precomputation. Open Chains limits (can be changed with -c=): "++ show openChainsLimit) False
+                            else traceChainLimit False
         ActionG _ fa  -> not (isKUFact fa)
         -- we do not solve KD goals for Xor facts as insertAction inserts
         -- these goals directly. This prevents loops in the precomputations
@@ -176,7 +180,7 @@ solveAllSafeGoals ths' openChainsLimit =
         simplifySystem
         ctxt <- ask
         contradictoryIf =<< (gets (contradictorySystem ctxt))
-        goals  <- gets openGoals
+        goals  <- gets (openGoals ctxt)
         chains <- gets unsolvedChains
         -- Filter out chain goals where the term in the conclusion is identical to one we just solved,
         -- as this indicates our chain can loop
@@ -368,7 +372,7 @@ saturateSources parameters ctxt thsInit  =
       | n > get paramSaturationLimit parameters =
           if get showSaturationSteps parameters then
             trace ("[Saturating Sources] Saturation aborted, more than " ++ show (get paramSaturationLimit parameters) ++
-                 " iterations. (Limit can be change with -s=)") ths'
+                 " iterations. (Limit can be changed with -s=)") ths'
           else
             ths'
       | otherwise =
@@ -379,8 +383,7 @@ saturateSources parameters ctxt thsInit  =
           (changes, ths') = unzip $ map (refineSource ctxt solver) ths
           goodTh th = length (getDisj (get cdCases th)) <= 1
           solver
-            = do names <- solveAllSafeGoals
-                            (filter goodTh ths) (get paramOpenChainsLimit parameters)
+            = do names <- solveAllSafeGoals (filter goodTh ths) parameters
                  return (not $ null names, names)
 
 -- | Precompute a saturated set of case distinctions.
@@ -441,7 +444,7 @@ precomputeSources parameters ctxt restrictions =
           , fAppAC NatPlus [varTerm (LVar "t" LSortNat 1), varTerm (LVar "t" LSortNat 2)] ]
           else []
       , [ fAppNoEq o $ nMsgVars k
-        | o@(_,(k,priv,_)) <- S.toList . noEqFunSyms  $ msig
+        | o@(_,(k,priv,_,_)) <- S.toList . noEqFunSyms  $ msig
         , NoEq o `S.notMember` implicitFunSig, k > 0 || priv==Private]
       ]
 

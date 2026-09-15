@@ -5,7 +5,7 @@ begin
 // Function signature and definition of the equational theory E
 
 functions: fst/1, pair/2, pk/1, read/1, sign/2,
-           skca/1[private,constructor], snd/1, true/0, verify/3
+           skca/1 [private,constructor], snd/1, true/0, verify/3
 equations:
     fst(<x.1, x.2>) = x.1,
     read(sign(sk, m)) = m,
@@ -34,9 +34,9 @@ rule (modulo E) p_0_[color=#ffffff, process="|", issapicrule,
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) Proto_0_1[color=#ffffff, process="Proto()", issapicrule,
+rule (modulo E) Proto_0_1[color=#ffffff, process="Proto();", issapicrule,
                           role='Process']:
-   [ State_1( ) ] --> [ State_11( ), State_12( ) ]
+   [ State_1( ) ] --> [ State_11( ) ]
 
   /* has exactly the trivial AC variant */
 
@@ -86,18 +86,14 @@ rule (modulo E) inca_0_1111111[color=#807740, process="in($ca.1);",
      [ State_1111111( ), In( $ca ) ] --> [ State_11111111( $ca ) ]
   */
 
-rule (modulo E) CA_0_11111111[color=#807740, process="CA()", issapicrule,
-                              role='Proto']:
-   [ State_11111111( $ca.1 ) ]
-  -->
-   [ State_111111111( $ca.1 ), State_111111112( $ca.1 ) ]
+rule (modulo E) CA_0_11111111[color=#807740, process="CA();",
+                              issapicrule, role='Proto']:
+   [ State_11111111( $ca.1 ) ] --> [ State_111111111( $ca.1 ) ]
 
   /*
-  rule (modulo AC) CA_0_11111111[color=#807740, process="CA()",
+  rule (modulo AC) CA_0_11111111[color=#807740, process="CA();",
                                  issapicrule, role='Proto']:
-     [ State_11111111( $ca ) ]
-    -->
-     [ State_111111111( $ca ), State_111111112( $ca ) ]
+     [ State_11111111( $ca ) ] --> [ State_111111111( $ca ) ]
   */
 
 rule (modulo E) outpkskcaca_0_111111111[color=#6f4080,
@@ -240,16 +236,6 @@ rule (modulo E) p_0_11111111111111111[color=#6f4080, process="0",
      [ State_11111111111111111( $ca, $s, skS, $ca.1 ) ] --> [ ]
   */
 
-rule (modulo E) p_0_111111112[color=#807740, process="0", issapicrule,
-                              role='Proto']:
-   [ State_111111112( $ca.1 ) ] --> [ ]
-
-  /*
-  rule (modulo AC) p_0_111111112[color=#807740, process="0", issapicrule,
-                                 role='Proto']:
-     [ State_111111112( $ca ) ] --> [ ]
-  */
-
 rule (modulo E) inla_0_1111112[color=#807740, process="in($la.1);",
                                issapicrule, role='Proto']:
    [ State_1111112( ), In( $la.1 ) ] --> [ State_11111121( $la.1 ) ]
@@ -260,18 +246,14 @@ rule (modulo E) inla_0_1111112[color=#807740, process="in($la.1);",
      [ State_1111112( ), In( $la ) ] --> [ State_11111121( $la ) ]
   */
 
-rule (modulo E) LogCert_0_11111121[color=#807740, process="LogCert()",
+rule (modulo E) LogCert_0_11111121[color=#807740, process="LogCert();",
                                    issapicrule, role='Proto']:
-   [ State_11111121( $la.1 ) ]
-  -->
-   [ State_111111211( $la.1 ), State_111111212( $la.1 ) ]
+   [ State_11111121( $la.1 ) ] --> [ State_111111211( $la.1 ) ]
 
   /*
-  rule (modulo AC) LogCert_0_11111121[color=#807740, process="LogCert()",
+  rule (modulo AC) LogCert_0_11111121[color=#807740, process="LogCert();",
                                       issapicrule, role='Proto']:
-     [ State_11111121( $la ) ]
-    -->
-     [ State_111111211( $la ), State_111111212( $la ) ]
+     [ State_11111121( $la ) ] --> [ State_111111211( $la ) ]
   */
 
 rule (modulo E) insignskcacapks_0_111111211[color=#40806b,
@@ -404,19 +386,9 @@ rule (modulo E) p_0_1111112111111111[color=#40806b, process="0",
      [ State_1111112111111111( lock, $la, pk, $s, $ca ) ] --> [ ]
   */
 
-rule (modulo E) p_0_111111212[color=#807740, process="0", issapicrule,
-                              role='Proto']:
-   [ State_111111212( $la.1 ) ] --> [ ]
-
-  /*
-  rule (modulo AC) p_0_111111212[color=#807740, process="0", issapicrule,
-                                 role='Proto']:
-     [ State_111111212( $la ) ] --> [ ]
-  */
-
-rule (modulo E) TestCA_0_111112[color=#807740, process="TestCA()",
+rule (modulo E) TestCA_0_111112[color=#807740, process="TestCA();",
                                 issapicrule, role='Proto']:
-   [ State_111112( ) ] --> [ State_1111121( ), State_1111122( ) ]
+   [ State_111112( ) ] --> [ State_1111121( ) ]
 
   /* has exactly the trivial AC variant */
 
@@ -596,15 +568,9 @@ rule (modulo E) p_0_1111121112111[color=#534080, process="0",
      [ State_1111121112111( lock, pk, $s, $ca ) ] --> [ ]
   */
 
-rule (modulo E) p_0_1111122[color=#807740, process="0", issapicrule,
-                            role='Proto']:
-   [ State_1111122( ) ] --> [ ]
-
-  /* has exactly the trivial AC variant */
-
-rule (modulo E) TestLA_0_11112[color=#807740, process="TestLA()",
+rule (modulo E) TestLA_0_11112[color=#807740, process="TestLA();",
                                issapicrule, role='Proto']:
-   [ State_11112( ) ] --> [ State_111121( ), State_111122( ) ]
+   [ State_11112( ) ] --> [ State_111121( ) ]
 
   /* has exactly the trivial AC variant */
 
@@ -910,15 +876,9 @@ rule (modulo E) p_0_1111211122[color=#404e80, process="0", issapicrule,
      [ State_1111211122( $la, lock, pk, $s ) ] --> [ ]
   */
 
-rule (modulo E) p_0_111122[color=#807740, process="0", issapicrule,
-                           role='Proto']:
-   [ State_111122( ) ] --> [ ]
-
-  /* has exactly the trivial AC variant */
-
-rule (modulo E) Terminate_0_1112[color=#807740, process="Terminate()",
+rule (modulo E) Terminate_0_1112[color=#807740, process="Terminate();",
                                  issapicrule, role='Proto']:
-   [ State_1112( ) ] --> [ State_11121( ), State_11122( ) ]
+   [ State_1112( ) ] --> [ State_11121( ) ]
 
   /* has exactly the trivial AC variant */
 
@@ -974,18 +934,6 @@ rule (modulo E) p_0_11121111[color=#407f80, process="0", issapicrule,
                                 role='Proto_Terminate']:
      [ State_11121111( lock, lock.1 ) ] --> [ ]
   */
-
-rule (modulo E) p_0_11122[color=#807740, process="0", issapicrule,
-                          role='Proto']:
-   [ State_11122( ) ] --> [ ]
-
-  /* has exactly the trivial AC variant */
-
-rule (modulo E) p_0_12[color=#ffffff, process="0", issapicrule,
-                       role='Process']:
-   [ State_12( ) ] --> [ ]
-
-  /* has exactly the trivial AC variant */
 
 rule (modulo E) p_0_2[color=#ffffff, process="!", issapicrule,
                       role='Process']:
@@ -6013,17 +5961,15 @@ solve( State_1112111( lock, lock.1 ) ▶₀ #t )
   qed
 qed
 
-predicate: tCA( ca )<=>∃ #i. DishonestCA( ca ) @ #i
+predicate: TCA( ca )<=>∃ #i. DishonestCA( ca ) @ #i
 
-predicate: tLA( la )<=>∃ #i. DishonestLA( la ) @ #i
+predicate: TLA( la )<=>∃ #i. DishonestLA( la ) @ #i
 
 /*
 WARNING: the following wellformedness checks failed!
 
 Wellformedness-error in Process
   Variable bound twice: $ca.
-  
-  There is an unlock that cannot be matched with a lock.
 
 Accountability (RP check)
   The specification contains at least one restriction.
@@ -6039,10 +5985,10 @@ Accountability (RP check)
 
 /*
 Generated from:
-Tamarin version 1.12.0
+Tamarin version 1.13.0
 Maude version 3.5.1
-Git revision: f1832c9bc70a2a165991a0802520f2e07c023227 (with uncommited changes), branch: prepare-release
-Compiled at: 2026-03-06 22:21:49.602637 UTC
+Git revision: 41bc81379b23681e7057314a5cf66a25c45e1986, branch: canonicalise-subst
+Compiled at: 2026-07-27 16:11:34.947223 UTC
 */
 
 end
@@ -6054,9 +6000,9 @@ summary of summaries:
 analyzed: examples/accountability/csf21-acc-unbounded/previous/ct.spthy
 
   output:          examples/accountability/csf21-acc-unbounded/previous/ct.spthy.tmp
-  processing time: 19.99s
+  processing time: 13.26s
   
-  WARNING: 3 wellformedness check failed!
+  WARNING: 2 wellformedness check failed!
            The analysis results might be wrong!
   
   accCA_tCA_suff (exists-trace): verified (9 steps)

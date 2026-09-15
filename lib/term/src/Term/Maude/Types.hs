@@ -61,6 +61,16 @@ lTermToMTerm' = lTermToMTerm sortOfName
 
 
 -- | Convert an @LNTerm@ with arbitrary names to an @MTerm@.
+--
+-- Almost always called at the concrete @Name@/@BindT (Lit Name LVar) MaudeLit
+-- Fresh@ type from the @theory@ package, once per Maude query. Without an
+-- exposed unfolding GHC compiled the @mapM@/@<$>@/@importBinding@ plumbing once
+-- with dictionary passing, so we make it INLINABLE and hint the common
+-- specialisation.
+{-# INLINABLE lTermToMTerm #-}
+{-# SPECIALIZE lTermToMTerm
+      :: (Name -> LSort) -> VTerm Name LVar
+      -> BindT (Lit Name LVar) MaudeLit Fresh MTerm #-}
 lTermToMTerm :: (MonadBind (Lit c LVar) MaudeLit m, MonadFresh m, Ord c)
              => (c -> LSort) -- ^ A function that returns the sort of a constant.
              -> VTerm c LVar -- ^ The term to translate.
@@ -77,6 +87,10 @@ lTermToMTerm sortOf =
 
 -- | Convert an 'MTerm' to an 'LNTerm' under the assumption that the bindings
 -- for the constants are already available.
+{-# INLINABLE mTermToLNTerm #-}
+{-# SPECIALIZE mTermToLNTerm
+      :: String -> MTerm
+      -> BindT MaudeLit (Lit Name LVar) Fresh (VTerm Name LVar) #-}
 mTermToLNTerm :: (MonadBind MaudeLit (Lit c LVar) m, MonadFresh m, Ord c, Show c)
              => String -- ^ Name hint for freshly generated variables.
              -> MTerm  -- ^ The maude term to convert.

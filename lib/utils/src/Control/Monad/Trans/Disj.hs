@@ -20,7 +20,7 @@ module Control.Monad.Trans.Disj (
 import Control.Monad
 import Control.Monad.Disj.Class
 import Control.Monad.Reader
-import ListT
+import Control.Monad.Logic (LogicT, observeAllT)
 
 
 ------------------------------------------------------------------------------
@@ -28,16 +28,16 @@ import ListT
 ------------------------------------------------------------------------------
 
 -- | A disjunction of atoms of type a.
-newtype DisjT m a = DisjT { unDisjT :: ListT m a }
+newtype DisjT m a = DisjT { unDisjT :: LogicT m a }
   deriving (Functor, Applicative, MonadTrans )
 
--- | Construct a 'DisjT' action.
+-- | Construct a 'DisjT' action: a disjunction over the elements of a foldable.
 disjT :: (Monad m, Foldable m) => m a -> DisjT m a
-disjT = DisjT . fromFoldable
+disjT = DisjT . foldr (mplus . return) mzero
 
--- | Run a 'DisjT' action.
+-- | Run a 'DisjT' action, enumerating all atoms in order.
 runDisjT :: Monad m => DisjT m a -> m [a]
-runDisjT = toList . unDisjT
+runDisjT = observeAllT . unDisjT
 
 
 

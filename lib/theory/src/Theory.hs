@@ -30,6 +30,7 @@ module Theory (
   , clearFunctionTypingInfos
 
   -- * Options
+  , declarableOptions
   , transAllowPatternMatchinginLookup
   , transProgress
   , transReliable
@@ -203,6 +204,9 @@ module Theory (
   , openTranslatedTheory
   , openDiffTheory
 
+  , applyNDCcheck
+  , prettyNDCcheck
+
   , ClosedProtoRule(..)
   , OpenProtoRule(..)
   , oprRuleE
@@ -233,8 +237,6 @@ module Theory (
 
   , getSource
   , getDiffSource
-  -- ** Alice
-  , Theory
   -- ** Proving
   , ProofSkeleton
   , DiffProofSkeleton
@@ -329,6 +331,7 @@ import Items.ExportInfo
 import OpenTheory
 import Pretty
 import Prover
+import CloseRule
 import Theory.Model
 import Theory.Proof
 import Theory.Syntactic.Predicate

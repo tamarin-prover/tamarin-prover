@@ -34,6 +34,7 @@ import Main.Console
 import Main.Environment
 import Main.TheoryLoader
 import Main.Utils
+import Data.ByteString.Lazy qualified as BL
 import Data.Map qualified as M
 import Theory.Constraint.System.Dot
 import Text.Dot qualified as D
@@ -232,7 +233,7 @@ run thisMode as
         --                   (modify diffThyItems (++ (DiffTextItem <$> formalComments thy')))
         --                   thy'
 
-        (, ppWf report) <$> either (liftIO . prettyOpenTheoryByModule thyLoadOptions)
+        (, ppWf report) <$> either (prettyOpenTheoryByModule versionData report thyLoadOptions)
                                    (pure . prettyOpenDiffTheory)
                                    thy'
 
@@ -250,6 +251,7 @@ run thisMode as
 
         handleError e@(ParserError _) = die $ show e
         handleError (StoreContextError message) = die message
+        handleError e@(ExportTranslationError _) = die $ show e
         handleError (WarningError report) = do
           putStrLn $ renderDoc $ Pretty.vcat $ [ Pretty.text ""
                                                , Pretty.text "WARNING: the following wellformedness checks failed!" ]
@@ -286,7 +288,7 @@ run thisMode as
               Nothing -> pure ()
               Just outfile ->
                 let serialized = serializeJSON labelledSystems in
-                writeFile outfile serialized
+                BL.writeFile outfile serialized
           where
             -- | Collect all solved (i.e. a trace was found) systems of the theory along with their
             -- path in the proof and the lemma in which they appear in the given theory.

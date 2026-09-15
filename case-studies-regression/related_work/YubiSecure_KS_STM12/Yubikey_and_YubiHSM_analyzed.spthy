@@ -109,7 +109,7 @@ rule (modulo E) YSM_AES_ESC_BLOCK_ENCRYPT:
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) YSM_AEAD_YUBIKEY_OTP_DECODE:
+rule (modulo E) YSM_AEAD_YUBIKEY_OTP_DECODE[no_derivcheck]:
    [
    InHSM( <did, kh, 
            <xorc(senc(keystream(kh, N), k), <k2, did>), mac(<k2, did>, k)>, 
@@ -7527,10 +7527,10 @@ Facts occur in the left-hand-side but not in any right-hand-side
 
 /*
 Generated from:
-Tamarin version 1.12.0
+Tamarin version 1.13.0
 Maude version 3.5.1
-Git revision: f1832c9bc70a2a165991a0802520f2e07c023227 (with uncommited changes), branch: prepare-release
-Compiled at: 2026-03-06 22:21:49.602637 UTC
+Git revision: 41bc81379b23681e7057314a5cf66a25c45e1986, branch: canonicalise-subst
+Compiled at: 2026-07-27 16:11:34.947223 UTC
 */
 
 end
@@ -7542,7 +7542,7 @@ summary of summaries:
 analyzed: examples/related_work/YubiSecure_KS_STM12/Yubikey_and_YubiHSM.spthy
 
   output:          examples/related_work/YubiSecure_KS_STM12/Yubikey_and_YubiHSM.spthy.tmp
-  processing time: 12.92s
+  processing time: 6.05s
   
   WARNING: 1 wellformedness check failed!
            The analysis results might be wrong!

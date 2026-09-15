@@ -28,9 +28,7 @@ rule (modulo E) Reveal_ephk:
   /* has exactly the trivial AC variant */
 
 rule (modulo E) Reveal_sessk:
-   [ !SessKey( ~sid, kdf(sessKey) ) ]
-  --[ SesskRev( ~sid ) ]->
-   [ Out( kdf(sessKey) ) ]
+   [ !SessKey( ~sid, sessKey ) ] --[ SesskRev( ~sid ) ]-> [ Out( sessKey ) ]
 
   /* has exactly the trivial AC variant */
 
@@ -245,7 +243,7 @@ rule (modulo E) Proto2:
         z     = em(x.11, x.12)^inv(x.9)
   */
 
-rule (modulo E) Proto3:
+rule (modulo E) Proto3[no_derivcheck]:
    [
    PState2( ~ex, $A, $B, $C, tag(XB), tag(XC), emXBXC ), !Ltk( $A, ~ea ),
    !Pk( $B, pmult(~eb, 'P') ), !Pk( $C, pmult(~ec, 'P') )
@@ -266,7 +264,7 @@ rule (modulo E) Proto3:
    ]
 
   /*
-  rule (modulo AC) Proto3:
+  rule (modulo AC) Proto3[no_derivcheck]:
      [
      PState2( ~ex, $A, $B, $C, tag(XB), tag(XC), emXBXC ), !Ltk( $A, ~ea ),
      !Pk( $B, pmult(~x, 'P') ), !Pk( $C, pmult(~x.1, 'P') )
@@ -481,13 +479,13 @@ solve( ((∃ #k spartner. (Origin( spartner, XC ) @ #k)) ∧
                     solve( !KU( tag(pmult(~ex.2, 'P')) ) @ #vk.15 )
                       case c_tag
                       solve( !KU( em('P', 'P')^(~ex*~ex.1*~ex.2) ) @ #vk.9 )
-                        case Proto1_case_3
+                        case Proto1_case_1
                         solve( !KU( ~ex.1 ) @ #vk.19 )
                           case Reveal_ephk
                           solve( !KU( ~ex.2 ) @ #vk.20 )
                             case Reveal_ephk
                             solve( !KU( em('P', 'P')^(~ea*~x*~x.1) ) @ #vk.15 )
-                              case Register_pk_case_4
+                              case Register_pk_case_7
                               solve( !KU( ~ea ) @ #vk.21 )
                                 case Reveal_ltk
                                 solve( !KU( pmult(~ex.1, 'P') ) @ #vk.15 )
@@ -521,10 +519,10 @@ qed
 
 /*
 Generated from:
-Tamarin version 1.12.0
+Tamarin version 1.13.0
 Maude version 3.5.1
-Git revision: f1832c9bc70a2a165991a0802520f2e07c023227 (with uncommited changes), branch: prepare-release
-Compiled at: 2026-03-06 22:21:49.602637 UTC
+Git revision: 41bc81379b23681e7057314a5cf66a25c45e1986, branch: canonicalise-subst
+Compiled at: 2026-07-27 16:11:34.947223 UTC
 */
 
 end
@@ -536,7 +534,7 @@ summary of summaries:
 analyzed: examples/ake/bilinear/TAK1_eCK_like.spthy
 
   output:          examples/ake/bilinear/TAK1_eCK_like.spthy.tmp
-  processing time: 19.54s
+  processing time: 15.71s
   
   session_key_establish (exists-trace): verified (17 steps)
   Session_Key_Secrecy (all-traces): falsified - found trace (21 steps)

@@ -48,7 +48,7 @@ rule Init_2:
   --[ SessionKey($I,$R, Y ^ ~ekI), Eq(verify(SIG, <'2', $R, $I, Y>, pkR), true) ]->
     []
 
-rule Resp:
+rule Resp [no_derivcheck]:
     [ !Pk($I, pk(ltkI))
     , !Ltk($R, ltkR)
     , Fr(~ekR)

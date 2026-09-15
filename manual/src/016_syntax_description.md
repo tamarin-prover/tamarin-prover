@@ -21,7 +21,7 @@ function symbols and the equalities describing their interaction.  Note that
 our parser is stateful and remembers what functions have been defined. It will
 only parse function applications of defined functions.
 
-~~~~ {.tamarin grammar="grammar/grammar.ebnf" rules="_signature_spec,function,_function_sym,function_pub,function_private,function_destructor,equations,equation"}
+~~~~ {.tamarin grammar="grammar/grammar.ebnf" rules="_signature_spec,function,_function_sym,function_untyped,function_typed,function_attribute,equations,equation"}
 ~~~~
 
 Note that the equations must be convergent and have the

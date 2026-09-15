@@ -544,9 +544,11 @@ natSubtermEqualities relation = {-trace (show (("natSubtermEqualities"
 
 
 instance HasFrees SubtermStore where
+    {-# INLINABLE foldFrees #-}
     foldFrees f (SubtermStore negSt st solvedSt _ _) =
         foldFrees f negSt <> foldFrees f st <> foldFrees f solvedSt
     foldFreesOcc  _ _ = const mempty
+    {-# INLINABLE mapFrees #-}
     mapFrees f (SubtermStore negSt st solvedSt contr oldNegSt) =
         SubtermStore <$> mapFrees f negSt
                 <*> mapFrees f st

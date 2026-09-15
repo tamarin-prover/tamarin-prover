@@ -36,7 +36,7 @@ rule (modulo E) Proto1:
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) Proto2:
+rule (modulo E) Proto2[no_derivcheck]:
    [
    PState( $A, ($B++$C), ~ekA ), !Pk( $B, pk(ltkB) ), !Pk( $C, pk(ltkC) ),
    In( <XB, sign(<$B, ($A++$C), XB>, ltkB)> ),
@@ -46,7 +46,7 @@ rule (modulo E) Proto2:
    [ ]
 
   /*
-  rule (modulo AC) Proto2:
+  rule (modulo AC) Proto2[no_derivcheck]:
      [
      PState( $A, ($B++$C), ~ekA ), !Pk( $B, pk(ltkB) ), !Pk( $C, pk(ltkC) ),
      In( <XB, sign(<$B, ($A++$C), XB>, ltkB)> ),
@@ -927,7 +927,7 @@ solve( SessionKey( A, (B++C), k ) @ #ia )
                                     solve( splitEqs(3) )
                                       case split_case_3
                                       solve( splitEqs(6) )
-                                        case split_case_4
+                                        case split_case_5
                                         solve( !KU( pmult(~ekA.1, 'P') ) @ #vk.6 )
                                           case Proto1
                                           solve( splitEqs(11) )
@@ -1001,17 +1001,23 @@ solve( SessionKey( A, (B++C), sessKey ) @ #i )
             case Proto1
             solve( !KU( em('P', 'P')^(~ekA*~ekA.1*~ekA.2) ) @ #vk.3 )
               case Proto1_case_4
-              solve( !KU( ~ekA ) @ #vk.7 )
+              solve( !KU( ~ekA.2 ) @ #vk.7 )
                 case EphkRev
-                solve( splitEqs(5) )
+                solve( splitEqs(4) )
                   case split
-                  solve( splitEqs(3) )
+                  solve( splitEqs(5) )
                     case split
-                    solve( !KU( pmult(~ekA.1, 'P') ) @ #vk.6 )
-                      case Proto1
-                      solve( !KU( pmult(~ekA.2, 'P') ) @ #vk.7 )
+                    solve( splitEqs(3) )
+                      case split_case_1
+                      solve( !KU( pmult(~ekA.1, 'P') ) @ #vk.6 )
                         case Proto1
-                        SOLVED // trace found
+                        solve( !KU( pmult(~ekA.2, 'P') ) @ #vk.7 )
+                          case Proto1
+                          solve( splitEqs(11) )
+                            case split
+                            SOLVED // trace found
+                          qed
+                        qed
                       qed
                     qed
                   qed
@@ -1029,10 +1035,10 @@ qed
 
 /*
 Generated from:
-Tamarin version 1.12.0
+Tamarin version 1.13.0
 Maude version 3.5.1
-Git revision: f1832c9bc70a2a165991a0802520f2e07c023227 (with uncommited changes), branch: prepare-release
-Compiled at: 2026-03-06 22:21:49.602637 UTC
+Git revision: 41bc81379b23681e7057314a5cf66a25c45e1986, branch: canonicalise-subst
+Compiled at: 2026-07-27 16:11:34.947223 UTC
 */
 
 end
@@ -1044,10 +1050,10 @@ summary of summaries:
 analyzed: examples/ake/bilinear/Joux_EphkRev.spthy
 
   output:          examples/ake/bilinear/Joux_EphkRev.spthy.tmp
-  processing time: 8.64s
+  processing time: 8.31s
   
   session_key_establish (exists-trace): verified (28 steps)
-  Session_Key_Secrecy_PFS (all-traces): falsified - found trace (14 steps)
+  Session_Key_Secrecy_PFS (all-traces): falsified - found trace (16 steps)
 
 ==============================================================================
 */

@@ -50,9 +50,9 @@ rule Reveal_master_key:
 
 
 rule Reveal_session_key:
-  [ !Sessk( ~ey, kdf(sek) ) ]
+  [ !Sessk( ~ey, sessKey ) ]
   --[ SesskRev( ~ey ) ]->
-  [ Out( kdf(sek) ) ]
+  [ Out( sessKey ) ]
 
 
 rule Reveal_ephemeral_key:
@@ -73,7 +73,7 @@ rule Init_1:
   , !Ephk( ~ex )
   ]
 
-rule Init_2:
+rule Init_2 [no_derivcheck]:
   let skA = pmult(~s1, hp($A))
       mpk = pmult(~s2,'P')
       X   = pmult(~ex,'P')
@@ -91,7 +91,7 @@ rule Init_2:
     ]->
   [ !Sessk( ~ex, sessKey ) ]
 
-rule Resp_1:
+rule Resp_1 [no_derivcheck]:
   let skB = pmult(~msk, hp($B))
       mpk = pmult(~msk, 'P')
       Y = pmult(~ey,'P')

@@ -9,7 +9,7 @@ rule challenge:
   [ Out(<~a, ~b>) ]
 
 
-rule receive:
+rule receive [no_derivcheck]:
  [ In(~a  ⊕ ~b) ]
 --[ Response(~a ⊕ ~b) ]->
  []

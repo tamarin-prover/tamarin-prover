@@ -1,0 +1,435 @@
+========================
+Equality condition
+========================
+
+theory T
+begin
+process:
+in(x); if x = 'a' then out(x)
+end
+
+---
+
+(theory
+  theory_name: (ident)
+  (process
+    (input
+      (mset_term
+        left: (nat_term
+          left: (xor_term
+            left: (mul_term
+              left: (exp_term
+                base: (msg_var_or_nullary_fun
+                  variable_identifier: (ident)))))))
+      (conditional
+        condition: (equality_check
+          (mset_term
+            left: (nat_term
+              left: (xor_term
+                left: (mul_term
+                  left: (exp_term
+                    base: (msg_var_or_nullary_fun
+                      variable_identifier: (ident)))))))
+          (mset_term
+            left: (nat_term
+              left: (xor_term
+                left: (mul_term
+                  left: (exp_term
+                    base: (pub_name)))))))
+        then: (output
+          (mset_term
+            left: (nat_term
+              left: (xor_term
+                left: (mul_term
+                  left: (exp_term
+                    base: (msg_var_or_nullary_fun
+                      variable_identifier: (ident))))))))))))
+
+========================
+Negated formula condition
+========================
+
+theory T
+begin
+process:
+in(x); if not (x = 'a') then out(x) else 0
+end
+
+---
+
+(theory
+  theory_name: (ident)
+  (process
+    (input
+      (mset_term
+        left: (nat_term
+          left: (xor_term
+            left: (mul_term
+              left: (exp_term
+                base: (msg_var_or_nullary_fun
+                  variable_identifier: (ident)))))))
+      (conditional
+        condition: (negation
+          formula: (nested_formula
+            (term_eq
+              left: (mset_term
+                left: (nat_term
+                  left: (xor_term
+                    left: (mul_term
+                      left: (exp_term
+                        base: (msg_var_or_nullary_fun
+                          variable_identifier: (ident)))))))
+              right: (mset_term
+                left: (nat_term
+                  left: (xor_term
+                    left: (mul_term
+                      left: (exp_term
+                        base: (pub_name)))))))))
+        then: (output
+          (mset_term
+            left: (nat_term
+              left: (xor_term
+                left: (mul_term
+                  left: (exp_term
+                    base: (msg_var_or_nullary_fun
+                      variable_identifier: (ident))))))))
+        else: (null)))))
+
+========================
+Quantified formula condition
+========================
+
+theory T
+begin
+process:
+in(x); if Ex #i. A(x) @ i then out(x)
+end
+
+---
+
+(theory
+  theory_name: (ident)
+  (process
+    (input
+      (mset_term
+        left: (nat_term
+          left: (xor_term
+            left: (mul_term
+              left: (exp_term
+                base: (msg_var_or_nullary_fun
+                  variable_identifier: (ident)))))))
+      (conditional
+        condition: (quantified_formula
+          variable: (temporal_var
+            variable_identifier: (ident))
+          formula: (action_constraint
+            fact: (linear_fact
+              fact_identifier: (ident)
+              (arguments
+                argument: (mset_term
+                  left: (nat_term
+                    left: (xor_term
+                      left: (mul_term
+                        left: (exp_term
+                          base: (msg_var_or_nullary_fun
+                            variable_identifier: (ident)))))))))
+            variable: (temporal_var
+              variable_identifier: (ident))))
+        then: (output
+          (mset_term
+            left: (nat_term
+              left: (xor_term
+                left: (mul_term
+                  left: (exp_term
+                    base: (msg_var_or_nullary_fun
+                      variable_identifier: (ident))))))))))))
+
+========================
+Predicate condition
+========================
+
+theory T
+begin
+process:
+in(x); if P(x) then out(x)
+end
+
+---
+
+(theory
+  theory_name: (ident)
+  (process
+    (input
+      (mset_term
+        left: (nat_term
+          left: (xor_term
+            left: (mul_term
+              left: (exp_term
+                base: (msg_var_or_nullary_fun
+                  variable_identifier: (ident)))))))
+      (conditional
+        condition: (predicate_ref
+          predicate_identifier: (ident)
+          (arguments
+            argument: (mset_term
+              left: (nat_term
+                left: (xor_term
+                  left: (mul_term
+                    left: (exp_term
+                      base: (msg_var_or_nullary_fun
+                        variable_identifier: (ident)))))))))
+        then: (output
+          (mset_term
+            left: (nat_term
+              left: (xor_term
+                left: (mul_term
+                  left: (exp_term
+                    base: (msg_var_or_nullary_fun
+                      variable_identifier: (ident))))))))))))
+
+========================
+Less-than and subterm conditions
+========================
+
+theory T
+begin
+process:
+in(x); if x (<) y then out(x) else if x << y then out(y)
+end
+
+---
+
+(theory
+  theory_name: (ident)
+  (process
+    (input
+      (mset_term
+        left: (nat_term
+          left: (xor_term
+            left: (mul_term
+              left: (exp_term
+                base: (msg_var_or_nullary_fun
+                  variable_identifier: (ident)))))))
+      (conditional
+        condition: (lesser_check
+          left: (mset_term
+            left: (nat_term
+              left: (xor_term
+                left: (mul_term
+                  left: (exp_term
+                    base: (msg_var_or_nullary_fun
+                      variable_identifier: (ident)))))))
+          right: (mset_term
+            left: (nat_term
+              left: (xor_term
+                left: (mul_term
+                  left: (exp_term
+                    base: (msg_var_or_nullary_fun
+                      variable_identifier: (ident))))))))
+        then: (output
+          (mset_term
+            left: (nat_term
+              left: (xor_term
+                left: (mul_term
+                  left: (exp_term
+                    base: (msg_var_or_nullary_fun
+                      variable_identifier: (ident))))))))
+        else: (conditional
+          condition: (subterm_rel
+            left: (mset_term
+              left: (nat_term
+                left: (xor_term
+                  left: (mul_term
+                    left: (exp_term
+                      base: (msg_var_or_nullary_fun
+                        variable_identifier: (ident)))))))
+            right: (mset_term
+              left: (nat_term
+                left: (xor_term
+                  left: (mul_term
+                    left: (exp_term
+                      base: (msg_var_or_nullary_fun
+                        variable_identifier: (ident))))))))
+          then: (output
+            (mset_term
+              left: (nat_term
+                left: (xor_term
+                  left: (mul_term
+                    left: (exp_term
+                      base: (msg_var_or_nullary_fun
+                        variable_identifier: (ident)))))))))))))
+
+========================
+Comparison inside a compound condition
+========================
+
+theory T
+begin
+process:
+in(x); if x (<) y & x << y then out(x)
+end
+
+---
+
+(theory
+  theory_name: (ident)
+  (process
+    (input
+      (mset_term
+        left: (nat_term
+          left: (xor_term
+            left: (mul_term
+              left: (exp_term
+                base: (msg_var_or_nullary_fun
+                  variable_identifier: (ident)))))))
+      (conditional
+        condition: (conjunction
+          left: (lesser_check
+            left: (mset_term
+              left: (nat_term
+                left: (xor_term
+                  left: (mul_term
+                    left: (exp_term
+                      base: (msg_var_or_nullary_fun
+                        variable_identifier: (ident)))))))
+            right: (mset_term
+              left: (nat_term
+                left: (xor_term
+                  left: (mul_term
+                    left: (exp_term
+                      base: (msg_var_or_nullary_fun
+                        variable_identifier: (ident))))))))
+          right: (subterm_rel
+            left: (mset_term
+              left: (nat_term
+                left: (xor_term
+                  left: (mul_term
+                    left: (exp_term
+                      base: (msg_var_or_nullary_fun
+                        variable_identifier: (ident)))))))
+            right: (mset_term
+              left: (nat_term
+                left: (xor_term
+                  left: (mul_term
+                    left: (exp_term
+                      base: (msg_var_or_nullary_fun
+                        variable_identifier: (ident)))))))))
+        then: (output
+          (mset_term
+            left: (nat_term
+              left: (xor_term
+                left: (mul_term
+                  left: (exp_term
+                    base: (msg_var_or_nullary_fun
+                      variable_identifier: (ident))))))))))))
+
+========================
+Equality operands are terms
+========================
+
+theory T
+begin
+functions: f/1
+process:
+in(x); if x = f(y) then out(x)
+end
+
+---
+
+(theory
+  theory_name: (ident)
+  (functions
+    (function_untyped
+      function_identifier: (ident)
+      arity: (natural)))
+  (process
+    (input
+      (mset_term
+        left: (nat_term
+          left: (xor_term
+            left: (mul_term
+              left: (exp_term
+                base: (msg_var_or_nullary_fun
+                  variable_identifier: (ident)))))))
+      (conditional
+        condition: (equality_check
+          (mset_term
+            left: (nat_term
+              left: (xor_term
+                left: (mul_term
+                  left: (exp_term
+                    base: (msg_var_or_nullary_fun
+                      variable_identifier: (ident)))))))
+          (mset_term
+            left: (nat_term
+              left: (xor_term
+                left: (mul_term
+                  left: (exp_term
+                    base: (nary_app
+                      function_identifier: (ident)
+                      (arguments
+                        argument: (mset_term
+                          left: (nat_term
+                            left: (xor_term
+                              left: (mul_term
+                                left: (exp_term
+                                  base: (msg_var_or_nullary_fun
+                                    variable_identifier: (ident)))))))))))))))
+        then: (output
+          (mset_term
+            left: (nat_term
+              left: (xor_term
+                left: (mul_term
+                  left: (exp_term
+                    base: (msg_var_or_nullary_fun
+                      variable_identifier: (ident))))))))))))
+
+========================
+Conjunction of equalities rejected
+========================
+
+theory T
+begin
+process:
+in(x); if x = 'a' & y = 'b' then out(x)
+end
+
+---
+
+(theory
+  theory_name: (ident)
+  (process
+    (input
+      (mset_term
+        left: (nat_term
+          left: (xor_term
+            left: (mul_term
+              left: (exp_term
+                base: (msg_var_or_nullary_fun
+                  variable_identifier: (ident)))))))
+      (conditional
+        condition: (equality_check
+          (mset_term
+            left: (nat_term
+              left: (xor_term
+                left: (mul_term
+                  left: (exp_term
+                    base: (msg_var_or_nullary_fun
+                      variable_identifier: (ident)))))))
+          (ERROR
+            (pub_name)
+            (ident))
+          (mset_term
+            left: (nat_term
+              left: (xor_term
+                left: (mul_term
+                  left: (exp_term
+                    base: (pub_name)))))))
+        then: (output
+          (mset_term
+            left: (nat_term
+              left: (xor_term
+                left: (mul_term
+                  left: (exp_term
+                    base: (msg_var_or_nullary_fun
+                      variable_identifier: (ident))))))))))))

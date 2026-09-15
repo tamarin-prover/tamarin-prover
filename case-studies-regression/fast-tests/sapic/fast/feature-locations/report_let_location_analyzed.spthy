@@ -1,0 +1,439 @@
+theory ReportLetLocation
+
+begin
+
+// Function signature and definition of the equational theory E
+
+functions: check_rep/2 [destructor], fst/1, get_rep/1 [destructor],
+           pair/2, rep/2 [private,constructor], report/1, snd/1
+equations:
+    check_rep(rep(x.1, x.2), x.2) = x.1,
+    fst(<x.1, x.2>) = x.1,
+    get_rep(rep(x.1, x.2)) = x.1,
+    snd(<x.1, x.2>) = x.2
+
+heuristic: p
+
+predicate: Report( x, y )<=>(¬(y = <'loc', 'p'>)) ∧ (¬(y = <'loc', 'q'>))
+
+lemma can_run_v:
+  exists-trace "∃ #i m. Local( m, <'loc', 'p'> ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #i m. (Local( m, <'loc', 'p'> ) @ #i)"
+*/
+simplify
+solve( State_12121111( r, m ) ▶₀ #i )
+  case ifxcheckreprlocp_0_1212111
+  solve( splitEqs(1) )
+    case split_case_1
+    solve( !KU( rep(m, <'loc', 'p'>) ) @ #vk.2 )
+      case outxrepxlocp_0_11111
+      SOLVED // trace found
+    qed
+  qed
+qed
+
+lemma simp_p [reuse]:
+  all-traces
+  "∀ #i m.
+    (!KU( rep(m, <'loc', 'p'>) ) @ #i) ⇒
+    (∃ #j. Remote( m, <'loc', 'p'> ) @ #j)"
+/*
+guarded formula characterizing all counter-examples:
+"∃ #i m.
+  (!KU( rep(m, <'loc', 'p'>) ) @ #i)
+ ∧
+  ∀ #j. (Remote( m, <'loc', 'p'> ) @ #j) ⇒ ⊥"
+*/
+simplify
+solve( !KU( rep(m, <'loc', 'p'>) ) @ #i )
+  case ReportRule
+  by contradiction /* from formulas */
+next
+  case outxrepxlocp_0_11111
+  by contradiction /* from formulas */
+qed
+
+lemma simp_q [reuse]:
+  all-traces
+  "∀ #i m.
+    (!KU( rep(m, <'loc', 'q'>) ) @ #i) ⇒
+    (∃ #j. Remote( m, <'loc', 'q'> ) @ #j)"
+/*
+guarded formula characterizing all counter-examples:
+"∃ #i m.
+  (!KU( rep(m, <'loc', 'q'>) ) @ #i)
+ ∧
+  ∀ #j. (Remote( m, <'loc', 'q'> ) @ #j) ⇒ ⊥"
+*/
+simplify
+solve( !KU( rep(m, <'loc', 'q'>) ) @ #i )
+  case ReportRule
+  by contradiction /* from formulas */
+next
+  case outxrepxlocq_0_1211111
+  by contradiction /* from formulas */
+qed
+
+lemma attested_comput:
+  all-traces
+  "∀ #i m.
+    (Local( m, <'loc', 'p'> ) @ #i) ⇒ (∃ #j. Remote( m, <'loc', 'p'> ) @ #j)"
+/*
+guarded formula characterizing all counter-examples:
+"∃ #i m.
+  (Local( m, <'loc', 'p'> ) @ #i)
+ ∧
+  ∀ #j. (Remote( m, <'loc', 'p'> ) @ #j) ⇒ ⊥"
+*/
+simplify
+solve( State_12121111( r, m ) ▶₀ #i )
+  case ifxcheckreprlocp_0_1212111
+  solve( splitEqs(1) )
+    case split_case_1
+    by contradiction /* from formulas */
+  next
+    case split_case_2
+    by solve( !KU( check_rep(r, <'loc', 'p'>) ) @ #vk.1 )
+  qed
+qed
+
+restriction Restr_ReportRule_1:
+  "∀ x #NOW x.1.
+    (Restr_ReportRule_1( x, x.1 ) @ #NOW) ⇒
+    ((¬(x = <'loc', 'p'>)) ∧ (¬(x.1 = <'loc', 'q'>)))"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ x #NOW x.1.
+    (Restr_ReportRule_1( x, x.1 ) @ #NOW) ⇒
+    ((¬(x = <'loc', 'p'>)) ∧ (¬(x.1 = <'loc', 'q'>)))"
+  */
+
+rule (modulo E) ReportRule[color=#ffffff, process="!", issapicrule,
+                           role='Process']:
+   [ In( <x, loc> ) ]
+  --[ Restr_ReportRule_1( loc, loc ) ]->
+   [ Out( rep(x, loc) ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Init[color=#ffffff, process="!", issapicrule,
+                     role='Process']:
+   [ ] --[ Init( ) ]-> [ State_( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_0_[color=#ffffff, process="!", issapicrule,
+                     role='Process']:
+   [ State_( ) ] --> [ !Semistate_1( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_1_[color=#ffffff, process="!", issapicrule,
+                     role='Process']:
+   [ !Semistate_1( ) ] --> [ State_1( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_0_1[color=#ffffff, process="|", issapicrule,
+                      role='Process']:
+   [ State_1( ) ] --> [ State_11( ), State_12( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) plocp_0_11[color=#ffffff, process="p(<'loc', 'p'>);",
+                           issapicrule, role='Process']:
+   [ State_11( ) ] --> [ State_111( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) inx_0_111[color=#804046, process="in(x.1);", issapicrule,
+                          role='p']:
+   [ State_111( ), In( x.1 ) ] --> [ State_1111( x.1 ) ]
+
+  /*
+  rule (modulo AC) inx_0_111[color=#804046, process="in(x.1);",
+                             issapicrule, role='p']:
+     [ State_111( ), In( x ) ] --> [ State_1111( x ) ]
+  */
+
+rule (modulo E) eventRemotexlocp_0_1111[color=#804046,
+                                        process="event Remote( x.1, <'loc', 'p'> );", issapicrule, role='p']:
+   [ State_1111( x.1 ) ]
+  --[ Remote( x.1, <'loc', 'p'> ) ]->
+   [ State_11111( x.1 ) ]
+
+  /*
+  rule (modulo AC) eventRemotexlocp_0_1111[color=#804046,
+                                           process="event Remote( x.1, <'loc', 'p'> );", issapicrule,
+                                           role='p']:
+     [ State_1111( x ) ]
+    --[ Remote( x, <'loc', 'p'> ) ]->
+     [ State_11111( x ) ]
+  */
+
+rule (modulo E) outxrepxlocp_0_11111[color=#804046,
+                                     process="out(<x.1, rep(x.1, <'loc', 'p'>)>);", issapicrule, role='p']:
+   [ State_11111( x.1 ) ]
+  -->
+   [ State_111111( x.1 ), Out( <x.1, rep(x.1, <'loc', 'p'>)> ) ]
+
+  /*
+  rule (modulo AC) outxrepxlocp_0_11111[color=#804046,
+                                        process="out(<x.1, rep(x.1, <'loc', 'p'>)>);", issapicrule, role='p']:
+     [ State_11111( x ) ]
+    -->
+     [ State_111111( x ), Out( <x, rep(x, <'loc', 'p'>)> ) ]
+  */
+
+rule (modulo E) p_0_111111[color=#804046, process="0", issapicrule,
+                           role='p']:
+   [ State_111111( x.1 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_111111[color=#804046, process="0", issapicrule,
+                              role='p']:
+     [ State_111111( x ) ] --> [ ]
+  */
+
+rule (modulo E) p_0_12[color=#ffffff, process="!", issapicrule,
+                       role='Process']:
+   [ State_12( ) ] --> [ !Semistate_121( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_1_12[color=#ffffff, process="!", issapicrule,
+                       role='Process']:
+   [ !Semistate_121( ) ] --> [ State_121( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_0_121[color=#ffffff, process="|", issapicrule,
+                        role='Process']:
+   [ State_121( ) ] --> [ State_1211( ), State_1212( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) q_0_1211[color=#ffffff, process="q();", issapicrule,
+                         role='Process']:
+   [ State_1211( ) ] --> [ State_12111( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) inx_0_12111[color=#794080, process="in(x.2);",
+                            issapicrule, role='q']:
+   [ State_12111( ), In( x.2 ) ] --> [ State_121111( x.2 ) ]
+
+  /*
+  rule (modulo AC) inx_0_12111[color=#794080, process="in(x.2);",
+                               issapicrule, role='q']:
+     [ State_12111( ), In( x ) ] --> [ State_121111( x ) ]
+  */
+
+rule (modulo E) eventRemotexlocq_0_121111[color=#794080,
+                                          process="event Remote( x.2, <'loc', 'q'> );", issapicrule,
+                                          role='q']:
+   [ State_121111( x.2 ) ]
+  --[ Remote( x.2, <'loc', 'q'> ) ]->
+   [ State_1211111( x.2 ) ]
+
+  /*
+  rule (modulo AC) eventRemotexlocq_0_121111[color=#794080,
+                                             process="event Remote( x.2, <'loc', 'q'> );", issapicrule,
+                                             role='q']:
+     [ State_121111( x ) ]
+    --[ Remote( x, <'loc', 'q'> ) ]->
+     [ State_1211111( x ) ]
+  */
+
+rule (modulo E) outxrepxlocq_0_1211111[color=#794080,
+                                       process="out(<x.2, rep(x.2, <'loc', 'q'>)>);", issapicrule, role='q']:
+   [ State_1211111( x.2 ) ]
+  -->
+   [ State_12111111( x.2 ), Out( <x.2, rep(x.2, <'loc', 'q'>)> ) ]
+
+  /*
+  rule (modulo AC) outxrepxlocq_0_1211111[color=#794080,
+                                          process="out(<x.2, rep(x.2, <'loc', 'q'>)>);", issapicrule,
+                                          role='q']:
+     [ State_1211111( x ) ]
+    -->
+     [ State_12111111( x ), Out( <x, rep(x, <'loc', 'q'>)> ) ]
+  */
+
+rule (modulo E) p_0_12111111[color=#794080, process="0", issapicrule,
+                             role='q']:
+   [ State_12111111( x.2 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_12111111[color=#794080, process="0", issapicrule,
+                                role='q']:
+     [ State_12111111( x ) ] --> [ ]
+  */
+
+rule (modulo E) p_0_1212[color=#ffffff, process="!", issapicrule,
+                         role='Process']:
+   [ State_1212( ) ] --> [ !Semistate_12121( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_1_1212[color=#ffffff, process="!", issapicrule,
+                         role='Process']:
+   [ !Semistate_12121( ) ] --> [ State_12121( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) v_0_12121[color=#ffffff, process="v();", issapicrule,
+                          role='Process']:
+   [ State_12121( ) ] --> [ State_121211( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) inxr_0_121211[color=#658040, process="in(<x.3, r.1>);",
+                              issapicrule, role='v']:
+   [ State_121211( ), In( <x.3, r.1> ) ] --> [ State_1212111( r.1, x.3 ) ]
+
+  /*
+  rule (modulo AC) inxr_0_121211[color=#658040, process="in(<x.3, r.1>);",
+                                 issapicrule, role='v']:
+     [ State_121211( ), In( <x, r> ) ] --> [ State_1212111( r, x ) ]
+  */
+
+rule (modulo E) ifxcheckreprlocp_0_1212111[color=#658040,
+                                           process="if x.3=check_rep(r.1, <'loc', 'p'>)", issapicrule,
+                                           role='v']:
+   [ State_1212111( r.1, x.3 ) ]
+  --[ Pred_Eq( x.3, check_rep(r.1, <'loc', 'p'>) ) ]->
+   [ State_12121111( r.1, x.3 ) ]
+
+  /*
+  rule (modulo AC) ifxcheckreprlocp_0_1212111[color=#658040,
+                                              process="if x.3=check_rep(r.1, <'loc', 'p'>)", issapicrule,
+                                              role='v']:
+     [ State_1212111( r, x ) ]
+    --[ Pred_Eq( x, z ) ]->
+     [ State_12121111( r, x ) ]
+    variants (modulo AC)
+    1. r     = r.7
+       z     = check_rep(r.7, <'loc', 'p'>)
+    
+    2. r     = rep(x.7, <'loc', 'p'>)
+       z     = x.7
+  */
+
+rule (modulo E) ifxcheckreprlocp_1_1212111[color=#658040,
+                                           process="if x.3=check_rep(r.1, <'loc', 'p'>)", issapicrule,
+                                           role='v']:
+   [ State_1212111( r.1, x.3 ) ]
+  --[ Pred_Not_Eq( x.3, check_rep(r.1, <'loc', 'p'>) ) ]->
+   [ State_12121112( r.1, x.3 ) ]
+
+  /*
+  rule (modulo AC) ifxcheckreprlocp_1_1212111[color=#658040,
+                                              process="if x.3=check_rep(r.1, <'loc', 'p'>)", issapicrule,
+                                              role='v']:
+     [ State_1212111( r, x ) ]
+    --[ Pred_Not_Eq( x, z ) ]->
+     [ State_12121112( r, x ) ]
+    variants (modulo AC)
+    1. r     = r.7
+       z     = check_rep(r.7, <'loc', 'p'>)
+    
+    2. r     = rep(x.7, <'loc', 'p'>)
+       z     = x.7
+  */
+
+rule (modulo E) eventLocalxlocp_0_12121111[color=#658040,
+                                           process="event Local( x.3, <'loc', 'p'> );", issapicrule,
+                                           role='v']:
+   [ State_12121111( r.1, x.3 ) ]
+  --[ Local( x.3, <'loc', 'p'> ) ]->
+   [ State_121211111( r.1, x.3 ) ]
+
+  /*
+  rule (modulo AC) eventLocalxlocp_0_12121111[color=#658040,
+                                              process="event Local( x.3, <'loc', 'p'> );", issapicrule,
+                                              role='v']:
+     [ State_12121111( r, x ) ]
+    --[ Local( x, <'loc', 'p'> ) ]->
+     [ State_121211111( r, x ) ]
+  */
+
+rule (modulo E) p_0_121211111[color=#658040, process="0", issapicrule,
+                              role='v']:
+   [ State_121211111( r.1, x.3 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_121211111[color=#658040, process="0", issapicrule,
+                                 role='v']:
+     [ State_121211111( r, x ) ] --> [ ]
+  */
+
+rule (modulo E) p_0_12121112[color=#658040, process="0", issapicrule,
+                             role='v']:
+   [ State_12121112( r.1, x.3 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_12121112[color=#658040, process="0", issapicrule,
+                                role='v']:
+     [ State_12121112( r, x ) ] --> [ ]
+  */
+
+restriction predicate_eq:
+  "∀ #i a b. (Pred_Eq( a, b ) @ #i) ⇒ (a = b)"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ #i a b. (Pred_Eq( a, b ) @ #i) ⇒ (a = b)"
+  */
+
+restriction predicate_not_eq:
+  "∀ #i a b. (Pred_Not_Eq( a, b ) @ #i) ⇒ (¬(a = b))"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ #i a b. (Pred_Not_Eq( a, b ) @ #i) ⇒ (¬(a = b))"
+  */
+
+restriction single_session:
+  "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
+  */
+
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.13.0
+Maude version 3.5.1
+Git revision: 78f181b8ec86895c0afe126ce89b1eacc6ebbdaf (with uncommited changes), branch: fix-locations-report
+Compiled at: 2026-08-22 16:32:05.755425323 UTC
+*/
+
+end
+/* Output
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/sapic/fast/feature-locations/report_let_location.spthy
+
+  output:          examples/sapic/fast/feature-locations/report_let_location.spthy.tmp
+  processing time: 0.25s
+  
+  can_run_v (exists-trace): verified (5 steps)
+  simp_p (all-traces): verified (4 steps)
+  simp_q (all-traces): verified (4 steps)
+  attested_comput (all-traces): verified (5 steps)
+
+==============================================================================
+*/

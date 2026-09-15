@@ -1,7 +1,7 @@
 #include <wctype.h>
 #include <stdbool.h>
 
-#include <tree_sitter/parser.h>
+#include "tree_sitter/parser.h"
 
 enum TokenType {
     MULTI_COMMENT,

@@ -22,7 +22,7 @@ import Text.PrettyPrint.Highlight (HighlightDocument, Document (nest, (<->), ($-
 
 type CaseIdentifier = String
 
-data CaseTest = CaseTest 
+data CaseTest = CaseTest
        { _cName       :: CaseIdentifier
        , _cFormula    :: SyntacticLNFormula
        }
@@ -31,9 +31,8 @@ data CaseTest = CaseTest
 $(mkLabels [''CaseTest])
 
 caseTestToPredicate :: CaseTest -> Maybe Predicate
-caseTestToPredicate caseTest = fmap (Predicate fact) formula
+caseTestToPredicate caseTest = fmap (mkPredicate name) formula
   where
-    fact = protoFact Linear name (frees formula)
     name = L.get cName caseTest
     formula = toLNFormula (L.get cFormula caseTest)
 
