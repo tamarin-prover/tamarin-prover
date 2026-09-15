@@ -91,10 +91,10 @@ import TheoryObject (diffTheoryConfigBlock, theoryConfigBlock)
 theoryLoadFlags :: [Flag Arguments]
 theoryLoadFlags =
   [ flagReq
-      ["evict"]
-      (updateArg "evict")
+      ["persist-proof-state"]
+      (updateArg "persistProofState")
       "DIR"
-      "store expanded proof systems in DIR/store.bin and drop them from memory (see --evict-json)",
+      "store expanded proof systems in DIR/store.bin and drop them from memory (see --persist-proof-state-json)",
     flagOpt
       ""
       ["prove"]
@@ -230,7 +230,7 @@ data TheoryLoadOptions = TheoryLoadOptions
     noReuse :: Bool,
     noRestrictions :: Bool,
     replicationBound :: Int,
-    evictDir :: Maybe FilePath          -- ^ --evict: spill+drop systems during the search
+    persistProofStateDir :: Maybe FilePath -- ^ --persist-proof-state: spill+drop systems during the search
   }
   deriving (Show)
 
@@ -259,7 +259,7 @@ defaultTheoryLoadOptions =
       noReuse = False,
       noRestrictions = False,
       replicationBound = 3,
-      evictDir = Nothing
+      persistProofStateDir = Nothing
     }
 
 toParserFlags :: TheoryLoadOptions -> [String]
@@ -297,12 +297,12 @@ mkTheoryLoadOptions as =
     <*> noReuse
     <*> noRestrictions
     <*> replicationBound
-    <*> evictDir
+    <*> persistProofStateDir
   where
     proveMode = pure $ argExists "prove" as
     lemmaNames = pure $ findArg "prove" as ++ findArg "lemma" as
 
-    evictDir = pure (findArg "evict" as :: Maybe FilePath)
+    persistProofStateDir = pure (findArg "persistProofState" as :: Maybe FilePath)
 
     parseIntArg args defaultValue conv errMsg = case args of
       [] -> pure defaultValue
@@ -606,7 +606,7 @@ closeTranslatedTheory thyOpts sign srcThy = do
               closedThy
           Nothing -> closedThy
 
-  evictionContextMatches <- case thyOpts.evictDir of
+  evictionContextMatches <- case thyOpts.persistProofStateDir of
       Nothing ->
         pure True
       Just _ -> case partialThy of
@@ -618,7 +618,7 @@ closeTranslatedTheory thyOpts sign srcThy = do
 
   unless evictionContextMatches $
     throwError $ StoreContextError
-      "eviction store belongs to a different theory; use a fresh --evict directory"
+      "eviction store belongs to a different theory; use a fresh --persist-proof-state directory"
 
   let provedThy =
         bimap
@@ -755,7 +755,7 @@ constructAutoProver thyOpts =
     thyOpts.proofBound
     (fromMaybe CutDFS thyOpts.stopOnTrace)
     thyOpts.oracleOnly
-    (isJust thyOpts.evictDir)
+    (isJust thyOpts.persistProofStateDir)
 
 -----------------------------------------------
 -- Add Options parameters in an OpenTheory

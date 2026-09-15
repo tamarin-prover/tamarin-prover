@@ -299,7 +299,7 @@ requireStore :: IO Store
 requireStore = do
     existing <- readIORef globalStore
     case existing of
-      Nothing    -> error "store not initialized (did you pass --evict?)"
+      Nothing    -> error "store not initialized (did you pass --persist-proof-state?)"
       Just store -> pure store
 
 -- | Store a value once, keyed by its content hash.

@@ -92,7 +92,7 @@ run thisMode as = case findArg "workDir" as of
           OutJSON -> ensureGraphCommand as
 
       -- Open the store requested for proof-state eviction.
-      mapM_ initStore (findArg "evict" as :: Maybe FilePath)
+      mapM_ initStore (findArg "persistProofState" as :: Maybe FilePath)
 
       port <- readPort
       let webUrl = serverUrl port

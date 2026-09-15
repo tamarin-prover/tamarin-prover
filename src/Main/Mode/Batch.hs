@@ -67,7 +67,7 @@ batchMode = tamarinMode
               , flagNone ["precompute-only"] (addEmptyArg "precomputeOnly")
                   "Just run precomputation and show partial deconstructions"
 
-              , flagReq ["evict-json"] (updateArg "evictJSON") "DIR"
+              , flagReq ["persist-proof-state-json"] (updateArg "persistProofStateJSON") "DIR"
                   "write DIR/store.jsonl and lemma tree JSON files from DIR/store.bin"
 
               ] ++
@@ -92,8 +92,8 @@ batchMode = tamarinMode
 -- | Process a theory file.
 run :: TamarinMode -> Arguments -> IO ()
 run thisMode as
-  | Just exportDir <- findArg "evictJSON" as :: Maybe FilePath, null inFiles =
-      writeEvictionJSON exportDir
+  | Just exportDir <- findArg "persistProofStateJSON" as :: Maybe FilePath, null inFiles =
+      writeProofStateJSON exportDir
   | null inFiles = helpAndExit thisMode (Just "no input files given")
   | argExists "parseOnly" as = do
       res <- mapM (processThy "") inFiles
@@ -120,7 +120,7 @@ run thisMode as
         mapM_ (putStrLn . renderDoc) docs
   | otherwise = do
       versionData <- ensureMaudeAndGetVersion as
-      mapM_ initStore thyLoadOptions.evictDir
+      mapM_ initStore thyLoadOptions.persistProofStateDir
       resTimed <- mapM (timedIO . processThy versionData) inFiles
       let (docs, reps, times) = unzip3 $ fmap (\((d, r), t) -> (d, r, t)) resTimed
 
@@ -142,7 +142,7 @@ run thisMode as
         putStrLn $ renderDoc $ ppSummary summary
 
       closeStore
-      mapM_ writeEvictionJSON (findArg "evictJSON" as :: Maybe FilePath)
+      mapM_ writeProofStateJSON (findArg "persistProofStateJSON" as :: Maybe FilePath)
 
   where
     ppSummary summary = Pretty.vcat [ Pretty.text ""
@@ -154,8 +154,8 @@ run thisMode as
                                     , Pretty.text $ replicate 78 '=' ]
 
     -- | Export every readable JSON artifact from one eviction store snapshot.
-    writeEvictionJSON :: FilePath -> IO ()
-    writeEvictionJSON dir =
+    writeProofStateJSON :: FilePath -> IO ()
+    writeProofStateJSON dir =
         writeStoreExports dir >>= mapM_ (putStrLn . ("wrote " ++))
 
     ppRep (inFile, outFile, time, summary) =

@@ -532,6 +532,10 @@ specifying a common prefix followed by a wildcard, e.g.,
 `--prove=Client_auth*`. **Note:** In most shells, the `*` needs to be escaped
 to `\*`.
 
+Use `--persist-proof-state=DIR` to reduce memory usage, restore interrupted searches,
+and inspect saved proof states. See
+[Reducing Memory Usage and Persisting Proof State](011_advanced-features.html#sec:persist-proof-state).
+
 ### Quit on Warning
 
 As referred to in ["Graphical User Interface"](#sec:gui), in larger models, one
