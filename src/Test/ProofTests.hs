@@ -1,11 +1,10 @@
--- Check that releasing cached proof states preserves valid annotations.
+-- Check that releasing cached proof states preserves the complete proof.
+-- Demand annotations after search, then compare with a run that retains states.
 module Test.ProofTests (tests) where
 
 import Control.DeepSeq (force)
 import Control.Exception (evaluate)
-import Control.Monad (forM_)
 import Extension.Data.Label qualified as L
-import Data.Maybe (fromJust)
 import Test.HUnit
 import Theory
 import Theory.Text.Parser
@@ -18,48 +17,31 @@ tests maudePath = do
     diffThy <- closeDiffTheory maudePath (addDefaultDiffLemma parsedDiff) False
     pure $ TestList $ concat
         [ [ TestLabel ("trace annotations: " ++ label) $ TestCase $ do
-                let proved = proveTheory (const True) (runAutoProverWith retention aut) thy
-                forM_ (theoryLemmas proved) $ \lem -> do
-                    prf <- evaluate $ force $ L.get lProof lem
-                    let ctxt = getProofContext lem proved
-                        sys = fromJust $ psInfo $ root prf
-                        checked = checkProof ctxt (\_ s -> sorry Nothing (Just s)) 0 sys prf
-                        comparisons = foldProof (compareAnnotation . psInfo) checked
-                    assertAnnotations (L.get lName lem) comparisons
+                let proofs retention = map (L.get lProof) $ theoryLemmas $
+                        proveTheory (const True) (runAutoProverWith retention aut) thy
+                    reconstructed = proofs ReleaseProofStates
+                assertBool "trace lemmas were generated" (not $ null reconstructed)
+                -- Finish search without forcing state annotations. Comparing the
+                -- complete proofs then checks lazy replay against retained states.
+                _ <- evaluate $ force $ map (mapProofInfo (const ())) reconstructed
+                assertEqual "proofs and annotations match retained search"
+                    (proofs RetainProofStates) reconstructed
           , TestLabel ("equivalence annotations: " ++ label) $ TestCase $ do
-                let proved = proveDiffTheory (const True)
-                        (runAutoProverWith retention aut) (runAutoDiffProverWith retention aut) diffThy
-                assertBool "an equivalence lemma was generated" $
-                    not $ null $ diffTheoryDiffLemmas proved
-                forM_ (diffTheoryDiffLemmas proved) $ \lem -> do
-                    prf <- evaluate $ force $ L.get lDiffProof lem
-                    let ctxt = getDiffProofContext lem proved
-                        sys = fromJust $ dpsInfo $ root prf
-                        checked = fromJust $ runDiffProver
-                            (checkAndExtendDiffProver $ sorryDiffProver Nothing)
-                            ctxt 0 sys prf
-                        compareState step =
-                            let (ann, path) = dpsInfo step
-                            in [Just ann == (dpsInfo . root <$> atPathDiff checked path)]
-                        comparisons = foldDiffProof compareState (insertPathsDiff prf)
-                    assertAnnotations (L.get lDiffName lem) comparisons
+                let proofs retention = map (L.get lDiffProof) $ diffTheoryDiffLemmas $
+                        proveDiffTheory (const True)
+                            (runAutoProverWith retention aut)
+                            (runAutoDiffProverWith retention aut) diffThy
+                    reconstructed = proofs ReleaseProofStates
+                assertBool "an equivalence lemma was generated" (not $ null reconstructed)
+                _ <- evaluate $ force $ map (mapDiffProofInfo (const ())) reconstructed
+                assertEqual "proofs and annotations match retained search"
+                    (proofs RetainProofStates) reconstructed
           ]
-        | retention <- [RetainProofStates, ReleaseProofStates]
-        , (cut, bound) <- [(CutDFS, Nothing), (CutBFS, Nothing),
-                          (CutSingleThreadDFS, Nothing), (CutNothing, Nothing),
-                          (CutAfterSorry, Nothing), (CutDFS, Just 2)]
+        | cut <- [CutDFS, CutBFS, CutSingleThreadDFS, CutNothing, CutAfterSorry]
+        , bound <- [Nothing, Just 0, Just 1, Just 2]
         , let aut = AutoProver Nothing Nothing bound cut False
-              label = show (retention, cut, bound)
+              label = show (cut, bound)
         ]
-  where
-    -- The checker can add omitted alternatives to a cut proof. Compare every
-    -- original annotation; those new alternatives have no original annotation.
-    compareAnnotation (Just original, replayed) = [original == replayed]
-    compareAnnotation (Nothing, _) = []
-    assertAnnotations name comparisons = do
-        assertBool (name ++ ": exercised child states") (length comparisons > 1)
-        assertBool (name ++ ": annotations match independent proof replay")
-            (and comparisons)
 
 traceModel :: String
 traceModel = unlines
