@@ -227,6 +227,8 @@ mkSystemDiff s ctxt restrictions previousItems =
         guard $    lemmaSourceKind lem <= kind && s==s''
                 && ReuseLemma `elem` L.get lAttributes lem
                 && AllTraces == L.get lTraceQuantifier lem
+                && L.get lName lem `notElem` L.get pcHiddenLemmas ctxt
+                && "ALL" `notElem` L.get pcHiddenLemmas ctxt
         return $ formulaToGuarded_ $ L.get lFormula lem
 
 -- | Construct a diff constraint system.
