@@ -214,7 +214,10 @@ getDiffProofContext l thy = DiffProofContext (proofContext LHS) (proofContext RH
         guard $    lemmaSourceKind lem <= RefinedSource
                 && ReuseDiffLemma `elem` L.get lAttributes lem
                 && AllTraces == L.get lTraceQuantifier lem
+                && L.get lName lem `notElem` hiddenLemmas
+                && "ALL" `notElem` hiddenLemmas
         return $ (s, formulaToGuarded_ $ L.get lFormula lem)
+    hiddenLemmas = [name | HideLemma name <- L.get lDiffAttributes l]
     proofContext s   = case s of
         LHS -> ProofContext
             ( L.get diffThySignature                    thy)
