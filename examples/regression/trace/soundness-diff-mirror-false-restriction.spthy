@@ -1,0 +1,14 @@
+theory SoundnessDiffMirrorFalseRestriction
+begin
+
+rule Emit:
+  [ Fr(~secret) ] --> [ Out(~secret) ]
+
+// An action-free restriction must not be discarded as irrelevant while
+// validating the opposite-side mirror.
+restriction BanAllRight [right]:
+  "F"
+
+diffLemma Observational_equivalence:
+
+end

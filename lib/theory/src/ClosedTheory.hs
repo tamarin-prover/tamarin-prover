@@ -203,6 +203,7 @@ getDiffProofContext l thy = DiffProofContext (proofContext LHS) (proofContext RH
     (map (L.get dprRule) $ diffTheoryDiffRules thy) (L.get (crConstruct . crcRules . diffThyDiffCacheLeft) thy)
     (L.get (crDestruct . crcRules . diffThyDiffCacheLeft) thy)
     ((LHS, restrictionsLeft):[(RHS, restrictionsRight)]) gatherReusableLemmas
+    (preservedDiffActions thy)
   where
     items = L.get diffThyItems thy
     restrictionsLeft  = do EitherRestrictionItem (LHS, rstr) <- items
@@ -492,6 +493,13 @@ prettyClosedSummary thy =
                  parens (integer siz <-> text "steps")
 
     proofStepSummary = proofStepStatus &&& const (Sum (1::Integer))
+
+-- | The action tags whose occurrences are preserved between the compiled
+-- rule families of the two sides, computed once per diff proof context.
+preservedDiffActions :: ClosedDiffTheory -> S.Set FactTag
+preservedDiffActions thy = diffPreservedActionTags
+    (joinAllRules $ L.get (crcRules . diffThyDiffCacheLeft) thy)
+    (joinAllRules $ L.get (crcRules . diffThyDiffCacheRight) thy)
 
 prettyClosedDiffSummary :: Document d => ClosedDiffTheory -> d
 prettyClosedDiffSummary thy =
