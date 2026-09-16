@@ -492,7 +492,9 @@ COMMON_REGRESSION_CASE_STUDIES+=auto-sources-rule-name-collision.spthy
 case-studies$(SUBDIR)regression/trace/auto-sources-rule-name-collision_analyzed.spthy: TRACE_EXTRA_ARGS=--auto-sources
 FAST_REGRESSION_CASE_STUDIES+=$(COMMON_REGRESSION_CASE_STUDIES)
 FAST_REGRESSION_TARGETS=$(subst .spthy,_analyzed.spthy,$(addprefix case-studies$(SUBDIR)regression/trace/,$(FAST_REGRESSION_CASE_STUDIES)))
-DIFF_REGRESSION_CASE_STUDIES=soundness-diff-source-side.spthy soundness-diff-hidden-reuse.spthy
+DIFF_REGRESSION_CASE_STUDIES=soundness-diff-source-side.spthy soundness-diff-hidden-reuse.spthy soundness-diff-macros.spthy
+DIFF_REGRESSION_CASE_STUDIES+=diff-auto-source-macros.spthy
+case-studies$(SUBDIR)regression/trace/diff-auto-source-macros_analyzed-diff.spthy: DIFF_EXTRA_ARGS=--auto-sources --bound=8 --quit-on-warning
 DIFF_REGRESSION_TARGETS=$(subst .spthy,_analyzed-diff.spthy,$(addprefix case-studies$(SUBDIR)regression/trace/,$(DIFF_REGRESSION_CASE_STUDIES)))
 
 

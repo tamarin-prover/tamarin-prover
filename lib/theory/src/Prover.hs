@@ -111,8 +111,10 @@ closeDiffTheoryWithMaude sig thy0 autoSources =
       DiffRuleItem
       (EitherRuleItem . closeEitherProtoRule hnd)
       (DiffLemmaItem . fmap skeletonToIncrementalDiffProof)
-      (\(s, l) -> EitherLemmaItem (s, fmap skeletonToIncrementalProof l))
-      EitherRestrictionItem
+      (\(s, l) -> EitherLemmaItem
+          (s, fmap skeletonToIncrementalProof $ applyMacroInLemma (diffTheoryMacros thy0) l))
+      (\(s, r) -> EitherRestrictionItem
+          (s, applyMacroInRestriction (diffTheoryMacros thy0) r))
       DiffMacroItem
       DiffTextItem
       DiffConfigBlockItem
