@@ -22,6 +22,7 @@ module Theory.Constraint.Solver.ProofMethod (
   , execProofMethod
   , execDiffProofMethod
   , isFinished
+  , restrictionPreservationReason
 
   -- ** Heuristics
   , rankProofMethods
@@ -345,6 +346,15 @@ execDiffProofMethod :: DiffProofContext
                 -> DiffProofMethod -> DiffSystem -> Maybe (M.Map CaseName DiffSystem)
 execDiffProofMethod ctxt method sys =
   case method of
+    DiffSorry (Just reason) | reason == restrictionPreservationReason -> do
+      -- Closing this case as MIRRORED is unjustified when an opposite
+      -- restriction is neither local nor preserved. Stop here with
+      -- a reason: the compositional check cannot establish this restriction
+      -- for every mirrored trace from this dependency graph.
+      side <- mside
+      guard $ not $ null $ unsupportedDiffRestrictions ctxt (opposite side)
+      mirroredOnGraph
+      return M.empty
     DiffSorry _ -> return M.empty
     DiffBackwardSearch -> do
       guard (L.get dsProofType sys == Just RuleEquivalence)
@@ -359,13 +369,12 @@ execDiffProofMethod ctxt method sys =
       s <- L.get dsSide sys
       applyStep meth s =<< sequent
     DiffMirrored -> do
-      guard (L.get dsProofType sys == Just RuleEquivalence)
-      guard (isJust $ L.get dsCurrentRule sys)
-      msys' >>= guard . trivial
-      mallSubtermsFinished >>= guard
-      mirrorSyss <- mmirrorSyss
-      solved <- isSolved <$> mside <*> msys'
-      guard (fst (evaluateRestrictions ctxt sys mirrorSyss solved) == TTrue)
+      -- The mirrors are checked on this graph only. That establishes an
+      -- opposite restriction on the mirrored trace only if it is local, or
+      -- shared with all its actions preserved.
+      side <- mside
+      guard $ null $ unsupportedDiffRestrictions ctxt (opposite side)
+      mirroredOnGraph
       return M.empty
     DiffAttack -> do
       guard (L.get dsProofType sys == Just RuleEquivalence)
@@ -395,6 +404,25 @@ execDiffProofMethod ctxt method sys =
       guard (not allSubtermsFinished)
       return M.empty
   where
+    -- The mirrors of this trivial graph satisfy the opposite restrictions.
+    mirroredOnGraph = do
+      guard (L.get dsProofType sys == Just RuleEquivalence)
+      guard (isJust $ L.get dsCurrentRule sys)
+      msys' >>= guard . trivial
+      mallSubtermsFinished >>= guard
+      side <- mside
+      mirrorSyss <- mmirrorSyss
+      solved <- isSolved side <$> msys'
+      -- A shared non-local conjunct whose actions are preserved holds on
+      -- the full mirror. Its witness need not occur in this dependency graph.
+      -- Keep unsupported conjuncts here (the diagnostic path uses this check
+      -- too), and keep every original restriction for admission checks.
+      let needsChecking f = classifyDiffRestriction ctxt (opposite side) f /= DiffPreserved
+          mirrorCtxt = L.modify dpcRestrictions
+            (map (\(s, fs) -> (s, if s == opposite side
+                then filter needsChecking (concatMap guardedConjuncts fs) else fs))) ctxt
+      guard (fst (evaluateRestrictions mirrorCtxt sys mirrorSyss solved) == TTrue)
+
     sequent              = L.get dsSystem sys
     mside                = L.get dsSide sys
     msys'                = L.get dsSystem sys
@@ -459,6 +487,11 @@ execDiffProofMethod ctxt method sys =
     applyStep m s dsSys = do
       cases <- checkAndExecProofMethod (eitherProofContext ctxt s) m dsSys
       return $ M.map (\x -> L.set dsSystem (Just x) sys) cases
+
+-- | The reason recorded when a rule-equivalence case would be closed as
+-- MIRRORED but an opposite restriction is neither local nor preserved.
+restrictionPreservationReason :: String
+restrictionPreservationReason = "restriction preservation not established"
 
 -- | Whether the remaining subterm constraints permit extracting a trace.
 finishedSubterms :: ProofContext -> System -> Bool
@@ -679,6 +712,7 @@ rankDiffProofMethods ranking tactics ctxt sys = do
             [ (DiffRuleEquivalence, "Prove equivalence using rule equivalence")
             , (DiffMirrored, "Backward search completed")
             , (DiffAttack, "Found attack")
+            , (DiffSorry (Just restrictionPreservationReason), "Restriction preservation not established")
             , (DiffUnfinishable, "Proof cannot be finished")
             , (DiffBackwardSearch, "Do backward search from rule")]
         ++  maybe []

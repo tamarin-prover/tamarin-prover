@@ -1,0 +1,45 @@
+theory DiffMultisessionObservableRestriction
+begin
+
+builtins: symmetric-encryption, hashing
+
+// Each session publishes a commitment to a fresh secret. Its two remaining
+// rules can release the encryption key and the encrypted secret separately.
+rule Init:
+  [ Fr(~k), Fr(~s) ] --[ Secret(~s) ]->
+  [ First(~k), Second(~k,~s), Out(h(~s)) ]
+
+rule EmitKey:
+  [ First(k) ] --[ EmitFor(k), KeySent(k) ]-> [ Out(k) ]
+
+rule EmitCiphertext:
+  [ Second(k,s) ] --[ EmitFor(k), CiphertextSent(s,k) ]-> [ Out(senc(s,k)) ]
+
+// On the right, either output is possible, but they cannot both come from
+// the same session. Starting another session supplies a different fresh key.
+restriction OneEmission [right]:
+  "All k #i #j. EmitFor(k)@i & EmitFor(k)@j ==> #i=#j"
+
+lemma left_leaks [left]: exists-trace
+  "Ex s #i #j. Secret(s)@i & K(s)@j"
+
+lemma right_secret [right]:
+  "All s #i #j. Secret(s)@i & K(s)@j ==> F"
+
+lemma right_key_reachable [right]: exists-trace
+  "Ex k #i. KeySent(k)@i"
+
+lemma right_ciphertext_reachable [right]: exists-trace
+  "Ex s k #i. CiphertextSent(s,k)@i"
+
+// This difference is observable: with outputs c=h(s), k and e=senc(s,k),
+// the attacker can test h(sdec(e,k))=c. It succeeds on the left; the right
+// cannot supply both k and e for that commitment. The secrecy lemmas above
+// check the corresponding knowledge difference, and the reachability lemmas
+// confirm that the right-hand restriction still allows either output alone.
+//
+// This supplements the internal-event example. Equivalence should remain
+// incomplete or report an attack; a bound of 6 completes all four side lemmas.
+diffLemma Observational_equivalence:
+
+end

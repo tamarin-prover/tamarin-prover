@@ -493,9 +493,13 @@ case-studies$(SUBDIR)regression/trace/auto-sources-rule-name-collision_analyzed.
 FAST_REGRESSION_CASE_STUDIES+=$(COMMON_REGRESSION_CASE_STUDIES)
 FAST_REGRESSION_TARGETS=$(subst .spthy,_analyzed.spthy,$(addprefix case-studies$(SUBDIR)regression/trace/,$(FAST_REGRESSION_CASE_STUDIES)))
 DIFF_REGRESSION_CASE_STUDIES=soundness-diff-source-side.spthy soundness-diff-hidden-reuse.spthy soundness-diff-macros.spthy
-DIFF_REGRESSION_CASE_STUDIES+=diff-auto-source-macros.spthy diff-embedded-restrictions.spthy diff-embedded-restriction-projections.spthy
 DIFF_REGRESSION_CASE_STUDIES+=diff-embedded-restriction-names.spthy diff-embedded-side-restriction-names.spthy
+DIFF_REGRESSION_CASE_STUDIES+=diff-auto-source-macros.spthy diff-embedded-restrictions.spthy diff-embedded-restriction-projections.spthy
+DIFF_REGRESSION_CASE_STUDIES+=diff-preserved-restriction-binders.spthy
+DIFF_REGRESSION_CASE_STUDIES+=soundness-diff-mirror-restriction.spthy soundness-diff-mirror-false-restriction.spthy soundness-diff-mixed-restriction.spthy
+DIFF_REGRESSION_CASE_STUDIES+=soundness-diff-multisession-restriction.spthy soundness-diff-preserved-restrictions.spthy diff-multisession-observable-restriction.spthy
 case-studies$(SUBDIR)regression/trace/diff-auto-source-macros_analyzed-diff.spthy: DIFF_EXTRA_ARGS=--auto-sources --bound=8 --quit-on-warning
+case-studies$(SUBDIR)regression/trace/diff-multisession-observable-restriction_analyzed-diff.spthy: DIFF_EXTRA_ARGS=--bound=6
 DIFF_REGRESSION_CASE_STUDIES+=diff-side-restriction-choices.spthy
 DIFF_REGRESSION_TARGETS=$(subst .spthy,_analyzed-diff.spthy,$(addprefix case-studies$(SUBDIR)regression/trace/,$(DIFF_REGRESSION_CASE_STUDIES)))
 

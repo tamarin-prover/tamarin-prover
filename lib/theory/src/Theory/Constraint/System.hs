@@ -95,6 +95,7 @@ module Theory.Constraint.System (
   , dpcConstrRules
   , dpcRestrictions
   , dpcReuseLemmas
+  , dpcPreservedActions
   , eitherProofContext
 
   -- ** Classified rules
@@ -178,6 +179,10 @@ module Theory.Constraint.System (
   , evaluateRestrictions
   , doRestrictionsHold
   , filterRestrictions
+  , diffPreservedActionTags
+  , DiffRestrictionKind(..)
+  , classifyDiffRestriction
+  , unsupportedDiffRestrictions
 
   , checkIndependence
 
@@ -778,6 +783,7 @@ data DiffProofContext = DiffProofContext
        , _dpcDestrRules           :: [RuleAC]
        , _dpcRestrictions         :: [(Side, [LNGuarded])]
        , _dpcReuseLemmas          :: [(Side, LNGuarded)]
+       , _dpcPreservedActions     :: S.Set FactTag
        }
        deriving( Eq, Ord, Show )
 
@@ -982,6 +988,130 @@ getAllRulesOnOtherSide ctxt side = getAllRulesOnSide ctxt $ if side == LHS then 
 -- | 'getAllRulesOnSide' @ctxt@ @side@ returns all rules in diff proof context @ctxt@ on the side @side@.
 getAllRulesOnSide :: DiffProofContext -> Side -> [RuleAC]
 getAllRulesOnSide ctxt side = joinAllRules $ L.get pcRules $ if side == RHS then L.get dpcPCRight ctxt else L.get dpcPCLeft ctxt
+
+-- | Certify action predicates whose occurrences and arguments are identical
+-- in every mirror. This checks compiled rule families, including explicit
+-- sides and variants, rather than just the syntax of the original diff rule.
+--
+-- A protocol fact is preserved if every corresponding pair of producers
+-- preserves its conclusion at the same position, assuming preserved premises.
+-- Eliminate candidates until this condition is closed. Induction over a
+-- finite dependency graph then establishes the remaining candidates: fresh
+-- nodes are copied by mirroring, and each other node receives equal certified
+-- premises from earlier nodes. This also handles recursive state rules.
+--
+-- Only bare variables in equal premise argument positions are identified.
+-- We never invert a constructor (which need not be injective modulo E).
+-- New public variables are identified by the vector already fixed by
+-- getSubstitutionsFixingNewVars. Other inputs, notably attacker knowledge,
+-- remain unknown. Syntactically equal expressions in these identified values
+-- remain equal under all rule-variant substitutions and modulo E.
+diffPreservedActionTags :: [RuleAC] -> [RuleAC] -> S.Set FactTag
+diffPreservedActionTags leftRules rightRules = S.filter preservedAction actionCandidates
+  where
+    families = M.fromListWith (++) . map (\r -> (ruleName r, [r])) . filter isProtocolRule
+    leftFamilies = families leftRules
+    rightFamilies = families rightRules
+    pairs = [(l,r) | (name, ls) <- M.toList leftFamilies,
+                     l <- ls, r <- M.findWithDefault [] name rightFamilies]
+    protocolTag (ProtoFact _ _ _) = True
+    protocolTag _ = False
+    candidates field = S.fromList
+      [factTag f | r <- leftRules ++ rightRules, f <- L.get field r, protocolTag (factTag f)]
+    intruderTags field = S.fromList
+      [factTag f | r <- leftRules ++ rightRules, not (isProtocolRule r), f <- L.get field r]
+    -- An unmatched producer cannot certify its tags. Removing its state tags
+    -- also removes dependent certificates through the fixed point, without
+    -- disabling certificates for unrelated matched families.
+    unmatched = concat (M.elems (leftFamilies `M.difference` rightFamilies)) ++
+                concat (M.elems (rightFamilies `M.difference` leftFamilies))
+    unmatchedTags field = S.fromList [factTag f | r <- unmatched, f <- L.get field r]
+    eligible field = candidates field `S.difference`
+      (intruderTags field `S.union` unmatchedTags field)
+    factCandidates = eligible rConcs
+    actionCandidates = eligible rActs
+    preservedFacts = fixedPoint factCandidates
+    fixedPoint known =
+      let next = S.filter (\tag -> all (preservesConclusion known tag) pairs) known
+      in if next == known then known else fixedPoint next
+
+    -- Each binding has a shared positional key. Repeated variables can make
+    -- this approximation stricter, but cannot identify unequal inputs.
+    bindings :: S.Set FactTag -> RuleAC -> RuleAC -> [((Int, Int, Int), LVar, LVar)]
+    bindings known l r =
+      [((0, i, j), x, y)
+      | (i, (lf, rf)) <- zip [0..] (zip (L.get rPrems l) (L.get rPrems r))
+      , factTag lf == factTag rf
+      , factTag lf == FreshFact || factTag lf `S.member` known
+      , (j, (lt, rt)) <- zip [0..] (zip (factTerms lf) (factTerms rf))
+      , Just x <- [getVar lt], Just y <- [getVar rt]
+      , lvarSort x == lvarSort y] ++
+      [((1, i, 0), x, y)
+      | (i, (lt, rt)) <- zip [0..] (zip (L.get rNewVars l) (L.get rNewVars r))
+      , Just x <- [getVar lt], Just y <- [getVar rt]
+      , lvarSort x == LSortPub, lvarSort y == LSortPub]
+
+    canonical known l r =
+      let bs = bindings known l r
+          keys = M.fromList $ zip (S.toList $ S.fromList [key | (key, _, _) <- bs]) [0..]
+          variable key = varTerm $ LVar "preserved" LSortMsg (keys M.! key)
+          leftSubst = M.fromList [(x, variable key) | (key, x, _) <- bs]
+          rightSubst = M.fromList [(y, variable key) | (key, _, y) <- bs]
+          normalize :: M.Map LVar LNTerm -> [LNFact] -> Maybe [LNFact]
+          normalize subst facts
+            | all (`M.member` subst) (frees facts) = Just $ apply (Subst subst) facts
+            | otherwise = Nothing
+      in (normalize leftSubst, normalize rightSubst)
+
+    preservesConclusion known tag (l,r) =
+      let (normL, normR) = canonical known l r
+          selected ru = [(i,f) | (i,f) <- zip [0 :: Int ..] (L.get rConcs ru), factTag f == tag]
+          ls = selected l
+          rs = selected r
+      in map fst ls == map fst rs && case (normL (map snd ls), normR (map snd rs)) of
+           (Just lfs, Just rfs) -> lfs == rfs
+           _ -> False
+
+    preservedAction tag = all (\(l,r) ->
+      let (normL, normR) = canonical preservedFacts l r
+          selected = filter ((== tag) . factTag) . L.get rActs
+      in case (normL (selected l), normR (selected r)) of
+           (Just ls, Just rs) -> S.fromList ls == S.fromList rs
+           _ -> False) pairs
+
+-- | How a restriction conjunct can hold on the mirrored trace. Local
+-- conjuncts must be checked on each dependency graph; preserved conjuncts
+-- follow from the original trace and may need witnesses outside that graph.
+data DiffRestrictionKind = DiffLocal | DiffPreserved | DiffUnsupported
+    deriving (Eq, Show)
+
+classifyDiffRestriction :: DiffProofContext -> Side -> LNGuarded -> DiffRestrictionKind
+classifyDiffRestriction ctxt side f
+  | isDiffLocalRestriction f = DiffLocal
+  | withoutNames f `elem` map withoutNames other
+  , all (`S.member` L.get dpcPreservedActions ctxt) (actionFactTags f) =
+      DiffPreserved
+  | otherwise = DiffUnsupported
+  where
+    other = concat [guardedConjuncts formula
+                   | (s, fs) <- L.get dpcRestrictions ctxt, s == opposite side
+                   , formula <- fs]
+    -- Bound-variable names are printing hints. Sorts and bound indices still
+    -- determine whether two restrictions have the same structure.
+    withoutNames (GAto atom) = GAto atom
+    withoutNames (GConj formulas) = GConj (fmap withoutNames formulas)
+    withoutNames (GDisj formulas) = GDisj (fmap withoutNames formulas)
+    withoutNames (GGuarded q binders atoms body) =
+      GGuarded q (map snd binders) atoms (withoutNames body)
+
+-- | The conjuncts of a side's restrictions that rule equivalence cannot
+-- establish on the mirrored trace.
+unsupportedDiffRestrictions :: DiffProofContext -> Side -> [LNGuarded]
+unsupportedDiffRestrictions ctxt side =
+    [ f | (s, fs) <- L.get dpcRestrictions ctxt, s == side
+        , f <- concatMap guardedConjuncts fs
+        , classifyDiffRestriction ctxt side f == DiffUnsupported ]
+
 
 -- | 'protocolRuleWithName' @rules@ @name@ returns all rules with protocol rule name @name@ in rules @rules@.
 protocolRuleWithName :: [RuleAC] -> ProtoRuleName -> [RuleAC]
@@ -1188,24 +1318,42 @@ impliedFormulasAndSystems hnd sys gf = res
         go ((_  , _     ):acts) | otherwise                    = go acts
     equalities ((GEqE s t):as)     = map (\(x, y) -> ((Equal s t):x, (Equal s t):y)) $ equalities as
 
--- | Removes all restrictions that are not relevant for the system, i.e. that only contain atoms not present in the system.
+-- | Remove safety restrictions whose action guards cannot match the system.
+-- Action-free and non-safety restrictions cannot be discarded this way.
 filterRestrictions :: ProofContext -> System -> [LNGuarded] -> [LNGuarded]
-filterRestrictions ctxt sys formulas = filter (unifiableNodes) formulas
+filterRestrictions ctxt sys formulas = filter relevant formulas
   where
     runMaude   = (`runReader` L.get pcMaudeHandle ctxt)
 
-    -- | 'True' iff there in every solution to the system the two node-ids are
-    -- instantiated to a different index *in* the trace.
+    relevant fm = not (isSafetyFormula fm)
+               || hasActionFreeCase fm
+               || unifiableNodes fm
+
+    -- Boolean combinations can contain action-free obligations even when
+    -- guardFactTags reports an action elsewhere in the formula. Such a case
+    -- must retain the complete restriction. The body of an action-guarded
+    -- universal need not count: if its guard cannot match, that implication
+    -- is vacuously true; if it can match, unifiableNodes retains it.
+    hasActionFreeCase :: LNGuarded -> Bool
+    hasActionFreeCase (GAto (Action _ _)) = False
+    hasActionFreeCase (GAto _)            = True
+    hasActionFreeCase (GDisj fms)         =
+      null (getDisj fms) || any hasActionFreeCase (getDisj fms)
+    hasActionFreeCase (GConj fms)         = any hasActionFreeCase $ getConj fms
+    hasActionFreeCase (GGuarded _ _ atos _) =
+      not (any isActionAtom atos)
+
     unifiableNodes :: LNGuarded -> Bool
     unifiableNodes fm = case fm of
-         (GAto ato)  -> unifiableAtoms {-- $ trace ("atom on which bvarToLVar will be applied [ato]: " ++ show ato)-} $ [bvarToLVar ato]
-         (GDisj fms) -> any unifiableNodes $ getDisj fms
-         (GConj fms) -> any unifiableNodes $ getConj fms
-         gg@(GGuarded _ _ _ _) -> case evalFreshAvoiding (openGuarded gg) (L.get sNodes sys) of
-                                          Nothing               -> error "Bug in filterRestrictions, please report."
-                                          Just (_, _, atos, gf) -> (unifiableNodes gf) || (unifiableAtoms atos)
+         GAto ato  -> unifiableAtoms [bvarToLVar ato]
+         GDisj fms -> any unifiableNodes $ getDisj fms
+         GConj fms -> any unifiableNodes $ getConj fms
+         gg@(GGuarded _ _ _ _) ->
+           case evalFreshAvoiding (openGuarded gg) (L.get sNodes sys) of
+             Nothing -> error "Bug in filterRestrictions, please report."
+             Just (_, _, atos, gf) -> unifiableNodes gf || unifiableAtoms atos
 
-    unifiableAtoms :: [Atom (VTerm Name (LVar))] -> Bool
+    unifiableAtoms :: [Atom (VTerm Name LVar)] -> Bool
     unifiableAtoms []                   = False
     unifiableAtoms ((Action _ fact):fs) = unifiableFact fact || unifiableAtoms fs
     unifiableAtoms (_:fs)               = unifiableAtoms fs
@@ -1245,8 +1393,16 @@ evaluateRestrictions dctxt dsys mirrors isSolved =
                             (TFalse, concat $ map snd $ filter (\x -> fst x == TFalse) evals)
             where
                 oppositeCtxt = eitherProofContext dctxt (opposite side)
-                restrictions = filterRestrictions oppositeCtxt sys $ restrictions' (opposite side) $ L.get dpcRestrictions dctxt
-                evals = map (\x -> doRestrictionsHold oppositeCtxt x restrictions isSolved) mirrors
+                evals = map (\mirror ->
+                    doRestrictionsHold oppositeCtxt mirror
+                      (relevantRestrictions mirror)
+                      isSolved) mirrors
+                restrictions = restrictions' (opposite side) $ L.get dpcRestrictions dctxt
+                relevantRestrictions mirror =
+                  let originalRelevant = filterRestrictions oppositeCtxt sys restrictions
+                      mirrorRelevant = filterRestrictions oppositeCtxt mirror restrictions
+                  in filter (\r -> r `elem` originalRelevant || r `elem` mirrorRelevant)
+                            restrictions
 
                 restrictions' _  []               = []
                 restrictions' s' ((s'', form):xs) = if s' == s'' then form ++ (restrictions' s' xs) else (restrictions' s' xs)
