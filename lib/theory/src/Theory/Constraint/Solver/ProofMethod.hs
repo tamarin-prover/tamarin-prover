@@ -379,18 +379,21 @@ execDiffProofMethod ctxt method sys =
     DiffAttack -> do
       guard (L.get dsProofType sys == Just RuleEquivalence)
       guard (isJust $ L.get dsCurrentRule sys)
-      s <- L.get dsSide sys
-      solved <- isSolved <$> mside <*> msys'
-      sys' <- L.get dsSystem sys
-      notContradictory <- not . contradictorySystem (eitherProofContext ctxt s) <$> sequent
-      -- In the second case, the system is trivial, has no mirror and restrictions do not get in the way.
-      -- If we solve arbitrarily the last remaining trivial goals,
-      -- then there will be an attack.
-      guard (solved || (trivial sys' && notContradictory))
+      side <- mside
+      original <- msys'
+      let solved = isSolved side original
+      -- An attack requires a completed original trace. Even independent
+      -- trivial goals can have only producers that violate a restriction, so
+      -- their syntactic shape alone does not establish reachability. Open
+      -- attacker inputs are the exception: fresh public names complete them,
+      -- and the evaluator checks that completed instance.
+      guard (solved || openGoalsAreAttackerInputs original)
       allSubtermsFinished <- mallSubtermsFinished
       guard allSubtermsFinished
       mirrorSyss <- mmirrorSyss
-      guard (fst (evaluateRestrictions ctxt sys mirrorSyss solved) == TFalse)
+      -- The solved original already supplies an admitted witness. With no
+      -- mirrors, do not ask the partial evaluator to reprove its restrictions.
+      guard ((solved && null mirrorSyss) || fst (evaluateRestrictionsFor MirrorAttack (certifyOn side) ctxt sys mirrorSyss solved) == TFalse)
       return M.empty
     DiffRuleEquivalence -> do
       guard (isNothing $ L.get dsProofType sys)
@@ -421,8 +424,21 @@ execDiffProofMethod ctxt method sys =
           mirrorCtxt = L.modify dpcRestrictions
             (map (\(s, fs) -> (s, if s == opposite side
                 then filter needsChecking (concatMap guardedConjuncts fs) else fs))) ctxt
-      guard (fst (evaluateRestrictions mirrorCtxt sys mirrorSyss solved) == TTrue)
+      guard (fst (evaluateRestrictionsFor MirrorCoverage (certifyOn side) mirrorCtxt sys mirrorSyss solved) == TTrue)
 
+    -- Specialization can activate reusable assumptions whose guards did not
+    -- match before. Ordinary simplification applies their consequences and
+    -- may split or reject the candidate. Unchanged is not rejection, and new
+    -- open obligations do not yet describe a completed attack witness.
+    certifyOn s original = map admission candidates
+      where
+        originalCtxt = eitherProofContext ctxt s
+        candidates = maybe [original] M.elems $
+          execProofMethod originalCtxt Simplify original
+        admission candidate = case isFinished originalCtxt candidate of
+          Just (Contradictory _) -> MirrorRejected
+          Just Solved           -> MirrorAdmitted candidate
+          _                     -> MirrorUnresolved
     sequent              = L.get dsSystem sys
     mside                = L.get dsSide sys
     msys'                = L.get dsSystem sys

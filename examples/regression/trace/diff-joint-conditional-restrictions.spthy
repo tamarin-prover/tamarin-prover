@@ -1,0 +1,29 @@
+theory DiffJointConditionalRestrictions
+begin
+
+builtins: multiset
+
+rule Produce:
+  [ ] --> [ F('a' ++ 'b') ]
+
+rule Consume:
+  [ F(x ++ y) ] --[ Choice(x,y,$p,$q) ]-> [ Out(<$p,$q>) ]
+
+restriction Original [left]:
+  "All x y #i. Choice(x,y,'a','b') @ i ==> F"
+
+restriction Choices [right]:
+  "All x y p q #i. Choice(x,y,p,q) @ i ==>
+    (x='a' | not(q='b')) & (x='b' | not(p='a'))"
+
+// Each failure condition is individually allowed on the left. Their only
+// common assignment is forbidden there, so every admitted trace has a mirror.
+lemma left_possible [left]:
+  exists-trace "Ex x y #i. Choice(x,y,'c','c') @ i"
+
+lemma right_possible [right]:
+  exists-trace "Ex x y #i. Choice(x,y,'c','c') @ i"
+
+diffLemma Observational_equivalence:
+
+end

@@ -498,6 +498,10 @@ DIFF_REGRESSION_CASE_STUDIES+=diff-auto-source-macros.spthy diff-embedded-restri
 DIFF_REGRESSION_CASE_STUDIES+=diff-preserved-restriction-binders.spthy
 DIFF_REGRESSION_CASE_STUDIES+=soundness-diff-mirror-restriction.spthy soundness-diff-mirror-false-restriction.spthy soundness-diff-mixed-restriction.spthy
 DIFF_REGRESSION_CASE_STUDIES+=soundness-diff-multisession-restriction.spthy soundness-diff-preserved-restrictions.spthy diff-multisession-observable-restriction.spthy
+DIFF_REGRESSION_CASE_STUDIES+=soundness-diff-mirror-unifiers.spthy soundness-diff-unreachable-trivial-goal.spthy soundness-diff-conditional-restriction.spthy
+DIFF_REGRESSION_CASE_STUDIES+=diff-alternative-conditional-restrictions.spthy diff-joint-conditional-restrictions.spthy diff-joint-conditional-attack.spthy
+DIFF_REGRESSION_CASE_STUDIES+=diff-mirror-reuse-specialization.spthy
+DIFF_REGRESSION_CASE_STUDIES+=diff-disequality-attack.spthy
 case-studies$(SUBDIR)regression/trace/diff-auto-source-macros_analyzed-diff.spthy: DIFF_EXTRA_ARGS=--auto-sources --bound=8 --quit-on-warning
 case-studies$(SUBDIR)regression/trace/diff-multisession-observable-restriction_analyzed-diff.spthy: DIFF_EXTRA_ARGS=--bound=6
 DIFF_REGRESSION_CASE_STUDIES+=diff-side-restriction-choices.spthy
