@@ -1,0 +1,25 @@
+theory SapicProcessCallLocationScope
+begin
+builtins: locations-report
+predicates: Report(x,l) <=> T
+
+// The local y is renamed when the actual argument is also called y. Its
+// location annotation must follow that renaming while x keeps the caller y.
+let Local(path,x) = in(y); (event Local(path,x,y,report(y)))@y
+let Caller(x) = in(y); (event Caller(x,y,report(y)))@x
+let Nested(x) = Local('nested',x)
+process: (in(y); Local('direct',y)) | (in(y); Caller(y)) | (in(y); Nested(y))
+
+lemma direct_location: exists-trace
+  "Ex #i. Local('direct','caller','local',rep('local','local'))@i"
+lemma nested_location: exists-trace
+  "Ex #i. Local('nested','caller','local',rep('local','local'))@i"
+lemma caller_location: exists-trace
+  "Ex #i. Caller('caller','local',rep('local','caller'))@i"
+lemma direct_location_preserved:
+  "All x y r #i. Local('direct',x,y,r)@i ==> r = rep(y,y)"
+lemma nested_location_preserved:
+  "All x y r #i. Local('nested',x,y,r)@i ==> r = rep(y,y)"
+lemma caller_location_preserved:
+  "All x y r #i. Caller(x,y,r)@i ==> r = rep(y,x)"
+end

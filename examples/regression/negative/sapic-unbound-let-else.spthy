@@ -1,0 +1,7 @@
+theory SapicUnboundLetElse
+begin
+
+// The let binder is not in scope in the failure branch.
+process: let x = 'ok' in out(x) else out(x)
+
+end

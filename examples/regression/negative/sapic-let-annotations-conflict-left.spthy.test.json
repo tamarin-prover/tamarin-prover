@@ -1,0 +1,15 @@
+{
+  "tests": [
+    {
+      "name": "typed-pattern",
+      "args": [
+        "--output-module=spthytyped",
+        "--quit-on-warning"
+      ],
+      "exit_code": 1,
+      "contains": [
+        "Typing error: expected term "
+      ]
+    }
+  ]
+}

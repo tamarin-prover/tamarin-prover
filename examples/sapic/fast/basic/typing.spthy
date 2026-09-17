@@ -8,7 +8,7 @@ builtins: multiset
 
 let P(a:rofl) =
         new x:lol;
-        new y; // TODO should be typed with test, too... need to propagate back
+        new y; // Inferred as bitstring from f(y) below.
         out(x); out(y); 
         out(f(y));
         /* out(f(x)); // should fail */
@@ -26,7 +26,7 @@ let Q(x) =
 
 process:
 in(a:lol); // TODO we do not typecheck call to process correctly atm. I think the trick is to type check before inlining.
-new n:truc;
+// Each parallel branch may bind n independently, with its own type.
 (
 ( new n:lol; out(n)) | (new n:rofl; out(n))
 |

@@ -1,0 +1,7 @@
+theory SapicScopeInputMatch
+begin
+
+// The input binds x while matching the outer typed y.
+process: in(y:alpha); in(<x,=y>); out(<x,y>)
+
+end

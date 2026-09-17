@@ -1,0 +1,45 @@
+theory SapicProcessCallCallerScope
+begin
+
+// Passing y requires the local input binder to be renamed. The fresh name
+// must also avoid unrelated caller bindings, including typed and indexed ones.
+let Read(tag,x) = in(y); event Local(tag,x,y)
+
+// Even an unused earlier binder in the called process reserves its name.
+let Earlier(x) = in(y.1); in(y); event Local('earlier',x,y)
+
+// Inner expansion must reserve all formal parameters of the enclosing process,
+// including the one that is not passed on to Read.
+let Nested(y,y.1) = Read('nested',y)
+
+process:
+  (in(y); in(y.1); event Caller('input',y,y.1); Read('input',y)) |
+  (in(y); in(y.1:bitstring); event Caller('typed',y,y.1); Read('typed',y)) |
+  (let <y,y.1> = <'a','b'> in
+     event Caller('let',y,y.1); Read('let',y)) |
+  (insert 'cell','b'; in(y); lookup 'cell' as y.1 in
+     event Caller('lookup',y,y.1); Read('lookup',y)) |
+  ([In(y),In(y.1)] --[ Caller('embedded',y,y.1) ]-> []; Read('embedded',y)) |
+  (in(y); event Caller('earlier',y,'unused'); Earlier(y)) |
+  (in(a); event Caller('nested',a,'unused'); Nested(a,'unused'))
+
+// Caller and local inputs remain independent. All lemmas must finish with
+// --quit-on-warning: silently accepting a generated name collision is not enough.
+lemma caller_input: exists-trace
+  "Ex #i #j. Caller('input','a','b')@i & Local('input','a','c')@j & i<j"
+lemma typed_caller_input: exists-trace
+  "Ex #i #j. Caller('typed','a','b')@i & Local('typed','a','c')@j & i<j"
+lemma caller_let: exists-trace
+  "Ex #i. Local('let','a','c')@i"
+lemma caller_lookup: exists-trace
+  "Ex #i. Local('lookup','a','c')@i"
+lemma caller_embedded_rule: exists-trace
+  "Ex #i #j. Caller('embedded','a','b')@i & Local('embedded','a','c')@j & i<j"
+lemma earlier_local_binder: exists-trace
+  "Ex #i. Local('earlier','a','b')@i"
+lemma enclosing_parameter: exists-trace
+  "Ex #i. Local('nested','a','b')@i"
+lemma argument_preserved:
+  "All tag x y #i. Local(tag,x,y)@i ==> Ex z #j. Caller(tag,x,z)@j & j<i"
+
+end

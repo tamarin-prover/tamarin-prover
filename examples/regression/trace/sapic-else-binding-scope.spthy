@@ -1,0 +1,29 @@
+theory SapicElseBindingScope
+begin
+
+// A lookup or let binder is not in scope in its else branch. Each input below
+// introduces a separate variable, whether or not it has a type annotation.
+// These processes must also be accepted with --quit-on-warning.
+process:
+  (lookup 'typed_lookup' as y in 0
+    else in(y:bitstring); event LookupTyped(y)) |
+  (lookup 'untyped_lookup' as y in 0
+    else in(y); event LookupUntyped(y)) |
+  (let <y,z> = 'not_pair' in 0
+    else in(y:bitstring); event LetTyped(y)) |
+  (let <y,z> = 'not_pair' in 0
+    else in(y); event LetUntyped(y))
+
+lemma lookup_typed_else:
+  exists-trace "Ex #i. LookupTyped('a') @ i"
+
+lemma lookup_untyped_else:
+  exists-trace "Ex #i. LookupUntyped('a') @ i"
+
+lemma let_typed_else:
+  exists-trace "Ex #i. LetTyped('a') @ i"
+
+lemma let_untyped_else:
+  exists-trace "Ex #i. LetUntyped('a') @ i"
+
+end
