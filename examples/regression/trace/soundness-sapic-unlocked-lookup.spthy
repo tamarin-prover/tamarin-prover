@@ -1,0 +1,9 @@
+theory SoundnessSapicUnlockedLookup
+begin
+options: translation-state-optimisation
+/* #941: an unlocked lookup must retain the ordinary state restrictions. */
+process: new s; insert s, '0'; lookup s as w in event B(w) else event NB()
+lemma stored_value: "All w #i. B(w)@i ==> w = '0'"
+lemma present: "All #i. NB()@i ==> F"
+lemma read_reachable: exists-trace "Ex #i. B('0')@i"
+end

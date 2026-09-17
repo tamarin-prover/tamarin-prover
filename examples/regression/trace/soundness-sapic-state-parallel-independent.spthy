@@ -1,0 +1,14 @@
+theory SoundnessSapicStateParallelIndependent
+begin
+options: translation-state-optimisation
+functions: oldvalue/0, newvalue/0
+// Only the left branch accesses s. Its single initializer and locked updates
+// must retain the consuming-lookup encoding, including in ProVerif exports.
+process: new s;
+  ((insert s,oldvalue;
+    lock s; lookup s as before in insert s,newvalue; unlock s;
+    lock s; lookup s as after in event Read(after); insert s,after; unlock s)
+  | event Independent())
+lemma latest: "All v #i. Read(v)@i ==> v = newvalue"
+lemma read_reachable: exists-trace "Ex #i. Read(newvalue)@i"
+end

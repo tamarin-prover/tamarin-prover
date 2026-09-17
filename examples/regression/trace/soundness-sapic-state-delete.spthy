@@ -1,0 +1,22 @@
+theory SoundnessSapicStateDelete
+begin
+options: translation-state-optimisation
+/* #942: deleting a cell must invalidate the value read inside a lock. */
+// Keep the original optimization candidate: no earlier lookup or final else.
+let Candidate = new s; insert s, '0'; event Setup(); delete s; lock s;
+  lookup s as v in event B(v); insert s, v; unlock s
+
+// An independent cell witnesses the read and failure continuations without
+// changing the optimization eligibility of Candidate.
+let Control = new s; insert s, '0';
+  lookup s as before in
+    event BeforeDelete(before); delete s; lock s;
+    lookup s as v in event UnexpectedRead(v); insert s, v; unlock s
+    else event MissingAfterDelete(); unlock s
+process: Candidate | Control
+lemma setup_reachable: exists-trace "Ex #i. Setup()@i"
+lemma deletion_reaches_else: exists-trace
+  "Ex #i #j. BeforeDelete('0')@i & MissingAfterDelete()@j & i < j"
+lemma deleted_unreachable: "All v #i. B(v)@i ==> F"
+lemma control_deleted_unreachable: "All v #i. UnexpectedRead(v)@i ==> F"
+end

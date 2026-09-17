@@ -301,7 +301,7 @@ baseTransComb c an p tildex
                                                        ], [def_state1 tx', CellLocked t (varTerm vs) ], [])
 --        , ([def_state], [IsNotSet t], [def_state2 tildex], [])
        ]
-             , tx', Just tildex )
+             , tx', Nothing )
 
 
     -- Classical state translation

@@ -1,0 +1,47 @@
+{
+  "tests": [
+    {
+      "name": "pure-independent-branch",
+      "args": [
+        "--quit-on-warning",
+        "--prove"
+      ],
+      "matches": [
+        {
+          "regex": "\\bL_PureState\\(",
+          "min": 1,
+          "theory_only": true
+        },
+        {
+          "regex": "latest \\(all-traces\\): verified",
+          "min": 1
+        },
+        {
+          "regex": "read_reachable \\(exists-trace\\): verified",
+          "min": 1
+        }
+      ]
+    },
+    {
+      "name": "consuming-lookup-export",
+      "args": [
+        "--output-module=proverif",
+        "--quit-on-warning"
+      ],
+      "matches": [
+        {
+          "regex": "in\\(StateChannel[^,]*, before_\\d+:bitstring\\)",
+          "min": 1
+        },
+        {
+          "regex": "out\\(StateChannel[^,]*, before_\\d+\\)",
+          "max": 0
+        },
+        {
+          "regex": "lock_StateChannel",
+          "max": 0
+        }
+      ]
+    }
+  ]
+}

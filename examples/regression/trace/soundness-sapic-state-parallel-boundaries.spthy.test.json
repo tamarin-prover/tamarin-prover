@@ -1,0 +1,25 @@
+{
+  "tests": [
+    {
+      "name": "shared-and-replicated-initialization",
+      "args": [
+        "--prove"
+      ],
+      "matches": [
+        {
+          "regex": "\\bL_PureState\\(",
+          "max": 0,
+          "theory_only": true
+        },
+        {
+          "regex": "shared_reachable \\(exists-trace\\): verified",
+          "min": 1
+        },
+        {
+          "regex": "repeated_reachable \\(exists-trace\\): verified",
+          "min": 1
+        }
+      ]
+    }
+  ]
+}
