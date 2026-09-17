@@ -1,0 +1,8 @@
+theory SapicParameterReboundLet
+begin
+// The let would bind the parameter x again. Substituting the argument 'b'
+// used to turn it into the match 'b'='a' and silently remove every E event.
+let P(x) = let x = 'a' in event E(x)
+process: P('b')
+lemma never_E: "All y #i. E(y)@i ==> F"
+end
