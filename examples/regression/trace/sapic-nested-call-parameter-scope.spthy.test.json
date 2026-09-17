@@ -1,0 +1,17 @@
+{
+  "tests": [
+    {
+      "name": "hygienic-expansion",
+      "args": [
+        "--prove",
+        "--quit-on-warning"
+      ],
+      "contains": [
+        "let_binder (exists-trace): verified",
+        "input_binder (exists-trace): verified",
+        "single_input_binder (exists-trace): verified",
+        "caller_binder (exists-trace): verified"
+      ]
+    }
+  ]
+}

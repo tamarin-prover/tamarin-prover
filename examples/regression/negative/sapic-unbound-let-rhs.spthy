@@ -1,0 +1,7 @@
+theory SapicUnboundLetRhs
+begin
+
+// The let binder is not in scope in its own right-hand side.
+process: let x = x in out(x)
+
+end

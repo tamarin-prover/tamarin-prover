@@ -18,6 +18,7 @@ module Theory.Sapic.Annotation (
     -- utilities
     , mapProcessParsedAnnotation
     , mappendProcessParsedAnnotation
+    , applyProcessParsedAnnotation
     -- type classes
     , GoodAnnotation(..)
 ,applyAnn) where
@@ -28,6 +29,7 @@ import GHC.Generics (Generic)
 import Control.Parallel.Strategies
 import Term.Substitution
 import Theory.Sapic.Term
+import Data.Maybe (mapMaybe)
 
 -- | After parsing, the process is already annotated wth a list of process
 --   identifiers. Any identifier in this in this list was inlined to give this
@@ -48,6 +50,9 @@ data ProcessParsedAnnotation = ProcessParsedAnnotation {
     -- 2. only applies to variables bound at this subprocess
     -- 3. maps variables to variable terms
     , backSubstitution :: Subst Name LVar
+    -- Binders renamed or owned by a closed call during expansion, at this node
+    -- only. An outer call may need to freshen them to avoid caller variables.
+    , generatedBinders :: [SapicLVar]
     }
     deriving (Eq, Ord, Show, Generic)
 instance NFData ProcessParsedAnnotation
@@ -58,7 +63,7 @@ deriving instance Data (Subst Name LVar)
 deriving instance Data ProcessParsedAnnotation
 
 instance Monoid ProcessParsedAnnotation where
-    mempty = ProcessParsedAnnotation [] Nothing emptySubst
+    mempty = ProcessParsedAnnotation [] Nothing emptySubst []
 
 instance Semigroup ProcessParsedAnnotation where
     (<>) p1 p2 = ProcessParsedAnnotation
@@ -68,6 +73,7 @@ instance Semigroup ProcessParsedAnnotation where
              (l1, Nothing) -> l1
              (_, l2) -> l2)
         (backSubstitution p1 `compose` backSubstitution p2)
+        (generatedBinders p1 ++ generatedBinders p2)
 
 -- | Any annotation that is good enough to be converted back into a Process
 --  can at least recover the names of the processes used to bind
@@ -98,11 +104,17 @@ mappendProcessParsedAnnotation pn = mapProcessParsedAnnotation (<> pn)
 applyProcessParsedAnnotation :: Apply s SapicTerm => s -> ProcessParsedAnnotation -> ProcessParsedAnnotation
 applyProcessParsedAnnotation subst ann =
         ann {location = fmap (apply subst) (location ann)
+            , generatedBinders = mapMaybe (asVariable . apply subst . varTerm) (generatedBinders ann)
                     -- , backSubstitution = undefined
                     -- WARNING: we do not apply the substitution to the back
                     -- translation, as this is not always possible. If variables
                     -- are renamed, modify the backtranslation by hand.
                     }
+  where
+    asVariable :: SapicTerm -> Maybe SapicLVar
+    asVariable t = case viewTerm t of
+      Lit (Var v) -> Just v
+      _ -> Nothing
 
 applyAnn :: (GoodAnnotation a, Apply t' SapicTerm) => t' -> a -> a
 applyAnn subst = mapProcessParsedAnnotation (applyProcessParsedAnnotation subst)

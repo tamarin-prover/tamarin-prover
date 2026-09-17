@@ -1,0 +1,21 @@
+{
+  "tests": [
+    {
+      "name": "local-pattern-name",
+      "args": [
+        "--quit-on-warning",
+        "--prove"
+      ],
+      "matches": [
+        {
+          "regex": "another_input \\(exists-trace\\): verified",
+          "min": 1
+        },
+        {
+          "regex": "only_argument \\(all-traces\\): falsified",
+          "min": 1
+        }
+      ]
+    }
+  ]
+}

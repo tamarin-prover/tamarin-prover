@@ -1,0 +1,12 @@
+theory SapicEmptyParameterScope
+begin
+
+// An empty parameter list still gives Local its own binding scope.
+// The local x must remain independent of the caller's x.
+let Local() = in(x); event Local(x)
+process: in(x); event Caller(x); Local()
+
+lemma independent_inputs: exists-trace
+  "Ex #i #j. Caller('caller')@i & Local('local')@j & #i < #j"
+
+end

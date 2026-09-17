@@ -1,0 +1,14 @@
+{
+  "tests": [
+    {
+      "name": "caller-collision",
+      "args": ["--quit-on-warning"],
+      "checks": ["roundtrip"]
+    },
+    {
+      "name": "renamed-caller",
+      "args": ["--quit-on-warning", "-DNO_COLLISION"],
+      "checks": ["roundtrip"]
+    }
+  ]
+}
