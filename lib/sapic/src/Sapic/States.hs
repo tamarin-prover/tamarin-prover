@@ -12,6 +12,7 @@ module Sapic.States
   ) where
 
 import Sapic.Annotation
+import Sapic.ProcessUtils (processContains)
 
 import Theory
 import Theory.Sapic
@@ -31,40 +32,31 @@ hasBoundUnboundStates ::  LProcess (ProcessAnnotation LVar) -> (Bool, Bool)
 hasBoundUnboundStates p = (bounds /= S.empty, unbounds /= S.empty)
   where (bounds, unbounds) = getAllStates p S.empty
 
-getAllStates ::  LProcess (ProcessAnnotation LVar) ->  S.Set LVar-> (S.Set SapicTerm, S.Set SapicTerm)
-getAllStates (ProcessAction (Insert t _) _ p) boundNames | isBound boundNames t = (S.insert t boundStates, freeStates)
-  where (boundStates,freeStates) = getAllStates p boundNames
-getAllStates (ProcessAction (Insert t _) _ p) boundNames  = (boundStates, S.insert t freeStates)
-  where (boundStates,freeStates) = getAllStates p boundNames
-getAllStates (ProcessAction (Lock t) _ p) boundNames | isBound boundNames t = (S.insert t boundStates, freeStates)
-  where (boundStates,freeStates) = getAllStates p boundNames
-getAllStates (ProcessAction (Lock t) _ p) boundNames  = (boundStates, S.insert t freeStates)
-  where (boundStates,freeStates) = getAllStates p boundNames
-getAllStates (ProcessAction (Unlock t) _ p) boundNames | isBound boundNames t = (S.insert t boundStates, freeStates)
-  where (boundStates,freeStates) = getAllStates p boundNames
-getAllStates (ProcessAction (Unlock t ) _ p) boundNames  = (boundStates, S.insert t freeStates)
-  where (boundStates,freeStates) = getAllStates p boundNames
+-- | The state identifier accessed by this node, independent of its continuation.
+stateIdentifier :: LProcess ann -> Maybe SapicTerm
+stateIdentifier proc = case proc of
+  ProcessAction (Insert t _) _ _ -> Just t
+  ProcessAction (Lock t) _ _ -> Just t
+  ProcessAction (Unlock t) _ _ -> Just t
+  ProcessAction (Delete t) _ _ -> Just t
+  ProcessComb (Lookup t _) _ _ _ -> Just t
+  _ -> Nothing
 
-
-getAllStates (ProcessAction (New (SapicLVar v _)) _ p) boundNames = getAllStates p (v `S.insert` boundNames)
-getAllStates (ProcessAction _ _ p) boundNames = getAllStates p boundNames
-getAllStates (ProcessNull _) _ = (S.empty, S.empty)
-
-getAllStates (ProcessComb  (Lookup t _)  _ pl pr) boundNames | isBound boundNames t  =
-  (t `S.insert` boundStatesL `S.union` boundStatesR, freeStatesL `S.union` freeStatesR)
-  where (boundStatesL,freeStatesL) = getAllStates pl boundNames
-        (boundStatesR,freeStatesR) = getAllStates pr boundNames
-getAllStates (ProcessComb  (Lookup t _)  _ pl pr) boundNames  =
-  (boundStatesL `S.union` boundStatesR, t `S.insert`  freeStatesL `S.union` freeStatesR)
-  where (boundStatesL,freeStatesL) = getAllStates pl boundNames
-        (boundStatesR,freeStatesR) = getAllStates pr boundNames
-
-
-getAllStates (ProcessComb _ _ pl pr) boundNames =
-    (boundStatesL `S.union` boundStatesR, freeStatesL `S.union` freeStatesR)
-  where (boundStatesL,freeStatesL) = getAllStates pl boundNames
-        (boundStatesR,freeStatesR) = getAllStates pr boundNames
-
+getAllStates :: LProcess (ProcessAnnotation LVar) -> S.Set LVar -> (S.Set SapicTerm, S.Set SapicTerm)
+getAllStates p boundNames = case stateIdentifier p of
+  Just t | isBound boundNames t -> (S.insert t boundStates, freeStates)
+         | otherwise -> (boundStates, S.insert t freeStates)
+  Nothing -> (boundStates, freeStates)
+  where
+    (boundStates, freeStates) = case p of
+      ProcessAction (New (SapicLVar v _)) _ rest ->
+        getAllStates rest (S.insert v boundNames)
+      ProcessAction _ _ rest -> getAllStates rest boundNames
+      ProcessComb _ _ left right ->
+        let (boundLeft, freeLeft) = getAllStates left boundNames
+            (boundRight, freeRight) = getAllStates right boundNames
+        in (S.union boundLeft boundRight, S.union freeLeft freeRight)
+      ProcessNull _ -> (S.empty, S.empty)
 
 
 -- State channels declaration
@@ -79,7 +71,7 @@ addStatesChannels ::  LProcess (ProcessAnnotation LVar) -> LProcess (ProcessAnno
 addStatesChannels p = evalFresh (declareStateChannel p (S.toList allBoundStates) S.empty M.empty) initStateChan
  where
    allBoundStates =  fst $ getAllStates p S.empty
-   initState = avoidPreciseVars . map (\(SapicLVar lvar _) -> lvar) $ S.toList $ varsProc p
+   initState = avoidPreciseVars $ translationVars p
    initStateChan = fromMaybe 0 (M.lookup stateChannelName initState)
 
 -- Descends into a process. Whenever all the names of a state term are declared, we declare a name corresponding to this state term, that will be used as the corresponding channel name.
@@ -124,112 +116,73 @@ newStates p (v:declarables) declared stateMap = do
 
 
 
--- We now have a process with defined states channels. We want to optimize on pure states, that is
--- a state channel such that, 1) there is a single insert outside of a lock (this is the state initialisation); 2) every occurence of the state channel is either lock t; lookup t or insert t; unlock t.
+-- A pure cell is initialized once per fresh state identifier, before replicating
+-- or splitting its accesses between parallel branches, then accessed through
+-- locked read/write sections. Replication above the fresh declaration creates
+-- distinct cells and is allowed. Outside this fragment the ordinary translation
+-- retains overwrite, deletion, and lookup-failure semantics through restrictions.
+data CellPhase = InitializerAllowed | InitializerForbidden | Ready | Locked
+  deriving (Eq)
 
--- Remark that if there is a state identifier based on an input variable accessed not in a pure fashion, no state is considered pure
-existsAttackerUnpure :: LProcess (ProcessAnnotation LVar) -> S.Set LVar -> Bool
-existsAttackerUnpure p boundNames =
-  case p of
-     ProcessAction  (New (SapicLVar v _)) _ pl
-          ->  existsAttackerUnpure pl (v `S.insert` boundNames)
-     ProcessAction (Insert t _) _  (ProcessAction (Unlock t2) _ pl) | t == t2
-          ->  existsAttackerUnpure pl  boundNames
-     ProcessAction (Lock t) _   (ProcessComb (Lookup t2 _ )  _ pl (ProcessNull _)) | t == t2
-          ->  existsAttackerUnpure pl boundNames
-     -- any lone action on unbound identifier raises the warning
-     ProcessAction (Insert t _) _ _ | not (isBound boundNames t)
-          -> True
-     ProcessAction (Lock t) _ _ | not (isBound boundNames t)
-          -> True
-     ProcessAction (Unlock t) _ _ | not (isBound boundNames t)
-          -> True
-     ProcessComb (Lookup t _ )  _ _ (ProcessNull _) | not (isBound boundNames t)
-          -> True
-     ProcessAction _ _ pl
-          -> existsAttackerUnpure pl boundNames
-     ProcessComb _ _ pl pr ->
-       let bl = existsAttackerUnpure pl boundNames in
-       let br = existsAttackerUnpure pr boundNames in
-         bl || br
-     ProcessNull _ -> False
+isPureState :: LProcess (ProcessAnnotation LVar) -> SapicTerm -> Bool
+isPureState p target = check InitializerAllowed p
+  where
+    check phase proc = case proc of
+      ProcessAction (Insert t _) _ rest
+        | t == target, phase == InitializerAllowed -> check Ready rest
+      ProcessAction (Lock t) _ (ProcessComb (Lookup t' _) _ body (ProcessNull _))
+        | t == target, t' == target, phase == Ready -> check Locked body
+      ProcessAction (Insert t _) _ (ProcessAction (Unlock t') _ rest)
+        | t == target, t' == target, phase == Locked -> check Ready rest
+      _ | stateIdentifier proc == Just target -> False
+      -- Initialization cannot be replicated or separated from users in another
+      -- parallel branch. An unrelated branch does not affect an isolated cell.
+      -- A fresh cell inside replication is checked at its declaration.
+      ProcessAction Rep _ rest -> phase /= Locked && check (withoutInit phase) rest
+      ProcessComb Parallel _ left right
+        | phase == InitializerAllowed, not (usesTarget left && usesTarget right) ->
+            check phase left && check phase right
+        | otherwise ->
+            phase /= Locked && check (withoutInit phase) left && check (withoutInit phase) right
+      ProcessAction _ _ rest -> check phase rest
+      ProcessComb _ _ left right -> check phase left && check phase right
+      -- Terminating while holding the cell also leaves the original lock held.
+      ProcessNull _ -> True
+    withoutInit InitializerAllowed = InitializerForbidden
+    withoutInit phase = phase
+    usesTarget proc = processContains proc ((== Just target) . stateIdentifier)
 
--- isPureState decides if a state is pure. It returns (isPure, loneInsert), where loneInsert describes that there is at least one lone insert for this state.
-isPureState ::  LProcess (ProcessAnnotation LVar) -> SapicTerm -> Bool -> (Bool, Bool)
-isPureState p target loneInsert =
-  case p of
-     (ProcessAction (Insert t _) _  (ProcessAction (Unlock t2) _ pl)) | t == t2
-          -> isPureState pl target loneInsert
-     (ProcessAction (Lock t) _   (ProcessComb (Lookup t2 _ )  _ pl (ProcessNull _)) ) | t == t2
-          -> isPureState pl target loneInsert
-     (ProcessAction (Insert t _) _ pl) | t == target
-          ->
-       -- when we see a lone insert, if there is another lone insert somewhere else we return false
-       let (pure', lone) = isPureState pl target loneInsert in
-         if lone then
-           (False, lone)
-         else (pure', lone)
-     (ProcessAction (Lock t ) _ _) | t == target
-          -> (False, False)
-     (ProcessAction (Unlock t) _ _) | t == target
-          -> (False, False)
-     (ProcessAction _ _ pl)
-          -> isPureState pl target loneInsert
-     ProcessComb Parallel _ pl pr ->
-       -- in parallel, we sum the oneOutSide, and in all other cases, we just merge them (as the two branches can never be taken
-       let (pur, lone) = isPureState pl target loneInsert in
-       let (pure', lone') = isPureState pr target loneInsert in
-         ( pur && pure' && not (lone && lone'), lone || lone')
-     ProcessComb _ _ pl pr ->
-       let (pur, lone) = isPureState pl target loneInsert in
-       let (pure', lone') = isPureState pr target loneInsert in
-         ( pur && pure', lone || lone')
-     ProcessNull _ -> (True, False)
-
--- getPureStates ::  LProcess (ProcessAnnotation LVar)  -> S.Set SapicTerm -> S.Set SapicTerm
--- getPureStates p currentPures = fst $ computePureStates p currentPures S.empty
---    where (pureStates, unPureStates)
 annotatePureStates :: LProcess (ProcessAnnotation LVar)  -> LProcess (ProcessAnnotation LVar)
 annotatePureStates p
-  | existsAttackerUnpure p S.empty           = addStatesChannels p
-  | fst (getAllStates p S.empty)  == S.empty = p
-  | otherwise                                = annotateEachPureStates (addStatesChannels p) S.empty
---  where pureStates = getPureStates p (getAllBoundStates p)
+  -- A variable state identifier may alias an otherwise pure cell.
+  | not (S.null freeStates) = addStatesChannels p
+  | S.null boundStates = p
+  | otherwise = annotateEachPureStates (addStatesChannels p) S.empty
+  where (boundStates, freeStates) = getAllStates p S.empty
 
 
--- | For each input or output, if the variable is secret, we annotate the process
+-- | Annotate every access to cells with a supported access pattern.
 annotateEachPureStates :: LProcess (ProcessAnnotation LVar) -> S.Set SapicTerm -> LProcess (ProcessAnnotation LVar)
-annotateEachPureStates (ProcessNull an) _ = ProcessNull an
-annotateEachPureStates (ProcessComb comb an pl pr ) pureStates
-  | Lookup t _ <- comb =
-      if t `S.member` pureStates then
-            ProcessComb comb an{pureState=True} pl' pr'
-      else
-            ProcessComb comb an pl' pr'
-  | otherwise = ProcessComb comb an pl' pr'
-            where
-              pl' = annotateEachPureStates pl pureStates
-              pr' = annotateEachPureStates pr pureStates
-annotateEachPureStates (ProcessAction ac an p) pureStates
-  | New _ <- ac, Just cid <- an.isStateChannel =
-      if fst $ isPureState p cid False then
-        ProcessAction ac an{pureState=True, isStateChannel = Just cid} (annotateEachPureStates p (cid `S.insert` pureStates))
-      else
-        ProcessAction ac an p
-  | Unlock t <- ac =
-      if t `S.member` pureStates then
-        ProcessAction ac an{pureState=True} p'
-      else
-        ProcessAction ac an p'
-  | Lock t <- ac =
-      if t `S.member` pureStates then
-        ProcessAction ac an{pureState=True} p'
-      else
-        ProcessAction ac an p'
-  | Insert t _ <- ac =
-      if t `S.member` pureStates then
-        ProcessAction ac an{pureState=True} p'
-      else
-        ProcessAction ac an p'
-  | otherwise = ProcessAction ac an p'
-  where p'= annotateEachPureStates p pureStates
+annotateEachPureStates proc pureStates = case proc of
+    ProcessNull _ -> proc
+    ProcessComb comb an left right ->
+      ProcessComb comb (mark an) (recurse left) (recurse right)
+    ProcessAction ac an p
+      | New _ <- ac, Just cid <- an.isStateChannel
+      , isolatedCell p cid && isPureState p cid ->
+          ProcessAction ac an{pureState=True}
+            (annotateEachPureStates p (cid `S.insert` pureStates))
+      | otherwise -> ProcessAction ac (mark an) (recurse p)
+  where
+    recurse p = annotateEachPureStates p pureStates
+    -- A cell with a delete cannot enter pureStates.
+    mark an
+      | Just t <- stateIdentifier proc, t `S.member` pureStates = an{pureState=True}
+      | otherwise = an
+    -- Syntactic comparisons suffice for a fresh-name identifier only if no other
+    -- state identifier contains that name (and might reduce to it).
+    isolatedCell p t = case viewTerm t of
+      Lit (Var v) -> not $ processContains p $ \node -> case stateIdentifier node of
+        Just other -> other /= t && toLVar v `elem` frees (toLNTerm other)
+        Nothing -> False
+      _ -> False
