@@ -42,9 +42,18 @@ getSecretChannels (ProcessAction (ChOut _ t2) _ p) candidates =
 getSecretChannels (ProcessAction (Insert _ t2) _ p) candidates =
   let c = S.difference candidates (getTermVariables t2) in
     getSecretChannels p c
+-- Embedded rules can pass a name to other rules, even without an Out fact.
+getSecretChannels (ProcessAction (MSR _ _ rs _ _) _ p) candidates =
+  getSecretChannels p (candidates `S.difference`
+    S.fromList (L.map toLVar $ concatMap freesSapicFact rs))
 getSecretChannels (ProcessAction _ _ p) candidates =
     getSecretChannels p candidates
 getSecretChannels (ProcessNull _) candidates =  candidates
+-- A remaining pattern/destructor let can bind an alias that escapes later.
+-- Simple variable lets have already been substituted before this analysis.
+getSecretChannels (ProcessComb (Let _ t _) _ pl pr) candidates =
+  let c = candidates `S.difference` getTermVariables t in
+    getSecretChannels pl c `S.intersection` getSecretChannels pr c
 getSecretChannels (ProcessComb _ _ pl pr ) candidates =
             S.intersection c1 c2
             where

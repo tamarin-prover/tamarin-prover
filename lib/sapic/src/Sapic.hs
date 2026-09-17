@@ -54,12 +54,13 @@ translate th =
              return th
     [p] -> do
       -- annotate
-      an_proc_pre <- translateLetDestr (theoryMacros th) sigRules
+      substituted <- translateLetDestr (theoryMacros th) sigRules
         $ checkOps' (._transReport) translateTermsReport
         $ checkOps' (._stateChannelOpt) annotatePureStates
-        $ annotateSecretChannels
         $ propagateNames
         $ toAnProcess p
+      -- Let substitution can expose channel names in outputs.
+      let an_proc_pre = annotateSecretChannels substituted
       an_proc <- annotateLocks an_proc_pre
       -- compute initial rules
       (initRules,initTx) <-
