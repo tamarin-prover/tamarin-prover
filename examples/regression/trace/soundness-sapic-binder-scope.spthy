@@ -1,0 +1,17 @@
+theory SoundnessSapicBinderScope
+begin
+// Each process binds x again. Uniqueness renaming must rename the new binder
+// only in its scope: the else branch, the let right-hand side and the lookup
+// key still refer to the input x.
+process:
+    (in(x); event Input('else',x); lookup 'unset' as x in event Found(x)
+       else event Missing(x))
+  | (in(x); event Input('let',x); let <x,y> = x in event Parts(x,y))
+  | (insert 'key','value'; in(x); lookup x as x in event Read(x))
+lemma else_outer:
+  "All v #i. Missing(v)@i ==> Ex #j. Input('else',v)@j & j < i"
+lemma let_outer:
+  "All a b #i. Parts(a,b)@i ==> Ex #j. Input('let',<a,b>)@j & j < i"
+lemma key_outer: exists-trace
+  "Ex #i. Read('value')@i"
+end

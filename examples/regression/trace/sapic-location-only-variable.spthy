@@ -1,0 +1,10 @@
+theory SapicLocationOnlyVariable
+begin
+builtins: locations-report
+predicates: Report(x,l) <=> T
+
+// x.1 occurs only in the location annotation and has no binding. Renaming
+// the bound x to x.1 used to capture it, so strict validation accepted this
+// process. Translation must reject the unbound location instead.
+process: new x; (event At(report('message')))@x.1
+end

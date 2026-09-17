@@ -1,0 +1,7 @@
+theory SapicScopeLetBranches
+begin
+
+// Success and failure branches may bind independent variables with different types.
+process: in(y); let x:alpha = y in out(x) else in(x:beta); out(x)
+
+end

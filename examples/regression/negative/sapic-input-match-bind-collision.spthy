@@ -1,0 +1,7 @@
+theory SapicInputMatchBindCollision
+begin
+
+// Different annotations must not disguise a match/bind collision.
+process: in(<x:alpha,=x:beta>); out(x)
+
+end

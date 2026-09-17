@@ -1,0 +1,13 @@
+{
+  "tests": [
+    {
+      "name": "supplied-patterns",
+      "args": ["--quit-on-warning", "--prove"],
+      "matches": [
+        {"regex": "supplied_patterns \\(all-traces\\): verified", "min": 1},
+        {"regex": "repeated_pattern \\(all-traces\\): verified", "min": 1},
+        {"regex": "nested_reachable \\(exists-trace\\): verified", "min": 1}
+      ]
+    }
+  ]
+}

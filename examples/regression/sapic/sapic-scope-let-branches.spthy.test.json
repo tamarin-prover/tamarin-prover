@@ -1,0 +1,18 @@
+{
+  "tests": [
+    {
+      "name": "spthytyped",
+      "args": [
+        "--output-module=spthytyped",
+        "--quit-on-warning"
+      ]
+    },
+    {
+      "name": "msr",
+      "args": [
+        "--output-module=msr",
+        "--quit-on-warning"
+      ]
+    }
+  ]
+}

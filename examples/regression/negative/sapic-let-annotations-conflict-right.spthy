@@ -1,0 +1,7 @@
+theory SapicLetAnnotationsConflictRight
+begin
+
+// Both occurrences bind the same variable, so their types must agree.
+process: in(y); let <x:alpha,x:beta> = y in out(x)
+
+end

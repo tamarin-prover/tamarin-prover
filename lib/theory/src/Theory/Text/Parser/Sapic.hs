@@ -37,7 +37,9 @@ import Theory.Text.Parser.Let
 import Theory.Text.Parser.Formula
 import Theory.Sapic.Pattern
 import qualified Data.Functor.Identity ()
-import Data.Maybe (fromMaybe)
+import Data.Maybe (fromMaybe, listToMaybe)
+import Data.List (isPrefixOf)
+import qualified Data.Foldable as F
 
 
 -- used for debugging
@@ -67,9 +69,32 @@ processDef thy= do
                     _ <- letIdentifier
                     BC.pack <$> identifier
                 vs <- optionMaybe $ parens $ commaSep sapicvar
+                let identities = map toLVar $ fromMaybe [] vs
                 equalSign
-                p <- process thy
-                return (ProcessDef (BC.unpack i) p vs)
+                p <- processAvoiding identities thy
+                let resolved = matchBoundMSRVariables identities p
+                -- A parameter is bound by the definition. Rebinding it in the
+                -- body would turn the binder into a match against the argument
+                -- for some arguments only, so reject it for every argument.
+                case parameterBinder identities resolved of
+                    Just v -> fail $ "parameter " ++ show v ++ " of process " ++ BC.unpack i
+                        ++ " is bound again in its body; rename the inner binder"
+                    Nothing -> return ()
+                return (ProcessDef (BC.unpack i) resolved vs)
+
+-- | The first binder in a definition body, including expanded calls, whose
+-- identity is a parameter. Embedded-rule premises have been classified
+-- already, so parameters used there as matches are not binders. Parameters
+-- named pat_* keep their legacy meaning as patterns.
+parameterBinder :: [LVar] -> PlainProcess -> Maybe SapicLVar
+parameterBinder params = go
+  where
+    ps = S.fromList params
+    clash vs = listToMaybe [v | v <- vs, toLVar v `S.member` ps
+                              , not ("pat_" `isPrefixOf` lvarName (toLVar v))]
+    go (ProcessNull _) = Nothing
+    go (ProcessAction ac _ rest) = clash (actionBinders ac) <|> go rest
+    go (ProcessComb c _ l r) = clash (combinatorBinders c) <|> go l <|> go r
 
 toplevelprocess :: OpenTheory -> Parser PlainProcess
 toplevelprocess thy = do
@@ -186,7 +211,33 @@ sapicAction = (do
 --     | IDENTIFIER
 --     | msr
 process :: OpenTheory -> Parser PlainProcess
-process thy=
+process thy = matchBoundMSRVariables [] <$> processAvoiding [] thy
+
+-- Embedded MSR premises bind only new variables. Mark references to existing
+-- binders before process-call substitution or uniqueness renaming can capture them.
+matchBoundMSRVariables :: [LVar] -> PlainProcess -> PlainProcess
+matchBoundMSRVariables vars = go (S.fromList vars)
+  where
+    extend bound vs = S.union bound (S.fromList $ map toLVar vs)
+    go _ p@(ProcessNull _) = p
+    -- Called bodies were classified in their definitions, before substitution.
+    -- Closed bodies are expanded hygienically, so the caller's binders can
+    -- only reach them through arguments.
+    go _ p@(ProcessAction ProcessCall{} _ _) = p
+    go bound (ProcessAction ac ann rest) =
+      let ac' = case ac of
+            MSR l a r phi matches -> MSR l a r phi $ S.union matches $ S.fromList
+              [v | v <- concatMap freesSapicFact l, toLVar v `S.member` bound]
+            _ -> ac
+      in ProcessAction ac' ann (go (extend bound $ actionBinders ac') rest)
+    go bound (ProcessComb comb ann left right) =
+      ProcessComb comb ann (go (extend bound $ combinatorBinders comb) left) (go bound right)
+
+-- Reserve caller names during process-call expansion, including bindings that
+-- are not passed as arguments. This set only guides fresh-name allocation;
+-- normal scope and duplicate-binding checks still apply to the parsed process.
+processAvoiding :: [LVar] -> OpenTheory -> Parser PlainProcess
+processAvoiding usedVars thy =
             -- left-associative NDC and parallel using chainl1.
             -- Note: this roughly encodes the following grammar:
             -- <|>   try   (do
@@ -194,7 +245,7 @@ process thy=
             --             opParallel
             --             p2 <- process thy
             --             return (ProcessParallel p1 p2))
-                  chainl1 (actionprocess thy) (
+                  chainl1 (actionprocess usedVars thy) (
                              do { _ <- try opNDC; return (ProcessComb NDC mempty)}
                          <|> do { _ <- try opParallelDepr; return (ProcessComb Parallel mempty)}
                          <|> do { _ <- opParallel; return (ProcessComb Parallel mempty)}
@@ -217,15 +268,14 @@ diffEquivLemma thy = do
                return $ DiffEquivLemma p
 
 
-elseprocess :: OpenTheory
-    -> Parser PlainProcess
-elseprocess thy = option (ProcessNull mempty) (symbol "else" *> process thy)
+elseprocess :: [LVar] -> OpenTheory -> Parser PlainProcess
+elseprocess usedVars thy = option (ProcessNull mempty) (symbol "else" *> processAvoiding usedVars thy)
 
-actionprocess :: OpenTheory -> Parser PlainProcess
-actionprocess thy=
+actionprocess :: [LVar] -> OpenTheory -> Parser PlainProcess
+actionprocess usedVars thy =
                 (do     -- replication parser
                         _ <- try $ symbol "!"
-                        p <- process thy
+                        p <- processAvoiding usedVars thy
                         return (ProcessAction Rep mempty p)
                         <?> "replication"
                 )
@@ -235,8 +285,8 @@ actionprocess thy=
                         _ <- symbol "as"
                         v <- sapicvar
                         _ <- symbol "in"
-                        p <- process thy
-                        q <- elseprocess thy
+                        p <- processAvoiding (toLVar v : usedVars) thy
+                        q <- elseprocess usedVars thy
                         return (ProcessComb (Lookup t v) mempty p q)
                         <?> "lookup process"
                    )
@@ -254,8 +304,8 @@ actionprocess thy=
                                 return (Cond frml)
                                 )
                         _ <- symbol "then"
-                        p <- process thy
-                        q <- elseprocess thy
+                        p <- processAvoiding usedVars thy
+                        q <- elseprocess usedVars thy
                         return (ProcessComb cond mempty p q)
                         <?> "conditional process"
                    )
@@ -263,8 +313,9 @@ actionprocess thy=
                         _  <- try $ letIdentifier
                         ls  <-genericletBlock sapicpatternterm sapicterm
                         _  <- symbol "in"
-                        p   <- process thy
-                        q   <- elseprocess thy
+                        let names = concatMap (\(t, _) -> freesSapicTerm (unpattern t)) ls
+                        p   <- processAvoiding (map toLVar names ++ usedVars) thy
+                        q   <- elseprocess usedVars thy
                         let f (t1,t2) p' =
                                     ProcessComb (Let (unpattern t1) t2 (extractMatchingVariables t1)) mempty p' q
                         return $ foldr f p ls
@@ -276,11 +327,11 @@ actionprocess thy=
             <|> ( do  -- sapic actions are separated by ";"
                       -- but allow trailing actions (syntactic sugar for action; 0)
                         (s,ann) <- try sapicAction
-                        p <-  option (ProcessNull mempty) (try opSeq *> actionprocess thy)
+                        p <-  option (ProcessNull mempty) (try opSeq *> actionprocess (map toLVar (F.toList s) ++ usedVars) thy)
                         return (ProcessAction s ann p))
             <|>  (do    -- combined parser for `(p)` and `(p)@t`
                         _ <- try $ symbol "("
-                        p <- process thy
+                        p <- processAvoiding usedVars thy
                         _ <- symbol ")"
                         p' <- (do
                                 _ <- try $ symbol "@"
@@ -294,24 +345,19 @@ actionprocess thy=
                         -- println ("test process identifier parsing Start")
                         i <- BC.pack <$> identifier
                         ts <- option [] $ parens $ commaSep (msetterm False ltypedlit)
-                        (p, vars) <- checkProcess (BC.unpack i) thy
-                        let base_subst = zip vars ts
-                        let extend_sup = foldl (\acc (svar,t) ->
-                                  map (,t)
-                                   (case svar of
-                                      (SapicLVar sl_var (Just _)) ->
-                                        [svar, SapicLVar sl_var Nothing]
-                                      _ -> [svar]
-                                   )
-                                  ++ acc) [] base_subst
-                        substP <- applyM (substFromList extend_sup) p
+                        (p, mvars) <- checkProcess (BC.unpack i) thy
+                        let vars = fromMaybe [] mvars
+                        -- A definition with a parameter list, even an empty
+                        -- one, is closed and is expanded hygienically.
+                        substP <- expandProcessCall mvars usedVars (substFromList $ zip vars ts) p
                         return (ProcessAction
                                 (ProcessCall (BC.unpack i) ts) mempty
                                 (processAddAnnotation substP (mempty {processnames =  [BC.unpack i]}))
                                 )
                         )
--- | checks if process exists, if not -> error
-checkProcess :: String -> OpenTheory -> Parser (PlainProcess, [SapicLVar])
+-- | checks if process exists, if not -> error. Also returns the parameter
+-- list, which is absent for an open definition.
+checkProcess :: String -> OpenTheory -> Parser (PlainProcess, Maybe [SapicLVar])
 checkProcess i thy = case lookupProcessDef i thy of
-    Just p -> return (get pBody p, fromMaybe [] $ get pVars p)
+    Just p -> return (get pBody p, get pVars p)
     Nothing -> fail $ "process not defined: " ++ i

@@ -1,0 +1,14 @@
+{
+  "tests": [
+    {
+      "name": "validation",
+      "args": [
+        "--quit-on-warning"
+      ],
+      "exit_code": 1,
+      "contains": [
+        "Variable bound twice: x."
+      ]
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+theory SapicMSRCallBindingReuse
+begin
+
+// The x in Read is a local binder, not a match against the caller's x.
+// Keep the duplicate-binding warning instead of silently changing its meaning.
+// With warnings allowed, Read can still consume S('token').
+rule init: [] --> [S('token')]
+let Read = [S(x)] --[Consumed(x)]-> []
+process: new x; Read
+
+lemma consumes_token:
+  exists-trace "Ex #i. Consumed('token') @ i"
+
+end

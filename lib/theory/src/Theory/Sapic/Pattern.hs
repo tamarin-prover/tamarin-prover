@@ -31,7 +31,6 @@ module Theory.Sapic.Pattern (
 import Data.Binary
 import Data.Data
 import qualified Data.Set as S
-import Data.List ( group, sort )
 import GHC.Generics (Generic)
 import Control.Parallel.Strategies
 -- import Theory.Model.Fact
@@ -63,14 +62,14 @@ unpatternVar (PatternMatch v) = v
 --    already bound, i.e.,
 --   1. no variable that is already bound should occur as PatternBind
 --   2. no variable that already occurs as PatternMatch should occur as PatternBind
---   3. a variable should not be bound twice.
+--   3. a variable should not be bound twice, regardless of its annotations.
 validPattern :: S.Set SapicLVar -> Term (Lit n PatternSapicLVar) -> Bool
-validPattern alreadyBound pt = (alreadyBound `S.union` matched) `S.disjoint` tobind && duplicate tobind'
+validPattern alreadyBound pt = (S.map toLVar alreadyBound `S.union` matched) `S.disjoint` tobind
+    && S.size tobind == length tobind'
     where
         (tobind',matched') = freesPatternSapicLVar pt
-        tobind  = S.fromList tobind'
-        matched = S.fromList matched'
-        duplicate = not . any ((>1) . length) . group . sort
+        tobind  = S.fromList $ map toLVar tobind'
+        matched = S.fromList $ map toLVar matched'
 
 -- | Check an MSR (l,a,r) with a pattern on the lhs for validity:
 -- 1. a and r do not contain "="
@@ -81,9 +80,9 @@ validMSR alreadyBound (l,a,r)
     | (tobind_l',matched_l') <- freesPatternFactList l
     , (_,[]) <- freesPatternFactList a
     , (_,[]) <- freesPatternFactList r
-    , matched_l <- S.fromList matched_l'
-    , tobind_l <- S.fromList tobind_l'
-      =  (alreadyBound `S.union` matched_l) `S.disjoint`  tobind_l
+    , matched_l <- S.fromList $ map toLVar matched_l'
+    , tobind_l <- S.fromList $ map toLVar tobind_l'
+      =  (S.map toLVar alreadyBound `S.union` matched_l) `S.disjoint`  tobind_l
     | otherwise = False
     where
         freesPatternFactList = foldMap (foldMap freesPatternSapicLVar)

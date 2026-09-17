@@ -1,0 +1,7 @@
+theory SapicUnboundLookupKey
+begin
+
+// The lookup key is evaluated before its result binder enters scope.
+process: lookup x as x in out(x)
+
+end

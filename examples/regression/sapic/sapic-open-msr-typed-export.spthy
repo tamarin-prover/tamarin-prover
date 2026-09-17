@@ -1,0 +1,10 @@
+theory SapicOpenMsrTypedExport
+begin
+
+// Both premise occurrences bind the same variable. Inferring the parameters
+// of P must not mistake the typed occurrence for a free variable: the export
+// would declare an unused parameter while still calling P with no arguments.
+let P = [F(x), G(x:a)] --> []; out(x)
+process: P
+
+end

@@ -126,7 +126,7 @@ type AnnotatedSapicException = SapicException (ProcessAnnotation LVar)
 -- Destructor-equation variables and intermediate results can occur only in
 -- let plans, where the ordinary process traversal cannot see them.
 translationVars :: AnnotatedProcess -> [LVar]
-translationVars p = map toLVar (F.toList $ varsProc p) ++ pfoldMap planVars p
+translationVars p = map toLVar (F.toList $ varsProcWithAnnotations p) ++ pfoldMap planVars p
   where
     planVars node = concat
       [ frees (input, F.toList alternatives, bound)

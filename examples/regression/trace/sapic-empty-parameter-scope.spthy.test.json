@@ -1,0 +1,14 @@
+{
+  "tests": [
+    {
+      "name": "empty-parameter-list",
+      "args": [
+        "--prove",
+        "--quit-on-warning"
+      ],
+      "contains": [
+        "independent_inputs (exists-trace): verified"
+      ]
+    }
+  ]
+}
