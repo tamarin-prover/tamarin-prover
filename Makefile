@@ -492,6 +492,8 @@ COMMON_REGRESSION_CASE_STUDIES+=soundness-sapic-destructor-failure-chain.spthy s
 COMMON_REGRESSION_CASE_STUDIES+=soundness-sapic-progress-let.spthy soundness-sapic-nested-destructor-progress.spthy
 # SAPIC secret channels
 COMMON_REGRESSION_CASE_STUDIES+=soundness-sapic-channel-alias.spthy soundness-sapic-channel-embedded.spthy soundness-sapic-channel-pattern.spthy
+# SAPIC state cells
+COMMON_REGRESSION_CASE_STUDIES+=soundness-sapic-state-phases.spthy soundness-sapic-state-parallel-independent.spthy soundness-sapic-state-parallel-boundaries.spthy soundness-sapic-state-overwrite.spthy soundness-sapic-state-repeated-insert.spthy soundness-sapic-unlocked-lookup.spthy soundness-sapic-state-alias.spthy soundness-sapic-state-delete.spthy soundness-sapic-state-double-insert.spthy soundness-sapic-state-equivalent-key.spthy soundness-sapic-state-supported.spthy
 COMMON_REGRESSION_CASE_STUDIES+=sapic-lookup-destructor-progress.spthy
 FAST_REGRESSION_CASE_STUDIES+=$(COMMON_REGRESSION_CASE_STUDIES)
 FAST_REGRESSION_TARGETS=$(subst .spthy,_analyzed.spthy,$(addprefix case-studies$(SUBDIR)regression/trace/,$(FAST_REGRESSION_CASE_STUDIES)))
