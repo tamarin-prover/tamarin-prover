@@ -30,6 +30,7 @@ import Text.RawString.QQ qualified as QQ
 import Theory
 import Theory.Sapic
 import Sapic.Facts
+import Sapic.Annotation
 import Sapic.ProgressFunction
 import Sapic.Basetranslation
 
@@ -127,7 +128,12 @@ progressTransComb :: (MonadCatch m, Show ann, Typeable ann) =>
                     -> TransFComb (m TranslationResultComb)
                     -> TransFComb (m TranslationResultComb)
 progressTransComb anP tComb comb an pos tx =  do
-                (rs0,tx1,tx2) <- tComb comb an pos tx
+                -- An omitted else is else 0. Reaching it satisfies progress
+                -- when a let pattern fails, so its transition must be present.
+                let an' = case comb of
+                            Let {} -> an {elseBranch = True}
+                            _ -> an
+                (rs0,tx1,tx2) <- tComb comb an' pos tx
                 domPF <- pfFrom anP
                 invPF <- pfInv anP
                 return (map (addProgressItems domPF invPF pos) rs0
