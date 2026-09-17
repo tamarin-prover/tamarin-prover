@@ -489,6 +489,8 @@ COMMON_REGRESSION_CASE_STUDIES=
 COMMON_REGRESSION_CASE_STUDIES+=soundness-sapic-destructor-failure-chain.spthy soundness-sapic-destructor-variable-clash.spthy soundness-sapic-destructor-alternatives.spthy soundness-sapic-let-match-else.spthy soundness-sapic-destructor-patterns.spthy soundness-sapic-nested-destructors.spthy soundness-sapic-nested-destructor-failure-chain.spthy soundness-sapic-destructor-generated-binders.spthy soundness-sapic-destructor-nonvariable-result.spthy
 # SAPIC progress translation of lets
 COMMON_REGRESSION_CASE_STUDIES+=soundness-sapic-progress-let.spthy soundness-sapic-nested-destructor-progress.spthy
+# SAPIC secret channels
+COMMON_REGRESSION_CASE_STUDIES+=soundness-sapic-channel-alias.spthy soundness-sapic-channel-embedded.spthy soundness-sapic-channel-pattern.spthy
 COMMON_REGRESSION_CASE_STUDIES+=sapic-lookup-destructor-progress.spthy
 FAST_REGRESSION_CASE_STUDIES+=$(COMMON_REGRESSION_CASE_STUDIES)
 FAST_REGRESSION_TARGETS=$(subst .spthy,_analyzed.spthy,$(addprefix case-studies$(SUBDIR)regression/trace/,$(FAST_REGRESSION_CASE_STUDIES)))
