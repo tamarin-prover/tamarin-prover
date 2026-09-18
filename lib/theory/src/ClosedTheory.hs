@@ -33,6 +33,8 @@ import           Theory.Tools.InjectiveFactInstances
 import           Theory.Text.Pretty
 import OpenTheory
 import Pretty
+import Control.Monad.Reader (runReader)
+import Data.Maybe (fromMaybe)
 
 ------------------------------------------------------------------------------
 -- Closed theory querying / construction / modification
@@ -321,6 +323,24 @@ closeEitherProtoRule hnd (s, ruE) = (s, closeProtoRule hnd [] ruE)
 -- | Apply macro to a diff protocol rule.
 applyMacroInDiffProtoRule :: [LNMacro]-> DiffProtoRule -> DiffProtoRule
 applyMacroInDiffProtoRule mcs (DiffProtoRule ruE sides) = DiffProtoRule (applyMacroInRule mcs ruE) sides
+
+-- | Prepare the explicit side rules of a diff rule for closing: expand their
+-- macros and, when a side rule matches the parent's projection up to
+-- renaming, rename it into the parent's names with the parent's new-variable
+-- slots (see 'normalizeDiffSideRule'). The parent is left as it is.
+-- Wellformedness rejects side rules that do not match, so they are left
+-- unchanged here.
+prepareDiffSideRules :: MaudeHandle -> [LNMacro] -> DiffProtoRule -> DiffProtoRule
+prepareDiffSideRules hnd mcs (DiffProtoRule ruE sides) =
+    DiffProtoRule ruE (fmap (\(l, r) -> (side getLeftRule l, side getRightRule r)) sides)
+  where
+    parent = applyMacroInRule mcs ruE
+    side project (OpenProtoRule ru variants) =
+        OpenProtoRule (normalized expanded) (map (applyMacroInRulePreservingNewVars mcs) variants)
+      where
+        expanded = applyMacroInRulePreservingNewVars mcs ru
+        projection = project parent
+        normalized r = fromMaybe r (normalizeDiffSideRule r projection `runReader` hnd)
 
 -- | Apply macro to an open protocol rule.
 applyMacroInProtoRule :: [LNMacro]-> OpenProtoRule -> OpenProtoRule

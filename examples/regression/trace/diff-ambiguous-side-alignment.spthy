@@ -1,0 +1,9 @@
+// Two AC renamings align the facts but disagree on the added Choice action.
+// Reject the ambiguous declaration before mirroring pairs its variable slots.
+theory AmbiguousSideSlots begin
+builtins: multiset
+rule Pick: [] --> [Out(diff($p ++ $q, $p ++ $r))]
+left rule Pick: [] --[Choice($x)]-> [Out($x ++ $y)]
+right rule Pick: [] --[Choice($p)]-> [Out($p ++ $r)]
+diffLemma D:
+end

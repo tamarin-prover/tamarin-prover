@@ -1,0 +1,15 @@
+{
+  "tests": [
+    {
+      "name": "strict-rejection",
+      "args": [
+        "--diff",
+        "--quit-on-warning"
+      ],
+      "exit_code": 1,
+      "contains": [
+        "Unbound variables"
+      ]
+    }
+  ]
+}

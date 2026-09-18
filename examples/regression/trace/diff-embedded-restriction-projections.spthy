@@ -14,13 +14,14 @@ left rule Choose:
 right rule Choose:
   [In(<x,y>)] --[Chosen(x,y)]-> []
 
-// An annotation on an explicit side rule only constrains that side.
+// Side-local annotations keep their variable alignment after renaming.
+// The parent allows a or b; each explicit side allows just one of them.
 rule Local:
-  [In(x)] --[Local(x)]-> []
+  [In(x)] --[Local(x), _restrict(x = 'a' | x = 'b')]-> []
 left rule Local:
-  [In(x)] --[Local(x), _restrict(x = 'a')]-> []
+  [In(y)] --[Local(y), _restrict(y = 'a')]-> []
 right rule Local:
-  [In(x)] --[Local(x), _restrict(x = 'b')]-> []
+  [In(z)] --[Local(z), _restrict(z = 'b')]-> []
 
 // Projection must not change the generated action's arity when a variable
 // disappears from one side of a diff term. This is tautological on the left.

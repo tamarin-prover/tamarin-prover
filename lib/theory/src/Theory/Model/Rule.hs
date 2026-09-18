@@ -112,6 +112,8 @@ module Theory.Model.Rule (
   , equalUpToAddedActions
   , equalUpToTerms
   , alignRuleUpToRenaming
+  , ruleAlignmentsUpToRenaming
+  , normalizeDiffSideRule
 
   -- ** Conversion
   , ruleACToIntrRuleAC
@@ -171,6 +173,7 @@ module Theory.Model.Rule (
 
   , prettyIntruderVariants)  where
 
+
 import           Prelude              hiding (id, (.))
 
 import           GHC.Generics (Generic)
@@ -178,6 +181,7 @@ import           Data.Binary
 import qualified Data.ByteString.Char8 as BC
 -- import           Data.Foldable        (foldMap)
 import           Data.Data
+import           Data.Functor.Identity (runIdentity)
 import           Data.List
 import qualified Data.Set              as S
 import qualified Data.Map              as M
@@ -981,24 +985,37 @@ equalUpToAddedActions ruAC@(Rule _ ps cs as _) ruE@(Rule _ ps' cs' as' _) =
 alignRuleUpToRenaming :: (HasRuleName (Rule i), HasRuleName (Rule j))
                       => Rule i -> Rule j -> WithMaude (Maybe [LNFact])
 alignRuleUpToRenaming member computed
-  | ruleName member /= ruleName computed = return Nothing
-  | equalUpToAddedActions member computed = return (Just acts')
+  | equalUpToAddedActions member computed = return (Just $ L.get rActs computed)
+  | otherwise = return $ fst <$> listToMaybe (ruleAlignmentsUpToRenaming member computed)
+
+-- | Inherited-action selections and their computed-to-member
+-- variable maps. Unlike general unification, this only searches bijections:
+-- AC arguments can permute, but variables cannot become compound terms.
+-- Callers transporting mirror slots must check that alternative maps agree.
+ruleAlignmentsUpToRenaming :: (HasRuleName (Rule i), HasRuleName (Rule j))
+                          => Rule i -> Rule j -> [([LNFact], M.Map LVar LVar)]
+ruleAlignmentsUpToRenaming member computed
+  | ruleName member /= ruleName computed = []
   | length (L.get rPrems member) /= length expectedPrems ||
-    length (L.get rConcs member) /= length expectedConcs = return Nothing
-  | otherwise = reader $ \hnd -> listToMaybe
-      [ chosen
+    length (L.get rConcs member) /= length expectedConcs = []
+  | otherwise =
+      [ (chosen, M.fromList [(v, mapping M.! w) | (v,w) <- zip originalVariables renamedVariables])
       | renaming <- maybeToList $ matchFacts M.empty fixed expectedFixed
       , chosen <- orderedChoices renaming initialVariables
           (zip [0 :: Int ..] $ L.get rActs member) expectedActs
-      -- The partial mapping only prunes candidates; this checks the full alignment.
-      , isRenamingOf hnd (facts' chosen) expected ]
+      , let actual = fixed ++ chosen
+      , initial <- maybeToList $ matchFacts M.empty actual expected
+      , mapping <- foldM matchTerm initial $
+          zip (concatMap factTerms actual) (concatMap factTerms expected) ]
   where
-    acts' = L.get rActs computed
-    facts' as = (L.get rPrems member, L.get rConcs member, as)
-    -- Rename apart, so that the unifier relates two disjoint sets of variables.
-    expected@(expectedPrems, expectedConcs, expectedActs) =
-      (L.get rPrems computed, L.get rConcs computed, acts')
-        `renameAvoiding` facts' (L.get rActs member)
+    original = (L.get rPrems computed, L.get rConcs computed, L.get rActs computed)
+    originalVariables = frees original
+    -- Carry the old names through renaming too, so the result refers to the
+    -- caller's variables even when the two rules originally shared names.
+    ((expectedPrems, expectedConcs, expectedActs), renamedVariables) =
+      (original, originalVariables) `renameAvoiding`
+        (L.get rPrems member, L.get rConcs member, L.get rActs member)
+    expected = expectedPrems ++ expectedConcs ++ expectedActs
     fixed = L.get rPrems member ++ L.get rConcs member
     expectedFixed = expectedPrems ++ expectedConcs
     -- A bijective renaming preserves distinct variables of each sort, both in
@@ -1035,7 +1052,7 @@ alignRuleUpToRenaming member computed
       case dropWhile (\(_, a) -> isNothing $ matchFacts renaming [a] [e]) actions of
         []     -> Nothing
         (a:as) -> (a :) <$> scan renaming as es
-    -- Search only within the feasible positions. AC unification waits until a
+    -- Search only within the feasible positions. AC renaming waits until a
     -- complete selection: later actions can fix an ambiguous AC renaming.
     -- Bounds are only necessary conditions, so a failed final check must still
     -- allow other selections.
@@ -1100,17 +1117,66 @@ alignRuleUpToRenaming member computed
     skeleton renaming fs = apply (substFromList
                                      [ (v, varTerm $ maybe (LVar "_" (lvarSort v) 0) (min v) (M.lookup v renaming))
                                        | v <- frees fs ] :: LNSubst) fs
-    isRenamingOf hnd actual@(ps, cs, as) (ps', cs', as') =
-      case concat <$> sequence (zipWith factEqs (ps ++ cs ++ as) (ps' ++ cs' ++ as')) of
-        Just eqs | length ps == length ps' && length cs == length cs' ->
-          any renamesBoth (unifyLNTerm eqs `runReader` hnd)
-        _ -> False
+    matchTerm env (t,u) = case (viewTerm t, viewTerm u) of
+      (Lit (Var v), Lit (Var w)) | lvarSort v == lvarSort w -> maybeToList $ bind env (v,w)
+      (Lit x, Lit y) | x == y -> [env]
+      (FApp f ts, FApp g us) | f == g && length ts == length us ->
+        case f of
+          AC _ -> unordered env ts us
+          C _  -> unordered env ts us
+          _    -> foldM matchTerm env (zip ts us)
+      _ -> []
+    unordered env [] [] = [env]
+    unordered env ts (u:us) = do
+      -- Equal arguments give identical bindings and remaining multisets.
+      -- Trying each occurrence would enumerate the same correspondence again.
+      t <- S.toList (S.fromList ts)
+      next <- matchTerm env (t,u)
+      unordered next (delete t ts) us
+    unordered _ _ _ = []
+
+-- | Put an explicit side in its parent's namespace and positional mirror
+-- slots. Extra actions and restriction metadata must have the same meaning
+-- under every renaming of the selected inherited actions; otherwise the
+-- declaration is ambiguous.
+normalizeDiffSideRule :: ProtoRuleE -> ProtoRuleE -> WithMaude (Maybe ProtoRuleE)
+normalizeDiffSideRule originalSide originalProjection = return $ do
+    -- Parent restriction actions already use the parent's variable names.
+    -- Align the side's own facts before restoring those actions.
+    guard $ sideGenerated == generated
+    normalized <- if equalUpToAddedActions side projection
+      then Just $ L.set rNewVars (L.get rNewVars projection) side
+      else case alignments of
+        [] -> Nothing
+        first:_ | noExtraVariableUses -> Just $ normalize first
+        _ -> case take 2 $ nub $ map normalize alignments of
+          [rule] -> Just rule
+          _ -> Nothing
+    return $ L.modify rActs (++ generated) normalized
+  where
+    count = length (L.get (preRestriction . rInfo) originalProjection)
+    splitActions rule = splitAt (length (L.get rActs rule) - count) (L.get rActs rule)
+    (sideActions, sideGenerated) = splitActions originalSide
+    (projectionActions, generated) = splitActions originalProjection
+    side = L.set rActs sideActions originalSide
+    projection = L.set rActs projectionActions originalProjection
+    -- Keep variables belonging only to side annotations clear of parent slots.
+    side' = side `renameAvoiding` projection
+    -- Retain the existing choice of the first inherited-action selection.
+    -- Its possible AC correspondences are consecutive in the shared search.
+    alignments = case ruleAlignmentsUpToRenaming side' projection of
+      [] -> []
+      results@((chosen,_):_) -> takeWhile ((== chosen) . fst) results
+    -- With no added actions or variable-bearing metadata, all alignments give
+    -- exactly the projection's facts. Symmetric AC permutations cannot change
+    -- the result, so there is no reason to enumerate them.
+    noExtraVariableUses = length sideActions == length projectionActions &&
+                         null (frees $ L.get rInfo side :: [LVar])
+    normalize (_, mapping) = L.set rNewVars (L.get rNewVars projection) $
+      runIdentity $ mapFrees (Arbitrary $ pure . rename) side'
       where
-        renamesBoth subst = isRenaming (restrictVFresh (frees actual) subst)
-                         && isRenaming (restrictVFresh (frees (ps', cs', as')) subst)
-    factEqs (Fact tag _ ts) (Fact tag' _ ts')
-      | tag == tag' && length ts == length ts' = Just (zipWith Equal ts ts')
-      | otherwise                              = Nothing
+        back = M.fromList [(w,v) | (v,w) <- M.toList mapping]
+        rename w = M.findWithDefault w w back
 
 -- | returns true if the first Rule has the same name, premise, conclusion and
 -- action facts, ignoring terms
