@@ -90,6 +90,7 @@ import Data.Functor (($>))
 
 import           Control.Monad.Bind
 import           Control.Monad.Reader        (runReader)
+import           ClosedTheory (prepareDiffSideRules)
 
 import           Extension.Prelude
 import           Term.LTerm
@@ -124,9 +125,16 @@ invalidVariantsTopic = underlineTopic "Variants"
 uncoveredAddedActionTopic = underlineTopic "Unsupported actions added to variants"
 unsupportedMultiplicationTopic = underlineTopic "Unsupported multiplication outside exponents"
 
+-- | An explicit side rule of a diff rule replaces the parent's projection on
+-- its side, so the prover uses it instead of the parent.
+inconsistentLeftRuleTopic, inconsistentRightRuleTopic :: Topic
+inconsistentLeftRuleTopic = underlineTopic "Left rule"
+inconsistentRightRuleTopic = underlineTopic "Right rule"
+
 fatalWfErrors :: WfErrorReport -> WfErrorReport
 fatalWfErrors = filter ((`elem`
-    [invalidVariantsTopic, uncoveredAddedActionTopic, unsupportedMultiplicationTopic]) . fst)
+    [invalidVariantsTopic, uncoveredAddedActionTopic, unsupportedMultiplicationTopic,
+     inconsistentLeftRuleTopic, inconsistentRightRuleTopic]) . fst)
 
 type RuleAndFact   = (String, LNFact) -- String : name of rule where the fact is
                                       -- LNFact : the rule
@@ -470,24 +478,33 @@ ruleVariantsReportDiff sig thy = do
     hnd = get sigmMaudeHandle sig
 
 -- | Report on inconsistent left/right rules. This does not check the variants (done by ruleVariantsReportDiff).
-leftRightRuleReportDiff :: OpenDiffTheory -> WfErrorReport
-leftRightRuleReportDiff thy = do
+-- An explicit side rule replaces the parent's projection on its side, so the
+-- two must agree up to a variable renaming, added actions and macro
+-- expansion, as explicit variant members must agree with computed variants.
+leftRightRuleReportDiff :: SignatureWithMaude -> OpenDiffTheory -> WfErrorReport
+leftRightRuleReportDiff sig thy = do
     ru <- [ ru | DiffRuleItem ru <- get diffThyItems thy ]
     case get dprLeftRight ru of
-      Just ((OpenProtoRule lr _), _) | not (equalUpToAddedActions lr (getLeftRule (applyMacroInRule (diffTheoryMacros thy) (get dprRule ru)))) -> return $
-              ( (underlineTopic "Left rule")
+      Just ((OpenProtoRule lr _), _) | not (justified lr (getLeftRule (parent ru))) -> return $
+              ( inconsistentLeftRuleTopic
               , text "Inconsistent left rule" $-$ (nest 2 $ prettyProtoRuleE lr)
                 $--$ text "w.r.t." $--$
                 (nest 2 $ prettyProtoRuleE (get dprRule ru))
               )
-      Just (_, (OpenProtoRule rr _)) | not (equalUpToAddedActions rr (getRightRule (applyMacroInRule (diffTheoryMacros thy) (get dprRule ru)))) -> return $
-              ( (underlineTopic "Right rule")
+      Just (_, (OpenProtoRule rr _)) | not (justified rr (getRightRule (parent ru))) -> return $
+              ( inconsistentRightRuleTopic
               , text "Inconsistent right rule" $-$ (nest 2 $ prettyProtoRuleE rr)
                 $--$ text "w.r.t." $--$
                 (nest 2 $ prettyProtoRuleE (get dprRule ru))
               )
       Just (_, _) | otherwise -> []
       Nothing -> []
+  where
+    hnd = get sigmMaudeHandle sig
+    macros = diffTheoryMacros thy
+    parent = applyMacroInRule macros . get dprRule
+    justified side projection = isJust $
+      normalizeDiffSideRule (applyMacroInRulePreservingNewVars macros side) projection `runReader` hnd
 
 -- | Report on sort clashes.
 ruleSortsReportDiff :: OpenDiffTheory -> WfErrorReport
@@ -1343,7 +1360,7 @@ checkDiffEquationsSubtermConvergence thy
 -- | Returns a list of errors, if there are any.
 checkWellformednessDiff :: OpenDiffTheory -> SignatureWithMaude
                     -> WfErrorReport
-checkWellformednessDiff thy sig = -- trace ("checkWellformednessDiff: " ++ show thy) $
+checkWellformednessDiff thy0 sig =
   concatMap ($ thy)
     [ checkIfLemmasInDiffTheory
     , unboundReportDiff
@@ -1352,13 +1369,21 @@ checkWellformednessDiff thy sig = -- trace ("checkWellformednessDiff: " ++ show 
     , ruleSortsReportDiff
     , factReportsDiff
     , ruleVariantsReportDiff sig
-    , leftRightRuleReportDiff
+    , leftRightRuleReportDiff sig
 --     , ruleNameReportDiff
     , formulaReportsDiff
     , lemmaAttributeReportDiff
     , multRestrictedReportDiff
     , natWellSortedReportDiff
     ] ++ (if not (isUserMarkedConvergentDiff thy) then checkDiffEquationsSubtermConvergence thy else [])
+  where
+    -- Inherited restriction actions start in the parent's variable names.
+    -- Check the same normalized side rules that closing will use, so those
+    -- actions do not look unbound when an explicit side renames its inputs.
+    thy = modify diffThyItems (map prepareItem) thy0
+    prepareItem (DiffRuleItem ru) = DiffRuleItem $
+      prepareDiffSideRules (get sigmMaudeHandle sig) (diffTheoryMacros thy0) ru
+    prepareItem item = item
 
 -- | Returns a list of errors, if there are any. `incompleteMSR`, if true, indicates
 -- that the MSRs are incomplete (e.g., when we export to ProVerif) and that

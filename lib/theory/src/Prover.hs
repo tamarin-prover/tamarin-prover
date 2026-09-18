@@ -91,14 +91,19 @@ closeDiffTheoryWithMaude sig thy0 autoSources =
 
     checkProofM = checkAndExtendProver (sorryProver Nothing)
     checkDiffProof = checkAndExtendDiffProver (sorryDiffProver Nothing)
-    diffRules  = map (applyMacroInDiffProtoRule (diffTheoryMacros thy0)) $ diffTheoryDiffRules thy0
+    diffRules  = map (applyMacroInDiffProtoRule (diffTheoryMacros thy0)) $ diffTheoryDiffRules preparedThy
     leftOpenRules  = map (addProtoRuleLabel . getLeftProtoRule)  diffRules
     rightOpenRules = map (addProtoRuleLabel . getRightProtoRule) diffRules
 
     -- Maude / Signature handle
     hnd = L.get sigmMaudeHandle sig
 
-    theoryItems = L.get diffThyItems thy0 ++ map (\x -> EitherRuleItem (LHS, x)) leftOpenRules ++ map (\x -> EitherRuleItem (RHS, x)) rightOpenRules
+    -- Explicit side rules are closed and reopened in their prepared form.
+    preparedThy = L.modify diffThyItems (map prepareItem) thy0
+    prepareItem (DiffRuleItem ru) = DiffRuleItem (prepareDiffSideRules hnd (diffTheoryMacros thy0) ru)
+    prepareItem item = item
+
+    theoryItems = L.get diffThyItems preparedThy ++ map (\x -> EitherRuleItem (LHS, x)) leftOpenRules ++ map (\x -> EitherRuleItem (RHS, x)) rightOpenRules
     -- Close all theory items: in parallel (especially useful for variants)
     --
     -- NOTE that 'rdeepseq' is OK here, as the proof has not yet been checked

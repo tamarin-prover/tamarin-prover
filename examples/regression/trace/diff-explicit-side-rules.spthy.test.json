@@ -1,0 +1,14 @@
+{
+  "tests": [
+    {
+      "name": "default-rejection",
+      "args": ["--diff", "--prove"],
+      "exit_code": 1,
+      "contains": [
+        "Inconsistent left rule",
+        "Unsupported multiplication outside exponents",
+        "Rule Product has products outside exponents:"
+      ]
+    }
+  ]
+}
