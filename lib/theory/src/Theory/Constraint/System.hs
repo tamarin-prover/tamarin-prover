@@ -1688,44 +1688,17 @@ prettyNonGraphSystem se = vsep $ map combine_ -- text $ show se
 
 -- | Pretty print the non-graph part of the sequent; i.e. equation store and
 -- clauses.
-prettyNonGraphSystemDiff :: HighlightDocument d => DiffProofContext -> DiffSystem -> d
-prettyNonGraphSystemDiff ctxt se = vsep $ map combine_
+prettyNonGraphSystemDiff :: HighlightDocument d => DiffSystem -> d
+prettyNonGraphSystemDiff se = vsep $ map combine_
   [ ("proof type",          prettyProofType $ L.get dsProofType se)
   , ("current rule",        maybe (text "none") text $ L.get dsCurrentRule se)
   , ("system",              maybe (text "none") prettyNonGraphSystem $ L.get dsSystem se)
-  , ("mirror system",       case ((L.get dsSide se), (L.get dsSystem se)) of
-                                 (Just s, Just sys) | (dgIsNotEmpty sys) && (allOpenGoalsAreSimpleFacts ctxt sys) && (allOpenFactGoalsAreIndependent sys) -> vsep $ map (prettySystem) $ getMirrorDG ctxt s sys
-                                 _                                                                                                                        -> text "none")
---   , ("DEBUG",               maybe (text "none") (\x -> vsep $ map prettyGuarded x) help)
---   , ("DEBUG2",              maybe (text "none") (\x -> vsep $ map prettyGuarded x) help2)
   , ("protocol rules",      vsep $ map prettyProtoRuleE $ S.toList $ L.get dsProtoRules se)
   , ("construction rules",  vsep $ map prettyRuleAC $ S.toList $ L.get dsConstrRules se)
   , ("destruction rules",   vsep $ map prettyRuleAC $ S.toList $ L.get dsDestrRules se)
   ]
   where
     combine_ (header, d)  = fsep [keyword_ header <> colon, nest 2 d]
---     help :: Maybe [LNGuarded]
---     help = do
---       side <- L.get dsSide se
--- --       system <- L.get dsSystem se
---       restrictions <- Just $ L.get dpcRestrictions ctxt
---       siderestrictions <- Just $ filter (\x -> fst x == side) restrictions
--- --       formulas <- Just $ concat $ map snd siderestrictions
--- --       evalFms <- Just $ doRestrictionsHold (if side == LHS then L.get dpcPCLeft ctxt else L.get dpcPCRight ctxt) system formulas
--- --       strings <- Just $ (concat $ map (\x -> (show x) ++ " ") evalFms) ++ (concat $ map (\x -> (show x) ++ " ") formulas)
---       return $ concat $ map snd siderestrictions
---
---     help2 :: Maybe [LNGuarded]
---     help2 = do
---       side2 <- L.get dsSide se
---       side <- Just $ if side2 == LHS then RHS else LHS
--- --       system <- L.get dsSystem se
---       restrictions <- Just $ L.get dpcRestrictions ctxt
---       siderestrictions <- Just $ filter (\x -> fst x == side) restrictions
--- --       formulas <- Just $ concat $ map snd siderestrictions
--- --       evalFms <- Just $ doRestrictionsHold (if side == LHS then L.get dpcPCLeft ctxt else L.get dpcPCRight ctxt) system formulas
--- --       strings <- Just $ (concat $ map (\x -> (show x) ++ " ") evalFms) ++ (concat $ map (\x -> (show x) ++ " ") formulas)
---       return $ concat $ map snd siderestrictions
 
 -- | Pretty print the proof type.
 prettyProofType :: HighlightDocument d => Maybe DiffProofType -> d

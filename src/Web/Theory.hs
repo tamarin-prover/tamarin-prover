@@ -735,7 +735,7 @@ subDiffProofSnippet renderUrl tidx ti lemma proofPath ctxt prf =
         ++
         mirrorSystem
         ++
-        [ preformatted (Just "sequent") (prettyNonGraphSystemDiff ctxt se)
+        [ preformatted (Just "sequent") (prettyNonGraphSystemDiff se)
         , withTag "h3" [] (text $ nCases ++ " sub-case(s)")
         ] ++
         subCases
