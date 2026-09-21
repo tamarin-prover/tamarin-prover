@@ -406,8 +406,11 @@ execDiffProofMethod ctxt method sys =
     mmirrorCtxt          = eitherProofContext ctxt . opposite <$> mside
     mallSubtermsFinished = do
       finished <- finishedSubterms <$> mctxt <*> msys'
-      finishedMirrored <- (all . finishedSubterms <$> mmirrorCtxt) <*> mmirrorSyss
-      return $ finished && finishedMirrored
+      -- Mirroring changes only the nodes, so every mirror shares this subterm
+      -- store. Check it once without enumerating all alternative mirrors.
+      finishedMirrored <- finishedSubterms <$> mmirrorCtxt <*> msys'
+      mirrors <- mmirrorSyss
+      return $ finished && (finishedMirrored || null mirrors)
 
     protoRules       = L.get dpcProtoRules  ctxt
     destrRules       = L.get dpcDestrRules  ctxt
