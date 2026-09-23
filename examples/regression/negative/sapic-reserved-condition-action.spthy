@@ -1,0 +1,14 @@
+theory SapicReservedConditionAction
+begin
+// The translation enforces the condition Ok(x) by a restriction on the action
+// Restr_ifOkx_0_11_1 of the rule it generates for the conditional. The user
+// event with that name in the other branch was constrained by it too, so
+// Got('bad') was unreachable: got_bad was falsified and only_ok verified
+// without any warning. Such an event must be rejected.
+predicates: Ok(x) <=> x = 'ok'
+process:
+  (in(x); if Ok(x) then event Accepted(x))
+  || (in(y); event Restr_ifOkx_0_11_1(y); event Got(y))
+lemma got_bad: exists-trace "Ex #i. Got('bad')@i"
+lemma only_ok: "All y #i. Got(y)@i ==> y = 'ok'"
+end

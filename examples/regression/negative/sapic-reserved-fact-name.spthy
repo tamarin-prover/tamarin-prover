@@ -1,0 +1,11 @@
+theory SapicReservedFactName
+begin
+// The translation keeps the state of a process in facts such as State_11,
+// the state after event A. The fact of this user rule was taken as that
+// state, so the process could reach event B without event A: b_after_a was
+// falsified without any warning. Such a fact must be rejected.
+rule forge: [ ] --> [ State_11('bad') ]
+process:
+  in(x); event A(x); event B(x)
+lemma b_after_a: "All x #j. B(x)@j ==> Ex #i. A(x)@i & #i < #j"
+end
