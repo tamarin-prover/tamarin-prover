@@ -1,0 +1,21 @@
+theory SapicReservedVariantAction
+begin
+builtins: symmetric-encryption
+// A complete variant family can add actions. Insert is reserved by SAPIC,
+// including when it appears only in a member: otherwise this action acts as
+// a store update and makes only_y verify, although the process inserts 'x'.
+rule Fake:
+  [ Trigger(), In(x), In(k) ] --> [ Continue(), Out(sdec(x,k)) ]
+variants
+rule (modulo AC) Fake___VARIANT_1:
+  [ Trigger(), In(x.2), In(k.1) ] --[ Insert('a','y') ]-> [ Continue(), Out(sdec(x.2,k.1)) ],
+rule (modulo AC) Fake___VARIANT_2:
+  [ Trigger(), In(senc(z.2,k.1)), In(k.1) ] --[ Insert('a','y') ]-> [ Continue(), Out(z.2) ]
+process:
+  insert 'a','x';
+  [] --> [ Trigger() ];
+  [ Continue() ] --> [];
+  lookup 'a' as v in event Got(v)
+lemma got_x: exists-trace "Ex #i. Got('x')@i"
+lemma only_y: "All v #i. Got(v)@i ==> v = 'y'"
+end

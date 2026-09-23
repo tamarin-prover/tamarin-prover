@@ -1,0 +1,14 @@
+{
+  "tests": [
+    {
+      "name": "reserved-action",
+      "args": [
+        "--prove"
+      ],
+      "exit_code": 1,
+      "contains": [
+        "The action name Insert is reserved"
+      ]
+    }
+  ]
+}
