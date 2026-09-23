@@ -6,7 +6,8 @@
         "--quit-on-warning"
       ],
       "checks": [
-        "roundtrip"
+        "roundtrip",
+        "partial-evaluation"
       ]
     },
     {
@@ -16,7 +17,8 @@
         "--quit-on-warning"
       ],
       "checks": [
-        "roundtrip"
+        "roundtrip",
+        "partial-evaluation"
       ]
     },
     {

@@ -6,7 +6,8 @@
         "--quit-on-warning"
       ],
       "checks": [
-        "roundtrip"
+        "roundtrip",
+        "partial-evaluation"
       ],
       "timeout": 15
     },

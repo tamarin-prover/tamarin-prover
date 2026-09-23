@@ -1,13 +1,11 @@
 {
   "tests": [
     {
-      "name": "generated-family-roundtrip",
+      "name": "partial-evaluation",
       "args": [
-        "--auto-sources",
         "--quit-on-warning"
       ],
       "checks": [
-        "roundtrip",
         "partial-evaluation"
       ]
     }
