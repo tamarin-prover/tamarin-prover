@@ -96,6 +96,7 @@ import           Term.LTerm
 
 import           Term.Maude.Signature
 import           Theory
+import           Theory.Model.Rule          (ruleProductsOutsideExponents)
 import           Theory.Text.Pretty
 import           Theory.Sapic
 import           Theory.Tools.RuleVariants
@@ -118,12 +119,14 @@ type WfErrorReport = [WfError]
 
 -- These checks identify unsupported inputs for which proof search can return
 -- a wrong verdict. Other wellformedness reports retain their warning policy.
-invalidVariantsTopic, uncoveredAddedActionTopic :: Topic
+invalidVariantsTopic, uncoveredAddedActionTopic, unsupportedMultiplicationTopic :: Topic
 invalidVariantsTopic = underlineTopic "Variants"
 uncoveredAddedActionTopic = underlineTopic "Unsupported actions added to variants"
+unsupportedMultiplicationTopic = underlineTopic "Unsupported multiplication outside exponents"
 
 fatalWfErrors :: WfErrorReport -> WfErrorReport
-fatalWfErrors = filter ((`elem` [invalidVariantsTopic, uncoveredAddedActionTopic]) . fst)
+fatalWfErrors = filter ((`elem`
+    [invalidVariantsTopic, uncoveredAddedActionTopic, unsupportedMultiplicationTopic]) . fst)
 
 type RuleAndFact   = (String, LNFact) -- String : name of rule where the fact is
                                       -- LNFact : the rule
@@ -149,7 +152,11 @@ thyProtoRules thy = [ applyMacroInRule (theoryMacros thy) (get oprRuleE ru) | Ru
 -- | All protocol rules of a theory.
 -- thyProtoRules :: OpenTranslatedTheory ->
 diffThyProtoRules :: OpenDiffTheory -> [ProtoRuleE]
-diffThyProtoRules thy = [ applyMacroInRule (diffTheoryMacros thy) (get dprRule ru) | DiffRuleItem ru <- get diffThyItems thy ]
+diffThyProtoRules thy = map (applyMacroInRule (diffTheoryMacros thy)) $ concat
+    [ get dprRule ru : case get dprLeftRight ru of
+        Nothing -> []
+        Just (leftSide, rightSide) -> map (get oprRuleE) [leftSide, rightSide]
+    | DiffRuleItem ru <- get diffThyItems thy ]
 
 -- | Lower-case a string.
 lowerCase :: String -> String
@@ -1105,6 +1112,22 @@ formulaReportsDiff thy = do
                          fm     = applyMacroInFormula (diffTheoryMacros thy) (get rstrFormula rstr)
                      return (header, fm)
 
+-- | Products outside the exponent of @^@ can miss DH cancellation variants,
+-- including when matching premises. Restrict original rules to products in
+-- exponent positions, where variant computation supports them. Some other
+-- placements also work, but are conservatively excluded by this check.
+-- The multiplication-restriction
+-- warning of multRestrictedReport' also covers exponents in conclusions.
+multiplicationOutsideExponentsReport :: HasRuleName (Rule i) => Rule i -> WfErrorReport
+multiplicationOutsideExponentsReport ru =
+    [ ( unsupportedMultiplicationTopic
+      , text "Rule" <-> prettyRuleName ru <-> text "has products outside exponents:"
+        <-> prettyLNTermList mults
+      )
+    | not (null mults) ]
+  where
+    mults = ruleProductsOutsideExponents ru
+
 -- | Check that all rules are multipliation restricted. Compared
 -- to the definition in the paper we are slightly more lenient.
 -- We also accept a rule that is an instance of a multiplication
@@ -1177,8 +1200,10 @@ multRestrictedReport' irreducible ru0 = do
 -- 2. check vars(rhs) subset of vars(lhs) u V_Pub for abstracted rule for abstracted variables.
 -- 3. check that * does not occur in rhs of abstracted rule.
 multRestrictedReport :: OpenTranslatedTheory -> WfErrorReport
-multRestrictedReport thy = multRestrictedReport' irreducible (thyProtoRules thy)
+multRestrictedReport thy = multRestrictedReport' irreducible rules ++
+    concatMap multiplicationOutsideExponentsReport rules
   where
+    rules = thyProtoRules thy
     irreducible = irreducibleFunSyms $ get (sigpMaudeSig . thySignature) thy
 
 
@@ -1191,8 +1216,10 @@ multRestrictedReport thy = multRestrictedReport' irreducible (thyProtoRules thy)
 -- 2. check vars(rhs) subset of vars(lhs) u V_Pub for abstracted rule for abstracted variables.
 -- 3. check that * does not occur in rhs of abstracted rule.
 multRestrictedReportDiff :: OpenDiffTheory -> WfErrorReport
-multRestrictedReportDiff thy = multRestrictedReport' irreducible (diffThyProtoRules thy)
+multRestrictedReportDiff thy = multRestrictedReport' irreducible rules ++
+    concatMap multiplicationOutsideExponentsReport rules
   where
+    rules = diffThyProtoRules thy
     irreducible = irreducibleFunSyms $ get (sigpMaudeSig . diffThySignature) thy
 
 

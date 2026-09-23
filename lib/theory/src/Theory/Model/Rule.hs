@@ -94,6 +94,7 @@ module Theory.Model.Rule (
   , builtInDestrRuleInclPair
   , containsNewVars
   , getRuleName
+  , ruleProductsOutsideExponents
   , getRuleNameDiff
   , getDestrRuleFunction
   , getRemainingRuleApplications
@@ -793,6 +794,18 @@ isTrivialProtoVariantAC :: ProtoRuleAC -> ProtoRuleE -> Bool
 isTrivialProtoVariantAC (Rule info ps as cs nvs) (Rule _ ps' as' cs' nvs') =
     L.get pracVariants info == Disj [emptySubstVFresh]
     && ps == ps' && as == as' && cs == cs' && nvs == nvs'
+
+-- | Products in rule facts that would be unsupported in an
+-- original E-rule. Keep this check shared by validation and rule export.
+ruleProductsOutsideExponents :: Rule i -> [LNTerm]
+ruleProductsOutsideExponents ru = concatMap products $
+    concatMap factTerms (L.get rPrems ru ++ L.get rActs ru ++ L.get rConcs ru)
+  where
+    products t = case viewTerm t of
+      FApp (AC Mult) _                         -> [t]
+      FApp (NoEq sym) [base, _] | sym == expSym -> products base
+      FApp _ args                              -> concatMap products args
+      _                                        -> []
 
 -- | Returns a rule's name
 getRuleName :: HasRuleName (Rule i) => Rule i -> String

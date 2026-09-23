@@ -1,0 +1,47 @@
+{
+  "tests": [
+    {
+      "name": "default-rejection",
+      "args": [
+        "--prove"
+      ],
+      "exit_code": 1,
+      "contains": [
+        "Unsupported multiplication outside exponents",
+        "Rule Product has products outside exponents:",
+        "Rule NestedProduct has products outside exponents:",
+        "Rule StoreProduct has products outside exponents:",
+        "Rule ProductPremise has products outside exponents:",
+        "Rule NestedProductPremise has products outside exponents:"
+      ],
+      "matches": [
+        {
+          "regex": "Rule Power has products outside exponents",
+          "max": 0
+        }
+      ]
+    },
+    {
+      "name": "diff-rejection",
+      "args": [
+        "--diff",
+        "--prove"
+      ],
+      "exit_code": 1,
+      "contains": [
+        "Unsupported multiplication outside exponents",
+        "Rule Product has products outside exponents:",
+        "Rule NestedProduct has products outside exponents:",
+        "Rule StoreProduct has products outside exponents:",
+        "Rule ProductPremise has products outside exponents:",
+        "Rule NestedProductPremise has products outside exponents:"
+      ],
+      "matches": [
+        {
+          "regex": "Rule Power has products outside exponents",
+          "max": 0
+        }
+      ]
+    }
+  ]
+}
