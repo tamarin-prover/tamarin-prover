@@ -33,7 +33,7 @@ module Theory.Tools.SubtermStore (
   -- ** Accessors
   , addNegSubterm
   , addSubterm
-  , hasReducibleOperatorsOnTop
+  , subtermStoreIsFinished
   , simpSubtermStore
 
   -- ** Computation
@@ -125,10 +125,18 @@ addSubterm st sst = if st `elem` L.get solvedSubterms sst
 addNegSubterm :: (LNTerm, LNTerm) -> SubtermStore -> SubtermStore
 addNegSubterm st = modify negSubterms (S.insert st)
 
--- | returns true if any of the subterms has a reducible operator on the top of the right side.
--- If this is the case when rankProofMethods is empty (i.e., no constraints to solve) then the proof cannot be finished
-hasReducibleOperatorsOnTop :: FunSig -> SubtermStore -> Bool
-hasReducibleOperatorsOnTop reducible sst = all (topIsNotReducible . snd) allSubterms
+-- | Whether residual subterms permit declaring a trace. A positive constraint
+-- @s << x@ cannot be discharged by choosing an arbitrary public value for @x@:
+-- its instantiation must also satisfy the system's deduction constraints.
+-- Keep such branches incomplete, just like subterms below reducible operators.
+-- Callers remove the residuals for which they can construct a witness.
+-- Split subterms are checked through their remaining obligations, not again as
+-- unresolved positives (in particular, nat subterms may have been solved by an
+-- equation). Negative variable subterms do not require a containing witness.
+subtermStoreIsFinished :: FunSig -> SubtermStore -> Bool
+subtermStoreIsFinished reducible sst =
+    all (not . isMsgVar . snd) (L.get posSubterms sst) &&
+    all (topIsNotReducible . snd) allSubterms
   where
     allSubterms = S.toList (L.get posSubterms sst `S.union` L.get negSubterms sst `S.union` L.get solvedSubterms sst)
     topIsNotReducible term = case viewTerm term of

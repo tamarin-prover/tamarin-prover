@@ -403,7 +403,7 @@ data ProofStatus =
        | IncompleteProof    -- ^ There is a annotated sorry,
                             --   but no annotated solved step.
        | TraceFound         -- ^ There is an annotated solved step
-       | UnfinishableProof  -- ^ The proof cannot be finished (due to reducible operators in subterms)
+       | UnfinishableProof  -- ^ The proof cannot be finished (due to unresolved subterm constraints)
                             --   i.e. all ends are either Completed or Unfinishable (if a trace is found, then the status is TraceFound)
        | InvalidatedProof   -- ^ The proof has been Invalidated (eg. by editing a reuse lemma)
     deriving ( Show, Generic, NFData, Binary, Eq )
@@ -1154,7 +1154,7 @@ showProofStatus ExistsNoTrace   TraceFound        = "falsified - found trace"
 showProofStatus ExistsNoTrace   CompleteProof     = "verified"
 showProofStatus ExistsSomeTrace CompleteProof     = "falsified - no trace found"
 showProofStatus ExistsSomeTrace TraceFound        = "verified"
-showProofStatus _               UnfinishableProof = "analysis cannot be finished (reducible operators in subterms)"
+showProofStatus _               UnfinishableProof = "analysis cannot be finished (unresolved subterm constraints)"
 showProofStatus _               IncompleteProof   = "analysis incomplete"
 showProofStatus _               UndeterminedProof = "analysis undetermined"
 showProofStatus _               InvalidatedProof  = "proof has been invalidated"
@@ -1163,7 +1163,7 @@ showProofStatus _               InvalidatedProof  = "proof has been invalidated"
 showDiffProofStatus :: ProofStatus -> String
 showDiffProofStatus TraceFound        = "falsified - found trace"
 showDiffProofStatus CompleteProof     = "verified"
-showDiffProofStatus UnfinishableProof = "analysis cannot be finished (reducible operators in subterms)"
+showDiffProofStatus UnfinishableProof = "analysis cannot be finished (unresolved subterm constraints)"
 showDiffProofStatus IncompleteProof   = "analysis incomplete"
 showDiffProofStatus UndeterminedProof = "analysis undetermined"
 showDiffProofStatus InvalidatedProof  = "proof has been invalidated" 

@@ -1,0 +1,38 @@
+{
+  "tests": [
+    {
+      "name": "witness-verdicts",
+      "args": [
+        "--prove",
+        "--quit-on-warning"
+      ],
+      "contains": [
+        "public_constant (exists-trace): verified",
+        "public_constant_never (all-traces): falsified - found trace",
+        "public_variable (exists-trace): verified",
+        "message_variable (exists-trace): verified",
+        "public_constructor (exists-trace): verified",
+        "private_symbol (exists-trace): analysis cannot be finished",
+        "destructor_symbol (exists-trace): analysis cannot be finished",
+        "destructor_containing_message (exists-trace): falsified - no trace found",
+        "disequality (exists-trace): analysis cannot be finished",
+        "negative_constraint (exists-trace): analysis cannot be finished",
+        "guard_shape (exists-trace): analysis cannot be finished",
+        "shared_container (exists-trace): verified",
+        "independent_containers (exists-trace): verified",
+        "dependent_containers (exists-trace): analysis cannot be finished"
+      ]
+    },
+    {
+      "name": "knowledge-guard",
+      "args": [
+        "--prove=public_constant",
+        "-DKUGUARD",
+        "--quit-on-warning"
+      ],
+      "contains": [
+        "public_constant (exists-trace): analysis cannot be finished"
+      ]
+    }
+  ]
+}
