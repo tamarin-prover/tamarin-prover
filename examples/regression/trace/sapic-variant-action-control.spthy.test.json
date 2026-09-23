@@ -1,0 +1,15 @@
+{
+  "tests": [
+    {
+      "name": "ordinary-variant-action",
+      "args": [
+        "--prove",
+        "--quit-on-warning"
+      ],
+      "contains": [
+        "got_x (exists-trace): verified",
+        "only_y (all-traces): falsified - found trace"
+      ]
+    }
+  ]
+}

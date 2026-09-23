@@ -1,0 +1,15 @@
+{
+  "tests": [
+    {
+      "name": "reserved-variant-action",
+      "args": [
+        "--prove",
+        "--quit-on-warning"
+      ],
+      "exit_code": 1,
+      "contains": [
+        "The action name Insert is reserved"
+      ]
+    }
+  ]
+}

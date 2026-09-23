@@ -58,6 +58,7 @@ data SapicException an = NotImplementedError String
                     | RestrictionNameExists String
                     | ReliableTransmissionButNoProcess
                     | CannotExpandPredicate FactTag SyntacticRestriction
+                    | ReservedName String String
     deriving (Typeable)
 
 
@@ -101,6 +102,9 @@ instance Show (SapicException an) where
                               ++ " in definition of predicate: "
                               ++ rstr._rstrName
                               ++ "."
+    show (ReservedName kind name) = "The " ++ kind ++ " name " ++ name
+                              ++ " is reserved: the process translation uses it for " ++ kind ++ "s of its own."
+                              ++ " Rename the " ++ kind ++ " in the process or rule that uses it."
 
 instance Show WFerror where
     show (WFUnbound varset) =

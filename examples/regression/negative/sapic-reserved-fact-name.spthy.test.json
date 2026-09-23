@@ -1,0 +1,14 @@
+{
+  "tests": [
+    {
+      "name": "reserved-fact",
+      "args": [
+        "--prove"
+      ],
+      "exit_code": 1,
+      "contains": [
+        "The fact name State_11 is reserved"
+      ]
+    }
+  ]
+}
