@@ -1068,8 +1068,9 @@ proveSystemDFS heuristic tactics ctxt =
   where
     prove !depth sys =
         case rankProofMethods (useHeuristic heuristic depth) tactics ctxt sys of
-          [] | finishedSubterms ctxt sys  -> node (Finished Solved) M.empty
-          []                              -> node (Finished Unfinishable) M.empty
+          -- rankProofMethods already checks isFinished; exhaustion alone does
+          -- not establish a trace (for example, if induction is inapplicable).
+          []                             -> node (Sorry (Just "Cannot prove")) M.empty
           (method, (cases, _expl)):_      -> node method cases
       where
         node method cases =

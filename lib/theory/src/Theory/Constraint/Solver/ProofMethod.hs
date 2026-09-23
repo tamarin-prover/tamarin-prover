@@ -254,20 +254,12 @@ checkAndExecProofMethod :: ProofContext -> ProofMethod -> System -> Maybe (M.Map
 checkAndExecProofMethod ctxt method sys = do
     case method of
       Finished r -> isFinished ctxt sys >>= guard . equalReason r
-      Induction -> canApplyInduction
+      Induction -> Just ()
       SolveGoal goal -> guard (goal `M.member` L.get sGoals sys)
       Simplify -> Just ()
       Sorry _ -> Just ()
     execProofMethod ctxt method sys
   where
-    canApplyInduction :: Maybe ()
-    canApplyInduction = do
-      guard (M.null $ L.get sNodes sys)
-      guard (S.null $ L.get sSolvedFormulas sys)
-      guard (M.null $ L.get sGoals sys)
-      (_, t) <- uncons $ S.toList $ L.get sFormulas sys
-      guard (null t)
-
     equalReason :: Result -> Result -> Bool
     equalReason (Contradictory _) (Contradictory _) = True
     equalReason r1 r2 = r1 == r2
@@ -319,10 +311,15 @@ execProofMethod ctxt method sys =
                 (solveWithSource ctxt ths goal)
 
     -- Induction is only possible if the system contains only
-    -- a single, last-free, closed formula.
+    -- a single, last-free, closed formula. Check here so automatic search and
+    -- saved-proof replay agree, including after simplification creates goals.
     getInductionCases :: System -> Maybe (LNGuarded, LNGuarded)
     getInductionCases s = do
-      (h, _) <- uncons $ S.toList $ L.get sFormulas s
+      guard (M.null $ L.get sNodes s)
+      guard (S.null $ L.get sSolvedFormulas s)
+      guard (M.null $ L.get sGoals s)
+      (h, t) <- uncons $ S.toList $ L.get sFormulas s
+      guard (null t)
       either (const Nothing) Just (ginduct h)
 
     induction :: (LNGuarded, LNGuarded) -> Reduction String
@@ -1323,4 +1320,3 @@ prettyDiffProofMethod method = case method of
     DiffRuleEquivalence      -> keyword_ "rule-equivalence"
     DiffBackwardSearch       -> keyword_ "backward-search"  
     DiffBackwardSearchStep s -> keyword_ "step(" <-> prettyProofMethod s <-> keyword_ ")"
-
