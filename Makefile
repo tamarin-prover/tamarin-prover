@@ -483,10 +483,16 @@ accountability-case-studies:	$(ACCOUNTABILITY_CS_TARGETS)
 ##########################
 
 FAST_REGRESSION_CASE_STUDIES=issue446-1.spthy issue446-2.spthy issue753-4.spthy issue753-5.spthy issue753-6.spthy issue834.spthy issue777.spthy issue770.spthy issue914.spthy negated-equivalence.spthy
+# SAPIC regressions shared by the fast and the slow suites
+COMMON_REGRESSION_CASE_STUDIES=
+# SAPIC let and destructor evaluation
+COMMON_REGRESSION_CASE_STUDIES+=soundness-sapic-destructor-failure-chain.spthy soundness-sapic-destructor-variable-clash.spthy soundness-sapic-destructor-alternatives.spthy soundness-sapic-let-match-else.spthy soundness-sapic-destructor-patterns.spthy soundness-sapic-nested-destructors.spthy soundness-sapic-nested-destructor-failure-chain.spthy soundness-sapic-destructor-generated-binders.spthy soundness-sapic-destructor-nonvariable-result.spthy
+FAST_REGRESSION_CASE_STUDIES+=$(COMMON_REGRESSION_CASE_STUDIES)
 FAST_REGRESSION_TARGETS=$(subst .spthy,_analyzed.spthy,$(addprefix case-studies$(SUBDIR)regression/trace/,$(FAST_REGRESSION_CASE_STUDIES)))
 
 
 REGRESSION_CASE_STUDIES=issue216.spthy issue193.spthy issue310.spthy issue519.spthy issue527.spthy issue515.spthy
+REGRESSION_CASE_STUDIES+=$(COMMON_REGRESSION_CASE_STUDIES)
 REGRESSION_TARGETS=$(subst .spthy,_analyzed.spthy,$(addprefix case-studies$(SUBDIR)regression/trace/,$(REGRESSION_CASE_STUDIES)))
 
 SEQDFS_CASE_STUDIES=seqdfsneeded.spthy
