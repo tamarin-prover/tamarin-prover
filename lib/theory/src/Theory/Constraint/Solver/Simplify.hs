@@ -305,9 +305,14 @@ solveUniqueActions = do
 reduceFormulas :: Reduction ChangeIndicator
 reduceFormulas = do
     formulas <- getM sFormulas
+    goals <- getM sGoals
     applyChangeList $ do
         fm <- S.toList formulas
-        guard (reducibleFormula fm)
+        -- The initial formula bypasses insertFormula. A disjunction needs its
+        -- case-split goal even when none of its atoms can be simplified yet.
+        guard $ case fm of
+          GDisj disj -> DisjG disj `M.notMember` goals
+          _         -> reducibleFormula fm
         return $ do modM sFormulas $ S.delete fm
                     insertFormula fm
 
