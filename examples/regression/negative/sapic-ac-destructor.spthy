@@ -1,0 +1,12 @@
+theory SapicACDestructor
+begin
+functions: d/1 [destructor], c/1, a/0, b/0, fail/2 [AC, destructor]
+#ifdef NESTED
+equations: d(c(x))=c(fail(a(),b()))
+#else
+equations: d(c(x))=fail(a(),b())
+#endif
+process: let y=d(c('a')) in event Seen(y) else event Missing()
+// An AC destructor is still a destructor, including inside an equation result.
+lemma seen: exists-trace "Ex y #i.Seen(y)@i"
+end

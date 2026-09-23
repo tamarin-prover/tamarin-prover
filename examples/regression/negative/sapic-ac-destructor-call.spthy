@@ -1,0 +1,7 @@
+theory SapicACDestructorCall
+begin
+functions: fail/2 [AC, destructor]
+process: let y=fail('a','b') in event Seen(y) else event Missing()
+// AC destructor calls have no supported SAPIC success/failure translation.
+lemma seen: exists-trace "Ex y #i.Seen(y)@i"
+end

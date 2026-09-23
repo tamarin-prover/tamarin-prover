@@ -119,6 +119,9 @@ progressTransAct anP tAct ac an pos tx = do
                 return (map (addProgressItems domPF invPF pos) rs0,extendVars domPF pos tx1)
 
 -- | Add ProgressTo or -From to rules generated on a combinator.
+-- A staged let carries the caller's progress variables through FLet facts.
+-- Only its final success or shared failure emits a child State, so internal
+-- evaluation cannot discharge progress before reaching a source continuation.
 progressTransComb :: (MonadCatch m, Show ann, Typeable ann) =>
                      LProcess ann
                     -> TransFComb (m TranslationResultComb)

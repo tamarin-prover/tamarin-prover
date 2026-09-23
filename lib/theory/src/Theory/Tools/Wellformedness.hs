@@ -945,7 +945,9 @@ lemmaAttributeReportDiff thy = do
            )
 
 
--- check that only message and node variables are used
+-- Ordinary formulas quantify messages, nodes and naturals. Pattern exclusion
+-- also needs the pattern's name sorts: widening a fresh/public variable to a
+-- message variable would rule out inputs which cannot match that pattern.
 checkQuantifiers :: Document b => Show a => String -> ProtoFormula syn (a, LSort) c v -> [b]
 checkQuantifiers header fm
   | null disallowed = []
@@ -953,8 +955,17 @@ checkQuantifiers header fm
       (text $ header ++ " uses quantifiers with wrong sort:") :
       (punctuate comma $ map (nest 2 . text . show) disallowed)
   where
-    binders    = foldFormula (const mempty) (const mempty) id (const mappend)
-                      (\_ binder rest -> binder : rest) fm
+    binders = ordinaryBinders fm
+    ordinaryBinders f | patternExclusion f = []
+    ordinaryBinders (Qua _ binder rest) = binder : ordinaryBinders rest
+    ordinaryBinders (Not f) = ordinaryBinders f
+    ordinaryBinders (Conn _ f g) = ordinaryBinders f ++ ordinaryBinders g
+    ordinaryBinders _ = []
+    -- These variables are introduced only for matching an equality guard;
+    -- guardedness checking still requires every binder to be determined.
+    patternExclusion (Qua All _ f) = patternExclusion f
+    patternExclusion (Conn Imp (Ato EqE{}) (TF False)) = True
+    patternExclusion _ = False
     disallowed = filter (not . (`elem` [LSortMsg, LSortNode, LSortNat]) . snd) binders
 
 -- check that only bound variables and public names are used
