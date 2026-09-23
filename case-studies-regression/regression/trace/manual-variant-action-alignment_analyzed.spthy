@@ -1,0 +1,142 @@
+theory ManualVariantActionAlignment
+
+begin
+
+// Function signature and definition of the equational theory E
+
+builtins: multiset
+functions: fst/1, pair/2, snd/1
+equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
+
+rule (modulo E) Late___VARIANT_1:
+   [ In( y ), In( w ) ]
+  --[
+  A( 'a' ), A( 'a' ), A( 'a' ), A( 'a' ), A( 'a' ), A( 'a' ), A( 'a' ),
+  A( 'a' ), A( 'a' ), A( 'a' ), A( 'a' ), A( 'a' ), A( 'a' ), A( 'a' ),
+  A( 'a' ), A( 'a' ), A( w ), A( w ), A( w ), A( w ), A( w ), A( w ),
+  A( w ), A( w ), A( w ), A( w ), A( w ), A( w ), A( w ), A( w ), A( w ),
+  A( w ), A( y ), A( y ), A( y ), A( y ), A( y ), A( y ), A( y ), A( y ),
+  A( y ), A( y ), A( y ), A( y ), A( y ), A( y ), A( y ), A( y )
+  ]->
+   [ Out( w ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Backtrack___VARIANT_1:
+   [ ] --[ Candidate( $a ), Candidate( $b ), Following( $b ) ]-> [ ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Ambiguous___VARIANT_1:
+   [ ] --[ Pair( ($a++$b) ), Pick( $b ) ]-> [ ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Seed:
+   [ In( z ) ] --> [ State( z ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) ACPremise___VARIANT_1:
+   [ State( (y0++y1++y2++y3) ) ]
+  --[ Extra( ), Pin0( y0 ), Pin1( y1 ), Pin2( y2 ), Pin3( y3 ) ]->
+   [ ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) ACAction___VARIANT_1:
+   [ ]
+  --[
+  Extra( ), Bag( ($y0++$y1++$y2++$y3++$y4++$y5++$y6++$y7) ), Pin0( $y0 ),
+  Pin1( $y1 ), Pin2( $y2 ), Pin3( $y3 ), Pin4( $y4 ), Pin5( $y5 ),
+  Pin6( $y6 ), Pin7( $y7 )
+  ]->
+   [ ]
+
+  /* has exactly the trivial AC variant */
+
+lemma late:
+  exists-trace "∃ #i. A( 'b' ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #i. (A( 'b' ) @ #i)"
+*/
+simplify
+solve( A( 'b' ) @ #i )
+  case Late___VARIANT_1_case_1
+  SOLVED // trace found
+qed
+
+lemma backtrack:
+  exists-trace
+  "∃ #i.
+    ((Candidate( 'a' ) @ #i) ∧ (Candidate( 'b' ) @ #i)) ∧
+    (Following( 'b' ) @ #i)"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #i.
+  (Candidate( 'a' ) @ #i) ∧
+  (Candidate( 'b' ) @ #i) ∧
+  (Following( 'b' ) @ #i)"
+*/
+simplify
+solve( Candidate( 'a' ) @ #i )
+  case Backtrack___VARIANT_1
+  solve( Candidate( 'b' ) @ #i )
+    case Backtrack___VARIANT_1
+    SOLVED // trace found
+  qed
+qed
+
+lemma ac_choice:
+  exists-trace "∃ #i. (Pair( ('a'++'b') ) @ #i) ∧ (Pick( 'b' ) @ #i)"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #i. (Pair( ('a'++'b') ) @ #i) ∧ (Pick( 'b' ) @ #i)"
+*/
+simplify
+solve( Pair( ('a'++'b') ) @ #i )
+  case Ambiguous___VARIANT_1
+  SOLVED // trace found
+qed
+
+lemma false_safety:
+  all-traces "∀ x #i. (A( x ) @ #i) ⇒ (⊥)"
+/*
+guarded formula characterizing all counter-examples:
+"∃ x #i. (A( x ) @ #i)"
+*/
+simplify
+solve( A( x ) @ #i )
+  case Late___VARIANT_1_case_1
+  SOLVED // trace found
+qed
+
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.13.0
+Maude version 3.5.1
+Git revision: 939314524b3979131534c3c795416b3fae2d8a74 (with uncommited changes), branch: msr-rule-handling
+Compiled at: 2026-10-06 21:25:39.274392779 UTC
+*/
+
+end
+/* Output
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/regression/trace/manual-variant-action-alignment.spthy
+
+  output:          examples/regression/trace/manual-variant-action-alignment.spthy.tmp
+  processing time: 0.22s
+  
+  late (exists-trace): verified (3 steps)
+  backtrack (exists-trace): verified (4 steps)
+  ac_choice (exists-trace): verified (3 steps)
+  false_safety (all-traces): falsified - found trace (3 steps)
+
+==============================================================================
+*/

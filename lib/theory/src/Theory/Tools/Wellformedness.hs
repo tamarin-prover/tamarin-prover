@@ -60,6 +60,7 @@ module Theory.Tools.Wellformedness (
 
   -- * Wellformedness checking
     WfErrorReport
+  , fatalWfErrors
   , checkWellformedness
   , checkWellformednessDiff
 
@@ -82,11 +83,13 @@ import           Data.Label
 import           Data.List                   (intersperse,(\\), intercalate, isPrefixOf)
 import           Data.Maybe
 -- import           Data.Monoid                 (mappend, mempty)
+import qualified Data.Map.Strict             as M
 import qualified Data.Set                    as S
 -- import           Data.Traversable            (traverse)
 import Data.Functor (($>))
 
 import           Control.Monad.Bind
+import           Control.Monad.Reader        (runReader)
 
 import           Extension.Prelude
 import           Term.LTerm
@@ -112,6 +115,16 @@ import Term.SubtermRule ( CtxtStRule, prettyCtxtStRule, filterNonSubtermCtxtRule
 type Topic         = String
 type WfError       = (Topic, Doc)
 type WfErrorReport = [WfError]
+
+-- These checks identify unsupported inputs for which proof search can return
+-- a wrong verdict. Other wellformedness reports retain their warning policy.
+invalidVariantsTopic, uncoveredAddedActionTopic :: Topic
+invalidVariantsTopic = underlineTopic "Variants"
+uncoveredAddedActionTopic = underlineTopic "Unsupported actions added to variants"
+
+fatalWfErrors :: WfErrorReport -> WfErrorReport
+fatalWfErrors = filter ((`elem` [invalidVariantsTopic, uncoveredAddedActionTopic]) . fst)
+
 type RuleAndFact   = (String, LNFact) -- String : name of rule where the fact is
                                       -- LNFact : the rule
 
@@ -353,9 +366,9 @@ natWellSortedReportDiff thy = natSortErrors itemsTerms
 
 --- | Check that the protocol rule variants are correct.
 variantsCheck :: MaudeHandle -> [LNMacro] -> String -> OpenProtoRule -> WfErrorReport
-variantsCheck hnd macros info (OpenProtoRule ruE ruAC) = catMaybes
-  [ guard (not (null ruAC) && not (sameVariantsUpToActions ruAC recomputedVariants)) $>
-      ( underlineTopic "Variants"
+variantsCheck hnd macros info (OpenProtoRule ruE supplied) = catMaybes
+  [ guard (not (null ruAC) && not complete) $>
+      ( invalidVariantsTopic
       , text info $-$ nest 2 (numbered' (map prettyProtoRuleAC ruAC))
         $--$ text "Recomputed variants: " $--$
         nest 2 (numbered' $ map prettyProtoRuleAC recomputedVariants)
@@ -365,12 +378,67 @@ variantsCheck hnd macros info (OpenProtoRule ruE ruAC) = catMaybes
       ,       text "Rule " <> prettyRuleName ruE <> text " has no variants."
         $--$  text "Most likely, this means that the rule's use of fresh variables is contradictory. "
         <>    text "For exaple, a rule with the premises In(~x) and Fr(~x) has no variants because ~x cannot be sent before it is generated." )]
+  ++ concat
+    [ addedActionReport (mhMaudeSig hnd) parsed inherited
+    | (parsed, Just inherited) <- zip ruAC alignments
+    ]
   where
-    recomputedVariants =
+    -- The solver uses the supplied members with their macros expanded.
+    ruAC = map (applyMacroInRulePreservingNewVars macros) supplied
+    recomputedVariants = case computedVariants of
+      -- Trivial families keep the parent name internally, but the parser
+      -- requires an explicit member to have a distinct name, even if there
+      -- is only one. Use the numbered name when checking supplied members.
+      [variant] | ruleName variant == ruleName ruE ->
+        [set (pracName . rInfo) (ruleVariantName 1 (get (preName . rInfo) ruE)) variant]
+      variants -> variants
+    computedVariants =
       map (get cprRuleAC) $
       concatMap (unfoldRuleVariants . ClosedProtoRule ruE) $
       maybeToList (variantsProtoRule hnd (applyMacroInRule macros ruE))
-    sameVariantsUpToActions parsed computed = all (\x -> any (equalUpToAddedActions x) computed) parsed
+    -- The solver uses the supplied members as they are. Every member must
+    -- therefore be a computed variant up to renaming and added actions, and
+    -- every computed variant must be supplied, or rule instances are missing.
+    -- The alignment also gives the member's inherited (computed) actions.
+    computedByName = M.fromList [(ruleName ru, ru) | ru <- recomputedVariants]
+    alignments =
+      [ M.lookup (ruleName parsed) computedByName >>= \computed ->
+          alignRuleUpToRenaming parsed computed `runReader` hnd
+      | parsed <- ruAC ]
+    complete = all isJust alignments &&
+      M.keysSet computedByName == S.fromList (map ruleName ruAC)
+
+-- | Actions that an explicit variant member adds to its computed variant are
+-- not part of variant computation. The solver discards every rule instance
+-- with a term that is not in normal form, including action terms, so an added
+-- action that can leave normal form silently removes rule instances. An added
+-- action may therefore only combine subterms that already occur in the
+-- member's premises, conclusions or computed actions, whose normality the
+-- variant guarantees, using symbols that can neither rewrite nor cancel. AC
+-- multiplication and xor are listed as irreducible but cancel. The comparison
+-- is syntactic, so it is conservative for AC subterms.
+addedActionReport :: MaudeSig -> ProtoRuleAC -> [LNFact] -> WfErrorReport
+addedActionReport msig member inherited =
+    [ ( uncoveredAddedActionTopic
+      , text "Rule" <-> prettyRuleName member <-> text "adds actions whose instances can leave normal form:"
+        $-$ nest 2 (prettyLNTermList uncovered)
+        $-$ text "Such subterms must already occur in the member's premises, conclusions or computed actions."
+        $-$ text "Annotate the original rule instead, so that variant computation covers them."
+      )
+    | not (null uncovered) ]
+  where
+    added = get rActs member \\ inherited
+    inheritedTerms = concatMap factTerms (get rPrems member ++ get rConcs member ++ inherited)
+    covered = S.fromList (concatMap subtermsOf inheritedTerms)
+    subtermsOf t = t : case viewTerm t of
+      FApp _ as -> concatMap subtermsOf as
+      _         -> []
+    stable = irreducibleFunSyms msig `S.difference` S.fromList [AC Mult, AC Xor]
+    risky t = case viewTerm t of
+      Lit _                           -> []
+      FApp o as | o `S.member` stable -> concatMap risky as
+      _                               -> [t]
+    uncovered = [ r | fa <- added, t <- factTerms fa, r <- risky t, r `S.notMember` covered ]
 
 -- | Report on missing or different variants.
 ruleVariantsReport :: SignatureWithMaude -> OpenTranslatedTheory -> WfErrorReport

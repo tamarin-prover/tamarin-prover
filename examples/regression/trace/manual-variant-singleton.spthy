@@ -1,0 +1,41 @@
+theory ManualVariantSingleton
+begin
+
+builtins: symmetric-encryption
+macros: identity(x) = x
+
+// An unchanged singleton and an annotated, renamed singleton both need an
+// explicit name distinct from their parent. The computed trivial variant
+// keeps the parent name, which previously left neither spelling acceptable.
+rule Plain: [In(x)] --[Plain(x)]-> []
+variants rule (modulo AC) Plain___VARIANT_1:
+  [In(x)] --[Plain(x)]-> []
+
+rule Annotated: [In(x)] --[Original(x)]-> [Out(x)]
+variants rule (modulo AC) Annotated___VARIANT_1:
+  [In(y)] --[Original(y), Added(identity(y))]-> [Out(y)]
+
+#ifdef WRONG_NAME
+rule Wrong: [In(x)] --> [Out(x)]
+variants rule (modulo AC) Wrong___VARIANT_2:
+  [In(y)] --> [Out(y)]
+#endif
+
+#ifdef UNSAFE
+rule Unsafe: [In(x)] --> [Out(x)]
+variants rule (modulo AC) Unsafe___VARIANT_1:
+  [In(y)] --[Added(sdec(y,'k'))]-> [Out(y)]
+#endif
+
+// Macro expansion can also produce a singleton already bearing a numbered
+// name. Validation and repeated export must not number it a second time.
+rule Macro: [In(x)] --[Macro(identity(x))]-> []
+variants rule (modulo AC) Macro___VARIANT_1:
+  [In(y)] --[Macro(y)]-> []
+
+lemma plain: exists-trace "Ex #i. Plain('a')@i"
+lemma annotated: exists-trace "Ex #i. Original('a')@i & Added('a')@i"
+lemma macro: exists-trace "Ex #i. Macro('a')@i"
+lemma false_safety: "All x #i. Added(x)@i ==> F"
+
+end

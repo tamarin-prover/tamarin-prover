@@ -1,0 +1,45 @@
+{
+  "tests": [
+    {
+      "name": "singleton-roundtrip",
+      "args": [
+        "--quit-on-warning"
+      ],
+      "checks": [
+        "roundtrip"
+      ]
+    },
+    {
+      "name": "singleton-auto-sources",
+      "args": [
+        "--auto-sources",
+        "--quit-on-warning"
+      ],
+      "checks": [
+        "roundtrip"
+      ]
+    },
+    {
+      "name": "reject-wrong-member-name",
+      "args": [
+        "-DWRONG_NAME"
+      ],
+      "exit_code": 1,
+      "contains": [
+        "cannot confirm manual variants",
+        "Unsupported rule semantics - aborting before proof search."
+      ]
+    },
+    {
+      "name": "reject-unsafe-singleton-action",
+      "args": [
+        "-DUNSAFE"
+      ],
+      "exit_code": 1,
+      "contains": [
+        "Unsupported actions added to variants",
+        "Unsupported rule semantics - aborting before proof search."
+      ]
+    }
+  ]
+}

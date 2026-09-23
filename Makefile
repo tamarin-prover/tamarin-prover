@@ -144,7 +144,7 @@ csf12-case-studies:	$(CSF12_CS_TARGETS)
 case-studies$(SUBDIR)%_analyzed.spthy:	examples/%.spthy $(TAMARIN)
 	mkdir -p $(dir $@)
 	# Use -N3, as the fourth core is used by the OS and the console
-	$(TAMARIN) $< --prove --stop-on-trace=dfs -d=0 +RTS -N3 -RTS -o$<.tmp >$<.out
+	$(TAMARIN) $< --prove --stop-on-trace=dfs -d=0 $(TRACE_EXTRA_ARGS) +RTS -N3 -RTS -o$<.tmp >$<.out
 	# We only produce the target after the run, otherwise aborted
 	# runs already 'finish' the case.
 	printf "\n/* Output\n" >>$<.tmp
@@ -483,10 +483,16 @@ accountability-case-studies:	$(ACCOUNTABILITY_CS_TARGETS)
 ##########################
 
 FAST_REGRESSION_CASE_STUDIES=issue446-1.spthy issue446-2.spthy issue753-4.spthy issue753-5.spthy issue753-6.spthy issue834.spthy issue777.spthy issue770.spthy issue914.spthy negated-equivalence.spthy
+COMMON_REGRESSION_CASE_STUDIES=soundness-manual-variants-complete.spthy
+COMMON_REGRESSION_CASE_STUDIES+=manual-variant-auto-sources-roundtrip.spthy
+case-studies$(SUBDIR)regression/trace/manual-variant-auto-sources-roundtrip_analyzed.spthy: TRACE_EXTRA_ARGS=--auto-sources
+FAST_REGRESSION_CASE_STUDIES+=$(COMMON_REGRESSION_CASE_STUDIES)
 FAST_REGRESSION_TARGETS=$(subst .spthy,_analyzed.spthy,$(addprefix case-studies$(SUBDIR)regression/trace/,$(FAST_REGRESSION_CASE_STUDIES)))
 
 
+
 REGRESSION_CASE_STUDIES=issue216.spthy issue193.spthy issue310.spthy issue519.spthy issue527.spthy issue515.spthy
+REGRESSION_CASE_STUDIES+=$(COMMON_REGRESSION_CASE_STUDIES)
 REGRESSION_TARGETS=$(subst .spthy,_analyzed.spthy,$(addprefix case-studies$(SUBDIR)regression/trace/,$(REGRESSION_CASE_STUDIES)))
 
 SEQDFS_CASE_STUDIES=seqdfsneeded.spthy

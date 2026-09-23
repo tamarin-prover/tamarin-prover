@@ -1,0 +1,14 @@
+{
+  "tests": [
+    {
+      "name": "generated-family-roundtrip",
+      "args": [
+        "--auto-sources",
+        "--quit-on-warning"
+      ],
+      "checks": [
+        "roundtrip"
+      ]
+    }
+  ]
+}

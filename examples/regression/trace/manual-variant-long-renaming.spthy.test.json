@@ -1,0 +1,11 @@
+{
+  "tests": [
+    {
+      "name": "long-renaming-validation",
+      "args": [
+        "--quit-on-warning"
+      ],
+      "timeout": 20
+    }
+  ]
+}

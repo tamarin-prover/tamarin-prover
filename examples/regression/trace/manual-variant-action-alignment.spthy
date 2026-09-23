@@ -1,0 +1,211 @@
+theory ManualVariantActionAlignment
+begin
+
+builtins: multiset
+
+// Repetition is intentional. The inherited A actions occur after constants
+// and variables incompatible with the renaming fixed by the premises. Choosing
+// complete subsequences before checking their terms takes exponential time.
+rule Late: [In(x), In(z)]
+  --[A(x), A(x), A(x), A(x), A(x), A(x), A(x), A(x),
+     A(x), A(x), A(x), A(x), A(x), A(x), A(x), A(x)]-> [Out(z)]
+variants rule (modulo AC) Late___VARIANT_1: [In(y), In(w)]
+  --[A('a'), A('a'), A('a'), A('a'), A('a'), A('a'), A('a'), A('a'),
+     A('a'), A('a'), A('a'), A('a'), A('a'), A('a'), A('a'), A('a'),
+     A(w), A(w), A(w), A(w), A(w), A(w), A(w), A(w),
+     A(w), A(w), A(w), A(w), A(w), A(w), A(w), A(w),
+     A(y), A(y), A(y), A(y), A(y), A(y), A(y), A(y),
+     A(y), A(y), A(y), A(y), A(y), A(y), A(y), A(y)]-> [Out(w)]
+
+// The first Candidate fits alone, but cannot share a renaming with Following.
+// Matching must backtrack to Candidate($b), leaving Candidate($a) as added.
+rule Backtrack: [] --[Candidate($x), Following($x)]-> []
+variants rule (modulo AC) Backtrack___VARIANT_1:
+  [] --[Candidate($a), Candidate($b), Following($b)]-> []
+
+// The first action has two AC renamings; the second selects the one mapping
+// $x to $b. Checking prefixes must not commit to just one unifier.
+rule Ambiguous: [] --[Pair($x ++ $y), Pick($x)]-> []
+variants rule (modulo AC) Ambiguous___VARIANT_1:
+  [] --[Pair($a ++ $b), Pick($b)]-> []
+
+// The later actions determine the renaming of these AC terms. Unifying the
+// premise or first action on its own needlessly enumerates many AC unifiers.
+rule Seed: [In(z)] --> [State(z)]
+rule ACPremise: [State(x0 ++ x1 ++ x2 ++ x3)]
+  --[Pin0(x0), Pin1(x1), Pin2(x2), Pin3(x3)]-> []
+variants rule (modulo AC) ACPremise___VARIANT_1:
+  [State(y0 ++ y1 ++ y2 ++ y3)]
+  --[Extra(), Pin0(y0), Pin1(y1), Pin2(y2), Pin3(y3)]-> []
+
+rule ACAction: []
+  --[Bag($x0 ++ $x1 ++ $x2 ++ $x3 ++ $x4 ++ $x5 ++ $x6 ++ $x7),
+     Pin0($x0), Pin1($x1), Pin2($x2), Pin3($x3),
+     Pin4($x4), Pin5($x5), Pin6($x6), Pin7($x7)]-> []
+variants rule (modulo AC) ACAction___VARIANT_1: []
+  --[Extra(), Bag($y0 ++ $y1 ++ $y2 ++ $y3 ++ $y4 ++ $y5 ++ $y6 ++ $y7),
+     Pin0($y0), Pin1($y1), Pin2($y2), Pin3($y3),
+     Pin4($y4), Pin5($y5), Pin6($y6), Pin7($y7)]-> []
+
+#ifdef PINNED_AC
+// Premises fix the renaming inside these AC actions too. Distinct added actions
+// must not force enumeration of all complete subsequences before rejecting them.
+rule ACPinned: [In($x), In($y)] --[A($x ++ $y), A($x ++ $y), A($x ++ $y), A($x ++ $y),
+     A($x ++ $y), A($x ++ $y), A($x ++ $y), A($x ++ $y),
+     A($x ++ $y), A($x ++ $y), A($x ++ $y), A($x ++ $y),
+     A($x ++ $y), A($x ++ $y), A($x ++ $y), A($x ++ $y)]-> []
+variants rule (modulo AC) ACPinned___VARIANT_1: [In($a), In($b)] --[A($a ++ $c0), A($a ++ $c1), A($a ++ $c2), A($a ++ $c3),
+     A($a ++ $c4), A($a ++ $c5), A($a ++ $c6), A($a ++ $c7),
+     A($a ++ $c8), A($a ++ $c9), A($a ++ $c10), A($a ++ $c11),
+     A($a ++ $c12), A($a ++ $c13), A($a ++ $c14), A($a ++ $c15),
+     A($a ++ $b), A($a ++ $b), A($a ++ $b), A($a ++ $b),
+     A($a ++ $b), A($a ++ $b), A($a ++ $b), A($a ++ $b),
+     A($a ++ $b), A($a ++ $b), A($a ++ $b), A($a ++ $b),
+     A($a ++ $b), A($a ++ $b), A($a ++ $b), A($a ++ $b)]-> []
+#endif
+
+#ifdef LATE_PINNED_AC
+// The initial Pin cannot be inherited: the A actions must come first. The
+// later Pins are forced by order despite the extra Pin and determine the
+// renaming inside the AC prefix before search.
+rule ACLatePinned: [] --[A($x ++ $y), A($x ++ $y), A($x ++ $y), A($x ++ $y),
+     A($x ++ $y), A($x ++ $y), A($x ++ $y), A($x ++ $y),
+     A($x ++ $y), A($x ++ $y), A($x ++ $y), A($x ++ $y),
+     A($x ++ $y), A($x ++ $y), A($x ++ $y), A($x ++ $y),
+     Pin($x), Pin($y)]-> []
+variants rule (modulo AC) ACLatePinned___VARIANT_1: [] --[Pin($d), A($a ++ $c0), A($a ++ $c1), A($a ++ $c2), A($a ++ $c3),
+     A($a ++ $c4), A($a ++ $c5), A($a ++ $c6), A($a ++ $c7),
+     A($a ++ $c8), A($a ++ $c9), A($a ++ $c10), A($a ++ $c11),
+     A($a ++ $c12), A($a ++ $c13), A($a ++ $c14), A($a ++ $c15),
+     A($a ++ $b), A($a ++ $b), A($a ++ $b), A($a ++ $b),
+     A($a ++ $b), A($a ++ $b), A($a ++ $b), A($a ++ $b),
+     A($a ++ $b), A($a ++ $b), A($a ++ $b), A($a ++ $b),
+     A($a ++ $b), A($a ++ $b), A($a ++ $b), A($a ++ $b),
+     Pin($a), Extra(), Pin($b)]-> []
+#endif
+
+#ifdef REORDERED_PINS
+// Matching preserves order even when every tag appears on both sides.
+rule ReorderedPins: [] --[First($x), Last($y)]-> []
+variants rule (modulo AC) ReorderedPins___VARIANT_1:
+  [] --[Last($b), First($a)]-> []
+#endif
+
+#ifdef PROPAGATION
+// End first fixes $y to $d, then Link fixes $x to $b, then Pick is forced.
+// Looking at each action separately cannot establish all three pairings.
+rule Propagation: [] --[Pick($x), Link($x,$y), End($y)]-> []
+variants rule (modulo AC) Propagation___VARIANT_1:
+  [] --[Pick($a), Pick($b), Link($a,$c), Link($b,$d), End($d)]-> []
+#endif
+
+#ifdef IMPOSSIBLE_ORDER
+// No selection can put End after the A actions. Distinct variables prevent
+// duplicate-fact pruning from hiding exponential enumeration of selections.
+rule ImpossibleOrder: []
+  --[A($x0), A($x1), A($x2), A($x3), A($x4), A($x5),
+     A($x6), A($x7), A($x8), A($x9), A($x10), A($x11), End()]-> []
+variants rule (modulo AC) ImpossibleOrder___VARIANT_1: []
+  --[End(), A($y0), A($y1), A($y2), A($y3), A($y4), A($y5),
+     A($y6), A($y7), A($y8), A($y9), A($y10), A($y11),
+     A($y12), A($y13), A($y14), A($y15), A($y16), A($y17),
+     A($y18), A($y19), A($y20), A($y21), A($y22), A($y23)]-> []
+#endif
+
+#ifdef ORDERED_EXTRA_ACTIONS
+// The same number of distinct candidates is supported when End comes last.
+rule OrderedExtras: []
+  --[A($x0), A($x1), A($x2), A($x3), A($x4), A($x5),
+     A($x6), A($x7), A($x8), A($x9), A($x10), A($x11), End()]-> []
+variants rule (modulo AC) OrderedExtras___VARIANT_1: []
+  --[A($y0), A($y1), A($y2), A($y3), A($y4), A($y5),
+     A($y6), A($y7), A($y8), A($y9), A($y10), A($y11),
+     A($y12), A($y13), A($y14), A($y15), A($y16), A($y17),
+     A($y18), A($y19), A($y20), A($y21), A($y22), A($y23), End()]-> []
+#endif
+
+#ifdef AC_VARIABLE_SHARING
+// Each inherited action uses a different pair of variables. Reusing both copies
+// of one member action would merge those pairs, even though each action fits
+// by itself. Reject that prefix before trying complete action selections.
+rule ACVariableSharing: []
+  --[A($x0 ++ $y0), A($x1 ++ $y1), A($x2 ++ $y2), A($x3 ++ $y3),
+     A($x4 ++ $y4), A($x5 ++ $y5), A($x6 ++ $y6), A($x7 ++ $y7)]-> []
+variants rule (modulo AC) ACVariableSharing___VARIANT_1: []
+  --[A($a0 ++ $b0), A($a0 ++ $b0), A($a1 ++ $b1), A($a1 ++ $b1),
+     A($a2 ++ $b2), A($a2 ++ $b2), A($a3 ++ $b3), A($a3 ++ $b3),
+     A($a4 ++ $b4), A($a4 ++ $b4), A($a5 ++ $b5), A($a5 ++ $b5),
+     A($a6 ++ $b6), A($a6 ++ $b6), A($a7 ++ $b7), A($a7 ++ $b7)]-> []
+
+// Prefixes include the premises too: the first action cannot use the two
+// variables already matched there. The later action supplies a valid choice.
+rule ACFixedSharing: [In($x ++ $y)] --[Pick($z ++ $w)]-> []
+variants rule (modulo AC) ACFixedSharing___VARIANT_1:
+  [In($a ++ $b)] --[Pick($a ++ $b), Pick($c ++ $d)]-> []
+
+// Sharing is supported when it agrees on both sides. The first AC action
+// must remain free to swap its two variables to accommodate the later one.
+rule ACSharedControl: [] --[First($x ++ $y), Last($x ++ $z)]-> []
+variants rule (modulo AC) ACSharedControl___VARIANT_1:
+  [] --[First($a ++ $b), Last($b ++ $c)]-> []
+#endif
+
+#ifdef AC_NONLINEAR
+// Every proposed pairing merges two member variables into one. Erasing
+// variable identities would postpone this local contradiction until the end.
+rule ACNonlinear: []
+  --[A($x0 ++ $x0), A($x1 ++ $x1), A($x2 ++ $x2), A($x3 ++ $x3),
+     A($x4 ++ $x4), A($x5 ++ $x5), A($x6 ++ $x6), A($x7 ++ $x7)]-> []
+variants rule (modulo AC) ACNonlinear___VARIANT_1: []
+  --[A($a0 ++ $b0), A($a1 ++ $b1), A($a2 ++ $b2), A($a3 ++ $b3),
+     A($a4 ++ $b4), A($a5 ++ $b5), A($a6 ++ $b6), A($a7 ++ $b7),
+     A($a8 ++ $b8), A($a9 ++ $b9), A($a10 ++ $b10), A($a11 ++ $b11),
+     A($a12 ++ $b12), A($a13 ++ $b13), A($a14 ++ $b14), A($a15 ++ $b15)]-> []
+#endif
+
+#ifdef AC_BACKTRACK
+// The first complete selection fails the final AC check. Search must still try
+// the later Bag action, whose multiplicities agree with the pinned variables.
+// Extra Pin0/Pin1 actions prevent their pairing from being fixed before search.
+rule ACBacktrack: [] --[Bag($x ++ $x ++ $y), Pin0($x), Pin1($y)]-> []
+variants rule (modulo AC) ACBacktrack___VARIANT_1:
+  [] --[Bag($a ++ $b ++ $b), Bag($a ++ $a ++ $b),
+        Pin0($a), Pin0($c), Pin1($b), Pin1($d)]-> []
+#endif
+
+#ifdef AC_CONFLICT
+// The non-AC equations agree, but their renaming does not preserve the sum.
+rule ACConflict: [] --[Bag($x ++ $x ++ $y), Pin0($x), Pin1($y)]-> []
+variants rule (modulo AC) ACConflict___VARIANT_1:
+  [] --[Bag($a ++ $b ++ $b), Pin0($a), Pin1($b)]-> []
+#endif
+
+#ifdef LATE_CONFLICT
+// Every L candidate fits. Only the last action contradicts the premise
+// renaming, so retrying identical L selections would still be exponential.
+rule Conflict: [In(x), In(z)]
+  --[L(x), L(x), L(x), L(x), L(x), L(x), L(x), L(x),
+     L(x), L(x), L(x), L(x), L(x), L(x), L(x), L(x),
+     End(x)]-> [Out(z)]
+variants rule (modulo AC) Conflict___VARIANT_1: [In(y), In(w)]
+  --[L(y), L(y), L(y), L(y), L(y), L(y), L(y), L(y),
+     L(y), L(y), L(y), L(y), L(y), L(y), L(y), L(y),
+     L(y), L(y), L(y), L(y), L(y), L(y), L(y), L(y),
+     L(y), L(y), L(y), L(y), L(y), L(y), L(y), L(y),
+     End(w)]-> [Out(w)]
+#endif
+
+#ifdef MISSING_ACTION
+// Identical inherited actions retain their multiplicity.
+rule Missing: [In(x)] --[Repeated(x), Repeated(x)]-> []
+variants rule (modulo AC) Missing___VARIANT_1:
+  [In(y)] --[Repeated(y)]-> []
+#endif
+
+lemma late: exists-trace "Ex #i. A('b')@i"
+lemma backtrack: exists-trace
+  "Ex #i. Candidate('a')@i & Candidate('b')@i & Following('b')@i"
+lemma ac_choice: exists-trace "Ex #i. Pair('a' ++ 'b')@i & Pick('b')@i"
+lemma false_safety: "All x #i. A(x)@i ==> F"
+
+end

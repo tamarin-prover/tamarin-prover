@@ -1,0 +1,32 @@
+theory SoundnessManualVariantsComplete
+begin
+
+builtins: symmetric-encryption
+
+rule Key:
+  [ Fr(~k) ] --> [ !Key(~k) ]
+
+rule Secret:
+  [ Fr(~m), !Key(~k) ] --[ Secret(~m) ]-> [ Out(senc(~m,~k)) ]
+
+// All computed cases are present, in reverse order and with extra actions
+// of the kind used by auto-sources. Completeness must allow these additions.
+// Keep the generated variant names and variable numbering used on export.
+rule Dec:
+  [ In(x), !Key(k) ] --> [ Out(sdec(x,k)) ]
+  variants
+  rule (modulo AC) Dec___VARIANT_2:
+    [ In(senc(z.2,k.1)), !Key(k.1) ]
+    --[ Decrypted(z.2) ]-> [ Out(z.2) ],
+  rule (modulo AC) Dec___VARIANT_1:
+    [ In(x.2), !Key(k.1) ]
+    --[ Decrypted(sdec(x.2,k.1)) ]-> [ Out(sdec(x.2,k.1)) ]
+
+// The retained decryption case exposes the secret.
+lemma secrecy:
+  "All m #i. Secret(m)@i ==> not Ex #j. K(m)@j"
+
+lemma annotated_variant_reachable: exists-trace
+  "Ex m #i #j. Secret(m)@i & Decrypted(m)@j"
+
+end

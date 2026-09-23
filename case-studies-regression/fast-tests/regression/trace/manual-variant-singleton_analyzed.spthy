@@ -1,0 +1,93 @@
+theory ManualVariantSingleton
+
+begin
+
+// Function signature and definition of the equational theory E
+
+functions: fst/1, pair/2, sdec/2, senc/2, snd/1
+equations:
+    fst(<x.1, x.2>) = x.1,
+    sdec(senc(x.1, x.2), x.2) = x.1,
+    snd(<x.1, x.2>) = x.2
+
+macros: identity( x ) =  x
+
+rule (modulo E) Plain___VARIANT_1:
+   [ In( x ) ] --[ Plain( x ) ]-> [ ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Annotated___VARIANT_1:
+   [ In( y ) ] --[ Original( y ), Added( y ) ]-> [ Out( y ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Macro___VARIANT_1:
+   [ In( y ) ] --[ Macro( y ) ]-> [ ]
+
+  /* has exactly the trivial AC variant */
+
+lemma plain:
+  exists-trace "∃ #i. Plain( 'a' ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #i. (Plain( 'a' ) @ #i)"
+*/
+simplify
+SOLVED // trace found
+
+lemma annotated:
+  exists-trace "∃ #i. (Original( 'a' ) @ #i) ∧ (Added( 'a' ) @ #i)"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #i. (Original( 'a' ) @ #i) ∧ (Added( 'a' ) @ #i)"
+*/
+simplify
+SOLVED // trace found
+
+lemma macro:
+  exists-trace "∃ #i. Macro( 'a' ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #i. (Macro( 'a' ) @ #i)"
+*/
+simplify
+SOLVED // trace found
+
+lemma false_safety:
+  all-traces "∀ x #i. (Added( x ) @ #i) ⇒ (⊥)"
+/*
+guarded formula characterizing all counter-examples:
+"∃ x #i. (Added( x ) @ #i)"
+*/
+simplify
+SOLVED // trace found
+
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.13.0
+Maude version 3.5.1
+Git revision: 5b6a770805e3ab24d2d727e270408eaf19df779d (with uncommited changes), branch: msr-rule-handling
+Compiled at: 2026-10-06 21:05:10.016846453 UTC
+*/
+
+end
+/* Output
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/regression/trace/manual-variant-singleton.spthy
+
+  output:          examples/regression/trace/manual-variant-singleton.spthy.tmp
+  processing time: 0.10s
+  
+  plain (exists-trace): verified (2 steps)
+  annotated (exists-trace): verified (2 steps)
+  macro (exists-trace): verified (2 steps)
+  false_safety (all-traces): falsified - found trace (2 steps)
+
+==============================================================================
+*/

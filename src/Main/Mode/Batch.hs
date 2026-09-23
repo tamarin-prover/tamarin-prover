@@ -242,6 +242,14 @@ run thisMode as
                                             ++ [ prettyWfErrorReport report
                                                , Pretty.text "" ]
           die "quit-on-warning mode selected - aborting on wellformedness errors."
+        -- Like a parse error, unsupported input stops the batch.
+        handleError (UnsupportedInputError report) = do
+          putStrLn $ renderDoc $ Pretty.vcat [ Pretty.text ""
+                                             , Pretty.text $ "ERROR: unsupported rule semantics in " ++ inFile ++ ":"
+                                             , Pretty.text ""
+                                             , prettyWfErrorReport report
+                                             , Pretty.text "" ]
+          die "Unsupported rule semantics - aborting before proof search."
 
         ppWf []  = Pretty.emptyDoc
         ppWf rep = Pretty.vcat $
