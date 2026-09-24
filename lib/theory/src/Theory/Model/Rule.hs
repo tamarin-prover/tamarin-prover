@@ -158,6 +158,8 @@ module Theory.Model.Rule (
   , prettyRuleRestr
   , prettyProtoRuleName
   , prettyRuleName
+  , prettyNamedRuleWithActions
+  , prettyProtoRuleACInfo
   , prettyRuleAttribute
   , prettyProtoRuleE
   , prettyProtoRuleAC
@@ -1627,13 +1629,20 @@ prettyNamedRule :: (HighlightDocument d, HasRuleName (Rule i), HasRuleAttributes
                 -> (i -> d)    -- ^ Rule info pretty printing.
                 -> Rule i -> d
 prettyNamedRule prefix ppInfo ru =
+    prettyNamedRuleWithActions prefix ppInfo $
+      removeDiffLabel ru ("Diff" ++ getRuleNameDiff ru)
+
+-- | Print all actions. Exporters that know a rule's parent family remove its
+-- generated label themselves; a variant's own name does not identify it.
+prettyNamedRuleWithActions :: (HighlightDocument d, HasRuleName (Rule i), HasRuleAttributes (Rule i))
+                          => d -> (i -> d) -> Rule i -> d
+prettyNamedRuleWithActions prefix ppInfo ru =
     prefix <-> prettyRuleName ru <> prettyRuleAttributes ru <> colon $-$
     nest 2
     (prettyRule (facts rPrems) acts (facts rConcs))  $-$
     nest 2 (ppInfo $ L.get rInfo ru) --- $-$
     where
-    acts             = filter isNotDiffAnnotation (L.get rActs ru)
-    isNotDiffAnnotation fa = (fa /= Fact {factTag = ProtoFact Linear ("Diff" ++ getRuleNameDiff ru) 0, factAnnotations = S.empty, factTerms = []})
+    acts             = L.get rActs ru
     facts proj     = L.get proj ru
 
 prettyProtoRuleACInfo :: HighlightDocument d => ProtoRuleACInfo -> d

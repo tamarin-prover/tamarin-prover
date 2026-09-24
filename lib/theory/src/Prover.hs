@@ -9,6 +9,7 @@ module Prover (
 import           Prelude                             hiding (id, (.))
 
 import qualified Data.Map                            as M
+import           Data.List                           (mapAccumL)
 import           Data.Maybe
 import qualified Data.Set                            as S
 
@@ -138,13 +139,37 @@ closeDiffTheoryWithMaude sig thy0 autoSources =
     -- Name of the auto-generated lemma
     lemmaName = "AUTO_typing"
 
-    itemsModAC = unfoldRules items
+    itemsModAC = unfoldRules uniqueItems
+
+    -- Auto-sources finds and annotates members by name. Give every identity
+    -- member a private name for this pass and restore its name afterwards.
+    -- This separates members sharing a parent's name and prevents unfolding
+    -- from renaming an annotated singleton to ___VARIANT_1.
+    ((_, originalNames), uniqueItems) = mapAccumL nameMember (usedNames, M.empty) items
+    memberName = L.get (pracName . rInfo . cprRuleAC)
+    usedNames = S.fromList $
+      [ L.get (preName . rInfo . dprRule) ru | DiffRuleItem ru <- items ] ++
+      [ memberName member | EitherRuleItem (_, ru) <- items
+                        , member <- ru : unfoldRuleVariants ru ]
+    nameMember (used, names) (EitherRuleItem (s, ru))
+      | L.get (pracVariants . rInfo . cprRuleAC) ru == Disj [emptySubstVFresh] =
+          let freshName = head [ name | i <- [1 :: Int ..]
+                               , let name = StandRule (getRuleName (L.get cprRuleAC ru) ++ "___AUTO_MEMBER_" ++ show i)
+                               , name `S.notMember` used ]
+          in ((S.insert freshName used, M.insert (s, freshName) (memberName ru) names),
+              EitherRuleItem (s, L.set (pracName . rInfo . cprRuleAC) freshName ru))
+    nameMember state item = (state, item)
+    restoreName (EitherRuleItem (s, ru)) = EitherRuleItem (s,
+      maybe ru (\name -> L.set (pracName . rInfo . cprRuleAC) name ru) $
+        M.lookup (s, memberName ru) originalNames)
+    restoreName item = item
 
     unfoldRules (EitherRuleItem (s,r):is) = map (\x -> EitherRuleItem (s,x)) (unfoldRuleVariants r) ++ unfoldRules is
     unfoldRules                    (i:is) = i:unfoldRules is
     unfoldRules                        [] = []
 
-    items' = addAutoSourcesLemmaDiff hnd lemmaName (cacheLeft itemsModAC) (cacheRight itemsModAC) itemsModAC
+    items' = map restoreName $
+      addAutoSourcesLemmaDiff hnd lemmaName (cacheLeft itemsModAC) (cacheRight itemsModAC) itemsModAC
 
     -- extract source restrictions and lemmas
     restrictionsLeft  = do EitherRestrictionItem (LHS, rstr) <- items
@@ -440,10 +465,19 @@ openTheory  (Theory n f h t sig c items opts sapic) = openTranslatedTheory(
 -- | Open a theory by dropping the closed world assumption and values whose
 -- soundness depends on it.
 openDiffTheory :: ClosedDiffTheory -> OpenDiffTheory
-openDiffTheory  (DiffTheory n f h t sig c1 c2 c3 c4 items opts sapic) =
-    -- We merge duplicate rules if they were split into variants
+openDiffTheory = openDiffTheoryWith openDiffRuleFamily
+
+-- | Reopen for text export, encoding complete explicit families where the
+-- original E-rule alone would lose compiled behavior or annotations.
+exportDiffTheory :: ClosedDiffTheory -> OpenDiffTheory
+exportDiffTheory thy = openDiffTheoryWith
+    (exportDiffRuleFamily (L.get (sigmMaudeHandle . diffThySignature) thy)) thy
+
+openDiffTheoryWith :: ([ClosedProtoRule] -> OpenProtoRule) -> ClosedDiffTheory -> OpenDiffTheory
+openDiffTheoryWith reopen (DiffTheory n f h t sig c1 c2 c3 c4 items opts sapic) =
     DiffTheory n f h t (toSignaturePure sig) (openRuleCache c1) (openRuleCache c2) (openRuleCache c3) (openRuleCache c4)
-      (mergeOpenProtoRulesDiff $ map (mapDiffTheoryItem id (\(x, y) -> (x, (openProtoRule y))) (\(DiffLemma s a p) -> (DiffLemma s a (incrementalToSkeletonDiffProof p))) (\(x, Lemma a p m b c c' d e) -> (x, Lemma a p m b c c' d (incrementalToSkeletonProof e)))) items)
+      (map (mapDiffTheoryItem id id (\(DiffLemma s a p) -> (DiffLemma s a (incrementalToSkeletonDiffProof p))) (\(x, Lemma a p m b c c' d e) -> (x, Lemma a p m b c c' d (incrementalToSkeletonProof e))))
+           (reconstructDiffRuleFamilies reopen items))
       opts sapic
 
 ------------------------------------------------------------------------------

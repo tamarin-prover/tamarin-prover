@@ -6,6 +6,7 @@ module ClosedTheory (
 import Control.Basics
 import Control.Category
 import qualified Data.Set as S
+import qualified Data.Map.Strict as M
 import qualified Extension.Data.Label as L
 -- import qualified Data.Label.Total
 
@@ -318,7 +319,8 @@ getDiffSource RHS True  RefinedSource = L.get (crcRefinedSources . diffThyDiffCa
 -- | Close a protocol rule; i.e., compute AC variant and source assertion
 -- soundness sequent, if required.
 closeEitherProtoRule :: MaudeHandle -> (Side, OpenProtoRule) -> (Side, [ClosedProtoRule])
-closeEitherProtoRule hnd (s, ruE) = (s, closeProtoRule hnd [] ruE)
+closeEitherProtoRule hnd (s, ruE) = (s, closeProtoRule hnd [] prepared)
+  where (prepared, _, _) = prepareDiffRule hnd ruE
 
 -- | Apply macro to a diff protocol rule.
 applyMacroInDiffProtoRule :: [LNMacro]-> DiffProtoRule -> DiffProtoRule
@@ -441,29 +443,86 @@ prettyClosedTheory thy = if containsManualRuleVariants mergedRules
                       [ text "looping facts with injective instances:"
                       , nest 2 $ fsepList (text . showFactTagArity) (map fst tags) ]
 
+-- | Reconstruct one authoritative family per side from the compiled rules.
+-- The original diff E-rule supplies correspondence, not a second copy of the
+-- side variants to merge against. Preserve compact substitutions in memory;
+-- the export policy below converts them to parser-supported families.
+reconstructDiffRuleFamilies
+    :: ([ClosedProtoRule] -> OpenProtoRule)
+    -> [DiffTheoryItem DiffProtoRule ClosedProtoRule p p2]
+    -> [DiffTheoryItem DiffProtoRule OpenProtoRule p p2]
+reconstructDiffRuleFamilies reopen items
+  | any (\(_, name) -> name `S.notMember` parents) (M.keys families) =
+      error "Cannot reopen diff theory: compiled side rule has no parent"
+  | otherwise = concatMap reconstruct items
+  where
+    parents = S.fromList [ruleName ru | DiffRuleItem ru <- items]
+    families = foldr collect M.empty items
+    collect (EitherRuleItem (side, ru)) =
+      M.insertWith (++) (side, ruleName (L.get cprRuleE ru)) [ru]
+    collect _ = id
+    sideFamily :: Side -> OpenProtoRule -> OpenProtoRule
+    sideFamily side declaration@(OpenProtoRule parent _) = case M.lookup (side, ruleName parent) families of
+      -- Compilation can discard every variant of an unreachable rule, for
+      -- example one requiring a freshly generated name as an existing input.
+      -- Retain that side's declaration so reclosing computes the empty family
+      -- again, including when the other side still has compiled variants.
+      Nothing -> declaration
+      Just rules -> reopen (map stripLabel rules)
+        where
+          stripLabel (ClosedProtoRule ruE ruAC) =
+            let strip = removeGeneratedDiffLabel ("DiffProto" ++ getRuleName parent)
+            in ClosedProtoRule (strip ruE) (strip ruAC)
+    reconstruct (EitherRuleItem _) = []
+    reconstruct (DiffRuleItem diffRule@(DiffProtoRule parent _)) =
+      let leftRule = sideFamily LHS (getLeftProtoRule diffRule)
+          rightRule = sideFamily RHS (getRightProtoRule diffRule)
+          sides | leftRule == OpenProtoRule (getLeftRule parent) []
+               && rightRule == OpenProtoRule (getRightRule parent) [] = Nothing
+                | otherwise = Just (leftRule, rightRule)
+      in [DiffRuleItem (DiffProtoRule parent sides)]
+    reconstruct item = [mapDiffTheoryItem id (\_ -> error "Unexpected side rule") id id item]
+
+-- | Opening in memory retains variant substitutions, names and new-variable
+-- vectors exactly. Reclosing recomputes the derived loop breakers.
+openDiffRuleFamily :: [ClosedProtoRule] -> OpenProtoRule
+openDiffRuleFamily [] = error "Cannot reopen an empty diff rule family"
+openDiffRuleFamily rules@(ClosedProtoRule ruE _:_)
+  | all ((== ruE) . L.get cprRuleE) rules =
+      OpenProtoRule ruE (map (L.get cprRuleAC) rules)
+  | otherwise = error $ "Inconsistent E-rules in diff family " ++ getRuleName ruE
+
+-- | Text can omit a family only if recomputation reproduces every rule field
+-- except derived loop breakers. Otherwise emit complete explicit members,
+-- keeping their parent E-rule even when there is only one member.
+exportDiffRuleFamily :: MaudeHandle -> [ClosedProtoRule] -> OpenProtoRule
+exportDiffRuleFamily hnd rules =
+    if map withoutBreakers variants == automatic
+      then OpenProtoRule ruE []
+      else OpenProtoRule ruE (concatMap explicit rules)
+  where
+    OpenProtoRule ruE variants = openDiffRuleFamily rules
+    withoutBreakers = L.set (pracLoopBreakers . rInfo) []
+    automatic = map (withoutBreakers . L.get cprRuleAC) $
+      closeProtoRule hnd [] (OpenProtoRule ruE [])
+    explicit ru
+      | L.get (pracVariants . rInfo . cprRuleAC) ru == Disj [emptySubstVFresh] =
+          [withoutBreakers (L.get cprRuleAC ru)]
+      | otherwise = map (withoutBreakers . L.get cprRuleAC) (unfoldRuleVariants ru)
+
 -- | Pretty print a closed diff theory.
 prettyClosedDiffTheory :: HighlightDocument d => ClosedDiffTheory -> d
-prettyClosedDiffTheory thy = if containsManualRuleVariantsDiff mergedRules
-    then
-      prettyDiffTheory prettySignatureWithMaude
-                 ppInjectiveFactInsts
-                 -- (prettyIntrVariantsSection . intruderRules . L.get crcRules)
-                 (\_ -> emptyDoc) --prettyClosedEitherRule
-                 prettyIncrementalDiffProof
-                 prettyIncrementalProof
-                 thy'
-    else
-        prettyDiffTheory prettySignatureWithMaude
-                   ppInjectiveFactInsts
-                   -- (prettyIntrVariantsSection . intruderRules . L.get crcRules)
-                   (\_ -> emptyDoc) --prettyClosedEitherRule
-                   prettyIncrementalDiffProof
-                   prettyIncrementalProof
-                   thy
+prettyClosedDiffTheory thy =
+    prettyDiffTheory prettySignatureWithMaude
+                    ppInjectiveFactInsts
+                    (\_ -> emptyDoc)
+                    prettyIncrementalDiffProof
+                    prettyIncrementalProof
+                    thy'
   where
     items = L.get diffThyItems thy
-    mergedRules = mergeLeftRightRulesDiff $ mergeOpenProtoRulesDiff $
-       map (mapDiffTheoryItem id (\(x, y) -> (x, (openProtoRule y))) id id) items
+    families = reconstructDiffRuleFamilies
+      (exportDiffRuleFamily (L.get (sigmMaudeHandle . diffThySignature) thy)) items
     thy' :: DiffTheory SignatureWithMaude ClosedRuleCache DiffProtoRule OpenProtoRule IncrementalDiffProof IncrementalProof
     thy' = DiffTheory {_diffThyName=(L.get diffThyName thy)
             ,_diffThyInFile=(L.get diffThyInFile thy)
@@ -474,7 +533,7 @@ prettyClosedDiffTheory thy = if containsManualRuleVariantsDiff mergedRules
             ,_diffThyCacheRight=(L.get diffThyCacheRight thy)
             ,_diffThyDiffCacheLeft=(L.get diffThyDiffCacheLeft thy)
             ,_diffThyDiffCacheRight=(L.get diffThyDiffCacheRight thy)
-            ,_diffThyItems = mergedRules
+            ,_diffThyItems = families
             ,_diffThyOptions =(L.get diffThyOptions thy)
             ,_diffThyIsSapic = (L.get diffThyIsSapic thy)}
     ppInjectiveFactInsts crc =
