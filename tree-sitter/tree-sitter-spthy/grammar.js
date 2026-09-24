@@ -328,24 +328,27 @@ module.exports = grammar({
       global_heuristic: $ => seq(
           'heuristic',
           ':',
-          field('proof_method_ranking', repeat1($._proof_method_ranking))
+          field('heuristic', $.heuristic)
       ),
 
-      _proof_method_ranking: $ => choice(
-          $.standard_proof_method_ranking,
-          $.oracle_proof_method_ranking,
-          $.tactic_proof_method_ranking
-      ),
+      heuristic: $ => repeat1(choice(
+          $.ranking_sequence,
+          $.tactic_reference
+      )),
 
-      standard_proof_method_ranking: $ => /[CISPcisp][CISPcisp]?[CISPcisp]?[CISPcisp]?/,
+      builtin_ranking: $ => builtinRanking(),
 
-      oracle_proof_method_ranking: $ => seq(
-          choice('O', 'o'),
-          optional(seq('"', $.param, '"'))
-      ),
+      // Lex each run as a unit so `osopo` is not split at an identifier.
+      // Like goalRanking in the Haskell parser, leading oracles can take paths;
+      // the first builtin consumes all remaining letters in the run.
+      ranking_sequence: $ => token(choice(
+          repeat1(oracleRanking()),
+          seq(repeat(oracleRanking()), builtinRanking(),
+              repeat(choice(builtinRanking(), /[Oo]/)))
+      )),
 
-      tactic_proof_method_ranking: $ => seq(
-          '{', $.ident, '}' // in this case ident has to be a tactic name
+      tactic_reference: $ => seq(
+          '{', field('name', $.ident), '}'
       ),
 
 
@@ -362,7 +365,7 @@ module.exports = grammar({
 
       presort: $ => seq(
           'presort', ':',
-          $.standard_proof_method_ranking
+          field('ranking', $.builtin_ranking)
       ),
 
       prio: $ => seq(
@@ -916,7 +919,7 @@ module.exports = grammar({
           'use_induction',
           seq('output=', '[', $.language, repeat(seq(',', $.language)), ']'),
           seq('hide_lemma=', $.ident),
-          seq('heuristic=', field('proof_method_ranking', repeat1($._proof_method_ranking)))
+          seq('heuristic=', field('heuristic', $.heuristic))
       ),
 
       language: $ => choice(
@@ -1507,3 +1510,14 @@ module.exports = grammar({
 
   }
 });
+
+// A tactic presort selects one builtin; a heuristic can concatenate these
+// with oracle rankings. Keep their shared alphabet in one place.
+// Literal choices also give presorts the grammar's identifier boundaries.
+function builtinRanking() {
+    return choice('C', 'I', 'S', 'P', 'c', 'i', 's', 'p');
+}
+
+function oracleRanking() {
+    return seq(/[Oo]/, optional(seq(/ */, '"', /[^"\n\r]+/, '"')));
+}

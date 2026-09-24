@@ -425,6 +425,11 @@
     }
   },
   {
+    "type": "builtin_ranking",
+    "named": true,
+    "fields": {}
+  },
+  {
     "type": "by_method",
     "named": true,
     "fields": {},
@@ -2576,24 +2581,35 @@
     "type": "global_heuristic",
     "named": true,
     "fields": {
-      "proof_method_ranking": {
-        "multiple": true,
+      "heuristic": {
+        "multiple": false,
         "required": true,
         "types": [
           {
-            "type": "oracle_proof_method_ranking",
-            "named": true
-          },
-          {
-            "type": "standard_proof_method_ranking",
-            "named": true
-          },
-          {
-            "type": "tactic_proof_method_ranking",
+            "type": "heuristic",
             "named": true
           }
         ]
       }
+    }
+  },
+  {
+    "type": "heuristic",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "ranking_sequence",
+          "named": true
+        },
+        {
+          "type": "tactic_reference",
+          "named": true
+        }
+      ]
     }
   },
   {
@@ -3601,20 +3617,12 @@
     "type": "lemma_attr",
     "named": true,
     "fields": {
-      "proof_method_ranking": {
-        "multiple": true,
+      "heuristic": {
+        "multiple": false,
         "required": false,
         "types": [
           {
-            "type": "oracle_proof_method_ranking",
-            "named": true
-          },
-          {
-            "type": "standard_proof_method_ranking",
-            "named": true
-          },
-          {
-            "type": "tactic_proof_method_ranking",
+            "type": "heuristic",
             "named": true
           }
         ]
@@ -4637,21 +4645,6 @@
     }
   },
   {
-    "type": "oracle_proof_method_ranking",
-    "named": true,
-    "fields": {},
-    "children": {
-      "multiple": false,
-      "required": false,
-      "types": [
-        {
-          "type": "param",
-          "named": true
-        }
-      ]
-    }
-  },
-  {
     "type": "output",
     "named": true,
     "fields": {},
@@ -5020,16 +5013,17 @@
   {
     "type": "presort",
     "named": true,
-    "fields": {},
-    "children": {
-      "multiple": false,
-      "required": true,
-      "types": [
-        {
-          "type": "standard_proof_method_ranking",
-          "named": true
-        }
-      ]
+    "fields": {
+      "ranking": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "builtin_ranking",
+            "named": true
+          }
+        ]
+      }
     }
   },
   {
@@ -6584,18 +6578,19 @@
     }
   },
   {
-    "type": "tactic_proof_method_ranking",
+    "type": "tactic_reference",
     "named": true,
-    "fields": {},
-    "children": {
-      "multiple": false,
-      "required": true,
-      "types": [
-        {
-          "type": "ident",
-          "named": true
-        }
-      ]
+    "fields": {
+      "name": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "ident",
+            "named": true
+          }
+        ]
+      }
     }
   },
   {
@@ -7069,6 +7064,10 @@
     "named": false
   },
   {
+    "type": "C",
+    "named": false
+  },
+  {
     "type": "DFS",
     "named": false
   },
@@ -7085,6 +7084,10 @@
     "named": false
   },
   {
+    "type": "I",
+    "named": false
+  },
+  {
     "type": "NDC",
     "named": false
   },
@@ -7093,7 +7096,11 @@
     "named": false
   },
   {
-    "type": "O",
+    "type": "P",
+    "named": false
+  },
+  {
+    "type": "S",
     "named": false
   },
   {
@@ -7174,6 +7181,10 @@
   },
   {
     "type": "by",
+    "named": false
+  },
+  {
+    "type": "c",
     "named": false
   },
   {
@@ -7314,6 +7325,10 @@
   },
   {
     "type": "hide_lemma=",
+    "named": false
+  },
+  {
+    "type": "i",
     "named": false
   },
   {
@@ -7478,10 +7493,6 @@
     "named": true
   },
   {
-    "type": "o",
-    "named": false
-  },
-  {
     "type": "options",
     "named": false
   },
@@ -7491,6 +7502,10 @@
   },
   {
     "type": "output=",
+    "named": false
+  },
+  {
+    "type": "p",
     "named": false
   },
   {
@@ -7538,6 +7553,10 @@
     "named": false
   },
   {
+    "type": "ranking_sequence",
+    "named": true
+  },
+  {
     "type": "reasonableNoncesNoise",
     "named": false
   },
@@ -7575,6 +7594,10 @@
   },
   {
     "type": "rule-equivalence",
+    "named": false
+  },
+  {
+    "type": "s",
     "named": false
   },
   {
@@ -7625,10 +7648,6 @@
   {
     "type": "spthytyped",
     "named": false
-  },
-  {
-    "type": "standard_proof_method_ranking",
-    "named": true
   },
   {
     "type": "step",

@@ -1,0 +1,231 @@
+==================================================
+Concatenated default oracle rankings
+==================================================
+
+theory T begin
+heuristic: osopo
+end
+
+---
+
+(theory
+  theory_name: (ident)
+  (global_heuristic
+    heuristic: (heuristic
+      (ranking_sequence))))
+
+==================================================
+Mixed uppercase and lowercase oracle rankings
+==================================================
+
+theory T begin
+heuristic: sOpiO
+end
+
+---
+
+(theory
+  theory_name: (ident)
+  (global_heuristic
+    heuristic: (heuristic
+      (ranking_sequence))))
+
+==================================================
+Lemma heuristic with default oracle rankings
+==================================================
+
+theory T begin
+lemma L [heuristic=soioo]: "T"
+end
+
+---
+
+(theory
+  theory_name: (ident)
+  (lemma
+    lemma_identifier: (ident)
+    (diff_lemma_attrs
+      (lemma_attr
+        heuristic: (heuristic
+          (ranking_sequence))))
+    formula: (atom)))
+
+==================================================
+Explicit oracle paths between adjacent rankings
+==================================================
+
+theory T begin
+heuristic: o"oracle.py"O"../other/oracle"si
+end
+
+---
+
+(theory
+  theory_name: (ident)
+  (global_heuristic
+    heuristic: (heuristic
+      (ranking_sequence))))
+
+==================================================
+Spaces around oracle paths and tactics
+==================================================
+
+theory T begin
+heuristic: s o "my oracle.py" {custom} O "../oracle" i
+end
+
+---
+
+(theory
+  theory_name: (ident)
+  (global_heuristic
+    heuristic: (heuristic
+      (ranking_sequence)
+      (ranking_sequence)
+      (tactic_reference
+        name: (ident))
+      (ranking_sequence)
+      (ranking_sequence))))
+
+==================================================
+Rankings do not consume the following declaration
+==================================================
+
+theory T begin
+heuristic: osopo
+section{* Comments after a heuristic *}
+process: out('x')
+end
+
+---
+
+(theory
+  theory_name: (ident)
+  (global_heuristic
+    heuristic: (heuristic
+      (ranking_sequence)))
+  (formal_comment
+    comment_identifier: (ident))
+  (process
+    (output
+      (mset_term
+        left: (nat_term
+          left: (xor_term
+            left: (mul_term
+              left: (exp_term
+                base: (pub_name)))))))))
+
+==================================================
+Oracle prefixes remain ordinary identifiers
+==================================================
+
+theory osopo begin
+functions: oracle/0
+rule orange: [] --> [Out(oracle)]
+end
+
+---
+
+(theory
+  theory_name: (ident)
+  (functions
+    (function_untyped
+      function_identifier: (ident)
+      arity: (natural)))
+  (rule
+    (simple_rule
+      rule_identifier: (ident)
+      (premise)
+      (conclusion
+        (linear_fact
+          fact_identifier: (ident)
+          (arguments
+            argument: (mset_term
+              left: (nat_term
+                left: (xor_term
+                  left: (mul_term
+                    left: (exp_term
+                      base: (msg_var_or_nullary_fun
+                        variable_identifier: (ident)))))))))))))
+
+==================================================
+Invalid ranking punctuation rejected
+:error
+==================================================
+
+theory T begin
+heuristic: os?po
+end
+
+---
+
+==================================================
+Non-oracle ranking cannot take a path
+:error
+==================================================
+
+theory T begin
+heuristic: si"oracle.py"
+end
+
+---
+
+==================================================
+Oracle path after a builtin needs a separator
+:error
+==================================================
+
+theory T begin
+heuristic: sO"oracle.py"
+end
+
+---
+
+==================================================
+Oracle prefix does not allow a later path after a builtin
+:error
+==================================================
+
+theory T begin
+heuristic: o"oracle.py"sO"../other/oracle"i
+end
+
+---
+
+==================================================
+Long heuristic sequences are not presorts
+==================================================
+
+theory T begin
+heuristic: cispCISPosopo
+end
+
+---
+
+(theory
+  theory_name: (ident)
+  (global_heuristic
+    heuristic: (heuristic
+      (ranking_sequence))))
+
+==================================================
+Heuristic must not be empty
+:error
+==================================================
+
+theory T begin
+heuristic:
+end
+
+---
+
+==================================================
+Lemma heuristic must not be empty
+:error
+==================================================
+
+theory T begin
+lemma L [heuristic=]: "T"
+end
+
+---

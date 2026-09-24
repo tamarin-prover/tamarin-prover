@@ -41,12 +41,12 @@ A global heuristic sets the default heuristic that will be used when autoproving
 lemmas in the file. The specified proof method ranking can be any of those discussed in
 Section [Heuristics](010_advanced-features.html#sec:heuristics).
 
-~~~~ {.tamarin grammar="grammar/grammar.ebnf" rules="global_heuristic,_proof_method_ranking,standard_proof_method_ranking,oracle_proof_method_ranking,tactic_proof_method_ranking,param"}
+~~~~ {.tamarin grammar="grammar/grammar.ebnf" rules="global_heuristic,heuristic,ranking_sequence,tactic_reference"}
 ~~~~
 
 The tactics allow the user to write their own heuristics based on the lemmas there are trying to prove. Their use is descibed in in Section [Using a Tactic](010_advanced-features.html#sec:fact-annotations#subsec:tactic).
 
-~~~~ {.tamarin grammar="grammar/grammar.ebnf" rules="tactic,presort,prio,deprio,standard_proof_method_ranking,post_ranking,_function,and_function,not_function,function_name"}
+~~~~ {.tamarin grammar="grammar/grammar.ebnf" rules="tactic,presort,prio,deprio,builtin_ranking,post_ranking,_function,and_function,not_function,function_name"}
 ~~~~
 
 Multiset rewriting rules are specified as follows. The protocol corresponding
