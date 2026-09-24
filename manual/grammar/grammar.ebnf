@@ -78,7 +78,15 @@ rules:
   replication  ::=  >REPLICATION('!' _process (';' _process)?)
   set_state  ::=  >('insert' (mset_term: from) ',' (mset_term: to) (';' _process)?)
   delete_state  ::=  >('delete' mset_term (';' _process)?)
-  read_state  ::=  >LOOKUP('lookup' (mset_term: from) 'as' (_lvar: to) 'in' (_process: in) ('else' (_process: else))? (';' _process)?)
+  read_state  ::=  >LOOKUP('lookup' (mset_term: from) 'as' ((_lookup_var_no_suffix | (_typed_lookup_var -> custom_var) | (_any_lookup_var -> any_var)): to) 'in' (_process: in) ('else' (_process: else))? (';' _process)?)
+  _typed_lookup_var  ::=  _lookup_var_no_suffix ':' (ident: variable_type)
+  _any_lookup_var  ::=  _lookup_var_no_suffix ':' 'ANY'
+  _lookup_var_no_suffix  ::=  (_lookup_var_identifier -> msg_var_or_nullary_fun) | (_lookup_pub_var -> pub_var) | (_lookup_fresh_var -> fresh_var) | (_lookup_temporal_var -> temporal_var) | (_lookup_nat_var -> nat_var)
+  _lookup_pub_var  ::=  '$' _lookup_var_identifier
+  _lookup_fresh_var  ::=  '~' _lookup_var_identifier
+  _lookup_temporal_var  ::=  '#' _lookup_var_identifier
+  _lookup_nat_var  ::=  '%' _lookup_var_identifier
+  _lookup_var_identifier  ::=  (_term_ident: variable_identifier) ('.' natural)?
   set_lock  ::=  >('lock' mset_term (';' _process)?)
   remove_lock  ::=  >('unlock' mset_term (';' _process)?)
   _condition  ::=  equality_check | _formula
