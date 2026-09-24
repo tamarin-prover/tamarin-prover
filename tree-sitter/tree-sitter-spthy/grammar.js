@@ -895,23 +895,12 @@ module.exports = grammar({
           'lemma',
           optional($.modulo),
           field('lemma_identifier', $.ident),
-          optional($.diff_lemma_attrs),
+          optional($.lemma_attrs),
           ':',
           optional($.trace_quantifier),
           '"', field('formula', $._formula), '"',
           optional(field('proof_skeleton', $._proof_skeleton))
       ),
-
-      // lemma_attrs: $ => seq(
-      //     '[',
-      //     $.lemma_attr,
-      //     repeat(seq(
-      //         ',',
-      //         $.lemma_attr
-      //     )),
-      //     optional(','),
-      //     ']'
-      // ),
 
       lemma_attr: $ => choice(
           'sources',
@@ -935,12 +924,12 @@ module.exports = grammar({
           'diffLemma',
           optional($.modulo),
           field('lemma_identifier', $.ident),
-          optional($.diff_lemma_attrs),
+          optional($.lemma_attrs),
           ':',
           optional(field('proof_skeleton', $._proof_skeleton))
       ),
 
-      diff_lemma_attrs: $ => seq(
+      lemma_attrs: $ => seq(
           '[',
           choice($.diff_lemma_attr,$.lemma_attr),
           repeat(seq(

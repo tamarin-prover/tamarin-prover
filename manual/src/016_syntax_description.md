@@ -100,12 +100,12 @@ security protocol theory. You can change this using the 'exists-trace' trace
 quantifier.
 When exporting, one may indicate which lemmas should only be included in certain output formats.
 
-~~~~ {.tamarin grammar="grammar/grammar.ebnf" rules="_lemma,lemma,diff_lemma_attrs,lemma_attr,trace_quantifier"}
+~~~~ {.tamarin grammar="grammar/grammar.ebnf" rules="_lemma,lemma,lemma_attrs,lemma_attr,trace_quantifier"}
 ~~~~
 
 In observational equivalence mode, lemmas can be associated to one side.
 
-~~~~ {.tamarin grammar="grammar/grammar.ebnf" rules="diff_lemma,diff_lemma_attrs,diff_lemma_attr"}
+~~~~ {.tamarin grammar="grammar/grammar.ebnf" rules="diff_lemma,lemma_attrs,diff_lemma_attr"}
 ~~~~
 
 A proof skeleton is a complete or partial proof as output by the Tamarin prover.
