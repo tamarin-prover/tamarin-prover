@@ -134,6 +134,14 @@ jobs:
           ./node_modules/.bin/tree-sitter test
           PATH="$PWD/node_modules/.bin:$PATH" ./regressionParser.sh
 
+      - name: Check manual grammar
+        working-directory: manual/grammar
+        run: |
+          npm ci --ignore-scripts
+          node generate-ebnf.js ../../tree-sitter/tree-sitter-spthy/grammar.js > grammar.ebnf
+          git diff --exit-code -- grammar.ebnf
+          python3 -m unittest discover -s .. -p test_filter.py
+
       - name: Test Go binding
         run: go test ./...
 

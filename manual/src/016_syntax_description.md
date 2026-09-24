@@ -21,7 +21,7 @@ function symbols and the equalities describing their interaction.  Note that
 our parser is stateful and remembers what functions have been defined. It will
 only parse function applications of defined functions.
 
-~~~~ {.tamarin grammar="grammar/grammar.ebnf" rules="_signature_spec,function,_function_sym,function_untyped,function_typed,function_attribute,equations,equation"}
+~~~~ {.tamarin grammar="grammar/grammar.ebnf" rules="_signature_spec,functions,_function_sym,function_untyped,function_typed,function_attribute,equations,equation"}
 ~~~~
 
 Note that the equations must be convergent and have the
@@ -41,12 +41,12 @@ A global heuristic sets the default heuristic that will be used when autoproving
 lemmas in the file. The specified proof method ranking can be any of those discussed in
 Section [Heuristics](010_advanced-features.html#sec:heuristics).
 
-~~~~ {.tamarin grammar="grammar/grammar.ebnf" rules="global_heuristic,_goal_ranking,standard_goal_ranking,oracle_goal_ranking,tactic_goal_ranking,param"}
+~~~~ {.tamarin grammar="grammar/grammar.ebnf" rules="global_heuristic,_proof_method_ranking,standard_proof_method_ranking,oracle_proof_method_ranking,tactic_proof_method_ranking,param"}
 ~~~~
 
 The tactics allow the user to write their own heuristics based on the lemmas there are trying to prove. Their use is descibed in in Section [Using a Tactic](010_advanced-features.html#sec:fact-annotations#subsec:tactic).
 
-~~~~ {.tamarin grammar="grammar/grammar.ebnf" rules="tactic,presort,prio,deprio,standard_goal_ranking,post_ranking,_function,and_function,not_function,function_name"}
+~~~~ {.tamarin grammar="grammar/grammar.ebnf" rules="tactic,presort,prio,deprio,standard_proof_method_ranking,post_ranking,_function,and_function,not_function,function_name"}
 ~~~~
 
 Multiset rewriting rules are specified as follows. The protocol corresponding
@@ -55,7 +55,7 @@ specified in the body of the theory. Rule variants can be explicitly given, as
 well as the left and right instances of a rule in diff-mode.
 (When called with `--diff`, Tamarin will parse `diff_rule` instead of `rule`).
 
-~~~~ {.tamarin grammar="grammar/grammar.ebnf" rules="_rule,rule,diff_rule,simple_rule,variants,modulo,rule_attrs,rule_attr,rule_let_block,rule_let_term,msg_var,msg_var_or_nullary_fun,hexcolor"}
+~~~~ {.tamarin grammar="grammar/grammar.ebnf" rules="_rule,rule,diff_rule,simple_rule,variants,modulo,rule_attrs,rule_attr,rule_let_block,rule_let_term,msg_var_or_nullary_fun,hexcolor"}
 ~~~~
 
 Rule annotations do not influence the rule's semantics. A color is represented
@@ -75,7 +75,7 @@ left-hand side separate from the free variables on the right-hand side.
 
 Macros works similarly to let-blocks, but apply globally to all rules.
 
-~~~~ {.tamarin grammar="grammar/grammar.ebnf" rules="macros,macro,macro_identifier,_non_temporal_var"}
+~~~~ {.tamarin grammar="grammar/grammar.ebnf" rules="macros,macro,_non_temporal_var"}
 ~~~~
 
 Configuration blocks allow the specification of certain Tamarin command line options
@@ -100,7 +100,7 @@ security protocol theory. You can change this using the 'exists-trace' trace
 quantifier.
 When exporting, one may indicate which lemmas should only be included in certain output formats.
 
-~~~~ {.tamarin grammar="grammar/grammar.ebnf" rules="_lemma,lemma,lemma_attrs,lemma_attr,trace_quantifier"}
+~~~~ {.tamarin grammar="grammar/grammar.ebnf" rules="_lemma,lemma,diff_lemma_attrs,lemma_attr,trace_quantifier"}
 ~~~~
 
 In observational equivalence mode, lemmas can be associated to one side.
@@ -111,7 +111,7 @@ In observational equivalence mode, lemmas can be associated to one side.
 A proof skeleton is a complete or partial proof as output by the Tamarin prover.
 It indicates the proof method used at each step, which may include multiple cases.
 
-~~~~ {.tamarin grammar="grammar/grammar.ebnf" rules="_proof_skeleton,_proof_methods,proof_method,goal,premise_goal,nod_var,solved,mirrored,by_method,method_skeleton,cases,premise_goal,action_goal,chain_goal,disjunction_split_goal,eq_split_goal,node_var,natural,natural_subscript"}
+~~~~ {.tamarin grammar="grammar/grammar.ebnf" rules="_proof_skeleton,_proof_methods,proof_method,step,solved,mirrored,by_method,method_skeleton,cases,case,constraint,premise_constraint,action_constraint,chain_constraint,disjunction_split_constraint,eq_split_constraint,temporal_var,natural,natural_subscript"}
 ~~~~
 
 Formal comments are used to make the input more readable. In contrast
@@ -135,7 +135,7 @@ symbols, there is no need to write `nullary()`. Note that the number of
 arguments of an n-ary function application must agree with the arity given in
 the function definition.
 
-~~~~ {.tamarin grammar="grammar/grammar.ebnf" rules="tupleterm,mset_term,nat_term,xor_term,mult_term,exp_term,_term"}
+~~~~ {.tamarin grammar="grammar/grammar.ebnf" rules="tuple_term,mset_term,nat_term,xor_term,mul_term,exp_term,_term"}
 ~~~~
 
 Tamarin's parser checks that functions were previously defined and are used with the correct arity.
@@ -149,7 +149,7 @@ Tamarin's parser checks that functions were previously defined and are used with
 
 External tools may instead use the following grammar and check these conditions after parsing.
 
-~~~~ {.tamarin grammar="grammar/grammar.ebnf" rules="nulllary_fun,binary_app,binary_fun,nary_app"}
+~~~~ {.tamarin grammar="grammar/grammar.ebnf" rules="nullary_fun,binary_app,nary_app,arguments,_term_ident"}
 ~~~~
 
 Literals and variables appear in many forms.
