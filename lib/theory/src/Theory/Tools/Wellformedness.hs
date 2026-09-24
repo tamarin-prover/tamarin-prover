@@ -465,17 +465,21 @@ ruleVariantsReport sig thy = do
     hnd = get sigmMaudeHandle sig
 
 -- | Report on missing or different variants in case of diff rules.
+-- The private caller, checkWellformednessDiff, has already prepared side rules.
 ruleVariantsReportDiff :: SignatureWithMaude -> OpenDiffTheory -> WfErrorReport
 ruleVariantsReportDiff sig thy = do
-    lrRu <- [ get dprLeftRight ru | DiffRuleItem ru <- get diffThyItems thy ]
-    case lrRu of
-      Just (lr, rr) -> (variantsCheck hnd (diffTheoryMacros thy) ("Left rule " ++ quote (showRuleCaseName (get oprRuleE lr)) ++
-                     " cannot confirm manual variants:") lr) ++
-                      (variantsCheck hnd (diffTheoryMacros thy) ("Right rule " ++ quote (showRuleCaseName (get oprRuleE rr)) ++
-                      " cannot confirm manual variants:") rr)
+    DiffRuleItem input <- get diffThyItems thy
+    (side, family) <- case get dprLeftRight input of
       Nothing -> []
-  where
-    hnd = get sigmMaudeHandle sig
+      Just (leftSide, rightSide) -> [("Left", leftSide), ("Right", rightSide)]
+    let (aligned, inheritedActions, valid) = prepareDiffRule hnd family
+        supplied = get oprRuleAC aligned
+    [ (invalidVariantsTopic,
+       text (side ++ " rule cannot confirm manual variants or their new-variable alignment:")
+       $-$ numbered' (map prettyProtoRuleAC supplied)) | not valid ] ++
+      concat [ addedActionReport (mhMaudeSig hnd) member inherited
+             | (member, inherited) <- inheritedActions ]
+  where hnd = get sigmMaudeHandle sig
 
 -- | Report on inconsistent left/right rules. This does not check the variants (done by ruleVariantsReportDiff).
 -- An explicit side rule replaces the parent's projection on its side, so the

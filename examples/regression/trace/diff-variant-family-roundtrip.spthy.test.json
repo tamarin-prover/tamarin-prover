@@ -1,0 +1,29 @@
+{
+  "tests": [
+    {
+      "name": "export-roundtrip",
+      "args": [
+        "--diff",
+        "--quit-on-warning"
+      ],
+      "checks": [
+        "roundtrip"
+      ]
+    },
+    {
+      "name": "duplicate-declaration-printing",
+      "args": [
+        "--diff",
+        "--quit-on-warning"
+      ],
+      "matches": [
+        {
+          "regex": "^\\s*rule \\(modulo AC\\) Reduced___VARIANT_1:",
+          "min": 2,
+          "max": 2,
+          "theory_only": true
+        }
+      ]
+    }
+  ]
+}

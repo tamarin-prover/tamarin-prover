@@ -1,0 +1,36 @@
+theory DiffAutoSourceSingletonMember
+begin
+builtins: asymmetric-encryption
+
+rule Keys:
+  [ Fr(~k) ] --> [ !Key($A,~k), !Pub($A,pk(~k)), Out(pk(~k)) ]
+
+// An annotated identity member may keep its parent's name even when it is
+// the only member. Auto-sources must preserve that name and its action so
+// exported theories remain reloadable, including after partial evaluation.
+rule Send:
+  [ Fr(~n), !Pub($B,p) ] --> [ Out(aenc(<~n,'tag'>,p)) ]
+left rule Send:
+  [ Fr(~n), !Pub($B,p) ] --> [ Out(aenc(<~n,'tag'>,p)) ]
+  variants
+  rule (modulo AC) Send:
+    [ Fr(~n), !Pub($B,p) ] --[ First(~n) ]-> [ Out(aenc(<~n,'tag'>,p)) ]
+right rule Send:
+  [ Fr(~n), !Pub($B,p) ] --> [ Out(aenc(<~n,'tag'>,p)) ]
+  variants
+  rule (modulo AC) Send:
+    [ Fr(~n), !Pub($B,p) ] --[ First(~n) ]-> [ Out(aenc(<~n,'tag'>,p)) ]
+
+// A user rule may already have a name that the private naming pass would try.
+rule Send___AUTO_MEMBER_1:
+  [] --[ Collision() ]-> []
+
+rule Forward:
+  [ !Key($A,k), !Pub($B,p), In(aenc(<x,'tag'>,pk(k))) ]
+  --[ Seen(x) ]-> [ Out(aenc(x,p)) ]
+
+lemma first [left]: exists-trace "Ex x #i. First(x)@i"
+lemma collision [left]: exists-trace "Ex #i. Collision()@i"
+
+diffLemma Observational_equivalence:
+end
