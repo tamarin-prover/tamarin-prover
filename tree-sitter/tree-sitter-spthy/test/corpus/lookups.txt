@@ -1,0 +1,178 @@
+==================
+Typed lookup binder
+==================
+
+theory TypedLookup
+begin
+process: lookup 'cell' as value:bitstring in 0 else 0
+end
+
+---
+
+(theory
+  theory_name: (ident)
+  (process
+    (read_state
+      from: (mset_term
+        left: (nat_term
+          left: (xor_term
+            left: (mul_term
+              left: (exp_term
+                base: (pub_name))))))
+      to: (custom_var
+        (msg_var_or_nullary_fun
+          variable_identifier: (ident))
+        variable_type: (ident))
+      in: (null)
+      else: (null))))
+
+==================
+ANY lookup binder with a sort prefix and index
+==================
+
+theory AnyLookup
+begin
+process: lookup 'cell' as $value.1:ANY in 0
+end
+
+---
+
+(theory
+  theory_name: (ident)
+  (process
+    (read_state
+      from: (mset_term
+        left: (nat_term
+          left: (xor_term
+            left: (mul_term
+              left: (exp_term
+                base: (pub_name))))))
+      to: (any_var
+        (pub_var
+          variable_identifier: (ident)
+          (natural)))
+      in: (null))))
+
+==================
+Untyped lookup binder
+==================
+
+theory UntypedLookup
+begin
+process: lookup 'cell' as value in 0
+end
+
+---
+
+(theory
+  theory_name: (ident)
+  (process
+    (read_state
+      from: (mset_term
+        left: (nat_term
+          left: (xor_term
+            left: (mul_term
+              left: (exp_term
+                base: (pub_name))))))
+      to: (msg_var_or_nullary_fun
+        variable_identifier: (ident))
+      in: (null))))
+
+==================
+Typed lookup binder with a fresh prefix and index
+==================
+
+theory FreshTypedLookup
+begin
+process: lookup 'cell' as ~value.1:bitstring in 0
+end
+
+---
+
+(theory
+  theory_name: (ident)
+  (process
+    (read_state
+      from: (mset_term
+        left: (nat_term
+          left: (xor_term
+            left: (mul_term
+              left: (exp_term
+                base: (pub_name))))))
+      to: (custom_var
+        (fresh_var
+          variable_identifier: (ident)
+          (natural))
+        variable_type: (ident))
+      in: (null))))
+
+==================
+Literal lookup binder rejected
+:error
+==================
+
+theory LiteralLookup
+begin
+process: lookup 'cell' as 'value':bitstring in 0
+end
+
+---
+
+(theory)
+
+==================
+Pattern lookup binder rejected
+:error
+==================
+
+theory PatternLookup
+begin
+process: lookup 'cell' as =value:bitstring in 0
+end
+
+---
+
+(theory)
+
+==================
+Message sort suffix followed by a lookup type rejected
+:error
+==================
+
+theory DoubleTypedLookup
+begin
+process: lookup 'cell' as value:msg:bitstring in 0
+end
+
+---
+
+(theory)
+
+==================
+Public sort suffix followed by ANY rejected
+:error
+==================
+
+theory DoubleAnyLookup
+begin
+process: lookup 'cell' as value:pub:ANY in 0
+end
+
+---
+
+(theory)
+
+==================
+Indexed natural sort suffix followed by ANY rejected
+:error
+==================
+
+theory DoubleNaturalLookup
+begin
+builtins: natural-numbers
+process: lookup 'cell' as %value.1:nat:ANY in 0
+end
+
+---
+
+(theory)

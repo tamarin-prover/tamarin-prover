@@ -595,11 +595,40 @@ module.exports = grammar({
 
       read_state: $ => prec.right('LOOKUP', seq(
           'lookup', field('from', $.mset_term),
-          'as', field('to',$._lvar),
+          'as', field('to', choice(
+              $._lookup_var_no_suffix,
+              alias($._typed_lookup_var, $.custom_var),
+              alias($._any_lookup_var, $.any_var)
+          )),
           'in', field('in', $._process),
           optional(seq('else', field('else', $._process))),
           optional(seq(';', $._process))
       )),
+
+      _typed_lookup_var: $ => seq(
+          $._lookup_var_no_suffix, ':', field('variable_type', $.ident)
+      ),
+
+      _any_lookup_var: $ => seq($._lookup_var_no_suffix, ':', 'ANY'),
+
+      // SAPIC accepts a sort prefix and one type annotation, not x:pub:type.
+      _lookup_var_no_suffix: $ => choice(
+          alias($._lookup_var_identifier, $.msg_var_or_nullary_fun),
+          alias($._lookup_pub_var, $.pub_var),
+          alias($._lookup_fresh_var, $.fresh_var),
+          alias($._lookup_temporal_var, $.temporal_var),
+          alias($._lookup_nat_var, $.nat_var)
+      ),
+
+      _lookup_pub_var: $ => seq('$', $._lookup_var_identifier),
+      _lookup_fresh_var: $ => seq('~', $._lookup_var_identifier),
+      _lookup_temporal_var: $ => seq('#', $._lookup_var_identifier),
+      _lookup_nat_var: $ => seq('%', $._lookup_var_identifier),
+
+      _lookup_var_identifier: $ => seq(
+          field('variable_identifier', $._term_ident),
+          optional(seq('.', $.natural))
+      ),
 
       set_lock: $ => prec.right(seq(
           'lock', $.mset_term,
