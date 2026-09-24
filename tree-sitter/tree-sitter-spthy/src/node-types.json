@@ -222,6 +222,10 @@
         {
           "type": "pub_var",
           "named": true
+        },
+        {
+          "type": "temporal_var",
+          "named": true
         }
       ]
     }
@@ -1166,6 +1170,10 @@
         },
         {
           "type": "pub_var",
+          "named": true
+        },
+        {
+          "type": "temporal_var",
           "named": true
         }
       ]
@@ -5664,6 +5672,14 @@
         "multiple": false,
         "required": true,
         "types": [
+          {
+            "type": "any_var",
+            "named": true
+          },
+          {
+            "type": "custom_var",
+            "named": true
+          },
           {
             "type": "fresh_var",
             "named": true
