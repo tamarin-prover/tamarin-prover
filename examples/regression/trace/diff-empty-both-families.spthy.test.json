@@ -7,15 +7,8 @@
         "--quit-on-warning"
       ],
       "checks": [
-        "roundtrip"
-      ]
-    },
-    {
-      "name": "partial-evaluation-printing",
-      "args": [
-        "--diff",
-        "--quit-on-warning",
-        "--partial-evaluation=summary"
+        "roundtrip",
+        "partial-evaluation"
       ]
     }
   ]

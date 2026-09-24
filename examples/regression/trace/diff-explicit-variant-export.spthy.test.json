@@ -8,7 +8,8 @@
         "--bound=6"
       ],
       "checks": [
-        "roundtrip"
+        "roundtrip",
+        "partial-evaluation"
       ]
     }
   ]
