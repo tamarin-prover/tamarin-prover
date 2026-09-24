@@ -135,7 +135,24 @@ typeTermsWithEnv typeEnv terms = execStateT (mapM typeWith' terms) typeEnv'
 typeProcess :: (GoodAnnotation a, MonadThrow m, MonadCatch m, Show a, Typeable a) =>
     Process a SapicLVar ->  StateT
         TypingEnvironment m (Process a SapicLVar)
-typeProcess = traverseProcess fNull fAct fComb gAct gComb
+typeProcess p = do
+    typed <- traverseProcess fNull fAct fComb gAct gComb p
+    finalTypes <- gets (.vars)
+    -- Later constraints can refine variables in already reconstructed nodes.
+    -- Use final types throughout process terms, binders and locations, including
+    -- keys introduced by later report expansion. Leave quantified formulas alone.
+    let finalVar v = SapicLVar (slvar v) $ Map.findWithDefault (stype v) (slvar v) finalTypes
+        finalTerm = fmap $ fmap finalVar
+        finalAnn = mapProcessParsedAnnotation $ \ann ->
+            ann { location = fmap finalTerm (location ann) }
+        finalProcess (ProcessNull ann) = ProcessNull (finalAnn ann)
+        finalProcess (ProcessAction ac ann r) =
+            ProcessAction (mapTermsAction finalTerm id finalVar ac)
+                (finalAnn ann) (finalProcess r)
+        finalProcess (ProcessComb c ann l r) =
+            ProcessComb (mapTermsComb finalTerm id finalVar c)
+                (finalAnn ann) (finalProcess l) (finalProcess r)
+    return $ finalProcess typed
      where
         -- fNull/fAcc/fComb collect variables that are bound when going downwards
         fNull ann  = return (ProcessNull ann)
