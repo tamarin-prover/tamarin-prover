@@ -147,7 +147,7 @@ module.exports = grammar({
 
       include: $ => seq(
           '#include',
-          '"', $.path, '"'
+          '"', optional($.path), '"'
       ),
 
       _ifdef_formula: $ => choice(
@@ -1488,7 +1488,9 @@ module.exports = grammar({
 
       param: $ => /[^"]*/,
 
-      path: $ => /[A-Za-z0-9-\_]*/,
+      // Match filePath's letters/numbers and punctuation, with either host's
+      // directory separator. Empty paths are handled by the include rule.
+      path: $ => /[\p{L}\p{N}._/\\-]+/,
 
       export_query: $ => /(\\"|[^"])*/,
 

@@ -288,8 +288,16 @@
           "value": "\""
         },
         {
-          "type": "SYMBOL",
-          "name": "path"
+          "type": "CHOICE",
+          "members": [
+            {
+              "type": "SYMBOL",
+              "name": "path"
+            },
+            {
+              "type": "BLANK"
+            }
+          ]
         },
         {
           "type": "STRING",
@@ -6607,7 +6615,7 @@
     },
     "path": {
       "type": "PATTERN",
-      "value": "[A-Za-z0-9-\\_]*"
+      "value": "[\\p{L}\\p{N}._/\\\\-]+"
     },
     "export_query": {
       "type": "PATTERN",

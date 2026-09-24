@@ -16,7 +16,7 @@ rules:
   preprocessor  ::=  ifdef | define | include
   ifdef  ::=  '#ifdef' (_ifdef_formula: condition) (_body_item*: consequence) ('#else' (_body_item*: alternative))? '#endif'
   define  ::=  '#define' ident
-  include  ::=  '#include' '"' path '"'
+  include  ::=  '#include' '"' path? '"'
   _ifdef_formula  ::=  ifdef_nested | ifdef_or | ifdef_and | ifdef_not | ident
   ifdef_nested  ::=  NESTED('(' _ifdef_formula ')')
   ifdef_or  ::=  <LOGICAL_OR(_ifdef_formula '|' _ifdef_formula)
@@ -195,7 +195,7 @@ rules:
   fact_identifier  ::=  @(1(/[A-Z][A-Za-z0-9_]*/))
   ident  ::=  /[A-Za-z0-9]\w*/
   param  ::=  /[^"]*/
-  path  ::=  /[A-Za-z0-9-\_]*/
+  path  ::=  /[\p{L}\p{N}._/\\-]+/
   export_query  ::=  /(\\"|[^"])*/
   natural  ::=  /[0-9]+/
   natural_subscript  ::=  ('₀' | '₁' | '₂' | '₃' | '₄' | '₅' | '₆' | '₇' | '₈' | '₉')+
