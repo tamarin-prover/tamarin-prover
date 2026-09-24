@@ -906,9 +906,9 @@ module.exports = grammar({
           'sources',
           'reuse',
           'use_induction',
-          seq('output=', '[', $.language, repeat(seq(',', $.language)), ']'),
-          seq('hide_lemma=', $.ident),
-          seq('heuristic=', field('heuristic', $.heuristic))
+          seq('output', '=', '[', $.language, repeat(seq(',', $.language)), ']'),
+          seq('hide_lemma', '=', $.ident),
+          seq('heuristic', '=', field('heuristic', $.heuristic))
       ),
 
       language: $ => choice(

@@ -4112,7 +4112,11 @@
           "members": [
             {
               "type": "STRING",
-              "value": "output="
+              "value": "output"
+            },
+            {
+              "type": "STRING",
+              "value": "="
             },
             {
               "type": "STRING",
@@ -4149,7 +4153,11 @@
           "members": [
             {
               "type": "STRING",
-              "value": "hide_lemma="
+              "value": "hide_lemma"
+            },
+            {
+              "type": "STRING",
+              "value": "="
             },
             {
               "type": "SYMBOL",
@@ -4162,7 +4170,11 @@
           "members": [
             {
               "type": "STRING",
-              "value": "heuristic="
+              "value": "heuristic"
+            },
+            {
+              "type": "STRING",
+              "value": "="
             },
             {
               "type": "FIELD",
