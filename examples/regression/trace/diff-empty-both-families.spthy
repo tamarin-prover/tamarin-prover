@@ -1,0 +1,8 @@
+theory EmptyBothFamilies begin
+
+// Both families are unreachable, so their absence must not create an attack.
+rule Emit: [Fr(~n), In(~n)] --[Emitted(~n)]-> [Out(~n)]
+
+lemma no_output: "All x #i. Emitted(x)@i ==> F"
+diffLemma Observational_equivalence:
+end

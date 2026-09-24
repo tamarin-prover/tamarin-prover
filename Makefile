@@ -505,6 +505,8 @@ DIFF_REGRESSION_CASE_STUDIES+=diff-alternative-conditional-restrictions.spthy di
 DIFF_REGRESSION_CASE_STUDIES+=diff-mirror-reuse-specialization.spthy
 DIFF_REGRESSION_CASE_STUDIES+=diff-disequality-attack.spthy diff-asymmetric-explicit-variants.spthy diff-singleton-trivial-variants.spthy
 DIFF_REGRESSION_CASE_STUDIES+=diff-variant-family-roundtrip.spthy diff-explicit-variant-export.spthy diff-auto-source-variable-alignment.spthy
+DIFF_REGRESSION_CASE_STUDIES+=diff-empty-left-family.spthy diff-empty-right-family.spthy diff-empty-both-families.spthy diff-empty-left-silent.spthy
+DIFF_REGRESSION_CASE_STUDIES+=diff-empty-family-admission.spthy
 case-studies$(SUBDIR)regression/trace/diff-auto-source-macros_analyzed-diff.spthy: DIFF_EXTRA_ARGS=--auto-sources --bound=8 --quit-on-warning
 case-studies$(SUBDIR)regression/trace/diff-multisession-observable-restriction_analyzed-diff.spthy: DIFF_EXTRA_ARGS=--bound=6
 case-studies$(SUBDIR)regression/trace/diff-explicit-variant-export_analyzed-diff.spthy: DIFF_EXTRA_ARGS=--bound=6

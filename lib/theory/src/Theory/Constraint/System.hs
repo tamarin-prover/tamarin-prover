@@ -1136,9 +1136,8 @@ intruderRuleWithName rules name = filter (\(Rule x _ _ _ _) -> case x of
 -- | 'getOppositeRules' @ctxt@ @side@ @rule@ returns all rules with the same name as @rule@ in diff proof context @ctxt@ on the opposite side of side @side@.
 getOppositeRules :: DiffProofContext -> Side -> RuleACInst -> [RuleAC]
 getOppositeRules ctxt side (Rule rule prem _ _ _) = case rule of
-    ProtoInfo p -> case protocolRuleWithName (getAllRulesOnOtherSide ctxt side) (L.get praciName p) of
-        [] -> error $ "No other rule found for protocol rule " ++ show (L.get praciName p) ++ show (getAllRulesOnOtherSide ctxt side)
-        x  -> x
+    -- Compilation may remove every member of the opposite family.
+    ProtoInfo p -> protocolRuleWithName (getAllRulesOnOtherSide ctxt side) (L.get praciName p)
     IntrInfo  i -> case i of
         (ConstrRule _ x) | x == AC Mult     -> [(multRuleInstance (length prem))]
         (ConstrRule _ x) | x == AC Union    -> [(unionRuleInstance (length prem))]
