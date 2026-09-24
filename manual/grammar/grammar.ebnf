@@ -1,4 +1,4 @@
-extras  ::=  { multi_comment single_comment /\s|\\\r?\n|\u00A0/ }
+extras  ::=  { multi_comment single_comment /[\t-\r\u00a0\u1680\u2000-\u200a\u2028\u2029\u202f\u205f\u3000]| |\\\r?\n/ }
 
 conflicts  ::=  { { pub_var } { fresh_var } { temporal_var } { nat_var } { pub_var fresh_var msg_var_or_nullary_fun temporal_var nat_var } { pub_var fresh_var msg_var_or_nullary_fun nat_var } { nary_app predicate_ref } { _base_fact _term_ident } { nullary_fun nary_app msg_var_or_nullary_fun } }
 
@@ -36,11 +36,16 @@ rules:
   predicate  ::=  (ident: predicate_identifier) '(' arguments? ')' '<=>' (_formula: formula)
   options  ::=  'options' ':' option (',' option)* ','?
   option  ::=  'translation-state-optimisation' | 'translation-progress' | 'translation-asynchronous-channels' | 'translation-compress-events' | 'translation-allow-pattern-lookups'
-  global_heuristic  ::=  'heuristic' ':' (heuristic: heuristic)
-  heuristic  ::=  (ranking_sequence | tactic_reference)+
+  global_heuristic  ::=  'heuristic' ':' _heuristic_leading_space? (heuristic: heuristic) _heuristic_end
+  _heuristic_leading_space  ::=  (/[\t-\r\u00a0\u1680\u2000-\u200a\u2028\u2029\u202f\u205f\u3000]| / | single_comment | multi_comment)+
+  _heuristic_end  ::=  !(/ */ /[\t-\r\u00a0\u1680\u2000-\u200a\u2028\u2029\u202f\u205f\u3000]/) | single_comment | multi_comment
+  heuristic  ::=  ((_heuristic_builtin -> builtin_ranking) | oracle_ranking | tactic_reference)+
   builtin_ranking  ::=  'C' | 'I' | 'S' | 'P' | 'c' | 'i' | 's' | 'p'
-  ranking_sequence  ::=  @((/[Oo]/ (/ */ '"' /[^"\n\r]+/ '"')?)+ | ((/[Oo]/ (/ */ '"' /[^"\n\r]+/ '"')?)* ('C' | 'I' | 'S' | 'P' | 'c' | 'i' | 's' | 'p') (('C' | 'I' | 'S' | 'P' | 'c' | 'i' | 's' | 'p') | /[Oo]/)*))
-  tactic_reference  ::=  '{' (ident: name) '}'
+  _heuristic_builtin  ::=  !(1(/ */ ('C' | 'I' | 'S' | 'P' | 'c' | 'i' | 's' | 'p')))
+  oracle_ranking  ::=  >(!(1(/ *[Oo]/)) (oracle_path: path)?)
+  oracle_path  ::=  !(/ */ '"' /[^"\n\r]+/ '"')
+  tactic_reference  ::=  !(/ *\{ */) (tactic_name: name) !('}')
+  tactic_name  ::=  !(/[^"\n\r{}]+/)
   tactic  ::=  'tactic' ':' ident presort? prio* deprio*
   presort  ::=  'presort' ':' (builtin_ranking: ranking)
   prio  ::=  'prio' ':' ('{' post_ranking '}')? _function+
@@ -120,7 +125,7 @@ rules:
   case_test  ::=  'test' (ident: test_identifier) ':' '"' (_formula: formula) '"'
   _lemma  ::=  lemma | diff_lemma | accountability_lemma | equiv_lemma | diff_equiv_lemma
   lemma  ::=  'lemma' modulo? (ident: lemma_identifier) lemma_attrs? ':' trace_quantifier? '"' (_formula: formula) '"' (_proof_skeleton: proof_skeleton)?
-  lemma_attr  ::=  'typing' | 'sources' | 'reuse' | 'diff_reuse' | 'use_induction' | ('output' '=' '[' (language (',' language)* ','?)? ']') | ('hide_lemma' '=' ident) | ('heuristic' '=' (heuristic: heuristic))
+  lemma_attr  ::=  'typing' | 'sources' | 'reuse' | 'diff_reuse' | 'use_induction' | ('output' '=' '[' (language (',' language)* ','?)? ']') | ('hide_lemma' '=' ident) | ('heuristic' '=' _heuristic_leading_space? (heuristic: heuristic) (single_comment | multi_comment)?)
   language  ::=  'spthy' | 'spthytyped' | 'msr' | 'proverif' | 'deepsec'
   diff_lemma  ::=  'diffLemma' modulo? (ident: lemma_identifier) lemma_attrs? ':' (_proof_skeleton: proof_skeleton)?
   lemma_attrs  ::=  '[' ((diff_lemma_attr | lemma_attr) (',' (diff_lemma_attr | lemma_attr))* ','?)? ']'
