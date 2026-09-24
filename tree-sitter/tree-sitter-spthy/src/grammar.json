@@ -1048,82 +1048,249 @@
         },
         {
           "type": "FIELD",
-          "name": "proof_method_ranking",
+          "name": "heuristic",
           "content": {
-            "type": "REPEAT1",
-            "content": {
-              "type": "SYMBOL",
-              "name": "_proof_method_ranking"
-            }
+            "type": "SYMBOL",
+            "name": "heuristic"
           }
         }
       ]
     },
-    "_proof_method_ranking": {
+    "heuristic": {
+      "type": "REPEAT1",
+      "content": {
+        "type": "CHOICE",
+        "members": [
+          {
+            "type": "SYMBOL",
+            "name": "ranking_sequence"
+          },
+          {
+            "type": "SYMBOL",
+            "name": "tactic_reference"
+          }
+        ]
+      }
+    },
+    "builtin_ranking": {
       "type": "CHOICE",
       "members": [
         {
-          "type": "SYMBOL",
-          "name": "standard_proof_method_ranking"
+          "type": "STRING",
+          "value": "C"
         },
         {
-          "type": "SYMBOL",
-          "name": "oracle_proof_method_ranking"
+          "type": "STRING",
+          "value": "I"
         },
         {
-          "type": "SYMBOL",
-          "name": "tactic_proof_method_ranking"
+          "type": "STRING",
+          "value": "S"
+        },
+        {
+          "type": "STRING",
+          "value": "P"
+        },
+        {
+          "type": "STRING",
+          "value": "c"
+        },
+        {
+          "type": "STRING",
+          "value": "i"
+        },
+        {
+          "type": "STRING",
+          "value": "s"
+        },
+        {
+          "type": "STRING",
+          "value": "p"
         }
       ]
     },
-    "standard_proof_method_ranking": {
-      "type": "PATTERN",
-      "value": "[CISPcisp][CISPcisp]?[CISPcisp]?[CISPcisp]?"
-    },
-    "oracle_proof_method_ranking": {
-      "type": "SEQ",
-      "members": [
-        {
-          "type": "CHOICE",
-          "members": [
-            {
-              "type": "STRING",
-              "value": "O"
-            },
-            {
-              "type": "STRING",
-              "value": "o"
-            }
-          ]
-        },
-        {
-          "type": "CHOICE",
-          "members": [
-            {
+    "ranking_sequence": {
+      "type": "TOKEN",
+      "content": {
+        "type": "CHOICE",
+        "members": [
+          {
+            "type": "REPEAT1",
+            "content": {
               "type": "SEQ",
               "members": [
                 {
-                  "type": "STRING",
-                  "value": "\""
+                  "type": "PATTERN",
+                  "value": "[Oo]"
                 },
                 {
-                  "type": "SYMBOL",
-                  "name": "param"
-                },
-                {
-                  "type": "STRING",
-                  "value": "\""
+                  "type": "CHOICE",
+                  "members": [
+                    {
+                      "type": "SEQ",
+                      "members": [
+                        {
+                          "type": "PATTERN",
+                          "value": " *"
+                        },
+                        {
+                          "type": "STRING",
+                          "value": "\""
+                        },
+                        {
+                          "type": "PATTERN",
+                          "value": "[^\"\\n\\r]+"
+                        },
+                        {
+                          "type": "STRING",
+                          "value": "\""
+                        }
+                      ]
+                    },
+                    {
+                      "type": "BLANK"
+                    }
+                  ]
                 }
               ]
-            },
-            {
-              "type": "BLANK"
             }
-          ]
-        }
-      ]
+          },
+          {
+            "type": "SEQ",
+            "members": [
+              {
+                "type": "REPEAT",
+                "content": {
+                  "type": "SEQ",
+                  "members": [
+                    {
+                      "type": "PATTERN",
+                      "value": "[Oo]"
+                    },
+                    {
+                      "type": "CHOICE",
+                      "members": [
+                        {
+                          "type": "SEQ",
+                          "members": [
+                            {
+                              "type": "PATTERN",
+                              "value": " *"
+                            },
+                            {
+                              "type": "STRING",
+                              "value": "\""
+                            },
+                            {
+                              "type": "PATTERN",
+                              "value": "[^\"\\n\\r]+"
+                            },
+                            {
+                              "type": "STRING",
+                              "value": "\""
+                            }
+                          ]
+                        },
+                        {
+                          "type": "BLANK"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              },
+              {
+                "type": "CHOICE",
+                "members": [
+                  {
+                    "type": "STRING",
+                    "value": "C"
+                  },
+                  {
+                    "type": "STRING",
+                    "value": "I"
+                  },
+                  {
+                    "type": "STRING",
+                    "value": "S"
+                  },
+                  {
+                    "type": "STRING",
+                    "value": "P"
+                  },
+                  {
+                    "type": "STRING",
+                    "value": "c"
+                  },
+                  {
+                    "type": "STRING",
+                    "value": "i"
+                  },
+                  {
+                    "type": "STRING",
+                    "value": "s"
+                  },
+                  {
+                    "type": "STRING",
+                    "value": "p"
+                  }
+                ]
+              },
+              {
+                "type": "REPEAT",
+                "content": {
+                  "type": "CHOICE",
+                  "members": [
+                    {
+                      "type": "CHOICE",
+                      "members": [
+                        {
+                          "type": "STRING",
+                          "value": "C"
+                        },
+                        {
+                          "type": "STRING",
+                          "value": "I"
+                        },
+                        {
+                          "type": "STRING",
+                          "value": "S"
+                        },
+                        {
+                          "type": "STRING",
+                          "value": "P"
+                        },
+                        {
+                          "type": "STRING",
+                          "value": "c"
+                        },
+                        {
+                          "type": "STRING",
+                          "value": "i"
+                        },
+                        {
+                          "type": "STRING",
+                          "value": "s"
+                        },
+                        {
+                          "type": "STRING",
+                          "value": "p"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "PATTERN",
+                      "value": "[Oo]"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      }
     },
-    "tactic_proof_method_ranking": {
+    "tactic_reference": {
       "type": "SEQ",
       "members": [
         {
@@ -1131,8 +1298,12 @@
           "value": "{"
         },
         {
-          "type": "SYMBOL",
-          "name": "ident"
+          "type": "FIELD",
+          "name": "name",
+          "content": {
+            "type": "SYMBOL",
+            "name": "ident"
+          }
         },
         {
           "type": "STRING",
@@ -1195,8 +1366,12 @@
           "value": ":"
         },
         {
-          "type": "SYMBOL",
-          "name": "standard_proof_method_ranking"
+          "type": "FIELD",
+          "name": "ranking",
+          "content": {
+            "type": "SYMBOL",
+            "name": "builtin_ranking"
+          }
         }
       ]
     },
@@ -3991,13 +4166,10 @@
             },
             {
               "type": "FIELD",
-              "name": "proof_method_ranking",
+              "name": "heuristic",
               "content": {
-                "type": "REPEAT1",
-                "content": {
-                  "type": "SYMBOL",
-                  "name": "_proof_method_ranking"
-                }
+                "type": "SYMBOL",
+                "name": "heuristic"
               }
             }
           ]

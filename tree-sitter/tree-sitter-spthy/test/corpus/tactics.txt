@@ -36,12 +36,72 @@ end
   (tactic
     (ident)
     (presort
-      (standard_proof_method_ranking)))
+      ranking: (builtin_ranking)))
   (rule
     (simple_rule
       rule_identifier: (ident)
       (premise)
       (conclusion))))
+
+==================================================
+All builtin presorts
+==================================================
+
+theory T begin
+tactic: Sort0
+presort: C
+tactic: Sort1
+presort: I
+tactic: Sort2
+presort: S
+tactic: Sort3
+presort: P
+tactic: Sort4
+presort: c
+tactic: Sort5
+presort: i
+tactic: Sort6
+presort: s
+tactic: Sort7
+presort: p
+end
+
+---
+
+(theory
+  theory_name: (ident)
+  (tactic
+    (ident)
+    (presort
+      ranking: (builtin_ranking)))
+  (tactic
+    (ident)
+    (presort
+      ranking: (builtin_ranking)))
+  (tactic
+    (ident)
+    (presort
+      ranking: (builtin_ranking)))
+  (tactic
+    (ident)
+    (presort
+      ranking: (builtin_ranking)))
+  (tactic
+    (ident)
+    (presort
+      ranking: (builtin_ranking)))
+  (tactic
+    (ident)
+    (presort
+      ranking: (builtin_ranking)))
+  (tactic
+    (ident)
+    (presort
+      ranking: (builtin_ranking)))
+  (tactic
+    (ident)
+    (presort
+      ranking: (builtin_ranking))))
 
 ==================================================
 Tactic priority blocks retain their order
@@ -61,7 +121,7 @@ end
   (tactic
     (ident)
     (presort
-      (standard_proof_method_ranking))
+      ranking: (builtin_ranking))
     (prio
       (std_function
         (function_name)
@@ -92,6 +152,58 @@ end
         (param)))))
 
 ==================================================
+Presort rejects a pair of rankings
+:error
+==================================================
+
+theory T begin
+tactic: Bad
+presort: ss
+prio: isFactName "A"
+end
+
+---
+
+==================================================
+Presort rejects four rankings
+:error
+==================================================
+
+theory T begin
+tactic: Bad
+presort: cisp
+prio: isFactName "A"
+end
+
+---
+
+==================================================
+Presort rejects an oracle
+:error
+==================================================
+
+theory T begin
+tactic: Bad
+presort: o
+prio: isFactName "A"
+end
+
+---
+
+==================================================
+Presort rejects a tactic reference
+:error
+==================================================
+
+theory T begin
+tactic: Bad
+presort: {Other}
+prio: isFactName "A"
+end
+
+---
+
+==================================================
 Priority cannot follow deprioritization
 :error
 ==================================================
@@ -103,3 +215,47 @@ prio: isFactName "B"
 end
 
 ---
+
+==================================================
+Presort cannot split a ranking from a formal comment identifier
+:error
+==================================================
+
+theory T begin
+tactic: Bad
+presort: ss{* hello *}
+end
+
+---
+
+==================================================
+Presort cannot split a ranking from a priority keyword
+:error
+==================================================
+
+theory T begin
+tactic: Bad
+presort: sprio: regex "x"
+end
+
+---
+
+==================================================
+Presort allows a separate formal comment
+==================================================
+
+theory T begin
+tactic: Custom
+presort: s s{* hello *}
+end
+
+---
+
+(theory
+  theory_name: (ident)
+  (tactic
+    (ident)
+    (presort
+      ranking: (builtin_ranking)))
+  (formal_comment
+    comment_identifier: (ident)))
