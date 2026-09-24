@@ -1,0 +1,9 @@
+theory EmptyRightFamily begin
+
+// Exercise the opposite mirror direction of the empty-left-family fixture.
+rule Emit: [Fr(~n), In(diff('known',~n))] --[Emitted(~n)]-> [Out(~n)]
+
+lemma output [left]: exists-trace "Ex x #i. Emitted(x)@i"
+lemma no_output [right]: "All x #i. Emitted(x)@i ==> F"
+diffLemma Observational_equivalence:
+end
