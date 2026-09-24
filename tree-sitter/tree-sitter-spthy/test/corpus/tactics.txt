@@ -1,0 +1,105 @@
+==================================================
+Empty tactic uses the default presort
+==================================================
+
+theory T begin
+tactic: Empty
+rule R: [] --> []
+end
+
+---
+
+(theory
+  theory_name: (ident)
+  (tactic
+    (ident))
+  (rule
+    (simple_rule
+      rule_identifier: (ident)
+      (premise)
+      (conclusion))))
+
+==================================================
+Tactic can select only a presort
+==================================================
+
+theory T begin
+tactic: Ordered
+presort: C
+rule R: [] --> []
+end
+
+---
+
+(theory
+  theory_name: (ident)
+  (tactic
+    (ident)
+    (presort
+      (standard_proof_method_ranking)))
+  (rule
+    (simple_rule
+      rule_identifier: (ident)
+      (premise)
+      (conclusion))))
+
+==================================================
+Tactic priority blocks retain their order
+==================================================
+
+theory T begin
+tactic: Custom
+presort: s
+prio: isFactName "A"
+deprio: isFactName "B"
+end
+
+---
+
+(theory
+  theory_name: (ident)
+  (tactic
+    (ident)
+    (presort
+      (standard_proof_method_ranking))
+    (prio
+      (std_function
+        (function_name)
+        (param)))
+    (deprio
+      (std_function
+        (function_name)
+        (param)))))
+
+==================================================
+Tactic may have only deprioritization
+==================================================
+
+theory T begin
+tactic: Custom
+deprio: isFactName "B"
+end
+
+---
+
+(theory
+  theory_name: (ident)
+  (tactic
+    (ident)
+    (deprio
+      (std_function
+        (function_name)
+        (param)))))
+
+==================================================
+Priority cannot follow deprioritization
+:error
+==================================================
+
+theory T begin
+tactic: Bad
+deprio: isFactName "A"
+prio: isFactName "B"
+end
+
+---
