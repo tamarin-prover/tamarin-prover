@@ -44,7 +44,7 @@ end
   theory_name: (ident)
   (lemma
     lemma_identifier: (ident)
-    (diff_lemma_attrs
+    (lemma_attrs
       (lemma_attr
         heuristic: (heuristic
           (ranking_sequence))))

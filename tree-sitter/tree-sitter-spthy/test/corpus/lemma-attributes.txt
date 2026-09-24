@@ -1,0 +1,29 @@
+==================================================
+Trace and diff lemmas share the attribute list
+==================================================
+
+theory T begin
+lemma L [left,reuse,heuristic=s]: "T"
+diffLemma D [right,heuristic=s]:
+end
+
+---
+
+(theory
+  theory_name: (ident)
+  (lemma
+    lemma_identifier: (ident)
+    (lemma_attrs
+      (diff_lemma_attr)
+      (lemma_attr)
+      (lemma_attr
+        heuristic: (heuristic
+          (ranking_sequence))))
+    formula: (atom))
+  (diff_lemma
+    lemma_identifier: (ident)
+    (lemma_attrs
+      (diff_lemma_attr)
+      (lemma_attr
+        heuristic: (heuristic
+          (ranking_sequence))))))

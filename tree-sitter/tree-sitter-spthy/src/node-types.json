@@ -1533,7 +1533,7 @@
       "required": false,
       "types": [
         {
-          "type": "diff_lemma_attrs",
+          "type": "lemma_attrs",
           "named": true
         },
         {
@@ -1547,25 +1547,6 @@
     "type": "diff_lemma_attr",
     "named": true,
     "fields": {}
-  },
-  {
-    "type": "diff_lemma_attrs",
-    "named": true,
-    "fields": {},
-    "children": {
-      "multiple": true,
-      "required": true,
-      "types": [
-        {
-          "type": "diff_lemma_attr",
-          "named": true
-        },
-        {
-          "type": "lemma_attr",
-          "named": true
-        }
-      ]
-    }
   },
   {
     "type": "diff_rule",
@@ -3599,7 +3580,7 @@
       "required": false,
       "types": [
         {
-          "type": "diff_lemma_attrs",
+          "type": "lemma_attrs",
           "named": true
         },
         {
@@ -3638,6 +3619,25 @@
         },
         {
           "type": "language",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "lemma_attrs",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "diff_lemma_attr",
+          "named": true
+        },
+        {
+          "type": "lemma_attr",
           "named": true
         }
       ]

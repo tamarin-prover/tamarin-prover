@@ -4035,7 +4035,7 @@
           "members": [
             {
               "type": "SYMBOL",
-              "name": "diff_lemma_attrs"
+              "name": "lemma_attrs"
             },
             {
               "type": "BLANK"
@@ -4233,7 +4233,7 @@
           "members": [
             {
               "type": "SYMBOL",
-              "name": "diff_lemma_attrs"
+              "name": "lemma_attrs"
             },
             {
               "type": "BLANK"
@@ -4262,7 +4262,7 @@
         }
       ]
     },
-    "diff_lemma_attrs": {
+    "lemma_attrs": {
       "type": "SEQ",
       "members": [
         {
