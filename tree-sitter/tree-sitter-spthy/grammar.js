@@ -356,16 +356,8 @@ module.exports = grammar({
           'tactic', ':',
           $.ident,
           optional($.presort),
-          choice(
-              seq(
-                  repeat1($.prio),
-                  repeat($.deprio)
-              ),
-              seq(
-                  repeat($.prio),
-                  repeat1($.deprio)
-              )
-          )
+          repeat($.prio),
+          repeat($.deprio)
       ),
 
       presort: $ => seq(

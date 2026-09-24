@@ -41,7 +41,7 @@ rules:
   standard_proof_method_ranking  ::=  /[CISPcisp][CISPcisp]?[CISPcisp]?[CISPcisp]?/
   oracle_proof_method_ranking  ::=  ('O' | 'o') ('"' param '"')?
   tactic_proof_method_ranking  ::=  '{' ident '}'
-  tactic  ::=  'tactic' ':' ident presort? ((prio+ deprio*) | (prio* deprio+))
+  tactic  ::=  'tactic' ':' ident presort? prio* deprio*
   presort  ::=  'presort' ':' standard_proof_method_ranking
   prio  ::=  'prio' ':' ('{' post_ranking '}')? _function+
   deprio  ::=  'deprio' ':' ('{' post_ranking '}')? _function+
