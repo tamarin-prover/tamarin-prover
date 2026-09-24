@@ -908,7 +908,7 @@ module.exports = grammar({
           'reuse',
           'diff_reuse',
           'use_induction',
-          seq('output', '=', '[', $.language, repeat(seq(',', $.language)), ']'),
+          seq('output', '=', '[', commaSep($.language), ']'),
           seq('hide_lemma', '=', $.ident),
           seq('heuristic', '=', field('heuristic', $.heuristic))
       ),
@@ -933,12 +933,7 @@ module.exports = grammar({
 
       lemma_attrs: $ => seq(
           '[',
-          choice($.diff_lemma_attr,$.lemma_attr),
-          repeat(seq(
-              ',',
-              choice($.diff_lemma_attr,$.lemma_attr)
-          )),
-          optional(','),
+          commaSep(choice($.diff_lemma_attr, $.lemma_attr)),
           ']'
       ),
 
@@ -1512,4 +1507,9 @@ function builtinRanking() {
 
 function oracleRanking() {
     return seq(/[Oo]/, optional(seq(/ */, '"', /[^"\n\r]+/, '"')));
+}
+
+// Match the Haskell parser's list: zero or more items with a trailing comma.
+function commaSep(rule) {
+    return optional(seq(rule, repeat(seq(',', rule)), optional(',')));
 }
