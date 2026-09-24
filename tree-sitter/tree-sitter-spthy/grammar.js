@@ -903,8 +903,10 @@ module.exports = grammar({
       ),
 
       lemma_attr: $ => choice(
+          'typing', // Legacy alias for sources, still accepted by Haskell.
           'sources',
           'reuse',
+          'diff_reuse',
           'use_induction',
           seq('output', '=', '[', $.language, repeat(seq(',', $.language)), ']'),
           seq('hide_lemma', '=', $.ident),

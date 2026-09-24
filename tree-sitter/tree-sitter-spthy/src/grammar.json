@@ -4097,11 +4097,19 @@
       "members": [
         {
           "type": "STRING",
+          "value": "typing"
+        },
+        {
+          "type": "STRING",
           "value": "sources"
         },
         {
           "type": "STRING",
           "value": "reuse"
+        },
+        {
+          "type": "STRING",
+          "value": "diff_reuse"
         },
         {
           "type": "STRING",

@@ -7268,6 +7268,10 @@
     "named": false
   },
   {
+    "type": "diff_reuse",
+    "named": false
+  },
+  {
     "type": "diffie-hellman",
     "named": false
   },
@@ -7695,6 +7699,10 @@
   },
   {
     "type": "translation-state-optimisation",
+    "named": false
+  },
+  {
+    "type": "typing",
     "named": false
   },
   {
