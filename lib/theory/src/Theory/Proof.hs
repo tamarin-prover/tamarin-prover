@@ -85,6 +85,8 @@ module Theory.Proof (
   , AutoProver(..)
   , runAutoProver
   , runAutoDiffProver
+  , runAutoProverOnSorries
+  , runAutoDiffProverOnSorries
 
   -- ** Pretty Printing
   , prettyProof
@@ -729,15 +731,8 @@ selectDiffTactic prover ctx = fromMaybe [defaultTactic]
 
 runAutoProver :: AutoProver -> Prover
 runAutoProver aut@(AutoProver _ _  bound cut _) =
-    mapProverProof cutSolved $ maybe id boundProver bound autoProver
+    mapProverProof (extractSolutions cut) $ maybe id boundProver bound autoProver
   where
-    cutSolved = case cut of
-      CutDFS             -> cutOnSolvedDFS
-      CutBFS             -> cutOnSolvedBFS
-      CutSingleThreadDFS -> cutOnSolvedSingleThreadDFS
-      CutNothing         -> id
-      CutAfterSorry      -> cutAfterFirstSorry
-
     -- | The standard automatic prover that ignores the existing proof and
     -- tries to find one by itself.
     autoProver :: Prover
@@ -751,15 +746,8 @@ runAutoProver aut@(AutoProver _ _  bound cut _) =
 
 runAutoDiffProver :: AutoProver -> DiffProver
 runAutoDiffProver aut@(AutoProver _ _ bound cut _) =
-    mapDiffProverDiffProof cutSolved $ maybe id boundProver bound autoProver
+    mapDiffProverDiffProof (extractDiffSolutions cut) $ maybe id boundProver bound autoProver
   where
-    cutSolved = case cut of
-      CutDFS             -> cutOnSolvedDFSDiff
-      CutBFS             -> cutOnSolvedBFSDiff
-      CutSingleThreadDFS -> cutOnSolvedSingleThreadDFSDiff
-      CutAfterSorry      -> cutAfterFirstSorryDiff
-      CutNothing         -> id
-
     -- | The standard automatic prover that ignores the existing proof and
     -- tries to find one by itself.
     autoProver :: DiffProver
@@ -771,6 +759,47 @@ runAutoDiffProver aut@(AutoProver _ _ bound cut _) =
     boundProver b p = DiffProver $ \ctxt d se prf ->
         boundDiffProofDepth b <$> runDiffProver p ctxt d se prf
 
+
+-- | Replace the sorry steps of an existing proof by proofs of the automatic
+-- prover, and extract solutions from the resulting proof as a whole, as the
+-- automatic prover does for a proof it constructs from scratch. Extracting
+-- them for each replaced step separately would search every replaced step
+-- until it finds a solution or ends, even when the existing proof or another
+-- replaced step already contains one, and such a search need not terminate.
+-- Stopping at a sorry instead applies only within each replacement: cutting
+-- the whole tree at an unfinished sibling could discard a saved solution.
+runAutoProverOnSorries :: AutoProver -> Prover
+runAutoProverOnSorries aut
+  | apCut aut == CutAfterSorry = replaceSorryProver $ runAutoProver aut
+  | otherwise = mapProverProof (extractSolutions (apCut aut)) $
+      replaceSorryProver $ runAutoProver aut { apCut = CutNothing }
+
+-- | Replace the sorry steps of an existing diff proof by proofs of the
+-- automatic diff prover, and extract solutions from the resulting proof as a
+-- whole; see 'runAutoProverOnSorries'.
+runAutoDiffProverOnSorries :: AutoProver -> DiffProver
+runAutoDiffProverOnSorries aut
+  | apCut aut == CutAfterSorry = replaceDiffSorryProver $ runAutoDiffProver aut
+  | otherwise = mapDiffProverDiffProof (extractDiffSolutions (apCut aut)) $
+      replaceDiffSorryProver $ runAutoDiffProver aut { apCut = CutNothing }
+
+-- | Keep only the part of a proof that the solution extractor selects.
+extractSolutions :: SolutionExtractor -> Proof (Maybe a) -> Proof (Maybe a)
+extractSolutions cut = case cut of
+    CutDFS             -> cutOnSolvedDFS
+    CutBFS             -> cutOnSolvedBFS
+    CutSingleThreadDFS -> cutOnSolvedSingleThreadDFS
+    CutNothing         -> id
+    CutAfterSorry      -> cutAfterFirstSorry
+
+-- | Keep only the part of a diff proof that the solution extractor selects.
+extractDiffSolutions :: SolutionExtractor -> DiffProof (Maybe a) -> DiffProof (Maybe a)
+extractDiffSolutions cut = case cut of
+    CutDFS             -> cutOnSolvedDFSDiff
+    CutBFS             -> cutOnSolvedBFSDiff
+    CutSingleThreadDFS -> cutOnSolvedSingleThreadDFSDiff
+    CutAfterSorry      -> cutAfterFirstSorryDiff
+    CutNothing         -> id
 
 -- | The result of one pass of iterative deepening.
 data IterDeepRes = NoSolution | MaybeNoSolution | Solution ProofPath

@@ -705,11 +705,11 @@ closeTranslatedTheory thyOpts sign srcThy = do
     selector l = lemmaSelectorByModule thyOpts l && lemmaSelector thyOpts l
 
     prover
-      | thyOpts.proveMode = replaceSorryProver $ runAutoProver $ constructAutoProver thyOpts
+      | thyOpts.proveMode = runAutoProverOnSorries $ constructAutoProver thyOpts
       | otherwise = mempty
 
     diffProver
-      | thyOpts.proveMode = replaceDiffSorryProver $ runAutoDiffProver $ constructAutoProver thyOpts
+      | thyOpts.proveMode = runAutoDiffProverOnSorries $ constructAutoProver thyOpts
       | otherwise = mempty
 
     withDiffTheory = bitraverse pure
