@@ -3,6 +3,12 @@
  * @author Lennard Tworeck
  */
 
+// Data.Char.isSpace, excluding ASCII space: spaces can continue a heuristic,
+// whereas the other whitespace characters terminate a global sequence.
+const nonSpaceWhitespace = /[\t-\r\u00a0\u1680\u2000-\u200a\u2028\u2029\u202f\u205f\u3000]/;
+
+const whitespace = new RegExp(nonSpaceWhitespace.source + '| ');
+
 module.exports = grammar({
   name: 'spthy',
 
@@ -10,7 +16,7 @@ module.exports = grammar({
   extras: $ => [
       $.multi_comment,
       $.single_comment,
-      /\s|\\\r?\n|\u00A0/
+      new RegExp(whitespace.source + '|' + /\\\r?\n/.source)
   ],
 
   conflicts: $ => [
@@ -328,28 +334,46 @@ module.exports = grammar({
       global_heuristic: $ => seq(
           'heuristic',
           ':',
-          field('heuristic', $.heuristic)
+          optional($._heuristic_leading_space),
+          field('heuristic', $.heuristic),
+          $._heuristic_end
+      ),
+
+      // The initial token follows the ordinary lexer; subsequent tokens allow
+      // only ASCII spaces. Comments must explicitly end the sequence because
+      // named extras can otherwise be skipped even before immediate tokens.
+      _heuristic_leading_space: $ => repeat1(choice(whitespace, $.single_comment, $.multi_comment)),
+
+      _heuristic_end: $ => choice(
+          token.immediate(seq(/ */, nonSpaceWhitespace)),
+          $.single_comment,
+          $.multi_comment
       ),
 
       heuristic: $ => repeat1(choice(
-          $.ranking_sequence,
+          alias($._heuristic_builtin, $.builtin_ranking),
+          $.oracle_ranking,
           $.tactic_reference
       )),
 
       builtin_ranking: $ => builtinRanking(),
 
-      // Lex each run as a unit so `osopo` is not split at an identifier.
-      // Like goalRanking in the Haskell parser, leading oracles can take paths;
-      // the first builtin consumes all remaining letters in the run.
-      ranking_sequence: $ => token(choice(
-          repeat1(oracleRanking()),
-          seq(repeat(oracleRanking()), builtinRanking(),
-              repeat(choice(builtinRanking(), /[Oo]/)))
+      _heuristic_builtin: $ => token.immediate(prec(1, seq(/ */, builtinRanking()))),
+
+      oracle_ranking: $ => prec.right(seq(
+          token.immediate(prec(1, / *[Oo]/)),
+          optional(field('path', $.oracle_path))
       )),
 
+      oracle_path: $ => token.immediate(seq(/ */, '"', /[^"\n\r]+/, '"')),
+
       tactic_reference: $ => seq(
-          '{', field('name', $.ident), '}'
+          token.immediate(/ *\{ */),
+          field('name', $.tactic_name),
+          token.immediate('}')
       ),
+
+      tactic_name: $ => token.immediate(/[^"\n\r{}]+/),
 
 
       /*
@@ -910,7 +934,10 @@ module.exports = grammar({
           'use_induction',
           seq('output', '=', '[', commaSep($.language), ']'),
           seq('hide_lemma', '=', $.ident),
-          seq('heuristic', '=', field('heuristic', $.heuristic))
+          seq('heuristic', '=',
+              optional($._heuristic_leading_space),
+              field('heuristic', $.heuristic),
+              optional(choice($.single_comment, $.multi_comment)))
       ),
 
       language: $ => choice(
@@ -1502,10 +1529,6 @@ module.exports = grammar({
 // Literal choices also give presorts the grammar's identifier boundaries.
 function builtinRanking() {
     return choice('C', 'I', 'S', 'P', 'c', 'i', 's', 'p');
-}
-
-function oracleRanking() {
-    return seq(/[Oo]/, optional(seq(/ */, '"', /[^"\n\r]+/, '"')));
 }
 
 // Match the Haskell parser's list: zero or more items with a trailing comma.

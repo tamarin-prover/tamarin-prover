@@ -1047,12 +1047,77 @@
           "value": ":"
         },
         {
+          "type": "CHOICE",
+          "members": [
+            {
+              "type": "SYMBOL",
+              "name": "_heuristic_leading_space"
+            },
+            {
+              "type": "BLANK"
+            }
+          ]
+        },
+        {
           "type": "FIELD",
           "name": "heuristic",
           "content": {
             "type": "SYMBOL",
             "name": "heuristic"
           }
+        },
+        {
+          "type": "SYMBOL",
+          "name": "_heuristic_end"
+        }
+      ]
+    },
+    "_heuristic_leading_space": {
+      "type": "REPEAT1",
+      "content": {
+        "type": "CHOICE",
+        "members": [
+          {
+            "type": "PATTERN",
+            "value": "[\\t-\\r\\u00a0\\u1680\\u2000-\\u200a\\u2028\\u2029\\u202f\\u205f\\u3000]| "
+          },
+          {
+            "type": "SYMBOL",
+            "name": "single_comment"
+          },
+          {
+            "type": "SYMBOL",
+            "name": "multi_comment"
+          }
+        ]
+      }
+    },
+    "_heuristic_end": {
+      "type": "CHOICE",
+      "members": [
+        {
+          "type": "IMMEDIATE_TOKEN",
+          "content": {
+            "type": "SEQ",
+            "members": [
+              {
+                "type": "PATTERN",
+                "value": " *"
+              },
+              {
+                "type": "PATTERN",
+                "value": "[\\t-\\r\\u00a0\\u1680\\u2000-\\u200a\\u2028\\u2029\\u202f\\u205f\\u3000]"
+              }
+            ]
+          }
+        },
+        {
+          "type": "SYMBOL",
+          "name": "single_comment"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "multi_comment"
         }
       ]
     },
@@ -1062,8 +1127,17 @@
         "type": "CHOICE",
         "members": [
           {
+            "type": "ALIAS",
+            "content": {
+              "type": "SYMBOL",
+              "name": "_heuristic_builtin"
+            },
+            "named": true,
+            "value": "builtin_ranking"
+          },
+          {
             "type": "SYMBOL",
-            "name": "ranking_sequence"
+            "name": "oracle_ranking"
           },
           {
             "type": "SYMBOL",
@@ -1109,183 +1183,115 @@
         }
       ]
     },
-    "ranking_sequence": {
-      "type": "TOKEN",
+    "_heuristic_builtin": {
+      "type": "IMMEDIATE_TOKEN",
       "content": {
-        "type": "CHOICE",
-        "members": [
-          {
-            "type": "REPEAT1",
-            "content": {
-              "type": "SEQ",
+        "type": "PREC",
+        "value": 1,
+        "content": {
+          "type": "SEQ",
+          "members": [
+            {
+              "type": "PATTERN",
+              "value": " *"
+            },
+            {
+              "type": "CHOICE",
               "members": [
                 {
-                  "type": "PATTERN",
-                  "value": "[Oo]"
+                  "type": "STRING",
+                  "value": "C"
                 },
                 {
-                  "type": "CHOICE",
-                  "members": [
-                    {
-                      "type": "SEQ",
-                      "members": [
-                        {
-                          "type": "PATTERN",
-                          "value": " *"
-                        },
-                        {
-                          "type": "STRING",
-                          "value": "\""
-                        },
-                        {
-                          "type": "PATTERN",
-                          "value": "[^\"\\n\\r]+"
-                        },
-                        {
-                          "type": "STRING",
-                          "value": "\""
-                        }
-                      ]
-                    },
-                    {
-                      "type": "BLANK"
-                    }
-                  ]
+                  "type": "STRING",
+                  "value": "I"
+                },
+                {
+                  "type": "STRING",
+                  "value": "S"
+                },
+                {
+                  "type": "STRING",
+                  "value": "P"
+                },
+                {
+                  "type": "STRING",
+                  "value": "c"
+                },
+                {
+                  "type": "STRING",
+                  "value": "i"
+                },
+                {
+                  "type": "STRING",
+                  "value": "s"
+                },
+                {
+                  "type": "STRING",
+                  "value": "p"
                 }
               ]
             }
+          ]
+        }
+      }
+    },
+    "oracle_ranking": {
+      "type": "PREC_RIGHT",
+      "value": 0,
+      "content": {
+        "type": "SEQ",
+        "members": [
+          {
+            "type": "IMMEDIATE_TOKEN",
+            "content": {
+              "type": "PREC",
+              "value": 1,
+              "content": {
+                "type": "PATTERN",
+                "value": " *[Oo]"
+              }
+            }
           },
           {
-            "type": "SEQ",
+            "type": "CHOICE",
             "members": [
               {
-                "type": "REPEAT",
+                "type": "FIELD",
+                "name": "path",
                 "content": {
-                  "type": "SEQ",
-                  "members": [
-                    {
-                      "type": "PATTERN",
-                      "value": "[Oo]"
-                    },
-                    {
-                      "type": "CHOICE",
-                      "members": [
-                        {
-                          "type": "SEQ",
-                          "members": [
-                            {
-                              "type": "PATTERN",
-                              "value": " *"
-                            },
-                            {
-                              "type": "STRING",
-                              "value": "\""
-                            },
-                            {
-                              "type": "PATTERN",
-                              "value": "[^\"\\n\\r]+"
-                            },
-                            {
-                              "type": "STRING",
-                              "value": "\""
-                            }
-                          ]
-                        },
-                        {
-                          "type": "BLANK"
-                        }
-                      ]
-                    }
-                  ]
+                  "type": "SYMBOL",
+                  "name": "oracle_path"
                 }
               },
               {
-                "type": "CHOICE",
-                "members": [
-                  {
-                    "type": "STRING",
-                    "value": "C"
-                  },
-                  {
-                    "type": "STRING",
-                    "value": "I"
-                  },
-                  {
-                    "type": "STRING",
-                    "value": "S"
-                  },
-                  {
-                    "type": "STRING",
-                    "value": "P"
-                  },
-                  {
-                    "type": "STRING",
-                    "value": "c"
-                  },
-                  {
-                    "type": "STRING",
-                    "value": "i"
-                  },
-                  {
-                    "type": "STRING",
-                    "value": "s"
-                  },
-                  {
-                    "type": "STRING",
-                    "value": "p"
-                  }
-                ]
-              },
-              {
-                "type": "REPEAT",
-                "content": {
-                  "type": "CHOICE",
-                  "members": [
-                    {
-                      "type": "CHOICE",
-                      "members": [
-                        {
-                          "type": "STRING",
-                          "value": "C"
-                        },
-                        {
-                          "type": "STRING",
-                          "value": "I"
-                        },
-                        {
-                          "type": "STRING",
-                          "value": "S"
-                        },
-                        {
-                          "type": "STRING",
-                          "value": "P"
-                        },
-                        {
-                          "type": "STRING",
-                          "value": "c"
-                        },
-                        {
-                          "type": "STRING",
-                          "value": "i"
-                        },
-                        {
-                          "type": "STRING",
-                          "value": "s"
-                        },
-                        {
-                          "type": "STRING",
-                          "value": "p"
-                        }
-                      ]
-                    },
-                    {
-                      "type": "PATTERN",
-                      "value": "[Oo]"
-                    }
-                  ]
-                }
+                "type": "BLANK"
               }
             ]
+          }
+        ]
+      }
+    },
+    "oracle_path": {
+      "type": "IMMEDIATE_TOKEN",
+      "content": {
+        "type": "SEQ",
+        "members": [
+          {
+            "type": "PATTERN",
+            "value": " *"
+          },
+          {
+            "type": "STRING",
+            "value": "\""
+          },
+          {
+            "type": "PATTERN",
+            "value": "[^\"\\n\\r]+"
+          },
+          {
+            "type": "STRING",
+            "value": "\""
           }
         ]
       }
@@ -1294,22 +1300,35 @@
       "type": "SEQ",
       "members": [
         {
-          "type": "STRING",
-          "value": "{"
+          "type": "IMMEDIATE_TOKEN",
+          "content": {
+            "type": "PATTERN",
+            "value": " *\\{ *"
+          }
         },
         {
           "type": "FIELD",
           "name": "name",
           "content": {
             "type": "SYMBOL",
-            "name": "ident"
+            "name": "tactic_name"
           }
         },
         {
-          "type": "STRING",
-          "value": "}"
+          "type": "IMMEDIATE_TOKEN",
+          "content": {
+            "type": "STRING",
+            "value": "}"
+          }
         }
       ]
+    },
+    "tactic_name": {
+      "type": "IMMEDIATE_TOKEN",
+      "content": {
+        "type": "PATTERN",
+        "value": "[^\"\\n\\r{}]+"
+      }
     },
     "tactic": {
       "type": "SEQ",
@@ -4210,12 +4229,45 @@
               "value": "="
             },
             {
+              "type": "CHOICE",
+              "members": [
+                {
+                  "type": "SYMBOL",
+                  "name": "_heuristic_leading_space"
+                },
+                {
+                  "type": "BLANK"
+                }
+              ]
+            },
+            {
               "type": "FIELD",
               "name": "heuristic",
               "content": {
                 "type": "SYMBOL",
                 "name": "heuristic"
               }
+            },
+            {
+              "type": "CHOICE",
+              "members": [
+                {
+                  "type": "CHOICE",
+                  "members": [
+                    {
+                      "type": "SYMBOL",
+                      "name": "single_comment"
+                    },
+                    {
+                      "type": "SYMBOL",
+                      "name": "multi_comment"
+                    }
+                  ]
+                },
+                {
+                  "type": "BLANK"
+                }
+              ]
             }
           ]
         }
@@ -6919,7 +6971,7 @@
     },
     {
       "type": "PATTERN",
-      "value": "\\s|\\\\\\r?\\n|\\u00A0"
+      "value": "[\\t-\\r\\u00a0\\u1680\\u2000-\\u200a\\u2028\\u2029\\u202f\\u205f\\u3000]| |\\\\\\r?\\n"
     }
   ],
   "conflicts": [

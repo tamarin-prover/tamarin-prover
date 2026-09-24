@@ -18,7 +18,7 @@ end
       (lemma_attr)
       (lemma_attr
         heuristic: (heuristic
-          (ranking_sequence))))
+          (builtin_ranking))))
     formula: (atom))
   (diff_lemma
     lemma_identifier: (ident)
@@ -26,7 +26,7 @@ end
       (diff_lemma_attr)
       (lemma_attr
         heuristic: (heuristic
-          (ranking_sequence))))))
+          (builtin_ranking))))))
 
 ==================================================
 Lemma assignments allow whitespace and comments
@@ -46,9 +46,13 @@ end
       (lemma_attr
         (multi_comment)
         heuristic: (heuristic
-          (ranking_sequence)
+          (oracle_ranking)
+          (builtin_ranking)
+          (oracle_ranking)
+          (builtin_ranking)
+          (oracle_ranking)
           (tactic_reference
-            name: (ident))))
+            name: (tactic_name))))
       (lemma_attr
         (ident))
       (lemma_attr

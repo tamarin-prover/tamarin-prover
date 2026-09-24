@@ -2572,6 +2572,20 @@
           }
         ]
       }
+    },
+    "children": {
+      "multiple": true,
+      "required": false,
+      "types": [
+        {
+          "type": "multi_comment",
+          "named": true
+        },
+        {
+          "type": "single_comment",
+          "named": true
+        }
+      ]
     }
   },
   {
@@ -2583,7 +2597,11 @@
       "required": true,
       "types": [
         {
-          "type": "ranking_sequence",
+          "type": "builtin_ranking",
+          "named": true
+        },
+        {
+          "type": "oracle_ranking",
           "named": true
         },
         {
@@ -3620,6 +3638,14 @@
         {
           "type": "language",
           "named": true
+        },
+        {
+          "type": "multi_comment",
+          "named": true
+        },
+        {
+          "type": "single_comment",
+          "named": true
         }
       ]
     }
@@ -4642,6 +4668,22 @@
           "named": true
         }
       ]
+    }
+  },
+  {
+    "type": "oracle_ranking",
+    "named": true,
+    "fields": {
+      "path": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "oracle_path",
+            "named": true
+          }
+        ]
+      }
     }
   },
   {
@@ -6586,7 +6628,7 @@
         "required": true,
         "types": [
           {
-            "type": "ident",
+            "type": "tactic_name",
             "named": true
           }
         ]
@@ -7497,6 +7539,10 @@
     "named": false
   },
   {
+    "type": "oracle_path",
+    "named": true
+  },
+  {
     "type": "out",
     "named": false
   },
@@ -7551,10 +7597,6 @@
   {
     "type": "qed",
     "named": false
-  },
-  {
-    "type": "ranking_sequence",
-    "named": true
   },
   {
     "type": "reasonableNoncesNoise",
@@ -7660,6 +7702,10 @@
   {
     "type": "tactic",
     "named": false
+  },
+  {
+    "type": "tactic_name",
+    "named": true
   },
   {
     "type": "temporal",

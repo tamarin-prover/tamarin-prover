@@ -29,7 +29,7 @@ import           Data.Either()
 -- import           Data.Monoid                hiding (Last)
 import qualified Data.Set                   as S
 import           Data.Maybe                 (fromMaybe)
---import           Data.Char
+import           Data.Char (isSpace)
 --import qualified Data.Map                   as M
 import           Control.Applicative        hiding (empty, many, optional)
 import           Control.Monad
@@ -295,28 +295,41 @@ export thy = do
                     _    -> return c
 
 
+-- | Only ASCII spaces separate rankings. Other whitespace or a comment
+-- ends a global heuristic, after which the ordinary lexer resumes.
 heuristic :: Bool -> Maybe FilePath -> Parser [GoalRanking ProofContext]
-heuristic diff workDir = symbol "heuristic" *> char ':' *> skipMany (char ' ') *> (concat <$> many1 (goalRanking diff workDir)) <* lexeme spaces
+heuristic diff workDir = do
+    _ <- symbol "heuristic" *> colon
+    rankings <- many1 (goalRanking diff workDir)
+    _ <- lookAhead (satisfy (\c -> isSpace c || c == '/') <?> "end of heuristic line")
+    _ <- lexeme spaces
+    pure rankings
 
-goalRanking :: Bool -> Maybe FilePath -> Parser [GoalRanking ProofContext]
-goalRanking diff workDir = try oracleRanking <|> internalTacticRanking <|> regularRanking <?> "proof method ranking"
-   where
-       regularRanking = filterHeuristic diff <$> many1 letter <* skipMany (char ' ')
+-- | Parse one ranking, including an optional oracle path or tactic name.
+goalRanking :: Bool -> Maybe FilePath -> Parser (GoalRanking ProofContext)
+goalRanking diff workDir =
+    (oracleRanking <|> internalTacticRanking <|> regularRanking)
+        <* skipMany (char ' ') <?> "proof method ranking"
+  where
+    regularRanking = letter >>= toGoalRanking . pure
 
-       internalTacticRanking = do
-            _ <- string "{" <* skipMany (char ' ')
-            goal <- toGoalRanking <$> pure ("{.}")
-            tacticName <- optionMaybe (many1 (noneOf "\"\n\r{}") <* char '}' <* skipMany (char ' '))
+    internalTacticRanking = do
+        _ <- char '{' <* skipMany (char ' ')
+        tacticName <- many1 (noneOf "\"\n\r{}") <* char '}'
+        goal <- toGoalRanking "{.}"
+        pure $ mapInternalTacticRanking (maybeSetInternalTacticName (Just tacticName)) goal
 
-            return $ [mapInternalTacticRanking (maybeSetInternalTacticName tacticName) goal]
+    oracleRanking = do
+        name <- oneOf "oO" <* skipMany (char ' ')
+        relPath <- optionMaybe (char '"' *> many1 (noneOf "\"\n\r") <* char '"')
+        goal <- toGoalRanking [name]
+        pure $ mapOracleRanking
+            (maybeSetOracleRelPath relPath . maybeSetOracleWorkDir workDir) goal
 
-       oracleRanking = do
-           goal <- toGoalRanking <$> (string "o" <|> string "O") <* skipMany (char ' ')
-           relPath <- optionMaybe (char '"' *> many1 (noneOf "\"\n\r") <* char '"' <* skipMany (char ' '))
-
-           return [mapOracleRanking (maybeSetOracleRelPath relPath . maybeSetOracleWorkDir workDir) goal]
-
-       toGoalRanking = if diff then stringToGoalRankingDiff False else stringToGoalRanking False
+    toGoalRanking name = case convert False name of
+        Just goal -> pure goal
+        Nothing -> fail $ "Unknown proof method ranking " ++ show name
+    convert = if diff then stringToGoalRankingDiffMay else stringToGoalRankingMay
 
 liftedAddPredicate :: Catch.MonadThrow m =>
                       Theory sig c r p TranslationElement
