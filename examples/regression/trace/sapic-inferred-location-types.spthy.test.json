@@ -1,0 +1,23 @@
+{
+  "tests": [
+    {
+      "name": "strict-proof",
+      "args": ["--quit-on-warning", "--prove"],
+      "matches": [
+        {"regex": "reaches_done \\(exists-trace\\): verified", "min": 1},
+        {"regex": "correct_value \\(all-traces\\): verified", "min": 1}
+      ]
+    },
+    {
+      "name": "local-state-channel-export",
+      "args": ["--output-module=proverif", "--quit-on-warning"],
+      "matches": [
+        {"regex": "new StateChannel:channel\\[assumeCell\\];", "min": 1, "max": 1},
+        {"regex": "new lock_StateChannel:channel\\[assumeCell\\];", "min": 1, "max": 1},
+        {"regex": "out\\(StateChannel, vvalue\\)", "min": 1},
+        {"regex": "in\\(StateChannel, x_\\d+:bitstring\\)", "min": 1},
+        {"regex": "free stateChannel|tbl_states_handle", "max": 0}
+      ]
+    }
+  ]
+}
