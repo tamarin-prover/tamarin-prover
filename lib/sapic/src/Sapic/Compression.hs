@@ -21,6 +21,7 @@ import Data.List qualified as List
 import Data.Set qualified as S
 
 import Theory
+import Theory.Sapic (Process(..), ProcessCombinator(..))
 import Sapic.Facts
 
 -- We compress as much as possible silent actions
@@ -64,7 +65,14 @@ mergeInfo (ProtoRuleEInfo (StandRule name) attr res) (ProtoRuleEInfo (StandRule 
        mergeStand n _ = n  -- ++ "_" ++ n'
        -- NOTE: concatenating makes veryyyy big name rules, that completely make the the graphs unreadble
        -- NOTE: if we reintroduce Yavor's Dot output, recall 9e7e99fe070776172bd09cb977e8d3a83da3ed51
-       mergeAttrs a a' =  a <> a'
+       -- A lookup binds its result through IsIn rather than a premise.
+       -- Keep that provenance when absorbing a later silent rule, so the
+       -- wellformedness check still recognises the lookup-bound variable.
+       -- Two lookup actions cannot merge (see isSapicNoCompress).
+       mergeAttrs a a' = case ruleProcess a of
+         Just (ProcessComb (Lookup _ _) _ _ _) ->
+           (a <> a') { ruleProcess = ruleProcess a }
+         _ -> a <> a'
 mergeInfo _ _ = error "FreshRule(s) passed to mergeInfo"
 
 
