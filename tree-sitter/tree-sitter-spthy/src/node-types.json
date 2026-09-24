@@ -7320,11 +7320,7 @@
     "named": false
   },
   {
-    "type": "heuristic=",
-    "named": false
-  },
-  {
-    "type": "hide_lemma=",
+    "type": "hide_lemma",
     "named": false
   },
   {
@@ -7501,7 +7497,7 @@
     "named": false
   },
   {
-    "type": "output=",
+    "type": "output",
     "named": false
   },
   {

@@ -27,3 +27,31 @@ end
       (lemma_attr
         heuristic: (heuristic
           (ranking_sequence))))))
+
+==================================================
+Lemma assignments allow whitespace and comments
+==================================================
+
+theory T begin
+lemma L [heuristic /* comment */ = osopo{Custom}, hide_lemma = Other, output = [spthy,msr]]: "T"
+end
+
+---
+
+(theory
+  theory_name: (ident)
+  (lemma
+    lemma_identifier: (ident)
+    (lemma_attrs
+      (lemma_attr
+        (multi_comment)
+        heuristic: (heuristic
+          (ranking_sequence)
+          (tactic_reference
+            name: (ident))))
+      (lemma_attr
+        (ident))
+      (lemma_attr
+        (language)
+        (language)))
+    formula: (atom)))
