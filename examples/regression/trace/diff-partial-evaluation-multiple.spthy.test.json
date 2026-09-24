@@ -1,11 +1,10 @@
 {
   "tests": [
     {
-      "name": "export-roundtrip",
+      "name": "partial-evaluation-roundtrip",
       "args": [
         "--diff",
-        "--quit-on-warning",
-        "--bound=6"
+        "--quit-on-warning"
       ],
       "checks": [
         "roundtrip",

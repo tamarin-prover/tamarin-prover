@@ -385,9 +385,10 @@ applyPartialEvaluation evalStyle autosources thy0 =
 
 -- | Apply partial evaluation.
 applyPartialEvaluationDiff :: EvaluationStyle -> Bool -> ClosedDiffTheory -> ClosedDiffTheory
-applyPartialEvaluationDiff evalStyle autoSources thy0 =
-    closeDiffTheoryWithMaude sig
-      (L.modify diffThyItems replaceProtoRules (openDiffTheory thy0)) autoSources
+applyPartialEvaluationDiff evalStyle _autoSources thy0 =
+    -- Reachability refinements are not a complete equation-variant family.
+    -- Keep the proof caches, annotations and opposite-side correspondence.
+    L.modify diffThyItems (++ [DiffTextItem ("text", render ppAbsState)]) thy0
   where
     sig            = L.get diffThySignature thy0
     ruEs s         = getProtoRuleEsDiff s thy0
@@ -396,18 +397,8 @@ applyPartialEvaluationDiff evalStyle autoSources thy0 =
     (stR', ruEsR') = (`runReader` L.get sigmMaudeHandle sig) $
                      partialEvaluation evalStyle (ruEs RHS)
 
-    replaceProtoRules [] = []
-    replaceProtoRules (item:items)
-      | isEitherRuleItem item  =
-          [ DiffTextItem ("text", render ppAbsState)
-       -- Here we loose imported variants!
-          ] ++ map (\x -> EitherRuleItem (LHS, OpenProtoRule x [])) ruEsL' ++ map (\x -> EitherRuleItem (RHS, OpenProtoRule x [])) ruEsR' ++ filter (not . isEitherRuleItem) items
-      | otherwise        = item : replaceProtoRules items
-
-    isEitherRuleItem (EitherRuleItem _) = True
-    isEitherRuleItem _                  = False
-
     ppAbsState =
+      text "Diff partial evaluation is diagnostic only: it uses E-rules, whose equation variants may expose further behaviour. Refined rules are not installed." $--$
       (text $ " the abstract state after partial evaluation"
               ++ " contains " ++ show (S.size stL') ++ " left facts:") $--$
       (numbered' $ map prettyLNFact $ S.toList stL') $--$

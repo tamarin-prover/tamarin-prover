@@ -1,0 +1,28 @@
+theory SoundnessDiffPartialEvaluationRefinement
+begin
+
+rule SeedA: [] --> [ State('a') ]
+rule SeedB: [] --> [ State('b') ]
+
+// Refinement finds two reachable instances of Use. They are not complete
+// equation variants of the generic rule, so retain its original family.
+// Both values must remain reachable after strict export/reload validation.
+rule Use: [ State(x) ] --[ Used(x) ]-> [ Out(x) ]
+left rule Use: [ State(x) ] --[ Used(x) ]-> [ Out(x) ]
+  variants
+  rule (modulo AC) Use:
+    [ State(x) ] --[ Used(x), Annotated(x) ]-> [ Out(x) ]
+right rule Use: [ State(x) ] --[ Used(x) ]-> [ Out(x) ]
+  variants
+  rule (modulo AC) Use:
+    [ State(x) ] --[ Used(x), Annotated(x) ]-> [ Out(x) ]
+
+lemma both: exists-trace
+  "Ex #i #j. Used('a')@i & Used('b')@j"
+
+// Retaining the family must also retain actions supplied on its variants.
+lemma annotations: exists-trace
+  "Ex #i #j. Annotated('a')@i & Annotated('b')@j"
+
+diffLemma Observational_equivalence:
+end
