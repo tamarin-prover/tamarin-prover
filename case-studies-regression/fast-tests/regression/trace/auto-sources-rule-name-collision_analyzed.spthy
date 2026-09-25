@@ -171,8 +171,8 @@ qed
 Generated from:
 Tamarin version 1.13.0
 Maude version 3.5.1
-Git revision: e7d693716d8d8c81a4ebc195d61e23fa68106f5c (with uncommited changes), branch: review/auto-source-member-names
-Compiled at: 2026-10-07 08:05:46.53547452 UTC
+Git revision: b4ca08a3ebf7e1a7a16db04a62f1e23d3438dd04 (with uncommited changes), branch: msr-rule-handling
+Compiled at: 2026-10-07 11:28:33.82755466 UTC
 */
 
 end
@@ -184,7 +184,7 @@ summary of summaries:
 analyzed: examples/regression/trace/auto-sources-rule-name-collision.spthy
 
   output:          examples/regression/trace/auto-sources-rule-name-collision.spthy.tmp
-  processing time: 0.27s
+  processing time: 0.16s
   
   delivery (exists-trace): verified (5 steps)
   disclosure (exists-trace): verified (4 steps)

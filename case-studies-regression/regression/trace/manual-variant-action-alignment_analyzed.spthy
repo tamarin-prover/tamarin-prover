@@ -136,8 +136,8 @@ qed
 Generated from:
 Tamarin version 1.13.0
 Maude version 3.5.1
-Git revision: a29fff53cc2cbc5c7d0e8d19acb81dada0832470 (with uncommited changes), branch: msr-rule-handling
-Compiled at: 2026-10-07 07:50:49.373784664 UTC
+Git revision: b4ca08a3ebf7e1a7a16db04a62f1e23d3438dd04 (with uncommited changes), branch: msr-rule-handling
+Compiled at: 2026-10-07 11:28:33.82755466 UTC
 */
 
 end
@@ -149,7 +149,7 @@ summary of summaries:
 analyzed: examples/regression/trace/manual-variant-action-alignment.spthy
 
   output:          examples/regression/trace/manual-variant-action-alignment.spthy.tmp
-  processing time: 0.17s
+  processing time: 0.13s
   
   late (exists-trace): verified (3 steps)
   backtrack (exists-trace): verified (4 steps)

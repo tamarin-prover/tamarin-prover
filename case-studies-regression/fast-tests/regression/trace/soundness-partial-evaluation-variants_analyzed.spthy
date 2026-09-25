@@ -1,0 +1,108 @@
+theory SoundnessPartialEvaluationVariants
+
+begin
+
+// Function signature and definition of the equational theory E
+
+functions: c/1, d/1, fst/1, pair/2, snd/1
+equations: d(c(x)) = x, fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
+
+text{* the abstract state after partial evaluation contains 3 facts:
+
+1. State( 'ok' )
+
+2. Fr( ~z )
+
+3. In( z )
+
+This abstract state results in 2 refined multiset rewriting rules.
+Note that the original number of multiset rewriting rules was 2.
+
+*}
+
+rule (modulo E) Seed:
+   [ ] --> [ State( 'ok' ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) UseModuloE___VARIANT_1:
+   [ State( 'ok' ) ] --[ UsedModuloE( ), UsedImportedVariant( ) ]-> [ ]
+
+  /* has exactly the trivial AC variant */
+
+lemma e_variant_reachable:
+  exists-trace "∃ #i. UsedModuloE( ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #i. (UsedModuloE( ) @ #i)"
+*/
+simplify
+solve( State( 'ok' ) ▶₀ #i )
+  case Seed
+  SOLVED // trace found
+qed
+
+lemma e_variant_not_unreachable:
+  all-traces "¬(∃ #i. UsedModuloE( ) @ #i)"
+/*
+guarded formula characterizing all counter-examples:
+"∃ #i. (UsedModuloE( ) @ #i)"
+*/
+simplify
+solve( State( 'ok' ) ▶₀ #i )
+  case Seed
+  SOLVED // trace found
+qed
+
+lemma imported_variant_reachable:
+  exists-trace "∃ #i. UsedImportedVariant( ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #i. (UsedImportedVariant( ) @ #i)"
+*/
+simplify
+solve( State( 'ok' ) ▶₀ #i )
+  case Seed
+  SOLVED // trace found
+qed
+
+lemma imported_variant_not_unreachable:
+  all-traces "¬(∃ #i. UsedImportedVariant( ) @ #i)"
+/*
+guarded formula characterizing all counter-examples:
+"∃ #i. (UsedImportedVariant( ) @ #i)"
+*/
+simplify
+solve( State( 'ok' ) ▶₀ #i )
+  case Seed
+  SOLVED // trace found
+qed
+
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.13.0
+Maude version 3.5.1
+Git revision: b4ca08a3ebf7e1a7a16db04a62f1e23d3438dd04 (with uncommited changes), branch: msr-rule-handling
+Compiled at: 2026-10-07 11:28:33.82755466 UTC
+*/
+
+end
+/* Output
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/regression/trace/soundness-partial-evaluation-variants.spthy
+
+  output:          examples/regression/trace/soundness-partial-evaluation-variants.spthy.tmp
+  processing time: 0.08s
+  
+  e_variant_reachable (exists-trace): verified (3 steps)
+  e_variant_not_unreachable (all-traces): falsified - found trace (3 steps)
+  imported_variant_reachable (exists-trace): verified (3 steps)
+  imported_variant_not_unreachable (all-traces): falsified - found trace (3 steps)
+
+==============================================================================
+*/
