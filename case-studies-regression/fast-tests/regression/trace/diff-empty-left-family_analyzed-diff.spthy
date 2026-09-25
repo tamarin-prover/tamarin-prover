@@ -1,0 +1,70 @@
+theory EmptyLeftFamily
+
+begin
+
+// Function signature and definition of the equational theory E
+
+functions: fst/1, pair/2, snd/1
+equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
+
+rule (modulo E) Emit:
+   [ Fr( ~n ), In( diff(~n, 'known') ) ] --[ Emitted( ~n ) ]-> [ Out( ~n ) ]
+
+lemma output [right]:
+  exists-trace "∃ x #i. Emitted( x ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ x #i. (Emitted( x ) @ #i)"
+*/
+simplify
+SOLVED // trace found
+
+lemma no_output [left]:
+  all-traces "∀ x #i. (Emitted( x ) @ #i) ⇒ (⊥)"
+/*
+guarded formula characterizing all counter-examples:
+"∃ x #i. (Emitted( x ) @ #i)"
+*/
+simplify
+by solve( Emitted( x ) @ #i )
+
+diffLemma Observational_equivalence:
+rule-equivalence
+  case Rule_Emit
+  backward-search
+    case RHS
+    step( simplify )
+    step( solve( !KU( 'known' ) @ #vk ) )
+      case pub
+      by ATTACK // trace found
+    qed
+  qed
+qed
+
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.13.0
+Maude version 3.5.1
+Git revision: c4572aa2bab99bb68de09813420a8c2172b99182 (with uncommited changes), branch: diff-rule-families
+Compiled at: 2026-09-25 20:20:40.787603735 UTC
+*/
+
+end
+/* Output
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/regression/trace/diff-empty-left-family.spthy
+
+  output:          examples/regression/trace/diff-empty-left-family.spthy.tmp
+  processing time: 0.10s
+  
+  RHS :  output (exists-trace): verified (2 steps)
+  LHS :  no_output (all-traces): verified (2 steps)
+  DiffLemma:  Observational_equivalence : falsified - found trace (5 steps)
+
+==============================================================================
+*/

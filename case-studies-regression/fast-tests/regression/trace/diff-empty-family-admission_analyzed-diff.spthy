@@ -1,0 +1,142 @@
+theory EmptyFamilyAdmission
+
+begin
+
+// Function signature and definition of the equational theory E
+
+functions: fst/1, pair/2, snd/1
+equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
+
+rule (modulo E) Emit:
+   [ Fr( ~n ), In( diff(~n, 'known') ) ] --[ Emitted( ~n ) ]-> [ Out( ~n ) ]
+
+restriction Ban [right]:
+  "∀ x #i. (Emitted( x ) @ #i) ⇒ (⊥)"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ x #i. (Emitted( x ) @ #i) ⇒ (⊥)"
+  */
+
+restriction Ban [left]:
+  "∀ x #i. (Emitted( x ) @ #i) ⇒ (⊥)"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ x #i. (Emitted( x ) @ #i) ⇒ (⊥)"
+  */
+
+lemma no_output [right]:
+  all-traces "∀ x #i. (Emitted( x ) @ #i) ⇒ (⊥)"
+/*
+guarded formula characterizing all counter-examples:
+"∃ x #i. (Emitted( x ) @ #i)"
+*/
+simplify
+by contradiction /* from formulas */
+
+lemma no_output [left]:
+  all-traces "∀ x #i. (Emitted( x ) @ #i) ⇒ (⊥)"
+/*
+guarded formula characterizing all counter-examples:
+"∃ x #i. (Emitted( x ) @ #i)"
+*/
+simplify
+by contradiction /* from formulas */
+
+diffLemma Observational_equivalence:
+rule-equivalence
+  case Rule_Destrd_0_fst
+  backward-search
+    case LHS
+    step( simplify )
+    by step( solve( !KD( <x, x.1> ) ▶₀ #i ) )
+  next
+    case RHS
+    step( simplify )
+    step( solve( !KD( <x, x.1> ) ▶₀ #i ) )
+      case Emit
+      by step( contradiction /* impossible chain */ )
+    qed
+  qed
+next
+  case Rule_Destrd_0_snd
+  backward-search
+    case LHS
+    step( simplify )
+    by step( solve( !KD( <x, x.1> ) ▶₀ #i ) )
+  next
+    case RHS
+    step( simplify )
+    step( solve( !KD( <x, x.1> ) ▶₀ #i ) )
+      case Emit
+      by step( contradiction /* impossible chain */ )
+    qed
+  qed
+next
+  case Rule_Emit
+  backward-search
+    case LHS
+    step( simplify )
+    by step( solve( DiffProtoEmit( ) @ #i ) )
+  next
+    case RHS
+    step( simplify )
+    by step( contradiction /* from formulas */ )
+  qed
+next
+  case Rule_Equality
+  backward-search
+    case LHS
+    step( simplify )
+    by step( solve( !KD( x ) ▶₁ #i ) )
+  next
+    case RHS
+    step( simplify )
+    step( solve( !KD( x ) ▶₁ #i ) )
+      case Emit
+      by step( contradiction /* from formulas */ )
+    qed
+  qed
+next
+  case Rule_Send
+  backward-search
+    case LHS
+    step( simplify )
+    MIRRORED
+  next
+    case RHS
+    step( simplify )
+    MIRRORED
+  qed
+qed
+
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.13.0
+Maude version 3.5.1
+Git revision: c4572aa2bab99bb68de09813420a8c2172b99182 (with uncommited changes), branch: diff-rule-families
+Compiled at: 2026-09-25 20:20:40.787603735 UTC
+*/
+
+end
+/* Output
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/regression/trace/diff-empty-family-admission.spthy
+
+  output:          examples/regression/trace/diff-empty-family-admission.spthy.tmp
+  processing time: 0.10s
+  
+  RHS :  no_output (all-traces): verified (2 steps)
+  LHS :  no_output (all-traces): verified (2 steps)
+  DiffLemma:  Observational_equivalence : verified (29 steps)
+
+==============================================================================
+*/

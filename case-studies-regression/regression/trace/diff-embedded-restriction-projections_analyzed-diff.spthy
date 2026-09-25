@@ -10,33 +10,6 @@ equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
 macros: identity( x ) =  x,
         choice( ) =  diff('a', 'b')
 
-rule (modulo E) Choose:
-   [ In( <x, y> ) ]
-  --[ Chosen( x, y ), Restr_Choose_1( x ), Restr_Choose_2( y ) ]->
-   [ ]
- left
-  rule (modulo E) Choose:
-     [ In( <x, y> ) ]
-    --[ Chosen( x, y ), Restr_Choose_1( x ), Restr_Choose_2( y ) ]->
-     [ ]
- right
-  rule (modulo E) Choose:
-     [ In( <x, y> ) ]
-    --[ Chosen( x, y ), Restr_Choose_1( x ), Restr_Choose_2( y ) ]->
-     [ ]
-
-rule (modulo E) Local:
-   [ In( x ) ] --[ Local( x ) ]-> [ ]
- left
-  rule (modulo E) Local:
-     [ In( x ) ] --[ Local( x ), Restr_Local_LHS_1( x ) ]-> [ ]
- right
-  rule (modulo E) Local:
-     [ In( x ) ] --[ Local( x ), Restr_Local_RHS_1( x ) ]-> [ ]
-
-rule (modulo E) Mixed:
-   [ In( x ) ] --[ Mixed( x ), Restr_Mixed_1( diff(x, 'a'), x ) ]-> [ ]
-
 restriction Restr_Choose_1 [left]:
   "∀ x #NOW. (Restr_Choose_1( x ) @ #NOW) ⇒ (x = 'a')"
   // safety formula
@@ -73,6 +46,43 @@ restriction Restr_Choose_2 [right]:
   "∀ x #NOW. (Restr_Choose_2( x ) @ #NOW) ⇒ (x = 'tag')"
   */
 
+rule (modulo E) Choose:
+   [ In( <x, y> ) ]
+  --[ Chosen( x, y ), Restr_Choose_1( x ), Restr_Choose_2( y ) ]->
+   [ ]
+ left
+  rule (modulo E) Choose:
+     [ In( <x, y> ) ]
+    --[ Chosen( x, y ), Restr_Choose_1( x ), Restr_Choose_2( y ) ]->
+     [ ]
+ right
+  rule (modulo E) Choose:
+     [ In( <x, y> ) ]
+    --[ Chosen( x, y ), Restr_Choose_1( x ), Restr_Choose_2( y ) ]->
+     [ ]
+
+restriction Restr_Local_1 [left]:
+  "∀ x #NOW x.1.
+    (Restr_Local_1( x, x.1 ) @ #NOW) ⇒ ((x = 'a') ∨ (x.1 = 'b'))"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ x #NOW x.1.
+    (Restr_Local_1( x, x.1 ) @ #NOW) ⇒ ((x = 'a') ∨ (x.1 = 'b'))"
+  */
+
+restriction Restr_Local_1 [right]:
+  "∀ x #NOW x.1.
+    (Restr_Local_1( x, x.1 ) @ #NOW) ⇒ ((x = 'a') ∨ (x.1 = 'b'))"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ x #NOW x.1.
+    (Restr_Local_1( x, x.1 ) @ #NOW) ⇒ ((x = 'a') ∨ (x.1 = 'b'))"
+  */
+
 restriction Restr_Local_LHS_1 [left]:
   "∀ x #NOW. (Restr_Local_LHS_1( x ) @ #NOW) ⇒ (x = 'a')"
   // safety formula
@@ -91,6 +101,19 @@ restriction Restr_Local_RHS_1 [right]:
   "∀ x #NOW. (Restr_Local_RHS_1( x ) @ #NOW) ⇒ (x = 'b')"
   */
 
+rule (modulo E) Local:
+   [ In( x ) ] --[ Local( x ), Restr_Local_1( x, x ) ]-> [ ]
+ left
+  rule (modulo E) Local:
+     [ In( x ) ]
+    --[ Local( x ), Restr_Local_LHS_1( x ), Restr_Local_1( x, x ) ]->
+     [ ]
+ right
+  rule (modulo E) Local:
+     [ In( x ) ]
+    --[ Local( x ), Restr_Local_RHS_1( x ), Restr_Local_1( x, x ) ]->
+     [ ]
+
 restriction Restr_Mixed_1 [left]:
   "∀ x #NOW x.1. (Restr_Mixed_1( x, x.1 ) @ #NOW) ⇒ (x = x.1)"
   // safety formula
@@ -108,6 +131,9 @@ restriction Restr_Mixed_1 [right]:
   expanded formula:
   "∀ x #NOW x.1. (Restr_Mixed_1( x, x.1 ) @ #NOW) ⇒ (x = x.1)"
   */
+
+rule (modulo E) Mixed:
+   [ In( x ) ] --[ Mixed( x ), Restr_Mixed_1( diff(x, 'a'), x ) ]-> [ ]
 
 lemma left_choice [left]:
   all-traces "∀ x y #i. (Chosen( x, y ) @ #i) ⇒ ((x = 'a') ∧ (y = 'tag'))"
@@ -224,8 +250,8 @@ qed
 Generated from:
 Tamarin version 1.13.0
 Maude version 3.5.1
-Git revision: 4a4676de54da4a5081e344b98760d9d4e0f35d46 (with uncommited changes), branch: diff-mirror-proofs
-Compiled at: 2026-09-25 20:02:43.632305942 UTC
+Git revision: c4572aa2bab99bb68de09813420a8c2172b99182 (with uncommited changes), branch: diff-rule-families
+Compiled at: 2026-09-25 20:20:40.787603735 UTC
 */
 
 end
