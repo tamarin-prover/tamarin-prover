@@ -34,7 +34,7 @@ guarded formula characterizing all satisfying traces:
 */
 simplify
 solve( State_1111( k, x, m ) ▶₀ #t )
-  case letysdeckx_1_111
+  case letysdeckx_3_111
   solve( !KU( senc(~n, m) ) @ #vk )
     case outsenck_0_1
     SOLVED // trace found
@@ -49,7 +49,7 @@ guarded formula characterizing all counter-examples:
 */
 simplify
 solve( State_1111( k, x, m ) ▶₀ #t )
-  case letysdeckx_1_111
+  case letysdeckx_3_111
   solve( !KU( senc(~n, m) ) @ #vk )
     case c_senc
     solve( !KU( ~n ) @ #vk.1 )
@@ -112,28 +112,30 @@ rule (modulo E) letysdeckx_0_111[color=#ffffff,
   */
 
 rule (modulo E) letysdeckx_1_111[color=#ffffff,
-                                 process="let y.1=sdec(k.1, x.1)", issapicrule, role='Process']:
-   [ Let_1111( <k, senc(k, y.1)>, k.1, x.1 ) ]
+                                 process="let y.1=sdec(k.1, x.1)", no_derivcheck, issapicrule,
+                                 role='Process']:
+   [ Let_1111( <k.2, senc(k.2, m.2)>, k.1, x.1 ) ]
   -->
-   [ State_1111( k.1, x.1, y.1 ) ]
+   [ Let_11101( m.2, k.1, x.1 ) ]
 
   /*
   rule (modulo AC) letysdeckx_1_111[color=#ffffff,
-                                    process="let y.1=sdec(k.1, x.1)", issapicrule, role='Process']:
-     [ Let_1111( <k, senc(k, y)>, k.1, x ) ] --> [ State_1111( k.1, x, y ) ]
+                                    process="let y.1=sdec(k.1, x.1)", no_derivcheck, issapicrule,
+                                    role='Process']:
+     [ Let_1111( <k, senc(k, m)>, k.1, x ) ] --> [ Let_11101( m, k.1, x ) ]
   */
 
 restriction Restr_letysdeckx_2_111_1:
   "∀ x #NOW.
     (Restr_letysdeckx_2_111_1( x ) @ #NOW) ⇒
-    (∀ k y. (<k, senc(k, y)> = x) ⇒ (⊥))"
+    (∀ k m. (<k, senc(k, m)> = x) ⇒ (⊥))"
   // safety formula
 
   /*
   expanded formula:
   "∀ x #NOW.
     (Restr_letysdeckx_2_111_1( x ) @ #NOW) ⇒
-    (∀ k y. (<k, senc(k, y)> = x) ⇒ (⊥))"
+    (∀ k m. (<k, senc(k, m)> = x) ⇒ (⊥))"
   */
 
 rule (modulo E) letysdeckx_2_111[color=#ffffff,
@@ -147,6 +149,39 @@ rule (modulo E) letysdeckx_2_111[color=#ffffff,
                                     process="let y.1=sdec(k.1, x.1)", issapicrule, role='Process']:
      [ Let_1111( <k, x>, k, x ) ]
     --[ Restr_letysdeckx_2_111_1( <k, x> ) ]->
+     [ State_1112( k, x ) ]
+  */
+
+rule (modulo E) letysdeckx_3_111[color=#ffffff,
+                                 process="let y.1=sdec(k.1, x.1)", issapicrule, role='Process']:
+   [ Let_11101( y.1, k.1, x.1 ) ] --> [ State_1111( k.1, x.1, y.1 ) ]
+
+  /*
+  rule (modulo AC) letysdeckx_3_111[color=#ffffff,
+                                    process="let y.1=sdec(k.1, x.1)", issapicrule, role='Process']:
+     [ Let_11101( y, k, x ) ] --> [ State_1111( k, x, y ) ]
+  */
+
+restriction Restr_letysdeckx_4_111_1:
+  "∀ x #NOW. (Restr_letysdeckx_4_111_1( x ) @ #NOW) ⇒ (∀ y. (y = x) ⇒ (⊥))"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ x #NOW. (Restr_letysdeckx_4_111_1( x ) @ #NOW) ⇒ (∀ y. (y = x) ⇒ (⊥))"
+  */
+
+rule (modulo E) letysdeckx_4_111[color=#ffffff,
+                                 process="let y.1=sdec(k.1, x.1)", issapicrule, role='Process']:
+   [ Let_11101( destructor.4, k.1, x.1 ) ]
+  --[ Restr_letysdeckx_4_111_1( destructor.4 ) ]->
+   [ State_1112( k.1, x.1 ) ]
+
+  /*
+  rule (modulo AC) letysdeckx_4_111[color=#ffffff,
+                                    process="let y.1=sdec(k.1, x.1)", issapicrule, role='Process']:
+     [ Let_11101( destructor, k, x ) ]
+    --[ Restr_letysdeckx_4_111_1( destructor ) ]->
      [ State_1112( k, x ) ]
   */
 
@@ -219,8 +254,8 @@ restriction single_session:
 Generated from:
 Tamarin version 1.13.0
 Maude version 3.5.1
-Git revision: 41bc81379b23681e7057314a5cf66a25c45e1986, branch: canonicalise-subst
-Compiled at: 2026-07-27 16:11:34.947223 UTC
+Git revision: 5a753a172c7984e9403bc650a37a8223367bc1c5, branch: sapic-destructors
+Compiled at: 2026-09-25 19:30:59.558380567 UTC
 */
 
 end
@@ -232,7 +267,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/basic/destructors.spthy
 
   output:          examples/sapic/fast/basic/destructors.spthy.tmp
-  processing time: 0.04s
+  processing time: 0.25s
   
   else (exists-trace): verified (3 steps)
   main (exists-trace): verified (4 steps)

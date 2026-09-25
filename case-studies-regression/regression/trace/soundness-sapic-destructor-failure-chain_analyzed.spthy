@@ -1,0 +1,839 @@
+theory SoundnessSapicDestructorFailureChain
+
+begin
+
+// Function signature and definition of the equational theory E
+
+functions: c/1, d/1 [destructor], fst/1, pair/2, snd/1
+equations: d(c(x)) = x, fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
+
+heuristic: p
+
+lemma final_failure_reachable:
+  exists-trace "∃ #i. Done( ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #i. (Done( ) @ #i)"
+*/
+simplify
+solve( State_122222222( z ) ▶₀ #i )
+  case lettagadz_2_12222222
+  SOLVED // trace found
+qed
+
+rule (modulo E) Init[color=#ffffff, process="in(z.1);", issapicrule,
+                     role='Process']:
+   [ ] --[ Init( ) ]-> [ State_( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) inz_0_[color=#ffffff, process="in(z.1);", issapicrule,
+                       role='Process']:
+   [ State_( ), In( z.1 ) ] --> [ State_1( z.1 ) ]
+
+  /*
+  rule (modulo AC) inz_0_[color=#ffffff, process="in(z.1);", issapicrule,
+                          role='Process']:
+     [ State_( ), In( z ) ] --> [ State_1( z ) ]
+  */
+
+rule (modulo E) lettagadz_0_1[color=#ffffff,
+                              process="let <'tag', a0.1>=d(z.1)", issapicrule, role='Process']:
+   [ State_1( z.1 ) ] --> [ Let_11( z.1, z.1 ) ]
+
+  /*
+  rule (modulo AC) lettagadz_0_1[color=#ffffff,
+                                 process="let <'tag', a0.1>=d(z.1)", issapicrule, role='Process']:
+     [ State_1( z ) ] --> [ Let_11( z, z ) ]
+  */
+
+rule (modulo E) lettagadz_1_1[color=#ffffff,
+                              process="let <'tag', a0.1>=d(z.1)", no_derivcheck, issapicrule,
+                              role='Process']:
+   [ Let_11( c(x.2), z.1 ) ] --> [ Let_101( x.2, z.1 ) ]
+
+  /*
+  rule (modulo AC) lettagadz_1_1[color=#ffffff,
+                                 process="let <'tag', a0.1>=d(z.1)", no_derivcheck, issapicrule,
+                                 role='Process']:
+     [ Let_11( c(x), z ) ] --> [ Let_101( x, z ) ]
+  */
+
+restriction Restr_lettagadz_2_1_1:
+  "∀ x #NOW.
+    (Restr_lettagadz_2_1_1( x ) @ #NOW) ⇒ (∀ x.1. (c(x.1) = x) ⇒ (⊥))"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ x #NOW.
+    (Restr_lettagadz_2_1_1( x ) @ #NOW) ⇒ (∀ x.1. (c(x.1) = x) ⇒ (⊥))"
+  */
+
+rule (modulo E) lettagadz_2_1[color=#ffffff,
+                              process="let <'tag', a0.1>=d(z.1)", issapicrule, role='Process']:
+   [ Let_11( z.1, z.1 ) ]
+  --[ Restr_lettagadz_2_1_1( z.1 ) ]->
+   [ State_12( z.1 ) ]
+
+  /*
+  rule (modulo AC) lettagadz_2_1[color=#ffffff,
+                                 process="let <'tag', a0.1>=d(z.1)", issapicrule, role='Process']:
+     [ Let_11( z, z ) ] --[ Restr_lettagadz_2_1_1( z ) ]-> [ State_12( z ) ]
+  */
+
+rule (modulo E) lettagadz_3_1[color=#ffffff,
+                              process="let <'tag', a0.1>=d(z.1)", issapicrule, role='Process']:
+   [ Let_101( <'tag', a0.1>, z.1 ) ] --> [ State_11( a0.1, z.1 ) ]
+
+  /*
+  rule (modulo AC) lettagadz_3_1[color=#ffffff,
+                                 process="let <'tag', a0.1>=d(z.1)", issapicrule, role='Process']:
+     [ Let_101( <'tag', a0>, z ) ] --> [ State_11( a0, z ) ]
+  */
+
+restriction Restr_lettagadz_4_1_1:
+  "∀ x #NOW.
+    (Restr_lettagadz_4_1_1( x ) @ #NOW) ⇒ (∀ a0. (<'tag', a0> = x) ⇒ (⊥))"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ x #NOW.
+    (Restr_lettagadz_4_1_1( x ) @ #NOW) ⇒ (∀ a0. (<'tag', a0> = x) ⇒ (⊥))"
+  */
+
+rule (modulo E) lettagadz_4_1[color=#ffffff,
+                              process="let <'tag', a0.1>=d(z.1)", issapicrule, role='Process']:
+   [ Let_101( destructor.4, z.1 ) ]
+  --[ Restr_lettagadz_4_1_1( destructor.4 ) ]->
+   [ State_12( z.1 ) ]
+
+  /*
+  rule (modulo AC) lettagadz_4_1[color=#ffffff,
+                                 process="let <'tag', a0.1>=d(z.1)", issapicrule, role='Process']:
+     [ Let_101( destructor, z ) ]
+    --[ Restr_lettagadz_4_1_1( destructor ) ]->
+     [ State_12( z ) ]
+  */
+
+rule (modulo E) p_0_11[color=#ffffff, process="0", issapicrule,
+                       role='Process']:
+   [ State_11( a0.1, z.1 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_11[color=#ffffff, process="0", issapicrule,
+                          role='Process']:
+     [ State_11( a0, z ) ] --> [ ]
+  */
+
+rule (modulo E) lettagadz_0_12[color=#ffffff,
+                               process="let <'tag', a1.1>=d(z.1)", issapicrule, role='Process']:
+   [ State_12( z.1 ) ] --> [ Let_121( z.1, z.1 ) ]
+
+  /*
+  rule (modulo AC) lettagadz_0_12[color=#ffffff,
+                                  process="let <'tag', a1.1>=d(z.1)", issapicrule, role='Process']:
+     [ State_12( z ) ] --> [ Let_121( z, z ) ]
+  */
+
+rule (modulo E) lettagadz_1_12[color=#ffffff,
+                               process="let <'tag', a1.1>=d(z.1)", no_derivcheck, issapicrule,
+                               role='Process']:
+   [ Let_121( c(x.2), z.1 ) ] --> [ Let_1201( x.2, z.1 ) ]
+
+  /*
+  rule (modulo AC) lettagadz_1_12[color=#ffffff,
+                                  process="let <'tag', a1.1>=d(z.1)", no_derivcheck, issapicrule,
+                                  role='Process']:
+     [ Let_121( c(x), z ) ] --> [ Let_1201( x, z ) ]
+  */
+
+restriction Restr_lettagadz_2_12_1:
+  "∀ x #NOW.
+    (Restr_lettagadz_2_12_1( x ) @ #NOW) ⇒ (∀ x.1. (c(x.1) = x) ⇒ (⊥))"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ x #NOW.
+    (Restr_lettagadz_2_12_1( x ) @ #NOW) ⇒ (∀ x.1. (c(x.1) = x) ⇒ (⊥))"
+  */
+
+rule (modulo E) lettagadz_2_12[color=#ffffff,
+                               process="let <'tag', a1.1>=d(z.1)", issapicrule, role='Process']:
+   [ Let_121( z.1, z.1 ) ]
+  --[ Restr_lettagadz_2_12_1( z.1 ) ]->
+   [ State_122( z.1 ) ]
+
+  /*
+  rule (modulo AC) lettagadz_2_12[color=#ffffff,
+                                  process="let <'tag', a1.1>=d(z.1)", issapicrule, role='Process']:
+     [ Let_121( z, z ) ]
+    --[ Restr_lettagadz_2_12_1( z ) ]->
+     [ State_122( z ) ]
+  */
+
+rule (modulo E) lettagadz_3_12[color=#ffffff,
+                               process="let <'tag', a1.1>=d(z.1)", issapicrule, role='Process']:
+   [ Let_1201( <'tag', a1.1>, z.1 ) ] --> [ State_121( a1.1, z.1 ) ]
+
+  /*
+  rule (modulo AC) lettagadz_3_12[color=#ffffff,
+                                  process="let <'tag', a1.1>=d(z.1)", issapicrule, role='Process']:
+     [ Let_1201( <'tag', a1>, z ) ] --> [ State_121( a1, z ) ]
+  */
+
+restriction Restr_lettagadz_4_12_1:
+  "∀ x #NOW.
+    (Restr_lettagadz_4_12_1( x ) @ #NOW) ⇒ (∀ a1. (<'tag', a1> = x) ⇒ (⊥))"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ x #NOW.
+    (Restr_lettagadz_4_12_1( x ) @ #NOW) ⇒ (∀ a1. (<'tag', a1> = x) ⇒ (⊥))"
+  */
+
+rule (modulo E) lettagadz_4_12[color=#ffffff,
+                               process="let <'tag', a1.1>=d(z.1)", issapicrule, role='Process']:
+   [ Let_1201( destructor.5, z.1 ) ]
+  --[ Restr_lettagadz_4_12_1( destructor.5 ) ]->
+   [ State_122( z.1 ) ]
+
+  /*
+  rule (modulo AC) lettagadz_4_12[color=#ffffff,
+                                  process="let <'tag', a1.1>=d(z.1)", issapicrule, role='Process']:
+     [ Let_1201( destructor, z ) ]
+    --[ Restr_lettagadz_4_12_1( destructor ) ]->
+     [ State_122( z ) ]
+  */
+
+rule (modulo E) p_0_121[color=#ffffff, process="0", issapicrule,
+                        role='Process']:
+   [ State_121( a1.1, z.1 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_121[color=#ffffff, process="0", issapicrule,
+                           role='Process']:
+     [ State_121( a1, z ) ] --> [ ]
+  */
+
+rule (modulo E) lettagadz_0_122[color=#ffffff,
+                                process="let <'tag', a2.1>=d(z.1)", issapicrule, role='Process']:
+   [ State_122( z.1 ) ] --> [ Let_1221( z.1, z.1 ) ]
+
+  /*
+  rule (modulo AC) lettagadz_0_122[color=#ffffff,
+                                   process="let <'tag', a2.1>=d(z.1)", issapicrule, role='Process']:
+     [ State_122( z ) ] --> [ Let_1221( z, z ) ]
+  */
+
+rule (modulo E) lettagadz_1_122[color=#ffffff,
+                                process="let <'tag', a2.1>=d(z.1)", no_derivcheck, issapicrule,
+                                role='Process']:
+   [ Let_1221( c(x.2), z.1 ) ] --> [ Let_12201( x.2, z.1 ) ]
+
+  /*
+  rule (modulo AC) lettagadz_1_122[color=#ffffff,
+                                   process="let <'tag', a2.1>=d(z.1)", no_derivcheck, issapicrule,
+                                   role='Process']:
+     [ Let_1221( c(x), z ) ] --> [ Let_12201( x, z ) ]
+  */
+
+restriction Restr_lettagadz_2_122_1:
+  "∀ x #NOW.
+    (Restr_lettagadz_2_122_1( x ) @ #NOW) ⇒ (∀ x.1. (c(x.1) = x) ⇒ (⊥))"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ x #NOW.
+    (Restr_lettagadz_2_122_1( x ) @ #NOW) ⇒ (∀ x.1. (c(x.1) = x) ⇒ (⊥))"
+  */
+
+rule (modulo E) lettagadz_2_122[color=#ffffff,
+                                process="let <'tag', a2.1>=d(z.1)", issapicrule, role='Process']:
+   [ Let_1221( z.1, z.1 ) ]
+  --[ Restr_lettagadz_2_122_1( z.1 ) ]->
+   [ State_1222( z.1 ) ]
+
+  /*
+  rule (modulo AC) lettagadz_2_122[color=#ffffff,
+                                   process="let <'tag', a2.1>=d(z.1)", issapicrule, role='Process']:
+     [ Let_1221( z, z ) ]
+    --[ Restr_lettagadz_2_122_1( z ) ]->
+     [ State_1222( z ) ]
+  */
+
+rule (modulo E) lettagadz_3_122[color=#ffffff,
+                                process="let <'tag', a2.1>=d(z.1)", issapicrule, role='Process']:
+   [ Let_12201( <'tag', a2.1>, z.1 ) ] --> [ State_1221( a2.1, z.1 ) ]
+
+  /*
+  rule (modulo AC) lettagadz_3_122[color=#ffffff,
+                                   process="let <'tag', a2.1>=d(z.1)", issapicrule, role='Process']:
+     [ Let_12201( <'tag', a2>, z ) ] --> [ State_1221( a2, z ) ]
+  */
+
+restriction Restr_lettagadz_4_122_1:
+  "∀ x #NOW.
+    (Restr_lettagadz_4_122_1( x ) @ #NOW) ⇒ (∀ a2. (<'tag', a2> = x) ⇒ (⊥))"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ x #NOW.
+    (Restr_lettagadz_4_122_1( x ) @ #NOW) ⇒ (∀ a2. (<'tag', a2> = x) ⇒ (⊥))"
+  */
+
+rule (modulo E) lettagadz_4_122[color=#ffffff,
+                                process="let <'tag', a2.1>=d(z.1)", issapicrule, role='Process']:
+   [ Let_12201( destructor.6, z.1 ) ]
+  --[ Restr_lettagadz_4_122_1( destructor.6 ) ]->
+   [ State_1222( z.1 ) ]
+
+  /*
+  rule (modulo AC) lettagadz_4_122[color=#ffffff,
+                                   process="let <'tag', a2.1>=d(z.1)", issapicrule, role='Process']:
+     [ Let_12201( destructor, z ) ]
+    --[ Restr_lettagadz_4_122_1( destructor ) ]->
+     [ State_1222( z ) ]
+  */
+
+rule (modulo E) p_0_1221[color=#ffffff, process="0", issapicrule,
+                         role='Process']:
+   [ State_1221( a2.1, z.1 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_1221[color=#ffffff, process="0", issapicrule,
+                            role='Process']:
+     [ State_1221( a2, z ) ] --> [ ]
+  */
+
+rule (modulo E) lettagadz_0_1222[color=#ffffff,
+                                 process="let <'tag', a3.1>=d(z.1)", issapicrule, role='Process']:
+   [ State_1222( z.1 ) ] --> [ Let_12221( z.1, z.1 ) ]
+
+  /*
+  rule (modulo AC) lettagadz_0_1222[color=#ffffff,
+                                    process="let <'tag', a3.1>=d(z.1)", issapicrule, role='Process']:
+     [ State_1222( z ) ] --> [ Let_12221( z, z ) ]
+  */
+
+rule (modulo E) lettagadz_1_1222[color=#ffffff,
+                                 process="let <'tag', a3.1>=d(z.1)", no_derivcheck, issapicrule,
+                                 role='Process']:
+   [ Let_12221( c(x.2), z.1 ) ] --> [ Let_122201( x.2, z.1 ) ]
+
+  /*
+  rule (modulo AC) lettagadz_1_1222[color=#ffffff,
+                                    process="let <'tag', a3.1>=d(z.1)", no_derivcheck, issapicrule,
+                                    role='Process']:
+     [ Let_12221( c(x), z ) ] --> [ Let_122201( x, z ) ]
+  */
+
+restriction Restr_lettagadz_2_1222_1:
+  "∀ x #NOW.
+    (Restr_lettagadz_2_1222_1( x ) @ #NOW) ⇒ (∀ x.1. (c(x.1) = x) ⇒ (⊥))"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ x #NOW.
+    (Restr_lettagadz_2_1222_1( x ) @ #NOW) ⇒ (∀ x.1. (c(x.1) = x) ⇒ (⊥))"
+  */
+
+rule (modulo E) lettagadz_2_1222[color=#ffffff,
+                                 process="let <'tag', a3.1>=d(z.1)", issapicrule, role='Process']:
+   [ Let_12221( z.1, z.1 ) ]
+  --[ Restr_lettagadz_2_1222_1( z.1 ) ]->
+   [ State_12222( z.1 ) ]
+
+  /*
+  rule (modulo AC) lettagadz_2_1222[color=#ffffff,
+                                    process="let <'tag', a3.1>=d(z.1)", issapicrule, role='Process']:
+     [ Let_12221( z, z ) ]
+    --[ Restr_lettagadz_2_1222_1( z ) ]->
+     [ State_12222( z ) ]
+  */
+
+rule (modulo E) lettagadz_3_1222[color=#ffffff,
+                                 process="let <'tag', a3.1>=d(z.1)", issapicrule, role='Process']:
+   [ Let_122201( <'tag', a3.1>, z.1 ) ] --> [ State_12221( a3.1, z.1 ) ]
+
+  /*
+  rule (modulo AC) lettagadz_3_1222[color=#ffffff,
+                                    process="let <'tag', a3.1>=d(z.1)", issapicrule, role='Process']:
+     [ Let_122201( <'tag', a3>, z ) ] --> [ State_12221( a3, z ) ]
+  */
+
+restriction Restr_lettagadz_4_1222_1:
+  "∀ x #NOW.
+    (Restr_lettagadz_4_1222_1( x ) @ #NOW) ⇒ (∀ a3. (<'tag', a3> = x) ⇒ (⊥))"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ x #NOW.
+    (Restr_lettagadz_4_1222_1( x ) @ #NOW) ⇒ (∀ a3. (<'tag', a3> = x) ⇒ (⊥))"
+  */
+
+rule (modulo E) lettagadz_4_1222[color=#ffffff,
+                                 process="let <'tag', a3.1>=d(z.1)", issapicrule, role='Process']:
+   [ Let_122201( destructor.7, z.1 ) ]
+  --[ Restr_lettagadz_4_1222_1( destructor.7 ) ]->
+   [ State_12222( z.1 ) ]
+
+  /*
+  rule (modulo AC) lettagadz_4_1222[color=#ffffff,
+                                    process="let <'tag', a3.1>=d(z.1)", issapicrule, role='Process']:
+     [ Let_122201( destructor, z ) ]
+    --[ Restr_lettagadz_4_1222_1( destructor ) ]->
+     [ State_12222( z ) ]
+  */
+
+rule (modulo E) p_0_12221[color=#ffffff, process="0", issapicrule,
+                          role='Process']:
+   [ State_12221( a3.1, z.1 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_12221[color=#ffffff, process="0", issapicrule,
+                             role='Process']:
+     [ State_12221( a3, z ) ] --> [ ]
+  */
+
+rule (modulo E) lettagadz_0_12222[color=#ffffff,
+                                  process="let <'tag', a4.1>=d(z.1)", issapicrule, role='Process']:
+   [ State_12222( z.1 ) ] --> [ Let_122221( z.1, z.1 ) ]
+
+  /*
+  rule (modulo AC) lettagadz_0_12222[color=#ffffff,
+                                     process="let <'tag', a4.1>=d(z.1)", issapicrule, role='Process']:
+     [ State_12222( z ) ] --> [ Let_122221( z, z ) ]
+  */
+
+rule (modulo E) lettagadz_1_12222[color=#ffffff,
+                                  process="let <'tag', a4.1>=d(z.1)", no_derivcheck, issapicrule,
+                                  role='Process']:
+   [ Let_122221( c(x.2), z.1 ) ] --> [ Let_1222201( x.2, z.1 ) ]
+
+  /*
+  rule (modulo AC) lettagadz_1_12222[color=#ffffff,
+                                     process="let <'tag', a4.1>=d(z.1)", no_derivcheck, issapicrule,
+                                     role='Process']:
+     [ Let_122221( c(x), z ) ] --> [ Let_1222201( x, z ) ]
+  */
+
+restriction Restr_lettagadz_2_12222_1:
+  "∀ x #NOW.
+    (Restr_lettagadz_2_12222_1( x ) @ #NOW) ⇒ (∀ x.1. (c(x.1) = x) ⇒ (⊥))"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ x #NOW.
+    (Restr_lettagadz_2_12222_1( x ) @ #NOW) ⇒ (∀ x.1. (c(x.1) = x) ⇒ (⊥))"
+  */
+
+rule (modulo E) lettagadz_2_12222[color=#ffffff,
+                                  process="let <'tag', a4.1>=d(z.1)", issapicrule, role='Process']:
+   [ Let_122221( z.1, z.1 ) ]
+  --[ Restr_lettagadz_2_12222_1( z.1 ) ]->
+   [ State_122222( z.1 ) ]
+
+  /*
+  rule (modulo AC) lettagadz_2_12222[color=#ffffff,
+                                     process="let <'tag', a4.1>=d(z.1)", issapicrule, role='Process']:
+     [ Let_122221( z, z ) ]
+    --[ Restr_lettagadz_2_12222_1( z ) ]->
+     [ State_122222( z ) ]
+  */
+
+rule (modulo E) lettagadz_3_12222[color=#ffffff,
+                                  process="let <'tag', a4.1>=d(z.1)", issapicrule, role='Process']:
+   [ Let_1222201( <'tag', a4.1>, z.1 ) ] --> [ State_122221( a4.1, z.1 ) ]
+
+  /*
+  rule (modulo AC) lettagadz_3_12222[color=#ffffff,
+                                     process="let <'tag', a4.1>=d(z.1)", issapicrule, role='Process']:
+     [ Let_1222201( <'tag', a4>, z ) ] --> [ State_122221( a4, z ) ]
+  */
+
+restriction Restr_lettagadz_4_12222_1:
+  "∀ x #NOW.
+    (Restr_lettagadz_4_12222_1( x ) @ #NOW) ⇒
+    (∀ a4. (<'tag', a4> = x) ⇒ (⊥))"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ x #NOW.
+    (Restr_lettagadz_4_12222_1( x ) @ #NOW) ⇒
+    (∀ a4. (<'tag', a4> = x) ⇒ (⊥))"
+  */
+
+rule (modulo E) lettagadz_4_12222[color=#ffffff,
+                                  process="let <'tag', a4.1>=d(z.1)", issapicrule, role='Process']:
+   [ Let_1222201( destructor.8, z.1 ) ]
+  --[ Restr_lettagadz_4_12222_1( destructor.8 ) ]->
+   [ State_122222( z.1 ) ]
+
+  /*
+  rule (modulo AC) lettagadz_4_12222[color=#ffffff,
+                                     process="let <'tag', a4.1>=d(z.1)", issapicrule, role='Process']:
+     [ Let_1222201( destructor, z ) ]
+    --[ Restr_lettagadz_4_12222_1( destructor ) ]->
+     [ State_122222( z ) ]
+  */
+
+rule (modulo E) p_0_122221[color=#ffffff, process="0", issapicrule,
+                           role='Process']:
+   [ State_122221( a4.1, z.1 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_122221[color=#ffffff, process="0", issapicrule,
+                              role='Process']:
+     [ State_122221( a4, z ) ] --> [ ]
+  */
+
+rule (modulo E) lettagadz_0_122222[color=#ffffff,
+                                   process="let <'tag', a5.1>=d(z.1)", issapicrule, role='Process']:
+   [ State_122222( z.1 ) ] --> [ Let_1222221( z.1, z.1 ) ]
+
+  /*
+  rule (modulo AC) lettagadz_0_122222[color=#ffffff,
+                                      process="let <'tag', a5.1>=d(z.1)", issapicrule, role='Process']:
+     [ State_122222( z ) ] --> [ Let_1222221( z, z ) ]
+  */
+
+rule (modulo E) lettagadz_1_122222[color=#ffffff,
+                                   process="let <'tag', a5.1>=d(z.1)", no_derivcheck, issapicrule,
+                                   role='Process']:
+   [ Let_1222221( c(x.2), z.1 ) ] --> [ Let_12222201( x.2, z.1 ) ]
+
+  /*
+  rule (modulo AC) lettagadz_1_122222[color=#ffffff,
+                                      process="let <'tag', a5.1>=d(z.1)", no_derivcheck, issapicrule,
+                                      role='Process']:
+     [ Let_1222221( c(x), z ) ] --> [ Let_12222201( x, z ) ]
+  */
+
+restriction Restr_lettagadz_2_122222_1:
+  "∀ x #NOW.
+    (Restr_lettagadz_2_122222_1( x ) @ #NOW) ⇒ (∀ x.1. (c(x.1) = x) ⇒ (⊥))"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ x #NOW.
+    (Restr_lettagadz_2_122222_1( x ) @ #NOW) ⇒ (∀ x.1. (c(x.1) = x) ⇒ (⊥))"
+  */
+
+rule (modulo E) lettagadz_2_122222[color=#ffffff,
+                                   process="let <'tag', a5.1>=d(z.1)", issapicrule, role='Process']:
+   [ Let_1222221( z.1, z.1 ) ]
+  --[ Restr_lettagadz_2_122222_1( z.1 ) ]->
+   [ State_1222222( z.1 ) ]
+
+  /*
+  rule (modulo AC) lettagadz_2_122222[color=#ffffff,
+                                      process="let <'tag', a5.1>=d(z.1)", issapicrule, role='Process']:
+     [ Let_1222221( z, z ) ]
+    --[ Restr_lettagadz_2_122222_1( z ) ]->
+     [ State_1222222( z ) ]
+  */
+
+rule (modulo E) lettagadz_3_122222[color=#ffffff,
+                                   process="let <'tag', a5.1>=d(z.1)", issapicrule, role='Process']:
+   [ Let_12222201( <'tag', a5.1>, z.1 ) ] --> [ State_1222221( a5.1, z.1 ) ]
+
+  /*
+  rule (modulo AC) lettagadz_3_122222[color=#ffffff,
+                                      process="let <'tag', a5.1>=d(z.1)", issapicrule, role='Process']:
+     [ Let_12222201( <'tag', a5>, z ) ] --> [ State_1222221( a5, z ) ]
+  */
+
+restriction Restr_lettagadz_4_122222_1:
+  "∀ x #NOW.
+    (Restr_lettagadz_4_122222_1( x ) @ #NOW) ⇒
+    (∀ a5. (<'tag', a5> = x) ⇒ (⊥))"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ x #NOW.
+    (Restr_lettagadz_4_122222_1( x ) @ #NOW) ⇒
+    (∀ a5. (<'tag', a5> = x) ⇒ (⊥))"
+  */
+
+rule (modulo E) lettagadz_4_122222[color=#ffffff,
+                                   process="let <'tag', a5.1>=d(z.1)", issapicrule, role='Process']:
+   [ Let_12222201( destructor.9, z.1 ) ]
+  --[ Restr_lettagadz_4_122222_1( destructor.9 ) ]->
+   [ State_1222222( z.1 ) ]
+
+  /*
+  rule (modulo AC) lettagadz_4_122222[color=#ffffff,
+                                      process="let <'tag', a5.1>=d(z.1)", issapicrule, role='Process']:
+     [ Let_12222201( destructor, z ) ]
+    --[ Restr_lettagadz_4_122222_1( destructor ) ]->
+     [ State_1222222( z ) ]
+  */
+
+rule (modulo E) p_0_1222221[color=#ffffff, process="0", issapicrule,
+                            role='Process']:
+   [ State_1222221( a5.1, z.1 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_1222221[color=#ffffff, process="0", issapicrule,
+                               role='Process']:
+     [ State_1222221( a5, z ) ] --> [ ]
+  */
+
+rule (modulo E) lettagadz_0_1222222[color=#ffffff,
+                                    process="let <'tag', a6.1>=d(z.1)", issapicrule, role='Process']:
+   [ State_1222222( z.1 ) ] --> [ Let_12222221( z.1, z.1 ) ]
+
+  /*
+  rule (modulo AC) lettagadz_0_1222222[color=#ffffff,
+                                       process="let <'tag', a6.1>=d(z.1)", issapicrule, role='Process']:
+     [ State_1222222( z ) ] --> [ Let_12222221( z, z ) ]
+  */
+
+rule (modulo E) lettagadz_1_1222222[color=#ffffff,
+                                    process="let <'tag', a6.1>=d(z.1)", no_derivcheck, issapicrule,
+                                    role='Process']:
+   [ Let_12222221( c(x.2), z.1 ) ] --> [ Let_122222201( x.2, z.1 ) ]
+
+  /*
+  rule (modulo AC) lettagadz_1_1222222[color=#ffffff,
+                                       process="let <'tag', a6.1>=d(z.1)", no_derivcheck, issapicrule,
+                                       role='Process']:
+     [ Let_12222221( c(x), z ) ] --> [ Let_122222201( x, z ) ]
+  */
+
+restriction Restr_lettagadz_2_1222222_1:
+  "∀ x #NOW.
+    (Restr_lettagadz_2_1222222_1( x ) @ #NOW) ⇒ (∀ x.1. (c(x.1) = x) ⇒ (⊥))"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ x #NOW.
+    (Restr_lettagadz_2_1222222_1( x ) @ #NOW) ⇒ (∀ x.1. (c(x.1) = x) ⇒ (⊥))"
+  */
+
+rule (modulo E) lettagadz_2_1222222[color=#ffffff,
+                                    process="let <'tag', a6.1>=d(z.1)", issapicrule, role='Process']:
+   [ Let_12222221( z.1, z.1 ) ]
+  --[ Restr_lettagadz_2_1222222_1( z.1 ) ]->
+   [ State_12222222( z.1 ) ]
+
+  /*
+  rule (modulo AC) lettagadz_2_1222222[color=#ffffff,
+                                       process="let <'tag', a6.1>=d(z.1)", issapicrule, role='Process']:
+     [ Let_12222221( z, z ) ]
+    --[ Restr_lettagadz_2_1222222_1( z ) ]->
+     [ State_12222222( z ) ]
+  */
+
+rule (modulo E) lettagadz_3_1222222[color=#ffffff,
+                                    process="let <'tag', a6.1>=d(z.1)", issapicrule, role='Process']:
+   [ Let_122222201( <'tag', a6.1>, z.1 ) ]
+  -->
+   [ State_12222221( a6.1, z.1 ) ]
+
+  /*
+  rule (modulo AC) lettagadz_3_1222222[color=#ffffff,
+                                       process="let <'tag', a6.1>=d(z.1)", issapicrule, role='Process']:
+     [ Let_122222201( <'tag', a6>, z ) ] --> [ State_12222221( a6, z ) ]
+  */
+
+restriction Restr_lettagadz_4_1222222_1:
+  "∀ x #NOW.
+    (Restr_lettagadz_4_1222222_1( x ) @ #NOW) ⇒
+    (∀ a6. (<'tag', a6> = x) ⇒ (⊥))"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ x #NOW.
+    (Restr_lettagadz_4_1222222_1( x ) @ #NOW) ⇒
+    (∀ a6. (<'tag', a6> = x) ⇒ (⊥))"
+  */
+
+rule (modulo E) lettagadz_4_1222222[color=#ffffff,
+                                    process="let <'tag', a6.1>=d(z.1)", issapicrule, role='Process']:
+   [ Let_122222201( destructor.10, z.1 ) ]
+  --[ Restr_lettagadz_4_1222222_1( destructor.10 ) ]->
+   [ State_12222222( z.1 ) ]
+
+  /*
+  rule (modulo AC) lettagadz_4_1222222[color=#ffffff,
+                                       process="let <'tag', a6.1>=d(z.1)", issapicrule, role='Process']:
+     [ Let_122222201( destructor, z ) ]
+    --[ Restr_lettagadz_4_1222222_1( destructor ) ]->
+     [ State_12222222( z ) ]
+  */
+
+rule (modulo E) p_0_12222221[color=#ffffff, process="0", issapicrule,
+                             role='Process']:
+   [ State_12222221( a6.1, z.1 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_12222221[color=#ffffff, process="0", issapicrule,
+                                role='Process']:
+     [ State_12222221( a6, z ) ] --> [ ]
+  */
+
+rule (modulo E) lettagadz_0_12222222[color=#ffffff,
+                                     process="let <'tag', a7.1>=d(z.1)", issapicrule, role='Process']:
+   [ State_12222222( z.1 ) ] --> [ Let_122222221( z.1, z.1 ) ]
+
+  /*
+  rule (modulo AC) lettagadz_0_12222222[color=#ffffff,
+                                        process="let <'tag', a7.1>=d(z.1)", issapicrule, role='Process']:
+     [ State_12222222( z ) ] --> [ Let_122222221( z, z ) ]
+  */
+
+rule (modulo E) lettagadz_1_12222222[color=#ffffff,
+                                     process="let <'tag', a7.1>=d(z.1)", no_derivcheck, issapicrule,
+                                     role='Process']:
+   [ Let_122222221( c(x.2), z.1 ) ] --> [ Let_1222222201( x.2, z.1 ) ]
+
+  /*
+  rule (modulo AC) lettagadz_1_12222222[color=#ffffff,
+                                        process="let <'tag', a7.1>=d(z.1)", no_derivcheck, issapicrule,
+                                        role='Process']:
+     [ Let_122222221( c(x), z ) ] --> [ Let_1222222201( x, z ) ]
+  */
+
+restriction Restr_lettagadz_2_12222222_1:
+  "∀ x #NOW.
+    (Restr_lettagadz_2_12222222_1( x ) @ #NOW) ⇒ (∀ x.1. (c(x.1) = x) ⇒ (⊥))"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ x #NOW.
+    (Restr_lettagadz_2_12222222_1( x ) @ #NOW) ⇒ (∀ x.1. (c(x.1) = x) ⇒ (⊥))"
+  */
+
+rule (modulo E) lettagadz_2_12222222[color=#ffffff,
+                                     process="let <'tag', a7.1>=d(z.1)", issapicrule, role='Process']:
+   [ Let_122222221( z.1, z.1 ) ]
+  --[ Restr_lettagadz_2_12222222_1( z.1 ) ]->
+   [ State_122222222( z.1 ) ]
+
+  /*
+  rule (modulo AC) lettagadz_2_12222222[color=#ffffff,
+                                        process="let <'tag', a7.1>=d(z.1)", issapicrule, role='Process']:
+     [ Let_122222221( z, z ) ]
+    --[ Restr_lettagadz_2_12222222_1( z ) ]->
+     [ State_122222222( z ) ]
+  */
+
+rule (modulo E) lettagadz_3_12222222[color=#ffffff,
+                                     process="let <'tag', a7.1>=d(z.1)", issapicrule, role='Process']:
+   [ Let_1222222201( <'tag', a7.1>, z.1 ) ]
+  -->
+   [ State_122222221( a7.1, z.1 ) ]
+
+  /*
+  rule (modulo AC) lettagadz_3_12222222[color=#ffffff,
+                                        process="let <'tag', a7.1>=d(z.1)", issapicrule, role='Process']:
+     [ Let_1222222201( <'tag', a7>, z ) ] --> [ State_122222221( a7, z ) ]
+  */
+
+restriction Restr_lettagadz_4_12222222_1:
+  "∀ x #NOW.
+    (Restr_lettagadz_4_12222222_1( x ) @ #NOW) ⇒
+    (∀ a7. (<'tag', a7> = x) ⇒ (⊥))"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ x #NOW.
+    (Restr_lettagadz_4_12222222_1( x ) @ #NOW) ⇒
+    (∀ a7. (<'tag', a7> = x) ⇒ (⊥))"
+  */
+
+rule (modulo E) lettagadz_4_12222222[color=#ffffff,
+                                     process="let <'tag', a7.1>=d(z.1)", issapicrule, role='Process']:
+   [ Let_1222222201( destructor.11, z.1 ) ]
+  --[ Restr_lettagadz_4_12222222_1( destructor.11 ) ]->
+   [ State_122222222( z.1 ) ]
+
+  /*
+  rule (modulo AC) lettagadz_4_12222222[color=#ffffff,
+                                        process="let <'tag', a7.1>=d(z.1)", issapicrule, role='Process']:
+     [ Let_1222222201( destructor, z ) ]
+    --[ Restr_lettagadz_4_12222222_1( destructor ) ]->
+     [ State_122222222( z ) ]
+  */
+
+rule (modulo E) p_0_122222221[color=#ffffff, process="0", issapicrule,
+                              role='Process']:
+   [ State_122222221( a7.1, z.1 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_122222221[color=#ffffff, process="0", issapicrule,
+                                 role='Process']:
+     [ State_122222221( a7, z ) ] --> [ ]
+  */
+
+rule (modulo E) eventDone_0_122222222[color=#ffffff,
+                                      process="event Done( );", issapicrule, role='Process']:
+   [ State_122222222( z.1 ) ] --[ Done( ) ]-> [ State_1222222221( z.1 ) ]
+
+  /*
+  rule (modulo AC) eventDone_0_122222222[color=#ffffff,
+                                         process="event Done( );", issapicrule, role='Process']:
+     [ State_122222222( z ) ] --[ Done( ) ]-> [ State_1222222221( z ) ]
+  */
+
+rule (modulo E) p_0_1222222221[color=#ffffff, process="0", issapicrule,
+                               role='Process']:
+   [ State_1222222221( z.1 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_1222222221[color=#ffffff, process="0", issapicrule,
+                                  role='Process']:
+     [ State_1222222221( z ) ] --> [ ]
+  */
+
+restriction single_session:
+  "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
+  */
+
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.13.0
+Maude version 3.5.1
+Git revision: 5a753a172c7984e9403bc650a37a8223367bc1c5, branch: sapic-destructors
+Compiled at: 2026-09-25 19:30:59.558380567 UTC
+*/
+
+end
+/* Output
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/regression/trace/soundness-sapic-destructor-failure-chain.spthy
+
+  output:          examples/regression/trace/soundness-sapic-destructor-failure-chain.spthy.tmp
+  processing time: 1.95s
+  
+  final_failure_reachable (exists-trace): verified (3 steps)
+
+==============================================================================
+*/
