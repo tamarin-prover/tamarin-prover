@@ -1,0 +1,1276 @@
+theory SoundnessSapicNestedDestructorProgress
+
+begin
+
+// Function signature and definition of the equational theory E
+
+functions: c/1, d/1 [destructor], fst/1, pair/2, snd/1
+equations: d(c(x)) = x, fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
+
+heuristic: p
+
+lemma failure_reachable:
+  exists-trace "∃ #i. Started( 'failure' ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #i. (Started( 'failure' ) @ #i)"
+*/
+simplify
+solve( State_11( ~prog_ ) ▶₀ #t.1 )
+  case Init
+  solve( State_12( ~prog_ ) ▶₀ #t.2 )
+    case Init
+    solve( State_2( ~prog_ ) ▶₀ #t.3 )
+      case Init
+      solve( Started( 'failure' ) @ #i )
+        case eventStartedfailure_0_1111
+        solve( State_1111( ~prog_, ~prog_1111, x ) ▶₀ #i )
+          case inx_0_111
+          solve( State_11( ~prog_ ) ▶₀ #t.4 )
+            case Init
+            solve( State_12( ~prog_ ) ▶₀ #t.4 )
+              case Init
+              solve( State_2( ~prog_ ) ▶₀ #t.4 )
+                case Init
+                solve( (∃ #t. (ProgressTo_1111111( ~prog_1111 ) @ #t))  ∥
+                       (∃ #t. (ProgressTo_1111121( ~prog_1111 ) @ #t)) )
+                  case case_2
+                  solve( State_111112( ~prog_.1, ~prog_1111, x.1 ) ▶₀ #t.4 )
+                    case letydxdbad_2_11111
+                    solve( State_11( ~prog_ ) ▶₀ #t.5 )
+                      case Init
+                      solve( State_12( ~prog_ ) ▶₀ #t.5 )
+                        case Init
+                        solve( State_2( ~prog_ ) ▶₀ #t.5 )
+                          case Init
+                          SOLVED // trace found
+                        qed
+                      qed
+                    qed
+                  qed
+                qed
+              qed
+            qed
+          qed
+        qed
+      qed
+    qed
+  qed
+qed
+
+lemma failure_progress:
+  all-traces
+  "∀ #i.
+    (Started( 'failure' ) @ #i) ⇒
+    (∃ #j. (Finished( 'failure' ) @ #j) ∧ (#i < #j))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ #i.
+  (Started( 'failure' ) @ #i)
+ ∧
+  ∀ #j. (Finished( 'failure' ) @ #j) ⇒ ¬(#i < #j)"
+*/
+simplify
+solve( State_11( ~prog_ ) ▶₀ #t.1 )
+  case Init
+  solve( State_12( ~prog_ ) ▶₀ #t.2 )
+    case Init
+    solve( State_2( ~prog_ ) ▶₀ #t.3 )
+      case Init
+      solve( Started( 'failure' ) @ #i )
+        case eventStartedfailure_0_1111
+        solve( State_1111( ~prog_, ~prog_1111, x ) ▶₀ #i )
+          case inx_0_111
+          solve( State_11( ~prog_ ) ▶₀ #t.4 )
+            case Init
+            solve( State_12( ~prog_ ) ▶₀ #t.4 )
+              case Init
+              solve( State_2( ~prog_ ) ▶₀ #t.4 )
+                case Init
+                solve( (∃ #t. (ProgressTo_1111111( ~prog_1111 ) @ #t))  ∥
+                       (∃ #t. (ProgressTo_1111121( ~prog_1111 ) @ #t)) )
+                  case case_1
+                  by solve( State_111111( ~prog_.1, ~prog_1111, x.1, y ) ▶₀ #t.4 )
+                next
+                  case case_2
+                  by contradiction /* cyclic */
+                qed
+              qed
+            qed
+          qed
+        qed
+      qed
+    qed
+  qed
+qed
+
+lemma success_reachable:
+  exists-trace "∃ #i. Started( 'success' ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #i. (Started( 'success' ) @ #i)"
+*/
+simplify
+solve( State_11( ~prog_ ) ▶₀ #t.1 )
+  case Init
+  solve( State_12( ~prog_ ) ▶₀ #t.2 )
+    case Init
+    solve( State_2( ~prog_ ) ▶₀ #t.3 )
+      case Init
+      solve( Started( 'success' ) @ #i )
+        case eventStartedsuccess_0_1211
+        solve( State_1211( ~prog_, ~prog_1211, x ) ▶₀ #i )
+          case inx_0_121
+          solve( State_11( ~prog_ ) ▶₀ #t.4 )
+            case Init
+            solve( State_12( ~prog_ ) ▶₀ #t.4 )
+              case Init
+              solve( State_2( ~prog_ ) ▶₀ #t.4 )
+                case Init
+                solve( (∃ #t. (ProgressTo_1211111( ~prog_1211 ) @ #t))  ∥
+                       (∃ #t. (ProgressTo_1211121( ~prog_1211 ) @ #t)) )
+                  case case_1
+                  solve( State_121111( ~prog_.1, ~prog_1211, x.1, y ) ▶₀ #t.4 )
+                    case letydcxdcb_9_12111
+                    solve( State_11( ~prog_ ) ▶₀ #t.5 )
+                      case Init
+                      solve( State_12( ~prog_ ) ▶₀ #t.5 )
+                        case Init
+                        solve( State_2( ~prog_ ) ▶₀ #t.5 )
+                          case Init
+                          SOLVED // trace found
+                        qed
+                      qed
+                    qed
+                  qed
+                qed
+              qed
+            qed
+          qed
+        qed
+      qed
+    qed
+  qed
+qed
+
+lemma success_progress:
+  all-traces
+  "∀ #i.
+    (Started( 'success' ) @ #i) ⇒
+    (∃ x y #j. (Result( x, y ) @ #j) ∧ (#i < #j))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ #i.
+  (Started( 'success' ) @ #i)
+ ∧
+  ∀ x y #j. (Result( x, y ) @ #j) ⇒ ¬(#i < #j)"
+*/
+simplify
+solve( State_11( ~prog_ ) ▶₀ #t.1 )
+  case Init
+  solve( State_12( ~prog_ ) ▶₀ #t.2 )
+    case Init
+    solve( State_2( ~prog_ ) ▶₀ #t.3 )
+      case Init
+      solve( Started( 'success' ) @ #i )
+        case eventStartedsuccess_0_1211
+        solve( State_1211( ~prog_, ~prog_1211, x ) ▶₀ #i )
+          case inx_0_121
+          solve( State_11( ~prog_ ) ▶₀ #t.4 )
+            case Init
+            solve( State_12( ~prog_ ) ▶₀ #t.4 )
+              case Init
+              solve( State_2( ~prog_ ) ▶₀ #t.4 )
+                case Init
+                solve( (∃ #t. (ProgressTo_1211111( ~prog_1211 ) @ #t))  ∥
+                       (∃ #t. (ProgressTo_1211121( ~prog_1211 ) @ #t)) )
+                  case case_1
+                  by contradiction /* cyclic */
+                next
+                  case case_2
+                  by solve( State_121112( ~prog_.1, ~prog_1211, x.1 ) ▶₀ #t.4 )
+                qed
+              qed
+            qed
+          qed
+        qed
+      qed
+    qed
+  qed
+qed
+
+lemma result_preserved:
+  all-traces "∀ x y #i. (Result( x, y ) @ #i) ⇒ (y = <x, 'b'>)"
+/*
+guarded formula characterizing all counter-examples:
+"∃ x y #i. (Result( x, y ) @ #i) ∧ ¬(y = <x, 'b'>)"
+*/
+simplify
+solve( State_121111( ~prog_, ~prog_1211, x, y ) ▶₀ #i )
+  case letydcxdcb_9_12111
+  by contradiction /* from formulas */
+qed
+
+lemma omitted_reachable:
+  exists-trace "∃ #i. Omitted( c('a') ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #i. (Omitted( c('a') ) @ #i)"
+*/
+simplify
+solve( State_211( ~prog_, ~prog_211, c('a') ) ▶₀ #i )
+  case inx_0_21
+  solve( State_11( ~prog_ ) ▶₀ #t.1 )
+    case Init
+    solve( State_12( ~prog_ ) ▶₀ #t.2 )
+      case Init
+      solve( State_2( ~prog_ ) ▶₀ #t.3 )
+        case Init
+        solve( State_11( ~prog_ ) ▶₀ #t.3 )
+          case Init
+          solve( State_12( ~prog_ ) ▶₀ #t.3 )
+            case Init
+            solve( State_2( ~prog_ ) ▶₀ #t.3 )
+              case Init
+              solve( (∃ #t. (ProgressTo_211111( ~prog_211 ) @ #t))  ∥
+                     (∃ #t. (ProgressTo_21112( ~prog_211 ) @ #t)) )
+                case case_2
+                solve( ProgressTo_21112( ~prog_211 ) @ #t.3 )
+                  case letydxdbad_6_2111
+                  solve( Let_211102( 'bad', ~prog_.1, ~prog_211, x, destructor ) ▶₀ #t.3 )
+                    case letydxdbad_3_2111
+                    solve( State_11( ~prog_ ) ▶₀ #t.4 )
+                      case Init
+                      solve( State_12( ~prog_ ) ▶₀ #t.4 )
+                        case Init
+                        solve( State_2( ~prog_ ) ▶₀ #t.4 )
+                          case Init
+                          solve( !KU( c('a') ) @ #vk )
+                            case c_c
+                            SOLVED // trace found
+                          qed
+                        qed
+                      qed
+                    qed
+                  qed
+                qed
+              qed
+            qed
+          qed
+        qed
+      qed
+    qed
+  qed
+qed
+
+lemma no_wrong:
+  all-traces "∀ #i. (Wrong( ) @ #i) ⇒ (⊥)"
+/*
+guarded formula characterizing all counter-examples:
+"∃ #i. (Wrong( ) @ #i)"
+*/
+simplify
+solve( State_11( ~prog_ ) ▶₀ #t.1 )
+  case Init
+  solve( State_12( ~prog_ ) ▶₀ #t.2 )
+    case Init
+    solve( State_2( ~prog_ ) ▶₀ #t.3 )
+      case Init
+      solve( Wrong( ) @ #i )
+        case eventWrong_0_111111
+        by solve( State_111111( ~prog_, ~prog_1111, x, y ) ▶₀ #i )
+      next
+        case eventWrong_0_121112
+        by solve( State_121112( ~prog_, ~prog_1211, x ) ▶₀ #i )
+      next
+        case eventWrong_0_21111
+        by solve( State_21111( ~prog_, ~prog_211, x, y ) ▶₀ #i )
+      qed
+    qed
+  qed
+qed
+
+rule (modulo E) Failure_0_11[color=#ffffff, process="Failure();",
+                             issapicrule, role='Process']:
+   [ State_11( ~prog_ ) ]
+  --[ ProgressTo_111( ~prog_ ) ]->
+   [ State_111( ~prog_ ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) inx_0_111[color=#408057, process="in(x.1);", issapicrule,
+                          role='Failure']:
+   [ Fr( ~prog_1111 ), State_111( ~prog_ ), In( x.1 ) ]
+  --[ ProgressFrom_1111( ~prog_1111 ) ]->
+   [ State_1111( ~prog_, ~prog_1111, x.1 ) ]
+
+  /*
+  rule (modulo AC) inx_0_111[color=#408057, process="in(x.1);",
+                             issapicrule, role='Failure']:
+     [ Fr( ~prog_1111 ), State_111( ~prog_ ), In( x ) ]
+    --[ ProgressFrom_1111( ~prog_1111 ) ]->
+     [ State_1111( ~prog_, ~prog_1111, x ) ]
+  */
+
+rule (modulo E) eventStartedfailure_0_1111[color=#408057,
+                                           process="let y.1=<d(x.1), d('bad')>", issapicrule, role='Failure']:
+   [ State_1111( ~prog_, ~prog_1111, x.1 ) ]
+  --[ Started( 'failure' ) ]->
+   [ Let_111111( x.1, ~prog_, ~prog_1111, x.1 ) ]
+
+  /*
+  rule (modulo AC) eventStartedfailure_0_1111[color=#408057,
+                                              process="let y.1=<d(x.1), d('bad')>", issapicrule,
+                                              role='Failure']:
+     [ State_1111( ~prog_, ~prog_1111, x ) ]
+    --[ Started( 'failure' ) ]->
+     [ Let_111111( x, ~prog_, ~prog_1111, x ) ]
+  */
+
+rule (modulo E) letydxdbad_1_11111[color=#408057,
+                                   process="let y.1=<d(x.1), d('bad')>", no_derivcheck, issapicrule,
+                                   role='Failure']:
+   [ Let_111111( c(x.4), ~prog_, ~prog_1111, x.1 ) ]
+  -->
+   [ Let_1111101( x.4, ~prog_, ~prog_1111, x.1 ) ]
+
+  /*
+  rule (modulo AC) letydxdbad_1_11111[color=#408057,
+                                      process="let y.1=<d(x.1), d('bad')>", no_derivcheck, issapicrule,
+                                      role='Failure']:
+     [ Let_111111( c(x), ~prog_, ~prog_1111, x.1 ) ]
+    -->
+     [ Let_1111101( x, ~prog_, ~prog_1111, x.1 ) ]
+  */
+
+rule (modulo E) letydxdbad_3_11111[color=#408057,
+                                   process="let y.1=<d(x.1), d('bad')>", issapicrule, role='Failure']:
+   [ Let_1111101( destructor.6, ~prog_, ~prog_1111, x.1 ) ]
+  -->
+   [ Let_1111102( 'bad', ~prog_, ~prog_1111, x.1, destructor.6 ) ]
+
+  /*
+  rule (modulo AC) letydxdbad_3_11111[color=#408057,
+                                      process="let y.1=<d(x.1), d('bad')>", issapicrule, role='Failure']:
+     [ Let_1111101( destructor, ~prog_, ~prog_1111, x ) ]
+    -->
+     [ Let_1111102( 'bad', ~prog_, ~prog_1111, x, destructor ) ]
+  */
+
+rule (modulo E) letydxdbad_5_11111[color=#408057,
+                                   process="let y.1=<d(x.1), d('bad')>", no_derivcheck, issapicrule,
+                                   role='Failure']:
+   [ Let_1111102( c(x.4), ~prog_, ~prog_1111, x.1, destructor.6 ) ]
+  -->
+   [ Let_1111103( x.4, ~prog_, ~prog_1111, x.1, destructor.6 ) ]
+
+  /*
+  rule (modulo AC) letydxdbad_5_11111[color=#408057,
+                                      process="let y.1=<d(x.1), d('bad')>", no_derivcheck, issapicrule,
+                                      role='Failure']:
+     [ Let_1111102( c(x), ~prog_, ~prog_1111, x.1, destructor ) ]
+    -->
+     [ Let_1111103( x, ~prog_, ~prog_1111, x.1, destructor ) ]
+  */
+
+rule (modulo E) letydxdbad_7_11111[color=#408057,
+                                   process="let y.1=<d(x.1), d('bad')>", issapicrule, role='Failure']:
+   [ Let_1111103( destructor.7, ~prog_, ~prog_1111, x.1, destructor.6 ) ]
+  -->
+   [
+   Let_1111104( <destructor.6, destructor.7>, ~prog_, ~prog_1111, x.1,
+                destructor.6, destructor.7
+   )
+   ]
+
+  /*
+  rule (modulo AC) letydxdbad_7_11111[color=#408057,
+                                      process="let y.1=<d(x.1), d('bad')>", issapicrule, role='Failure']:
+     [ Let_1111103( destructor, ~prog_, ~prog_1111, x, destructor.1 ) ]
+    -->
+     [
+     Let_1111104( <destructor.1, destructor>, ~prog_, ~prog_1111, x,
+                  destructor.1, destructor
+     )
+     ]
+  */
+
+rule (modulo E) letydxdbad_9_11111[color=#408057,
+                                   process="let y.1=<d(x.1), d('bad')>", issapicrule, role='Failure']:
+   [ Let_1111104( y.1, ~prog_, ~prog_1111, x.1, destructor.6, destructor.7 )
+   ]
+  -->
+   [ State_111111( ~prog_, ~prog_1111, x.1, y.1 ) ]
+
+  /*
+  rule (modulo AC) letydxdbad_9_11111[color=#408057,
+                                      process="let y.1=<d(x.1), d('bad')>", issapicrule, role='Failure']:
+     [ Let_1111104( y, ~prog_, ~prog_1111, x, destructor, destructor.1 ) ]
+    -->
+     [ State_111111( ~prog_, ~prog_1111, x, y ) ]
+  */
+
+rule (modulo E) eventWrong_0_111111[color=#408057, process="0",
+                                    issapicrule, role='Failure']:
+   [ State_111111( ~prog_, ~prog_1111, x.1, y.1 ) ]
+  --[ ProgressTo_1111111( ~prog_1111 ), Wrong( ) ]->
+   [ ]
+
+  /*
+  rule (modulo AC) eventWrong_0_111111[color=#408057, process="0",
+                                       issapicrule, role='Failure']:
+     [ State_111111( ~prog_, ~prog_1111, x, y ) ]
+    --[ ProgressTo_1111111( ~prog_1111 ), Wrong( ) ]->
+     [ ]
+  */
+
+restriction Restr_letydxdbad_2_11111_1:
+  "∀ x #NOW.
+    (Restr_letydxdbad_2_11111_1( x ) @ #NOW) ⇒ (∀ x.1. (c(x.1) = x) ⇒ (⊥))"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ x #NOW.
+    (Restr_letydxdbad_2_11111_1( x ) @ #NOW) ⇒ (∀ x.1. (c(x.1) = x) ⇒ (⊥))"
+  */
+
+rule (modulo E) letydxdbad_2_11111[color=#408057,
+                                   process="let y.1=<d(x.1), d('bad')>", issapicrule, role='Failure']:
+   [ Let_111111( x.1, ~prog_, ~prog_1111, x.1 ) ]
+  --[ Restr_letydxdbad_2_11111_1( x.1 ) ]->
+   [ State_111112( ~prog_, ~prog_1111, x.1 ) ]
+
+  /*
+  rule (modulo AC) letydxdbad_2_11111[color=#408057,
+                                      process="let y.1=<d(x.1), d('bad')>", issapicrule, role='Failure']:
+     [ Let_111111( x, ~prog_, ~prog_1111, x ) ]
+    --[ Restr_letydxdbad_2_11111_1( x ) ]->
+     [ State_111112( ~prog_, ~prog_1111, x ) ]
+  */
+
+restriction Restr_letydxdbad_4_11111_1:
+  "∀ x #NOW.
+    (Restr_letydxdbad_4_11111_1( x ) @ #NOW) ⇒
+    (∀ destructor. (destructor = x) ⇒ (⊥))"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ x #NOW.
+    (Restr_letydxdbad_4_11111_1( x ) @ #NOW) ⇒
+    (∀ destructor. (destructor = x) ⇒ (⊥))"
+  */
+
+rule (modulo E) letydxdbad_4_11111[color=#408057,
+                                   process="let y.1=<d(x.1), d('bad')>", issapicrule, role='Failure']:
+   [ Let_1111101( destructor.8, ~prog_, ~prog_1111, x.1 ) ]
+  --[ Restr_letydxdbad_4_11111_1( destructor.8 ) ]->
+   [ State_111112( ~prog_, ~prog_1111, x.1 ) ]
+
+  /*
+  rule (modulo AC) letydxdbad_4_11111[color=#408057,
+                                      process="let y.1=<d(x.1), d('bad')>", issapicrule, role='Failure']:
+     [ Let_1111101( destructor, ~prog_, ~prog_1111, x ) ]
+    --[ Restr_letydxdbad_4_11111_1( destructor ) ]->
+     [ State_111112( ~prog_, ~prog_1111, x ) ]
+  */
+
+restriction Restr_letydxdbad_6_11111_1:
+  "∀ #NOW.
+    (Restr_letydxdbad_6_11111_1( ) @ #NOW) ⇒ (∀ x. (c(x) = 'bad') ⇒ (⊥))"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ #NOW.
+    (Restr_letydxdbad_6_11111_1( ) @ #NOW) ⇒ (∀ x. (c(x) = 'bad') ⇒ (⊥))"
+  */
+
+rule (modulo E) letydxdbad_6_11111[color=#408057,
+                                   process="let y.1=<d(x.1), d('bad')>", issapicrule, role='Failure']:
+   [ Let_1111102( 'bad', ~prog_, ~prog_1111, x.1, destructor.6 ) ]
+  --[ Restr_letydxdbad_6_11111_1( ) ]->
+   [ State_111112( ~prog_, ~prog_1111, x.1 ) ]
+
+  /*
+  rule (modulo AC) letydxdbad_6_11111[color=#408057,
+                                      process="let y.1=<d(x.1), d('bad')>", issapicrule, role='Failure']:
+     [ Let_1111102( 'bad', ~prog_, ~prog_1111, x, destructor ) ]
+    --[ Restr_letydxdbad_6_11111_1( ) ]->
+     [ State_111112( ~prog_, ~prog_1111, x ) ]
+  */
+
+restriction Restr_letydxdbad_8_11111_1:
+  "∀ x #NOW.
+    (Restr_letydxdbad_8_11111_1( x ) @ #NOW) ⇒
+    (∀ destructor. (destructor = x) ⇒ (⊥))"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ x #NOW.
+    (Restr_letydxdbad_8_11111_1( x ) @ #NOW) ⇒
+    (∀ destructor. (destructor = x) ⇒ (⊥))"
+  */
+
+rule (modulo E) letydxdbad_8_11111[color=#408057,
+                                   process="let y.1=<d(x.1), d('bad')>", issapicrule, role='Failure']:
+   [ Let_1111103( destructor.9, ~prog_, ~prog_1111, x.1, destructor.6 ) ]
+  --[ Restr_letydxdbad_8_11111_1( destructor.9 ) ]->
+   [ State_111112( ~prog_, ~prog_1111, x.1 ) ]
+
+  /*
+  rule (modulo AC) letydxdbad_8_11111[color=#408057,
+                                      process="let y.1=<d(x.1), d('bad')>", issapicrule, role='Failure']:
+     [ Let_1111103( destructor, ~prog_, ~prog_1111, x, destructor.1 ) ]
+    --[ Restr_letydxdbad_8_11111_1( destructor ) ]->
+     [ State_111112( ~prog_, ~prog_1111, x ) ]
+  */
+
+restriction Restr_letydxdbad_10_11111_1:
+  "∀ x #NOW.
+    (Restr_letydxdbad_10_11111_1( x ) @ #NOW) ⇒ (∀ y. (y = x) ⇒ (⊥))"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ x #NOW.
+    (Restr_letydxdbad_10_11111_1( x ) @ #NOW) ⇒ (∀ y. (y = x) ⇒ (⊥))"
+  */
+
+rule (modulo E) letydxdbad_10_11111[color=#408057,
+                                    process="let y.1=<d(x.1), d('bad')>", issapicrule, role='Failure']:
+   [
+   Let_1111104( <destructor.6, destructor.7>, ~prog_, ~prog_1111, x.1,
+                destructor.6, destructor.7
+   )
+   ]
+  --[ Restr_letydxdbad_10_11111_1( <destructor.6, destructor.7> ) ]->
+   [ State_111112( ~prog_, ~prog_1111, x.1 ) ]
+
+  /*
+  rule (modulo AC) letydxdbad_10_11111[color=#408057,
+                                       process="let y.1=<d(x.1), d('bad')>", issapicrule, role='Failure']:
+     [
+     Let_1111104( <destructor, destructor.1>, ~prog_, ~prog_1111, x,
+                  destructor, destructor.1
+     )
+     ]
+    --[ Restr_letydxdbad_10_11111_1( <destructor, destructor.1> ) ]->
+     [ State_111112( ~prog_, ~prog_1111, x ) ]
+  */
+
+rule (modulo E) eventFinishedfailure_0_111112[color=#408057, process="0",
+                                              issapicrule, role='Failure']:
+   [ State_111112( ~prog_, ~prog_1111, x.1 ) ]
+  --[ ProgressTo_1111121( ~prog_1111 ), Finished( 'failure' ) ]->
+   [ ]
+
+  /*
+  rule (modulo AC) eventFinishedfailure_0_111112[color=#408057,
+                                                 process="0", issapicrule, role='Failure']:
+     [ State_111112( ~prog_, ~prog_1111, x ) ]
+    --[ ProgressTo_1111121( ~prog_1111 ), Finished( 'failure' ) ]->
+     [ ]
+  */
+
+rule (modulo E) Success_0_12[color=#ffffff, process="Success();",
+                             issapicrule, role='Process']:
+   [ State_12( ~prog_ ) ]
+  --[ ProgressTo_121( ~prog_ ) ]->
+   [ State_121( ~prog_ ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) inx_0_121[color=#724080, process="in(x.2);", issapicrule,
+                          role='Success']:
+   [ Fr( ~prog_1211 ), State_121( ~prog_ ), In( x.2 ) ]
+  --[ ProgressFrom_1211( ~prog_1211 ) ]->
+   [ State_1211( ~prog_, ~prog_1211, x.2 ) ]
+
+  /*
+  rule (modulo AC) inx_0_121[color=#724080, process="in(x.2);",
+                             issapicrule, role='Success']:
+     [ Fr( ~prog_1211 ), State_121( ~prog_ ), In( x ) ]
+    --[ ProgressFrom_1211( ~prog_1211 ) ]->
+     [ State_1211( ~prog_, ~prog_1211, x ) ]
+  */
+
+rule (modulo E) eventStartedsuccess_0_1211[color=#724080,
+                                           process="let y.2=<d(c(x.2)), d(c('b'))>", issapicrule,
+                                           role='Success']:
+   [ State_1211( ~prog_, ~prog_1211, x.2 ) ]
+  --[ Started( 'success' ) ]->
+   [ Let_121111( c(x.2), ~prog_, ~prog_1211, x.2 ) ]
+
+  /*
+  rule (modulo AC) eventStartedsuccess_0_1211[color=#724080,
+                                              process="let y.2=<d(c(x.2)), d(c('b'))>", issapicrule,
+                                              role='Success']:
+     [ State_1211( ~prog_, ~prog_1211, x ) ]
+    --[ Started( 'success' ) ]->
+     [ Let_121111( c(x), ~prog_, ~prog_1211, x ) ]
+  */
+
+rule (modulo E) letydcxdcb_1_12111[color=#724080,
+                                   process="let y.2=<d(c(x.2)), d(c('b'))>", no_derivcheck, issapicrule,
+                                   role='Success']:
+   [ Let_121111( c(x.4), ~prog_, ~prog_1211, x.2 ) ]
+  -->
+   [ Let_1211101( x.4, ~prog_, ~prog_1211, x.2 ) ]
+
+  /*
+  rule (modulo AC) letydcxdcb_1_12111[color=#724080,
+                                      process="let y.2=<d(c(x.2)), d(c('b'))>", no_derivcheck, issapicrule,
+                                      role='Success']:
+     [ Let_121111( c(x), ~prog_, ~prog_1211, x.1 ) ]
+    -->
+     [ Let_1211101( x, ~prog_, ~prog_1211, x.1 ) ]
+  */
+
+rule (modulo E) letydcxdcb_3_12111[color=#724080,
+                                   process="let y.2=<d(c(x.2)), d(c('b'))>", issapicrule, role='Success']:
+   [ Let_1211101( destructor.10, ~prog_, ~prog_1211, x.2 ) ]
+  -->
+   [ Let_1211102( c('b'), ~prog_, ~prog_1211, x.2, destructor.10 ) ]
+
+  /*
+  rule (modulo AC) letydcxdcb_3_12111[color=#724080,
+                                      process="let y.2=<d(c(x.2)), d(c('b'))>", issapicrule, role='Success']:
+     [ Let_1211101( destructor, ~prog_, ~prog_1211, x ) ]
+    -->
+     [ Let_1211102( c('b'), ~prog_, ~prog_1211, x, destructor ) ]
+  */
+
+rule (modulo E) letydcxdcb_5_12111[color=#724080,
+                                   process="let y.2=<d(c(x.2)), d(c('b'))>", no_derivcheck, issapicrule,
+                                   role='Success']:
+   [ Let_1211102( c(x.4), ~prog_, ~prog_1211, x.2, destructor.10 ) ]
+  -->
+   [ Let_1211103( x.4, ~prog_, ~prog_1211, x.2, destructor.10 ) ]
+
+  /*
+  rule (modulo AC) letydcxdcb_5_12111[color=#724080,
+                                      process="let y.2=<d(c(x.2)), d(c('b'))>", no_derivcheck, issapicrule,
+                                      role='Success']:
+     [ Let_1211102( c(x), ~prog_, ~prog_1211, x.1, destructor ) ]
+    -->
+     [ Let_1211103( x, ~prog_, ~prog_1211, x.1, destructor ) ]
+  */
+
+rule (modulo E) letydcxdcb_7_12111[color=#724080,
+                                   process="let y.2=<d(c(x.2)), d(c('b'))>", issapicrule, role='Success']:
+   [ Let_1211103( destructor.11, ~prog_, ~prog_1211, x.2, destructor.10 ) ]
+  -->
+   [
+   Let_1211104( <destructor.10, destructor.11>, ~prog_, ~prog_1211, x.2,
+                destructor.10, destructor.11
+   )
+   ]
+
+  /*
+  rule (modulo AC) letydcxdcb_7_12111[color=#724080,
+                                      process="let y.2=<d(c(x.2)), d(c('b'))>", issapicrule, role='Success']:
+     [ Let_1211103( destructor, ~prog_, ~prog_1211, x, destructor.1 ) ]
+    -->
+     [
+     Let_1211104( <destructor.1, destructor>, ~prog_, ~prog_1211, x,
+                  destructor.1, destructor
+     )
+     ]
+  */
+
+rule (modulo E) letydcxdcb_9_12111[color=#724080,
+                                   process="let y.2=<d(c(x.2)), d(c('b'))>", issapicrule, role='Success']:
+   [
+   Let_1211104( y.2, ~prog_, ~prog_1211, x.2, destructor.10, destructor.11 )
+   ]
+  -->
+   [ State_121111( ~prog_, ~prog_1211, x.2, y.2 ) ]
+
+  /*
+  rule (modulo AC) letydcxdcb_9_12111[color=#724080,
+                                      process="let y.2=<d(c(x.2)), d(c('b'))>", issapicrule, role='Success']:
+     [ Let_1211104( y, ~prog_, ~prog_1211, x, destructor, destructor.1 ) ]
+    -->
+     [ State_121111( ~prog_, ~prog_1211, x, y ) ]
+  */
+
+rule (modulo E) eventResultxy_0_121111[color=#724080, process="0",
+                                       issapicrule, role='Success']:
+   [ State_121111( ~prog_, ~prog_1211, x.2, y.2 ) ]
+  --[ ProgressTo_1211111( ~prog_1211 ), Result( x.2, y.2 ) ]->
+   [ ]
+
+  /*
+  rule (modulo AC) eventResultxy_0_121111[color=#724080, process="0",
+                                          issapicrule, role='Success']:
+     [ State_121111( ~prog_, ~prog_1211, x, y ) ]
+    --[ ProgressTo_1211111( ~prog_1211 ), Result( x, y ) ]->
+     [ ]
+  */
+
+restriction Restr_letydcxdcb_2_12111_1:
+  "∀ x #NOW.
+    (Restr_letydcxdcb_2_12111_1( x ) @ #NOW) ⇒ (∀ x.1. (c(x.1) = x) ⇒ (⊥))"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ x #NOW.
+    (Restr_letydcxdcb_2_12111_1( x ) @ #NOW) ⇒ (∀ x.1. (c(x.1) = x) ⇒ (⊥))"
+  */
+
+rule (modulo E) letydcxdcb_2_12111[color=#724080,
+                                   process="let y.2=<d(c(x.2)), d(c('b'))>", issapicrule, role='Success']:
+   [ Let_121111( c(x.2), ~prog_, ~prog_1211, x.2 ) ]
+  --[ Restr_letydcxdcb_2_12111_1( c(x.2) ) ]->
+   [ State_121112( ~prog_, ~prog_1211, x.2 ) ]
+
+  /*
+  rule (modulo AC) letydcxdcb_2_12111[color=#724080,
+                                      process="let y.2=<d(c(x.2)), d(c('b'))>", issapicrule, role='Success']:
+     [ Let_121111( c(x), ~prog_, ~prog_1211, x ) ]
+    --[ Restr_letydcxdcb_2_12111_1( c(x) ) ]->
+     [ State_121112( ~prog_, ~prog_1211, x ) ]
+  */
+
+restriction Restr_letydcxdcb_4_12111_1:
+  "∀ x #NOW.
+    (Restr_letydcxdcb_4_12111_1( x ) @ #NOW) ⇒
+    (∀ destructor. (destructor = x) ⇒ (⊥))"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ x #NOW.
+    (Restr_letydcxdcb_4_12111_1( x ) @ #NOW) ⇒
+    (∀ destructor. (destructor = x) ⇒ (⊥))"
+  */
+
+rule (modulo E) letydcxdcb_4_12111[color=#724080,
+                                   process="let y.2=<d(c(x.2)), d(c('b'))>", issapicrule, role='Success']:
+   [ Let_1211101( destructor.12, ~prog_, ~prog_1211, x.2 ) ]
+  --[ Restr_letydcxdcb_4_12111_1( destructor.12 ) ]->
+   [ State_121112( ~prog_, ~prog_1211, x.2 ) ]
+
+  /*
+  rule (modulo AC) letydcxdcb_4_12111[color=#724080,
+                                      process="let y.2=<d(c(x.2)), d(c('b'))>", issapicrule, role='Success']:
+     [ Let_1211101( destructor, ~prog_, ~prog_1211, x ) ]
+    --[ Restr_letydcxdcb_4_12111_1( destructor ) ]->
+     [ State_121112( ~prog_, ~prog_1211, x ) ]
+  */
+
+restriction Restr_letydcxdcb_6_12111_1:
+  "∀ #NOW.
+    (Restr_letydcxdcb_6_12111_1( ) @ #NOW) ⇒ (∀ x. (c(x) = c('b')) ⇒ (⊥))"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ #NOW.
+    (Restr_letydcxdcb_6_12111_1( ) @ #NOW) ⇒ (∀ x. (c(x) = c('b')) ⇒ (⊥))"
+  */
+
+rule (modulo E) letydcxdcb_6_12111[color=#724080,
+                                   process="let y.2=<d(c(x.2)), d(c('b'))>", issapicrule, role='Success']:
+   [ Let_1211102( c('b'), ~prog_, ~prog_1211, x.2, destructor.10 ) ]
+  --[ Restr_letydcxdcb_6_12111_1( ) ]->
+   [ State_121112( ~prog_, ~prog_1211, x.2 ) ]
+
+  /*
+  rule (modulo AC) letydcxdcb_6_12111[color=#724080,
+                                      process="let y.2=<d(c(x.2)), d(c('b'))>", issapicrule, role='Success']:
+     [ Let_1211102( c('b'), ~prog_, ~prog_1211, x, destructor ) ]
+    --[ Restr_letydcxdcb_6_12111_1( ) ]->
+     [ State_121112( ~prog_, ~prog_1211, x ) ]
+  */
+
+restriction Restr_letydcxdcb_8_12111_1:
+  "∀ x #NOW.
+    (Restr_letydcxdcb_8_12111_1( x ) @ #NOW) ⇒
+    (∀ destructor. (destructor = x) ⇒ (⊥))"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ x #NOW.
+    (Restr_letydcxdcb_8_12111_1( x ) @ #NOW) ⇒
+    (∀ destructor. (destructor = x) ⇒ (⊥))"
+  */
+
+rule (modulo E) letydcxdcb_8_12111[color=#724080,
+                                   process="let y.2=<d(c(x.2)), d(c('b'))>", issapicrule, role='Success']:
+   [ Let_1211103( destructor.13, ~prog_, ~prog_1211, x.2, destructor.10 ) ]
+  --[ Restr_letydcxdcb_8_12111_1( destructor.13 ) ]->
+   [ State_121112( ~prog_, ~prog_1211, x.2 ) ]
+
+  /*
+  rule (modulo AC) letydcxdcb_8_12111[color=#724080,
+                                      process="let y.2=<d(c(x.2)), d(c('b'))>", issapicrule, role='Success']:
+     [ Let_1211103( destructor, ~prog_, ~prog_1211, x, destructor.1 ) ]
+    --[ Restr_letydcxdcb_8_12111_1( destructor ) ]->
+     [ State_121112( ~prog_, ~prog_1211, x ) ]
+  */
+
+restriction Restr_letydcxdcb_10_12111_1:
+  "∀ x #NOW.
+    (Restr_letydcxdcb_10_12111_1( x ) @ #NOW) ⇒ (∀ y. (y = x) ⇒ (⊥))"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ x #NOW.
+    (Restr_letydcxdcb_10_12111_1( x ) @ #NOW) ⇒ (∀ y. (y = x) ⇒ (⊥))"
+  */
+
+rule (modulo E) letydcxdcb_10_12111[color=#724080,
+                                    process="let y.2=<d(c(x.2)), d(c('b'))>", issapicrule, role='Success']:
+   [
+   Let_1211104( <destructor.10, destructor.11>, ~prog_, ~prog_1211, x.2,
+                destructor.10, destructor.11
+   )
+   ]
+  --[ Restr_letydcxdcb_10_12111_1( <destructor.10, destructor.11> ) ]->
+   [ State_121112( ~prog_, ~prog_1211, x.2 ) ]
+
+  /*
+  rule (modulo AC) letydcxdcb_10_12111[color=#724080,
+                                       process="let y.2=<d(c(x.2)), d(c('b'))>", issapicrule, role='Success']:
+     [
+     Let_1211104( <destructor, destructor.1>, ~prog_, ~prog_1211, x,
+                  destructor, destructor.1
+     )
+     ]
+    --[ Restr_letydcxdcb_10_12111_1( <destructor, destructor.1> ) ]->
+     [ State_121112( ~prog_, ~prog_1211, x ) ]
+  */
+
+rule (modulo E) eventWrong_0_121112[color=#724080, process="0",
+                                    issapicrule, role='Success']:
+   [ State_121112( ~prog_, ~prog_1211, x.2 ) ]
+  --[ ProgressTo_1211121( ~prog_1211 ), Wrong( ) ]->
+   [ ]
+
+  /*
+  rule (modulo AC) eventWrong_0_121112[color=#724080, process="0",
+                                       issapicrule, role='Success']:
+     [ State_121112( ~prog_, ~prog_1211, x ) ]
+    --[ ProgressTo_1211121( ~prog_1211 ), Wrong( ) ]->
+     [ ]
+  */
+
+rule (modulo E) Init[color=#ffffff, process="|", issapicrule,
+                     role='Process']:
+   [ Fr( ~prog_ ) ]
+  --[ ProgressFrom_( ~prog_ ), Init( ) ]->
+   [ State_11( ~prog_ ), State_12( ~prog_ ), State_2( ~prog_ ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Omitted_0_2[color=#ffffff, process="Omitted();",
+                            issapicrule, role='Process']:
+   [ State_2( ~prog_ ) ]
+  --[ ProgressTo_21( ~prog_ ) ]->
+   [ State_21( ~prog_ ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) inx_0_21[color=#806240, process="in(x.3);", issapicrule,
+                         role='Omitted']:
+   [ Fr( ~prog_211 ), State_21( ~prog_ ), In( x.3 ) ]
+  --[ ProgressFrom_211( ~prog_211 ) ]->
+   [ State_211( ~prog_, ~prog_211, x.3 ) ]
+
+  /*
+  rule (modulo AC) inx_0_21[color=#806240, process="in(x.3);", issapicrule,
+                            role='Omitted']:
+     [ Fr( ~prog_211 ), State_21( ~prog_ ), In( x ) ]
+    --[ ProgressFrom_211( ~prog_211 ) ]->
+     [ State_211( ~prog_, ~prog_211, x ) ]
+  */
+
+rule (modulo E) eventOmittedx_0_211[color=#806240,
+                                    process="let y.3=<d(x.3), d('bad')>", issapicrule, role='Omitted']:
+   [ State_211( ~prog_, ~prog_211, x.3 ) ]
+  --[ Omitted( x.3 ) ]->
+   [ Let_21111( x.3, ~prog_, ~prog_211, x.3 ) ]
+
+  /*
+  rule (modulo AC) eventOmittedx_0_211[color=#806240,
+                                       process="let y.3=<d(x.3), d('bad')>", issapicrule, role='Omitted']:
+     [ State_211( ~prog_, ~prog_211, x ) ]
+    --[ Omitted( x ) ]->
+     [ Let_21111( x, ~prog_, ~prog_211, x ) ]
+  */
+
+rule (modulo E) letydxdbad_1_2111[color=#806240,
+                                  process="let y.3=<d(x.3), d('bad')>", no_derivcheck, issapicrule,
+                                  role='Omitted']:
+   [ Let_21111( c(x.4), ~prog_, ~prog_211, x.3 ) ]
+  -->
+   [ Let_211101( x.4, ~prog_, ~prog_211, x.3 ) ]
+
+  /*
+  rule (modulo AC) letydxdbad_1_2111[color=#806240,
+                                     process="let y.3=<d(x.3), d('bad')>", no_derivcheck, issapicrule,
+                                     role='Omitted']:
+     [ Let_21111( c(x), ~prog_, ~prog_211, x.1 ) ]
+    -->
+     [ Let_211101( x, ~prog_, ~prog_211, x.1 ) ]
+  */
+
+rule (modulo E) letydxdbad_3_2111[color=#806240,
+                                  process="let y.3=<d(x.3), d('bad')>", issapicrule, role='Omitted']:
+   [ Let_211101( destructor.14, ~prog_, ~prog_211, x.3 ) ]
+  -->
+   [ Let_211102( 'bad', ~prog_, ~prog_211, x.3, destructor.14 ) ]
+
+  /*
+  rule (modulo AC) letydxdbad_3_2111[color=#806240,
+                                     process="let y.3=<d(x.3), d('bad')>", issapicrule, role='Omitted']:
+     [ Let_211101( destructor, ~prog_, ~prog_211, x ) ]
+    -->
+     [ Let_211102( 'bad', ~prog_, ~prog_211, x, destructor ) ]
+  */
+
+rule (modulo E) letydxdbad_5_2111[color=#806240,
+                                  process="let y.3=<d(x.3), d('bad')>", no_derivcheck, issapicrule,
+                                  role='Omitted']:
+   [ Let_211102( c(x.4), ~prog_, ~prog_211, x.3, destructor.14 ) ]
+  -->
+   [ Let_211103( x.4, ~prog_, ~prog_211, x.3, destructor.14 ) ]
+
+  /*
+  rule (modulo AC) letydxdbad_5_2111[color=#806240,
+                                     process="let y.3=<d(x.3), d('bad')>", no_derivcheck, issapicrule,
+                                     role='Omitted']:
+     [ Let_211102( c(x), ~prog_, ~prog_211, x.1, destructor ) ]
+    -->
+     [ Let_211103( x, ~prog_, ~prog_211, x.1, destructor ) ]
+  */
+
+rule (modulo E) letydxdbad_7_2111[color=#806240,
+                                  process="let y.3=<d(x.3), d('bad')>", issapicrule, role='Omitted']:
+   [ Let_211103( destructor.15, ~prog_, ~prog_211, x.3, destructor.14 ) ]
+  -->
+   [
+   Let_211104( <destructor.14, destructor.15>, ~prog_, ~prog_211, x.3,
+               destructor.14, destructor.15
+   )
+   ]
+
+  /*
+  rule (modulo AC) letydxdbad_7_2111[color=#806240,
+                                     process="let y.3=<d(x.3), d('bad')>", issapicrule, role='Omitted']:
+     [ Let_211103( destructor, ~prog_, ~prog_211, x, destructor.1 ) ]
+    -->
+     [
+     Let_211104( <destructor.1, destructor>, ~prog_, ~prog_211, x,
+                 destructor.1, destructor
+     )
+     ]
+  */
+
+rule (modulo E) letydxdbad_9_2111[color=#806240,
+                                  process="let y.3=<d(x.3), d('bad')>", issapicrule, role='Omitted']:
+   [ Let_211104( y.3, ~prog_, ~prog_211, x.3, destructor.14, destructor.15 )
+   ]
+  -->
+   [ State_21111( ~prog_, ~prog_211, x.3, y.3 ) ]
+
+  /*
+  rule (modulo AC) letydxdbad_9_2111[color=#806240,
+                                     process="let y.3=<d(x.3), d('bad')>", issapicrule, role='Omitted']:
+     [ Let_211104( y, ~prog_, ~prog_211, x, destructor, destructor.1 ) ]
+    -->
+     [ State_21111( ~prog_, ~prog_211, x, y ) ]
+  */
+
+rule (modulo E) eventWrong_0_21111[color=#806240, process="0",
+                                   issapicrule, role='Omitted']:
+   [ State_21111( ~prog_, ~prog_211, x.3, y.3 ) ]
+  --[ ProgressTo_211111( ~prog_211 ), Wrong( ) ]->
+   [ ]
+
+  /*
+  rule (modulo AC) eventWrong_0_21111[color=#806240, process="0",
+                                      issapicrule, role='Omitted']:
+     [ State_21111( ~prog_, ~prog_211, x, y ) ]
+    --[ ProgressTo_211111( ~prog_211 ), Wrong( ) ]->
+     [ ]
+  */
+
+restriction Restr_letydxdbad_2_2111_1:
+  "∀ x #NOW.
+    (Restr_letydxdbad_2_2111_1( x ) @ #NOW) ⇒ (∀ x.1. (c(x.1) = x) ⇒ (⊥))"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ x #NOW.
+    (Restr_letydxdbad_2_2111_1( x ) @ #NOW) ⇒ (∀ x.1. (c(x.1) = x) ⇒ (⊥))"
+  */
+
+rule (modulo E) letydxdbad_2_2111[color=#806240,
+                                  process="let y.3=<d(x.3), d('bad')>", issapicrule, role='Omitted']:
+   [ Let_21111( x.3, ~prog_, ~prog_211, x.3 ) ]
+  --[ ProgressTo_21112( ~prog_211 ), Restr_letydxdbad_2_2111_1( x.3 ) ]->
+   [ State_21112( ~prog_, ~prog_211, x.3 ) ]
+
+  /*
+  rule (modulo AC) letydxdbad_2_2111[color=#806240,
+                                     process="let y.3=<d(x.3), d('bad')>", issapicrule, role='Omitted']:
+     [ Let_21111( x, ~prog_, ~prog_211, x ) ]
+    --[ ProgressTo_21112( ~prog_211 ), Restr_letydxdbad_2_2111_1( x ) ]->
+     [ State_21112( ~prog_, ~prog_211, x ) ]
+  */
+
+restriction Restr_letydxdbad_4_2111_1:
+  "∀ x #NOW.
+    (Restr_letydxdbad_4_2111_1( x ) @ #NOW) ⇒
+    (∀ destructor. (destructor = x) ⇒ (⊥))"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ x #NOW.
+    (Restr_letydxdbad_4_2111_1( x ) @ #NOW) ⇒
+    (∀ destructor. (destructor = x) ⇒ (⊥))"
+  */
+
+rule (modulo E) letydxdbad_4_2111[color=#806240,
+                                  process="let y.3=<d(x.3), d('bad')>", issapicrule, role='Omitted']:
+   [ Let_211101( destructor.16, ~prog_, ~prog_211, x.3 ) ]
+  --[
+  ProgressTo_21112( ~prog_211 ), Restr_letydxdbad_4_2111_1( destructor.16 )
+  ]->
+   [ State_21112( ~prog_, ~prog_211, x.3 ) ]
+
+  /*
+  rule (modulo AC) letydxdbad_4_2111[color=#806240,
+                                     process="let y.3=<d(x.3), d('bad')>", issapicrule, role='Omitted']:
+     [ Let_211101( destructor, ~prog_, ~prog_211, x ) ]
+    --[
+    ProgressTo_21112( ~prog_211 ), Restr_letydxdbad_4_2111_1( destructor )
+    ]->
+     [ State_21112( ~prog_, ~prog_211, x ) ]
+  */
+
+restriction Restr_letydxdbad_6_2111_1:
+  "∀ #NOW.
+    (Restr_letydxdbad_6_2111_1( ) @ #NOW) ⇒ (∀ x. (c(x) = 'bad') ⇒ (⊥))"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ #NOW.
+    (Restr_letydxdbad_6_2111_1( ) @ #NOW) ⇒ (∀ x. (c(x) = 'bad') ⇒ (⊥))"
+  */
+
+rule (modulo E) letydxdbad_6_2111[color=#806240,
+                                  process="let y.3=<d(x.3), d('bad')>", issapicrule, role='Omitted']:
+   [ Let_211102( 'bad', ~prog_, ~prog_211, x.3, destructor.14 ) ]
+  --[ ProgressTo_21112( ~prog_211 ), Restr_letydxdbad_6_2111_1( ) ]->
+   [ State_21112( ~prog_, ~prog_211, x.3 ) ]
+
+  /*
+  rule (modulo AC) letydxdbad_6_2111[color=#806240,
+                                     process="let y.3=<d(x.3), d('bad')>", issapicrule, role='Omitted']:
+     [ Let_211102( 'bad', ~prog_, ~prog_211, x, destructor ) ]
+    --[ ProgressTo_21112( ~prog_211 ), Restr_letydxdbad_6_2111_1( ) ]->
+     [ State_21112( ~prog_, ~prog_211, x ) ]
+  */
+
+restriction Restr_letydxdbad_8_2111_1:
+  "∀ x #NOW.
+    (Restr_letydxdbad_8_2111_1( x ) @ #NOW) ⇒
+    (∀ destructor. (destructor = x) ⇒ (⊥))"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ x #NOW.
+    (Restr_letydxdbad_8_2111_1( x ) @ #NOW) ⇒
+    (∀ destructor. (destructor = x) ⇒ (⊥))"
+  */
+
+rule (modulo E) letydxdbad_8_2111[color=#806240,
+                                  process="let y.3=<d(x.3), d('bad')>", issapicrule, role='Omitted']:
+   [ Let_211103( destructor.17, ~prog_, ~prog_211, x.3, destructor.14 ) ]
+  --[
+  ProgressTo_21112( ~prog_211 ), Restr_letydxdbad_8_2111_1( destructor.17 )
+  ]->
+   [ State_21112( ~prog_, ~prog_211, x.3 ) ]
+
+  /*
+  rule (modulo AC) letydxdbad_8_2111[color=#806240,
+                                     process="let y.3=<d(x.3), d('bad')>", issapicrule, role='Omitted']:
+     [ Let_211103( destructor, ~prog_, ~prog_211, x, destructor.1 ) ]
+    --[
+    ProgressTo_21112( ~prog_211 ), Restr_letydxdbad_8_2111_1( destructor )
+    ]->
+     [ State_21112( ~prog_, ~prog_211, x ) ]
+  */
+
+restriction Restr_letydxdbad_10_2111_1:
+  "∀ x #NOW.
+    (Restr_letydxdbad_10_2111_1( x ) @ #NOW) ⇒ (∀ y. (y = x) ⇒ (⊥))"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ x #NOW.
+    (Restr_letydxdbad_10_2111_1( x ) @ #NOW) ⇒ (∀ y. (y = x) ⇒ (⊥))"
+  */
+
+rule (modulo E) letydxdbad_10_2111[color=#806240,
+                                   process="let y.3=<d(x.3), d('bad')>", issapicrule, role='Omitted']:
+   [
+   Let_211104( <destructor.14, destructor.15>, ~prog_, ~prog_211, x.3,
+               destructor.14, destructor.15
+   )
+   ]
+  --[
+  ProgressTo_21112( ~prog_211 ),
+  Restr_letydxdbad_10_2111_1( <destructor.14, destructor.15> )
+  ]->
+   [ State_21112( ~prog_, ~prog_211, x.3 ) ]
+
+  /*
+  rule (modulo AC) letydxdbad_10_2111[color=#806240,
+                                      process="let y.3=<d(x.3), d('bad')>", issapicrule, role='Omitted']:
+     [
+     Let_211104( <destructor, destructor.1>, ~prog_, ~prog_211, x, destructor,
+                 destructor.1
+     )
+     ]
+    --[
+    ProgressTo_21112( ~prog_211 ),
+    Restr_letydxdbad_10_2111_1( <destructor, destructor.1> )
+    ]->
+     [ State_21112( ~prog_, ~prog_211, x ) ]
+  */
+
+restriction single_session:
+  "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
+  */
+
+restriction Progress__to_111:
+  "∀ prog_ #t.
+    (ProgressFrom_( prog_ ) @ #t) ⇒ (∃ #t.1. ProgressTo_111( prog_ ) @ #t.1)"
+
+  /*
+  expanded formula:
+  "∀ prog_ #t.
+    (ProgressFrom_( prog_ ) @ #t) ⇒ (∃ #t.1. ProgressTo_111( prog_ ) @ #t.1)"
+  */
+
+restriction Progress__to_121:
+  "∀ prog_ #t.
+    (ProgressFrom_( prog_ ) @ #t) ⇒ (∃ #t.1. ProgressTo_121( prog_ ) @ #t.1)"
+
+  /*
+  expanded formula:
+  "∀ prog_ #t.
+    (ProgressFrom_( prog_ ) @ #t) ⇒ (∃ #t.1. ProgressTo_121( prog_ ) @ #t.1)"
+  */
+
+restriction Progress__to_21:
+  "∀ prog_ #t.
+    (ProgressFrom_( prog_ ) @ #t) ⇒ (∃ #t.1. ProgressTo_21( prog_ ) @ #t.1)"
+
+  /*
+  expanded formula:
+  "∀ prog_ #t.
+    (ProgressFrom_( prog_ ) @ #t) ⇒ (∃ #t.1. ProgressTo_21( prog_ ) @ #t.1)"
+  */
+
+restriction Progress_1111_to_1111111_or_1111121:
+  "∀ prog_1111 #t.
+    (ProgressFrom_1111( prog_1111 ) @ #t) ⇒
+    ((∃ #t.1. ProgressTo_1111111( prog_1111 ) @ #t.1) ∨
+     (∃ #t.1. ProgressTo_1111121( prog_1111 ) @ #t.1))"
+
+  /*
+  expanded formula:
+  "∀ prog_1111 #t.
+    (ProgressFrom_1111( prog_1111 ) @ #t) ⇒
+    ((∃ #t.1. ProgressTo_1111111( prog_1111 ) @ #t.1) ∨
+     (∃ #t.1. ProgressTo_1111121( prog_1111 ) @ #t.1))"
+  */
+
+restriction Progress_1211_to_1211111_or_1211121:
+  "∀ prog_1211 #t.
+    (ProgressFrom_1211( prog_1211 ) @ #t) ⇒
+    ((∃ #t.1. ProgressTo_1211111( prog_1211 ) @ #t.1) ∨
+     (∃ #t.1. ProgressTo_1211121( prog_1211 ) @ #t.1))"
+
+  /*
+  expanded formula:
+  "∀ prog_1211 #t.
+    (ProgressFrom_1211( prog_1211 ) @ #t) ⇒
+    ((∃ #t.1. ProgressTo_1211111( prog_1211 ) @ #t.1) ∨
+     (∃ #t.1. ProgressTo_1211121( prog_1211 ) @ #t.1))"
+  */
+
+restriction Progress_211_to_211111_or_21112:
+  "∀ prog_211 #t.
+    (ProgressFrom_211( prog_211 ) @ #t) ⇒
+    ((∃ #t.1. ProgressTo_211111( prog_211 ) @ #t.1) ∨
+     (∃ #t.1. ProgressTo_21112( prog_211 ) @ #t.1))"
+
+  /*
+  expanded formula:
+  "∀ prog_211 #t.
+    (ProgressFrom_211( prog_211 ) @ #t) ⇒
+    ((∃ #t.1. ProgressTo_211111( prog_211 ) @ #t.1) ∨
+     (∃ #t.1. ProgressTo_21112( prog_211 ) @ #t.1))"
+  */
+
+restriction progressInit:
+  "∃ #t. Init( ) @ #t"
+
+  /*
+  expanded formula:
+  "∃ #t. Init( ) @ #t"
+  */
+
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.13.0
+Maude version 3.5.1
+Git revision: 5a753a172c7984e9403bc650a37a8223367bc1c5, branch: sapic-destructors
+Compiled at: 2026-09-25 19:30:59.558380567 UTC
+*/
+
+end
+/* Output
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/regression/trace/soundness-sapic-nested-destructor-progress.spthy
+
+  output:          examples/regression/trace/soundness-sapic-nested-destructor-progress.spthy.tmp
+  processing time: 0.80s
+  
+  failure_reachable (exists-trace): verified (15 steps)
+  failure_progress (all-traces): verified (12 steps)
+  success_reachable (exists-trace): verified (15 steps)
+  success_progress (all-traces): verified (12 steps)
+  result_preserved (all-traces): verified (3 steps)
+  omitted_reachable (exists-trace): verified (16 steps)
+  no_wrong (all-traces): verified (8 steps)
+
+==============================================================================
+*/

@@ -1,0 +1,224 @@
+theory SoundnessSapicLetMatchElse
+
+begin
+
+// Function signature and definition of the equational theory E
+
+functions: fst/1, pair/2, snd/1
+equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
+
+heuristic: p
+
+lemma different_pair_fails:
+  exists-trace "∃ #i. Else( <'a', 'b'>, 'c' ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #i. (Else( <'a', 'b'>, 'c' ) @ #i)"
+*/
+simplify
+solve( State_112( <'a', 'b'>, 'c' ) ▶₀ #i )
+  case letxym_2_11
+  SOLVED // trace found
+qed
+
+lemma matching_pair_succeeds:
+  exists-trace "∃ #i. Then( 'a', 'b' ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #i. (Then( 'a', 'b' ) @ #i)"
+*/
+simplify
+solve( State_111( m, 'a', 'b' ) ▶₀ #i )
+  case letxym_1_11
+  SOLVED // trace found
+qed
+
+lemma nonpair_fails:
+  exists-trace "∃ #i. Else( 'a', 'b' ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #i. (Else( 'a', 'b' ) @ #i)"
+*/
+simplify
+solve( State_112( 'a', 'b' ) ▶₀ #i )
+  case letxym_2_11
+  SOLVED // trace found
+qed
+
+lemma matching_pair_never_fails:
+  all-traces "∀ a b #i. (Else( <a, b>, b ) @ #i) ⇒ (⊥)"
+/*
+guarded formula characterizing all counter-examples:
+"∃ a b #i. (Else( <a, b>, b ) @ #i)"
+*/
+simplify
+solve( State_112( <a, b>, b ) ▶₀ #i )
+  case letxym_2_11
+  by contradiction /* from formulas */
+qed
+
+lemma else_never_pair:
+  all-traces "∀ a b y #i. (Else( <a, b>, y ) @ #i) ⇒ (⊥)"
+/*
+guarded formula characterizing all counter-examples:
+"∃ a b y #i. (Else( <a, b>, y ) @ #i)"
+*/
+simplify
+solve( State_112( <a, b>, y ) ▶₀ #i )
+  case letxym_2_11
+  SOLVED // trace found
+qed
+
+rule (modulo E) Init[color=#ffffff, process="in(y.1);", issapicrule,
+                     role='Process']:
+   [ ] --[ Init( ) ]-> [ State_( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) iny_0_[color=#ffffff, process="in(y.1);", issapicrule,
+                       role='Process']:
+   [ State_( ), In( y.1 ) ] --> [ State_1( y.1 ) ]
+
+  /*
+  rule (modulo AC) iny_0_[color=#ffffff, process="in(y.1);", issapicrule,
+                          role='Process']:
+     [ State_( ), In( y ) ] --> [ State_1( y ) ]
+  */
+
+rule (modulo E) inm_0_1[color=#ffffff, process="in(m.1);", issapicrule,
+                        role='Process']:
+   [ State_1( y.1 ), In( m.1 ) ] --> [ State_11( m.1, y.1 ) ]
+
+  /*
+  rule (modulo AC) inm_0_1[color=#ffffff, process="in(m.1);", issapicrule,
+                           role='Process']:
+     [ State_1( y ), In( m ) ] --> [ State_11( m, y ) ]
+  */
+
+rule (modulo E) letxym_0_11[color=#ffffff, process="let <x.1, =y.1>=m.1",
+                            issapicrule, role='Process']:
+   [ State_11( m.1, y.1 ) ] --> [ Let_111( m.1, m.1, y.1 ) ]
+
+  /*
+  rule (modulo AC) letxym_0_11[color=#ffffff,
+                               process="let <x.1, =y.1>=m.1", issapicrule, role='Process']:
+     [ State_11( m, y ) ] --> [ Let_111( m, m, y ) ]
+  */
+
+rule (modulo E) letxym_1_11[color=#ffffff, process="let <x.1, =y.1>=m.1",
+                            issapicrule, role='Process']:
+   [ Let_111( <x.1, y.1>, m.1, y.1 ) ] --> [ State_111( m.1, x.1, y.1 ) ]
+
+  /*
+  rule (modulo AC) letxym_1_11[color=#ffffff,
+                               process="let <x.1, =y.1>=m.1", issapicrule, role='Process']:
+     [ Let_111( <x, y>, m, y ) ] --> [ State_111( m, x, y ) ]
+  */
+
+restriction Restr_letxym_2_11_1:
+  "∀ x #NOW x.1.
+    (Restr_letxym_2_11_1( x, x.1 ) @ #NOW) ⇒ (∀ x.2. (<x.2, x> = x.1) ⇒ (⊥))"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ x #NOW x.1.
+    (Restr_letxym_2_11_1( x, x.1 ) @ #NOW) ⇒ (∀ x.2. (<x.2, x> = x.1) ⇒ (⊥))"
+  */
+
+rule (modulo E) letxym_2_11[color=#ffffff, process="let <x.1, =y.1>=m.1",
+                            issapicrule, role='Process']:
+   [ Let_111( m.1, m.1, y.1 ) ]
+  --[ Restr_letxym_2_11_1( y.1, m.1 ) ]->
+   [ State_112( m.1, y.1 ) ]
+
+  /*
+  rule (modulo AC) letxym_2_11[color=#ffffff,
+                               process="let <x.1, =y.1>=m.1", issapicrule, role='Process']:
+     [ Let_111( m, m, y ) ]
+    --[ Restr_letxym_2_11_1( y, m ) ]->
+     [ State_112( m, y ) ]
+  */
+
+rule (modulo E) eventThenxy_0_111[color=#ffffff,
+                                  process="event Then( x.1, y.1 );", issapicrule, role='Process']:
+   [ State_111( m.1, x.1, y.1 ) ]
+  --[ Then( x.1, y.1 ) ]->
+   [ State_1111( m.1, x.1, y.1 ) ]
+
+  /*
+  rule (modulo AC) eventThenxy_0_111[color=#ffffff,
+                                     process="event Then( x.1, y.1 );", issapicrule, role='Process']:
+     [ State_111( m, x, y ) ] --[ Then( x, y ) ]-> [ State_1111( m, x, y ) ]
+  */
+
+rule (modulo E) p_0_1111[color=#ffffff, process="0", issapicrule,
+                         role='Process']:
+   [ State_1111( m.1, x.1, y.1 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_1111[color=#ffffff, process="0", issapicrule,
+                            role='Process']:
+     [ State_1111( m, x, y ) ] --> [ ]
+  */
+
+rule (modulo E) eventElsemy_0_112[color=#ffffff,
+                                  process="event Else( m.1, y.1 );", issapicrule, role='Process']:
+   [ State_112( m.1, y.1 ) ]
+  --[ Else( m.1, y.1 ) ]->
+   [ State_1121( m.1, y.1 ) ]
+
+  /*
+  rule (modulo AC) eventElsemy_0_112[color=#ffffff,
+                                     process="event Else( m.1, y.1 );", issapicrule, role='Process']:
+     [ State_112( m, y ) ] --[ Else( m, y ) ]-> [ State_1121( m, y ) ]
+  */
+
+rule (modulo E) p_0_1121[color=#ffffff, process="0", issapicrule,
+                         role='Process']:
+   [ State_1121( m.1, y.1 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_1121[color=#ffffff, process="0", issapicrule,
+                            role='Process']:
+     [ State_1121( m, y ) ] --> [ ]
+  */
+
+restriction single_session:
+  "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
+  */
+
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.13.0
+Maude version 3.5.1
+Git revision: 5a753a172c7984e9403bc650a37a8223367bc1c5, branch: sapic-destructors
+Compiled at: 2026-09-25 19:30:59.558380567 UTC
+*/
+
+end
+/* Output
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/regression/trace/soundness-sapic-let-match-else.spthy
+
+  output:          examples/regression/trace/soundness-sapic-let-match-else.spthy.tmp
+  processing time: 0.11s
+  
+  different_pair_fails (exists-trace): verified (3 steps)
+  matching_pair_succeeds (exists-trace): verified (3 steps)
+  nonpair_fails (exists-trace): verified (3 steps)
+  matching_pair_never_fails (all-traces): verified (3 steps)
+  else_never_pair (all-traces): falsified - found trace (3 steps)
+
+==============================================================================
+*/
