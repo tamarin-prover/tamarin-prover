@@ -1,0 +1,234 @@
+theory SoundnessSapicUnlockedLookup
+
+begin
+
+// Function signature and definition of the equational theory E
+
+functions: fst/1, pair/2, snd/1
+equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
+
+heuristic: p
+
+/* looping facts with injective instances: L_CellLocked/2, L_PureState/2
+*/
+
+lemma stored_value:
+  all-traces "∀ w #i. (B( w ) @ #i) ⇒ (w = '0')"
+/*
+guarded formula characterizing all counter-examples:
+"∃ w #i. (B( w ) @ #i) ∧ ¬(w = '0')"
+*/
+simplify
+solve( State_1111( StateChannel, s, w ) ▶₀ #i )
+  case lookupsasw_0_111
+  by contradiction /* from formulas */
+qed
+
+lemma present:
+  all-traces "∀ #i. (NB( ) @ #i) ⇒ (⊥)"
+/*
+guarded formula characterizing all counter-examples:
+"∃ #i. (NB( ) @ #i)"
+*/
+simplify
+by solve( State_1112( StateChannel, s ) ▶₀ #i )
+
+lemma read_reachable:
+  exists-trace "∃ #i. B( '0' ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #i. (B( '0' ) @ #i)"
+*/
+simplify
+solve( State_1111( StateChannel, s, '0' ) ▶₀ #i )
+  case lookupsasw_0_111
+  solve( (#vr.1 < #t2)  ∥ (#vr.1 = #t2) )
+    case case_2
+    SOLVED // trace found
+  qed
+qed
+
+rule (modulo E) Init[color=#ffffff, process="new s.1;", issapicrule,
+                     role='Process']:
+   [ ] --[ Init( ) ]-> [ State_( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) news_0_[color=#ffffff, process="new s.1;", issapicrule,
+                        role='Process']:
+   [ State_( ), Fr( s.1 ) ] --> [ State_1( s.1 ) ]
+
+  /*
+  rule (modulo AC) news_0_[color=#ffffff, process="new s.1;", issapicrule,
+                           role='Process']:
+     [ State_( ), Fr( s ) ] --> [ State_1( s ) ]
+  */
+
+rule (modulo E) newStateChannelchannel_0_1[color=#ffffff,
+                                           process="new StateChannel:channel;", issapicrule, role='Process']:
+   [ State_1( s.1 ), Fr( StateChannel ) ]
+  -->
+   [ State_11( StateChannel, s.1 ) ]
+
+  /*
+  rule (modulo AC) newStateChannelchannel_0_1[color=#ffffff,
+                                              process="new StateChannel:channel;", issapicrule,
+                                              role='Process']:
+     [ State_1( s ), Fr( StateChannel ) ] --> [ State_11( StateChannel, s ) ]
+  */
+
+rule (modulo E) inserts_0_11[color=#ffffff, process="insert s.1,'0';",
+                             issapicrule, role='Process']:
+   [ State_11( StateChannel, s.1 ) ]
+  --[ Insert( s.1, '0' ) ]->
+   [ State_111( StateChannel, s.1 ) ]
+
+  /*
+  rule (modulo AC) inserts_0_11[color=#ffffff, process="insert s.1,'0';",
+                                issapicrule, role='Process']:
+     [ State_11( StateChannel, s ) ]
+    --[ Insert( s, '0' ) ]->
+     [ State_111( StateChannel, s ) ]
+  */
+
+rule (modulo E) lookupsasw_0_111[color=#ffffff,
+                                 process="lookup s.1 as w.1", no_derivcheck, issapicrule, role='Process']:
+   [ State_111( StateChannel, s.1 ) ]
+  --[ IsIn( s.1, w.1 ) ]->
+   [ State_1111( StateChannel, s.1, w.1 ) ]
+
+  /*
+  rule (modulo AC) lookupsasw_0_111[color=#ffffff,
+                                    process="lookup s.1 as w.1", no_derivcheck, issapicrule, role='Process']:
+     [ State_111( StateChannel, s ) ]
+    --[ IsIn( s, w ) ]->
+     [ State_1111( StateChannel, s, w ) ]
+  */
+
+rule (modulo E) lookupsasw_1_111[color=#ffffff,
+                                 process="lookup s.1 as w.1", no_derivcheck, issapicrule, role='Process']:
+   [ State_111( StateChannel, s.1 ) ]
+  --[ IsNotSet( s.1 ) ]->
+   [ State_1112( StateChannel, s.1 ) ]
+
+  /*
+  rule (modulo AC) lookupsasw_1_111[color=#ffffff,
+                                    process="lookup s.1 as w.1", no_derivcheck, issapicrule, role='Process']:
+     [ State_111( StateChannel, s ) ]
+    --[ IsNotSet( s ) ]->
+     [ State_1112( StateChannel, s ) ]
+  */
+
+rule (modulo E) eventBw_0_1111[color=#ffffff, process="event B( w.1 );",
+                               issapicrule, role='Process']:
+   [ State_1111( StateChannel, s.1, w.1 ) ]
+  --[ B( w.1 ) ]->
+   [ State_11111( StateChannel, s.1, w.1 ) ]
+
+  /*
+  rule (modulo AC) eventBw_0_1111[color=#ffffff, process="event B( w.1 );",
+                                  issapicrule, role='Process']:
+     [ State_1111( StateChannel, s, w ) ]
+    --[ B( w ) ]->
+     [ State_11111( StateChannel, s, w ) ]
+  */
+
+rule (modulo E) p_0_11111[color=#ffffff, process="0", issapicrule,
+                          role='Process']:
+   [ State_11111( StateChannel, s.1, w.1 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_11111[color=#ffffff, process="0", issapicrule,
+                             role='Process']:
+     [ State_11111( StateChannel, s, w ) ] --> [ ]
+  */
+
+rule (modulo E) eventNB_0_1112[color=#ffffff, process="event NB( );",
+                               issapicrule, role='Process']:
+   [ State_1112( StateChannel, s.1 ) ]
+  --[ NB( ) ]->
+   [ State_11121( StateChannel, s.1 ) ]
+
+  /*
+  rule (modulo AC) eventNB_0_1112[color=#ffffff, process="event NB( );",
+                                  issapicrule, role='Process']:
+     [ State_1112( StateChannel, s ) ]
+    --[ NB( ) ]->
+     [ State_11121( StateChannel, s ) ]
+  */
+
+rule (modulo E) p_0_11121[color=#ffffff, process="0", issapicrule,
+                          role='Process']:
+   [ State_11121( StateChannel, s.1 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_11121[color=#ffffff, process="0", issapicrule,
+                             role='Process']:
+     [ State_11121( StateChannel, s ) ] --> [ ]
+  */
+
+restriction set_in:
+  "∀ x y #t3.
+    (IsIn( x, y ) @ #t3) ⇒
+    (∃ #t2.
+      ((Insert( x, y ) @ #t2) ∧ (#t2 < #t3)) ∧
+      (∀ #t1 yp.
+        (Insert( x, yp ) @ #t1) ⇒ (((#t1 < #t2) ∨ (#t1 = #t2)) ∨ (#t3 < #t1))))"
+
+  /*
+  expanded formula:
+  "∀ x y #t3.
+    (IsIn( x, y ) @ #t3) ⇒
+    (∃ #t2.
+      ((Insert( x, y ) @ #t2) ∧ (#t2 < #t3)) ∧
+      (∀ #t1 yp.
+        (Insert( x, yp ) @ #t1) ⇒ (((#t1 < #t2) ∨ (#t1 = #t2)) ∨ (#t3 < #t1))))"
+  */
+
+restriction set_notin:
+  "∀ x #t3.
+    (IsNotSet( x ) @ #t3) ⇒ (∀ #t1 y. (Insert( x, y ) @ #t1) ⇒ (#t3 < #t1))"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ x #t3.
+    (IsNotSet( x ) @ #t3) ⇒ (∀ #t1 y. (Insert( x, y ) @ #t1) ⇒ (#t3 < #t1))"
+  */
+
+restriction single_session:
+  "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
+  */
+
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.13.0
+Maude version 3.5.1
+Git revision: 75789dd37ec597af4859aa78d928136f33a697f6 (with uncommited changes), branch: sapic-optimisations
+Compiled at: 2026-09-25 19:56:56.873336963 UTC
+*/
+
+end
+/* Output
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/regression/trace/soundness-sapic-unlocked-lookup.spthy
+
+  output:          examples/regression/trace/soundness-sapic-unlocked-lookup.spthy.tmp
+  processing time: 0.19s
+  
+  stored_value (all-traces): verified (3 steps)
+  present (all-traces): verified (2 steps)
+  read_reachable (exists-trace): verified (4 steps)
+
+==============================================================================
+*/
