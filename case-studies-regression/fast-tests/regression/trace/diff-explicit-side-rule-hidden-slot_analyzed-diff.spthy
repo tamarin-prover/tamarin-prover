@@ -1,0 +1,56 @@
+theory DiffExplicitSideRuleHiddenSlot
+
+begin
+
+// Function signature and definition of the equational theory E
+
+functions: fst/1, pair/2, snd/1
+equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
+
+rule (modulo E) R:
+   [ ] --[ A( $p ) ]-> [ Out( diff($p, $a) ) ]
+
+diffLemma Observational_equivalence:
+rule-equivalence
+  case Rule_Equality
+  backward-search
+    case LHS
+    step( simplify )
+    step( solve( !KD( x ) ▶₁ #i ) )
+      case R
+      step( solve( (#vl, 0) ~~> (#i, 1) ) )
+        case Var_pub_p
+        step( solve( !KU( $p ) @ #vk ) )
+          case pub
+          by ATTACK // trace found
+        qed
+      qed
+    qed
+  qed
+qed
+
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.13.0
+Maude version 3.5.1
+Git revision: c4572aa2bab99bb68de09813420a8c2172b99182 (with uncommited changes), branch: diff-rule-families
+Compiled at: 2026-09-25 20:20:40.787603735 UTC
+*/
+
+end
+/* Output
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/regression/trace/diff-explicit-side-rule-hidden-slot.spthy
+
+  output:          examples/regression/trace/diff-explicit-side-rule-hidden-slot.spthy.tmp
+  processing time: 0.08s
+  
+  DiffLemma:  Observational_equivalence : falsified - found trace (7 steps)
+
+==============================================================================
+*/

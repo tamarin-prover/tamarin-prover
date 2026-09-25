@@ -513,8 +513,9 @@ case-studies$(SUBDIR)regression/trace/diff-multisession-observable-restriction_a
 case-studies$(SUBDIR)regression/trace/diff-explicit-variant-export_analyzed-diff.spthy: DIFF_EXTRA_ARGS=--bound=6
 case-studies$(SUBDIR)regression/trace/diff-auto-source-variable-alignment_analyzed-diff.spthy: DIFF_EXTRA_ARGS=--auto-sources --bound=6 --quit-on-warning
 case-studies$(SUBDIR)regression/trace/soundness-diff-partial-evaluation-variants_analyzed-diff.spthy case-studies$(SUBDIR)regression/trace/soundness-diff-partial-evaluation-refinement_analyzed-diff.spthy case-studies$(SUBDIR)regression/trace/diff-partial-evaluation-multiple_analyzed-diff.spthy: DIFF_EXTRA_ARGS=--partial-evaluation=summary
-DIFF_REGRESSION_CASE_STUDIES+=diff-side-restriction-choices.spthy diff-auto-source-duplicate-members.spthy
+DIFF_REGRESSION_CASE_STUDIES+=diff-side-restriction-choices.spthy diff-auto-source-duplicate-members.spthy diff-auto-source-singleton-member.spthy
 case-studies$(SUBDIR)regression/trace/diff-auto-source-duplicate-members_analyzed-diff.spthy: DIFF_EXTRA_ARGS=--auto-sources --bound=6 --quit-on-warning
+case-studies$(SUBDIR)regression/trace/diff-auto-source-singleton-member_analyzed-diff.spthy: DIFF_EXTRA_ARGS=--auto-sources --bound=6 --quit-on-warning
 DIFF_REGRESSION_TARGETS=$(subst .spthy,_analyzed-diff.spthy,$(addprefix case-studies$(SUBDIR)regression/trace/,$(DIFF_REGRESSION_CASE_STUDIES)))
 
 

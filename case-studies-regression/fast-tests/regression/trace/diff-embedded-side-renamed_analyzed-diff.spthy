@@ -1,0 +1,160 @@
+theory EmbeddedSideRenamed
+
+begin
+
+// Function signature and definition of the equational theory E
+
+functions: fst/1, pair/2, snd/1
+equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
+
+restriction Restr_Emit_1 [left]:
+  "∀ x #NOW. (Restr_Emit_1( x ) @ #NOW) ⇒ (x = 'a')"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ x #NOW. (Restr_Emit_1( x ) @ #NOW) ⇒ (x = 'a')"
+  */
+
+restriction Restr_Emit_1 [right]:
+  "∀ x #NOW. (Restr_Emit_1( x ) @ #NOW) ⇒ (x = 'a')"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ x #NOW. (Restr_Emit_1( x ) @ #NOW) ⇒ (x = 'a')"
+  */
+
+rule (modulo E) Emit:
+   [ In( x ) ] --[ Emitted( x ), Restr_Emit_1( x ) ]-> [ ]
+ left
+  rule (modulo E) Emit:
+     [ In( x ) ] --[ Emitted( x ), Restr_Emit_1( x ) ]-> [ ]
+ right
+  rule (modulo E) Emit:
+     [ In( x ) ] --[ Emitted( x ), Restr_Emit_1( x ) ]-> [ ]
+
+lemma only_a [left]:
+  all-traces "∀ x #i. (Emitted( x ) @ #i) ⇒ (x = 'a')"
+/*
+guarded formula characterizing all counter-examples:
+"∃ x #i. (Emitted( x ) @ #i) ∧ ¬(x = 'a')"
+*/
+simplify
+by contradiction /* from formulas */
+
+lemma a_exists [left]:
+  exists-trace "∃ #i. Emitted( 'a' ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #i. (Emitted( 'a' ) @ #i)"
+*/
+simplify
+SOLVED // trace found
+
+lemma b_exists [left]:
+  exists-trace "∃ #i. Emitted( 'b' ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #i. (Emitted( 'b' ) @ #i)"
+*/
+by simplify
+
+diffLemma Observational_equivalence:
+rule-equivalence
+  case Rule_Destrd_0_fst
+  backward-search
+    case LHS
+    step( simplify )
+    by step( solve( !KD( <x, x.1> ) ▶₀ #i ) )
+  next
+    case RHS
+    step( simplify )
+    by step( solve( !KD( <x, x.1> ) ▶₀ #i ) )
+  qed
+next
+  case Rule_Destrd_0_snd
+  backward-search
+    case LHS
+    step( simplify )
+    by step( solve( !KD( <x, x.1> ) ▶₀ #i ) )
+  next
+    case RHS
+    step( simplify )
+    by step( solve( !KD( <x, x.1> ) ▶₀ #i ) )
+  qed
+next
+  case Rule_Emit
+  backward-search
+    case LHS
+    step( simplify )
+    step( solve( !KU( 'a' ) @ #vk ) )
+      case coerce
+      by step( solve( !KD( 'a' ) ▶₀ #vk ) )
+    next
+      case pub
+      MIRRORED
+    qed
+  next
+    case RHS
+    step( simplify )
+    step( solve( !KU( 'a' ) @ #vk ) )
+      case coerce
+      by step( solve( !KD( 'a' ) ▶₀ #vk ) )
+    next
+      case pub
+      MIRRORED
+    qed
+  qed
+next
+  case Rule_Equality
+  backward-search
+    case LHS
+    step( simplify )
+    by step( solve( !KD( x ) ▶₁ #i ) )
+  next
+    case RHS
+    step( simplify )
+    by step( solve( !KD( x ) ▶₁ #i ) )
+  qed
+next
+  case Rule_Send
+  backward-search
+    case LHS
+    step( simplify )
+    MIRRORED
+  next
+    case RHS
+    step( simplify )
+    MIRRORED
+  qed
+qed
+
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.13.0
+Maude version 3.5.1
+Git revision: c4572aa2bab99bb68de09813420a8c2172b99182 (with uncommited changes), branch: diff-rule-families
+Compiled at: 2026-09-25 20:20:40.787603735 UTC
+*/
+
+end
+/* Output
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/regression/trace/diff-embedded-side-renamed.spthy
+
+  output:          examples/regression/trace/diff-embedded-side-renamed.spthy.tmp
+  processing time: 0.07s
+  
+  LHS :  only_a (all-traces): verified (2 steps)
+  LHS :  a_exists (exists-trace): verified (2 steps)
+  LHS :  b_exists (exists-trace): falsified - no trace found (1 steps)
+  DiffLemma:  Observational_equivalence : verified (30 steps)
+
+==============================================================================
+*/

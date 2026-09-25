@@ -1,0 +1,170 @@
+theory DiffVariantRepeatedActions
+
+begin
+
+// Function signature and definition of the equational theory E
+
+functions: fst/1, pair/2, sdec/2, senc/2, snd/1
+equations:
+    fst(<x.1, x.2>) = x.1,
+    sdec(senc(x.1, x.2), x.2) = x.1,
+    snd(<x.1, x.2>) = x.2
+
+rule (modulo E) R:
+   [ In( x ), In( k ) ]
+  --[
+  A( x ), A( x ), A( x ), A( x ), A( x ), A( x ), A( x ), A( x ), A( x ),
+  A( x ), A( x ), A( x ), A( x ), A( x )
+  ]->
+   [ Out( sdec(senc(x, k), k) ) ]
+ left
+  rule (modulo E) R:
+     [ In( x ), In( k ) ]
+    --[
+    A( x ), A( x ), A( x ), A( x ), A( x ), A( x ), A( x ), A( x ), A( x ),
+    A( x ), A( x ), A( x ), A( x ), A( x )
+    ]->
+     [ Out( sdec(senc(x, k), k) ) ]
+   variants
+    rule (modulo AC) R___VARIANT_1:
+       [ In( y ), In( k ) ]
+      --[
+      A( y ), A( y ), A( y ), A( y ), A( y ), A( y ), A( y ), A( y ), A( y ),
+      A( y ), A( y ), A( y ), A( y ), A( y ), A( y ), A( y ), A( y ), A( y ),
+      A( y ), A( y ), A( y ), A( y ), A( y ), A( y ), A( y ), A( y ), A( y ),
+      A( y )
+      ]->
+       [ Out( y ) ]
+ right
+  rule (modulo E) R:
+     [ In( x ), In( k ) ]
+    --[
+    A( x ), A( x ), A( x ), A( x ), A( x ), A( x ), A( x ), A( x ), A( x ),
+    A( x ), A( x ), A( x ), A( x ), A( x )
+    ]->
+     [ Out( sdec(senc(x, k), k) ) ]
+
+diffLemma Observational_equivalence:
+rule-equivalence
+  case Rule_Destrd_0_fst
+  backward-search
+    case LHS
+    step( simplify )
+    step( solve( !KD( <x, x.1> ) ▶₀ #i ) )
+      case R
+      by step( contradiction /* forbidden chain */ )
+    qed
+  next
+    case RHS
+    step( simplify )
+    step( solve( !KD( <x, x.1> ) ▶₀ #i ) )
+      case R
+      by step( contradiction /* forbidden chain */ )
+    qed
+  qed
+next
+  case Rule_Destrd_0_sdec
+  backward-search
+    case LHS
+    step( simplify )
+    step( solve( !KD( senc(x, x.1) ) ▶₀ #i ) )
+      case R
+      by step( contradiction /* forbidden chain */ )
+    qed
+  next
+    case RHS
+    step( simplify )
+    step( solve( !KD( senc(x, x.1) ) ▶₀ #i ) )
+      case R
+      by step( contradiction /* forbidden chain */ )
+    qed
+  qed
+next
+  case Rule_Destrd_0_snd
+  backward-search
+    case LHS
+    step( simplify )
+    step( solve( !KD( <x, x.1> ) ▶₀ #i ) )
+      case R
+      by step( contradiction /* forbidden chain */ )
+    qed
+  next
+    case RHS
+    step( simplify )
+    step( solve( !KD( <x, x.1> ) ▶₀ #i ) )
+      case R
+      by step( contradiction /* forbidden chain */ )
+    qed
+  qed
+next
+  case Rule_Equality
+  backward-search
+    case LHS
+    step( simplify )
+    step( solve( !KD( x ) ▶₁ #i ) )
+      case R
+      step( solve( (#vl, 0) ~~> (#i, 1) ) )
+        case Var_msg_t
+        MIRRORED
+      qed
+    qed
+  next
+    case RHS
+    step( simplify )
+    step( solve( !KD( x ) ▶₁ #i ) )
+      case R
+      step( solve( (#vl, 0) ~~> (#i, 1) ) )
+        case Var_msg_t
+        MIRRORED
+      qed
+    qed
+  qed
+next
+  case Rule_R
+  backward-search
+    case LHS
+    step( simplify )
+    MIRRORED
+  next
+    case RHS
+    step( simplify )
+    MIRRORED
+  qed
+next
+  case Rule_Send
+  backward-search
+    case LHS
+    step( simplify )
+    MIRRORED
+  next
+    case RHS
+    step( simplify )
+    MIRRORED
+  qed
+qed
+
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.13.0
+Maude version 3.5.1
+Git revision: 7e9aae089915fe0110a29fc5483bd9d0c0f3344c (with uncommited changes), branch: diff-rule-families
+Compiled at: 2026-10-07 19:31:20.946448454 UTC
+*/
+
+end
+/* Output
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/regression/trace/diff-variant-repeated-actions.spthy
+
+  output:          examples/regression/trace/diff-variant-repeated-actions.spthy.tmp
+  processing time: 0.21s
+  
+  DiffLemma:  Observational_equivalence : verified (41 steps)
+
+==============================================================================
+*/

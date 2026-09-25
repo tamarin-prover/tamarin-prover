@@ -12,34 +12,58 @@ equations:
 
 macros: w( x ) =  <x, 'tag'>
 
-rule (modulo E) Recv:
-   [ !Key( k ), In( senc(y, k) ) ] --[ Got( y ) ]-> [ Out( y ) ]
- left
-  rule (modulo E) Recv:
-     [ !Key( k ), In( senc(y, k) ) ]
-    --[ AUTO_IN_TERM_1_0_0__Recv( senc(y, k), y ), Got( y ) ]->
-     [ Out( y ) ]
- right
-  rule (modulo E) Recv:
-     [ !Key( k ), In( senc(y, k) ) ]
-    --[ AUTO_IN_TERM_1_0_0__Recv( senc(y, k), y ), Got( y ) ]->
-     [ Out( y ) ]
+rule (modulo E) Setup:
+   [ Fr( ~k ) ] --> [ !Key( ~k ) ]
 
 rule (modulo E) Send:
    [ !Key( k ), Fr( ~m ) ] --[ Sent( ~m ) ]-> [ Out( senc(w(~m), k) ) ]
  left
   rule (modulo E) Send:
      [ !Key( k ), Fr( ~m ) ]
-    --[ AUTO_OUT_TERM_1_0_0__Recv( senc(<~m, 'tag'>, k) ), Sent( ~m ) ]->
+    --[ Sent( ~m ) ]->
      [ Out( senc(<~m, 'tag'>, k) ) ]
+   variants
+    rule (modulo AC) Send:
+       [ !Key( k ), Fr( ~m ) ]
+      --[
+      AUTO_OUT_TERM_1_0_0__Recv___AUTO_MEMBER_1( senc(<~m, 'tag'>, k) ),
+      Sent( ~m )
+      ]->
+       [ Out( senc(<~m, 'tag'>, k) ) ]
  right
   rule (modulo E) Send:
      [ !Key( k ), Fr( ~m ) ]
-    --[ AUTO_OUT_TERM_1_0_0__Recv( senc(<~m, 'tag'>, k) ), Sent( ~m ) ]->
+    --[ Sent( ~m ) ]->
      [ Out( senc(<~m, 'tag'>, k) ) ]
+   variants
+    rule (modulo AC) Send:
+       [ !Key( k ), Fr( ~m ) ]
+      --[
+      AUTO_OUT_TERM_1_0_0__Recv___AUTO_MEMBER_2( senc(<~m, 'tag'>, k) ),
+      Sent( ~m )
+      ]->
+       [ Out( senc(<~m, 'tag'>, k) ) ]
 
-rule (modulo E) Setup:
-   [ Fr( ~k ) ] --> [ !Key( ~k ) ]
+rule (modulo E) Recv:
+   [ !Key( k ), In( senc(y, k) ) ] --[ Got( y ) ]-> [ Out( y ) ]
+ left
+  rule (modulo E) Recv:
+     [ !Key( k ), In( senc(y, k) ) ] --[ Got( y ) ]-> [ Out( y ) ]
+   variants
+    rule (modulo AC) Recv:
+       [ !Key( k ), In( senc(y, k) ) ]
+      --[ AUTO_IN_TERM_1_0_0__Recv___AUTO_MEMBER_1( senc(y, k), y ), Got( y )
+      ]->
+       [ Out( y ) ]
+ right
+  rule (modulo E) Recv:
+     [ !Key( k ), In( senc(y, k) ) ] --[ Got( y ) ]-> [ Out( y ) ]
+   variants
+    rule (modulo AC) Recv:
+       [ !Key( k ), In( senc(y, k) ) ]
+      --[ AUTO_IN_TERM_1_0_0__Recv___AUTO_MEMBER_2( senc(y, k), y ), Got( y )
+      ]->
+       [ Out( y ) ]
 
 diffLemma Observational_equivalence:
 rule-equivalence
@@ -480,11 +504,17 @@ next
   backward-search
     case LHS
     step( simplify )
-    MIRRORED
+    step( solve( !Key( k ) ▶₀ #i ) )
+      case Setup
+      MIRRORED
+    qed
   next
     case RHS
     step( simplify )
-    MIRRORED
+    step( solve( !Key( k ) ▶₀ #i ) )
+      case Setup
+      MIRRORED
+    qed
   qed
 next
   case Rule_Setup
@@ -521,16 +551,18 @@ lemma AUTO_typing_LHS [left, sources]:
   all-traces
   "(⊤) ∧
    (∀ x m #i.
-     (AUTO_IN_TERM_1_0_0__Recv( m, x ) @ #i) ⇒
+     (AUTO_IN_TERM_1_0_0__Recv___AUTO_MEMBER_1( m, x ) @ #i) ⇒
      ((∃ #j. (!KU( x ) @ #j) ∧ (#j < #i)) ∨
-      (∃ #j. (AUTO_OUT_TERM_1_0_0__Recv( m ) @ #j) ∧ (#j < #i))))"
+      (∃ #j.
+        (AUTO_OUT_TERM_1_0_0__Recv___AUTO_MEMBER_1( m ) @ #j) ∧ (#j < #i))))"
 /*
 guarded formula characterizing all counter-examples:
 "∃ x m #i.
-  (AUTO_IN_TERM_1_0_0__Recv( m, x ) @ #i)
+  (AUTO_IN_TERM_1_0_0__Recv___AUTO_MEMBER_1( m, x ) @ #i)
  ∧
   (∀ #j. (!KU( x ) @ #j) ⇒ ¬(#j < #i)) ∧
-  (∀ #j. (AUTO_OUT_TERM_1_0_0__Recv( m ) @ #j) ⇒ ¬(#j < #i))"
+  (∀ #j.
+    (AUTO_OUT_TERM_1_0_0__Recv___AUTO_MEMBER_1( m ) @ #j) ⇒ ¬(#j < #i))"
 */
 induction
   case empty_trace
@@ -540,7 +572,7 @@ next
   solve( (last(#i))  ∥
          (∃ #j. (!KU( x ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #i))  ∥
          (∃ #j.
-           (AUTO_OUT_TERM_1_0_0__Recv( senc(x, k) ) @ #j)
+           (AUTO_OUT_TERM_1_0_0__Recv___AUTO_MEMBER_1( senc(x, k) ) @ #j)
           ∧
            (¬(last(#j))) ∧ (#j < #i)) )
     case case_1
@@ -550,7 +582,7 @@ next
         case Recv
         solve( (∃ #j. (!KU( t ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.1))  ∥
                (∃ #j.
-                 (AUTO_OUT_TERM_1_0_0__Recv( senc(t, ~k.1) ) @ #j)
+                 (AUTO_OUT_TERM_1_0_0__Recv___AUTO_MEMBER_1( senc(t, ~k.1) ) @ #j)
                 ∧
                  (¬(last(#j))) ∧ (#j < #vr.1)) )
           case case_1
@@ -580,16 +612,18 @@ lemma AUTO_typing_RHS [right, sources]:
   all-traces
   "(⊤) ∧
    (∀ x m #i.
-     (AUTO_IN_TERM_1_0_0__Recv( m, x ) @ #i) ⇒
+     (AUTO_IN_TERM_1_0_0__Recv___AUTO_MEMBER_2( m, x ) @ #i) ⇒
      ((∃ #j. (!KU( x ) @ #j) ∧ (#j < #i)) ∨
-      (∃ #j. (AUTO_OUT_TERM_1_0_0__Recv( m ) @ #j) ∧ (#j < #i))))"
+      (∃ #j.
+        (AUTO_OUT_TERM_1_0_0__Recv___AUTO_MEMBER_2( m ) @ #j) ∧ (#j < #i))))"
 /*
 guarded formula characterizing all counter-examples:
 "∃ x m #i.
-  (AUTO_IN_TERM_1_0_0__Recv( m, x ) @ #i)
+  (AUTO_IN_TERM_1_0_0__Recv___AUTO_MEMBER_2( m, x ) @ #i)
  ∧
   (∀ #j. (!KU( x ) @ #j) ⇒ ¬(#j < #i)) ∧
-  (∀ #j. (AUTO_OUT_TERM_1_0_0__Recv( m ) @ #j) ⇒ ¬(#j < #i))"
+  (∀ #j.
+    (AUTO_OUT_TERM_1_0_0__Recv___AUTO_MEMBER_2( m ) @ #j) ⇒ ¬(#j < #i))"
 */
 induction
   case empty_trace
@@ -599,7 +633,7 @@ next
   solve( (last(#i))  ∥
          (∃ #j. (!KU( x ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #i))  ∥
          (∃ #j.
-           (AUTO_OUT_TERM_1_0_0__Recv( senc(x, k) ) @ #j)
+           (AUTO_OUT_TERM_1_0_0__Recv___AUTO_MEMBER_2( senc(x, k) ) @ #j)
           ∧
            (¬(last(#j))) ∧ (#j < #i)) )
     case case_1
@@ -609,7 +643,7 @@ next
         case Recv
         solve( (∃ #j. (!KU( t ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.1))  ∥
                (∃ #j.
-                 (AUTO_OUT_TERM_1_0_0__Recv( senc(t, ~k.1) ) @ #j)
+                 (AUTO_OUT_TERM_1_0_0__Recv___AUTO_MEMBER_2( senc(t, ~k.1) ) @ #j)
                 ∧
                  (¬(last(#j))) ∧ (#j < #vr.1)) )
           case case_1
@@ -641,8 +675,8 @@ qed
 Generated from:
 Tamarin version 1.13.0
 Maude version 3.5.1
-Git revision: 4a4676de54da4a5081e344b98760d9d4e0f35d46 (with uncommited changes), branch: diff-mirror-proofs
-Compiled at: 2026-09-25 20:02:43.632305942 UTC
+Git revision: c4572aa2bab99bb68de09813420a8c2172b99182 (with uncommited changes), branch: diff-rule-families
+Compiled at: 2026-09-25 20:20:40.787603735 UTC
 */
 
 end
@@ -654,12 +688,12 @@ summary of summaries:
 analyzed: examples/regression/trace/diff-auto-source-macros.spthy
 
   output:          examples/regression/trace/diff-auto-source-macros.spthy.tmp
-  processing time: 0.45s
+  processing time: 0.43s
   
   LHS :  got_tagged (all-traces): verified (5 steps)
   LHS :  AUTO_typing_LHS (all-traces): verified (12 steps)
   RHS :  AUTO_typing_RHS (all-traces): verified (12 steps)
-  DiffLemma:  Observational_equivalence : analysis incomplete (162 steps)
+  DiffLemma:  Observational_equivalence : analysis incomplete (164 steps)
 
 ==============================================================================
 */

@@ -7,15 +7,6 @@ begin
 functions: fst/1, pair/2, snd/1
 equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
 
-rule (modulo E) P:
-   [ ] --[ Made( 'ok' ) ]-> [ Out( 'ok' ) ]
- left
-  rule (modulo E) P:
-     [ ] --[ Made( 'ok' ), Restr_P_LHS_1( $a ) ]-> [ Out( 'ok' ) ]
- right
-  rule (modulo E) P:
-     [ ] --[ Made( 'ok' ) ]-> [ Out( 'ok' ) ]
-
 restriction Restr_P_LHS_1 [left]:
   "∀ x #NOW. (Restr_P_LHS_1( x ) @ #NOW) ⇒ (x = 'left')"
   // safety formula
@@ -24,6 +15,15 @@ restriction Restr_P_LHS_1 [left]:
   expanded formula:
   "∀ x #NOW. (Restr_P_LHS_1( x ) @ #NOW) ⇒ (x = 'left')"
   */
+
+rule (modulo E) P:
+   [ ] --[ Made( 'ok' ) ]-> [ Out( 'ok' ) ]
+ left
+  rule (modulo E) P:
+     [ ] --[ Made( 'ok' ), Restr_P_LHS_1( $a ) ]-> [ Out( 'ok' ) ]
+ right
+  rule (modulo E) P:
+     [ ] --[ Made( 'ok' ) ]-> [ Out( 'ok' ) ]
 
 lemma reachable [right]:
   exists-trace "∃ #i. Made( 'ok' ) @ #i"
@@ -249,8 +249,8 @@ qed
 Generated from:
 Tamarin version 1.13.0
 Maude version 3.5.1
-Git revision: 4a4676de54da4a5081e344b98760d9d4e0f35d46 (with uncommited changes), branch: diff-mirror-proofs
-Compiled at: 2026-09-25 20:02:43.632305942 UTC
+Git revision: 7e9aae089915fe0110a29fc5483bd9d0c0f3344c (with uncommited changes), branch: diff-rule-families
+Compiled at: 2026-10-07 19:31:20.946448454 UTC
 */
 
 end
@@ -262,7 +262,7 @@ summary of summaries:
 analyzed: examples/regression/trace/diff-side-restriction-choices.spthy
 
   output:          examples/regression/trace/diff-side-restriction-choices.spthy.tmp
-  processing time: 0.10s
+  processing time: 0.17s
   
   RHS :  reachable (exists-trace): verified (2 steps)
   LHS :  reachable (exists-trace): verified (2 steps)
