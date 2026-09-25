@@ -36,9 +36,19 @@ restriction OneSetup [right]:
   "∀ #i #j. ((Setup( ) @ #i) ∧ (Setup( ) @ #j)) ⇒ (#i = #j)"
   // safety formula
 
+  /*
+  expanded formula:
+  "∀ #i #j. ((Setup( ) @ #i) ∧ (Setup( ) @ #j)) ⇒ (#i = #j)"
+  */
+
 restriction OneSetup [left]:
   "∀ #i #j. ((Setup( ) @ #i) ∧ (Setup( ) @ #j)) ⇒ (#i = #j)"
   // safety formula
+
+  /*
+  expanded formula:
+  "∀ #i #j. ((Setup( ) @ #i) ∧ (Setup( ) @ #j)) ⇒ (#i = #j)"
+  */
 
 restriction notSameRole [right]:
   "∀ H1 H2 D1 D2 #i.
@@ -48,6 +58,15 @@ restriction notSameRole [right]:
      (¬(D1 = D2)))"
   // safety formula
 
+  /*
+  expanded formula:
+  "∀ H1 H2 D1 D2 #i.
+    (Roles( H1, H2, D1, D2 ) @ #i) ⇒
+    ((((((¬(H1 = H2)) ∧ (¬(H1 = D1))) ∧ (¬(H1 = D2))) ∧ (¬(H2 = D1))) ∧
+      (¬(H2 = D2))) ∧
+     (¬(D1 = D2)))"
+  */
+
 restriction notSameRole [left]:
   "∀ H1 H2 D1 D2 #i.
     (Roles( H1, H2, D1, D2 ) @ #i) ⇒
@@ -55,6 +74,15 @@ restriction notSameRole [left]:
       (¬(H2 = D2))) ∧
      (¬(D1 = D2)))"
   // safety formula
+
+  /*
+  expanded formula:
+  "∀ H1 H2 D1 D2 #i.
+    (Roles( H1, H2, D1, D2 ) @ #i) ⇒
+    ((((((¬(H1 = H2)) ∧ (¬(H1 = D1))) ∧ (¬(H1 = D2))) ∧ (¬(H2 = D1))) ∧
+      (¬(H2 = D2))) ∧
+     (¬(D1 = D2)))"
+  */
 
 diffLemma Observational_equivalence:
 rule-equivalence
@@ -108,14 +136,14 @@ next
     step( simplify )
     step( solve( AgSt_H1v( $H, $D, vote ) ▶₀ #i ) )
       case Setup
-      by sorry // Cannot prove
+      MIRRORED
     qed
   next
     case RHS
     step( simplify )
     step( solve( AgSt_H1v( $H, $D, vote ) ▶₀ #i ) )
       case Setup
-      by sorry // Cannot prove
+      MIRRORED
     qed
   qed
 next
@@ -141,7 +169,7 @@ next
         case shuffleVoters_case_1
         step( solve( Channel( $Hvoter, vote ) ▶₂ #i ) )
           case H_vote
-          by sorry // Cannot prove
+          MIRRORED
         qed
       next
         case shuffleVoters_case_2
@@ -165,7 +193,7 @@ next
         case shuffleVoters_case_1
         step( solve( Channel( $Hvoter, vote ) ▶₂ #i ) )
           case H_vote
-          by sorry // Cannot prove
+          MIRRORED
         qed
       next
         case shuffleVoters_case_2
@@ -184,7 +212,7 @@ next
         case shuffleVoters_case_2
         step( solve( Channel( $Hvoter, vote ) ▶₂ #i ) )
           case H_vote
-          by sorry // Cannot prove
+          MIRRORED
         qed
       qed
     next
@@ -208,7 +236,7 @@ next
         case shuffleVoters_case_2
         step( solve( Channel( $Hvoter, vote ) ▶₂ #i ) )
           case H_vote
-          by sorry // Cannot prove
+          MIRRORED
         qed
       qed
     next
@@ -241,11 +269,11 @@ next
   backward-search
     case LHS
     step( simplify )
-    by sorry // Cannot prove
+    MIRRORED
   next
     case RHS
     step( simplify )
-    by sorry // Cannot prove
+    MIRRORED
   qed
 next
   case Rule_shuffleVoters
@@ -254,20 +282,20 @@ next
     step( simplify )
     step( solve( ShuffleAgents( (x++y) ) ▶₀ #i ) )
       case Setup_case_1
-      by sorry // Cannot prove
+      MIRRORED
     next
       case Setup_case_2
-      by sorry // Cannot prove
+      MIRRORED
     qed
   next
     case RHS
     step( simplify )
     step( solve( ShuffleAgents( (x++y) ) ▶₀ #i ) )
       case Setup_case_1
-      by sorry // Cannot prove
+      MIRRORED
     next
       case Setup_case_2
-      by sorry // Cannot prove
+      MIRRORED
     qed
   qed
 qed
@@ -278,8 +306,8 @@ qed
 Generated from:
 Tamarin version 1.13.0
 Maude version 3.5.1
-Git revision: 41bc81379b23681e7057314a5cf66a25c45e1986, branch: canonicalise-subst
-Compiled at: 2026-07-27 16:11:34.947223 UTC
+Git revision: 4a4676de54da4a5081e344b98760d9d4e0f35d46 (with uncommited changes), branch: diff-mirror-proofs
+Compiled at: 2026-09-25 20:02:43.632305942 UTC
 */
 
 end
@@ -291,9 +319,9 @@ summary of summaries:
 analyzed: examples/regression/diff/issue198-1.spthy
 
   output:          examples/regression/diff/issue198-1.spthy.tmp
-  processing time: 0.10s
+  processing time: 0.52s
   
-  DiffLemma:  Observational_equivalence : analysis incomplete (84 steps)
+  DiffLemma:  Observational_equivalence : verified (84 steps)
 
 ==============================================================================
 */

@@ -285,6 +285,9 @@ ccs15-case-studies:	$(CCS15_TARGETS)
 REGRESSION_OBSEQ_CASE_STUDIES=issue223.spthy issue198-1.spthy issue198-2.spthy issue324.spthy issue331.spthy last.spthy
 REGRESSION_OBSEQ_TARGETS=$(subst .spthy,_analyzed-diff.spthy,$(addprefix case-studies$(SUBDIR)regression/diff/,$(REGRESSION_OBSEQ_CASE_STUDIES)))
 
+# This tests warnings for forbidden last atoms, not proof search on those formulas.
+case-studies$(SUBDIR)regression/diff/last_analyzed-diff.spthy: DIFF_EXTRA_ARGS=--bound=6
+
 TESTOBSEQ_CASE_STUDIES=AxiomDiffTest1.spthy AxiomDiffTest2.spthy AxiomDiffTest3.spthy AxiomDiffTest4.spthy N5N6DiffTest.spthy MacroDiffprobEnc.spthy
 TESTOBSEQ_TARGETS=$(subst .spthy,_analyzed-diff.spthy,$(addprefix case-studies$(SUBDIR)features/equivalence/,$(TESTOBSEQ_CASE_STUDIES))) $(REGRESSION_OBSEQ_TARGETS)
 
