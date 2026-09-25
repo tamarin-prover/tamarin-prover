@@ -1,0 +1,277 @@
+theory SoundnessDiffMultisessionRestriction
+
+begin
+
+// Function signature and definition of the equational theory E
+
+functions: fst/1, pair/2, snd/1
+equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
+
+rule (modulo E) Init:
+   [ Fr( ~k ) ] --> [ First( ~k ), Second( ~k ) ]
+
+rule (modulo E) EmitFirst:
+   [ First( k ) ] --[ EmitFor( k ) ]-> [ Out( 'ok' ) ]
+
+rule (modulo E) EmitSecond:
+   [ Second( k ) ] --[ EmitFor( k ) ]-> [ Out( 'ok' ) ]
+
+restriction OneEmission [right]:
+  "∀ k #i #j. ((EmitFor( k ) @ #i) ∧ (EmitFor( k ) @ #j)) ⇒ (#i = #j)"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ k #i #j. ((EmitFor( k ) @ #i) ∧ (EmitFor( k ) @ #j)) ⇒ (#i = #j)"
+  */
+
+lemma left_two [left]:
+  exists-trace
+  "∃ k #i #j. ((EmitFor( k ) @ #i) ∧ (EmitFor( k ) @ #j)) ∧ (¬(#i = #j))"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ k #i #j. (EmitFor( k ) @ #i) ∧ (EmitFor( k ) @ #j) ∧ ¬(#i = #j)"
+*/
+simplify
+solve( (#i < #j)  ∥ (#j < #i) )
+  case case_1
+  solve( EmitFor( k ) @ #i )
+    case EmitFirst
+    solve( First( k ) ▶₀ #i )
+      case Init
+      solve( EmitFor( ~k ) @ #j )
+        case EmitSecond
+        solve( Second( ~k ) ▶₀ #j )
+          case Init
+          SOLVED // trace found
+        qed
+      qed
+    qed
+  qed
+qed
+
+lemma right_at_most_one [right]:
+  all-traces
+  "∀ k #i #j. ((EmitFor( k ) @ #i) ∧ (EmitFor( k ) @ #j)) ⇒ (#i = #j)"
+/*
+guarded formula characterizing all counter-examples:
+"∃ k #i #j. (EmitFor( k ) @ #i) ∧ (EmitFor( k ) @ #j) ∧ ¬(#i = #j)"
+*/
+simplify
+by contradiction /* from formulas */
+
+diffLemma Observational_equivalence:
+rule-equivalence
+  case Rule_Destrd_0_fst
+  backward-search
+    case LHS
+    step( simplify )
+    step( solve( !KD( <x, x.1> ) ▶₀ #i ) )
+      case EmitFirst
+      by step( contradiction /* impossible chain */ )
+    next
+      case EmitSecond
+      by step( contradiction /* impossible chain */ )
+    qed
+  next
+    case RHS
+    step( simplify )
+    step( solve( !KD( <x, x.1> ) ▶₀ #i ) )
+      case EmitFirst
+      by step( contradiction /* impossible chain */ )
+    next
+      case EmitSecond
+      by step( contradiction /* impossible chain */ )
+    qed
+  qed
+next
+  case Rule_Destrd_0_snd
+  backward-search
+    case LHS
+    step( simplify )
+    step( solve( !KD( <x, x.1> ) ▶₀ #i ) )
+      case EmitFirst
+      by step( contradiction /* impossible chain */ )
+    next
+      case EmitSecond
+      by step( contradiction /* impossible chain */ )
+    qed
+  next
+    case RHS
+    step( simplify )
+    step( solve( !KD( <x, x.1> ) ▶₀ #i ) )
+      case EmitFirst
+      by step( contradiction /* impossible chain */ )
+    next
+      case EmitSecond
+      by step( contradiction /* impossible chain */ )
+    qed
+  qed
+next
+  case Rule_EmitFirst
+  backward-search
+    case LHS
+    step( simplify )
+    by sorry // restriction preservation not established
+  next
+    case RHS
+    step( simplify )
+    MIRRORED
+  qed
+next
+  case Rule_EmitSecond
+  backward-search
+    case LHS
+    step( simplify )
+    by sorry // restriction preservation not established
+  next
+    case RHS
+    step( simplify )
+    MIRRORED
+  qed
+next
+  case Rule_Equality
+  backward-search
+    case LHS
+    step( simplify )
+    step( solve( !KD( x ) ▶₁ #i ) )
+      case EmitFirst
+      step( solve( (#vl, 0) ~~> (#i, 1) ) )
+        case Const_pub_ok
+        step( solve( First( k ) ▶₀ #vr ) )
+          case Init
+          step( solve( !KU( 'ok' ) @ #vk ) )
+            case coerce
+            step( solve( !KD( 'ok' ) ▶₀ #vk ) )
+              case EmitFirst
+              by step( contradiction /* impossible chain */ )
+            next
+              case EmitSecond
+              by step( contradiction /* impossible chain */ )
+            qed
+          next
+            case pub
+            by sorry // restriction preservation not established
+          qed
+        qed
+      qed
+    next
+      case EmitSecond
+      step( solve( (#vl, 0) ~~> (#i, 1) ) )
+        case Const_pub_ok
+        step( solve( Second( k ) ▶₀ #vr ) )
+          case Init
+          step( solve( !KU( 'ok' ) @ #vk ) )
+            case coerce
+            step( solve( !KD( 'ok' ) ▶₀ #vk ) )
+              case EmitFirst
+              by step( contradiction /* impossible chain */ )
+            next
+              case EmitSecond
+              by step( contradiction /* impossible chain */ )
+            qed
+          next
+            case pub
+            by sorry // restriction preservation not established
+          qed
+        qed
+      qed
+    qed
+  next
+    case RHS
+    step( simplify )
+    step( solve( !KD( x ) ▶₁ #i ) )
+      case EmitFirst
+      step( solve( (#vl, 0) ~~> (#i, 1) ) )
+        case Const_pub_ok
+        step( solve( First( k ) ▶₀ #vr ) )
+          case Init
+          step( solve( !KU( 'ok' ) @ #vk ) )
+            case coerce
+            step( solve( !KD( 'ok' ) ▶₀ #vk ) )
+              case EmitFirst
+              by step( contradiction /* impossible chain */ )
+            next
+              case EmitSecond
+              by step( contradiction /* impossible chain */ )
+            qed
+          next
+            case pub
+            MIRRORED
+          qed
+        qed
+      qed
+    next
+      case EmitSecond
+      step( solve( (#vl, 0) ~~> (#i, 1) ) )
+        case Const_pub_ok
+        step( solve( Second( k ) ▶₀ #vr ) )
+          case Init
+          step( solve( !KU( 'ok' ) @ #vk ) )
+            case coerce
+            step( solve( !KD( 'ok' ) ▶₀ #vk ) )
+              case EmitFirst
+              by step( contradiction /* impossible chain */ )
+            next
+              case EmitSecond
+              by step( contradiction /* impossible chain */ )
+            qed
+          next
+            case pub
+            MIRRORED
+          qed
+        qed
+      qed
+    qed
+  qed
+next
+  case Rule_Init
+  backward-search
+    case LHS
+    step( simplify )
+    by sorry // restriction preservation not established
+  next
+    case RHS
+    step( simplify )
+    MIRRORED
+  qed
+next
+  case Rule_Send
+  backward-search
+    case LHS
+    step( simplify )
+    by sorry // restriction preservation not established
+  next
+    case RHS
+    step( simplify )
+    MIRRORED
+  qed
+qed
+
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.13.0
+Maude version 3.5.1
+Git revision: 4a4676de54da4a5081e344b98760d9d4e0f35d46 (with uncommited changes), branch: diff-mirror-proofs
+Compiled at: 2026-09-25 20:02:43.632305942 UTC
+*/
+
+end
+/* Output
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/regression/trace/soundness-diff-multisession-restriction.spthy
+
+  output:          examples/regression/trace/soundness-diff-multisession-restriction.spthy.tmp
+  processing time: 0.15s
+  
+  LHS :  left_two (exists-trace): verified (7 steps)
+  RHS :  right_at_most_one (all-traces): verified (2 steps)
+  DiffLemma:  Observational_equivalence : analysis incomplete (72 steps)
+
+==============================================================================
+*/

@@ -1,36 +1,37 @@
-theory AxiomDiffTest4
+theory DiffDisequalityAttack
 
 begin
 
 // Function signature and definition of the equational theory E
 
+builtins: multiset
 functions: fst/1, pair/2, snd/1
 equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
 
-rule (modulo E) not_match:
-   [ In( x ) ] --[ RNeq( x, 'B' ) ]-> [ Out( 'a' ) ]
+rule (modulo E) Produce:
+   [ In( u ), In( v ) ] --> [ F( (u++v) ) ]
 
-restriction BlockSometimes [right]:
-  "∀ t #e. (RNeq( t, t ) @ #e) ⇒ (⊥)"
+rule (modulo E) Consume:
+   [ F( (x++y) ) ] --[ Choice( x, y ) ]-> [ Out( x ) ]
+
+restriction Same [right]:
+  "∀ a b #i. (Choice( a, b ) @ #i) ⇒ (a = b)"
   // safety formula
 
   /*
   expanded formula:
-  "∀ t #e. (RNeq( t, t ) @ #e) ⇒ (⊥)"
+  "∀ a b #i. (Choice( a, b ) @ #i) ⇒ (a = b)"
   */
 
 diffLemma Observational_equivalence:
 rule-equivalence
-  case Rule_not_match
+  case Rule_Consume
   backward-search
     case LHS
     step( simplify )
-    step( solve( !KU( x ) @ #vk ) )
-      case pub
-      step( solve( !KU( $x ) @ #vk ) )
-        case pub
-        by ATTACK // trace found
-      qed
+    step( solve( F( (x++y) ) ▶₀ #i ) )
+      case Produce_case_1
+      by ATTACK // trace found
     qed
   qed
 qed
@@ -51,12 +52,12 @@ end
 ==============================================================================
 summary of summaries:
 
-analyzed: examples/features/equivalence/AxiomDiffTest4.spthy
+analyzed: examples/regression/trace/diff-disequality-attack.spthy
 
-  output:          examples/features/equivalence/AxiomDiffTest4.spthy.tmp
-  processing time: 0.17s
+  output:          examples/regression/trace/diff-disequality-attack.spthy.tmp
+  processing time: 0.23s
   
-  DiffLemma:  Observational_equivalence : falsified - found trace (6 steps)
+  DiffLemma:  Observational_equivalence : falsified - found trace (5 steps)
 
 ==============================================================================
 */
