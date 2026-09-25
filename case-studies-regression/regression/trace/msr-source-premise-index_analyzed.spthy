@@ -1,0 +1,177 @@
+theory SourcePremiseIndex
+
+begin
+
+// Function signature and definition of the equational theory E
+
+functions: fst/1, pair/2, snd/1
+equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
+
+tactic: prem1
+presort: S
+prio: {id}
+  regex"▶₁"
+tactic: prem2
+presort: S
+prio: {id}
+  regex"▶₂"
+
+rule (modulo E) Create:
+   [ Fr( ~x ) ] --[ Cr( ~x ) ]-> [ S( ~x ), !Permit( ~x ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Twice:
+   [ S( x ), S( x ) ] --[ Twice( x ) ]-> [ ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Three:
+   [ S( x ), !Permit( x ), S( x ) ] --[ Three( x ) ]-> [ ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) CreateTwo:
+   [ Fr( ~x ) ] --> [ T( ~x ), T( ~x ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) ConsumeTwo:
+   [ T( x ), T( x ) ] --[ ConsumedTwo( x ) ]-> [ ]
+
+  /* has exactly the trivial AC variant */
+
+lemma impossible_second_first [heuristic={prem1}]:
+  all-traces "∀ x #i. (Twice( x ) @ #i) ⇒ (⊥)"
+/*
+guarded formula characterizing all counter-examples:
+"∃ x #i. (Twice( x ) @ #i)"
+*/
+simplify
+solve( S( x ) ▶₁ #i )
+  case Create
+  by solve( S( ~x ) ▶₀ #i )
+qed
+
+lemma impossible_default:
+  all-traces "∀ x #i. (Twice( x ) @ #i) ⇒ (⊥)"
+/*
+guarded formula characterizing all counter-examples:
+"∃ x #i. (Twice( x ) @ #i)"
+*/
+simplify
+solve( S( x ) ▶₀ #i )
+  case Create
+  by solve( S( ~x ) ▶₁ #i )
+qed
+
+lemma no_witness_second_first [heuristic={prem1}]:
+  exists-trace "∃ x #i. Twice( x ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ x #i. (Twice( x ) @ #i)"
+*/
+simplify
+solve( S( x ) ▶₁ #i )
+  case Create
+  by solve( S( ~x ) ▶₀ #i )
+qed
+
+lemma no_witness_default:
+  exists-trace "∃ x #i. Twice( x ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ x #i. (Twice( x ) @ #i)"
+*/
+simplify
+solve( S( x ) ▶₀ #i )
+  case Create
+  by solve( S( ~x ) ▶₁ #i )
+qed
+
+lemma impossible_third_first [heuristic={prem2}]:
+  all-traces "∀ x #i. (Three( x ) @ #i) ⇒ (⊥)"
+/*
+guarded formula characterizing all counter-examples:
+"∃ x #i. (Three( x ) @ #i)"
+*/
+simplify
+solve( S( x ) ▶₂ #i )
+  case Create
+  by solve( S( ~x ) ▶₀ #i )
+qed
+
+lemma no_witness_third_first [heuristic={prem2}]:
+  exists-trace "∃ x #i. Three( x ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ x #i. (Three( x ) @ #i)"
+*/
+simplify
+solve( S( x ) ▶₂ #i )
+  case Create
+  by solve( S( ~x ) ▶₀ #i )
+qed
+
+lemma witness_second_first [heuristic={prem1}]:
+  exists-trace "∃ x #i. ConsumedTwo( x ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ x #i. (ConsumedTwo( x ) @ #i)"
+*/
+simplify
+solve( T( x ) ▶₁ #i )
+  case CreateTwo_case_1
+  solve( T( ~x ) ▶₀ #i )
+    case CreateTwo
+    SOLVED // trace found
+  qed
+qed
+
+lemma witness_default:
+  exists-trace "∃ x #i. ConsumedTwo( x ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ x #i. (ConsumedTwo( x ) @ #i)"
+*/
+simplify
+solve( T( x ) ▶₀ #i )
+  case CreateTwo_case_1
+  solve( T( ~x ) ▶₁ #i )
+    case CreateTwo
+    SOLVED // trace found
+  qed
+qed
+
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.13.0
+Maude version 3.5.1
+Git revision: 5df53af2911dfd01204a9142e8237672e5d05dae (with uncommited changes), branch: msr-proof-correctness
+Compiled at: 2026-09-25 19:18:42.692960904 UTC
+*/
+
+end
+/* Output
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/regression/trace/msr-source-premise-index.spthy
+
+  output:          examples/regression/trace/msr-source-premise-index.spthy.tmp
+  processing time: 0.15s
+  
+  impossible_second_first (all-traces): verified (3 steps)
+  impossible_default (all-traces): verified (3 steps)
+  no_witness_second_first (exists-trace): falsified - no trace found (3 steps)
+  no_witness_default (exists-trace): falsified - no trace found (3 steps)
+  impossible_third_first (all-traces): verified (3 steps)
+  no_witness_third_first (exists-trace): falsified - no trace found (3 steps)
+  witness_second_first (exists-trace): verified (4 steps)
+  witness_default (exists-trace): verified (4 steps)
+
+==============================================================================
+*/
