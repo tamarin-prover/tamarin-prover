@@ -1,0 +1,402 @@
+theory InjectiveLast
+
+begin
+
+// Function signature and definition of the equational theory E
+
+functions: fst/1, pair/2, snd/1
+equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
+
+tactic: prem
+presort: S
+prio: {id}
+  regex"last\(#j\)"
+prio: {id}
+  regex"▶₀#j"
+
+/* looping facts with injective instances: S/1 */
+
+rule (modulo E) Create:
+   [ Fr( ~id ) ] --[ Cr( ~id ) ]-> [ S( ~id ), Once( ~id ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Use:
+   [ S( id ), Once( id ) ] --[ Use( id ) ]-> [ S( id ) ]
+
+  // loop breaker: [0]
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Fin:
+   [ S( id ) ] --[ Fin( id ), FinArgument( id, $x ) ]-> [ ]
+
+  /* has exactly the trivial AC variant */
+
+lemma induction_counterexample [use_induction, heuristic={prem}]:
+  all-traces
+  "∀ id #i #j #k.
+    ((((((Cr( id ) @ #i) ∧ (Fin( id ) @ #j)) ∧ (Fin( id ) @ #k)) ∧
+       (#i < #j)) ∧
+      (#i < #k)) ∧
+     (¬(∃ #u. Use( id ) @ #u))) ⇒
+    (⊥)"
+/*
+guarded formula characterizing all counter-examples:
+"∃ id #i #j #k.
+  (Cr( id ) @ #i) ∧ (Fin( id ) @ #j) ∧ (Fin( id ) @ #k)
+ ∧
+  (#i < #j) ∧ (#i < #k) ∧ (∀ #u. (Use( id ) @ #u) ⇒ ⊥)"
+*/
+induction
+  case non_empty_trace
+  solve( (last(#j))  ∥ (∃ #u. (Use( ~id ) @ #u) ∧ ¬(last(#u))) )
+    case case_1
+    solve( S( ~id ) ▶₀ #j )
+      case Create
+      SOLVED // trace found
+    qed
+  qed
+qed
+
+lemma direct_counterexample:
+  all-traces
+  "∀ id #i #j #k.
+    ((((((Cr( id ) @ #i) ∧ (Fin( id ) @ #j)) ∧ (Fin( id ) @ #k)) ∧
+       (#i < #j)) ∧
+      (#i < #k)) ∧
+     (¬(∃ #u. Use( id ) @ #u))) ⇒
+    (⊥)"
+/*
+guarded formula characterizing all counter-examples:
+"∃ id #i #j #k.
+  (Cr( id ) @ #i) ∧ (Fin( id ) @ #j) ∧ (Fin( id ) @ #k)
+ ∧
+  (#i < #j) ∧ (#i < #k) ∧ (∀ #u. (Use( id ) @ #u) ⇒ ⊥)"
+*/
+simplify
+solve( S( ~id ) ▶₀ #j )
+  case Create
+  solve( S( ~id ) ▶₀ #k )
+    case Create
+    SOLVED // trace found
+  qed
+qed
+
+lemma witness:
+  exists-trace
+  "∃ id #i #j.
+    (((Cr( id ) @ #i) ∧ (Fin( id ) @ #j)) ∧ (#i < #j)) ∧
+    (¬(∃ #u. Use( id ) @ #u))"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ id #i #j.
+  (Cr( id ) @ #i) ∧ (Fin( id ) @ #j)
+ ∧
+  (#i < #j) ∧ (∀ #u. (Use( id ) @ #u) ⇒ ⊥)"
+*/
+simplify
+solve( S( ~id ) ▶₀ #j )
+  case Create
+  SOLVED // trace found
+qed
+
+lemma distinct_finals_impossible [use_induction, heuristic={prem}]:
+  all-traces
+  "∀ id #i #j #k.
+    (((((Cr( id ) @ #i) ∧ (Fin( id ) @ #j)) ∧ (Fin( id ) @ #k)) ∧
+      (#i < #j)) ∧
+     (#i < #k)) ⇒
+    (#j = #k)"
+/*
+guarded formula characterizing all counter-examples:
+"∃ id #i #j #k.
+  (Cr( id ) @ #i) ∧ (Fin( id ) @ #j) ∧ (Fin( id ) @ #k)
+ ∧
+  (#i < #j) ∧ (#i < #k) ∧ (¬(#j = #k))"
+*/
+induction
+  case empty_trace
+  by contradiction /* from formulas */
+next
+  case non_empty_trace
+  solve( (last(#j))  ∥ (last(#k))  ∥ (#k = #j) )
+    case case_1
+    solve( S( ~id ) ▶₀ #j )
+      case Use
+      solve( S( ~id ) ▶₀ #k )
+        case Create
+        by solve( S( ~id ) ▶₀ #vr )
+      qed
+    qed
+  next
+    case case_2
+    solve( S( ~id ) ▶₀ #j )
+      case Create
+      solve( S( ~id ) ▶₀ #k )
+        case Use
+        by solve( S( ~id ) ▶₀ #vr )
+      qed
+    next
+      case Use
+      by solve( S( ~id ) ▶₀ #k )
+    qed
+  next
+    case case_3
+    by contradiction /* from formulas */
+  qed
+qed
+
+lemma used_witness:
+  exists-trace
+  "∃ id #i #j #k.
+    ((((Cr( id ) @ #i) ∧ (Use( id ) @ #j)) ∧ (Fin( id ) @ #k)) ∧ (#i < #j)) ∧
+    (#j < #k)"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ id #i #j #k.
+  (Cr( id ) @ #i) ∧ (Use( id ) @ #j) ∧ (Fin( id ) @ #k)
+ ∧
+  (#i < #j) ∧ (#j < #k)"
+*/
+simplify
+solve( Once( ~id ) ▶₁ #j )
+  case Create
+  solve( S( ~id ) ▶₀ #k )
+    case Use
+    solve( S( ~id ) ▶₀ #j )
+      case Create
+      SOLVED // trace found
+    qed
+  qed
+qed
+
+lemma ordered_finals_impossible [use_induction, heuristic={prem}]:
+  all-traces
+  "∀ id #i #j #k.
+    (((((Cr( id ) @ #i) ∧ (Fin( id ) @ #j)) ∧ (Fin( id ) @ #k)) ∧
+      (#i < #j)) ∧
+     (#j < #k)) ⇒
+    (⊥)"
+/*
+guarded formula characterizing all counter-examples:
+"∃ id #i #j #k.
+  (Cr( id ) @ #i) ∧ (Fin( id ) @ #j) ∧ (Fin( id ) @ #k)
+ ∧
+  (#i < #j) ∧ (#j < #k)"
+*/
+induction
+  case empty_trace
+  by contradiction /* from formulas */
+next
+  case non_empty_trace
+  solve( S( ~id ) ▶₀ #j )
+    case Create
+    solve( S( ~id ) ▶₀ #k )
+      case Use
+      by solve( S( ~id ) ▶₀ #vr )
+    qed
+  next
+    case Use
+    by solve( S( ~id ) ▶₀ #k )
+  qed
+qed
+
+lemma reverse_ordered_finals_impossible [use_induction,
+                                         heuristic={prem}]:
+  all-traces
+  "∀ id #i #j #k.
+    (((((Cr( id ) @ #i) ∧ (Fin( id ) @ #j)) ∧ (Fin( id ) @ #k)) ∧
+      (#i < #k)) ∧
+     (#k < #j)) ⇒
+    (⊥)"
+/*
+guarded formula characterizing all counter-examples:
+"∃ id #i #j #k.
+  (Cr( id ) @ #i) ∧ (Fin( id ) @ #j) ∧ (Fin( id ) @ #k)
+ ∧
+  (#i < #k) ∧ (#k < #j)"
+*/
+induction
+  case empty_trace
+  by contradiction /* from formulas */
+next
+  case non_empty_trace
+  solve( S( ~id ) ▶₀ #j )
+    case Use
+    solve( S( ~id ) ▶₀ #k )
+      case Create
+      by solve( S( ~id ) ▶₀ #vr )
+    qed
+  qed
+qed
+
+lemma transitively_ordered_finals_impossible [use_induction,
+                                              heuristic={prem}]:
+  all-traces
+  "∀ id #i #j #u #k.
+    (((((((Cr( id ) @ #i) ∧ (Fin( id ) @ #j)) ∧ (Use( id ) @ #u)) ∧
+        (Fin( id ) @ #k)) ∧
+       (#i < #j)) ∧
+      (#j < #u)) ∧
+     (#u < #k)) ⇒
+    (⊥)"
+/*
+guarded formula characterizing all counter-examples:
+"∃ id #i #j #u #k.
+  (Cr( id ) @ #i) ∧ (Fin( id ) @ #j) ∧ (Use( id ) @ #u) ∧ (Fin( id ) @ #k)
+ ∧
+  (#i < #j) ∧ (#j < #u) ∧ (#u < #k)"
+*/
+induction
+  case empty_trace
+  by contradiction /* from formulas */
+next
+  case non_empty_trace
+  solve( S( ~id ) ▶₀ #j )
+    case Create
+    solve( Once( ~id ) ▶₁ #u )
+      case Create
+      solve( S( ~id ) ▶₀ #k )
+        case Use
+        by solve( S( ~id ) ▶₀ #u )
+      qed
+    qed
+  next
+    case Use
+    solve( Once( ~id ) ▶₁ #u )
+      case Create
+      by contradiction /* cyclic */
+    qed
+  qed
+qed
+
+lemma equality_or_order_counterexample [use_induction, heuristic={prem}]:
+  all-traces
+  "∀ id #i #j #k.
+    ((((((Cr( id ) @ #i) ∧ (Fin( id ) @ #j)) ∧ (Fin( id ) @ #k)) ∧
+       (#i < #j)) ∧
+      (#i < #k)) ∧
+     ((#j = #k) ∨ (#j < #k))) ⇒
+    (⊥)"
+/*
+guarded formula characterizing all counter-examples:
+"∃ id #i #j #k.
+  (Cr( id ) @ #i) ∧ (Fin( id ) @ #j) ∧ (Fin( id ) @ #k)
+ ∧
+  (#i < #j) ∧ (#i < #k) ∧ (((#j = #k) ∨ (#j < #k)))"
+*/
+induction
+  case non_empty_trace
+  solve( S( ~id ) ▶₀ #j )
+    case Create
+    SOLVED // trace found
+  qed
+qed
+
+lemma incompatible_final_arguments [use_induction, heuristic={prem}]:
+  all-traces
+  "∀ id #i #j #k.
+    (((((Cr( id ) @ #i) ∧ (FinArgument( id, 'a' ) @ #j)) ∧
+       (FinArgument( id, 'b' ) @ #k)) ∧
+      (#i < #j)) ∧
+     (#i < #k)) ⇒
+    (⊥)"
+/*
+guarded formula characterizing all counter-examples:
+"∃ id #i #j #k.
+  (Cr( id ) @ #i) ∧
+  (FinArgument( id, 'a' ) @ #j) ∧
+  (FinArgument( id, 'b' ) @ #k)
+ ∧
+  (#i < #j) ∧ (#i < #k)"
+*/
+induction
+  case empty_trace
+  by contradiction /* from formulas */
+next
+  case non_empty_trace
+  solve( (last(#k))  ∥ (last(#j)) )
+    case case_1
+    solve( S( ~id ) ▶₀ #j )
+      case Create
+      solve( S( ~id ) ▶₀ #k )
+        case Use
+        by solve( S( ~id ) ▶₀ #vr )
+      qed
+    next
+      case Use
+      by solve( S( ~id ) ▶₀ #k )
+    qed
+  next
+    case case_2
+    solve( S( ~id ) ▶₀ #j )
+      case Use
+      solve( S( ~id ) ▶₀ #k )
+        case Create
+        by solve( S( ~id ) ▶₀ #vr )
+      qed
+    qed
+  qed
+qed
+
+lemma equal_final_arguments_counterexample [use_induction,
+                                            heuristic={prem}]:
+  all-traces
+  "∀ id #i #j #k.
+    (((((Cr( id ) @ #i) ∧ (FinArgument( id, 'a' ) @ #j)) ∧
+       (FinArgument( id, 'a' ) @ #k)) ∧
+      (#i < #j)) ∧
+     (#i < #k)) ⇒
+    (⊥)"
+/*
+guarded formula characterizing all counter-examples:
+"∃ id #i #j #k.
+  (Cr( id ) @ #i) ∧
+  (FinArgument( id, 'a' ) @ #j) ∧
+  (FinArgument( id, 'a' ) @ #k)
+ ∧
+  (#i < #j) ∧ (#i < #k)"
+*/
+induction
+  case non_empty_trace
+  solve( S( ~id ) ▶₀ #j )
+    case Create
+    SOLVED // trace found
+  qed
+qed
+
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.13.0
+Maude version 3.5.1
+Git revision: 5df53af2911dfd01204a9142e8237672e5d05dae (with uncommited changes), branch: msr-proof-correctness
+Compiled at: 2026-09-25 19:18:42.692960904 UTC
+*/
+
+end
+/* Output
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/regression/trace/msr-injective-last.spthy
+
+  output:          examples/regression/trace/msr-injective-last.spthy.tmp
+  processing time: 0.24s
+  
+  induction_counterexample (all-traces): falsified - found trace (4 steps)
+  direct_counterexample (all-traces): falsified - found trace (4 steps)
+  witness (exists-trace): verified (3 steps)
+  distinct_finals_impossible (all-traces): verified (11 steps)
+  used_witness (exists-trace): verified (5 steps)
+  ordered_finals_impossible (all-traces): verified (6 steps)
+  reverse_ordered_finals_impossible (all-traces): verified (5 steps)
+  transitively_ordered_finals_impossible (all-traces): verified (8 steps)
+  equality_or_order_counterexample (all-traces): falsified - found trace (3 steps)
+  incompatible_final_arguments (all-traces): verified (10 steps)
+  equal_final_arguments_counterexample (all-traces): falsified - found trace (3 steps)
+
+==============================================================================
+*/
