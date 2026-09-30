@@ -66,6 +66,7 @@ module Web.Handler
   )
 where
 
+import Theory.Constraint.Solver.Store (isStoreOpen)
 import Theory
   ( Theory(..), DiffTheory(..), ClosedTheory, ClosedDiffTheory, Side
   , ClosedTheory, ClosedDiffTheory, Side, Signature(..)
@@ -80,6 +81,8 @@ import Theory
   , openTheory
   , sorryProver
   , runAutoProver
+  , runAutoProverWith
+  , ProofStateRetention(..)
   , sorryDiffProver
   , runAutoDiffProver
   , prettyClosedTheory
@@ -1243,8 +1246,10 @@ getAutoProverR
   -> Bool  -- Quit on empty oracle
   -> TheoryPath
   -> Handler RepJson
-getAutoProverR idx extractor bound quitOnEmpty =
-  getProverR (fullName, runAutoProver . adapt) idx
+getAutoProverR idx extractor bound quitOnEmpty path = do
+  persistent <- liftIO isStoreOpen
+  let retention = if persistent then PersistProofStates else RetainProofStates
+  getProverR (fullName, runAutoProverWith retention . adapt) idx path
   where
     adapt autoProver = autoProver
       { apBound = actualBound
@@ -1273,8 +1278,10 @@ getAutoProverAllR
   -> Int  -- autoprover bound to use
   -> TheoryPath
   -> Handler RepJson
-getAutoProverAllR idx extractor bound _ =
-  getProverAllR (fullName, runAutoProver . adapt) idx
+getAutoProverAllR idx extractor bound _ = do
+  persistent <- liftIO isStoreOpen
+  let retention = if persistent then PersistProofStates else RetainProofStates
+  getProverAllR (fullName, runAutoProverWith retention . adapt) idx
   where
     adapt autoProver = autoProver { apBound = actualBound, apCut = extractor }
 

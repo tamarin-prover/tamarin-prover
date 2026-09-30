@@ -234,6 +234,7 @@ theoryLoadFlags =
 
 data TheoryLoadOptions = TheoryLoadOptions
   { proveMode :: Bool,
+    proofStateRetention :: ProofStateRetention, -- Internal policy; not a command-line option.
     lemmaNames :: [String],
     stopOnTrace :: Maybe SolutionExtractor,
     proofBound :: Maybe Int,
@@ -267,6 +268,7 @@ defaultTheoryLoadOptions :: TheoryLoadOptions
 defaultTheoryLoadOptions =
   TheoryLoadOptions
     { proveMode = False,
+      proofStateRetention = RetainProofStates,
       lemmaNames = [],
       stopOnTrace = Nothing,
       proofBound = Nothing,
@@ -309,6 +311,7 @@ mkTheoryLoadOptions :: (MonadError ArgumentError m) => Arguments -> m TheoryLoad
 mkTheoryLoadOptions as =
   TheoryLoadOptions
     <$> proveMode
+    <*> pure RetainProofStates
     <*> lemmaNames
     <*> stopOnTrace as
     <*> proofBound
@@ -715,8 +718,8 @@ closeTranslatedTheory thyOpts sign srcThy = do
         Left closedTheory ->
           liftIO $ setTheoryContext (theoryContextFingerprint thyOpts closedTheory)
         Right _ ->
-          -- Diff-theory eviction is currently unsupported
-          pure True
+          throwError $ StoreContextError
+            "--persist-proof-state is not supported for diff theories"
 
   unless evictionContextMatches $
     throwError $ StoreContextError
@@ -737,12 +740,16 @@ closeTranslatedTheory thyOpts sign srcThy = do
     selector :: (HasLemmaName l, HasLemmaAttributes l) => l -> Bool
     selector l = lemmaSelectorByModule thyOpts l && lemmaSelector thyOpts l
 
+    retention
+      | isJust thyOpts.persistProofStateDir = PersistProofStates
+      | otherwise = thyOpts.proofStateRetention
+
     prover
-      | thyOpts.proveMode = replaceSorryProver $ runAutoProver $ constructAutoProver thyOpts
+      | thyOpts.proveMode = replaceSorryProver $ runAutoProverWith retention $ constructAutoProver thyOpts
       | otherwise = mempty
 
     diffProver
-      | thyOpts.proveMode = replaceDiffSorryProver $ runAutoDiffProver $ constructAutoProver thyOpts
+      | thyOpts.proveMode = replaceDiffSorryProver $ runAutoDiffProverWith thyOpts.proofStateRetention $ constructAutoProver thyOpts
       | otherwise = mempty
 
     withDiffTheory = bitraverse pure
@@ -919,7 +926,6 @@ constructAutoProver thyOpts =
     thyOpts.proofBound
     (fromMaybe CutDFS thyOpts.stopOnTrace)
     thyOpts.oracleOnly
-    (isJust thyOpts.persistProofStateDir)
 
 -----------------------------------------------
 -- Add Options parameters in an OpenTheory

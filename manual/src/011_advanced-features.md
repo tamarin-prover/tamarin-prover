@@ -693,7 +693,13 @@ complete input file, with an artificial protocol:
 Reducing Memory Usage and Persisting Proof State {#sec:persist-proof-state}
 ------------------------------------------------
 
-The `--persist-proof-state=DIR` option writes proof states to disk. To try it
+Ordinary batch proof search releases expanded states by default (including diff
+proofs). It keeps the initial state and the states needed for ongoing search;
+other states are reconstructed lazily from the recorded proof methods if needed.
+This does not write proof states to disk. Without persistence, batch trace export
+with `--output-json` or `--output-dot` retains states, as does interactive mode.
+
+The `--persist-proof-state=DIR` option instead writes proof states to disk. To try it
 with `FirstExample.spthy`, run:
 
 ```shell
@@ -728,7 +734,7 @@ can require a fresh directory. Only one process can write to a store at a time.
 Precomputation, the proof-tree structure, and the store index remain in memory.
 Checking an existing proof script uses the normal checking path, without the same
 memory reduction. The store is append-only, has no compaction, and does not support
-diff theories.
+diff theories (requesting persistence for a diff theory reports an error).
 
 
 Configure the Number of Threads Used by Tamarin
