@@ -46,7 +46,7 @@ import Data.Char (toLower)
 import Data.FileEmbed (embedFile)
 import Data.Function (on)
 import Data.Map (keys)
-import Data.Maybe (fromMaybe, isNothing)
+import Data.Maybe (fromMaybe, isJust, isNothing)
 import Data.Set qualified
 import Debug.Trace
 import Data.List (isPrefixOf, intercalate, find, groupBy, sortOn)
@@ -225,6 +225,7 @@ data TheoryLoadOptions = TheoryLoadOptions
   { proveMode :: Bool,
     lemmaNames :: [String],
     stopOnTrace :: Maybe SolutionExtractor,
+    forceStopOnTrace :: Bool, -- ^ stop-on-trace given on the command line: overrides lemma attributes.
     proofBound :: Maybe Int,
     heuristic :: Maybe (Heuristic ProofContext),
     oracleOnly :: Bool,
@@ -257,6 +258,7 @@ defaultTheoryLoadOptions =
     { proveMode = False,
       lemmaNames = [],
       stopOnTrace = Nothing,
+      forceStopOnTrace = False,
       proofBound = Nothing,
       heuristic = Nothing,
       oracleOnly = False,
@@ -298,6 +300,7 @@ mkTheoryLoadOptions as =
     <$> proveMode
     <*> lemmaNames
     <*> stopOnTrace as
+    <*> (isJust <$> stopOnTrace as)
     <*> proofBound
     <*> heuristic
     <*> oracleOnly
@@ -868,6 +871,7 @@ constructAutoProver thyOpts =
     thyOpts.proofBound
     (fromMaybe CutDFS thyOpts.stopOnTrace)
     thyOpts.oracleOnly
+    thyOpts.forceStopOnTrace
 
 -----------------------------------------------
 -- Add Options parameters in an OpenTheory

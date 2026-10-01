@@ -1241,7 +1241,8 @@ getAutoProverR idx extractor bound quitOnEmpty =
     adapt autoProver = autoProver
       { apBound = actualBound
       , apCut = if quitOnEmpty then CutAfterSorry else extractor
-      , quitOnEmptyOracle = quitOnEmpty }
+      , quitOnEmptyOracle = quitOnEmpty
+      , apForceCut = quitOnEmpty || extractor /= CutDFS }
 
     withCommas = intersperse ", "
     fullName   = mconcat $ proverName : " (" : withCommas qualifiers ++ [")"]
@@ -1268,7 +1269,7 @@ getAutoProverAllR
 getAutoProverAllR idx extractor bound _ =
   getProverAllR (fullName, runAutoProver . adapt) idx
   where
-    adapt autoProver = autoProver { apBound = actualBound, apCut = extractor }
+    adapt autoProver = autoProver { apBound = actualBound, apCut = extractor, apForceCut = extractor /= CutDFS }
 
     withCommas = intersperse ", "
     fullName   = mconcat $ proverName : " (" : withCommas qualifiers ++ [")"]
@@ -1297,7 +1298,7 @@ getAutoProverDiffR
 getAutoProverDiffR idx extractor bound =
   getProverDiffR (fullName, runAutoProver . adapt) idx
   where
-    adapt autoProver = autoProver { apBound = actualBound, apCut = extractor }
+    adapt autoProver = autoProver { apBound = actualBound, apCut = extractor, apForceCut = extractor /= CutDFS }
 
     withCommas = intersperse ", "
     fullName   = mconcat $ proverName : " (" : withCommas qualifiers ++ [")"]
@@ -1324,7 +1325,7 @@ getAutoProverAllDiffR
 getAutoProverAllDiffR idx extractor bound =
   getProverDiffAllR (fullName, runAutoProver . adapt, runAutoDiffProver . adapt) idx
   where
-    adapt autoProver = autoProver { apBound = actualBound, apCut = extractor }
+    adapt autoProver = autoProver { apBound = actualBound, apCut = extractor, apForceCut = extractor /= CutDFS }
 
     withCommas = intersperse ", "
     fullName   = mconcat $ proverName : " (" : withCommas qualifiers ++ [")"]
@@ -1352,7 +1353,7 @@ getAutoDiffProverR
 getAutoDiffProverR idx extractor bound =
     getDiffProverR (fullName, runAutoDiffProver . adapt) idx
   where
-    adapt autoProver = autoProver { apBound = actualBound, apCut = extractor }
+    adapt autoProver = autoProver { apBound = actualBound, apCut = extractor, apForceCut = extractor /= CutDFS }
 
     withCommas = intersperse ", "
     fullName   = mconcat $ proverName : " (" : withCommas qualifiers ++ [")"]

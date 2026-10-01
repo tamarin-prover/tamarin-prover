@@ -690,15 +690,16 @@ contradictionDiffProver = DiffProver $ \ctxt d sys prf ->
 -- Automatic Prover's
 ------------------------------------------------------------------------------
 
-data SolutionExtractor = CutDFS | CutBFS | CutSingleThreadDFS | CutNothing | CutAfterSorry
-    deriving( Eq, Ord, Show, Read, Generic, NFData, Binary )
-
 data AutoProver = AutoProver
     { apDefaultHeuristic :: Maybe (Heuristic ProofContext)
     , apDefaultTactic   :: Maybe [Tactic ProofContext]
     , apBound            :: Maybe Int
     , apCut              :: SolutionExtractor
     , quitOnEmptyOracle  :: Bool
+    , apForceCut         :: Bool
+      -- ^ If 'True', 'apCut' overrides a lemma's @stop-on-trace@ attribute
+      -- (e.g. when given on the command line); otherwise the lemma's
+      -- attribute takes precedence and 'apCut' is only the fallback.
     }
     deriving ( Generic, NFData, Binary )
 
@@ -727,11 +728,19 @@ selectDiffTactic :: AutoProver -> DiffProofContext -> [Tactic ProofContext]
 selectDiffTactic prover ctx = fromMaybe [defaultTactic]
                                  (apDefaultTactic prover <|> L.get pcTactic (L.get dpcPCLeft ctx))
 
+-- | The solution extractor to use in the given context: the lemma's
+-- @stop-on-trace@ attribute, unless the prover's cut is forced.
+selectCut :: AutoProver -> ProofContext -> SolutionExtractor
+selectCut prover ctx
+  | apForceCut prover = apCut prover
+  | otherwise         = fromMaybe (apCut prover) (L.get pcStopOnTrace ctx)
+
 runAutoProver :: AutoProver -> Prover
-runAutoProver aut@(AutoProver _ _  bound cut _) =
-    mapProverProof cutSolved $ maybe id boundProver bound autoProver
+runAutoProver aut@(AutoProver _ _  bound _ _ _) =
+    Prover $ \ctxt d se prf ->
+        cutSolved (selectCut aut ctxt) <$> runProver (maybe id boundProver bound autoProver) ctxt d se prf
   where
-    cutSolved = case cut of
+    cutSolved cut = case cut of
       CutDFS             -> cutOnSolvedDFS
       CutBFS             -> cutOnSolvedBFS
       CutSingleThreadDFS -> cutOnSolvedSingleThreadDFS
@@ -750,10 +759,11 @@ runAutoProver aut@(AutoProver _ _  bound cut _) =
         boundProofDepth b <$> runProver p ctxt d se prf
 
 runAutoDiffProver :: AutoProver -> DiffProver
-runAutoDiffProver aut@(AutoProver _ _ bound cut _) =
-    mapDiffProverDiffProof cutSolved $ maybe id boundProver bound autoProver
+runAutoDiffProver aut@(AutoProver _ _ bound _ _ _) =
+    DiffProver $ \ctxt d se prf ->
+        cutSolved (selectCut aut (L.get dpcPCLeft ctxt)) <$> runDiffProver (maybe id boundProver bound autoProver) ctxt d se prf
   where
-    cutSolved = case cut of
+    cutSolved cut = case cut of
       CutDFS             -> cutOnSolvedDFSDiff
       CutBFS             -> cutOnSolvedBFSDiff
       CutSingleThreadDFS -> cutOnSolvedSingleThreadDFSDiff

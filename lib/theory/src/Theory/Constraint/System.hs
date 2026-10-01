@@ -70,6 +70,7 @@ module Theory.Constraint.System (
   , ProofContext(..)
   , DiffProofContext(..)
   , InductionHint(..)
+  , SolutionExtractor(..)
 
   , pcSignature
   , pcRules
@@ -79,6 +80,7 @@ module Theory.Constraint.System (
   , pcUseInduction
   , pcHeuristic
   , pcTactic
+  , pcStopOnTrace
   , pcTraceQuantifier
   , pcLemmaName
   , pcHiddenLemmas
@@ -745,6 +747,11 @@ data Source = Source
 data InductionHint = UseInduction | AvoidInduction
        deriving( Eq, Ord, Show, Generic, NFData, Binary )
 
+-- | How the autoprover cuts the proof tree once a trace (solution) is found
+-- (cf. @--stop-on-trace@).
+data SolutionExtractor = CutDFS | CutBFS | CutSingleThreadDFS | CutNothing | CutAfterSorry
+    deriving( Eq, Ord, Show, Read, Generic, NFData, Binary )
+
 -- | A proof context contains the globally fresh facts, classified rewrite
 -- rules and the corresponding precomputed premise source theorems.
 data ProofContext = ProofContext
@@ -756,6 +763,7 @@ data ProofContext = ProofContext
        , _pcUseInduction       :: InductionHint
        , _pcHeuristic          :: Maybe (Heuristic ProofContext)
        , _pcTactic             :: Maybe [Tactic ProofContext]
+       , _pcStopOnTrace        :: Maybe SolutionExtractor -- per-lemma stop-on-trace method
        , _pcTraceQuantifier    :: SystemTraceQuantifier
        , _pcLemmaName          :: String
        , _pcHiddenLemmas       :: [String]
