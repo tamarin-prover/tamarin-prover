@@ -560,6 +560,7 @@ evictSystemsFromIncrementalProof lemmaName proof = do
     evictSystemRef (OnDisk ref)        = pure (OnDisk ref)
 
     storeMethodEdge Invalidated _ _ = pure ()
+    storeMethodEdge (Sorry _) _ _ = pure ()
     storeMethodEdge method (Just parentSystemRef) childProofs =
         case traverse childRef childProofs of
           Just childRefs ->
@@ -1203,6 +1204,7 @@ solveOrRestore heuristic tactics ctxt depth systemRef = unsafePerformIO $ do
     -- Check if we already have a proof step for this system from a prev run
     storedStep <- readProofStepMaybe (L.get pcLemmaName ctxt) parentRef
     case storedStep of
+      Just (MethodEdge _ _ (Sorry _) _) -> solveAndStore heuristic tactics ctxt depth parentRef systemRef
       Just step -> pure (restoreStep parentRef step)
       Nothing   -> solveAndStore heuristic tactics ctxt depth parentRef systemRef
 {-# NOINLINE solveOrRestore #-}
