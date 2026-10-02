@@ -1227,6 +1227,14 @@ getProverDiffAllR (name, mkProver, mkDiffProver) idx  = do
           thb <- proveDiff thy
           foldM (\tha (s, lemma) -> applyProverAtPathDiff tha s lemma [] autoProver) thb $ names thb
 
+-- | Apply the stop-on-trace method selected in the web UI. The default
+-- ('CutDFS') keeps the autoprover's method, so a lemma's @stop-on-trace@
+-- attribute applies unless one was given on the command line; any other
+-- selection is explicit and overrides the lemma attribute.
+withSelectedCut :: SolutionExtractor -> AutoProver -> AutoProver
+withSelectedCut CutDFS autoProver = autoProver
+withSelectedCut cut    autoProver = autoProver { apCut = cut, apForceCut = True }
+
 -- | Run an autoprover on a given proof path.
 getAutoProverR
   :: TheoryIdx
@@ -1238,10 +1246,8 @@ getAutoProverR
 getAutoProverR idx extractor bound quitOnEmpty =
   getProverR (fullName, runAutoProver . adapt) idx
   where
-    adapt autoProver = autoProver
-      { apBound = actualBound
-      , apCut = if quitOnEmpty then CutAfterSorry else extractor
-      , quitOnEmptyOracle = quitOnEmpty }
+    adapt autoProver = withSelectedCut (if quitOnEmpty then CutAfterSorry else extractor)
+      (autoProver { apBound = actualBound, quitOnEmptyOracle = quitOnEmpty })
 
     withCommas = intersperse ", "
     fullName   = mconcat $ proverName : " (" : withCommas qualifiers ++ [")"]
@@ -1268,7 +1274,7 @@ getAutoProverAllR
 getAutoProverAllR idx extractor bound _ =
   getProverAllR (fullName, runAutoProver . adapt) idx
   where
-    adapt autoProver = autoProver { apBound = actualBound, apCut = extractor }
+    adapt autoProver = withSelectedCut extractor (autoProver { apBound = actualBound })
 
     withCommas = intersperse ", "
     fullName   = mconcat $ proverName : " (" : withCommas qualifiers ++ [")"]
@@ -1297,7 +1303,7 @@ getAutoProverDiffR
 getAutoProverDiffR idx extractor bound =
   getProverDiffR (fullName, runAutoProver . adapt) idx
   where
-    adapt autoProver = autoProver { apBound = actualBound, apCut = extractor }
+    adapt autoProver = withSelectedCut extractor (autoProver { apBound = actualBound })
 
     withCommas = intersperse ", "
     fullName   = mconcat $ proverName : " (" : withCommas qualifiers ++ [")"]
@@ -1324,7 +1330,7 @@ getAutoProverAllDiffR
 getAutoProverAllDiffR idx extractor bound =
   getProverDiffAllR (fullName, runAutoProver . adapt, runAutoDiffProver . adapt) idx
   where
-    adapt autoProver = autoProver { apBound = actualBound, apCut = extractor }
+    adapt autoProver = withSelectedCut extractor (autoProver { apBound = actualBound })
 
     withCommas = intersperse ", "
     fullName   = mconcat $ proverName : " (" : withCommas qualifiers ++ [")"]
@@ -1352,7 +1358,7 @@ getAutoDiffProverR
 getAutoDiffProverR idx extractor bound =
     getDiffProverR (fullName, runAutoDiffProver . adapt) idx
   where
-    adapt autoProver = autoProver { apBound = actualBound, apCut = extractor }
+    adapt autoProver = withSelectedCut extractor (autoProver { apBound = actualBound })
 
     withCommas = intersperse ", "
     fullName   = mconcat $ proverName : " (" : withCommas qualifiers ++ [")"]

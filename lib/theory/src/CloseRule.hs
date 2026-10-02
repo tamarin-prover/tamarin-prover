@@ -288,7 +288,7 @@ deductionCheck ocLimit satLimit sig intrR fact terms =
      where
       f = forAllFormula (factAndD "i" .&&. factAndD "j" .&&. factAndD "k" .==>. factEq "i" "j" .||. factEq "i" "k" .||. factEq "j" "k" )
 
-    defaultProver = replaceSorryProver $ runAutoProver (AutoProver Nothing Nothing Nothing CutDFS False)
+    defaultProver = replaceSorryProver $ runAutoProver (AutoProver Nothing Nothing Nothing CutDFS False False)
 
     checkProofd (TraceFound:q) = checkProofd q
     checkProofd [] = True
@@ -410,7 +410,7 @@ closeRuleCache parameters restrictions typAsms forcedInjFacts sig protoRules int
         classifiedRules rawSources refinedSources injFactInstances
   where
     ctxt0 = ProofContext
-        sig classifiedRules injFactInstances RawSource [] AvoidInduction Nothing Nothing
+        sig classifiedRules injFactInstances RawSource [] AvoidInduction Nothing Nothing Nothing
         (error "closeRuleCache: trace quantifier should not matter here")
         (error "closeRuleCache: lemma name should not matter here") [] verbose isdiff
         (all isSubtermRule destr) (any isConstantRule destr)

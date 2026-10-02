@@ -28,6 +28,7 @@ import Theory.Text.Parser.Proof
 import Theory.Text.Parser.Signature
 
 import Data.Functor (($>))
+import Data.Char (toLower)
 
 -- | Parse an arbitrary type consisting of simple constructors
 constructorp :: (Show a, Enum a, Bounded a) => Parser a
@@ -47,10 +48,23 @@ lemmaAttribute diff workDir = asum
   , symbol "hide_lemma" *> opEqual *> (HideLemma <$> identifier)
   , symbol "heuristic"  *> opEqual *> (LemmaHeuristic <$> (concat <$> many1 (goalRanking diff workDir)))
   , symbol "output"  *> opEqual *> (LemmaModule <$> list constructorp)
+  , symbol "stop-on-trace" *> opEqual *> (LemmaStopOnTrace <$> solutionExtractor)
   , symbol "left"          *> pure LHSLemma
   , symbol "right"         *> pure RHSLemma
 --   , symbol "both"          *> pure BothLemma
   ]
+
+-- | Parse a stop-on-trace method (case-insensitive, as on the command line).
+solutionExtractor :: Parser SolutionExtractor
+solutionExtractor = do
+  m <- identifier
+  case map toLower m of
+    "dfs"    -> pure CutDFS
+    "bfs"    -> pure CutBFS
+    "seqdfs" -> pure CutSingleThreadDFS
+    "none"   -> pure CutNothing
+    "sorry"  -> pure CutAfterSorry
+    _        -> fail $ "unknown stop-on-trace method: " ++ m
 
 -- | Parse a 'TraceQuantifier'.
 traceQuantifier :: Parser TraceQuantifier

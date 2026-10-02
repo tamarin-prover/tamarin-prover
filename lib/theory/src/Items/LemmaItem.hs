@@ -15,7 +15,7 @@ import GHC.Records
 import GHC.Generics (Generic)
 import Control.DeepSeq (NFData)
 import Data.Binary (Binary)
-import Theory.Constraint.Solver (GoalRanking, ProofContext)
+import Theory.Constraint.Solver (GoalRanking, ProofContext, SolutionExtractor)
 import Theory.Model
 import Data.Label as L
 import Theory.Module
@@ -35,9 +35,16 @@ data LemmaAttribute =
        | RHSLemma
        | LemmaHeuristic [GoalRanking ProofContext]
        | LemmaTactic String
+       | LemmaStopOnTrace SolutionExtractor
        | LemmaModule [ModuleType]
 --        | BothLemma
        deriving( Eq, Ord, Show, Generic, NFData, Binary )
+
+-- | The stop-on-trace method requested by the lemma's attributes, if any.
+lemmaStopOnTrace :: [LemmaAttribute] -> Maybe SolutionExtractor
+lemmaStopOnTrace as = case [ e | LemmaStopOnTrace e <- as ] of
+    (e:_) -> Just e
+    []    -> Nothing
 
 -- | A 'TraceQuantifier' stating whether we check satisfiability of validity.
 data TraceQuantifier = ExistsTrace | AllTraces

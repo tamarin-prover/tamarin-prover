@@ -200,3 +200,34 @@ end
         (ERROR
           (ident)
           (ident))))))
+
+=========================
+Lemma stop-on-trace attribute
+=========================
+
+theory StopOnTrace
+begin
+
+lemma a [stop-on-trace=SEQDFS]: exists-trace "T"
+lemma b [use_induction, stop-on-trace=bfs]: "T"
+
+end
+
+---
+
+(theory
+  theory_name: (ident)
+  (lemma
+    lemma_identifier: (ident)
+    (diff_lemma_attrs
+      (lemma_attr
+        method: (stop_on_trace_method)))
+    (trace_quantifier)
+    formula: (atom))
+  (lemma
+    lemma_identifier: (ident)
+    (diff_lemma_attrs
+      (lemma_attr)
+      (lemma_attr
+        method: (stop_on_trace_method)))
+    formula: (atom)))

@@ -101,12 +101,20 @@ prettyLemmaAttribute ReuseDiffLemma     = text "diff_reuse"
 prettyLemmaAttribute InvariantLemma     = text "use_induction"
 prettyLemmaAttribute (HideLemma s)      = text ("hide_lemma=" ++ s)
 prettyLemmaAttribute (LemmaHeuristic h) = text ("heuristic=" ++ (prettyGoalRankings h))
+prettyLemmaAttribute (LemmaStopOnTrace e) = text ("stop-on-trace=" ++ prettySolutionExtractor e)
 prettyLemmaAttribute (LemmaModule h)    = text ("output=[" ++ intercalate "," (map show h)  ++ "]")
 prettyLemmaAttribute LHSLemma           = text "left"
 prettyLemmaAttribute RHSLemma           = text "right"
 prettyLemmaAttribute _                  = emptyDoc
 --     prettyLemmaAttribute BothLemma      = text "both"
 
+
+prettySolutionExtractor :: SolutionExtractor -> String
+prettySolutionExtractor CutDFS             = "DFS"
+prettySolutionExtractor CutBFS             = "BFS"
+prettySolutionExtractor CutSingleThreadDFS = "SEQDFS"
+prettySolutionExtractor CutNothing         = "NONE"
+prettySolutionExtractor CutAfterSorry      = "SORRY"
 
 -- | Pretty print the diff lemma name
 prettyDiffLemmaName :: HighlightDocument d => DiffLemma p -> d
