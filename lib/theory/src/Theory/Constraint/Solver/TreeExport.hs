@@ -45,9 +45,9 @@ writeLemmaTrees storeDirectory storedRecords = mapM writeLemmaTree lemmaRoots
       | lemmaRoot <- decodeRecords KLemmaRoot storedRecords
       ]
 
-    methodEdgesBySystem :: Map.Map Ref MethodEdge
+    methodEdgesBySystem :: Map.Map (String, Ref) MethodEdge
     methodEdgesBySystem = Map.fromList
-      [ (methodEdge.meSubject, methodEdge)
+      [ ((methodEdge.meLemma, methodEdge.meParent), methodEdge)
       | methodEdge <- decodeRecords KMethodEdge storedRecords
       ]
 
@@ -62,7 +62,7 @@ writeLemmaTrees storeDirectory storedRecords = mapM writeLemmaTree lemmaRoots
     writeLemmaTree lemmaRoot = do
         let (rootJSON, proofStatus) =
               buildTreeNode storedSystemRefs methodEdgesBySystem
-                            Set.empty lemmaRoot.lrRoot
+                            lemmaRoot.lrLemma Set.empty lemmaRoot.lrRoot
             treePath = storeDirectory
                        </> (sanitizeFileName lemmaRoot.lrLemma ++ ".tree.json")
         JSON.encodeFile treePath $ object
@@ -75,17 +75,18 @@ writeLemmaTrees storeDirectory storedRecords = mapM writeLemmaTree lemmaRoots
 
 -- | Build one nested proof tree and its aggregate status.
 buildTreeNode :: Set.Set Ref
-              -> Map.Map Ref MethodEdge
+              -> Map.Map (String, Ref) MethodEdge
+              -> String
               -> Set.Set Ref
               -> Ref
               -> (Value, ExportStatus)
-buildTreeNode storedSystemRefs methodEdgesBySystem ancestorRefs systemRef
+buildTreeNode storedSystemRefs methodEdgesBySystem lemmaName ancestorRefs systemRef
   | systemRef `Set.member` ancestorRefs =
       error ("cycle in stored method edges at " ++ show systemRef)
   | systemRef `Set.notMember` storedSystemRefs =
       error ("lemma tree references missing system " ++ show systemRef)
   | otherwise =
-      case Map.lookup systemRef methodEdgesBySystem of
+      case Map.lookup (lemmaName, systemRef) methodEdgesBySystem of
         Nothing         -> unexpandedNode
         Just methodEdge -> expandedNode methodEdge
   where
@@ -103,7 +104,7 @@ buildTreeNode storedSystemRefs methodEdgesBySystem ancestorRefs systemRef
         let nextAncestorRefs = Set.insert systemRef ancestorRefs
             childResults = Map.map
               (buildTreeNode storedSystemRefs methodEdgesBySystem
-                             nextAncestorRefs)
+                             lemmaName nextAncestorRefs)
               methodEdge.meChildren
             childNodes = Map.map fst childResults
             childStatuses = map snd (Map.elems childResults)

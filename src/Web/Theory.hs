@@ -105,7 +105,7 @@ evictSystemsFromLemmas selectedLemma (Just theory) = do
   where
     evictItem (LemmaItem lemma)
       | maybe True (lemma._lName ==) selectedLemma = do
-          evictedProof <- evictSystemsFromIncrementalProof lemma._lProof
+          evictedProof <- evictSystemsFromIncrementalProof lemma._lName lemma._lProof
           pure $ LemmaItem (lemma { _lProof = evictedProof })
     evictItem item = pure item
 
@@ -138,7 +138,7 @@ restoreLemmaProofs theory = do
                                 currentRootRef
                 pure lemma
               else do
-                restored <- restoreProofFromStore currentRootRef
+                restored <- restoreProofFromStore lemma._lName currentRootRef
                 case restored of
                   Nothing    -> pure lemma
                   Just proof -> do

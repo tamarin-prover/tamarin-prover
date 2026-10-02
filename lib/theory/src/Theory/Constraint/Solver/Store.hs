@@ -9,7 +9,8 @@
 --   > [kind : 1B][key : 32B][len : 8B BE][payload]
 --
 -- Values hash their payload. Method edges and lemma roots hash the subject
--- used to look them up. The kind is included in both hashes.
+-- used to look them up. Method edges are scoped by lemma, so lemmas that reach
+-- the same system do not share proof steps. The kind is included in both hashes.
 --
 -- One MVar serializes writes. Readers use pread and do not take the lock.
 -- The index is published only after a complete record was written.
@@ -114,7 +115,7 @@ data Kind
   | KSubtermStore  -- ^ the whole '_sSubtermStore'
   | KEqStore       -- ^ the whole '_sEqStore'
   | KShell         -- ^ a spilled system (heavy fields as refs)
-  | KMethodEdge    -- ^ applied method + case refs, keyed by parent system
+  | KMethodEdge    -- ^ applied method + case refs, keyed by lemma and parent system
   | KLemmaRoot     -- ^ lemma name -> root system and metadata, keyed by the name
   | KTheoryContext  -- ^ the theory context every tree in this store was built against
   deriving (Eq, Ord, Show, Enum, Bounded)
@@ -190,8 +191,6 @@ storePath dir = dir </> "store.bin"
 
 -- | Identifies the binary layout before any records are read.
 storeVersionHeader :: BS.ByteString
--- Upstream added fields to function symbols and intruder rules, changing their
--- Binary encodings. Reject older stores before attempting to decode them.
 storeVersionHeader = "tamarin-store-v5\n"
 
 storeVersionHeaderSize :: Word64
@@ -576,9 +575,10 @@ storeSystem system = do
 
 -- method edges
 
--- | The selected method and all child cases for one system.
+-- | The selected method and all child cases for one system in one lemma.
 data MethodEdge = MethodEdge
-  { meSubject  :: Ref                      -- ^ the parent system
+  { meLemma    :: String
+  , meParent   :: Ref
   , meMethod   :: ProofMethod
   , meChildren :: M.Map CaseName Ref
   } deriving (Generic)
@@ -586,22 +586,24 @@ data MethodEdge = MethodEdge
 instance Bin.Binary MethodEdge
 
 instance ToJSON MethodEdge where
-  toJSON edge = object [ "subject"  .= edge.meSubject
+  toJSON edge = object [ "lemma"    .= edge.meLemma
+                       , "subject"  .= edge.meParent
                        , "method"   .= show edge.meMethod
                        , "children" .= edge.meChildren ]
 
 -- | Derive the lookup key for a system's method edge.
-edgeKey :: Ref -> Ref
-edgeKey (Ref parentBytes) = keyOf KMethodEdge (BL.fromStrict parentBytes)
+edgeKey :: String -> Ref -> Ref
+edgeKey lemmaName parent = keyOf KMethodEdge (Bin.encode (lemmaName, parent))
 
 -- | Store the method applied at a system.
-storeProofStep :: Ref -> ProofMethod -> M.Map CaseName Ref -> IO ()
-storeProofStep parent method children =
-    writeKeyed KMethodEdge (edgeKey parent) (MethodEdge parent method children)
+storeProofStep :: String -> Ref -> ProofMethod -> M.Map CaseName Ref -> IO ()
+storeProofStep lemmaName parent method children =
+    writeKeyed KMethodEdge (edgeKey lemmaName parent)
+               (MethodEdge lemmaName parent method children)
 
 -- | Read the stored proof step, if present.
-readProofStepMaybe :: Ref -> IO (Maybe MethodEdge)
-readProofStepMaybe parent = readKeyedMaybe (edgeKey parent)
+readProofStepMaybe :: String -> Ref -> IO (Maybe MethodEdge)
+readProofStepMaybe lemmaName parent = readKeyedMaybe (edgeKey lemmaName parent)
 
 -- lemma roots
 

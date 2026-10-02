@@ -539,8 +539,8 @@ getOrRestoreProofSystem proof = psInfo (root proof) >>= getOrRestoreSystem
 
 
 -- | Store every system in an incremental proof and retain only its reference.
-evictSystemsFromIncrementalProof :: IncrementalProof -> IO IncrementalProof
-evictSystemsFromIncrementalProof proof = do
+evictSystemsFromIncrementalProof :: String -> IncrementalProof -> IO IncrementalProof
+evictSystemsFromIncrementalProof lemmaName proof = do
     storeOpen <- isStoreOpen
     unless storeOpen $
         error "evictSystemsFromIncrementalProof: store is not initialized"
@@ -562,7 +562,8 @@ evictSystemsFromIncrementalProof proof = do
     storeMethodEdge Invalidated _ _ = pure ()
     storeMethodEdge method (Just parentSystemRef) childProofs =
         case traverse childRef childProofs of
-          Just childRefs -> storeProofStep (getStoredRef parentSystemRef) method childRefs
+          Just childRefs ->
+              storeProofStep lemmaName (getStoredRef parentSystemRef) method childRefs
           Nothing -> pure ()
     storeMethodEdge _ _ _ =
         pure ()
@@ -573,10 +574,10 @@ evictSystemsFromIncrementalProof proof = do
 
 -- | Rebuild a proof tree from the method edges recorded in the store.
 -- Nothing when the root has no recorded step, i.e. there is nothing to restore.
-restoreProofFromStore :: Ref -> IO (Maybe IncrementalProof)
-restoreProofFromStore rootRef = do
+restoreProofFromStore :: String -> Ref -> IO (Maybe IncrementalProof)
+restoreProofFromStore lemmaName rootRef = do
     -- Try to get root node from Store first
-    rootStep <- readProofStepMaybe rootRef
+    rootStep <- readProofStepMaybe lemmaName rootRef
     case rootStep of
       Nothing -> pure Nothing
       Just _  -> Just <$> restoreNode S.empty rootRef
@@ -587,14 +588,14 @@ restoreProofFromStore rootRef = do
           error ("restoreProofFromStore: cycle in stored method edges at "
                  ++ show systemRef)
       | otherwise = do
-          storedStep <- readProofStepMaybe systemRef
+          storedStep <- readProofStepMaybe lemmaName systemRef
           case storedStep of
             -- A system that was stored but never expanded: the frontier where
             -- the previous run stopped.
             Nothing -> pure (LNode (ProofStep (Sorry (Just "not explored"))
                                               (Just (OnDisk systemRef)))
                                    M.empty)
-            Just (MethodEdge _ method caseRefs) -> do
+            Just (MethodEdge _ _ method caseRefs) -> do
               childProofs <- traverse (restoreNode (S.insert systemRef ancestorRefs))
                                       caseRefs
               pure (LNode (ProofStep method (Just (OnDisk systemRef))) childProofs)
@@ -1200,14 +1201,14 @@ solveOrRestore :: Heuristic ProofContext -> [Tactic ProofContext] -> ProofContex
 solveOrRestore heuristic tactics ctxt depth systemRef = unsafePerformIO $ do
     let parentRef = getStoredRef systemRef
     -- Check if we already have a proof step for this system from a prev run
-    storedStep <- readProofStepMaybe parentRef
+    storedStep <- readProofStepMaybe (L.get pcLemmaName ctxt) parentRef
     case storedStep of
       Just step -> pure (restoreStep parentRef step)
       Nothing   -> solveAndStore heuristic tactics ctxt depth parentRef systemRef
 {-# NOINLINE solveOrRestore #-}
 
 restoreStep :: Ref -> MethodEdge -> (Ref, ProofMethod, M.Map CaseName SystemRef)
-restoreStep parentRef (MethodEdge _ method caseRefs) =
+restoreStep parentRef (MethodEdge _ _ method caseRefs) =
     (parentRef, method, M.map OnDisk caseRefs)
 
 solveAndStore :: Heuristic ProofContext -> [Tactic ProofContext] -> ProofContext -> Int
@@ -1224,7 +1225,8 @@ solveAndStore heuristic tactics ctxt depth parentRef systemRef = do
     -- frontier rather than with the whole tree.
     casesWithRefs <- mapM storeCase cases
 
-    storeProofStep parentRef method (M.map getStoredRef casesWithRefs)
+    storeProofStep (L.get pcLemmaName ctxt) parentRef method
+                   (M.map getStoredRef casesWithRefs)
     pure (parentRef, method, casesWithRefs)
   where
     storeCase system = do
