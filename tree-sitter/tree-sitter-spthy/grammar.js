@@ -924,8 +924,12 @@ module.exports = grammar({
           'use_induction',
           seq('output=', '[', $.language, repeat(seq(',', $.language)), ']'),
           seq('hide_lemma=', $.ident),
-          seq('heuristic=', field('proof_method_ranking', repeat1($._proof_method_ranking)))
+          seq('heuristic=', field('proof_method_ranking', repeat1($._proof_method_ranking))),
+          seq('stop-on-trace=', field('method', $.stop_on_trace_method))
       ),
+
+      // Case-insensitive, as on the command line.
+      stop_on_trace_method: $ => choice(/dfs/i, /bfs/i, /seqdfs/i, /none/i, /sorry/i),
 
       language: $ => choice(
           'spthy',

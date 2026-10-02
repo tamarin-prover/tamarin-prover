@@ -3601,6 +3601,16 @@
     "type": "lemma_attr",
     "named": true,
     "fields": {
+      "method": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "stop_on_trace_method",
+            "named": true
+          }
+        ]
+      },
       "proof_method_ranking": {
         "multiple": true,
         "required": false,
@@ -6531,6 +6541,11 @@
     }
   },
   {
+    "type": "stop_on_trace_method",
+    "named": true,
+    "fields": {}
+  },
+  {
     "type": "subterm_rel",
     "named": true,
     "fields": {
@@ -7632,6 +7647,10 @@
   },
   {
     "type": "step",
+    "named": false
+  },
+  {
+    "type": "stop-on-trace=",
     "named": false
   },
   {

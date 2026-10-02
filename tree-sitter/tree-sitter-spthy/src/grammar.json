@@ -4022,6 +4022,53 @@
               }
             }
           ]
+        },
+        {
+          "type": "SEQ",
+          "members": [
+            {
+              "type": "STRING",
+              "value": "stop-on-trace="
+            },
+            {
+              "type": "FIELD",
+              "name": "method",
+              "content": {
+                "type": "SYMBOL",
+                "name": "stop_on_trace_method"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "stop_on_trace_method": {
+      "type": "CHOICE",
+      "members": [
+        {
+          "type": "PATTERN",
+          "value": "dfs",
+          "flags": "i"
+        },
+        {
+          "type": "PATTERN",
+          "value": "bfs",
+          "flags": "i"
+        },
+        {
+          "type": "PATTERN",
+          "value": "seqdfs",
+          "flags": "i"
+        },
+        {
+          "type": "PATTERN",
+          "value": "none",
+          "flags": "i"
+        },
+        {
+          "type": "PATTERN",
+          "value": "sorry",
+          "flags": "i"
         }
       ]
     },
