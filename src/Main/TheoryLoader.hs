@@ -68,7 +68,11 @@ import Theory.Module
 import Theory.Constraint.Solver.Store
   ( Kind (KTheoryContext),
     Ref,
+    readLemmaRootMaybe,
+    readProofStepMaybe,
+    recordLemmaRoot,
     setTheoryContext,
+    storeSystem,
     valueRef,
   )
 import Theory.Text.Parser (diffTheory, parseIntruderRules, theory)
@@ -86,7 +90,7 @@ import Theory.Tools.IntruderRules
   )
 import Theory.Tools.MessageDerivationChecks
 import Theory.Tools.Wellformedness
-import TheoryObject (diffTheoryConfigBlock, theoryConfigBlock, theoryConfigBlock, deductionChainCheck)
+import TheoryObject (diffTheoryConfigBlock, theoryConfigBlock, theoryConfigBlock, deductionChainCheck, toSystemTraceQuantifier)
 
 ------------------------------------------------------------------------------
 -- Theory loading: shared between interactive and batch mode
@@ -725,6 +729,14 @@ closeTranslatedTheory thyOpts sign srcThy = do
     throwError $ StoreContextError
       "eviction store belongs to a different theory; use a fresh --persist-proof-state directory"
 
+  if thyOpts.proveMode && isJust thyOpts.persistProofStateDir
+    then case partialThy of
+      Left closedTheory -> do
+        let selectedLemmas = filter selector (theoryLemmas closedTheory)
+        liftIO (mapM_ storeLemmaRootAndInputProof selectedLemmas)
+      Right _ -> pure ()
+    else pure ()
+
   let provedThy =
         bimap
           (proveTheory selector prover)
@@ -755,6 +767,30 @@ closeTranslatedTheory thyOpts sign srcThy = do
     withDiffTheory = bitraverse pure
 
     theoryName = either (._thyName) (._diffThyName)
+
+storeLemmaRootAndInputProof :: Lemma IncrementalProof -> IO ()
+storeLemmaRootAndInputProof lemma = do
+  let lemmaName = lemma._lName
+  let lemmaProof = lemma._lProof
+  let rootProofStep = root lemmaProof
+  let traceQuantifier = toSystemTraceQuantifier lemma._lTraceQuantifier
+
+  case psInfo rootProofStep of
+    Just (InMem lemmaRootSystem) -> do
+      lemmaRootRef <- storeSystem lemmaRootSystem
+
+      storedRootStep <- readProofStepMaybe lemmaName lemmaRootRef
+      if isNothing storedRootStep
+        then do
+          _ <- evictSystemsFromIncrementalProof lemmaName lemmaProof
+          pure ()
+        else pure ()
+
+      storedRootRef <- readLemmaRootMaybe lemmaName
+      if storedRootRef == Just lemmaRootRef
+        then pure ()
+        else recordLemmaRoot lemmaName traceQuantifier lemmaRootRef
+    _ -> fail ("Expected an in-memory root system for lemma " ++ lemmaName)
 
 -- | Fingerprint everything a stored proof step's validity depends on. Lemma
 -- formulas are checked separately through their root-system references.

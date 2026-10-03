@@ -132,11 +132,9 @@ import           Control.Parallel.Strategies
 
 import           Theory.Constraint.Solver
 import           Theory.Constraint.Solver.Store   (Ref, MethodEdge(..), isStoreOpen,
-                                                    readLemmaRootMaybe,
                                                     readProofStepMaybe,
                                                     readSystemLive,
                                                     readSystemLiveMaybe,
-                                                    recordLemmaRoot,
                                                     storeProofStep, storeSystem)
 import           Theory.Model
 import           Theory.Text.Pretty
@@ -1183,10 +1181,10 @@ nextProofStep heuristic tactics ctxt depth sys =
 
 -- | DFS with proof-state eviction and restore.
 proveSystemDFSEvicted :: Heuristic ProofContext -> [Tactic ProofContext] -> ProofContext -> Int -> System -> Proof (Maybe SystemRef)
-proveSystemDFSEvicted heuristic tactics ctxt depth0 initialSystem =
-    prove depth0 (StoredInMem rootRef initialSystem)
+proveSystemDFSEvicted heuristic tactics ctxt depth0 initialSearchSystem =
+    prove depth0 (StoredInMem initialSearchSystemRef initialSearchSystem)
   where
-    rootRef = storeInitialSystemUnsafe depth0 ctxt initialSystem
+    initialSearchSystemRef = storeInitialSearchSystemUnsafe initialSearchSystem
 
     prove !depth systemRef =
         let (parentRef, method, cases) = solveOrRestore heuristic tactics ctxt depth systemRef
@@ -1245,18 +1243,10 @@ loadSystemFromRef (InMem system)         = pure system
 loadSystemFromRef (StoredInMem _ system) = pure system
 loadSystemFromRef (OnDisk ref)           = readSystemLive ref
 
-storeInitialSystemUnsafe :: Int -> ProofContext -> System -> Ref
-storeInitialSystemUnsafe depth ctxt system = unsafePerformIO $ do
-    ref <- storeSystem system
-    when (depth == 0) $ do
-        let lemmaName = L.get pcLemmaName ctxt
-        storedRoot <- readLemmaRootMaybe lemmaName
-        when (storedRoot /= Just ref) $
-            recordLemmaRoot lemmaName
-                            (L.get pcTraceQuantifier ctxt)
-                            ref
-    pure ref
-{-# NOINLINE storeInitialSystemUnsafe #-}
+storeInitialSearchSystemUnsafe :: System -> Ref
+storeInitialSearchSystemUnsafe initialSearchSystem =
+    unsafePerformIO (storeSystem initialSearchSystem)
+{-# NOINLINE storeInitialSearchSystemUnsafe #-}
 
 
 -- | @proveSystemDFS rules se@ explores all solutions of the initial

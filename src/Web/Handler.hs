@@ -66,7 +66,7 @@ module Web.Handler
   )
 where
 
-import Theory.Constraint.Solver.Store (isStoreOpen)
+import Theory.Constraint.Solver.Store (isStoreOpen, recordLemmaRoot, storeSystem)
 import Theory
   ( Theory(..), DiffTheory(..), ClosedTheory, ClosedDiffTheory, Side
   , ClosedTheory, ClosedDiffTheory, Side, Signature(..)
@@ -103,6 +103,7 @@ import Theory
   , checkAndExtendProver
   , theoryRestrictions
   , Prover (runProver), unproven
+  , System
   )
 
 import Theory.Proof
@@ -213,6 +214,7 @@ editProof idx name = withTheory idx $ \ti -> do
             case maybe_nthy of
                 Nothing -> pure $ Left "Lemma editing failed"
                 Just nthy -> do
+                    storeInteractiveLemmaRoot n tq gsys
                     nidx <- replaceTheory (Just ti) Nothing nthy ("modified" ++ show idx) idx
                     pure $ Right nidx
 
@@ -276,7 +278,19 @@ addLemma idx maybelemmaIndex (Lemma n pt _ tq f ofm a lp) = withTheory idx $ \ti
                     let newThy = addLemmaAtIndex (Lemma n pt True tq f ofm a $ unproven (Just (InMem gsys))) lemmaIndex ti.theory
                     case newThy of
                          Nothing -> pure $ Left "lemma editing failed"
-                         (Just nthy) -> Right <$> replaceTheory (Just ti) Nothing nthy ("modified" ++ show idx) idx
+                         (Just nthy) -> do
+                             storeInteractiveLemmaRoot n tq gsys
+                             Right <$> replaceTheory (Just ti) Nothing nthy ("modified" ++ show idx) idx
+
+storeInteractiveLemmaRoot :: String -> TraceQuantifier -> System -> Handler ()
+storeInteractiveLemmaRoot lemmaName traceQuantifier lemmaRootSystem = do
+    storeOpen <- liftIO isStoreOpen
+    if storeOpen
+      then liftIO $ do
+        lemmaRootRef <- storeSystem lemmaRootSystem
+        let systemTraceQuantifier = toSystemTraceQuantifier traceQuantifier
+        recordLemmaRoot lemmaName systemTraceQuantifier lemmaRootRef
+      else pure ()
 
 -- | Deletes, adds or modifies a lemma depending on the path
 editLemma :: Int -> TheoryPath -> Lemma ProofSkeleton -> Handler (Either String TheoryIdx)
