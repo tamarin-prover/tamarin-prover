@@ -4,6 +4,7 @@ module Export.Sapic
   ( ensureAttackerContext,
     formalCommentDocs,
     headerOfFunSym,
+    headersOfFormula,
     loadDiffProc,
     loadEquivProc,
     loadHeaders,
@@ -21,7 +22,7 @@ import Data.List as List
 import Data.Map qualified as M
 import Data.Maybe
 import Data.Set qualified as S
-import Export.Name (sanitizeSymbol)
+import Export.Name (publicName, sanitizeSymbol)
 import Export.ProVerif.Header
 import Export.ProVerif.Rule
 import Export.Types
@@ -37,11 +38,7 @@ import Theory.Sapic
 
 
 ppPubName :: NameId -> Doc
-ppPubName (NameId n) = text $ case n of
-  "zero" -> "0"
-  "one" -> "1"
-  "g" -> "g"
-  _ -> "v" ++ n
+ppPubName (NameId n) = text $ publicName n
 
 
 ------------------------------------------------------------------------------
@@ -72,6 +69,12 @@ ppTypeVar tc v@(SapicLVar lvar ty) = case trans tc of
 ppTypeLit :: (Show c) => TranslationContext -> Lit c SapicLVar -> Doc
 ppTypeLit tc (Var v) = ppTypeVar tc v
 ppTypeLit _ (Con c) = text . sanitizeSymbol 'a' $ show c
+
+-- | Collect declarations from all formula terms, including equalities.
+headersOfFormula :: LNFormula -> S.Set ProVerifHeader
+headersOfFormula =
+  foldFormula (foldMap (snd . renderTermWithHeaders (const emptyDoc)))
+    (const S.empty) id (\_ p q -> p `S.union` q) (\_ _ p -> p)
 
 -- | Render a term and collect required ProVerif header declarations.
 -- Takes a literal rendering function and a term, returns the rendered
@@ -112,16 +115,7 @@ renderTermWithHeaders ppLit t = (ppTerm t, getHdTerm t)
       text (ppFunSym f ++ "(") <> fsep (punctuate comma (map ppTerm ts)) <> text ")"
     getHdTerm tm = case viewTerm tm of
       Lit (Con (Name PubName n)) ->
-        if show n `elem` ["g", "one", "zero"]
-          then S.empty
-          else -- The 's' is just prepended here instead of using sanitizeSymbol, because that function
-          -- only does the prepending for reserved keywords and symbols starting with a digit. For
-          -- free bitstrings however, we ALWAYS want the leading 's', to also avoid clashes with
-          -- function names, rule names, event names etc. We could also do it like that for variables
-          -- and function names (where we use sanitizeSymbol now), but I thought if we did it in all
-          -- other places it might not be needed there, and I thought it would be better to leave as
-          -- much as possible of the original naming as it is
-            S.singleton (Sym "free" ("s" ++ show n) ":bitstring" [])
+        S.singleton (Sym "free" (publicName $ show n) ":bitstring" [])
       Lit _ -> S.empty
       FApp _ ts -> foldl (\x y -> x `S.union` getHdTerm y) S.empty ts
 
@@ -133,7 +127,7 @@ renderSapicTermWithPattern tc mVars isPattern = renderTermWithHeaders ppLit
   where
     ppLit v = case v of
       Con (Name FreshName n) -> text . sanitizeSymbol 'a' $ show n
-      Con (Name PubName n) | isPattern -> text "=" <> text ("s" ++ show n)
+      Con (Name PubName n) | isPattern -> text "=" <> ppPubName n
       Con (Name PubName n) -> ppPubName n
       Var (SapicLVar lvar@(LVar _ lsort _) _)
         | lsort `elem` [LSortPub, LSortFresh, LSortNat] ->
@@ -420,7 +414,7 @@ ppSapic renderFormula tc (ProcessComb (Cond a) _ pl pr) =
     ppFact' p =
       case expandFormula (predicates tc) (toLFormula p) of
         Left _ -> translationFail "Export does not support tamarin predicates in conditionnals."
-        Right form -> (renderFormula form, S.empty)
+        Right form -> (renderFormula form, headersOfFormula form)
     addElseBranch (d, s) = case pr of
       ProcessNull _ -> (d, s)
       _ ->
