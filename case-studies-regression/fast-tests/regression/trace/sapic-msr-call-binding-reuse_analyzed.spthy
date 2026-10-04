@@ -1,0 +1,125 @@
+theory SapicMSRCallBindingReuse
+
+begin
+
+// Function signature and definition of the equational theory E
+
+functions: fst/1, pair/2, snd/1
+equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
+
+heuristic: p
+
+rule (modulo E) init:
+   [ ] --> [ S( 'token' ) ]
+
+  /* has exactly the trivial AC variant */
+
+lemma consumes_token:
+  exists-trace "∃ #i. Consumed( 'token' ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #i. (Consumed( 'token' ) @ #i)"
+*/
+simplify
+solve( State_11( x ) ▶₀ #i )
+  case Read_0_1
+  solve( S( 'token' ) ▶₁ #i )
+    case init
+    SOLVED // trace found
+  qed
+qed
+
+rule (modulo E) Init[color=#ffffff, process="new x.1;", issapicrule,
+                     role='Process']:
+   [ ] --[ Init( ) ]-> [ State_( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) newx_0_[color=#ffffff, process="new x.1;", issapicrule,
+                        role='Process']:
+   [ State_( ), Fr( x.1 ) ] --> [ State_1( x.1 ) ]
+
+  /*
+  rule (modulo AC) newx_0_[color=#ffffff, process="new x.1;", issapicrule,
+                           role='Process']:
+     [ State_( ), Fr( x ) ] --> [ State_1( x ) ]
+  */
+
+rule (modulo E) Read_0_1[color=#ffffff, process="Read();", issapicrule,
+                         role='Process']:
+   [ State_1( x.1 ) ] --> [ State_11( x.1 ) ]
+
+  /*
+  rule (modulo AC) Read_0_1[color=#ffffff, process="Read();", issapicrule,
+                            role='Process']:
+     [ State_1( x ) ] --> [ State_11( x ) ]
+  */
+
+rule (modulo E) SxConsumedx_0_11[color=#406580,
+                                 process=" [ S( x.2 ) ] --[ Consumed( x.2 ) ]-> [ ];", issapicrule,
+                                 role='Read']:
+   [ State_11( x.1 ), S( x.2 ) ]
+  --[ Consumed( x.2 ) ]->
+   [ State_111( x.1, x.2 ) ]
+
+  /*
+  rule (modulo AC) SxConsumedx_0_11[color=#406580,
+                                    process=" [ S( x.2 ) ] --[ Consumed( x.2 ) ]-> [ ];", issapicrule,
+                                    role='Read']:
+     [ State_11( x ), S( x.1 ) ]
+    --[ Consumed( x.1 ) ]->
+     [ State_111( x, x.1 ) ]
+  */
+
+rule (modulo E) p_0_111[color=#406580, process="0", issapicrule,
+                        role='Read']:
+   [ State_111( x.1, x.2 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_111[color=#406580, process="0", issapicrule,
+                           role='Read']:
+     [ State_111( x, x.1 ) ] --> [ ]
+  */
+
+restriction single_session:
+  "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
+  */
+
+/*
+WARNING: the following wellformedness checks failed!
+
+Wellformedness-error in Process
+  Variable bound twice: x.
+*/
+
+/*
+Generated from:
+Tamarin version 1.13.0
+Maude version 3.5.1
+Git revision: bf885ca9abf478867fbdbbf3ad80e4da85370e01 (with uncommited changes), branch: HEAD
+Compiled at: 2026-10-04 11:58:25.282416529 UTC
+*/
+
+end
+/* Output
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/regression/trace/sapic-msr-call-binding-reuse.spthy
+
+  output:          examples/regression/trace/sapic-msr-call-binding-reuse.spthy.tmp
+  processing time: 0.12s
+  
+  WARNING: 1 wellformedness check failed!
+           The analysis results might be wrong!
+  
+  consumes_token (exists-trace): verified (4 steps)
+
+==============================================================================
+*/
