@@ -1,0 +1,276 @@
+theory SapicOpenProcessExport
+
+begin
+
+// Function signature and definition of the equational theory E
+
+functions: fst/1, pair/2, snd/1
+equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
+
+heuristic: p
+
+lemma caller_binding:
+  all-traces
+  "∀ x #i.
+    (Seen( x ) @ #i) ⇒ ((x = 'a') ∨ (∃ #j. (Created( x ) @ #j) ∧ (#j < #i)))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ x #i.
+  (Seen( x ) @ #i)
+ ∧
+  (¬(x = 'a')) ∧ (∀ #j. (Created( x ) @ #j) ⇒ ¬(#j < #i))"
+*/
+simplify
+solve( Seen( x ) @ #i )
+  case eventSeena_0_211
+  by contradiction /* from formulas */
+next
+  case eventSeenx_0_11111
+  solve( State_11111( x ) ▶₀ #i )
+    case P_0_1111
+    by contradiction /* from formulas */
+  qed
+next
+  case eventSeenx_0_12111
+  solve( State_12111( x ) ▶₀ #i )
+    case P_0_1211
+    by contradiction /* from formulas */
+  qed
+qed
+
+lemma distinct_callers:
+  exists-trace
+  "∃ x y #i #j #k #l.
+    ((((Created( x ) @ #i) ∧ (Created( y ) @ #j)) ∧ (Seen( x ) @ #k)) ∧
+     (Seen( y ) @ #l)) ∧
+    (¬(x = y))"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ x y #i #j #k #l.
+  (Created( x ) @ #i) ∧
+  (Created( y ) @ #j) ∧
+  (Seen( x ) @ #k) ∧
+  (Seen( y ) @ #l)
+ ∧
+  ¬(x = y)"
+*/
+simplify
+solve( Created( x ) @ #i )
+  case eventCreatedx_0_111
+  solve( State_111( x ) ▶₀ #i )
+    case newx_0_11
+    solve( Created( y ) @ #j )
+      case eventCreatedx_0_121
+      solve( State_121( y ) ▶₀ #j )
+        case newx_0_12
+        solve( Seen( ~n ) @ #k )
+          case eventSeenx_0_11111
+          solve( State_11111( ~n ) ▶₀ #k )
+            case P_0_1111
+            solve( Seen( ~n.1 ) @ #l )
+              case eventSeenx_0_12111
+              solve( State_12111( ~n.1 ) ▶₀ #l )
+                case P_0_1211
+                SOLVED // trace found
+              qed
+            qed
+          qed
+        qed
+      qed
+    qed
+  qed
+qed
+
+lemma closed_wrapper:
+  exists-trace "∃ #i. Seen( 'a' ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #i. (Seen( 'a' ) @ #i)"
+*/
+simplify
+solve( Seen( 'a' ) @ #i )
+  case eventSeena_0_211
+  solve( State_211( ) ▶₀ #i )
+    case P_0_21
+    SOLVED // trace found
+  qed
+qed
+
+rule (modulo E) Init[color=#ffffff, process="|", issapicrule,
+                     role='Process']:
+   [ ] --[ Init( ) ]-> [ State_( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_0_[color=#ffffff, process="|", issapicrule,
+                     role='Process']:
+   [ State_( ) ] --> [ State_1( ), State_2( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_0_1[color=#ffffff, process="|", issapicrule,
+                      role='Process']:
+   [ State_1( ) ] --> [ State_11( ), State_12( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) newx_0_11[color=#ffffff, process="new x.1;", issapicrule,
+                          role='Process']:
+   [ State_11( ), Fr( x.1 ) ] --> [ State_111( x.1 ) ]
+
+  /*
+  rule (modulo AC) newx_0_11[color=#ffffff, process="new x.1;",
+                             issapicrule, role='Process']:
+     [ State_11( ), Fr( x ) ] --> [ State_111( x ) ]
+  */
+
+rule (modulo E) eventCreatedx_0_111[color=#ffffff,
+                                    process="event Created( x.1 );", issapicrule, role='Process']:
+   [ State_111( x.1 ) ] --[ Created( x.1 ) ]-> [ State_1111( x.1 ) ]
+
+  /*
+  rule (modulo AC) eventCreatedx_0_111[color=#ffffff,
+                                       process="event Created( x.1 );", issapicrule, role='Process']:
+     [ State_111( x ) ] --[ Created( x ) ]-> [ State_1111( x ) ]
+  */
+
+rule (modulo E) P_0_1111[color=#ffffff, process="P();", issapicrule,
+                         role='Process']:
+   [ State_1111( x.1 ) ] --> [ State_11111( x.1 ) ]
+
+  /*
+  rule (modulo AC) P_0_1111[color=#ffffff, process="P();", issapicrule,
+                            role='Process']:
+     [ State_1111( x ) ] --> [ State_11111( x ) ]
+  */
+
+rule (modulo E) eventSeenx_0_11111[color=#6c8040,
+                                   process="event Seen( x.1 );", issapicrule, role='P']:
+   [ State_11111( x.1 ) ] --[ Seen( x.1 ) ]-> [ State_111111( x.1 ) ]
+
+  /*
+  rule (modulo AC) eventSeenx_0_11111[color=#6c8040,
+                                      process="event Seen( x.1 );", issapicrule, role='P']:
+     [ State_11111( x ) ] --[ Seen( x ) ]-> [ State_111111( x ) ]
+  */
+
+rule (modulo E) p_0_111111[color=#6c8040, process="0", issapicrule,
+                           role='P']:
+   [ State_111111( x.1 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_111111[color=#6c8040, process="0", issapicrule,
+                              role='P']:
+     [ State_111111( x ) ] --> [ ]
+  */
+
+rule (modulo E) newx_0_12[color=#ffffff, process="new x.2;", issapicrule,
+                          role='Process']:
+   [ State_12( ), Fr( x.2 ) ] --> [ State_121( x.2 ) ]
+
+  /*
+  rule (modulo AC) newx_0_12[color=#ffffff, process="new x.2;",
+                             issapicrule, role='Process']:
+     [ State_12( ), Fr( x ) ] --> [ State_121( x ) ]
+  */
+
+rule (modulo E) eventCreatedx_0_121[color=#ffffff,
+                                    process="event Created( x.2 );", issapicrule, role='Process']:
+   [ State_121( x.2 ) ] --[ Created( x.2 ) ]-> [ State_1211( x.2 ) ]
+
+  /*
+  rule (modulo AC) eventCreatedx_0_121[color=#ffffff,
+                                       process="event Created( x.2 );", issapicrule, role='Process']:
+     [ State_121( x ) ] --[ Created( x ) ]-> [ State_1211( x ) ]
+  */
+
+rule (modulo E) P_0_1211[color=#ffffff, process="P();", issapicrule,
+                         role='Process']:
+   [ State_1211( x.2 ) ] --> [ State_12111( x.2 ) ]
+
+  /*
+  rule (modulo AC) P_0_1211[color=#ffffff, process="P();", issapicrule,
+                            role='Process']:
+     [ State_1211( x ) ] --> [ State_12111( x ) ]
+  */
+
+rule (modulo E) eventSeenx_0_12111[color=#6c8040,
+                                   process="event Seen( x.2 );", issapicrule, role='P']:
+   [ State_12111( x.2 ) ] --[ Seen( x.2 ) ]-> [ State_121111( x.2 ) ]
+
+  /*
+  rule (modulo AC) eventSeenx_0_12111[color=#6c8040,
+                                      process="event Seen( x.2 );", issapicrule, role='P']:
+     [ State_12111( x ) ] --[ Seen( x ) ]-> [ State_121111( x ) ]
+  */
+
+rule (modulo E) p_0_121111[color=#6c8040, process="0", issapicrule,
+                           role='P']:
+   [ State_121111( x.2 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_121111[color=#6c8040, process="0", issapicrule,
+                              role='P']:
+     [ State_121111( x ) ] --> [ ]
+  */
+
+rule (modulo E) Wrappeda_0_2[color=#ffffff, process="Wrapped('a');",
+                             issapicrule, role='Process']:
+   [ State_2( ) ] --> [ State_21( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) P_0_21[color=#404a80, process="P();", issapicrule,
+                       role='Wrapped']:
+   [ State_21( ) ] --> [ State_211( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) eventSeena_0_211[color=#6c8040,
+                                 process="event Seen( 'a' );", issapicrule, role='Wrapped_P']:
+   [ State_211( ) ] --[ Seen( 'a' ) ]-> [ State_2111( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_0_2111[color=#6c8040, process="0", issapicrule,
+                         role='Wrapped_P']:
+   [ State_2111( ) ] --> [ ]
+
+  /* has exactly the trivial AC variant */
+
+restriction single_session:
+  "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
+  */
+
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.13.0
+Maude version 3.5.1
+Git revision: bf885ca9abf478867fbdbbf3ad80e4da85370e01 (with uncommited changes), branch: HEAD
+Compiled at: 2026-10-04 11:58:25.282416529 UTC
+*/
+
+end
+/* Output
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/regression/trace/sapic-open-process-export.spthy
+
+  output:          examples/regression/trace/sapic-open-process-export.spthy.tmp
+  processing time: 0.26s
+  
+  caller_binding (all-traces): verified (7 steps)
+  distinct_callers (exists-trace): verified (10 steps)
+  closed_wrapper (exists-trace): verified (4 steps)
+
+==============================================================================
+*/
