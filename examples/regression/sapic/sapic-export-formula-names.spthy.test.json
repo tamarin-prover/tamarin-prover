@@ -1,0 +1,39 @@
+{
+  "tests": [
+    {
+      "name": "formula-only-declarations",
+      "args": [
+        "--output-module=proverif",
+        "--quit-on-warning"
+      ],
+      "matches": [
+        {
+          "regex": "free v'condition_2d_only:bitstring\\.",
+          "min": 1,
+          "max": 1
+        },
+        {
+          "regex": "free v'query_2d_only:bitstring\\.",
+          "min": 1,
+          "max": 1
+        },
+        {
+          "regex": "free v'axiom_2d_only:bitstring\\.",
+          "min": 1,
+          "max": 1
+        },
+        {
+          "regex": "free v'restriction_2d_only:bitstring\\.",
+          "min": 1,
+          "max": 1
+        }
+      ],
+      "contains": [
+        "= v'condition_2d_only",
+        "= v'query_2d_only",
+        "= v'axiom_2d_only",
+        "= v'restriction_2d_only"
+      ]
+    }
+  ]
+}
