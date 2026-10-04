@@ -1,0 +1,19 @@
+theory SapicPatternExportTypes
+begin
+
+// Substitution replaces the annotated pattern variable by a constant. The
+// declaration must still constrain f, even when P is unused in the process.
+#ifdef CONFLICT
+functions: f(b):b
+#else
+functions: f/1
+#endif
+
+let P(pat_x:a) = in(pat_x:a); out(f(pat_x:a))
+#ifdef UNUSED
+process: 0
+#else
+process: P('c')
+#endif
+
+end
