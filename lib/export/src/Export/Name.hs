@@ -11,12 +11,14 @@ module Export.Name
     allocateVariable,
     freshNameAvoiding,
     sanitizeSymbol,
+    publicName,
   )
 where
 
-import Data.Char (isDigit)
+import Data.Char (isAscii, isAlphaNum, isDigit, ord)
 import Data.Map.Strict qualified as Map
 import Data.Set qualified as Set
+import Numeric (showHex)
 
 data TargetNamespace
   = GlobalNamespace
@@ -34,6 +36,17 @@ newtype NameAllocator = NameAllocator (Map.Map TargetNamespace (Set.Set String))
 
 emptyNameAllocator :: NameAllocator
 emptyNameAllocator = NameAllocator Map.empty
+
+-- | Quoted public names are distinct from built-in constants. Use the same
+-- spelling in declarations, patterns and terms, including embedded rules.
+-- Apostrophes are valid in both targets but not in source identifiers, so
+-- local binders cannot capture these names. Escape underscores too, so
+-- punctuation cannot alias a literal escape.
+publicName :: String -> String
+publicName name = "v'" ++ concatMap encode name
+  where
+    encode c | isAscii c && isAlphaNum c = [c]
+             | otherwise = "_" ++ showHex (ord c) "_"
 
 reserveNames :: TargetNamespace -> Set.Set String -> NameAllocator -> NameAllocator
 reserveNames namespace names (NameAllocator allocated) =

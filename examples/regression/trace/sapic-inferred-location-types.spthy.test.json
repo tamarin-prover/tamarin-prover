@@ -14,7 +14,7 @@
       "matches": [
         {"regex": "new StateChannel:channel\\[assumeCell\\];", "min": 1, "max": 1},
         {"regex": "new lock_StateChannel:channel\\[assumeCell\\];", "min": 1, "max": 1},
-        {"regex": "out\\(StateChannel, vvalue\\)", "min": 1},
+        {"regex": "out\\(StateChannel, v'value\\)", "min": 1},
         {"regex": "in\\(StateChannel, x_\\d+:bitstring\\)", "min": 1},
         {"regex": "free stateChannel|tbl_states_handle", "max": 0}
       ]
