@@ -56,7 +56,7 @@ def theory_text(text):
 
 
 def validate(test):
-    allowed = {"name", "args", "exit_code", "contains", "matches", "fact_arities", "baseline", "checks", "timeout", "slow"}
+    allowed = {"name", "args", "exit_code", "contains", "matches", "fact_arities", "baseline", "checks", "roundtrip_module", "timeout", "slow"}
     if not isinstance(test, dict) or set(test) - allowed:
         raise RegressionFailure(f"Unknown test fields or invalid test: {test!r}")
     if not isinstance(test.get("name"), str) or not re.fullmatch(r"[\w-]+", test["name"]):
@@ -82,6 +82,9 @@ def validate(test):
         raise RegressionFailure("checks may contain roundtrip and partial-evaluation")
     if len(set(checks)) != len(checks):
         raise RegressionFailure("Duplicate checks")
+    if "roundtrip_module" in test and ("roundtrip" not in checks or
+            test["roundtrip_module"] not in ("spthy", "spthytyped", "msr")):
+        raise RegressionFailure("roundtrip_module requires roundtrip and must be spthy, spthytyped or msr")
     baseline = test.get("baseline")
     if "baseline" in test and (not isinstance(baseline, str) or not baseline or
                                  Path(baseline).is_absolute() or ".." in Path(baseline).parts):
@@ -234,7 +237,8 @@ def run_test(source, test, tamarin, baseline_dir, artifacts):
         checks = test.get("checks", [])
         original = invoke("original", source, prove=True, export="roundtrip" in checks)
         if "roundtrip" in checks:
-            printed = invoke("printed", source, export=True)
+            flags = (f"--output-module={test['roundtrip_module']}",) if "roundtrip_module" in test else ()
+            printed = invoke("printed", source, flags, export=True)
             invoke("reloaded", printed, prove=True)
             invoke("replay", original, check_verdicts=True)
         if "partial-evaluation" in checks:
