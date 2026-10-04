@@ -1,12 +1,21 @@
 {
   "tests": [
     {
-      "name": "supplied-patterns",
-      "args": ["--quit-on-warning", "--prove"],
+      "name": "typed-roundtrip",
+      "args": ["--quit-on-warning"],
+      "checks": ["roundtrip"],
+      "roundtrip_module": "spthytyped"
+    },
+    {
+      "name": "typed-patterns",
+      "args": ["--output-module=spthytyped", "--quit-on-warning"],
       "matches": [
-        {"regex": "supplied_patterns \\(all-traces\\): verified", "min": 1},
-        {"regex": "repeated_pattern \\(all-traces\\): verified", "min": 1},
-        {"regex": "nested_reachable \\(exists-trace\\): verified", "min": 1}
+        {"regex": "pat_x", "max": 0, "theory_only": true},
+        {"regex": "in\\(<'a',\\s*'b'>\\)", "min": 1, "max": 1, "theory_only": true},
+        {"regex": "in\\('c'\\)", "min": 2, "max": 2, "theory_only": true},
+        {"regex": "in\\('d'\\)", "min": 1, "max": 1, "theory_only": true},
+        {"regex": "let\\s+Value\\s*\\(", "min": 1, "max": 1, "theory_only": true},
+        {"regex": "Value\\('e'\\)", "min": 1, "theory_only": true}
       ]
     }
   ]

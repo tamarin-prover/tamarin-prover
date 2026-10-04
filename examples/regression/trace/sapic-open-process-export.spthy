@@ -1,0 +1,21 @@
+theory SapicOpenProcessExport
+begin
+
+// P captures the x at each call. Export used to declare P(x) but print P(),
+// losing the association with the two different fresh names in the callers.
+let P = event Seen(x)
+let Wrapped(x) = P
+
+process:
+  (new x; event Created(x); P) |
+  (new x; event Created(x); P) |
+  Wrapped('a')
+
+lemma caller_binding:
+  "All x #i. Seen(x)@i ==> x = 'a' | (Ex #j. Created(x)@j & j < i)"
+lemma distinct_callers: exists-trace
+  "Ex x y #i #j #k #l. Created(x)@i & Created(y)@j &
+     Seen(x)@k & Seen(y)@l & not(x = y)"
+lemma closed_wrapper: exists-trace "Ex #i. Seen('a')@i"
+
+end

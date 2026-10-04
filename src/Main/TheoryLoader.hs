@@ -473,16 +473,16 @@ processOpenTheory :: (MonadCatch m) => TheoryLoadOptions -> OpenTheory -> m Open
 processOpenTheory thyOpts = case thyOpts.outputModule of
   Nothing -> Sapic.typeTheory >=> Sapic.translate >=> Acc.translate
   Just ModuleSpthy -> pure
-  Just ModuleSpthyTyped -> Sapic.typeTheory
+  Just ModuleSpthyTyped -> Sapic.typeTheoryForExport
   -- If the output module is set to MSR, we only keep the specified lemmas in the theory.
   Just ModuleMsr ->
     Sapic.typeTheory
       >=> Sapic.translate
       >=> Acc.translate
       >=> (pure . filterLemma lemmas)
-  Just ModuleProVerifEquivalence -> Sapic.typeTheory -- Type theory here to catch errors.
-  Just ModuleProVerif -> Sapic.typeTheory -- Type theory here to catch errors.
-  Just ModuleDeepSec -> Sapic.typeTheory
+  Just ModuleProVerifEquivalence -> Sapic.typeTheoryForExport -- Type theory here to catch errors.
+  Just ModuleProVerif -> Sapic.typeTheoryForExport -- Type theory here to catch errors.
+  Just ModuleDeepSec -> Sapic.typeTheoryForExport
   where
     lemmas = lemmaSelector thyOpts
 
