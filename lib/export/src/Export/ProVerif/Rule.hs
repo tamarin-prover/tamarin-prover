@@ -68,7 +68,7 @@ loadRules plan thy m = case theoryRules thy of
           `S.union` completionHeader
       baseHeaders = Sym "free" "publicChannel" ":channel" []
       desHeaders = map makeDestructorHeader $ M.toList destructors
-      ruleHeaders = foldMap (\r -> makeHeadersFromRule ruleIdEvents r thy) rulesMod
+      ruleHeaders = foldMap (makeHeadersFromRule ruleIdEvents) rulesMod
       completionHeader
         | S.null completionTriggerEvents = S.empty
         | otherwise =
@@ -236,7 +236,7 @@ makeDestructorHeader ((dDef, atom), dName) =
       Eq "reduc" declarations (dName ++ "(" ++ body ++ ") = " ++ showAtom False atom) "[private]"
     _ -> translationInvariantFail "A generated destructor definition has no body."
 
-makeHeadersFromRule :: S.Set String -> OpenProtoRule -> OpenTheory -> S.Set ProVerifHeader
+makeHeadersFromRule :: S.Set String -> OpenProtoRule -> S.Set ProVerifHeader
 makeHeadersFromRule ruleIdEvents (OpenProtoRule ruE _) = makeHeadersFromProtoRule ruleIdEvents ruE
 
 notDiffRuleActs :: Rule ProtoRuleEInfo -> [Fact LNTerm]
@@ -250,19 +250,12 @@ notDiffRuleActs ru = filter isNotDiffAnnotation ru._rActs
             factTerms = []
           }
 
-makeHeadersFromProtoRule :: S.Set String -> Rule ProtoRuleEInfo -> OpenTheory -> S.Set ProVerifHeader
-makeHeadersFromProtoRule ruleIdEvents ru thy = S.unions [freeHeaders, tables, events]
+makeHeadersFromProtoRule :: S.Set String -> Rule ProtoRuleEInfo -> S.Set ProVerifHeader
+makeHeadersFromProtoRule ruleIdEvents ru = S.unions [freeHeaders, tables, events]
   where
-    freeHeaders = makeFreeHeaders ru._rPrems (notDiffRuleActs ru) ru._rConcs thy
+    freeHeaders = makeFreeHeadersFromFacts ru._rPrems (notDiffRuleActs ru) ru._rConcs
     tables = makeTableHeaders ru._rPrems ru._rConcs
     events = makeEventHeaders ruleIdEvents (notDiffRuleActs ru)
-
-makeFreeHeaders :: [LNFact] -> [LNFact] -> [LNFact] -> OpenTheory -> S.Set ProVerifHeader
-makeFreeHeaders rprems racts rconcls thy =
-  makeFreeHeadersFromFacts rprems racts rconcls
-    `S.union` S.map (\x -> Sym "free" x ":bitstring" []) lemmaBitstrings
-  where
-    lemmaBitstrings = foldMap (searchLemmaForBitstrings . (._lFormula)) (theoryLemmas thy)
 
 makeFreeHeadersFromFacts :: [LNFact] -> [LNFact] -> [LNFact] -> S.Set ProVerifHeader
 makeFreeHeadersFromFacts rprems racts rconcls =
@@ -272,14 +265,6 @@ freeBitstringsFromFacts :: [LNFact] -> [LNFact] -> [LNFact] -> S.Set String
 freeBitstringsFromFacts rprems racts rconcls = foldMap searchTermForBitstrings allTerms
   where
     allTerms = foldMap factTerms (rprems ++ racts ++ rconcls)
-
-searchLemmaForBitstrings :: ProtoFormula Unit2 (String, LSort) Name LVar -> S.Set String
-searchLemmaForBitstrings =
-  foldFormula searchAtomForBitstring (const S.empty) id (\_ p q -> p `S.union` q) (\_ _ p -> p)
-  where
-    searchAtomForBitstring a = case a of
-      Action _ f -> foldMap searchTermForBitstrings f
-      _ -> S.empty
 
 searchTermForBitstrings :: (Show l) => Term l -> S.Set String
 searchTermForBitstrings =
@@ -656,7 +641,7 @@ showAtom :: Bool -> String -> String
 showAtom sanitized atom = case atom of
   '~' : rest -> sanitize (replaceDots rest)
   '$' : rest -> sanitize (replaceDots rest)
-  '\'' : rest -> sanitizeName ('v' : replaceDots (dropLast rest))
+  '\'' : rest -> sanitizeName (publicName (dropLast rest))
   _ : _ -> sanitize (replaceDots atom)
   [] -> translationFail "Cannot translate an empty atom name."
   where
