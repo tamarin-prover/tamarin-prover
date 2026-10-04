@@ -1,0 +1,8 @@
+theory SapicPatternExportUnusedArgument
+begin
+
+// Inlining must not bypass validation of an argument unused by the body.
+let P(pat_x,y) = in(pat_x); out('a')
+process: P('x',unbound)
+
+end

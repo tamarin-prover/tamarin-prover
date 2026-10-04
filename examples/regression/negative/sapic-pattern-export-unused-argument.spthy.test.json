@@ -1,0 +1,10 @@
+{
+  "tests": [
+    {
+      "name": "typed-unused-argument",
+      "args": ["--output-module=spthytyped", "--quit-on-warning"],
+      "exit_code": 1,
+      "contains": ["are not bound"]
+    }
+  ]
+}

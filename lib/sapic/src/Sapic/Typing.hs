@@ -2,6 +2,7 @@
 
 module Sapic.Typing
   ( typeTheory
+  , typeTheoryForExport
   , typeTheoryEnv
   , typeTermsWithEnv
   , typeProcess
@@ -259,6 +260,40 @@ typeTheoryEnv th = do
 -- | Type the Sapic processes in a theory
 typeTheory :: (MonadThrow m, MonadCatch m) => OpenTheory -> m OpenTheory
 typeTheory th = fst <$> typeTheoryEnv th
+
+-- | Pattern parameters stand for syntax rather than values. Typing their
+-- definition as a function renames the formal and its pattern binder apart.
+-- Export the parser's already instantiated bodies for these calls instead.
+-- Open definitions also need their caller's bindings: inferring parameters
+-- for the definition alone leaves its original zero-argument calls invalid.
+-- This preparation is only for export; MSR translation keeps its call nodes.
+typeTheoryForExport :: (MonadThrow m, MonadCatch m) => OpenTheory -> m OpenTheory
+typeTheoryForExport th = do
+    -- Check declarations before discarding them: their annotations can still
+    -- constrain function types, even when substitution replaces a pattern
+    -- variable by a constant in every call.
+    typed <- typeTheory th
+    processes <- mapMProcesses (pure . inlineCalls mempty) typed
+    definitions <- mapMProcessesDef
+      (\p -> pure $ p { _pBody = inlineCalls mempty p._pBody }) processes
+    pure $ definitions { _thyItems = filter keepDefinition definitions._thyItems }
+  where
+    expanded = S.fromList [p._pName | p <- theoryProcessDefs th,
+                          isNothing p._pVars || hasPatternParameter p]
+    hasPatternParameter p =
+      let parameters = S.fromList $ map toLVar $ fromMaybe [] p._pVars
+      in any ((`S.member` parameters) . toLVar) $ accBindings p._pBody
+    keepDefinition (TranslationItem (ProcessDefItem p)) = p._pName `S.notMember` expanded
+    keepDefinition _ = True
+    -- Preserve call-site annotations; a location in the body overrides the
+    -- caller's location, just as it does when traversing the expanded process.
+    inlineCalls ann (ProcessAction (ProcessCall name _) here rest)
+      | name `S.member` expanded = inlineCalls (ann <> here) rest
+    inlineCalls ann (ProcessAction ac here rest) =
+      ProcessAction ac (ann <> here) (inlineCalls mempty rest)
+    inlineCalls ann (ProcessComb c here left right) =
+      ProcessComb c (ann <> here) (inlineCalls mempty left) (inlineCalls mempty right)
+    inlineCalls ann (ProcessNull here) = ProcessNull (ann <> here)
 
 -- | Rename a process so that all its names are unique. Returns renamed process
 -- p' and substitution such that: let (p',subst) = renameUnique p in apply subst

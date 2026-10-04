@@ -60,6 +60,8 @@ class ExpectationTests(unittest.TestCase):
 
     def test_metadata_errors_cannot_silently_disable_checks(self):
         for fields in [{"check": ["roundtrip"]}, {"checks": ["unknown"]},
+                       {"roundtrip_module": "spthytyped"},
+                       {"checks": ["roundtrip"], "roundtrip_module": "proverif"},
                        {"checks": "roundtrip"}, {"baseline": None},
                        {"checks": ["roundtrip"], "exit_code": 1, "contains": ["error"]},
                        {"checks": ["roundtrip"], "args": ["--prove"]},
@@ -169,6 +171,22 @@ class WorkflowTests(unittest.TestCase):
 
     def run_test(self):
         commands.run_test(self.source, self.test, "tamarin-prover", self.root, self.root / "logs")
+
+    def test_typed_roundtrip_prints_typed_but_proves_normally(self):
+        self.test.update(checks=["roundtrip"], roundtrip_module="spthytyped")
+        commands.validate(self.test)
+        def prover(argv, timeout):
+            result = self.prover(argv, timeout)
+            if "--output-module=spthytyped" in argv:
+                self.assertNotIn("--prove", argv)
+                return 0, "theory TypedExport begin end\n"  # No proof summary.
+            return result
+        with patch.object(commands, "run_process", side_effect=prover) as run:
+            self.run_test()
+        invocations = [call.args[0] for call in run.call_args_list]
+        self.assertEqual(sum("--output-module=spthytyped" in argv for argv in invocations), 1)
+        self.assertTrue(any(Path(argv[1]).name == "printed.spthy" and "--prove" in argv
+                            for argv in invocations))
 
     def test_export_reload_and_replay_use_distinct_inputs(self):
         with patch.object(commands, "run_process", side_effect=self.prover) as run:

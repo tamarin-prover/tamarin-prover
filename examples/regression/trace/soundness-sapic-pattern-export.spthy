@@ -1,8 +1,8 @@
 theory SoundnessSapicPatternExport
 begin
 
-// Pattern parameters must survive nested calls even when an inner argument
-// has the same variable identity as its formal. Each call must keep its pattern.
+// Typed export used to rename the input binder independently of its formal,
+// so reparsing P's export accepted any input instead of the supplied pattern.
 let P(pat_x) = in(pat_x); event Seen(pat_x)
 let Twice(pat_x) = in(pat_x); in(pat_x); event Twice(pat_x)
 let Nested(pat_x) = P(pat_x)
