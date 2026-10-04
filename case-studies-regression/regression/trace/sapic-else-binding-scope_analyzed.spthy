@@ -1,0 +1,433 @@
+theory SapicElseBindingScope
+
+begin
+
+// Function signature and definition of the equational theory E
+
+functions: fst/1, pair/2, snd/1
+equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
+
+heuristic: p
+
+lemma lookup_typed_else:
+  exists-trace "∃ #i. LookupTyped( 'a' ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #i. (LookupTyped( 'a' ) @ #i)"
+*/
+simplify
+solve( State_11121( 'a' ) ▶₀ #i )
+  case inybitstring_0_1112
+  SOLVED // trace found
+qed
+
+lemma lookup_untyped_else:
+  exists-trace "∃ #i. LookupUntyped( 'a' ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #i. (LookupUntyped( 'a' ) @ #i)"
+*/
+simplify
+solve( State_11221( 'a' ) ▶₀ #i )
+  case iny_0_1122
+  SOLVED // trace found
+qed
+
+lemma let_typed_else:
+  exists-trace "∃ #i. LetTyped( 'a' ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #i. (LetTyped( 'a' ) @ #i)"
+*/
+simplify
+solve( State_1221( 'a' ) ▶₀ #i )
+  case inybitstring_0_122
+  SOLVED // trace found
+qed
+
+lemma let_untyped_else:
+  exists-trace "∃ #i. LetUntyped( 'a' ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #i. (LetUntyped( 'a' ) @ #i)"
+*/
+simplify
+solve( State_221( 'a' ) ▶₀ #i )
+  case iny_0_22
+  SOLVED // trace found
+qed
+
+rule (modulo E) Init[color=#ffffff, process="|", issapicrule,
+                     role='Process']:
+   [ ] --[ Init( ) ]-> [ State_( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_0_[color=#ffffff, process="|", issapicrule,
+                     role='Process']:
+   [ State_( ) ] --> [ State_1( ), State_2( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_0_1[color=#ffffff, process="|", issapicrule,
+                      role='Process']:
+   [ State_1( ) ] --> [ State_11( ), State_12( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_0_11[color=#ffffff, process="|", issapicrule,
+                       role='Process']:
+   [ State_11( ) ] --> [ State_111( ), State_112( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) lookuptypedlookupasy_0_111[color=#ffffff,
+                                           process="lookup 'typed_lookup' as y.1", no_derivcheck, issapicrule,
+                                           role='Process']:
+   [ State_111( ) ]
+  --[ IsIn( 'typed_lookup', y.1 ) ]->
+   [ State_1111( y.1 ) ]
+
+  /*
+  rule (modulo AC) lookuptypedlookupasy_0_111[color=#ffffff,
+                                              process="lookup 'typed_lookup' as y.1", no_derivcheck,
+                                              issapicrule, role='Process']:
+     [ State_111( ) ] --[ IsIn( 'typed_lookup', y ) ]-> [ State_1111( y ) ]
+  */
+
+rule (modulo E) lookuptypedlookupasy_1_111[color=#ffffff,
+                                           process="lookup 'typed_lookup' as y.1", no_derivcheck, issapicrule,
+                                           role='Process']:
+   [ State_111( ) ] --[ IsNotSet( 'typed_lookup' ) ]-> [ State_1112( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_0_1111[color=#ffffff, process="0", issapicrule,
+                         role='Process']:
+   [ State_1111( y.1 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_1111[color=#ffffff, process="0", issapicrule,
+                            role='Process']:
+     [ State_1111( y ) ] --> [ ]
+  */
+
+rule (modulo E) inybitstring_0_1112[color=#ffffff,
+                                    process="in(y.2:bitstring);", issapicrule, role='Process']:
+   [ State_1112( ), In( y.2 ) ] --> [ State_11121( y.2 ) ]
+
+  /*
+  rule (modulo AC) inybitstring_0_1112[color=#ffffff,
+                                       process="in(y.2:bitstring);", issapicrule, role='Process']:
+     [ State_1112( ), In( y ) ] --> [ State_11121( y ) ]
+  */
+
+rule (modulo E) eventLookupTypedybitstring_0_11121[color=#ffffff,
+                                                   process="event LookupTyped( y.2:bitstring );", issapicrule,
+                                                   role='Process']:
+   [ State_11121( y.2 ) ] --[ LookupTyped( y.2 ) ]-> [ State_111211( y.2 ) ]
+
+  /*
+  rule (modulo AC) eventLookupTypedybitstring_0_11121[color=#ffffff,
+                                                      process="event LookupTyped( y.2:bitstring );",
+                                                      issapicrule, role='Process']:
+     [ State_11121( y ) ] --[ LookupTyped( y ) ]-> [ State_111211( y ) ]
+  */
+
+rule (modulo E) p_0_111211[color=#ffffff, process="0", issapicrule,
+                           role='Process']:
+   [ State_111211( y.2 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_111211[color=#ffffff, process="0", issapicrule,
+                              role='Process']:
+     [ State_111211( y ) ] --> [ ]
+  */
+
+rule (modulo E) lookupuntypedlookupasy_0_112[color=#ffffff,
+                                             process="lookup 'untyped_lookup' as y.3", no_derivcheck,
+                                             issapicrule, role='Process']:
+   [ State_112( ) ]
+  --[ IsIn( 'untyped_lookup', y.3 ) ]->
+   [ State_1121( y.3 ) ]
+
+  /*
+  rule (modulo AC) lookupuntypedlookupasy_0_112[color=#ffffff,
+                                                process="lookup 'untyped_lookup' as y.3", no_derivcheck,
+                                                issapicrule, role='Process']:
+     [ State_112( ) ] --[ IsIn( 'untyped_lookup', y ) ]-> [ State_1121( y ) ]
+  */
+
+rule (modulo E) lookupuntypedlookupasy_1_112[color=#ffffff,
+                                             process="lookup 'untyped_lookup' as y.3", no_derivcheck,
+                                             issapicrule, role='Process']:
+   [ State_112( ) ] --[ IsNotSet( 'untyped_lookup' ) ]-> [ State_1122( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_0_1121[color=#ffffff, process="0", issapicrule,
+                         role='Process']:
+   [ State_1121( y.3 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_1121[color=#ffffff, process="0", issapicrule,
+                            role='Process']:
+     [ State_1121( y ) ] --> [ ]
+  */
+
+rule (modulo E) iny_0_1122[color=#ffffff, process="in(y.4);",
+                           issapicrule, role='Process']:
+   [ State_1122( ), In( y.4 ) ] --> [ State_11221( y.4 ) ]
+
+  /*
+  rule (modulo AC) iny_0_1122[color=#ffffff, process="in(y.4);",
+                              issapicrule, role='Process']:
+     [ State_1122( ), In( y ) ] --> [ State_11221( y ) ]
+  */
+
+rule (modulo E) eventLookupUntypedy_0_11221[color=#ffffff,
+                                            process="event LookupUntyped( y.4 );", issapicrule,
+                                            role='Process']:
+   [ State_11221( y.4 ) ]
+  --[ LookupUntyped( y.4 ) ]->
+   [ State_112211( y.4 ) ]
+
+  /*
+  rule (modulo AC) eventLookupUntypedy_0_11221[color=#ffffff,
+                                               process="event LookupUntyped( y.4 );", issapicrule,
+                                               role='Process']:
+     [ State_11221( y ) ] --[ LookupUntyped( y ) ]-> [ State_112211( y ) ]
+  */
+
+rule (modulo E) p_0_112211[color=#ffffff, process="0", issapicrule,
+                           role='Process']:
+   [ State_112211( y.4 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_112211[color=#ffffff, process="0", issapicrule,
+                              role='Process']:
+     [ State_112211( y ) ] --> [ ]
+  */
+
+rule (modulo E) letyznotpair_0_12[color=#ffffff,
+                                  process="let <y.5, z.1>='not_pair'", issapicrule, role='Process']:
+   [ State_12( ) ] --> [ Let_121( 'not_pair' ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) letyznotpair_1_12[color=#ffffff,
+                                  process="let <y.5, z.1>='not_pair'", issapicrule, role='Process']:
+   [ Let_121( <y.5, z.1> ) ] --> [ State_121( z.1, y.5 ) ]
+
+  /*
+  rule (modulo AC) letyznotpair_1_12[color=#ffffff,
+                                     process="let <y.5, z.1>='not_pair'", issapicrule, role='Process']:
+     [ Let_121( <y, z> ) ] --> [ State_121( z, y ) ]
+  */
+
+restriction Restr_letyznotpair_2_12_1:
+  "∀ #NOW.
+    (Restr_letyznotpair_2_12_1( ) @ #NOW) ⇒
+    (∀ z y. (<y, z> = 'not_pair') ⇒ (⊥))"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ #NOW.
+    (Restr_letyznotpair_2_12_1( ) @ #NOW) ⇒
+    (∀ z y. (<y, z> = 'not_pair') ⇒ (⊥))"
+  */
+
+rule (modulo E) letyznotpair_2_12[color=#ffffff,
+                                  process="let <y.5, z.1>='not_pair'", issapicrule, role='Process']:
+   [ Let_121( 'not_pair' ) ]
+  --[ Restr_letyznotpair_2_12_1( ) ]->
+   [ State_122( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_0_121[color=#ffffff, process="0", issapicrule,
+                        role='Process']:
+   [ State_121( z.1, y.5 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_121[color=#ffffff, process="0", issapicrule,
+                           role='Process']:
+     [ State_121( z, y ) ] --> [ ]
+  */
+
+rule (modulo E) inybitstring_0_122[color=#ffffff,
+                                   process="in(y.6:bitstring);", issapicrule, role='Process']:
+   [ State_122( ), In( y.6 ) ] --> [ State_1221( y.6 ) ]
+
+  /*
+  rule (modulo AC) inybitstring_0_122[color=#ffffff,
+                                      process="in(y.6:bitstring);", issapicrule, role='Process']:
+     [ State_122( ), In( y ) ] --> [ State_1221( y ) ]
+  */
+
+rule (modulo E) eventLetTypedybitstring_0_1221[color=#ffffff,
+                                               process="event LetTyped( y.6:bitstring );", issapicrule,
+                                               role='Process']:
+   [ State_1221( y.6 ) ] --[ LetTyped( y.6 ) ]-> [ State_12211( y.6 ) ]
+
+  /*
+  rule (modulo AC) eventLetTypedybitstring_0_1221[color=#ffffff,
+                                                  process="event LetTyped( y.6:bitstring );", issapicrule,
+                                                  role='Process']:
+     [ State_1221( y ) ] --[ LetTyped( y ) ]-> [ State_12211( y ) ]
+  */
+
+rule (modulo E) p_0_12211[color=#ffffff, process="0", issapicrule,
+                          role='Process']:
+   [ State_12211( y.6 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_12211[color=#ffffff, process="0", issapicrule,
+                             role='Process']:
+     [ State_12211( y ) ] --> [ ]
+  */
+
+rule (modulo E) letyznotpair_0_2[color=#ffffff,
+                                 process="let <y.7, z.2>='not_pair'", issapicrule, role='Process']:
+   [ State_2( ) ] --> [ Let_21( 'not_pair' ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) letyznotpair_1_2[color=#ffffff,
+                                 process="let <y.7, z.2>='not_pair'", issapicrule, role='Process']:
+   [ Let_21( <y.7, z.2> ) ] --> [ State_21( z.2, y.7 ) ]
+
+  /*
+  rule (modulo AC) letyznotpair_1_2[color=#ffffff,
+                                    process="let <y.7, z.2>='not_pair'", issapicrule, role='Process']:
+     [ Let_21( <y, z> ) ] --> [ State_21( z, y ) ]
+  */
+
+restriction Restr_letyznotpair_2_2_1:
+  "∀ #NOW.
+    (Restr_letyznotpair_2_2_1( ) @ #NOW) ⇒
+    (∀ z y. (<y, z> = 'not_pair') ⇒ (⊥))"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ #NOW.
+    (Restr_letyznotpair_2_2_1( ) @ #NOW) ⇒
+    (∀ z y. (<y, z> = 'not_pair') ⇒ (⊥))"
+  */
+
+rule (modulo E) letyznotpair_2_2[color=#ffffff,
+                                 process="let <y.7, z.2>='not_pair'", issapicrule, role='Process']:
+   [ Let_21( 'not_pair' ) ]
+  --[ Restr_letyznotpair_2_2_1( ) ]->
+   [ State_22( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_0_21[color=#ffffff, process="0", issapicrule,
+                       role='Process']:
+   [ State_21( z.2, y.7 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_21[color=#ffffff, process="0", issapicrule,
+                          role='Process']:
+     [ State_21( z, y ) ] --> [ ]
+  */
+
+rule (modulo E) iny_0_22[color=#ffffff, process="in(y.8);", issapicrule,
+                         role='Process']:
+   [ State_22( ), In( y.8 ) ] --> [ State_221( y.8 ) ]
+
+  /*
+  rule (modulo AC) iny_0_22[color=#ffffff, process="in(y.8);", issapicrule,
+                            role='Process']:
+     [ State_22( ), In( y ) ] --> [ State_221( y ) ]
+  */
+
+rule (modulo E) eventLetUntypedy_0_221[color=#ffffff,
+                                       process="event LetUntyped( y.8 );", issapicrule, role='Process']:
+   [ State_221( y.8 ) ] --[ LetUntyped( y.8 ) ]-> [ State_2211( y.8 ) ]
+
+  /*
+  rule (modulo AC) eventLetUntypedy_0_221[color=#ffffff,
+                                          process="event LetUntyped( y.8 );", issapicrule, role='Process']:
+     [ State_221( y ) ] --[ LetUntyped( y ) ]-> [ State_2211( y ) ]
+  */
+
+rule (modulo E) p_0_2211[color=#ffffff, process="0", issapicrule,
+                         role='Process']:
+   [ State_2211( y.8 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_2211[color=#ffffff, process="0", issapicrule,
+                            role='Process']:
+     [ State_2211( y ) ] --> [ ]
+  */
+
+restriction set_in:
+  "∀ x y #t3.
+    (IsIn( x, y ) @ #t3) ⇒
+    (∃ #t2.
+      ((Insert( x, y ) @ #t2) ∧ (#t2 < #t3)) ∧
+      (∀ #t1 yp.
+        (Insert( x, yp ) @ #t1) ⇒ (((#t1 < #t2) ∨ (#t1 = #t2)) ∨ (#t3 < #t1))))"
+
+  /*
+  expanded formula:
+  "∀ x y #t3.
+    (IsIn( x, y ) @ #t3) ⇒
+    (∃ #t2.
+      ((Insert( x, y ) @ #t2) ∧ (#t2 < #t3)) ∧
+      (∀ #t1 yp.
+        (Insert( x, yp ) @ #t1) ⇒ (((#t1 < #t2) ∨ (#t1 = #t2)) ∨ (#t3 < #t1))))"
+  */
+
+restriction set_notin:
+  "∀ x #t3.
+    (IsNotSet( x ) @ #t3) ⇒ (∀ #t1 y. (Insert( x, y ) @ #t1) ⇒ (#t3 < #t1))"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ x #t3.
+    (IsNotSet( x ) @ #t3) ⇒ (∀ #t1 y. (Insert( x, y ) @ #t1) ⇒ (#t3 < #t1))"
+  */
+
+restriction single_session:
+  "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
+  */
+
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.13.0
+Maude version 3.5.1
+Git revision: bf885ca9abf478867fbdbbf3ad80e4da85370e01 (with uncommited changes), branch: HEAD
+Compiled at: 2026-10-04 11:58:25.282416529 UTC
+*/
+
+end
+/* Output
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/regression/trace/sapic-else-binding-scope.spthy
+
+  output:          examples/regression/trace/sapic-else-binding-scope.spthy.tmp
+  processing time: 0.31s
+  
+  lookup_typed_else (exists-trace): verified (3 steps)
+  lookup_untyped_else (exists-trace): verified (3 steps)
+  let_typed_else (exists-trace): verified (3 steps)
+  let_untyped_else (exists-trace): verified (3 steps)
+
+==============================================================================
+*/

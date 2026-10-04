@@ -1,0 +1,373 @@
+theory SoundnessSapicBinderScope
+
+begin
+
+// Function signature and definition of the equational theory E
+
+functions: fst/1, pair/2, snd/1
+equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
+
+heuristic: p
+
+lemma else_outer:
+  all-traces
+  "∀ v #i.
+    (Missing( v ) @ #i) ⇒ (∃ #j. (Input( 'else', v ) @ #j) ∧ (#j < #i))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ v #i.
+  (Missing( v ) @ #i) ∧ ∀ #j. (Input( 'else', v ) @ #j) ⇒ ¬(#j < #i)"
+*/
+simplify
+solve( State_11112( v ) ▶₀ #i )
+  case lookupunsetasx_1_1111
+  by contradiction /* from formulas */
+qed
+
+lemma let_outer:
+  all-traces
+  "∀ a b #i.
+    (Parts( a, b ) @ #i) ⇒ (∃ #j. (Input( 'let', <a, b> ) @ #j) ∧ (#j < #i))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ a b #i.
+  (Parts( a, b ) @ #i) ∧ ∀ #j. (Input( 'let', <a, b> ) @ #j) ⇒ ¬(#j < #i)"
+*/
+simplify
+solve( State_12111( b, x, a ) ▶₀ #i )
+  case letxyx_1_1211
+  by contradiction /* from formulas */
+qed
+
+lemma key_outer:
+  exists-trace "∃ #i. Read( 'value' ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #i. (Read( 'value' ) @ #i)"
+*/
+simplify
+solve( State_2111( x, 'value' ) ▶₀ #i )
+  case lookupxasx_0_211
+  solve( (#vr.2 < #t2)  ∥ (#vr.2 = #t2) )
+    case case_2
+    SOLVED // trace found
+  qed
+qed
+
+rule (modulo E) Init[color=#ffffff, process="|", issapicrule,
+                     role='Process']:
+   [ ] --[ Init( ) ]-> [ State_( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_0_[color=#ffffff, process="|", issapicrule,
+                     role='Process']:
+   [ State_( ) ] --> [ State_1( ), State_2( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_0_1[color=#ffffff, process="|", issapicrule,
+                      role='Process']:
+   [ State_1( ) ] --> [ State_11( ), State_12( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) inx_0_11[color=#ffffff, process="in(x.1);", issapicrule,
+                         role='Process']:
+   [ State_11( ), In( x.1 ) ] --> [ State_111( x.1 ) ]
+
+  /*
+  rule (modulo AC) inx_0_11[color=#ffffff, process="in(x.1);", issapicrule,
+                            role='Process']:
+     [ State_11( ), In( x ) ] --> [ State_111( x ) ]
+  */
+
+rule (modulo E) eventInputelsex_0_111[color=#ffffff,
+                                      process="event Input( 'else', x.1 );", issapicrule, role='Process']:
+   [ State_111( x.1 ) ] --[ Input( 'else', x.1 ) ]-> [ State_1111( x.1 ) ]
+
+  /*
+  rule (modulo AC) eventInputelsex_0_111[color=#ffffff,
+                                         process="event Input( 'else', x.1 );", issapicrule, role='Process']:
+     [ State_111( x ) ] --[ Input( 'else', x ) ]-> [ State_1111( x ) ]
+  */
+
+rule (modulo E) lookupunsetasx_0_1111[color=#ffffff,
+                                      process="lookup 'unset' as x.2", no_derivcheck, issapicrule,
+                                      role='Process']:
+   [ State_1111( x.1 ) ]
+  --[ IsIn( 'unset', x.2 ) ]->
+   [ State_11111( x.1, x.2 ) ]
+
+  /*
+  rule (modulo AC) lookupunsetasx_0_1111[color=#ffffff,
+                                         process="lookup 'unset' as x.2", no_derivcheck, issapicrule,
+                                         role='Process']:
+     [ State_1111( x ) ]
+    --[ IsIn( 'unset', x.1 ) ]->
+     [ State_11111( x, x.1 ) ]
+  */
+
+rule (modulo E) lookupunsetasx_1_1111[color=#ffffff,
+                                      process="lookup 'unset' as x.2", no_derivcheck, issapicrule,
+                                      role='Process']:
+   [ State_1111( x.1 ) ] --[ IsNotSet( 'unset' ) ]-> [ State_11112( x.1 ) ]
+
+  /*
+  rule (modulo AC) lookupunsetasx_1_1111[color=#ffffff,
+                                         process="lookup 'unset' as x.2", no_derivcheck, issapicrule,
+                                         role='Process']:
+     [ State_1111( x ) ] --[ IsNotSet( 'unset' ) ]-> [ State_11112( x ) ]
+  */
+
+rule (modulo E) eventFoundx_0_11111[color=#ffffff,
+                                    process="event Found( x.2 );", issapicrule, role='Process']:
+   [ State_11111( x.1, x.2 ) ]
+  --[ Found( x.2 ) ]->
+   [ State_111111( x.1, x.2 ) ]
+
+  /*
+  rule (modulo AC) eventFoundx_0_11111[color=#ffffff,
+                                       process="event Found( x.2 );", issapicrule, role='Process']:
+     [ State_11111( x, x.1 ) ] --[ Found( x.1 ) ]-> [ State_111111( x, x.1 ) ]
+  */
+
+rule (modulo E) p_0_111111[color=#ffffff, process="0", issapicrule,
+                           role='Process']:
+   [ State_111111( x.1, x.2 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_111111[color=#ffffff, process="0", issapicrule,
+                              role='Process']:
+     [ State_111111( x, x.1 ) ] --> [ ]
+  */
+
+rule (modulo E) eventMissingx_0_11112[color=#ffffff,
+                                      process="event Missing( x.1 );", issapicrule, role='Process']:
+   [ State_11112( x.1 ) ] --[ Missing( x.1 ) ]-> [ State_111121( x.1 ) ]
+
+  /*
+  rule (modulo AC) eventMissingx_0_11112[color=#ffffff,
+                                         process="event Missing( x.1 );", issapicrule, role='Process']:
+     [ State_11112( x ) ] --[ Missing( x ) ]-> [ State_111121( x ) ]
+  */
+
+rule (modulo E) p_0_111121[color=#ffffff, process="0", issapicrule,
+                           role='Process']:
+   [ State_111121( x.1 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_111121[color=#ffffff, process="0", issapicrule,
+                              role='Process']:
+     [ State_111121( x ) ] --> [ ]
+  */
+
+rule (modulo E) inx_0_12[color=#ffffff, process="in(x.3);", issapicrule,
+                         role='Process']:
+   [ State_12( ), In( x.3 ) ] --> [ State_121( x.3 ) ]
+
+  /*
+  rule (modulo AC) inx_0_12[color=#ffffff, process="in(x.3);", issapicrule,
+                            role='Process']:
+     [ State_12( ), In( x ) ] --> [ State_121( x ) ]
+  */
+
+rule (modulo E) eventInputletx_0_121[color=#ffffff,
+                                     process="event Input( 'let', x.3 );", issapicrule, role='Process']:
+   [ State_121( x.3 ) ] --[ Input( 'let', x.3 ) ]-> [ State_1211( x.3 ) ]
+
+  /*
+  rule (modulo AC) eventInputletx_0_121[color=#ffffff,
+                                        process="event Input( 'let', x.3 );", issapicrule, role='Process']:
+     [ State_121( x ) ] --[ Input( 'let', x ) ]-> [ State_1211( x ) ]
+  */
+
+rule (modulo E) letxyx_0_1211[color=#ffffff,
+                              process="let <x.4, y.1>=x.3", issapicrule, role='Process']:
+   [ State_1211( x.3 ) ] --> [ Let_12111( x.3, x.3 ) ]
+
+  /*
+  rule (modulo AC) letxyx_0_1211[color=#ffffff,
+                                 process="let <x.4, y.1>=x.3", issapicrule, role='Process']:
+     [ State_1211( x ) ] --> [ Let_12111( x, x ) ]
+  */
+
+rule (modulo E) letxyx_1_1211[color=#ffffff,
+                              process="let <x.4, y.1>=x.3", issapicrule, role='Process']:
+   [ Let_12111( <x.4, y.1>, x.3 ) ] --> [ State_12111( y.1, x.3, x.4 ) ]
+
+  /*
+  rule (modulo AC) letxyx_1_1211[color=#ffffff,
+                                 process="let <x.4, y.1>=x.3", issapicrule, role='Process']:
+     [ Let_12111( <x, y>, x.1 ) ] --> [ State_12111( y, x.1, x ) ]
+  */
+
+rule (modulo E) eventPartsxy_0_12111[color=#ffffff,
+                                     process="event Parts( x.4, y.1 );", issapicrule, role='Process']:
+   [ State_12111( y.1, x.3, x.4 ) ]
+  --[ Parts( x.4, y.1 ) ]->
+   [ State_121111( y.1, x.3, x.4 ) ]
+
+  /*
+  rule (modulo AC) eventPartsxy_0_12111[color=#ffffff,
+                                        process="event Parts( x.4, y.1 );", issapicrule, role='Process']:
+     [ State_12111( y, x, x.1 ) ]
+    --[ Parts( x.1, y ) ]->
+     [ State_121111( y, x, x.1 ) ]
+  */
+
+rule (modulo E) p_0_121111[color=#ffffff, process="0", issapicrule,
+                           role='Process']:
+   [ State_121111( y.1, x.3, x.4 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_121111[color=#ffffff, process="0", issapicrule,
+                              role='Process']:
+     [ State_121111( y, x, x.1 ) ] --> [ ]
+  */
+
+rule (modulo E) insertkeyvalue_0_2[color=#ffffff,
+                                   process="insert 'key','value';", issapicrule, role='Process']:
+   [ State_2( ) ] --[ Insert( 'key', 'value' ) ]-> [ State_21( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) inx_0_21[color=#ffffff, process="in(x.5);", issapicrule,
+                         role='Process']:
+   [ State_21( ), In( x.5 ) ] --> [ State_211( x.5 ) ]
+
+  /*
+  rule (modulo AC) inx_0_21[color=#ffffff, process="in(x.5);", issapicrule,
+                            role='Process']:
+     [ State_21( ), In( x ) ] --> [ State_211( x ) ]
+  */
+
+rule (modulo E) lookupxasx_0_211[color=#ffffff,
+                                 process="lookup x.5 as x.6", no_derivcheck, issapicrule, role='Process']:
+   [ State_211( x.5 ) ] --[ IsIn( x.5, x.6 ) ]-> [ State_2111( x.5, x.6 ) ]
+
+  /*
+  rule (modulo AC) lookupxasx_0_211[color=#ffffff,
+                                    process="lookup x.5 as x.6", no_derivcheck, issapicrule, role='Process']:
+     [ State_211( x ) ] --[ IsIn( x, x.1 ) ]-> [ State_2111( x, x.1 ) ]
+  */
+
+rule (modulo E) lookupxasx_1_211[color=#ffffff,
+                                 process="lookup x.5 as x.6", no_derivcheck, issapicrule, role='Process']:
+   [ State_211( x.5 ) ] --[ IsNotSet( x.5 ) ]-> [ State_2112( x.5 ) ]
+
+  /*
+  rule (modulo AC) lookupxasx_1_211[color=#ffffff,
+                                    process="lookup x.5 as x.6", no_derivcheck, issapicrule, role='Process']:
+     [ State_211( x ) ] --[ IsNotSet( x ) ]-> [ State_2112( x ) ]
+  */
+
+rule (modulo E) eventReadx_0_2111[color=#ffffff,
+                                  process="event Read( x.6 );", issapicrule, role='Process']:
+   [ State_2111( x.5, x.6 ) ]
+  --[ Read( x.6 ) ]->
+   [ State_21111( x.5, x.6 ) ]
+
+  /*
+  rule (modulo AC) eventReadx_0_2111[color=#ffffff,
+                                     process="event Read( x.6 );", issapicrule, role='Process']:
+     [ State_2111( x, x.1 ) ] --[ Read( x.1 ) ]-> [ State_21111( x, x.1 ) ]
+  */
+
+rule (modulo E) p_0_21111[color=#ffffff, process="0", issapicrule,
+                          role='Process']:
+   [ State_21111( x.5, x.6 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_21111[color=#ffffff, process="0", issapicrule,
+                             role='Process']:
+     [ State_21111( x, x.1 ) ] --> [ ]
+  */
+
+rule (modulo E) p_0_2112[color=#ffffff, process="0", issapicrule,
+                         role='Process']:
+   [ State_2112( x.5 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_2112[color=#ffffff, process="0", issapicrule,
+                            role='Process']:
+     [ State_2112( x ) ] --> [ ]
+  */
+
+restriction set_in:
+  "∀ x y #t3.
+    (IsIn( x, y ) @ #t3) ⇒
+    (∃ #t2.
+      ((Insert( x, y ) @ #t2) ∧ (#t2 < #t3)) ∧
+      (∀ #t1 yp.
+        (Insert( x, yp ) @ #t1) ⇒ (((#t1 < #t2) ∨ (#t1 = #t2)) ∨ (#t3 < #t1))))"
+
+  /*
+  expanded formula:
+  "∀ x y #t3.
+    (IsIn( x, y ) @ #t3) ⇒
+    (∃ #t2.
+      ((Insert( x, y ) @ #t2) ∧ (#t2 < #t3)) ∧
+      (∀ #t1 yp.
+        (Insert( x, yp ) @ #t1) ⇒ (((#t1 < #t2) ∨ (#t1 = #t2)) ∨ (#t3 < #t1))))"
+  */
+
+restriction set_notin:
+  "∀ x #t3.
+    (IsNotSet( x ) @ #t3) ⇒ (∀ #t1 y. (Insert( x, y ) @ #t1) ⇒ (#t3 < #t1))"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ x #t3.
+    (IsNotSet( x ) @ #t3) ⇒ (∀ #t1 y. (Insert( x, y ) @ #t1) ⇒ (#t3 < #t1))"
+  */
+
+restriction single_session:
+  "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
+  */
+
+/*
+WARNING: the following wellformedness checks failed!
+
+Wellformedness-error in Process
+  Variable bound twice: x.
+  
+  Variable bound twice: x.
+  
+  Variable bound twice: x.
+*/
+
+/*
+Generated from:
+Tamarin version 1.13.0
+Maude version 3.5.1
+Git revision: bf885ca9abf478867fbdbbf3ad80e4da85370e01 (with uncommited changes), branch: HEAD
+Compiled at: 2026-10-04 11:58:25.282416529 UTC
+*/
+
+end
+/* Output
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/regression/trace/soundness-sapic-binder-scope.spthy
+
+  output:          examples/regression/trace/soundness-sapic-binder-scope.spthy.tmp
+  processing time: 0.28s
+  
+  WARNING: 3 wellformedness check failed!
+           The analysis results might be wrong!
+  
+  else_outer (all-traces): verified (3 steps)
+  let_outer (all-traces): verified (3 steps)
+  key_outer (exists-trace): verified (4 steps)
+
+==============================================================================
+*/
