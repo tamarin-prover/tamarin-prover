@@ -1,0 +1,1510 @@
+theory SoundnessSapicProcessCallCapture
+
+begin
+
+// Function signature and definition of the equational theory E
+
+functions: fst/1, pair/2, snd/1
+equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
+
+heuristic: p
+
+lemma typed_distinct:
+  exists-trace "∃ #i. Typed( 'a', 'b' ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #i. (Typed( 'a', 'b' ) @ #i)"
+*/
+simplify
+solve( State_1111111111111111( 'a', 'b' ) ▶₀ #i )
+  case inybitstring_0_111111111111111
+  SOLVED // trace found
+qed
+
+lemma untyped_distinct:
+  exists-trace "∃ #i. Untyped( 'a', 'b' ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #i. (Untyped( 'a', 'b' ) @ #i)"
+*/
+simplify
+solve( State_111111111112111( 'a', 'b' ) ▶₀ #i )
+  case iny_0_11111111111211
+  SOLVED // trace found
+qed
+
+lemma typed_equal:
+  exists-trace "∃ #i. Typed( 'a', 'a' ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #i. (Typed( 'a', 'a' ) @ #i)"
+*/
+simplify
+solve( State_1111111111111111( 'a', 'a' ) ▶₀ #i )
+  case inybitstring_0_111111111111111
+  SOLVED // trace found
+qed
+
+lemma compound_argument:
+  exists-trace "∃ #i. Pattern( <'tag', 'a'>, 'b', 'c' ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #i. (Pattern( <'tag', 'a'>, 'b', 'c' ) @ #i)"
+*/
+simplify
+solve( State_111111111121111( 'c', 'a', 'b' ) ▶₀ #i )
+  case inybitstringzbitstring_0_11111111112111
+  SOLVED // trace found
+qed
+
+lemma match_argument:
+  exists-trace "∃ #i. Matched( 'a', 'b' ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #i. (Matched( 'a', 'b' ) @ #i)"
+*/
+simplify
+solve( State_1111111112111( 'a', 'b' ) ▶₀ #i )
+  case inybitstringy_0_111111111211
+  SOLVED // trace found
+qed
+
+lemma fresh_distinct:
+  exists-trace "∃ y #i. (Fresh( 'a', y ) @ #i) ∧ (¬(y = 'a'))"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ y #i. (Fresh( 'a', y ) @ #i) ∧ ¬(y = 'a')"
+*/
+simplify
+solve( State_111111112111( 'a', y ) ▶₀ #i )
+  case newy_0_11111111211
+  SOLVED // trace found
+qed
+
+lemma let_argument:
+  exists-trace "∃ #i. Bound( <'a', 'b'>, 'a', 'b' ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #i. (Bound( <'a', 'b'>, 'a', 'b' ) @ #i)"
+*/
+simplify
+solve( State_11111112111( 'b', <'a', 'b'>, 'a' ) ▶₀ #i )
+  case letybitstringzbitstringy_1_1111111211
+  SOLVED // trace found
+qed
+
+lemma lookup_argument:
+  exists-trace "∃ #i. Read( 'a', 'b' ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #i. (Read( 'a', 'b' ) @ #i)"
+*/
+simplify
+solve( Read( 'a', 'b' ) @ #i )
+  case eventReadyybitstring_0_111111211111
+  solve( State_111111211111( s, 'a', 'b' ) ▶₀ #i )
+    case lookupsasybitstring_0_11111121111
+    solve( (#vr.3 < #t2)  ∥ (#vr.3 = #t2) )
+      case case_2
+      solve( Insert( ~n, 'b' ) @ #t2 )
+        case insertsb_0_11111121
+        SOLVED // trace found
+      qed
+    qed
+  qed
+qed
+
+lemma lookup_else:
+  exists-trace "∃ #i. Missing( 'a' ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #i. (Missing( 'a' ) @ #i)"
+*/
+simplify
+solve( Missing( 'a' ) @ #i )
+  case eventMissingy_0_1111121112
+  solve( State_1111121112( s, 'a' ) ▶₀ #i )
+    case lookupsasybitstring_1_111112111
+    SOLVED // trace found
+  qed
+qed
+
+lemma let_else:
+  exists-trace "∃ #i. ElseValue( 'a' ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #i. (ElseValue( 'a' ) @ #i)"
+*/
+simplify
+solve( State_11112112( 'a' ) ▶₀ #i )
+  case letybitstringzbitstringnotpair_2_1111211
+  SOLVED // trace found
+qed
+
+lemma nested_argument:
+  exists-trace "∃ #i. Nested( 'a', 'b' ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #i. (Nested( 'a', 'b' ) @ #i)"
+*/
+simplify
+solve( State_11121111( 'a', 'b' ) ▶₀ #i )
+  case inybitstring_0_1112111
+  SOLVED // trace found
+qed
+
+lemma embedded_argument:
+  exists-trace "∃ #i. Embedded( 'a', 'b' ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #i. (Embedded( 'a', 'b' ) @ #i)"
+*/
+simplify
+solve( State_11211( 'a' ) ▶₀ #i )
+  case Embeddedy_0_1121
+  SOLVED // trace found
+qed
+
+lemma input_channel:
+  exists-trace "∃ #i. Channel( 'a', 'b' ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #i. (Channel( 'a', 'b' ) @ #i)"
+*/
+simplify
+solve( State_121111( 'a', 'b' ) ▶₀ #i )
+  case inyybitstring_1_12111
+  SOLVED // trace found
+qed
+
+lemma lookup_cell:
+  exists-trace "∃ s #i. ReadSelf( s, 'b' ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ s #i. (ReadSelf( s, 'b' ) @ #i)"
+*/
+simplify
+solve( State_21111( s, 'b' ) ▶₀ #i )
+  case lookupyasybitstring_0_2111
+  solve( (#vr.2 < #t2)  ∥ (#vr.2 = #t2) )
+    case case_2
+    solve( Insert( ~n, 'b' ) @ #t2 )
+      case insertyb_0_21
+      SOLVED // trace found
+    qed
+  qed
+qed
+
+lemma typed_argument_preserved:
+  all-traces
+  "∀ x y #i.
+    (Typed( x, y ) @ #i) ⇒ (∃ #j. (TypedArgument( x ) @ #j) ∧ (#j < #i))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ x y #i.
+  (Typed( x, y ) @ #i) ∧ ∀ #j. (TypedArgument( x ) @ #j) ⇒ ¬(#j < #i)"
+*/
+simplify
+solve( State_1111111111111111( x, y ) ▶₀ #i )
+  case inybitstring_0_111111111111111
+  by contradiction /* from formulas */
+qed
+
+lemma compound_argument_preserved:
+  all-traces
+  "∀ x y z #i.
+    (Pattern( x, y, z ) @ #i) ⇒
+    (∃ a #j. ((PatternArgument( a ) @ #j) ∧ (x = <'tag', a>)) ∧ (#j < #i))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ x y z #i.
+  (Pattern( x, y, z ) @ #i)
+ ∧
+  ∀ a #j. (PatternArgument( a ) @ #j) ∧ (x = <'tag', a>) ⇒ ¬(#j < #i)"
+*/
+simplify
+solve( State_111111111121111( z, y, y.1 ) ▶₀ #i )
+  case inybitstringzbitstring_0_11111111112111
+  by contradiction /* from formulas */
+qed
+
+rule (modulo E) Init[color=#ffffff, process="|", issapicrule,
+                     role='Process']:
+   [ ] --[ Init( ) ]-> [ State_( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_0_[color=#ffffff, process="|", issapicrule,
+                     role='Process']:
+   [ State_( ) ] --> [ State_1( ), State_2( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_0_1[color=#ffffff, process="|", issapicrule,
+                      role='Process']:
+   [ State_1( ) ] --> [ State_11( ), State_12( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_0_11[color=#ffffff, process="|", issapicrule,
+                       role='Process']:
+   [ State_11( ) ] --> [ State_111( ), State_112( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_0_111[color=#ffffff, process="|", issapicrule,
+                        role='Process']:
+   [ State_111( ) ] --> [ State_1111( ), State_1112( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_0_1111[color=#ffffff, process="|", issapicrule,
+                         role='Process']:
+   [ State_1111( ) ] --> [ State_11111( ), State_11112( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_0_11111[color=#ffffff, process="|", issapicrule,
+                          role='Process']:
+   [ State_11111( ) ] --> [ State_111111( ), State_111112( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_0_111111[color=#ffffff, process="|", issapicrule,
+                           role='Process']:
+   [ State_111111( ) ] --> [ State_1111111( ), State_1111112( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_0_1111111[color=#ffffff, process="|", issapicrule,
+                            role='Process']:
+   [ State_1111111( ) ] --> [ State_11111111( ), State_11111112( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_0_11111111[color=#ffffff, process="|", issapicrule,
+                             role='Process']:
+   [ State_11111111( ) ] --> [ State_111111111( ), State_111111112( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_0_111111111[color=#ffffff, process="|", issapicrule,
+                              role='Process']:
+   [ State_111111111( ) ] --> [ State_1111111111( ), State_1111111112( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_0_1111111111[color=#ffffff, process="|", issapicrule,
+                               role='Process']:
+   [ State_1111111111( ) ]
+  -->
+   [ State_11111111111( ), State_11111111112( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_0_11111111111[color=#ffffff, process="|", issapicrule,
+                                role='Process']:
+   [ State_11111111111( ) ]
+  -->
+   [ State_111111111111( ), State_111111111112( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) iny_0_111111111111[color=#ffffff, process="in(y.2);",
+                                   issapicrule, role='Process']:
+   [ State_111111111111( ), In( y.2 ) ] --> [ State_1111111111111( y.2 ) ]
+
+  /*
+  rule (modulo AC) iny_0_111111111111[color=#ffffff, process="in(y.2);",
+                                      issapicrule, role='Process']:
+     [ State_111111111111( ), In( y ) ] --> [ State_1111111111111( y ) ]
+  */
+
+rule (modulo E) eventTypedArgumenty_0_1111111111111[color=#ffffff,
+                                                    process="event TypedArgument( y.2 );", issapicrule,
+                                                    role='Process']:
+   [ State_1111111111111( y.2 ) ]
+  --[ TypedArgument( y.2 ) ]->
+   [ State_11111111111111( y.2 ) ]
+
+  /*
+  rule (modulo AC) eventTypedArgumenty_0_1111111111111[color=#ffffff,
+                                                       process="event TypedArgument( y.2 );", issapicrule,
+                                                       role='Process']:
+     [ State_1111111111111( y ) ]
+    --[ TypedArgument( y ) ]->
+     [ State_11111111111111( y ) ]
+  */
+
+rule (modulo E) Typedy_0_11111111111111[color=#ffffff,
+                                        process="Typed(y.2);", issapicrule, role='Process']:
+   [ State_11111111111111( y.2 ) ] --> [ State_111111111111111( y.2 ) ]
+
+  /*
+  rule (modulo AC) Typedy_0_11111111111111[color=#ffffff,
+                                           process="Typed(y.2);", issapicrule, role='Process']:
+     [ State_11111111111111( y ) ] --> [ State_111111111111111( y ) ]
+  */
+
+rule (modulo E) inybitstring_0_111111111111111[color=#408055,
+                                               process="in(y.3:bitstring);", issapicrule, role='Typed']:
+   [ State_111111111111111( y.2 ), In( y.3 ) ]
+  -->
+   [ State_1111111111111111( y.2, y.3 ) ]
+
+  /*
+  rule (modulo AC) inybitstring_0_111111111111111[color=#408055,
+                                                  process="in(y.3:bitstring);", issapicrule, role='Typed']:
+     [ State_111111111111111( y ), In( y.1 ) ]
+    -->
+     [ State_1111111111111111( y, y.1 ) ]
+  */
+
+rule (modulo E) eventTypedyybitstring_0_1111111111111111[color=#408055,
+                                                         process="event Typed( y.2, y.3:bitstring );",
+                                                         issapicrule, role='Typed']:
+   [ State_1111111111111111( y.2, y.3 ) ]
+  --[ Typed( y.2, y.3 ) ]->
+   [ State_11111111111111111( y.2, y.3 ) ]
+
+  /*
+  rule (modulo AC) eventTypedyybitstring_0_1111111111111111[color=#408055,
+                                                            process="event Typed( y.2, y.3:bitstring );",
+                                                            issapicrule, role='Typed']:
+     [ State_1111111111111111( y, y.1 ) ]
+    --[ Typed( y, y.1 ) ]->
+     [ State_11111111111111111( y, y.1 ) ]
+  */
+
+rule (modulo E) p_0_11111111111111111[color=#408055, process="0",
+                                      issapicrule, role='Typed']:
+   [ State_11111111111111111( y.2, y.3 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_11111111111111111[color=#408055, process="0",
+                                         issapicrule, role='Typed']:
+     [ State_11111111111111111( y, y.1 ) ] --> [ ]
+  */
+
+rule (modulo E) iny_0_111111111112[color=#ffffff, process="in(y.4);",
+                                   issapicrule, role='Process']:
+   [ State_111111111112( ), In( y.4 ) ] --> [ State_1111111111121( y.4 ) ]
+
+  /*
+  rule (modulo AC) iny_0_111111111112[color=#ffffff, process="in(y.4);",
+                                      issapicrule, role='Process']:
+     [ State_111111111112( ), In( y ) ] --> [ State_1111111111121( y ) ]
+  */
+
+rule (modulo E) Untypedy_0_1111111111121[color=#ffffff,
+                                         process="Untyped(y.4);", issapicrule, role='Process']:
+   [ State_1111111111121( y.4 ) ] --> [ State_11111111111211( y.4 ) ]
+
+  /*
+  rule (modulo AC) Untypedy_0_1111111111121[color=#ffffff,
+                                            process="Untyped(y.4);", issapicrule, role='Process']:
+     [ State_1111111111121( y ) ] --> [ State_11111111111211( y ) ]
+  */
+
+rule (modulo E) iny_0_11111111111211[color=#408068, process="in(y.5);",
+                                     issapicrule, role='Untyped']:
+   [ State_11111111111211( y.4 ), In( y.5 ) ]
+  -->
+   [ State_111111111112111( y.4, y.5 ) ]
+
+  /*
+  rule (modulo AC) iny_0_11111111111211[color=#408068, process="in(y.5);",
+                                        issapicrule, role='Untyped']:
+     [ State_11111111111211( y ), In( y.1 ) ]
+    -->
+     [ State_111111111112111( y, y.1 ) ]
+  */
+
+rule (modulo E) eventUntypedyy_0_111111111112111[color=#408068,
+                                                 process="event Untyped( y.4, y.5 );", issapicrule,
+                                                 role='Untyped']:
+   [ State_111111111112111( y.4, y.5 ) ]
+  --[ Untyped( y.4, y.5 ) ]->
+   [ State_1111111111121111( y.4, y.5 ) ]
+
+  /*
+  rule (modulo AC) eventUntypedyy_0_111111111112111[color=#408068,
+                                                    process="event Untyped( y.4, y.5 );", issapicrule,
+                                                    role='Untyped']:
+     [ State_111111111112111( y, y.1 ) ]
+    --[ Untyped( y, y.1 ) ]->
+     [ State_1111111111121111( y, y.1 ) ]
+  */
+
+rule (modulo E) p_0_1111111111121111[color=#408068, process="0",
+                                     issapicrule, role='Untyped']:
+   [ State_1111111111121111( y.4, y.5 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_1111111111121111[color=#408068, process="0",
+                                        issapicrule, role='Untyped']:
+     [ State_1111111111121111( y, y.1 ) ] --> [ ]
+  */
+
+rule (modulo E) iny_0_11111111112[color=#ffffff, process="in(y.6);",
+                                  issapicrule, role='Process']:
+   [ State_11111111112( ), In( y.6 ) ] --> [ State_111111111121( y.6 ) ]
+
+  /*
+  rule (modulo AC) iny_0_11111111112[color=#ffffff, process="in(y.6);",
+                                     issapicrule, role='Process']:
+     [ State_11111111112( ), In( y ) ] --> [ State_111111111121( y ) ]
+  */
+
+rule (modulo E) eventPatternArgumenty_0_111111111121[color=#ffffff,
+                                                     process="event PatternArgument( y.6 );", issapicrule,
+                                                     role='Process']:
+   [ State_111111111121( y.6 ) ]
+  --[ PatternArgument( y.6 ) ]->
+   [ State_1111111111211( y.6 ) ]
+
+  /*
+  rule (modulo AC) eventPatternArgumenty_0_111111111121[color=#ffffff,
+                                                        process="event PatternArgument( y.6 );", issapicrule,
+                                                        role='Process']:
+     [ State_111111111121( y ) ]
+    --[ PatternArgument( y ) ]->
+     [ State_1111111111211( y ) ]
+  */
+
+rule (modulo E) Patterntagy_0_1111111111211[color=#ffffff,
+                                            process="Pattern(<'tag', y.6>);", issapicrule, role='Process']:
+   [ State_1111111111211( y.6 ) ] --> [ State_11111111112111( y.6 ) ]
+
+  /*
+  rule (modulo AC) Patterntagy_0_1111111111211[color=#ffffff,
+                                               process="Pattern(<'tag', y.6>);", issapicrule, role='Process']:
+     [ State_1111111111211( y ) ] --> [ State_11111111112111( y ) ]
+  */
+
+rule (modulo E) inybitstringzbitstring_0_11111111112111[color=#805040,
+                                                        process="in(<y.7:bitstring, z.1:bitstring>);",
+                                                        issapicrule, role='Pattern']:
+   [ State_11111111112111( y.6 ), In( <y.7, z.1> ) ]
+  -->
+   [ State_111111111121111( z.1, y.6, y.7 ) ]
+
+  /*
+  rule (modulo AC) inybitstringzbitstring_0_11111111112111[color=#805040,
+                                                           process="in(<y.7:bitstring, z.1:bitstring>);",
+                                                           issapicrule, role='Pattern']:
+     [ State_11111111112111( y ), In( <y.1, z> ) ]
+    -->
+     [ State_111111111121111( z, y, y.1 ) ]
+  */
+
+rule (modulo E) eventPatterntagyybitstringzbitstring_0_111111111121111[color=#805040,
+                                                                       process="event Pattern( <'tag', y.6>, y.7:bitstring, z.1:bitstring );",
+                                                                       issapicrule, role='Pattern']:
+   [ State_111111111121111( z.1, y.6, y.7 ) ]
+  --[ Pattern( <'tag', y.6>, y.7, z.1 ) ]->
+   [ State_1111111111211111( z.1, y.6, y.7 ) ]
+
+  /*
+  rule (modulo AC) eventPatterntagyybitstringzbitstring_0_111111111121111[color=#805040,
+                                                                          process="event Pattern( <'tag', y.6>, y.7:bitstring, z.1:bitstring );",
+                                                                          issapicrule, role='Pattern']:
+     [ State_111111111121111( z, y, y.1 ) ]
+    --[ Pattern( <'tag', y>, y.1, z ) ]->
+     [ State_1111111111211111( z, y, y.1 ) ]
+  */
+
+rule (modulo E) p_0_1111111111211111[color=#805040, process="0",
+                                     issapicrule, role='Pattern']:
+   [ State_1111111111211111( z.1, y.6, y.7 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_1111111111211111[color=#805040, process="0",
+                                        issapicrule, role='Pattern']:
+     [ State_1111111111211111( z, y, y.1 ) ] --> [ ]
+  */
+
+rule (modulo E) iny_0_1111111112[color=#ffffff, process="in(y.8);",
+                                 issapicrule, role='Process']:
+   [ State_1111111112( ), In( y.8 ) ] --> [ State_11111111121( y.8 ) ]
+
+  /*
+  rule (modulo AC) iny_0_1111111112[color=#ffffff, process="in(y.8);",
+                                    issapicrule, role='Process']:
+     [ State_1111111112( ), In( y ) ] --> [ State_11111111121( y ) ]
+  */
+
+rule (modulo E) Matchy_0_11111111121[color=#ffffff,
+                                     process="Match(y.8);", issapicrule, role='Process']:
+   [ State_11111111121( y.8 ) ] --> [ State_111111111211( y.8 ) ]
+
+  /*
+  rule (modulo AC) Matchy_0_11111111121[color=#ffffff,
+                                        process="Match(y.8);", issapicrule, role='Process']:
+     [ State_11111111121( y ) ] --> [ State_111111111211( y ) ]
+  */
+
+rule (modulo E) inybitstringy_0_111111111211[color=#804046,
+                                             process="in(<y.9:bitstring, =y.8>);", issapicrule, role='Match']:
+   [ State_111111111211( y.8 ), In( <y.9, y.8> ) ]
+  -->
+   [ State_1111111112111( y.8, y.9 ) ]
+
+  /*
+  rule (modulo AC) inybitstringy_0_111111111211[color=#804046,
+                                                process="in(<y.9:bitstring, =y.8>);", issapicrule,
+                                                role='Match']:
+     [ State_111111111211( y ), In( <y.1, y> ) ]
+    -->
+     [ State_1111111112111( y, y.1 ) ]
+  */
+
+rule (modulo E) eventMatchedyybitstring_0_1111111112111[color=#804046,
+                                                        process="event Matched( y.8, y.9:bitstring );",
+                                                        issapicrule, role='Match']:
+   [ State_1111111112111( y.8, y.9 ) ]
+  --[ Matched( y.8, y.9 ) ]->
+   [ State_11111111121111( y.8, y.9 ) ]
+
+  /*
+  rule (modulo AC) eventMatchedyybitstring_0_1111111112111[color=#804046,
+                                                           process="event Matched( y.8, y.9:bitstring );",
+                                                           issapicrule, role='Match']:
+     [ State_1111111112111( y, y.1 ) ]
+    --[ Matched( y, y.1 ) ]->
+     [ State_11111111121111( y, y.1 ) ]
+  */
+
+rule (modulo E) p_0_11111111121111[color=#804046, process="0",
+                                   issapicrule, role='Match']:
+   [ State_11111111121111( y.8, y.9 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_11111111121111[color=#804046, process="0",
+                                      issapicrule, role='Match']:
+     [ State_11111111121111( y, y.1 ) ] --> [ ]
+  */
+
+rule (modulo E) iny_0_111111112[color=#ffffff, process="in(y.10);",
+                                issapicrule, role='Process']:
+   [ State_111111112( ), In( y.10 ) ] --> [ State_1111111121( y.10 ) ]
+
+  /*
+  rule (modulo AC) iny_0_111111112[color=#ffffff, process="in(y.10);",
+                                   issapicrule, role='Process']:
+     [ State_111111112( ), In( y ) ] --> [ State_1111111121( y ) ]
+  */
+
+rule (modulo E) Freshy_0_1111111121[color=#ffffff,
+                                    process="Fresh(y.10);", issapicrule, role='Process']:
+   [ State_1111111121( y.10 ) ] --> [ State_11111111211( y.10 ) ]
+
+  /*
+  rule (modulo AC) Freshy_0_1111111121[color=#ffffff,
+                                       process="Fresh(y.10);", issapicrule, role='Process']:
+     [ State_1111111121( y ) ] --> [ State_11111111211( y ) ]
+  */
+
+rule (modulo E) newy_0_11111111211[color=#408055, process="new y.11;",
+                                   issapicrule, role='Fresh']:
+   [ State_11111111211( y.10 ), Fr( y.11 ) ]
+  -->
+   [ State_111111112111( y.10, y.11 ) ]
+
+  /*
+  rule (modulo AC) newy_0_11111111211[color=#408055, process="new y.11;",
+                                      issapicrule, role='Fresh']:
+     [ State_11111111211( y ), Fr( y.1 ) ]
+    -->
+     [ State_111111112111( y, y.1 ) ]
+  */
+
+rule (modulo E) eventFreshyy_0_111111112111[color=#408055,
+                                            process="event Fresh( y.10, y.11 );", issapicrule, role='Fresh']:
+   [ State_111111112111( y.10, y.11 ) ]
+  --[ Fresh( y.10, y.11 ) ]->
+   [ State_1111111121111( y.10, y.11 ) ]
+
+  /*
+  rule (modulo AC) eventFreshyy_0_111111112111[color=#408055,
+                                               process="event Fresh( y.10, y.11 );", issapicrule,
+                                               role='Fresh']:
+     [ State_111111112111( y, y.1 ) ]
+    --[ Fresh( y, y.1 ) ]->
+     [ State_1111111121111( y, y.1 ) ]
+  */
+
+rule (modulo E) p_0_1111111121111[color=#408055, process="0",
+                                  issapicrule, role='Fresh']:
+   [ State_1111111121111( y.10, y.11 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_1111111121111[color=#408055, process="0",
+                                     issapicrule, role='Fresh']:
+     [ State_1111111121111( y, y.1 ) ] --> [ ]
+  */
+
+rule (modulo E) iny_0_11111112[color=#ffffff, process="in(y.12);",
+                               issapicrule, role='Process']:
+   [ State_11111112( ), In( y.12 ) ] --> [ State_111111121( y.12 ) ]
+
+  /*
+  rule (modulo AC) iny_0_11111112[color=#ffffff, process="in(y.12);",
+                                  issapicrule, role='Process']:
+     [ State_11111112( ), In( y ) ] --> [ State_111111121( y ) ]
+  */
+
+rule (modulo E) Bindy_0_111111121[color=#ffffff, process="Bind(y.12);",
+                                  issapicrule, role='Process']:
+   [ State_111111121( y.12 ) ] --> [ State_1111111211( y.12 ) ]
+
+  /*
+  rule (modulo AC) Bindy_0_111111121[color=#ffffff, process="Bind(y.12);",
+                                     issapicrule, role='Process']:
+     [ State_111111121( y ) ] --> [ State_1111111211( y ) ]
+  */
+
+rule (modulo E) letybitstringzbitstringy_0_1111111211[color=#805640,
+                                                      process="let <y.13:bitstring, z.2:bitstring>=y.12",
+                                                      issapicrule, role='Bind']:
+   [ State_1111111211( y.12 ) ] --> [ Let_11111112111( y.12, y.12 ) ]
+
+  /*
+  rule (modulo AC) letybitstringzbitstringy_0_1111111211[color=#805640,
+                                                         process="let <y.13:bitstring, z.2:bitstring>=y.12",
+                                                         issapicrule, role='Bind']:
+     [ State_1111111211( y ) ] --> [ Let_11111112111( y, y ) ]
+  */
+
+rule (modulo E) letybitstringzbitstringy_1_1111111211[color=#805640,
+                                                      process="let <y.13:bitstring, z.2:bitstring>=y.12",
+                                                      issapicrule, role='Bind']:
+   [ Let_11111112111( <y.13, z.2>, y.12 ) ]
+  -->
+   [ State_11111112111( z.2, y.12, y.13 ) ]
+
+  /*
+  rule (modulo AC) letybitstringzbitstringy_1_1111111211[color=#805640,
+                                                         process="let <y.13:bitstring, z.2:bitstring>=y.12",
+                                                         issapicrule, role='Bind']:
+     [ Let_11111112111( <y, z>, y.1 ) ] --> [ State_11111112111( z, y.1, y ) ]
+  */
+
+rule (modulo E) eventBoundyybitstringzbitstring_0_11111112111[color=#805640,
+                                                              process="event Bound( y.12, y.13:bitstring, z.2:bitstring );",
+                                                              issapicrule, role='Bind']:
+   [ State_11111112111( z.2, y.12, y.13 ) ]
+  --[ Bound( y.12, y.13, z.2 ) ]->
+   [ State_111111121111( z.2, y.12, y.13 ) ]
+
+  /*
+  rule (modulo AC) eventBoundyybitstringzbitstring_0_11111112111[color=#805640,
+                                                                 process="event Bound( y.12, y.13:bitstring, z.2:bitstring );",
+                                                                 issapicrule, role='Bind']:
+     [ State_11111112111( z, y, y.1 ) ]
+    --[ Bound( y, y.1, z ) ]->
+     [ State_111111121111( z, y, y.1 ) ]
+  */
+
+rule (modulo E) p_0_111111121111[color=#805640, process="0", issapicrule,
+                                 role='Bind']:
+   [ State_111111121111( z.2, y.12, y.13 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_111111121111[color=#805640, process="0",
+                                    issapicrule, role='Bind']:
+     [ State_111111121111( z, y, y.1 ) ] --> [ ]
+  */
+
+rule (modulo E) news_0_1111112[color=#ffffff, process="new s.1;",
+                               issapicrule, role='Process']:
+   [ State_1111112( ), Fr( s.1 ) ] --> [ State_11111121( s.1 ) ]
+
+  /*
+  rule (modulo AC) news_0_1111112[color=#ffffff, process="new s.1;",
+                                  issapicrule, role='Process']:
+     [ State_1111112( ), Fr( s ) ] --> [ State_11111121( s ) ]
+  */
+
+rule (modulo E) insertsb_0_11111121[color=#ffffff,
+                                    process="insert s.1,'b';", issapicrule, role='Process']:
+   [ State_11111121( s.1 ) ]
+  --[ Insert( s.1, 'b' ) ]->
+   [ State_111111211( s.1 ) ]
+
+  /*
+  rule (modulo AC) insertsb_0_11111121[color=#ffffff,
+                                       process="insert s.1,'b';", issapicrule, role='Process']:
+     [ State_11111121( s ) ] --[ Insert( s, 'b' ) ]-> [ State_111111211( s ) ]
+  */
+
+rule (modulo E) iny_0_111111211[color=#ffffff, process="in(y.14);",
+                                issapicrule, role='Process']:
+   [ State_111111211( s.1 ), In( y.14 ) ]
+  -->
+   [ State_1111112111( s.1, y.14 ) ]
+
+  /*
+  rule (modulo AC) iny_0_111111211[color=#ffffff, process="in(y.14);",
+                                   issapicrule, role='Process']:
+     [ State_111111211( s ), In( y ) ] --> [ State_1111112111( s, y ) ]
+  */
+
+rule (modulo E) Readys_0_1111112111[color=#ffffff,
+                                    process="Read(y.14, s.1);", issapicrule, role='Process']:
+   [ State_1111112111( s.1, y.14 ) ] --> [ State_11111121111( s.1, y.14 ) ]
+
+  /*
+  rule (modulo AC) Readys_0_1111112111[color=#ffffff,
+                                       process="Read(y.14, s.1);", issapicrule, role='Process']:
+     [ State_1111112111( s, y ) ] --> [ State_11111121111( s, y ) ]
+  */
+
+rule (modulo E) lookupsasybitstring_0_11111121111[color=#406580,
+                                                  process="lookup s.1 as y.15:bitstring", no_derivcheck,
+                                                  issapicrule, role='Read']:
+   [ State_11111121111( s.1, y.14 ) ]
+  --[ IsIn( s.1, y.15 ) ]->
+   [ State_111111211111( s.1, y.14, y.15 ) ]
+
+  /*
+  rule (modulo AC) lookupsasybitstring_0_11111121111[color=#406580,
+                                                     process="lookup s.1 as y.15:bitstring", no_derivcheck,
+                                                     issapicrule, role='Read']:
+     [ State_11111121111( s, y ) ]
+    --[ IsIn( s, y.1 ) ]->
+     [ State_111111211111( s, y, y.1 ) ]
+  */
+
+rule (modulo E) lookupsasybitstring_1_11111121111[color=#406580,
+                                                  process="lookup s.1 as y.15:bitstring", no_derivcheck,
+                                                  issapicrule, role='Read']:
+   [ State_11111121111( s.1, y.14 ) ]
+  --[ IsNotSet( s.1 ) ]->
+   [ State_111111211112( s.1, y.14 ) ]
+
+  /*
+  rule (modulo AC) lookupsasybitstring_1_11111121111[color=#406580,
+                                                     process="lookup s.1 as y.15:bitstring", no_derivcheck,
+                                                     issapicrule, role='Read']:
+     [ State_11111121111( s, y ) ]
+    --[ IsNotSet( s ) ]->
+     [ State_111111211112( s, y ) ]
+  */
+
+rule (modulo E) eventReadyybitstring_0_111111211111[color=#406580,
+                                                    process="event Read( y.14, y.15:bitstring );",
+                                                    issapicrule, role='Read']:
+   [ State_111111211111( s.1, y.14, y.15 ) ]
+  --[ Read( y.14, y.15 ) ]->
+   [ State_1111112111111( s.1, y.14, y.15 ) ]
+
+  /*
+  rule (modulo AC) eventReadyybitstring_0_111111211111[color=#406580,
+                                                       process="event Read( y.14, y.15:bitstring );",
+                                                       issapicrule, role='Read']:
+     [ State_111111211111( s, y, y.1 ) ]
+    --[ Read( y, y.1 ) ]->
+     [ State_1111112111111( s, y, y.1 ) ]
+  */
+
+rule (modulo E) p_0_1111112111111[color=#406580, process="0",
+                                  issapicrule, role='Read']:
+   [ State_1111112111111( s.1, y.14, y.15 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_1111112111111[color=#406580, process="0",
+                                     issapicrule, role='Read']:
+     [ State_1111112111111( s, y, y.1 ) ] --> [ ]
+  */
+
+rule (modulo E) eventMissingy_0_111111211112[color=#406580,
+                                             process="event Missing( y.14 );", issapicrule, role='Read']:
+   [ State_111111211112( s.1, y.14 ) ]
+  --[ Missing( y.14 ) ]->
+   [ State_1111112111121( s.1, y.14 ) ]
+
+  /*
+  rule (modulo AC) eventMissingy_0_111111211112[color=#406580,
+                                                process="event Missing( y.14 );", issapicrule, role='Read']:
+     [ State_111111211112( s, y ) ]
+    --[ Missing( y ) ]->
+     [ State_1111112111121( s, y ) ]
+  */
+
+rule (modulo E) p_0_1111112111121[color=#406580, process="0",
+                                  issapicrule, role='Read']:
+   [ State_1111112111121( s.1, y.14 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_1111112111121[color=#406580, process="0",
+                                     issapicrule, role='Read']:
+     [ State_1111112111121( s, y ) ] --> [ ]
+  */
+
+rule (modulo E) news_0_111112[color=#ffffff, process="new s.2;",
+                              issapicrule, role='Process']:
+   [ State_111112( ), Fr( s.2 ) ] --> [ State_1111121( s.2 ) ]
+
+  /*
+  rule (modulo AC) news_0_111112[color=#ffffff, process="new s.2;",
+                                 issapicrule, role='Process']:
+     [ State_111112( ), Fr( s ) ] --> [ State_1111121( s ) ]
+  */
+
+rule (modulo E) iny_0_1111121[color=#ffffff, process="in(y.16);",
+                              issapicrule, role='Process']:
+   [ State_1111121( s.2 ), In( y.16 ) ] --> [ State_11111211( s.2, y.16 ) ]
+
+  /*
+  rule (modulo AC) iny_0_1111121[color=#ffffff, process="in(y.16);",
+                                 issapicrule, role='Process']:
+     [ State_1111121( s ), In( y ) ] --> [ State_11111211( s, y ) ]
+  */
+
+rule (modulo E) Readys_0_11111211[color=#ffffff,
+                                  process="Read(y.16, s.2);", issapicrule, role='Process']:
+   [ State_11111211( s.2, y.16 ) ] --> [ State_111112111( s.2, y.16 ) ]
+
+  /*
+  rule (modulo AC) Readys_0_11111211[color=#ffffff,
+                                     process="Read(y.16, s.2);", issapicrule, role='Process']:
+     [ State_11111211( s, y ) ] --> [ State_111112111( s, y ) ]
+  */
+
+rule (modulo E) lookupsasybitstring_0_111112111[color=#406580,
+                                                process="lookup s.2 as y.17:bitstring", no_derivcheck,
+                                                issapicrule, role='Read']:
+   [ State_111112111( s.2, y.16 ) ]
+  --[ IsIn( s.2, y.17 ) ]->
+   [ State_1111121111( s.2, y.16, y.17 ) ]
+
+  /*
+  rule (modulo AC) lookupsasybitstring_0_111112111[color=#406580,
+                                                   process="lookup s.2 as y.17:bitstring", no_derivcheck,
+                                                   issapicrule, role='Read']:
+     [ State_111112111( s, y ) ]
+    --[ IsIn( s, y.1 ) ]->
+     [ State_1111121111( s, y, y.1 ) ]
+  */
+
+rule (modulo E) lookupsasybitstring_1_111112111[color=#406580,
+                                                process="lookup s.2 as y.17:bitstring", no_derivcheck,
+                                                issapicrule, role='Read']:
+   [ State_111112111( s.2, y.16 ) ]
+  --[ IsNotSet( s.2 ) ]->
+   [ State_1111121112( s.2, y.16 ) ]
+
+  /*
+  rule (modulo AC) lookupsasybitstring_1_111112111[color=#406580,
+                                                   process="lookup s.2 as y.17:bitstring", no_derivcheck,
+                                                   issapicrule, role='Read']:
+     [ State_111112111( s, y ) ]
+    --[ IsNotSet( s ) ]->
+     [ State_1111121112( s, y ) ]
+  */
+
+rule (modulo E) eventReadyybitstring_0_1111121111[color=#406580,
+                                                  process="event Read( y.16, y.17:bitstring );", issapicrule,
+                                                  role='Read']:
+   [ State_1111121111( s.2, y.16, y.17 ) ]
+  --[ Read( y.16, y.17 ) ]->
+   [ State_11111211111( s.2, y.16, y.17 ) ]
+
+  /*
+  rule (modulo AC) eventReadyybitstring_0_1111121111[color=#406580,
+                                                     process="event Read( y.16, y.17:bitstring );",
+                                                     issapicrule, role='Read']:
+     [ State_1111121111( s, y, y.1 ) ]
+    --[ Read( y, y.1 ) ]->
+     [ State_11111211111( s, y, y.1 ) ]
+  */
+
+rule (modulo E) p_0_11111211111[color=#406580, process="0", issapicrule,
+                                role='Read']:
+   [ State_11111211111( s.2, y.16, y.17 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_11111211111[color=#406580, process="0", issapicrule,
+                                   role='Read']:
+     [ State_11111211111( s, y, y.1 ) ] --> [ ]
+  */
+
+rule (modulo E) eventMissingy_0_1111121112[color=#406580,
+                                           process="event Missing( y.16 );", issapicrule, role='Read']:
+   [ State_1111121112( s.2, y.16 ) ]
+  --[ Missing( y.16 ) ]->
+   [ State_11111211121( s.2, y.16 ) ]
+
+  /*
+  rule (modulo AC) eventMissingy_0_1111121112[color=#406580,
+                                              process="event Missing( y.16 );", issapicrule, role='Read']:
+     [ State_1111121112( s, y ) ]
+    --[ Missing( y ) ]->
+     [ State_11111211121( s, y ) ]
+  */
+
+rule (modulo E) p_0_11111211121[color=#406580, process="0", issapicrule,
+                                role='Read']:
+   [ State_11111211121( s.2, y.16 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_11111211121[color=#406580, process="0", issapicrule,
+                                   role='Read']:
+     [ State_11111211121( s, y ) ] --> [ ]
+  */
+
+rule (modulo E) iny_0_11112[color=#ffffff, process="in(y.18);",
+                            issapicrule, role='Process']:
+   [ State_11112( ), In( y.18 ) ] --> [ State_111121( y.18 ) ]
+
+  /*
+  rule (modulo AC) iny_0_11112[color=#ffffff, process="in(y.18);",
+                               issapicrule, role='Process']:
+     [ State_11112( ), In( y ) ] --> [ State_111121( y ) ]
+  */
+
+rule (modulo E) ElseScopey_0_111121[color=#ffffff,
+                                    process="ElseScope(y.18);", issapicrule, role='Process']:
+   [ State_111121( y.18 ) ] --> [ State_1111211( y.18 ) ]
+
+  /*
+  rule (modulo AC) ElseScopey_0_111121[color=#ffffff,
+                                       process="ElseScope(y.18);", issapicrule, role='Process']:
+     [ State_111121( y ) ] --> [ State_1111211( y ) ]
+  */
+
+rule (modulo E) letybitstringzbitstringnotpair_0_1111211[color=#4f4080,
+                                                         process="let <y.19:bitstring, z.3:bitstring>='not_pair'",
+                                                         issapicrule, role='ElseScope']:
+   [ State_1111211( y.18 ) ] --> [ Let_11112111( 'not_pair', y.18 ) ]
+
+  /*
+  rule (modulo AC) letybitstringzbitstringnotpair_0_1111211[color=#4f4080,
+                                                            process="let <y.19:bitstring, z.3:bitstring>='not_pair'",
+                                                            issapicrule, role='ElseScope']:
+     [ State_1111211( y ) ] --> [ Let_11112111( 'not_pair', y ) ]
+  */
+
+rule (modulo E) letybitstringzbitstringnotpair_1_1111211[color=#4f4080,
+                                                         process="let <y.19:bitstring, z.3:bitstring>='not_pair'",
+                                                         issapicrule, role='ElseScope']:
+   [ Let_11112111( <y.19, z.3>, y.18 ) ]
+  -->
+   [ State_11112111( z.3, y.18, y.19 ) ]
+
+  /*
+  rule (modulo AC) letybitstringzbitstringnotpair_1_1111211[color=#4f4080,
+                                                            process="let <y.19:bitstring, z.3:bitstring>='not_pair'",
+                                                            issapicrule, role='ElseScope']:
+     [ Let_11112111( <y, z>, y.1 ) ] --> [ State_11112111( z, y.1, y ) ]
+  */
+
+restriction Restr_letybitstringzbitstringnotpair_2_1111211_1:
+  "∀ #NOW.
+    (Restr_letybitstringzbitstringnotpair_2_1111211_1( ) @ #NOW) ⇒
+    (∀ z y. (<y, z> = 'not_pair') ⇒ (⊥))"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ #NOW.
+    (Restr_letybitstringzbitstringnotpair_2_1111211_1( ) @ #NOW) ⇒
+    (∀ z y. (<y, z> = 'not_pair') ⇒ (⊥))"
+  */
+
+rule (modulo E) letybitstringzbitstringnotpair_2_1111211[color=#4f4080,
+                                                         process="let <y.19:bitstring, z.3:bitstring>='not_pair'",
+                                                         issapicrule, role='ElseScope']:
+   [ Let_11112111( 'not_pair', y.18 ) ]
+  --[ Restr_letybitstringzbitstringnotpair_2_1111211_1( ) ]->
+   [ State_11112112( y.18 ) ]
+
+  /*
+  rule (modulo AC) letybitstringzbitstringnotpair_2_1111211[color=#4f4080,
+                                                            process="let <y.19:bitstring, z.3:bitstring>='not_pair'",
+                                                            issapicrule, role='ElseScope']:
+     [ Let_11112111( 'not_pair', y ) ]
+    --[ Restr_letybitstringzbitstringnotpair_2_1111211_1( ) ]->
+     [ State_11112112( y ) ]
+  */
+
+rule (modulo E) eventWrongy_0_11112111[color=#4f4080,
+                                       process="event Wrong( y.18 );", issapicrule, role='ElseScope']:
+   [ State_11112111( z.3, y.18, y.19 ) ]
+  --[ Wrong( y.18 ) ]->
+   [ State_111121111( z.3, y.18, y.19 ) ]
+
+  /*
+  rule (modulo AC) eventWrongy_0_11112111[color=#4f4080,
+                                          process="event Wrong( y.18 );", issapicrule, role='ElseScope']:
+     [ State_11112111( z, y, y.1 ) ]
+    --[ Wrong( y ) ]->
+     [ State_111121111( z, y, y.1 ) ]
+  */
+
+rule (modulo E) p_0_111121111[color=#4f4080, process="0", issapicrule,
+                              role='ElseScope']:
+   [ State_111121111( z.3, y.18, y.19 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_111121111[color=#4f4080, process="0", issapicrule,
+                                 role='ElseScope']:
+     [ State_111121111( z, y, y.1 ) ] --> [ ]
+  */
+
+rule (modulo E) eventElseValuey_0_11112112[color=#4f4080,
+                                           process="event ElseValue( y.18 );", issapicrule, role='ElseScope']:
+   [ State_11112112( y.18 ) ]
+  --[ ElseValue( y.18 ) ]->
+   [ State_111121121( y.18 ) ]
+
+  /*
+  rule (modulo AC) eventElseValuey_0_11112112[color=#4f4080,
+                                              process="event ElseValue( y.18 );", issapicrule,
+                                              role='ElseScope']:
+     [ State_11112112( y ) ] --[ ElseValue( y ) ]-> [ State_111121121( y ) ]
+  */
+
+rule (modulo E) p_0_111121121[color=#4f4080, process="0", issapicrule,
+                              role='ElseScope']:
+   [ State_111121121( y.18 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_111121121[color=#4f4080, process="0", issapicrule,
+                                 role='ElseScope']:
+     [ State_111121121( y ) ] --> [ ]
+  */
+
+rule (modulo E) iny_0_1112[color=#ffffff, process="in(y.20);",
+                           issapicrule, role='Process']:
+   [ State_1112( ), In( y.20 ) ] --> [ State_11121( y.20 ) ]
+
+  /*
+  rule (modulo AC) iny_0_1112[color=#ffffff, process="in(y.20);",
+                              issapicrule, role='Process']:
+     [ State_1112( ), In( y ) ] --> [ State_11121( y ) ]
+  */
+
+rule (modulo E) Nestedy_0_11121[color=#ffffff, process="Nested(y.20);",
+                                issapicrule, role='Process']:
+   [ State_11121( y.20 ) ] --> [ State_111211( y.20 ) ]
+
+  /*
+  rule (modulo AC) Nestedy_0_11121[color=#ffffff, process="Nested(y.20);",
+                                   issapicrule, role='Process']:
+     [ State_11121( y ) ] --> [ State_111211( y ) ]
+  */
+
+rule (modulo E) Innery_0_111211[color=#7b4080, process="Inner(y.20);",
+                                issapicrule, role='Nested']:
+   [ State_111211( y.20 ) ] --> [ State_1112111( y.20 ) ]
+
+  /*
+  rule (modulo AC) Innery_0_111211[color=#7b4080, process="Inner(y.20);",
+                                   issapicrule, role='Nested']:
+     [ State_111211( y ) ] --> [ State_1112111( y ) ]
+  */
+
+rule (modulo E) inybitstring_0_1112111[color=#406e80,
+                                       process="in(y.21:bitstring);", issapicrule, role='Nested_Inner']:
+   [ State_1112111( y.20 ), In( y.21 ) ]
+  -->
+   [ State_11121111( y.20, y.21 ) ]
+
+  /*
+  rule (modulo AC) inybitstring_0_1112111[color=#406e80,
+                                          process="in(y.21:bitstring);", issapicrule, role='Nested_Inner']:
+     [ State_1112111( y ), In( y.1 ) ] --> [ State_11121111( y, y.1 ) ]
+  */
+
+rule (modulo E) eventNestedyybitstring_0_11121111[color=#406e80,
+                                                  process="event Nested( y.20, y.21:bitstring );",
+                                                  issapicrule, role='Nested_Inner']:
+   [ State_11121111( y.20, y.21 ) ]
+  --[ Nested( y.20, y.21 ) ]->
+   [ State_111211111( y.20, y.21 ) ]
+
+  /*
+  rule (modulo AC) eventNestedyybitstring_0_11121111[color=#406e80,
+                                                     process="event Nested( y.20, y.21:bitstring );",
+                                                     issapicrule, role='Nested_Inner']:
+     [ State_11121111( y, y.1 ) ]
+    --[ Nested( y, y.1 ) ]->
+     [ State_111211111( y, y.1 ) ]
+  */
+
+rule (modulo E) p_0_111211111[color=#406e80, process="0", issapicrule,
+                              role='Nested_Inner']:
+   [ State_111211111( y.20, y.21 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_111211111[color=#406e80, process="0", issapicrule,
+                                 role='Nested_Inner']:
+     [ State_111211111( y, y.1 ) ] --> [ ]
+  */
+
+rule (modulo E) iny_0_112[color=#ffffff, process="in(y.22);",
+                          issapicrule, role='Process']:
+   [ State_112( ), In( y.22 ) ] --> [ State_1121( y.22 ) ]
+
+  /*
+  rule (modulo AC) iny_0_112[color=#ffffff, process="in(y.22);",
+                             issapicrule, role='Process']:
+     [ State_112( ), In( y ) ] --> [ State_1121( y ) ]
+  */
+
+rule (modulo E) Embeddedy_0_1121[color=#ffffff,
+                                 process="Embedded(y.22);", issapicrule, role='Process']:
+   [ State_1121( y.22 ) ] --> [ State_11211( y.22 ) ]
+
+  /*
+  rule (modulo AC) Embeddedy_0_1121[color=#ffffff,
+                                    process="Embedded(y.22);", issapicrule, role='Process']:
+     [ State_1121( y ) ] --> [ State_11211( y ) ]
+  */
+
+rule (modulo E) InybitstringEmbeddedyybitstring_0_11211[color=#744080,
+                                                        process=" [ In( y.23 ) ] --[ Embedded( y.22, y.23 ) ]-> [ ];",
+                                                        issapicrule, role='Embedded']:
+   [ State_11211( y.22 ), In( y.23 ) ]
+  --[ Embedded( y.22, y.23 ) ]->
+   [ State_112111( y.22, y.23 ) ]
+
+  /*
+  rule (modulo AC) InybitstringEmbeddedyybitstring_0_11211[color=#744080,
+                                                           process=" [ In( y.23 ) ] --[ Embedded( y.22, y.23 ) ]-> [ ];",
+                                                           issapicrule, role='Embedded']:
+     [ State_11211( y ), In( y.1 ) ]
+    --[ Embedded( y, y.1 ) ]->
+     [ State_112111( y, y.1 ) ]
+  */
+
+rule (modulo E) p_0_112111[color=#744080, process="0", issapicrule,
+                           role='Embedded']:
+   [ State_112111( y.22, y.23 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_112111[color=#744080, process="0", issapicrule,
+                              role='Embedded']:
+     [ State_112111( y, y.1 ) ] --> [ ]
+  */
+
+rule (modulo E) iny_0_12[color=#ffffff, process="in(y.24);", issapicrule,
+                         role='Process']:
+   [ State_12( ), In( y.24 ) ] --> [ State_121( y.24 ) ]
+
+  /*
+  rule (modulo AC) iny_0_12[color=#ffffff, process="in(y.24);",
+                            issapicrule, role='Process']:
+     [ State_12( ), In( y ) ] --> [ State_121( y ) ]
+  */
+
+rule (modulo E) p_0_121[color=#ffffff, process="|", issapicrule,
+                        role='Process']:
+   [ State_121( y.24 ) ] --> [ State_1211( y.24 ), State_1212( y.24 ) ]
+
+  /*
+  rule (modulo AC) p_0_121[color=#ffffff, process="|", issapicrule,
+                           role='Process']:
+     [ State_121( y ) ] --> [ State_1211( y ), State_1212( y ) ]
+  */
+
+rule (modulo E) Channely_0_1211[color=#ffffff, process="Channel(y.24);",
+                                issapicrule, role='Process']:
+   [ State_1211( y.24 ) ] --> [ State_12111( y.24 ) ]
+
+  /*
+  rule (modulo AC) Channely_0_1211[color=#ffffff, process="Channel(y.24);",
+                                   issapicrule, role='Process']:
+     [ State_1211( y ) ] --> [ State_12111( y ) ]
+  */
+
+rule (modulo E) inyybitstring_0_12111[color=#405a80,
+                                      process="in(y.24,y.25:bitstring);", issapicrule, role='Channel']:
+   [ State_12111( y.24 ), Message( y.24, x.25 ) ]
+  -->
+   [ Let_121111( x.25, y.24 ), Ack( y.24, x.25 ) ]
+
+  /*
+  rule (modulo AC) inyybitstring_0_12111[color=#405a80,
+                                         process="in(y.24,y.25:bitstring);", issapicrule, role='Channel']:
+     [ State_12111( y ), Message( y, x ) ]
+    -->
+     [ Let_121111( x, y ), Ack( y, x ) ]
+  */
+
+rule (modulo E) inyybitstring_1_12111[color=#405a80,
+                                      process="in(y.24,y.25:bitstring);", issapicrule, role='Channel']:
+   [ Let_121111( y.25, y.24 ) ] --> [ State_121111( y.24, y.25 ) ]
+
+  /*
+  rule (modulo AC) inyybitstring_1_12111[color=#405a80,
+                                         process="in(y.24,y.25:bitstring);", issapicrule, role='Channel']:
+     [ Let_121111( y, y.1 ) ] --> [ State_121111( y.1, y ) ]
+  */
+
+rule (modulo E) inyybitstring_2_12111[color=#405a80,
+                                      process="in(y.24,y.25:bitstring);", issapicrule, role='Channel']:
+   [ State_12111( y.24 ), In( <y.24, x.25> ) ]
+  -->
+   [ Let_121111( x.25, y.24 ) ]
+
+  /*
+  rule (modulo AC) inyybitstring_2_12111[color=#405a80,
+                                         process="in(y.24,y.25:bitstring);", issapicrule, role='Channel']:
+     [ State_12111( y ), In( <y, x> ) ] --> [ Let_121111( x, y ) ]
+  */
+
+rule (modulo E) inyybitstring_3_12111[color=#405a80,
+                                      process="in(y.24,y.25:bitstring);", issapicrule, role='Channel']:
+   [ Let_121111( y.25, y.24 ) ] --> [ State_121111( y.24, y.25 ) ]
+
+  /*
+  rule (modulo AC) inyybitstring_3_12111[color=#405a80,
+                                         process="in(y.24,y.25:bitstring);", issapicrule, role='Channel']:
+     [ Let_121111( y, y.1 ) ] --> [ State_121111( y.1, y ) ]
+  */
+
+rule (modulo E) eventChannelyybitstring_0_121111[color=#405a80,
+                                                 process="event Channel( y.24, y.25:bitstring );",
+                                                 issapicrule, role='Channel']:
+   [ State_121111( y.24, y.25 ) ]
+  --[ Channel( y.24, y.25 ) ]->
+   [ State_1211111( y.24, y.25 ) ]
+
+  /*
+  rule (modulo AC) eventChannelyybitstring_0_121111[color=#405a80,
+                                                    process="event Channel( y.24, y.25:bitstring );",
+                                                    issapicrule, role='Channel']:
+     [ State_121111( y, y.1 ) ]
+    --[ Channel( y, y.1 ) ]->
+     [ State_1211111( y, y.1 ) ]
+  */
+
+rule (modulo E) p_0_1211111[color=#405a80, process="0", issapicrule,
+                            role='Channel']:
+   [ State_1211111( y.24, y.25 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_1211111[color=#405a80, process="0", issapicrule,
+                               role='Channel']:
+     [ State_1211111( y, y.1 ) ] --> [ ]
+  */
+
+rule (modulo E) outyhonest_0_1212[color=#ffffff,
+                                  process="out(y.24,'honest');", issapicrule, role='Process']:
+   [ State_1212( y.24 ), In( y.24 ) ]
+  -->
+   [ Out( 'honest' ), State_12121( y.24 ) ]
+
+  /*
+  rule (modulo AC) outyhonest_0_1212[color=#ffffff,
+                                     process="out(y.24,'honest');", issapicrule, role='Process']:
+     [ State_1212( y ), In( y ) ] --> [ Out( 'honest' ), State_12121( y ) ]
+  */
+
+rule (modulo E) outyhonest_1_1212[color=#ffffff,
+                                  process="out(y.24,'honest');", issapicrule, role='Process']:
+   [ State_1212( y.24 ) ]
+  -->
+   [ Message( y.24, 'honest' ), Semistate_12121( y.24 ) ]
+
+  /*
+  rule (modulo AC) outyhonest_1_1212[color=#ffffff,
+                                     process="out(y.24,'honest');", issapicrule, role='Process']:
+     [ State_1212( y ) ] --> [ Message( y, 'honest' ), Semistate_12121( y ) ]
+  */
+
+rule (modulo E) outyhonest_2_1212[color=#ffffff,
+                                  process="out(y.24,'honest');", issapicrule, role='Process']:
+   [ Semistate_12121( y.24 ), Ack( y.24, 'honest' ) ]
+  -->
+   [ State_12121( y.24 ) ]
+
+  /*
+  rule (modulo AC) outyhonest_2_1212[color=#ffffff,
+                                     process="out(y.24,'honest');", issapicrule, role='Process']:
+     [ Semistate_12121( y ), Ack( y, 'honest' ) ] --> [ State_12121( y ) ]
+  */
+
+rule (modulo E) p_0_12121[color=#ffffff, process="0", issapicrule,
+                          role='Process']:
+   [ State_12121( y.24 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_12121[color=#ffffff, process="0", issapicrule,
+                             role='Process']:
+     [ State_12121( y ) ] --> [ ]
+  */
+
+rule (modulo E) newy_0_2[color=#ffffff, process="new y.26;", issapicrule,
+                         role='Process']:
+   [ State_2( ), Fr( y.26 ) ] --> [ State_21( y.26 ) ]
+
+  /*
+  rule (modulo AC) newy_0_2[color=#ffffff, process="new y.26;",
+                            issapicrule, role='Process']:
+     [ State_2( ), Fr( y ) ] --> [ State_21( y ) ]
+  */
+
+rule (modulo E) insertyb_0_21[color=#ffffff, process="insert y.26,'b';",
+                              issapicrule, role='Process']:
+   [ State_21( y.26 ) ] --[ Insert( y.26, 'b' ) ]-> [ State_211( y.26 ) ]
+
+  /*
+  rule (modulo AC) insertyb_0_21[color=#ffffff, process="insert y.26,'b';",
+                                 issapicrule, role='Process']:
+     [ State_21( y ) ] --[ Insert( y, 'b' ) ]-> [ State_211( y ) ]
+  */
+
+rule (modulo E) ReadSelfy_0_211[color=#ffffff, process="ReadSelf(y.26);",
+                                issapicrule, role='Process']:
+   [ State_211( y.26 ) ] --> [ State_2111( y.26 ) ]
+
+  /*
+  rule (modulo AC) ReadSelfy_0_211[color=#ffffff,
+                                   process="ReadSelf(y.26);", issapicrule, role='Process']:
+     [ State_211( y ) ] --> [ State_2111( y ) ]
+  */
+
+rule (modulo E) lookupyasybitstring_0_2111[color=#408078,
+                                           process="lookup y.26 as y.27:bitstring", no_derivcheck,
+                                           issapicrule, role='ReadSelf']:
+   [ State_2111( y.26 ) ]
+  --[ IsIn( y.26, y.27 ) ]->
+   [ State_21111( y.26, y.27 ) ]
+
+  /*
+  rule (modulo AC) lookupyasybitstring_0_2111[color=#408078,
+                                              process="lookup y.26 as y.27:bitstring", no_derivcheck,
+                                              issapicrule, role='ReadSelf']:
+     [ State_2111( y ) ] --[ IsIn( y, y.1 ) ]-> [ State_21111( y, y.1 ) ]
+  */
+
+rule (modulo E) lookupyasybitstring_1_2111[color=#408078,
+                                           process="lookup y.26 as y.27:bitstring", no_derivcheck,
+                                           issapicrule, role='ReadSelf']:
+   [ State_2111( y.26 ) ] --[ IsNotSet( y.26 ) ]-> [ State_21112( y.26 ) ]
+
+  /*
+  rule (modulo AC) lookupyasybitstring_1_2111[color=#408078,
+                                              process="lookup y.26 as y.27:bitstring", no_derivcheck,
+                                              issapicrule, role='ReadSelf']:
+     [ State_2111( y ) ] --[ IsNotSet( y ) ]-> [ State_21112( y ) ]
+  */
+
+rule (modulo E) eventReadSelfyybitstring_0_21111[color=#408078,
+                                                 process="event ReadSelf( y.26, y.27:bitstring );",
+                                                 issapicrule, role='ReadSelf']:
+   [ State_21111( y.26, y.27 ) ]
+  --[ ReadSelf( y.26, y.27 ) ]->
+   [ State_211111( y.26, y.27 ) ]
+
+  /*
+  rule (modulo AC) eventReadSelfyybitstring_0_21111[color=#408078,
+                                                    process="event ReadSelf( y.26, y.27:bitstring );",
+                                                    issapicrule, role='ReadSelf']:
+     [ State_21111( y, y.1 ) ]
+    --[ ReadSelf( y, y.1 ) ]->
+     [ State_211111( y, y.1 ) ]
+  */
+
+rule (modulo E) p_0_211111[color=#408078, process="0", issapicrule,
+                           role='ReadSelf']:
+   [ State_211111( y.26, y.27 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_211111[color=#408078, process="0", issapicrule,
+                              role='ReadSelf']:
+     [ State_211111( y, y.1 ) ] --> [ ]
+  */
+
+rule (modulo E) p_0_21112[color=#408078, process="0", issapicrule,
+                          role='ReadSelf']:
+   [ State_21112( y.26 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_21112[color=#408078, process="0", issapicrule,
+                             role='ReadSelf']:
+     [ State_21112( y ) ] --> [ ]
+  */
+
+restriction set_in:
+  "∀ x y #t3.
+    (IsIn( x, y ) @ #t3) ⇒
+    (∃ #t2.
+      ((Insert( x, y ) @ #t2) ∧ (#t2 < #t3)) ∧
+      (∀ #t1 yp.
+        (Insert( x, yp ) @ #t1) ⇒ (((#t1 < #t2) ∨ (#t1 = #t2)) ∨ (#t3 < #t1))))"
+
+  /*
+  expanded formula:
+  "∀ x y #t3.
+    (IsIn( x, y ) @ #t3) ⇒
+    (∃ #t2.
+      ((Insert( x, y ) @ #t2) ∧ (#t2 < #t3)) ∧
+      (∀ #t1 yp.
+        (Insert( x, yp ) @ #t1) ⇒ (((#t1 < #t2) ∨ (#t1 = #t2)) ∨ (#t3 < #t1))))"
+  */
+
+restriction set_notin:
+  "∀ x #t3.
+    (IsNotSet( x ) @ #t3) ⇒ (∀ #t1 y. (Insert( x, y ) @ #t1) ⇒ (#t3 < #t1))"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ x #t3.
+    (IsNotSet( x ) @ #t3) ⇒ (∀ #t1 y. (Insert( x, y ) @ #t1) ⇒ (#t3 < #t1))"
+  */
+
+restriction single_session:
+  "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
+  */
+
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.13.0
+Maude version 3.5.1
+Git revision: bf885ca9abf478867fbdbbf3ad80e4da85370e01 (with uncommited changes), branch: HEAD
+Compiled at: 2026-10-04 11:58:25.282416529 UTC
+*/
+
+end
+/* Output
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/regression/trace/soundness-sapic-process-call-capture.spthy
+
+  output:          examples/regression/trace/soundness-sapic-process-call-capture.spthy.tmp
+  processing time: 4.53s
+  
+  typed_distinct (exists-trace): verified (3 steps)
+  untyped_distinct (exists-trace): verified (3 steps)
+  typed_equal (exists-trace): verified (3 steps)
+  compound_argument (exists-trace): verified (3 steps)
+  match_argument (exists-trace): verified (3 steps)
+  fresh_distinct (exists-trace): verified (3 steps)
+  let_argument (exists-trace): verified (3 steps)
+  lookup_argument (exists-trace): verified (6 steps)
+  lookup_else (exists-trace): verified (4 steps)
+  let_else (exists-trace): verified (3 steps)
+  nested_argument (exists-trace): verified (3 steps)
+  embedded_argument (exists-trace): verified (3 steps)
+  input_channel (exists-trace): verified (3 steps)
+  lookup_cell (exists-trace): verified (5 steps)
+  typed_argument_preserved (all-traces): verified (3 steps)
+  compound_argument_preserved (all-traces): verified (3 steps)
+
+==============================================================================
+*/

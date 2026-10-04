@@ -1,0 +1,230 @@
+theory SapicInferredLocationTypes
+
+begin
+
+// Function signature and definition of the equational theory E
+
+functions: check_rep/2 [destructor], f/1, fst/1, get_rep/1 [destructor],
+           pair/2, rep/2 [private,constructor], report/1, snd/1
+equations:
+    check_rep(rep(x.1, x.2), x.2) = x.1,
+    fst(<x.1, x.2>) = x.1,
+    get_rep(rep(x.1, x.2)) = x.1,
+    snd(<x.1, x.2>) = x.2
+
+heuristic: p
+
+predicate: Report( x, l )<=>⊤
+
+lemma reaches_done:
+  exists-trace "∃ #i. Done( 'value' ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #i. (Done( 'value' ) @ #i)"
+*/
+simplify
+solve( State_1111( s, 'value' ) ▶₀ #i )
+  case lookuprepmessagesbitstringasx_0_111
+  solve( (#vr.1 < #t2)  ∥ (#vr.1 = #t2) )
+    case case_2
+    SOLVED // trace found
+  qed
+qed
+
+lemma correct_value:
+  all-traces "∀ x #i. (Done( x ) @ #i) ⇒ (x = 'value')"
+/*
+guarded formula characterizing all counter-examples:
+"∃ x #i. (Done( x ) @ #i) ∧ ¬(x = 'value')"
+*/
+simplify
+solve( State_1111( s, x ) ▶₀ #i )
+  case lookuprepmessagesbitstringasx_0_111
+  by contradiction /* from formulas */
+qed
+
+restriction Restr_ReportRule_1:
+  "∀ #NOW. (Restr_ReportRule_1( ) @ #NOW) ⇒ (⊤)"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ #NOW. (Restr_ReportRule_1( ) @ #NOW) ⇒ (⊤)"
+  */
+
+rule (modulo E) ReportRule[color=#ffffff, process="new s.1:bitstring;",
+                           issapicrule, role='Process']:
+   [ In( <x, loc> ) ] --[ Restr_ReportRule_1( ) ]-> [ Out( rep(x, loc) ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Init[color=#ffffff, process="new s.1:bitstring;",
+                     issapicrule, role='Process']:
+   [ ] --[ Init( ) ]-> [ State_( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) newsbitstring_0_[color=#ffffff,
+                                 process="new s.1:bitstring;", issapicrule, role='Process']:
+   [ State_( ), Fr( s.1 ) ] --> [ State_1( s.1 ) ]
+
+  /*
+  rule (modulo AC) newsbitstring_0_[color=#ffffff,
+                                    process="new s.1:bitstring;", issapicrule, role='Process']:
+     [ State_( ), Fr( s ) ] --> [ State_1( s ) ]
+  */
+
+rule (modulo E) outfsbitstring_0_1[color=#ffffff,
+                                   process="out(f(s.1:bitstring));", issapicrule, role='Process']:
+   [ State_1( s.1 ) ] --> [ State_11( s.1 ), Out( f(s.1) ) ]
+
+  /*
+  rule (modulo AC) outfsbitstring_0_1[color=#ffffff,
+                                      process="out(f(s.1:bitstring));", issapicrule, role='Process']:
+     [ State_1( s ) ] --> [ State_11( s ), Out( f(s) ) ]
+  */
+
+rule (modulo E) insertrepmessagesbitstringvalue_0_11[color=#ffffff,
+                                                     process="insert rep('message', s.1:bitstring),'value';",
+                                                     issapicrule, role='Process']:
+   [ State_11( s.1 ) ]
+  --[ Insert( rep('message', s.1), 'value' ) ]->
+   [ State_111( s.1 ) ]
+
+  /*
+  rule (modulo AC) insertrepmessagesbitstringvalue_0_11[color=#ffffff,
+                                                        process="insert rep('message', s.1:bitstring),'value';",
+                                                        issapicrule, role='Process']:
+     [ State_11( s ) ]
+    --[ Insert( rep('message', s), 'value' ) ]->
+     [ State_111( s ) ]
+  */
+
+rule (modulo E) lookuprepmessagesbitstringasx_0_111[color=#ffffff,
+                                                    process="lookup rep('message', s.1:bitstring) as x.1",
+                                                    no_derivcheck, issapicrule, role='Process']:
+   [ State_111( s.1 ) ]
+  --[ IsIn( rep('message', s.1), x.1 ) ]->
+   [ State_1111( s.1, x.1 ) ]
+
+  /*
+  rule (modulo AC) lookuprepmessagesbitstringasx_0_111[color=#ffffff,
+                                                       process="lookup rep('message', s.1:bitstring) as x.1",
+                                                       no_derivcheck, issapicrule, role='Process']:
+     [ State_111( s ) ]
+    --[ IsIn( rep('message', s), x ) ]->
+     [ State_1111( s, x ) ]
+  */
+
+rule (modulo E) lookuprepmessagesbitstringasx_1_111[color=#ffffff,
+                                                    process="lookup rep('message', s.1:bitstring) as x.1",
+                                                    no_derivcheck, issapicrule, role='Process']:
+   [ State_111( s.1 ) ]
+  --[ IsNotSet( rep('message', s.1) ) ]->
+   [ State_1112( s.1 ) ]
+
+  /*
+  rule (modulo AC) lookuprepmessagesbitstringasx_1_111[color=#ffffff,
+                                                       process="lookup rep('message', s.1:bitstring) as x.1",
+                                                       no_derivcheck, issapicrule, role='Process']:
+     [ State_111( s ) ]
+    --[ IsNotSet( rep('message', s) ) ]->
+     [ State_1112( s ) ]
+  */
+
+rule (modulo E) eventDonex_0_1111[color=#ffffff,
+                                  process="event Done( x.1 );", issapicrule, role='Process']:
+   [ State_1111( s.1, x.1 ) ]
+  --[ Done( x.1 ) ]->
+   [ State_11111( s.1, x.1 ) ]
+
+  /*
+  rule (modulo AC) eventDonex_0_1111[color=#ffffff,
+                                     process="event Done( x.1 );", issapicrule, role='Process']:
+     [ State_1111( s, x ) ] --[ Done( x ) ]-> [ State_11111( s, x ) ]
+  */
+
+rule (modulo E) p_0_11111[color=#ffffff, process="0", issapicrule,
+                          role='Process']:
+   [ State_11111( s.1, x.1 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_11111[color=#ffffff, process="0", issapicrule,
+                             role='Process']:
+     [ State_11111( s, x ) ] --> [ ]
+  */
+
+rule (modulo E) p_0_1112[color=#ffffff, process="0", issapicrule,
+                         role='Process']:
+   [ State_1112( s.1 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_1112[color=#ffffff, process="0", issapicrule,
+                            role='Process']:
+     [ State_1112( s ) ] --> [ ]
+  */
+
+restriction set_in:
+  "∀ x y #t3.
+    (IsIn( x, y ) @ #t3) ⇒
+    (∃ #t2.
+      ((Insert( x, y ) @ #t2) ∧ (#t2 < #t3)) ∧
+      (∀ #t1 yp.
+        (Insert( x, yp ) @ #t1) ⇒ (((#t1 < #t2) ∨ (#t1 = #t2)) ∨ (#t3 < #t1))))"
+
+  /*
+  expanded formula:
+  "∀ x y #t3.
+    (IsIn( x, y ) @ #t3) ⇒
+    (∃ #t2.
+      ((Insert( x, y ) @ #t2) ∧ (#t2 < #t3)) ∧
+      (∀ #t1 yp.
+        (Insert( x, yp ) @ #t1) ⇒ (((#t1 < #t2) ∨ (#t1 = #t2)) ∨ (#t3 < #t1))))"
+  */
+
+restriction set_notin:
+  "∀ x #t3.
+    (IsNotSet( x ) @ #t3) ⇒ (∀ #t1 y. (Insert( x, y ) @ #t1) ⇒ (#t3 < #t1))"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ x #t3.
+    (IsNotSet( x ) @ #t3) ⇒ (∀ #t1 y. (Insert( x, y ) @ #t1) ⇒ (#t3 < #t1))"
+  */
+
+restriction single_session:
+  "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
+  */
+
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.13.0
+Maude version 3.5.1
+Git revision: bf885ca9abf478867fbdbbf3ad80e4da85370e01 (with uncommited changes), branch: HEAD
+Compiled at: 2026-10-04 11:58:25.282416529 UTC
+*/
+
+end
+/* Output
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/regression/trace/sapic-inferred-location-types.spthy
+
+  output:          examples/regression/trace/sapic-inferred-location-types.spthy.tmp
+  processing time: 0.23s
+  
+  reaches_done (exists-trace): verified (4 steps)
+  correct_value (all-traces): verified (3 steps)
+
+==============================================================================
+*/
