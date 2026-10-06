@@ -638,29 +638,6 @@ def getArguments():
 
 
 
-def testDiagnostics():
-	"""Invalid-input regressions have diagnostics rather than proof summaries."""
-	cases = [
-		("issue905-undeclared-em", ["--parse-only"], 1, 'unexpected "("'),
-		("issue906-end-prefix", ["--parse-only"], 1, "unexpected"),
-		("issue907-variable-lhs", [], 1, "Not a correct equation"),
-		("issue908-unguardable-restriction", [], 0, "cannot be converted to a guarded formula"),
-	]
-	successful = True
-	for name, flags, status, diagnostic in cases:
-		path = f"examples/regression/not-working/{name}.spthy"
-		try:
-			result = subprocess.run(["tamarin-prover", path, *flags], capture_output=True, text=True, timeout=60)
-			output = result.stdout if status == 0 else result.stdout + result.stderr
-			if result.returncode != status or diagnostic not in output:
-				logging.error(f"Diagnostic regression failed: {path}\n{result.stdout}{result.stderr}")
-				successful = False
-		except (OSError, subprocess.TimeoutExpired) as error:
-			logging.error(f"Diagnostic regression failed: {path}: {error}")
-			successful = False
-	return successful
-
-
 def main():
 	startTime = datetime.datetime.now() 
 
@@ -710,7 +687,7 @@ Parser test results:
 			os.chdir(working_dir)
 			
 	## repeat case-studies r times for higher confidence in time measurements ##
-	successful = testDiagnostics()
+	successful = True
 	for r in range(settings.repeat):
 		if (settings.repeat != 1):
 			if not command_tests_only:

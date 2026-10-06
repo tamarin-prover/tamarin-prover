@@ -1,0 +1,15 @@
+{
+  "tests": [
+    {
+      "name": "issue906-end-prefix",
+      "args": [
+        "--parse-only"
+      ],
+      "exit_code": 1,
+      "contains": [
+        "unexpected"
+      ],
+      "timeout": 60
+    }
+  ]
+}
