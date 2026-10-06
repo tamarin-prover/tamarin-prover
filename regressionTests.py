@@ -1,5 +1,6 @@
 from html import parser
-import subprocess, sys, re, os, argparse, logging, datetime, shutil
+import subprocess, sys, re, os, argparse, logging, datetime, shutil, tempfile
+from regressionTestCommands import run_tests as runCommandTests
 
 
 class colors:
@@ -241,36 +242,80 @@ def parseFile(path):
 	except Exception as ex:
 		return f"Parse error - lemmas: {path}"
 	
+def isDiffOutputFile(path):
+	""" Whether the generated output file belongs to a diff (equivalence) theory. """
+	return any(pattern in path for pattern in [
+		"_analyzed-diff.spthy",
+		"_analyzed-diff-noprove.spthy",
+		"_analyzed-diff-obseqonly.spthy",
+		"_analyzed-diff-bfs.spthy"
+	])
+
+def isSapicOrAccountabilityFile(path):
+	""" Whether the file is a SAPIC or accountability theory. """
+	return any(pattern in path for pattern in [
+		"sapic",
+		"accountability"
+	])
+
 def testOutputFileParsing(path):
 	"""
 	Tests if a generated Tamarin output file can still be parsed.
 	"""
 	try:
-		# Determine file type based on filename patterns
-		is_diff_file = any(pattern in path for pattern in [
-			"_analyzed-diff.spthy", 
-			"_analyzed-diff-noprove.spthy",
-			"_analyzed-diff-obseqonly.spthy",
-			"_analyzed-diff-bfs.spthy"
-		])
-
-		is_sapic_or_accountability_file = any(pattern in path for pattern in [
-			"sapic",
-			"accountability"
-		])
-  
-		flags = "--diff" if is_diff_file else ""
-		command = f"tamarin-prover --parse-only {flags} {path}"
+		flags = "--diff" if isDiffOutputFile(path) else ""
+		command = [settings.tamarin, "--parse-only", *([flags] if flags else []), path]
 		
-		if is_sapic_or_accountability_file and settings.no_sapic_output_parse_test:
+		if isSapicOrAccountabilityFile(path) and settings.no_sapic_output_parse_test:
 			logging.warning(f"Skipping output parse test for {path} since it is a SAPIC or accountability file and the flag --no-sapic-output-parse-test is set.")
 			return True, None
 
-		process = subprocess.run(command, shell=True, capture_output=True, text=True)
+		process = subprocess.run(command, capture_output=True, text=True)
 		if process.returncode == 0:
 			return True, None
 		else:
 			return False, process.stderr
+	except Exception as ex:
+		return False, str(ex)
+
+def sourceOfOutputFile(pathB):
+	"""
+	Returns the path in examples/ of the theory from which the output file pathB
+	was generated, or None if there is no such file.
+	"""
+	rel = pathB.split(settings.folderB, 1)[-1].lstrip("/")
+	match = re.match(r"(?:fast-tests/)?(.*)_analyzed(?:-[\w-]+)?\.spthy$", rel)
+	if match is None:
+		return None
+	source = os.path.join("examples", match.group(1) + ".spthy")
+	return source if os.path.exists(source) else None
+
+def testParseOnlyRoundTrip(source, diff):
+	"""
+	Tests if the output of 'tamarin-prover --parse-only' on the theory file source
+	can be parsed again, and if doing so prints the same theory. The second check
+	catches output that the parser accepts but that denotes a different theory,
+	e.g. because a declaration is printed twice. diff runs Tamarin in --diff mode.
+	"""
+	try:
+		if isSapicOrAccountabilityFile(source) and settings.no_sapic_output_parse_test:
+			logging.warning(f"Skipping --parse-only round-trip test for {source} since it is a SAPIC or accountability file and the flag --no-sapic-output-parse-test is set.")
+			return True, None
+
+		flags = ["--diff"] if diff else []
+		first = subprocess.run([settings.tamarin, "--parse-only", *flags, source], capture_output=True, encoding="utf-8")
+		if first.returncode != 0:
+			return False, first.stderr
+		with tempfile.TemporaryDirectory() as tmpDir:
+			tmpPath = os.path.join(tmpDir, os.path.basename(source))
+			with open(tmpPath, "w", encoding="utf-8") as tmpFile:
+				tmpFile.write(first.stdout)
+			second = subprocess.run([settings.tamarin, "--parse-only", *flags, tmpPath], capture_output=True, encoding="utf-8")
+		if second.returncode != 0:
+			return False, f"The printed theory cannot be parsed again:\n{second.stderr}"
+		if second.stdout != first.stdout:
+			return False, "The printed theory changes when it is parsed and printed again"
+		return True, None
 	except Exception as ex:
 		return False, str(ex)
 
@@ -314,6 +359,8 @@ def compare():
 	majorDifferences = False
 	stepSumA, stepSumB, timeSumA, timeSumB = 0, 0, 0, 0
 	parseTestsTotal, parseTestsFailed = 0, 0
+	roundTripTestsTotal, roundTripTestsFailed = 0, 0
+	roundTripTested = set()
 	
 	for pathB in iterFolder(settings.folderB):
 
@@ -327,6 +374,21 @@ def compare():
 				majorDifferences = True
 				parseTestsFailed += 1		
   
+		## Tamarin round-trip testing of --parse-only on the source theory ##
+		if not settings.no_output_parse_test:
+			source = sourceOfOutputFile(pathB)
+			diff = isDiffOutputFile(pathB)
+			# The same source theory can produce several output files, so test it once per mode.
+			if source is not None and (source, diff) not in roundTripTested:
+				roundTripTested.add((source, diff))
+				roundTripTestsTotal += 1
+				roundTripSuccess, roundTripError = testParseOnlyRoundTrip(source, diff)
+				if not roundTripSuccess:
+					logging.error(color(colors.RED + colors.BOLD, f"--parse-only round-trip test failed for {source}"))
+					logging.error(color(colors.RED, roundTripError))
+					majorDifferences = True
+					roundTripTestsFailed += 1
+
 		## parse file ##
 		parsed = parseFiles(pathB)
 		if type(parsed) == str:
@@ -491,6 +553,11 @@ def compare():
 			logging.error(color(colors.RED + colors.BOLD, f"{parseTestsFailed} output files failed to parse!"))
 		else:
 			logging.warning("All output files successfully parsed")
+		if roundTripTestsFailed > 0:
+			logging.warning(f"--parse-only round-trip tests: {roundTripTestsTotal - roundTripTestsFailed}/{roundTripTestsTotal} successful")
+			logging.error(color(colors.RED + colors.BOLD, f"{roundTripTestsFailed} theories do not survive a --parse-only round trip!"))
+		else:
+			logging.warning("All theories survive a --parse-only round trip")
 		if settings.verbose >= 3:
 			logging.error(color(colors.RED + colors.BOLD, "There were differences in the results of the lemmas, or in the rules, or in the equations, or in the builtins, or in the functions, or in the warnings, or the files itself could not be parsed!"))
 		else: 
@@ -530,7 +597,7 @@ def getArguments():
 	parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter)
 	parser.add_argument("-s", "--slow", help = "Run slow tests (instead of fast tests)", action="store_true")
 	parser.add_argument("-noi", "--no-install", help = "Do not call 'stack install' before starting the tests", action="store_true")
-	parser.add_argument("-nom", "--no-make", help = "Do not run regression tests, i.e., do not call 'make case-studies'", action="store_true")
+	parser.add_argument("-nom", "--no-make", help = "Skip command checks and case-study generation; compare existing outputs", action="store_true")
 	parser.add_argument("-j", "--jobs", help = "The amount of Tamarin instances used simultaneously. Each Tamarin instance should have 3 threads and 16GB RAM available", type=int, default=1)
 	parser.add_argument("-d", "--directory", help = "The directory to compare the test results with. The default is case-studies-regression", type=str, default="case-studies-regression")
 	parser.add_argument("-r", "--repeat", help = "Repeat everything r times (except for 'stack install'). This gives more confidence in time measurements", type=int, default=1)
@@ -545,13 +612,18 @@ def getArguments():
 			"6: show diff output if the corresponding proofs changed"
 			, type=int, default=3)
 	parser.add_argument("-p", "--parser-test", help = "Run the parser tests.", action="store_true")
-	parser.add_argument("-nopt", "--no-output-parse-test", help="Skip testing if output files can be parsed again", action="store_true")
+	parser.add_argument("-nopt", "--no-output-parse-test", help="Skip the output parse tests and the --parse-only round-trip tests", action="store_true")
 	parser.add_argument("--no-sapic-output-parse-test", dest="no_sapic_output_parse_test", help="Disable SAPIC/accountability output parse tests", action="store_true")
 	
+
+	parser.add_argument("--command-tests-only", nargs="*", metavar="FILE", help="Run only command checks (all sidecars, or the specified .spthy.test.json files)")
+	parser.add_argument("--tamarin", default=os.environ.get("TAMARIN", "tamarin-prover"), help="Tamarin executable (default: TAMARIN environment variable or tamarin-prover)")
 
 	## save the settings ##
 	global settings
 	settings = parser.parse_args()
+	if settings.command_tests_only is not None and settings.no_make:
+		parser.error("--command-tests-only cannot be combined with --no-make")
 	settings.folderA = settings.directory
 	settings.folderB = "case-studies"
 
@@ -601,9 +673,12 @@ def main():
 		output = subprocess.check_output("stack install", shell=True, stderr=subprocess.STDOUT).decode("utf-8")
 		logging.debug(output)
 
+	settings.tamarin = shutil.which(settings.tamarin) or settings.tamarin
+	command_tests_only = settings.command_tests_only is not None
+
 	## test the spthy parser
 	parsingSuccessful = True
-	if settings.parser_test:
+	if settings.parser_test and not command_tests_only:
 		logging.info("running the parser tests ...")
 		tree_sitter_spthy_dir = './tree-sitter/tree-sitter-spthy'
 
@@ -638,17 +713,21 @@ Parser test results:
 	successful = testDiagnostics()
 	for r in range(settings.repeat):
 		if (settings.repeat != 1):
-			shutil.rmtree(settings.folderB, ignore_errors=True)
+			if not command_tests_only:
+				shutil.rmtree(settings.folderB, ignore_errors=True)
 			logging.warning("\n" + "="*80 + "\n")
 			logging.warning(color(colors.BOLD, f"This is repetition number {r+1}\n"))
 
 
 		## make case-studies ##
 		if not settings.no_make:
+			successful = runCommandTests(settings.tamarin, settings.directory, settings.slow, settings.command_tests_only) & successful
+			if command_tests_only:
+				continue
 			cases = "case-studies" if settings.slow else "fast-case-studies sapic-case-studies-fast FAST=y"
-			command = f"make -j {settings.jobs} {cases} 2>/dev/null"
+			command = ["make", "-j", str(settings.jobs), f"TAMARIN={settings.tamarin}", *cases.split()]
 			logging.warning(f"running '{command}' ...")
-			output = subprocess.check_output(command, shell=True, stderr=subprocess.STDOUT).decode("utf-8")
+			output = subprocess.check_output(command, stderr=subprocess.STDOUT).decode("utf-8")
 			logging.debug(output)
 
 		## compare time and steps ##

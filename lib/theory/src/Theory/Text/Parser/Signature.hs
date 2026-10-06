@@ -253,20 +253,11 @@ options :: OpenTheory -> Parser OpenTheory
 options thy0 =do
             _  <- symbol "options"
             _  <- colon
-            l <- commaSep1 builtinTheory -- l is list of lenses to set options to true with
-                                         -- builtinTheory modifies signature in state.
-            return $ foldl setOption' thy0 l
+            ls <- commaSep1 optionName -- ls is the list of lenses to set to true
+            return $ foldl (flip setOption) thy0 ls
   where
-    setOption' thy Nothing  = thy
-    setOption' thy (Just l) = setOption l thy
-    builtinTheory = asum
-      [  try 
-         (symbol "translation-progress") Data.Functor.$> Just transProgress
-        , symbol "translation-allow-pattern-lookups" Data.Functor.$> Just transAllowPatternMatchinginLookup
-        , symbol "translation-state-optimisation" Data.Functor.$> Just stateChannelOpt
-        , symbol "translation-asynchronous-channels" Data.Functor.$> Just asynchronousChannels
-        , symbol "translation-compress-events" Data.Functor.$> Just compressEvents
-      ]
+    optionName = asum
+      [ symbol name Data.Functor.$> l | (name, l) <- declarableOptions ]
 
 predicate :: Parser Predicate
 predicate = do
@@ -289,7 +280,9 @@ export thy = do
                     _          <- try (symbol "export")
                     tag          <- identifier
                     _          <- colon
-                    text       <- doubleQuoted $ many bodyChar -- TODO Gotta use some kind of text.
+                    -- The opening quote must not be a lexeme: a lexeme would
+                    -- consume whitespace and comments that belong to the text.
+                    text       <- between (char '"') (symbol "\"") (many bodyChar)
                     let ei = ExportInfo tag text
                     return (addExportInfo ei thy)
                     <?> "export block"

@@ -488,20 +488,89 @@ prettySapic' :: (Document d) => ([SapicNFact SapicLVar]
     -> [SapicNFormula SapicLVar]
     -> Set SapicLVar
     -> String)
+    -> (ann -> Maybe SapicTerm)
     -> Process ann SapicLVar -> d
-prettySapic' ppRR p
-    | (ProcessNull _) <- p = text "0"
-    | (ProcessComb c _ pl pr) <- p =  r pl <-> text (prettySapicComb c) <-> r pr
-    | (ProcessAction Rep _ p') <- p = ppAct Rep <> parens (r p')
-    | (ProcessAction a@ProcessCall {} _ _ ) <- p = ppAct a
-    | (ProcessAction a _ (ProcessNull _)) <- p = ppAct a
-    | (ProcessAction a _ p'@ProcessComb {}) <- p = ppAct a <> semi $-$ nest 1 (parens (r p'))
-    | (ProcessAction a _ p') <- p = ppAct a <> semi $-$ r p'
+prettySapic' ppRR ppLoc = pp
     where
-        r = prettySapic' ppRR -- recursion shortcut
+        -- Print a process that is not followed by further tokens.
+        pp p = case ppLoc (processGetAnnotation p) of
+            Just l  -> ppLocated l p
+            Nothing -> ppForm p
+
+        -- Print a process that is followed by further tokens. The printed
+        -- form must not be able to absorb them, so any form that is not
+        -- clearly delimited is parenthesized.
+        ppDelimited p = case ppLoc (processGetAnnotation p) of
+            -- the location term could absorb a following '+'
+            Just l -> parens (ppLocated l p)
+            Nothing
+                | delimited p -> ppForm p
+                | otherwise   -> parens (ppForm p)
+
+        -- Left operands of '|' and '+' may keep their own '|' and '+'
+        -- structure without parentheses: the parser is left-associative.
+        ppLeftOp p
+            | chainNode p = ppForm p
+            | otherwise   = ppDelimited p
+
+        ppLocated l p = parens (ppForm p) <> text "@" <> prettySapicTerm l
+
+        -- A '|' or '+' node without a location annotation. Only these
+        -- print as a bare chain; an annotated node prints as "(p)@term".
+        chainNode p
+            | ProcessComb c _ _ _ <- p
+            , Nothing <- ppLoc (processGetAnnotation p) = isParOrNDC c
+            | otherwise                                 = False
+
+        isParOrNDC Parallel = True
+        isParOrNDC NDC      = True
+        isParOrNDC _        = False
+
+        -- Printed forms that neither absorb a following token nor extend to
+        -- the right. Replication is excluded on purpose: '!' takes a whole
+        -- process, so it would swallow a following '|' or '+'.
+        delimited (ProcessNull _)                     = True
+        delimited (ProcessAction ProcessCall {} _ _)  = True
+        delimited (ProcessAction a _ (ProcessNull _)) = delimitedAction a
+        delimited _                                   = False
+
+        -- Actions that do not absorb a following token. Actions ending in a
+        -- term are excluded: the term could absorb a following '+'.
+        delimitedAction (New _)   = True
+        delimitedAction ChIn {}   = True
+        delimitedAction ChOut {}  = True
+        delimitedAction (Event _) = True
+        delimitedAction _         = False
+
+        -- The keyword between the head of a branching combinator and its
+        -- first branch.
+        branchKeyword c = case c of
+            Cond _     -> "then"
+            CondEq _ _ -> "then"
+            _          -> "in"  -- Let and Lookup
+
+        ppForm (ProcessNull _) = text "0"
+        ppForm (ProcessComb c _ pl pr)
+            | isParOrNDC c = ppLeftOp pl <-> text (prettySapicComb c) <-> ppDelimited pr
+            -- if, let and lookup, with an optional else branch
+            | (ProcessNull _) <- pr = hdr $-$ nest 4 (pp pl)
+            | otherwise = hdr $-$ nest 4 (ppDelimited pl) $-$ text "else" $-$ nest 4 (pp pr)
+            where
+                hdr = text (prettySapicComb c) <-> text (branchKeyword c)
+        ppForm (ProcessAction Rep _ p') = ppAct Rep <> parens (pp p')
+        ppForm (ProcessAction a@ProcessCall {} _ _ ) = ppAct a
+        ppForm (ProcessAction a _ (ProcessNull _)) = ppAct a
+        ppForm (ProcessAction a _ p') = ppAct a <> semi $-$ ppNext p'
+
+        -- Print the process behind a ';'. The grammar only allows an action
+        -- process there, so a '|' or '+' chain needs parentheses.
+        ppNext p'
+            | chainNode p' = nest 1 (parens (ppForm p'))
+            | otherwise    = pp p'
+
         ppAct a = text (prettySapicAction' ppRR a)
 
---- >>> render $ prettySapic' undefined (ProcessNull ())
+--- >>> render $ prettySapic' undefined (const Nothing) (ProcessNull ())
 -- "0"
 
 --- >>> render $ semi <> semi

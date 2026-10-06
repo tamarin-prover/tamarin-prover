@@ -23,7 +23,7 @@ import Data.Typeable
 import Theory
 import Theory.Sapic
 import Theory.Text.Pretty
-import Theory.Sapic.Print (prettySapic)
+import Theory.Sapic.Print (prettySapicNoLoc)
 import Theory.Text.Pretty qualified as Pretty
 
 -- two different kind of locking erros
@@ -94,7 +94,7 @@ instance Show (SapicException an) where
     show (InvalidPosition p) = "Invalid position:" ++ prettyPosition p
     show (NotImplementedError s) = "This feature is not implemented yet. Sorry! " ++ s
     show (ImplementationError s) = "You've encountered an error in the implementation: " ++ s
-    show (ProcessNotWellformed e p) = "Process not well-formed: " ++ Pretty.render (text (show e) $-$ nest 2 (maybe emptyDoc prettySapic p))
+    show (ProcessNotWellformed e p) = "Process not well-formed: " ++ Pretty.render (text (show e) $-$ nest 2 (maybe emptyDoc prettySapicNoLoc p))
     show ReliableTransmissionButNoProcess = "The builtin support for reliable channels currently only affects the process calculus, but you have not specified a top-level process. Please remove \"builtins: reliable-channel\" to proceed."
     show (CannotExpandPredicate facttag rstr) = "Undefined predicate "
                               ++ showFactTagArity facttag

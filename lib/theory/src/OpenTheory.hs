@@ -866,15 +866,26 @@ prettyDiffRule (DiffProtoRule ruE (Just (ruL, ruR))) =
 prettyEitherRule :: (HighlightDocument d) => (Side, OpenProtoRule) -> d
 prettyEitherRule (_, p) = prettyProtoRuleE $ L.get oprRuleE p
 
--- | Pretty print an open theory.
+-- | Print the options a theory declares. Nothing is printed when no
+-- declarable option is set.
+prettyTheoryOptions :: (HighlightDocument d) => Option -> d
+prettyTheoryOptions opts
+    | null declared = emptyDoc
+    | otherwise = text "options" <> colon <-> fsep (punctuate comma (map text declared))
+  where
+    declared = [name | (name, l) <- declarableOptions, L.get l opts]
+
+-- | Pretty print an open theory. The declared options are printed after the
+-- signature, as they are not part of it.
 prettyOpenTheory :: (HighlightDocument d) => OpenTheory -> d
-prettyOpenTheory =
+prettyOpenTheory thy =
   prettyTheory
-    prettySignaturePure
+    (\sig -> prettySignaturePure sig $--$ prettyTheoryOptions (L.get thyOptions thy))
     (const emptyDoc)
     prettyOpenProtoRule
     prettyProof
     prettyTranslationElement
+    thy
 
 -- | Pretty print an open theory.
 prettyOpenDiffTheory :: (HighlightDocument d) => OpenDiffTheory -> d
