@@ -1,0 +1,14 @@
+{
+  "tests": [
+    {
+      "name": "saved-diff-proofs",
+      "args": [
+        "--diff",
+        "--quit-on-warning"
+      ],
+      "checks": [
+        "roundtrip"
+      ]
+    }
+  ]
+}
