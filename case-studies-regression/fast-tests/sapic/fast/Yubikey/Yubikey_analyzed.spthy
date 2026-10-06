@@ -613,13 +613,7 @@ solve( (#t1 = #t2)  ∥ (#t2 < #t1) )
                                            (otc++z)
            ) ▶₀ #t1.1 )
       case newnpr_0_11111111211111111121111
-      solve( State_111111112111111111211111( StateChannel.2, ~n.1, SL_pid.1,
-                                             StateChannel.3, YL_pid.1, ~n.5, lock.1, nonce.1, npr.1, sc.1,
-                                             sid, (otc++z)
-             ) ▶₀ #t1.2 )
-        case newnpr_0_11111111211111111121111
-        by solve( Login( ~n.1, ~n.5, (otc++z++z.1) ) @ #t1 )
-      qed
+      by solve( Login( ~n.1, ~n.5, (otc++z++z.1) ) @ #t1 )
     qed
   qed
 qed
@@ -2355,8 +2349,8 @@ Facts occur in the left-hand-side but not in any right-hand-side
 Generated from:
 Tamarin version 1.13.0
 Maude version 3.5.1
-Git revision: 41bc81379b23681e7057314a5cf66a25c45e1986, branch: canonicalise-subst
-Compiled at: 2026-07-27 16:11:34.947223 UTC
+Git revision: c827ceb2418a7d5390dac6671f01a07f7f0ac087 (with uncommited changes), branch: HEAD
+Compiled at: 2026-09-15 17:34:25.020280498 UTC
 */
 
 end
@@ -2368,7 +2362,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/Yubikey/Yubikey.spthy
 
   output:          examples/sapic/fast/Yubikey/Yubikey.spthy.tmp
-  processing time: 7.11s
+  processing time: 10.91s
   
   WARNING: 1 wellformedness check failed!
            The analysis results might be wrong!
@@ -2381,7 +2375,7 @@ analyzed: examples/sapic/fast/Yubikey/Yubikey.spthy
   one_count_foreach_login (all-traces): verified (20 steps)
   no_replay (all-traces): verified (2 steps)
   injective_correspondance (all-traces): verified (5 steps)
-  Login_invalidates_smaller_counters (all-traces): verified (6 steps)
+  Login_invalidates_smaller_counters (all-traces): verified (5 steps)
 
 ==============================================================================
 */

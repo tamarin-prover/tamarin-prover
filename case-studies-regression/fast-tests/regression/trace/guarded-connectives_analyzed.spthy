@@ -1,0 +1,116 @@
+theory GuardedConnectives
+
+begin
+
+// Function signature and definition of the equational theory E
+
+functions: fst/1, pair/2, snd/1
+equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
+
+rule (modulo E) Start:
+   [ Fr( ~x ) ] --[ A( ~x, ~x ) ]-> [ Pending( ~x ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Finish:
+   [ Pending( x ) ] --[ B( x ), C( 'public' ) ]-> [ ]
+
+  /* has exactly the trivial AC variant */
+
+restriction repeated_obligation:
+  "∀ x y #i.
+    (A( x, y ) @ #i) ⇒
+    ((∃ #j. (B( x ) @ #j) ∧ (#i < #j)) ∨ (∃ #j. (B( y ) @ #j) ∧ (#i < #j)))"
+
+  /*
+  expanded formula:
+  "∀ x y #i.
+    (A( x, y ) @ #i) ⇒
+    ((∃ #j. (B( x ) @ #j) ∧ (#i < #j)) ∨ (∃ #j. (B( y ) @ #j) ∧ (#i < #j)))"
+  */
+
+lemma collapsed_disjunction_reachable:
+  exists-trace
+  "∃ x y #i.
+    (A( x, y ) @ #i) ∧
+    ((∃ #j. (B( x ) @ #j) ∧ (#i < #j)) ∨ (∃ #j. (B( y ) @ #j) ∧ (#i < #j)))"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ x y #i.
+  (A( x, y ) @ #i)
+ ∧
+  ((∃ #j. (B( x ) @ #j) ∧ #i < #j) ∨ (∃ #j. (B( y ) @ #j) ∧ #i < #j))"
+*/
+simplify
+solve( Pending( ~x ) ▶₀ #j )
+  case Start
+  SOLVED // trace found
+qed
+
+lemma collapsed_disjunction_wrong_action:
+  exists-trace
+  "∃ x y #i.
+    (A( x, y ) @ #i) ∧
+    ((∃ #j. (C( x ) @ #j) ∧ (#i < #j)) ∨ (∃ #j. (C( y ) @ #j) ∧ (#i < #j)))"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ x y #i.
+  (A( x, y ) @ #i)
+ ∧
+  ((∃ #j. (C( x ) @ #j) ∧ #i < #j) ∨ (∃ #j. (C( y ) @ #j) ∧ #i < #j))"
+*/
+by simplify
+
+lemma collapsed_disjunction_wrong_order:
+  exists-trace
+  "∃ x y #i.
+    (A( x, y ) @ #i) ∧
+    ((∃ #j. (B( x ) @ #j) ∧ (#j < #i)) ∨ (∃ #j. (B( y ) @ #j) ∧ (#j < #i)))"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ x y #i.
+  (A( x, y ) @ #i)
+ ∧
+  ((∃ #j. (B( x ) @ #j) ∧ #j < #i) ∨ (∃ #j. (B( y ) @ #j) ∧ #j < #i))"
+*/
+simplify
+by contradiction /* cyclic */
+
+lemma restriction_applies:
+  all-traces
+  "∀ x y #i. (A( x, y ) @ #i) ⇒ (∃ #j. (B( x ) @ #j) ∧ (#i < #j))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ x y #i. (A( x, y ) @ #i) ∧ ∀ #j. (B( x ) @ #j) ⇒ ¬(#i < #j)"
+*/
+simplify
+by contradiction /* from formulas */
+
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.13.0
+Maude version 3.5.1
+Git revision: e21ed2902accbb12f7062569d046b00b1799386a, branch: fix-guarded-singleton-connectives
+Compiled at: 2026-09-14 15:10:54.267940289 UTC
+*/
+
+end
+/* Output
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/regression/trace/guarded-connectives.spthy
+
+  output:          examples/regression/trace/guarded-connectives.spthy.tmp
+  processing time: 0.05s
+  
+  collapsed_disjunction_reachable (exists-trace): verified (3 steps)
+  collapsed_disjunction_wrong_action (exists-trace): falsified - no trace found (1 steps)
+  collapsed_disjunction_wrong_order (exists-trace): falsified - no trace found (2 steps)
+  restriction_applies (all-traces): verified (2 steps)
+
+==============================================================================
+*/

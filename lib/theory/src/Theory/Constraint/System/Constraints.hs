@@ -228,7 +228,7 @@ instance HasFrees Goal where
         PremiseG p fa -> PremiseG <$> mapFrees f p <*> mapFrees f fa
         ChainG c p    -> ChainG   <$> mapFrees f c <*> mapFrees f p
         SplitG i      -> SplitG   <$> mapFrees f i
-        DisjG x       -> DisjG    <$> mapFrees f x
+        DisjG x       -> DisjG . normaliseDisjList <$> mapFrees f x
         SubtermG p    -> SubtermG <$> mapFrees f p
 
 instance Apply LNSubst Goal where
@@ -237,7 +237,7 @@ instance Apply LNSubst Goal where
         PremiseG p fa -> PremiseG (apply subst p) (apply subst fa)
         ChainG c p    -> ChainG   (apply subst c) (apply subst p)
         SplitG i      -> SplitG   (apply subst i)
-        DisjG x       -> DisjG    (apply subst x)
+        DisjG x       -> DisjG    (normaliseDisjList (apply subst x))
         SubtermG p    -> SubtermG (apply subst p)
 
 

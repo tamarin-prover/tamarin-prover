@@ -1824,40 +1824,11 @@ solve( (∃ matchingSession #i3 matchingRole matchingCom.
                                   qed
                                 next
                                   case Resp_NAXOS_1
-                                  solve( (∀ rest.
-                                           ((rest add <'1', 'g'^h1(<~ex, ~ea>)> add <'2', 'g'^h1(<~ey, ~eb>)>
-                                            ) =
-                                            (<'1', 'g'^h1(<~ex, ~ea>)> add <'2', 'g'^h1(<~ey, ~eb>)> add 
-                                             <'3', $A, 
-                                              h2(<
-                                                  first(h(<'g'^(~ea*h1(<~ey, ~eb>)), 
-                                                           'g'^(~eb*h1(<~ex, ~ea>)), 
-                                                           'g'^(h1(<~ex, ~ea>)*h1(<~ey, ~eb>)), $A, $B, 
-                                                           'g'^h1(<~ex, ~ea>), 'g'^h1(<~ey, ~eb>), 'NAXOS_C'
-                                                          >)), 
-                                                  'I', $A, $B, 'g'^h1(<~ex, ~ea>), 'g'^h1(<~ey, ~eb>), 
-                                                  'NAXOS_C'>)
-                                             >
-                                            ))
-                                          ⇒
-                                           ⊥)  ∥
-                                         (∃ #i4 sid. (Sid( ~ey, sid ) @ #i4) ∧ #i3.1 < #i4)  ∥
-                                         ((∀ #i5. (RevealSessk( ~ey ) @ #i5) ⇒ ⊥) ∧
-                                          (∀ #i5 #i6.
-                                            (RevealLtk( $B ) @ #i5) ∧ (RevealEphk( ~ey ) @ #i6) ⇒ ⊥)) )
-                                    case case_1
-                                    by contradiction /* from formulas */
-                                  next
-                                    case case_2
-                                    by contradiction /* from formulas */
-                                  next
-                                    case case_3
-                                    solve( !KU( h1(<~ex, ~ea>) ) @ #vk.22 )
-                                      case c_h1
-                                      solve( !KU( ~ex ) @ #vk.24 )
-                                        case Ephk_reveal
-                                        by contradiction /* from formulas */
-                                      qed
+                                  solve( !KU( h1(<~ex, ~ea>) ) @ #vk.22 )
+                                    case c_h1
+                                    solve( !KU( ~ex ) @ #vk.24 )
+                                      case Ephk_reveal
+                                      by contradiction /* from formulas */
                                     qed
                                   qed
                                 next
@@ -4488,8 +4459,8 @@ qed
 Generated from:
 Tamarin version 1.13.0
 Maude version 3.5.1
-Git revision: 41bc81379b23681e7057314a5cf66a25c45e1986, branch: canonicalise-subst
-Compiled at: 2026-07-27 16:11:34.947223 UTC
+Git revision: c827ceb2418a7d5390dac6671f01a07f7f0ac087 (with uncommited changes), branch: HEAD
+Compiled at: 2026-09-15 17:34:25.020280498 UTC
 */
 
 end
@@ -4501,10 +4472,10 @@ summary of summaries:
 analyzed: examples/csf26-ac/fast/DHKEA_NAXOS_C_eCK_PFS_partially_matching.spthy
 
   output:          examples/csf26-ac/fast/DHKEA_NAXOS_C_eCK_PFS_partially_matching.spthy.tmp
-  processing time: 16.06s
+  processing time: 21.75s
   
   execution_match_same_key_NAXOS (exists-trace): verified (13 steps)
-  eCK_key_secrecy (all-traces): verified (797 steps)
+  eCK_key_secrecy (all-traces): verified (794 steps)
 
 ==============================================================================
 */

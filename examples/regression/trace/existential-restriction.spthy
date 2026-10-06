@@ -1,0 +1,25 @@
+/*
+ * An existential restriction without a disjunction also used to loop:
+ * instantiating it before node merging settled created a new Finish witness
+ * whenever the Pending premise was solved.
+ */
+theory ExistentialRestriction
+begin
+
+rule Start:
+  [ Fr(~x) ] --[ A(~x) ]-> [ Pending(~x) ]
+
+rule Finish:
+  [ Pending(x) ] --[ B(x) ]-> []
+
+restriction finish_after_start:
+  "All x #i. A(x)@i ==> Ex #j. B(x)@j & i < j"
+
+lemma reachable:
+  exists-trace
+  "Ex x #i. A(x)@i & (Ex #j. B(x)@j & i < j)"
+
+lemma restriction_applies:
+  "All x #i. A(x)@i ==> Ex #j. B(x)@j & i < j"
+
+end

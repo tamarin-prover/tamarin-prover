@@ -103,6 +103,7 @@ import           Extension.Prelude
 
 import           Logic.Connectives
 
+import qualified Theory.Constraint.System.StoredFormulas as Stored
 import           Theory.Constraint.Solver.Contradictions
 import           Theory.Constraint.System
 import           Theory.Model
@@ -426,7 +427,7 @@ insertAtom ato = case ato of
 -- formula is marked as solved. Other intermediate formulas are not marked.
 insertFormula :: LNGuarded -> Reduction ()
 insertFormula = do
-    insert True
+    insert True . normaliseStoredFormula
   where
     insert mark fm = do
         formulas       <- getM sFormulas
@@ -434,8 +435,8 @@ insertFormula = do
         insert' mark formulas solvedFormulas fm
 
     insert' mark formulas solvedFormulas fm
-      | fm `S.member` formulas       = return ()
-      | fm `S.member` solvedFormulas = return ()
+      | fm `Stored.member` formulas       = return ()
+      | fm `Stored.member` solvedFormulas = return ()
       | otherwise = case fm of
           GAto ato -> do
               markAsSolved
@@ -448,14 +449,14 @@ insertFormula = do
 
           -- Store for later applications of CR-rule *S_∨*
           GDisj disj -> do
-              modM sFormulas (S.insert fm)
+              modM sFormulas (Stored.insert fm)
               insertGoal (DisjG disj) False
 
           -- CR-rule *S_∃*
           GGuarded Ex ss as gf -> do
               -- must always mark as solved, as we otherwise may repeatedly
               -- introduce fresh variables.
-              modM sSolvedFormulas $ S.insert fm
+              modM sSolvedFormulas $ Stored.insert fm
               xs <- mapM (uncurry freshLVar) ss
               let body = gconj (map GAto as ++ [gf])
               insert False (substBound (zip [0..] (reverse xs)) body)
@@ -489,9 +490,9 @@ insertFormula = do
               insert False $ gdisj [ GAto (Less j i), GAto (Less i j) ]
 
           -- Guarded All quantification: store for saturation
-          GGuarded All _ _ _ -> modM sFormulas (S.insert fm)
+          GGuarded All _ _ _ -> modM sFormulas (Stored.insert fm)
       where
-        markAsSolved = when mark $ modM sSolvedFormulas $ S.insert fm
+        markAsSolved = when mark $ modM sSolvedFormulas $ Stored.insert fm
 
 -- | 'True' iff the formula can be reduced by one of the rules implemented in
 -- 'insertFormula'.
@@ -508,12 +509,6 @@ reducibleFormula fm = case fm of
 
 -- Goal management
 ------------------
-
--- | Combine the status of two goals.
-combineGoalStatus :: GoalStatus -> GoalStatus -> GoalStatus
-combineGoalStatus (GoalStatus solved1 age1 loops1)
-                  (GoalStatus solved2 age2 loops2) =
-    GoalStatus (solved1 || solved2) (min age1 age2) (loops1 || loops2)
 
 -- | Insert a goal and its status with a new age. Merge status if goal exists.
 insertGoalStatus :: Goal -> GoalStatus -> Reduction ()
@@ -536,8 +531,8 @@ markGoalAsSolved how goal =
         | otherwise   -> updateStatus
       ChainG _ _      -> delete
       SplitG _        -> updateStatus
-      DisjG disj      -> modM sFormulas       (S.delete $ GDisj disj) >>
-                         modM sSolvedFormulas (S.insert $ GDisj disj) >>
+      DisjG disj      -> modM sFormulas       (Stored.delete $ GDisj disj) >>
+                         modM sSolvedFormulas (Stored.insert $ GDisj disj) >>
                          updateStatus
       SubtermG _      -> updateStatus
   where
@@ -656,6 +651,12 @@ substGoals = do
         ActionG i fa@(kFactView -> Just (UpK, m))
           | (isMsgVar m || isProduct m || isUnion m {--|| isXor m-}) && (apply subst m /= m) ->
               insertAction i (apply subst fa)
+        -- Disjunction goals are normalised in lockstep with the stored
+        -- formulas they mirror.
+        DisjG disj -> do
+            let disj' = normaliseDisjList (apply subst disj)
+            modM sGoals $ M'.insertWith combineGoalStatus (DisjG disj') status
+            return Unchanged
         _ -> do modM sGoals $
                   M'.insertWith combineGoalStatus (apply subst goal) status
                 return Unchanged
@@ -674,14 +675,14 @@ conjoinSystem sys = do
     kind <- getM sSourceKind
     unless (kind == get sSourceKind sys) $
         error "conjoinSystem: source-kind mismatch"
-    joinSets sSolvedFormulas
-    joinSets sLemmas
+    modM sSolvedFormulas (`Stored.union` get sSolvedFormulas sys)
+    modM sLemmas (`Stored.union` get sLemmas sys)
     joinSets sEdges
     F.mapM_ insertLast                 $ get sLastAtom    sys
     F.mapM_ insertLess $ get sLessAtoms sys
     -- split-goals are not valid anymore
     mapM_   (uncurry insertGoalStatus) $ filter (not . isSplitGoal . fst) $ M.toList $ get sGoals sys
-    F.mapM_ insertFormula $ get sFormulas sys
+    mapM_ insertFormula $ Stored.toList $ get sFormulas sys
     -- update nodes
     _ <- (setNodes . (M.toList (get sNodes sys) ++) . M.toList) =<< getM sNodes
     -- conjoin equation store
