@@ -1,0 +1,14 @@
+theory SapicNestedLocalPatternName
+begin
+
+// pat_x is local to C(), not W's pattern parameter. Passing through an open
+// definition must not make this input match W's argument.
+let C() = in(pat_x); event Seen(pat_x)
+let O = C()
+let W(pat_x) = O
+process: W('a')
+
+lemma another_input: exists-trace "Ex #i. Seen('b')@i"
+lemma only_argument: "All x #i. Seen(x)@i ==> x = 'a'"
+
+end

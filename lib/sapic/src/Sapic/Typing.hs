@@ -2,6 +2,7 @@
 
 module Sapic.Typing
   ( typeTheory
+  , typeTheoryForExport
   , typeTheoryEnv
   , typeTermsWithEnv
   , typeProcess
@@ -135,12 +136,29 @@ typeTermsWithEnv typeEnv terms = execStateT (mapM typeWith' terms) typeEnv'
 typeProcess :: (GoodAnnotation a, MonadThrow m, MonadCatch m, Show a, Typeable a) =>
     Process a SapicLVar ->  StateT
         TypingEnvironment m (Process a SapicLVar)
-typeProcess = traverseProcess fNull fAct fComb gAct gComb
+typeProcess p = do
+    typed <- traverseProcess fNull fAct fComb gAct gComb p
+    finalTypes <- gets (.vars)
+    -- Later constraints can refine variables in already reconstructed nodes.
+    -- Use final types throughout process terms, binders and locations, including
+    -- keys introduced by later report expansion. Leave quantified formulas alone.
+    let finalVar v = SapicLVar (slvar v) $ Map.findWithDefault (stype v) (slvar v) finalTypes
+        finalTerm = fmap $ fmap finalVar
+        finalAnn = mapProcessParsedAnnotation $ \ann ->
+            ann { location = fmap finalTerm (location ann) }
+        finalProcess (ProcessNull ann) = ProcessNull (finalAnn ann)
+        finalProcess (ProcessAction ac ann r) =
+            ProcessAction (mapTermsAction finalTerm id finalVar ac)
+                (finalAnn ann) (finalProcess r)
+        finalProcess (ProcessComb c ann l r) =
+            ProcessComb (mapTermsComb finalTerm id finalVar c)
+                (finalAnn ann) (finalProcess l) (finalProcess r)
+    return $ finalProcess typed
      where
         -- fNull/fAcc/fComb collect variables that are bound when going downwards
         fNull ann  = return (ProcessNull ann)
-        fAct ann ac       = F.traverse_ insertVar (bindingsAct ann ac)
-        fComb ann c        = F.traverse_ insertVar (bindingsComb ann c)
+        fAct _ ac         = insertDeclarations (actionBinderDeclarations ac)
+        fComb _ c         = insertDeclarations (combinatorBinderDeclarations c)
         -- gAct/gComb reconstruct process tree assigning types to the terms
         gAct ac@(Event (Fact tag _ ts)) ann r = do -- r is typed subprocess
             ac' <- traverseTermsAction (typeWith' $ ProcessAction ac ann r) typeWithFact typeWithVar ac
@@ -158,7 +176,18 @@ typeProcess = traverseProcess fNull fAct fComb gAct gComb
         typeWithVar  v -- variables are correctly typed, as we just inserted them
             | Nothing <- stype v = return $ SapicLVar (slvar v) defaultSapicType
             | otherwise = return v
-        typeWithFact = return -- typing facts is hard because of quantified variables. We skip for now.
+        typeWithFact = return -- Formula variables can be quantified; leave their annotations unchanged.
+        -- Merge only declarations from this node. Inserting the merged map
+        -- afterwards preserves rejection of rebinding across process nodes.
+        insertDeclarations declarations = do
+            merged <- foldM mergeDeclaration Map.empty declarations
+            F.traverse_ insertVar (Map.elems merged)
+        mergeDeclaration local v = do
+            ty <- case Map.lookup (slvar v) local of
+                Nothing -> return (stype v)
+                Just previous -> catch (sqcap (stype previous) (stype v))
+                    (\(CannotMerge a b) -> throwM $ TypingError (varTerm v) a b)
+            return $ Map.insert (slvar v) (SapicLVar (slvar v) ty) local
         insertVar v = do
             te <- get
             case Map.lookup (slvar v) te.vars of
@@ -216,7 +245,10 @@ typeTheoryEnv th = do
                 typeProcess pUnique
         typeAndRenameProcessDef p = do
                 let pr = p._pBody
-                let pvars = fromMaybe (S.toList (varsProc pr) List.\\ accBindings pr) p._pVars
+                -- Annotations constrain types, not binding identities.
+                let bound = S.fromList $ map toLVar $ accBindings pr
+                let pvars = fromMaybe (filter ((`S.notMember` bound) . toLVar) $
+                                      S.toList (varsProc pr)) p._pVars
                 let aux_pr = ProcessAction (ChIn Nothing (fAppList (map varTerm pvars)) S.empty) mempty pr
                 renamedP <- typeAndRenameProcess aux_pr
                 case renamedP of
@@ -229,6 +261,40 @@ typeTheoryEnv th = do
 typeTheory :: (MonadThrow m, MonadCatch m) => OpenTheory -> m OpenTheory
 typeTheory th = fst <$> typeTheoryEnv th
 
+-- | Pattern parameters stand for syntax rather than values. Typing their
+-- definition as a function renames the formal and its pattern binder apart.
+-- Export the parser's already instantiated bodies for these calls instead.
+-- Open definitions also need their caller's bindings: inferring parameters
+-- for the definition alone leaves its original zero-argument calls invalid.
+-- This preparation is only for export; MSR translation keeps its call nodes.
+typeTheoryForExport :: (MonadThrow m, MonadCatch m) => OpenTheory -> m OpenTheory
+typeTheoryForExport th = do
+    -- Check declarations before discarding them: their annotations can still
+    -- constrain function types, even when substitution replaces a pattern
+    -- variable by a constant in every call.
+    typed <- typeTheory th
+    processes <- mapMProcesses (pure . inlineCalls mempty) typed
+    definitions <- mapMProcessesDef
+      (\p -> pure $ p { _pBody = inlineCalls mempty p._pBody }) processes
+    pure $ definitions { _thyItems = filter keepDefinition definitions._thyItems }
+  where
+    expanded = S.fromList [p._pName | p <- theoryProcessDefs th,
+                          isNothing p._pVars || hasPatternParameter p]
+    hasPatternParameter p =
+      let parameters = S.fromList $ map toLVar $ fromMaybe [] p._pVars
+      in any ((`S.member` parameters) . toLVar) $ accBindings p._pBody
+    keepDefinition (TranslationItem (ProcessDefItem p)) = p._pName `S.notMember` expanded
+    keepDefinition _ = True
+    -- Preserve call-site annotations; a location in the body overrides the
+    -- caller's location, just as it does when traversing the expanded process.
+    inlineCalls ann (ProcessAction (ProcessCall name _) here rest)
+      | name `S.member` expanded = inlineCalls (ann <> here) rest
+    inlineCalls ann (ProcessAction ac here rest) =
+      ProcessAction ac (ann <> here) (inlineCalls mempty rest)
+    inlineCalls ann (ProcessComb c here left right) =
+      ProcessComb c (ann <> here) (inlineCalls mempty left) (inlineCalls mempty right)
+    inlineCalls ann (ProcessNull here) = ProcessNull (ann <> here)
+
 -- | Rename a process so that all its names are unique. Returns renamed process
 -- p' and substitution such that: let (p',subst) = renameUnique p in apply subst
 -- p' equals p
@@ -237,27 +303,33 @@ renameUnique :: (Monad m, Apply (Subst Name LVar) ann, GoodAnnotation ann, HasCa
 renameUnique p = Precise.evalFreshT actualCall initState
     where
         actualCall = renameUnique' emptySubst p
-        initState = avoidPreciseVars . map (\(SapicLVar lvar _) -> lvar) $ S.toList $ varsProc p
+        initState = avoidPreciseVars . map toLVar $ S.toList $ varsProcWithAnnotations p
 
 renameUnique' ::
   (MonadFresh m, Apply (Subst Name LVar) ann, GoodAnnotation ann) =>
   Subst Name LVar -> Process ann SapicLVar -> m (Process ann SapicLVar)
 renameUnique' initSubst p = do
-        let p' = apply initSubst p -- apply outstanding substitution subst, ignore capturing and hope for the best
-        case p' of
-            ProcessNull _ -> return p'
-            ProcessAction ac ann pl -> do
+        -- Apply the accumulated renaming only at this node. As in the eager
+        -- traversal, null annotations are untouched. Newly allocated names
+        -- affect only the binding region and its scoped continuation.
+        case p of
+            ProcessNull _ -> return p
+            ProcessAction ac0 ann0 pl -> do
+                let ac = apply initSubst ac0
+                    ann = apply initSubst ann0
                 (subst,inv) <- mkSubst $ bindingsAct ann ac
                 let ann' = mappendProcessParsedAnnotation (mempty {backSubstitution = inv}) ann
-                let ac' = apply subst ac -- use apply instead of applyM because we want to ignore capturing, i.e., rename bound names...
-                pl' <- renameUnique' subst pl
+                let ac' = renameActionBinders subst ac
+                pl' <- renameUnique' (subst `compose` initSubst) pl
                 return $ ProcessAction ac' ann' pl'
-            ProcessComb comb ann pl pr -> do
+            ProcessComb comb0 ann0 pl pr -> do
+                let comb = apply initSubst comb0
+                    ann = apply initSubst ann0
                 (subst,inv) <- mkSubst $ bindingsComb ann comb
                 let ann' = mappendProcessParsedAnnotation (mempty {backSubstitution = inv}) ann
-                let comb' = apply subst comb
-                pl' <- renameUnique' subst pl
-                pr' <- renameUnique' subst pr
+                let comb' = renameCombinatorBinders subst comb
+                pl' <- renameUnique' (subst `compose` initSubst) pl
+                pr' <- renameUnique' initSubst pr
                 return $ ProcessComb comb' ann' pl' pr'
     where
         substFromVarList = substFromList . map (second varTerm)

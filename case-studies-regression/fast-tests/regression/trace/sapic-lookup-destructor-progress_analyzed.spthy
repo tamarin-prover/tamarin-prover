@@ -1,0 +1,297 @@
+theory SapicLookupDestructorProgress
+
+begin
+
+// Function signature and definition of the equational theory E
+
+functions: box/1, fst/1, pair/2, snd/1, unbox/1 [destructor]
+equations:
+    fst(<x.1, x.2>) = x.1,
+    snd(<x.1, x.2>) = x.2,
+    unbox(box(<x, y>)) = <x, y>
+
+heuristic: p
+
+lemma reachable:
+  exists-trace "∃ #i. Seen( 'value', 'value' ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #i. (Seen( 'value', 'value' ) @ #i)"
+*/
+simplify
+solve( State_111( ~prog_, 'value', 'value', v ) ▶₀ #i )
+  case letabunboxboxvv_3_11
+  solve( (#vr.3 < #t2)  ∥ (#vr.3 = #t2) )
+    case case_2
+    solve( (∃ #t. (ProgressTo_1111( ~prog_ ) @ #t))  ∥
+           (∃ #t. (ProgressTo_112( ~prog_ ) @ #t))  ∥
+           (∃ #t. (ProgressTo_12( ~prog_ ) @ #t)) )
+      case case_1
+      solve( State_111( ~prog_, a, b, v ) ▶₀ #t.1 )
+        case letabunboxboxvv_3_11
+        solve( (#t2 < #t2.1)  ∥ (#t2 = #t2.1) )
+          case case_2
+          SOLVED // trace found
+        qed
+      qed
+    qed
+  qed
+qed
+
+lemma value_preserved:
+  all-traces
+  "∀ a b #i. (Seen( a, b ) @ #i) ⇒ ((a = 'value') ∧ (b = 'value'))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ a b #i. (Seen( a, b ) @ #i) ∧ ((¬(a = 'value')) ∨ (¬(b = 'value')))"
+*/
+simplify
+solve( (¬(a = 'value'))  ∥ (¬(b = 'value')) )
+  case case_1
+  solve( State_111( ~prog_, a, b, v ) ▶₀ #i )
+    case letabunboxboxvv_3_11
+    by contradiction /* from formulas */
+  qed
+next
+  case case_2
+  solve( State_111( ~prog_, a, b, v ) ▶₀ #i )
+    case letabunboxboxvv_3_11
+    by contradiction /* from formulas */
+  qed
+qed
+
+rule (modulo E) Init[color=#ffffff, process="insert 'cell','value';",
+                     issapicrule, role='Process']:
+   [ Fr( ~prog_ ) ]
+  --[ ProgressFrom_( ~prog_ ), Init( ) ]->
+   [ State_( ~prog_ ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) insertcellvalue_0_[color=#ffffff,
+                                   process="insert 'cell','value';", issapicrule, role='Process']:
+   [ State_( ~prog_ ) ]
+  --[ Insert( 'cell', 'value' ) ]->
+   [ State_1( ~prog_ ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) lookupcellasv_0_1[color=#ffffff,
+                                  process="lookup 'cell' as v.1", no_derivcheck, issapicrule,
+                                  role='Process']:
+   [ State_1( ~prog_ ) ]
+  --[ IsIn( 'cell', v.1 ) ]->
+   [ Let_111( box(<v.1, v.1>), ~prog_, v.1 ) ]
+
+  /*
+  rule (modulo AC) lookupcellasv_0_1[color=#ffffff,
+                                     process="lookup 'cell' as v.1", no_derivcheck, issapicrule,
+                                     role='Process']:
+     [ State_1( ~prog_ ) ]
+    --[ IsIn( 'cell', v ) ]->
+     [ Let_111( box(<v, v>), ~prog_, v ) ]
+  */
+
+rule (modulo E) letabunboxboxvv_1_11[color=#ffffff,
+                                     process="let <a.1, b.1>=unbox(box(<v.1, v.1>))", no_derivcheck,
+                                     issapicrule, role='Process']:
+   [ Let_111( box(<x.2, y.2>), ~prog_, v.1 ) ]
+  -->
+   [ Let_1101( <x.2, y.2>, ~prog_, v.1 ) ]
+
+  /*
+  rule (modulo AC) letabunboxboxvv_1_11[color=#ffffff,
+                                        process="let <a.1, b.1>=unbox(box(<v.1, v.1>))", no_derivcheck,
+                                        issapicrule, role='Process']:
+     [ Let_111( box(<x, y>), ~prog_, v ) ]
+    -->
+     [ Let_1101( <x, y>, ~prog_, v ) ]
+  */
+
+rule (modulo E) letabunboxboxvv_3_11[color=#ffffff,
+                                     process="let <a.1, b.1>=unbox(box(<v.1, v.1>))", issapicrule,
+                                     role='Process']:
+   [ Let_1101( <a.1, b.1>, ~prog_, v.1 ) ]
+  -->
+   [ State_111( ~prog_, a.1, b.1, v.1 ) ]
+
+  /*
+  rule (modulo AC) letabunboxboxvv_3_11[color=#ffffff,
+                                        process="let <a.1, b.1>=unbox(box(<v.1, v.1>))", issapicrule,
+                                        role='Process']:
+     [ Let_1101( <a, b>, ~prog_, v ) ] --> [ State_111( ~prog_, a, b, v ) ]
+  */
+
+rule (modulo E) eventSeenab_0_111[color=#ffffff, process="0",
+                                  issapicrule, role='Process']:
+   [ State_111( ~prog_, a.1, b.1, v.1 ) ]
+  --[ ProgressTo_1111( ~prog_ ), Seen( a.1, b.1 ) ]->
+   [ ]
+
+  /*
+  rule (modulo AC) eventSeenab_0_111[color=#ffffff, process="0",
+                                     issapicrule, role='Process']:
+     [ State_111( ~prog_, a, b, v ) ]
+    --[ ProgressTo_1111( ~prog_ ), Seen( a, b ) ]->
+     [ ]
+  */
+
+restriction Restr_letabunboxboxvv_2_11_1:
+  "∀ x #NOW.
+    (Restr_letabunboxboxvv_2_11_1( x ) @ #NOW) ⇒
+    (∀ x.1 y. (box(<x.1, y>) = x) ⇒ (⊥))"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ x #NOW.
+    (Restr_letabunboxboxvv_2_11_1( x ) @ #NOW) ⇒
+    (∀ x.1 y. (box(<x.1, y>) = x) ⇒ (⊥))"
+  */
+
+rule (modulo E) letabunboxboxvv_2_11[color=#ffffff,
+                                     process="let <a.1, b.1>=unbox(box(<v.1, v.1>))", issapicrule,
+                                     role='Process']:
+   [ Let_111( box(<v.1, v.1>), ~prog_, v.1 ) ]
+  --[
+  ProgressTo_112( ~prog_ ), Restr_letabunboxboxvv_2_11_1( box(<v.1, v.1>) )
+  ]->
+   [ State_112( ~prog_, v.1 ) ]
+
+  /*
+  rule (modulo AC) letabunboxboxvv_2_11[color=#ffffff,
+                                        process="let <a.1, b.1>=unbox(box(<v.1, v.1>))", issapicrule,
+                                        role='Process']:
+     [ Let_111( box(<v, v>), ~prog_, v ) ]
+    --[ ProgressTo_112( ~prog_ ), Restr_letabunboxboxvv_2_11_1( box(<v, v>) )
+    ]->
+     [ State_112( ~prog_, v ) ]
+  */
+
+restriction Restr_letabunboxboxvv_4_11_1:
+  "∀ x #NOW.
+    (Restr_letabunboxboxvv_4_11_1( x ) @ #NOW) ⇒ (∀ a b. (<a, b> = x) ⇒ (⊥))"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ x #NOW.
+    (Restr_letabunboxboxvv_4_11_1( x ) @ #NOW) ⇒ (∀ a b. (<a, b> = x) ⇒ (⊥))"
+  */
+
+rule (modulo E) letabunboxboxvv_4_11[color=#ffffff,
+                                     process="let <a.1, b.1>=unbox(box(<v.1, v.1>))", issapicrule,
+                                     role='Process']:
+   [ Let_1101( destructor.4, ~prog_, v.1 ) ]
+  --[
+  ProgressTo_112( ~prog_ ), Restr_letabunboxboxvv_4_11_1( destructor.4 )
+  ]->
+   [ State_112( ~prog_, v.1 ) ]
+
+  /*
+  rule (modulo AC) letabunboxboxvv_4_11[color=#ffffff,
+                                        process="let <a.1, b.1>=unbox(box(<v.1, v.1>))", issapicrule,
+                                        role='Process']:
+     [ Let_1101( destructor, ~prog_, v ) ]
+    --[ ProgressTo_112( ~prog_ ), Restr_letabunboxboxvv_4_11_1( destructor )
+    ]->
+     [ State_112( ~prog_, v ) ]
+  */
+
+rule (modulo E) lookupcellasv_1_1[color=#ffffff,
+                                  process="lookup 'cell' as v.1", no_derivcheck, issapicrule,
+                                  role='Process']:
+   [ State_1( ~prog_ ) ]
+  --[ ProgressTo_12( ~prog_ ), IsNotSet( 'cell' ) ]->
+   [ ]
+
+  /* has exactly the trivial AC variant */
+
+restriction set_in:
+  "∀ x y #t3.
+    (IsIn( x, y ) @ #t3) ⇒
+    (∃ #t2.
+      ((Insert( x, y ) @ #t2) ∧ (#t2 < #t3)) ∧
+      (∀ #t1 yp.
+        (Insert( x, yp ) @ #t1) ⇒ (((#t1 < #t2) ∨ (#t1 = #t2)) ∨ (#t3 < #t1))))"
+
+  /*
+  expanded formula:
+  "∀ x y #t3.
+    (IsIn( x, y ) @ #t3) ⇒
+    (∃ #t2.
+      ((Insert( x, y ) @ #t2) ∧ (#t2 < #t3)) ∧
+      (∀ #t1 yp.
+        (Insert( x, yp ) @ #t1) ⇒ (((#t1 < #t2) ∨ (#t1 = #t2)) ∨ (#t3 < #t1))))"
+  */
+
+restriction set_notin:
+  "∀ x #t3.
+    (IsNotSet( x ) @ #t3) ⇒ (∀ #t1 y. (Insert( x, y ) @ #t1) ⇒ (#t3 < #t1))"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ x #t3.
+    (IsNotSet( x ) @ #t3) ⇒ (∀ #t1 y. (Insert( x, y ) @ #t1) ⇒ (#t3 < #t1))"
+  */
+
+restriction single_session:
+  "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
+  */
+
+restriction Progress__to_1111_or_112_or_12:
+  "∀ prog_ #t.
+    (ProgressFrom_( prog_ ) @ #t) ⇒
+    ((∃ #t.1. ProgressTo_1111( prog_ ) @ #t.1) ∨
+     ((∃ #t.1. ProgressTo_112( prog_ ) @ #t.1) ∨
+      (∃ #t.1. ProgressTo_12( prog_ ) @ #t.1)))"
+
+  /*
+  expanded formula:
+  "∀ prog_ #t.
+    (ProgressFrom_( prog_ ) @ #t) ⇒
+    ((∃ #t.1. ProgressTo_1111( prog_ ) @ #t.1) ∨
+     ((∃ #t.1. ProgressTo_112( prog_ ) @ #t.1) ∨
+      (∃ #t.1. ProgressTo_12( prog_ ) @ #t.1)))"
+  */
+
+restriction progressInit:
+  "∃ #t. Init( ) @ #t"
+
+  /*
+  expanded formula:
+  "∃ #t. Init( ) @ #t"
+  */
+
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.13.0
+Maude version 3.5.1
+Git revision: 5a753a172c7984e9403bc650a37a8223367bc1c5, branch: sapic-destructors
+Compiled at: 2026-09-25 19:30:59.558380567 UTC
+*/
+
+end
+/* Output
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/regression/trace/sapic-lookup-destructor-progress.spthy
+
+  output:          examples/regression/trace/sapic-lookup-destructor-progress.spthy.tmp
+  processing time: 0.17s
+  
+  reachable (exists-trace): verified (7 steps)
+  value_preserved (all-traces): verified (6 steps)
+
+==============================================================================
+*/

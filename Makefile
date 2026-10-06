@@ -483,10 +483,28 @@ accountability-case-studies:	$(ACCOUNTABILITY_CS_TARGETS)
 ##########################
 
 FAST_REGRESSION_CASE_STUDIES=issue446-1.spthy issue446-2.spthy issue753-4.spthy issue753-5.spthy issue753-6.spthy issue834.spthy issue777.spthy issue770.spthy issue914.spthy negated-equivalence.spthy
+# SAPIC regressions shared by the fast and the slow suites
+COMMON_REGRESSION_CASE_STUDIES=
+# SAPIC let and destructor evaluation
+COMMON_REGRESSION_CASE_STUDIES+=soundness-sapic-destructor-failure-chain.spthy soundness-sapic-destructor-variable-clash.spthy soundness-sapic-destructor-alternatives.spthy soundness-sapic-let-match-else.spthy soundness-sapic-destructor-patterns.spthy soundness-sapic-nested-destructors.spthy soundness-sapic-nested-destructor-failure-chain.spthy soundness-sapic-destructor-generated-binders.spthy soundness-sapic-destructor-nonvariable-result.spthy
+# SAPIC progress translation of lets
+COMMON_REGRESSION_CASE_STUDIES+=soundness-sapic-progress-let.spthy soundness-sapic-nested-destructor-progress.spthy
+# SAPIC secret channels
+COMMON_REGRESSION_CASE_STUDIES+=soundness-sapic-channel-alias.spthy soundness-sapic-channel-embedded.spthy soundness-sapic-channel-pattern.spthy
+# SAPIC state cells
+COMMON_REGRESSION_CASE_STUDIES+=soundness-sapic-state-phases.spthy soundness-sapic-state-parallel-independent.spthy soundness-sapic-state-parallel-boundaries.spthy soundness-sapic-state-overwrite.spthy soundness-sapic-state-repeated-insert.spthy soundness-sapic-unlocked-lookup.spthy soundness-sapic-state-alias.spthy soundness-sapic-state-delete.spthy soundness-sapic-state-double-insert.spthy soundness-sapic-state-equivalent-key.spthy soundness-sapic-state-supported.spthy
+# SAPIC binder scopes, process calls and embedded rules
+COMMON_REGRESSION_CASE_STUDIES+=soundness-sapic-pattern-parameter.spthy
+COMMON_REGRESSION_CASE_STUDIES+=soundness-sapic-pattern-export.spthy
+COMMON_REGRESSION_CASE_STUDIES+=sapic-open-process-export.spthy sapic-inline-export-locations.spthy
+COMMON_REGRESSION_CASE_STUDIES+=sapic-inferred-lock-types.spthy sapic-inferred-location-types.spthy sapic-else-binding-scope.spthy sapic-msr-call-binding-reuse.spthy soundness-sapic-binder-scope.spthy soundness-sapic-process-call-capture.spthy sapic-process-call-caller-scope.spthy sapic-nested-call-caller-scope.spthy sapic-process-call-location-scope.spthy sapic-embedded-msr-binding.spthy
+COMMON_REGRESSION_CASE_STUDIES+=sapic-lookup-destructor-progress.spthy
+FAST_REGRESSION_CASE_STUDIES+=$(COMMON_REGRESSION_CASE_STUDIES)
 FAST_REGRESSION_TARGETS=$(subst .spthy,_analyzed.spthy,$(addprefix case-studies$(SUBDIR)regression/trace/,$(FAST_REGRESSION_CASE_STUDIES)))
 
 
 REGRESSION_CASE_STUDIES=issue216.spthy issue193.spthy issue310.spthy issue519.spthy issue527.spthy issue515.spthy
+REGRESSION_CASE_STUDIES+=$(COMMON_REGRESSION_CASE_STUDIES)
 REGRESSION_TARGETS=$(subst .spthy,_analyzed.spthy,$(addprefix case-studies$(SUBDIR)regression/trace/,$(REGRESSION_CASE_STUDIES)))
 
 SEQDFS_CASE_STUDIES=seqdfsneeded.spthy

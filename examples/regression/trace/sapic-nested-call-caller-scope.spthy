@@ -1,0 +1,54 @@
+theory SapicNestedCallCallerScope
+begin
+
+// Read(y) freshens its local input while Nested is being defined. Its chosen
+// name may collide with a variable bound later at the eventual caller.
+let Read(tag,x) = in(y); event Local(tag,x,y)
+let Nested(tag,y) = Read(tag,y)
+let Deep(tag,a) = Nested(tag,a)
+
+// The same issue applies to pattern, let, lookup and fresh-name binders.
+let Pattern(x) = in(<y,z>); event Local('pattern',x,y)
+let NestedPattern(y) = Pattern(y)
+let LetValue(x) = let y = 'local' in event Local('let',x,y)
+let NestedLet(y) = LetValue(y)
+let LookupValue(x) = lookup 'cell' as y in event Local('lookup',x,y)
+let NestedLookup(y) = LookupValue(y)
+let FreshValue(x) = new ~y; event Local('fresh',x,~y)
+let NestedFresh(~y) = FreshValue(~y)
+let Embedded(x) = [In(y)] --[ Local('embedded',x,y) ]-> []
+let NestedEmbedded(y) = Embedded(y)
+
+process:
+  (in(a); in(y.1); event Caller('input',a,y.1); Nested('input',a)) |
+  (in(a); in(y.1:bitstring); event Caller('typed',a,y.1); Nested('typed',a)) |
+  (in(a); in(y.1); in(y.2); event Caller('deep',a,y.2); Deep('deep',a)) |
+  (in(a); in(y.1); event Caller('pattern',a,y.1); NestedPattern(a)) |
+  (in(a); in(y.1); event Caller('let',a,y.1); NestedLet(a)) |
+  (insert 'cell','local'; in(a); in(y.1);
+     event Caller('lookup',a,y.1); NestedLookup(a)) |
+  (new ~a; new ~y.1; event Caller('fresh',~a,~y.1); NestedFresh(~a)) |
+  (in(a); in(y.1); event Caller('embedded',a,y.1); NestedEmbedded(a))
+
+// Each branch must pass --quit-on-warning. Distinct caller and local values
+// check that reallocating a generated name preserves the argument and binder.
+lemma input_independent: exists-trace
+  "Ex #i #j. Caller('input','a','b')@i & Local('input','a','c')@j & i<j"
+lemma typed_input_independent: exists-trace
+  "Ex #i #j. Caller('typed','a','b')@i & Local('typed','a','c')@j & i<j"
+lemma deeper_call: exists-trace
+  "Ex #i #j. Caller('deep','a','b')@i & Local('deep','a','c')@j & i<j"
+lemma pattern_input: exists-trace
+  "Ex #i. Local('pattern','a','c')@i"
+lemma let_value: exists-trace
+  "Ex #i. Local('let','a','local')@i"
+lemma lookup_value: exists-trace
+  "Ex #i. Local('lookup','a','local')@i"
+lemma fresh_values_distinct: exists-trace
+  "Ex a b c #i #j. Caller('fresh',a,b)@i & Local('fresh',a,c)@j &
+     not(a=c) & not(b=c) & i<j"
+lemma embedded_input: exists-trace
+  "Ex #i. Local('embedded','a','c')@i"
+lemma argument_preserved:
+  "All tag x y #i. Local(tag,x,y)@i ==> Ex z #j. Caller(tag,x,z)@j & j<i"
+end

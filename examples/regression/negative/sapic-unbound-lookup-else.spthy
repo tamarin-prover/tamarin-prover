@@ -1,0 +1,7 @@
+theory SapicUnboundLookupElse
+begin
+
+// A lookup's result binder is not in scope in its failure branch.
+process: lookup 'key' as x in out(x) else out(x)
+
+end

@@ -1,0 +1,52 @@
+{
+  "tests": [
+    {
+      "name": "reserved-pure-state",
+      "args": [
+        "--prove",
+        "--quit-on-warning"
+      ],
+      "exit_code": 1,
+      "contains": [
+        "The fact name L_PureState is reserved"
+      ]
+    },
+    {
+      "name": "ordinary-pure-state",
+      "args": [
+        "--prove",
+        "--quit-on-warning",
+        "-DNO_OPT"
+      ],
+      "contains": [
+        "ordered (exists-trace): verified",
+        "impossible (all-traces): falsified - found trace"
+      ]
+    },
+    {
+      "name": "reserved-cell-locked",
+      "args": [
+        "--prove",
+        "--quit-on-warning",
+        "-DLOCKED"
+      ],
+      "exit_code": 1,
+      "contains": [
+        "The fact name L_CellLocked is reserved"
+      ]
+    },
+    {
+      "name": "ordinary-cell-locked",
+      "args": [
+        "--prove",
+        "--quit-on-warning",
+        "-DNO_OPT",
+        "-DLOCKED"
+      ],
+      "contains": [
+        "ordered (exists-trace): verified",
+        "impossible (all-traces): falsified - found trace"
+      ]
+    }
+  ]
+}

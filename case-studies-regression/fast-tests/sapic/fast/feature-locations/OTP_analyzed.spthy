@@ -2627,9 +2627,9 @@ rule (modulo E) inshare_0_111111111121211[color=#658040,
      [ State_1111111111212111( cu, pc, pw, share, skV ) ]
   */
 
-rule (modulo E) letcyphersigneddsharedshare_0_1111111111212111[color=#ffffff,
+rule (modulo E) letcyphersigneddsharedshare_0_1111111111212111[color=#658040,
                                                                process="let <cypher.2, signed.2>=dshared(share.1)",
-                                                               issapicrule, role='Process']:
+                                                               issapicrule, role='server']:
    [ State_1111111111212111( cu.1, pc.1, pw.1, share.1, skV.1 ) ]
   -->
    [
@@ -2638,9 +2638,9 @@ rule (modulo E) letcyphersigneddsharedshare_0_1111111111212111[color=#ffffff,
    ]
 
   /*
-  rule (modulo AC) letcyphersigneddsharedshare_0_1111111111212111[color=#ffffff,
+  rule (modulo AC) letcyphersigneddsharedshare_0_1111111111212111[color=#658040,
                                                                   process="let <cypher.2, signed.2>=dshared(share.1)",
-                                                                  issapicrule, role='Process']:
+                                                                  issapicrule, role='server']:
      [ State_1111111111212111( cu, pc, pw, share, skV ) ]
     -->
      [ Let_11111111112121111( z, cu, pc, pw, share, skV ) ]
@@ -2652,9 +2652,9 @@ rule (modulo E) letcyphersigneddsharedshare_0_1111111111212111[color=#ffffff,
        z     = x.8
   */
 
-rule (modulo E) letcyphersigneddsharedshare_1_1111111111212111[color=#ffffff,
+rule (modulo E) letcyphersigneddsharedshare_1_1111111111212111[color=#658040,
                                                                process="let <cypher.2, signed.2>=dshared(share.1)",
-                                                               issapicrule, role='Process']:
+                                                               issapicrule, role='server']:
    [
    Let_11111111112121111( <cypher.2, signed.2>, cu.1, pc.1, pw.1, share.1,
                           skV.1
@@ -2668,9 +2668,9 @@ rule (modulo E) letcyphersigneddsharedshare_1_1111111111212111[color=#ffffff,
    ]
 
   /*
-  rule (modulo AC) letcyphersigneddsharedshare_1_1111111111212111[color=#ffffff,
+  rule (modulo AC) letcyphersigneddsharedshare_1_1111111111212111[color=#658040,
                                                                   process="let <cypher.2, signed.2>=dshared(share.1)",
-                                                                  issapicrule, role='Process']:
+                                                                  issapicrule, role='server']:
      [ Let_11111111112121111( <cypher, signed>, cu, pc, pw, share, skV ) ]
     -->
      [ State_11111111112121111( cu, pc, pw, share, skV, cypher, signed ) ]
@@ -3652,8 +3652,8 @@ restriction single_session:
 Generated from:
 Tamarin version 1.13.0
 Maude version 3.5.1
-Git revision: c1fe108d23200a746bf6e1a82287edd921c94d4b, branch: fix-locations-report
-Compiled at: 2026-08-22 12:00:01.491656761 UTC
+Git revision: 5a753a172c7984e9403bc650a37a8223367bc1c5, branch: sapic-destructors
+Compiled at: 2026-09-25 19:30:59.558380567 UTC
 */
 
 end
@@ -3665,7 +3665,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-locations/OTP.spthy
 
   output:          examples/sapic/fast/feature-locations/OTP.spthy.tmp
-  processing time: 90.01s
+  processing time: 934.57s
   
   reachV (exists-trace): verified (7 steps)
   secrecy_key (all-traces): verified (8 steps)

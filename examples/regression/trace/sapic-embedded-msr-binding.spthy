@@ -1,0 +1,49 @@
+theory SapicEmbeddedMSRBinding
+begin
+
+// Issue #927: y is introduced by the embedded rule, while an x already
+// bound by the process must be matched rather than rebound and renamed.
+rule init:
+  [Fr(b)] --[Secret(b)]-> [S(b)]
+
+rule public_values:
+  [] --> [S('public'), Arg('expected','value'), Else('else')]
+
+let Good = new x; [S(y)] --[Bound(y)]-> []; out(y)
+let Bad = in(x); [S(x)] --[Matched(x)]-> []; out(x)
+
+// Parameters are matches too, including when substituted with a ground term
+// or a caller variable with the same name. y remains a new binding.
+let Argument(tag,x) = [Arg(x,y)] --[ArgumentMatch(tag,x,y)]-> []; out(y)
+let Caller = in(x); event Requested(x); Argument('caller',x)
+
+// A success binder must not turn an else-branch binder into a match.
+let Failure = let <y,'expected'> = <'unused','wrong'> in 0
+              else [Else(y)] --[ElseBound(y)]-> []
+
+process: Good | Bad | Argument('ground','expected') | Argument('wrong','wrong') | Caller | Failure
+
+lemma binds_new_variable:
+  exists-trace "Ex x #i #j. Secret(x) @ i & Bound(x) @ j"
+
+lemma matches_public_value:
+  exists-trace "Ex #i. Matched('public') @ i"
+
+// Good can reveal a secret only after consuming its S token. Bad therefore
+// cannot consume that token by matching an attacker-supplied value.
+lemma does_not_rebind_input:
+  "All x #i. Matched(x) @ i ==> x = 'public'"
+
+lemma matches_argument:
+  exists-trace "Ex #i. ArgumentMatch('ground','expected','value') @ i"
+
+lemma does_not_rebind_argument:
+  "All x y #i. ArgumentMatch('wrong',x,y) @ i ==> F"
+
+lemma preserves_caller_argument:
+  "All x y #i. ArgumentMatch('caller',x,y) @ i ==> Ex #j. Requested(x) @ j & j < i"
+
+lemma binds_in_failure_branch:
+  exists-trace "Ex #i. ElseBound('else') @ i"
+
+end

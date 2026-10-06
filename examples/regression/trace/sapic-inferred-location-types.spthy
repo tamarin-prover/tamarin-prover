@@ -1,0 +1,21 @@
+theory SapicInferredLocationTypes
+begin
+builtins: locations-report
+functions: f(bitstring):bitstring
+predicates: Report(x,l) <=> T
+
+// f(s) refines the fresh name's type after the continuation is reconstructed.
+// Report expansion must use that same type in the location, so state-channel
+// allocation recognises the report-based cell as local to this fresh name.
+process:
+  new s;
+  out(f(s));
+  (insert report('message'),'value';
+   lookup report('message') as x in event Done(x))@s
+
+lemma reaches_done:
+  exists-trace "Ex #i. Done('value')@i"
+
+lemma correct_value:
+  "All x #i. Done(x)@i ==> x = 'value'"
+end

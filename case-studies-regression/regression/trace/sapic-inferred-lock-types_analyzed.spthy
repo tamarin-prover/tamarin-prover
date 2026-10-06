@@ -1,0 +1,165 @@
+theory SapicInferredLockTypes
+
+begin
+
+// Function signature and definition of the equational theory E
+
+functions: f/1, fst/1, pair/2, snd/1
+equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
+
+heuristic: p
+
+lemma reaches_done:
+  exists-trace "∃ #i. Done( ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #i. (Done( ) @ #i)"
+*/
+simplify
+solve( State_1111( lock, s ) ▶₀ #i )
+  case unlocksa_0_111
+  SOLVED // trace found
+qed
+
+rule (modulo E) Init[color=#ffffff, process="new s.1:a;", issapicrule,
+                     role='Process']:
+   [ ] --[ Init( ) ]-> [ State_( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) newsa_0_[color=#ffffff, process="new s.1:a;",
+                         issapicrule, role='Process']:
+   [ State_( ), Fr( s.1 ) ] --> [ State_1( s.1 ) ]
+
+  /*
+  rule (modulo AC) newsa_0_[color=#ffffff, process="new s.1:a;",
+                            issapicrule, role='Process']:
+     [ State_( ), Fr( s ) ] --> [ State_1( s ) ]
+  */
+
+rule (modulo E) locksa_0_1[color=#ffffff, process="lock s.1:a;",
+                           issapicrule, role='Process']:
+   [ State_1( s.1 ), Fr( lock ) ]
+  --[ Lock_0( '0', lock, s.1 ), Lock( '0', lock, s.1 ) ]->
+   [ State_11( lock, s.1 ) ]
+
+  /*
+  rule (modulo AC) locksa_0_1[color=#ffffff, process="lock s.1:a;",
+                              issapicrule, role='Process']:
+     [ State_1( s ), Fr( lock ) ]
+    --[ Lock_0( '0', lock, s ), Lock( '0', lock, s ) ]->
+     [ State_11( lock, s ) ]
+  */
+
+rule (modulo E) outfsa_0_11[color=#ffffff, process="out(f(s.1:a));",
+                            issapicrule, role='Process']:
+   [ State_11( lock, s.1 ) ] --> [ State_111( lock, s.1 ), Out( f(s.1) ) ]
+
+  /*
+  rule (modulo AC) outfsa_0_11[color=#ffffff, process="out(f(s.1:a));",
+                               issapicrule, role='Process']:
+     [ State_11( lock, s ) ] --> [ State_111( lock, s ), Out( f(s) ) ]
+  */
+
+rule (modulo E) unlocksa_0_111[color=#ffffff, process="unlock s.1:a;",
+                               issapicrule, role='Process']:
+   [ State_111( lock, s.1 ) ]
+  --[ Unlock_0( '0', lock, s.1 ), Unlock( '0', lock, s.1 ) ]->
+   [ State_1111( lock, s.1 ) ]
+
+  /*
+  rule (modulo AC) unlocksa_0_111[color=#ffffff, process="unlock s.1:a;",
+                                  issapicrule, role='Process']:
+     [ State_111( lock, s ) ]
+    --[ Unlock_0( '0', lock, s ), Unlock( '0', lock, s ) ]->
+     [ State_1111( lock, s ) ]
+  */
+
+rule (modulo E) eventDone_0_1111[color=#ffffff, process="event Done( );",
+                                 issapicrule, role='Process']:
+   [ State_1111( lock, s.1 ) ] --[ Done( ) ]-> [ State_11111( lock, s.1 ) ]
+
+  /*
+  rule (modulo AC) eventDone_0_1111[color=#ffffff,
+                                    process="event Done( );", issapicrule, role='Process']:
+     [ State_1111( lock, s ) ] --[ Done( ) ]-> [ State_11111( lock, s ) ]
+  */
+
+rule (modulo E) p_0_11111[color=#ffffff, process="0", issapicrule,
+                          role='Process']:
+   [ State_11111( lock, s.1 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_11111[color=#ffffff, process="0", issapicrule,
+                             role='Process']:
+     [ State_11111( lock, s ) ] --> [ ]
+  */
+
+restriction single_session:
+  "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
+  */
+
+restriction locking_0:
+  "∀ p pp l x lp #t1 #t3.
+    ((Lock_0( p, l, x ) @ #t1) ∧ (Lock( pp, lp, x ) @ #t3)) ⇒
+    ((((#t1 < #t3) ∧
+       (∃ #t2.
+         (((((Unlock_0( p, l, x ) @ #t2) ∧ (#t1 < #t2)) ∧ (#t2 < #t3)) ∧
+           (∀ #t0 pp.1. (Unlock( pp.1, l, x ) @ #t0) ⇒ (#t0 = #t2))) ∧
+          (∀ pp.1 lpp #t0.
+            (Lock( pp.1, lpp, x ) @ #t0) ⇒
+            (((#t0 < #t1) ∨ (#t0 = #t1)) ∨ (#t2 < #t0)))) ∧
+         (∀ pp.1 lpp #t0.
+           (Unlock( pp.1, lpp, x ) @ #t0) ⇒
+           (((#t0 < #t1) ∨ (#t2 < #t0)) ∨ (#t2 = #t0))))) ∨
+      (#t3 < #t1)) ∨
+     (#t1 = #t3))"
+
+  /*
+  expanded formula:
+  "∀ p pp l x lp #t1 #t3.
+    ((Lock_0( p, l, x ) @ #t1) ∧ (Lock( pp, lp, x ) @ #t3)) ⇒
+    ((((#t1 < #t3) ∧
+       (∃ #t2.
+         (((((Unlock_0( p, l, x ) @ #t2) ∧ (#t1 < #t2)) ∧ (#t2 < #t3)) ∧
+           (∀ #t0 pp.1. (Unlock( pp.1, l, x ) @ #t0) ⇒ (#t0 = #t2))) ∧
+          (∀ pp.1 lpp #t0.
+            (Lock( pp.1, lpp, x ) @ #t0) ⇒
+            (((#t0 < #t1) ∨ (#t0 = #t1)) ∨ (#t2 < #t0)))) ∧
+         (∀ pp.1 lpp #t0.
+           (Unlock( pp.1, lpp, x ) @ #t0) ⇒
+           (((#t0 < #t1) ∨ (#t2 < #t0)) ∨ (#t2 = #t0))))) ∨
+      (#t3 < #t1)) ∨
+     (#t1 = #t3))"
+  */
+
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.13.0
+Maude version 3.5.1
+Git revision: bf885ca9abf478867fbdbbf3ad80e4da85370e01 (with uncommited changes), branch: HEAD
+Compiled at: 2026-10-04 11:58:25.282416529 UTC
+*/
+
+end
+/* Output
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/regression/trace/sapic-inferred-lock-types.spthy
+
+  output:          examples/regression/trace/sapic-inferred-lock-types.spthy.tmp
+  processing time: 0.19s
+  
+  reaches_done (exists-trace): verified (3 steps)
+
+==============================================================================
+*/

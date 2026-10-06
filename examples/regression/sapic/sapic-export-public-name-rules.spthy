@@ -1,0 +1,11 @@
+theory SapicExportPublicNameRules
+begin
+
+// Rule terms, embedded actions, SAPIC terms and queries must share one name
+// and one declaration for the same public constant.
+rule Other: [In(va_5f_b), In('a_b')] --[ Other('a.b') ]-> [Out(va_5f_b)]
+process: [In('a.b')] --[ Seen('a.b') ]-> []; out('a.b')
+lemma names: "All va_5f_b #i. Other(va_5f_b)@i ==> va_5f_b = 'a_b'"
+lemma secrecy: "not (Ex #i. K('a.b')@i)"
+
+end

@@ -1,0 +1,20 @@
+theory SapicNestedClosedRebinding
+begin
+
+// Preserving C's scope must not turn two declarations in that same scope
+// into two distinct variables when another definition expands C().
+#ifdef INPUT
+let C() = in(x); in(x); event Seen(x)
+#else
+let C() = new x; new x; event Seen(x)
+#endif
+
+#ifdef CLOSED_WRAPPER
+let O() = C()
+process: O()
+#else
+let O = C()
+process: O
+#endif
+
+end

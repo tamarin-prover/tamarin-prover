@@ -1,0 +1,12 @@
+{
+  "tests": [
+    {
+      "name": "typed-export",
+      "args": ["--output-module=spthytyped", "--quit-on-warning"],
+      "matches": [
+        {"regex": "\\bP\\s*\\(", "max": 0, "theory_only": true},
+        {"regex": "x\\.[0-9]+:a", "min": 3, "max": 3, "theory_only": true}
+      ]
+    }
+  ]
+}

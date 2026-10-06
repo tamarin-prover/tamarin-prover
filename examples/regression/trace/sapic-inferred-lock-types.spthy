@@ -1,0 +1,20 @@
+theory SapicInferredLockTypes
+begin
+
+functions: f(a):a
+
+// Issue #932: typing visits the continuation before reconstructing each action.
+// The unlock was left untyped when f(s) subsequently refined s to type a,
+// so it no longer matched the typed lock and translation crashed.
+process:
+  new s;
+  lock s;
+  out(f(s));
+  unlock s;
+  event Done();
+  0
+
+lemma reaches_done:
+  exists-trace "Ex #i. Done() @ i"
+
+end

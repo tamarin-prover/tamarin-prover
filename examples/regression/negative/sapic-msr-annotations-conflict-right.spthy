@@ -1,0 +1,7 @@
+theory SapicMsrAnnotationsConflictRight
+begin
+
+// Both occurrences bind the same variable, so their types must agree.
+process: [In(<x:alpha,x:beta>)] --> [Out(x)]
+
+end
