@@ -1,6 +1,6 @@
 # RegressionTests - CI for Tamarin Prover
 
-RegressionTests is a script that runs tests for Tamarin either locally or on [Travis](https://travis-ci.com/github/tamarin-prover/tamarin-prover). 
+RegressionTests is a script that runs tests for Tamarin either locally or in [GitHub Actions](../.github/workflows/tamarin-integration-test.yaml).
 
 
 
@@ -23,67 +23,97 @@ $ python3 regressionTests.py
 ## What does the script do?
 
 - it calls `stack install` (prevented by `-noi`)
+- it runs the Tree-sitter parser tests if `-p` is given
+- it discovers `.spthy.test.json` companion files under `examples/` and runs their command checks (unless `-nom` is given)
 - it runs the case studies (unless `-nom` is given), using `make -j` for parallel execution:
   - `make fast-case-studies sapic-case-studies-fast FAST=y` by default
   - `make case-studies` if `-s` (slow) is given
 - for each `.spthy` in the folder `case-studies`
   - it searches for the equivalent in `case-studies-regression` (or another folder specified by `-d`)
+  - it checks that the generated output can be parsed, and that printing and reparsing the source with `--parse-only` preserves its output (prevented by `-nopt`)
   - it parses the steps and times for both files
   - it assures that the files have the same amount of lemmas and they have the same outcome (verified vs. trace-found)
 - it outputs the comparison of steps and times depending on the level of verbosity `-v`
-- it repeats running the regression tests `-r` times to provide more confidence in time measurements
-- it returns `1` if some result/stepcount/file missmatches or other major problems happen
+- it repeats the command checks, case-study generation and comparisons `-r` times to provide more confidence in time measurements
+- it returns `0` if the checks succeed, or `1` if a check fails or results, step counts or files do not match
+
+With `--command-tests-only`, it runs only the command checks after installation,
+skipping Tree-sitter tests, case-study generation and ordinary output comparisons.
+`-nom` instead compares existing case-study outputs without generating new ones;
+it still runs their output-parsing checks unless `-nopt` is also given.
+These flags cannot be used together.
 
 Warning:
-- The make command with can take more than an hour to run, consider `-j` if you run on a server with many cores
+- The make command can take more than an hour to run, consider `-j` if you run on a server with many cores
 - The tool does not show any differences in the proofs if the step count didn't change
 
 
 
 ## Arguments
 
-Here is the output of `python3 regressionTest.py -h`:
+Here is the output of `python3 regressionTests.py -h`:
 
 ```
 usage: regressionTests.py [-h] [-s] [-noi] [-nom] [-j JOBS] [-d DIRECTORY]
-                          [-r REPEAT] [-v VERBOSE]
+                          [-r REPEAT] [-v VERBOSE] [-p] [-nopt]
+                          [--no-sapic-output-parse-test]
+                          [--command-tests-only [FILE ...]]
+                          [--tamarin TAMARIN]
 
-optional arguments:
+options:
   -h, --help            show this help message and exit
   -s, --slow            Run slow tests (instead of fast tests)
   -noi, --no-install    Do not call 'stack install' before starting the tests
-  -nom, --no-make       Do not run regression tests, i.e., do not call 'make case-studies'
-  -j JOBS, --jobs JOBS  The amount of Tamarin instances used simultaneously. Each Tamarin instance should have 3 threads and 16GB RAM available
-  -d DIRECTORY, --directory DIRECTORY
+  -nom, --no-make       Skip command checks and case-study generation; compare existing outputs
+  -j, --jobs JOBS       The amount of Tamarin instances used simultaneously. Each Tamarin instance should have 3 threads and 16GB RAM available
+  -d, --directory DIRECTORY
                         The directory to compare the test results with. The default is case-studies-regression
-  -r REPEAT, --repeat REPEAT
-                        Repeat everything r times (except for 'stack install'). This gives more confidence in time measurements
-  -v VERBOSE, --verbose VERBOSE
-                        Level of verbosity, values are from 0 to 5. Default is 2
+  -r, --repeat REPEAT   Repeat everything r times (except for 'stack install'). This gives more confidence in time measurements
+  -v, --verbose VERBOSE
+                        Level of verbosity, values are from 0 to 6. Default is 3
                         0: show only critical error output and changes of verified vs. trace found
                         1: show summary of time and step differences
                         2: show step differences for changed lemmas
-                        3: show time differences for all lemmas
-                        4: show shell command output
-                        5: show diff output if the corresponding proofs changed
+                        3: show step differences for changed lemmas and changed functions, rules, equations, warning, builtins and macros
+                        4: show time differences for all lemmas
+                        5: show shell command output
+                        6: show diff output if the corresponding proofs changed
+  -p, --parser-test     Run the parser tests.
+  -nopt, --no-output-parse-test
+                        Skip the output parse tests and the --parse-only round-trip tests
+  --no-sapic-output-parse-test
+                        Disable SAPIC/accountability output parse tests
+  --command-tests-only [FILE ...]
+                        Run only command checks (all sidecars, or the specified .spthy.test.json files)
+  --tamarin TAMARIN     Tamarin executable (default: TAMARIN environment variable or tamarin-prover)
 ```
 
 
 
 ## Adding new files to test
 
-To add new files to test, you have to put a reference file in the `case-studies-regression` directory. This reference file **must** **be** an output of a make command.
+For an ordinary case study, add the input under `examples/` and include it in
+the appropriate case-study list in the Makefile. Run that target and put its
+analysed output in the matching directory under `case-studies-regression/`.
+The reference file **must** be output from the make command.
 
-If you want to add it in fast-tests (and so in Travis), you need to add a Target in the Makefile after `fast-case-studies` and to add the reference file in the `case-studies-regression/fast-tests` subdirectory. The CI offers the for download in the action "Store case-studies as artifacts".
+For a fast case study (also run in CI), include it in a list used by
+`fast-case-studies` or `sapic-case-studies-fast`, and generate it with `FAST=y`.
+Put its reference output under `case-studies-regression/fast-tests/`. Slow
+reference outputs go under `case-studies-regression/` without `fast-tests/`.
 
+For a command check, add `<example>.spthy.test.json` beside the input under
+`examples/`. These files are discovered automatically; no Makefile entry is
+needed just to run a command check. Tests that check an exit status or output
+assertions do not need a reference file. Tests using `checks` or `baseline`
+do need one; see [Command checks and expected failures](#command-checks-and-expected-failures).
 
+## CI
 
-## Travis
-
-To execute this script on Travis, you should think about two things:
-
-- Create all directories and subdirectories in `case-studies` in the `before_install` part of your file `.travis.yml`. Something like this: `  - mkdir -p case-studies case-studies/ake ...`
-- Add the following command in the script part: `python3 regressionTests.py -noi`
+[GitHub Actions](../.github/workflows/tamarin-integration-test.yaml) builds Tamarin
+and runs `python3 regressionTests.py -v 6 -noi`. This includes the command checks
+and fast case studies. Generated outputs and command-check logs are available
+in the `case-studies` artifact, including when the tests fail.
 
 
 
@@ -119,6 +149,11 @@ python3 regressionTests.py -noi --command-tests-only examples/regression/negativ
 python3 regressionTests.py -noi --command-tests-only --tamarin=/path/to/tamarin-prover
 ```
 
+Run these commands from the repository root. File arguments are relative to
+that working directory (so include `examples/`), or can be absolute paths to
+companion files under `examples/`. Diagnostic labels and artifact subdirectories
+use the path relative to `examples/`.
+
 `--tamarin` selects the executable for command checks, case-study generation,
 and existing output-parsing checks. It defaults to the `TAMARIN` environment
 variable, or `tamarin-prover` on `PATH`. Use `-noi` with an already built executable;
@@ -140,6 +175,10 @@ For example, `examples/regression/negative/missing-end.spthy.test.json` contains
   ]
 }
 ```
+
+`exit_code` is the expected process exit status, an integer from 0 to 255. It
+defaults to 0 (success). A nonzero value also requires at least one diagnostic
+substring in `contains`, and cannot be combined with `checks` or `baseline`.
 
 Both the exit status and every diagnostic substring must match. A timeout,
 signal, missing executable, or unrelated rejection fails the test. Use a stable
@@ -167,13 +206,15 @@ Use an existing regression baseline as the expected result:
 }
 ```
 
-For these checks, the baseline is inferred from the example's path under
-`examples/`: `ccs15/probEnc.spthy` uses `ccs15/probEnc_analyzed-diff.spthy`
-when `args` includes `--diff`, or `ccs15/probEnc_analyzed.spthy` otherwise.
+For these checks, the baseline is inferred from the input path with the
+`examples/` prefix removed: `examples/ccs15/probEnc.spthy` uses
+`ccs15/probEnc_analyzed-diff.spthy` when `args` includes `--diff`, or
+`ccs15/probEnc_analyzed.spthy` otherwise.
 Only set `baseline` to override this convention for a differently named target.
 
-These paths are relative to `case-studies-regression/fast-tests/`, or to
-`case-studies-regression/` with `--slow`. `--directory` changes that root using
+Baseline paths, including an explicit `baseline`, are relative to
+`case-studies-regression/fast-tests/`, or to `case-studies-regression/` with
+`--slow`. `--directory` changes that root using
 the same convention as ordinary regression comparisons. A missing baseline or
 missing proof summary fails the test. The runner never updates baselines.
 
