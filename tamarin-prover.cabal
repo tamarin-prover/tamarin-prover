@@ -186,6 +186,7 @@ executable tamarin-prover
       Web.Utils
 
       Test.ParserTests
+      Test.ProofTests
 
     default-extensions:
       DuplicateRecordFields

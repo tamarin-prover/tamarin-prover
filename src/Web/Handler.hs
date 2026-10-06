@@ -66,9 +66,11 @@ module Web.Handler
   )
 where
 
+import Theory.Constraint.Solver.Store (isStoreOpen)
 import Theory
   ( Theory(..), DiffTheory(..), ClosedTheory, ClosedDiffTheory, Side
   , ClosedTheory, ClosedDiffTheory, Side, Signature(..)
+  , SystemRef(..)
   , removeLemma
   , lookupLemmaIndex
   , addLemmaAtIndex
@@ -79,6 +81,8 @@ import Theory
   , openTheory
   , sorryProver
   , runAutoProver
+  , runAutoProverWith
+  , ProofStateRetention(..)
   , sorryDiffProver
   , runAutoDiffProver
   , prettyClosedTheory
@@ -269,7 +273,7 @@ addLemma idx maybelemmaIndex (Lemma n pt _ tq f ofm a lp) = withTheory idx $ \ti
             case maybelemmaIndex of
                 Nothing -> pure $ Left "Lemma not found"
                 Just lemmaIndex -> do
-                    let newThy = addLemmaAtIndex (Lemma n pt True tq f ofm a $ unproven (Just gsys)) lemmaIndex ti.theory
+                    let newThy = addLemmaAtIndex (Lemma n pt True tq f ofm a $ unproven (Just (InMem gsys))) lemmaIndex ti.theory
                     case newThy of
                          Nothing -> pure $ Left "lemma editing failed"
                          (Just nthy) -> Right <$> replaceTheory (Just ti) Nothing nthy ("modified" ++ show idx) idx
@@ -412,6 +416,9 @@ reloadTheoryFromFile filePath idx isDiff replaceTrace replaceDiff successRoute =
   case result of
     Left (ParserError e) ->
       mkAlert $ "Parse error while reloading " ++ typeName ++ ":\n\n" ++ filePath ++ "\n\n" ++ show e
+
+    Left (StoreContextError message) ->
+      mkAlert $ "Unable to reload " ++ typeName ++ ":\n\n" ++ message
     
     Left (WarningError report) -> mkAlert $ "Wellformedness errors while reloading " ++ typeName ++ ":\n\n"
       ++ filePath ++ "\n\n" ++
@@ -1079,7 +1086,7 @@ getTheoryPathMR idx path = do
     where
         go:: RenderUrl -> TheoryPath -> TheoryInfo -> HandlerFor WebUI Value
         go _ (TheoryMethod lemma proofPath i) ti = modifyTheory ti
-            (\thy -> pure $ applyMethodAtPath thy lemma proofPath ti.autoProver i)
+            (\thy -> evictSystemsFromLemmas (Just lemma) (applyMethodAtPath thy lemma proofPath ti.autoProver i))
             (\thy -> nextSmartThyPath thy (TheoryProof lemma proofPath))
             (JsonAlert "Sorry, but the prover failed on the selected method!")
 
@@ -1131,7 +1138,8 @@ getProverR (name, mkProver) idx path = do
   pure $ RepJson $ toContent jsonValue
   where
     go (TheoryProof lemma proofPath) ti = modifyTheory ti
-        (\thy -> pure $ applyProverAtPath thy lemma proofPath autoProver)
+        (\thy -> evictSystemsFromLemmas (Just lemma)
+                   (applyProverAtPath thy lemma proofPath autoProver))
         (`nextSmartThyPath` path)
         (JsonAlert $ "Sorry, but " <> name <> " failed!")
       where
@@ -1155,7 +1163,10 @@ getProverAllR (name, mkProver) idx = do
       where
         names thy = (._lName) <$> getLemmas thy
         autoProver = mkProver ti.autoProver
-        proveAll thy = pure $ foldM (\tha lemma -> applyProverAtPath tha lemma [] autoProver) thy $ names thy
+        proveAll thy = evictSystemsFromLemmas Nothing $
+          foldM (\tha lemma -> applyProverAtPath tha lemma [] autoProver)
+                thy
+                (names thy)
 
 -- | Run the some prover on a given proof path.
 getProverDiffR
@@ -1235,8 +1246,10 @@ getAutoProverR
   -> Bool  -- Quit on empty oracle
   -> TheoryPath
   -> Handler RepJson
-getAutoProverR idx extractor bound quitOnEmpty =
-  getProverR (fullName, runAutoProver . adapt) idx
+getAutoProverR idx extractor bound quitOnEmpty path = do
+  persistent <- liftIO isStoreOpen
+  let retention = if persistent then PersistProofStates else RetainProofStates
+  getProverR (fullName, runAutoProverWith retention . adapt) idx path
   where
     adapt autoProver = autoProver
       { apBound = actualBound
@@ -1265,8 +1278,10 @@ getAutoProverAllR
   -> Int  -- autoprover bound to use
   -> TheoryPath
   -> Handler RepJson
-getAutoProverAllR idx extractor bound _ =
-  getProverAllR (fullName, runAutoProver . adapt) idx
+getAutoProverAllR idx extractor bound _ = do
+  persistent <- liftIO isStoreOpen
+  let retention = if persistent then PersistProofStates else RetainProofStates
+  getProverAllR (fullName, runAutoProverWith retention . adapt) idx
   where
     adapt autoProver = autoProver { apBound = actualBound, apCut = extractor }
 
@@ -1692,7 +1707,7 @@ getDeleteStepR idx path = do
       (JsonAlert "Sorry, but removing the selected lemma failed!")
 
     go (TheoryProof lemma proofPath) ti = modifyTheory ti
-      (\thy -> pure $
+      (\thy -> evictSystemsFromLemmas (Just lemma) $
           applyProverAtPath thy lemma proofPath (sorryProver (Just "removed")))
       (const path)
       (JsonAlert "Sorry, but removing the selected proof step failed!")

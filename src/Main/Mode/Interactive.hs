@@ -34,6 +34,7 @@ import Web.Types (JSONGraphs, OutputCommand(..), OutputFormat(..))
 import Main.Console
 import Main.Environment
 import Main.TheoryLoader
+import Theory.Constraint.Solver.Store (initStore)
 
 
 ------------------------------------------------------------------------------
@@ -106,6 +107,9 @@ run thisMode as = case findArg "workDir" as <|> (takeDirectory <$> findArg "load
       _ <- case (readOutputCommand as).ocFormat of
           OutDot  -> ensureGraphVizDot as
           OutJSON -> ensureGraphCommand as
+
+      -- Open the store requested for proof-state eviction.
+      mapM_ initStore (findArg "persistProofState" as :: Maybe FilePath)
 
       port <- readPort
       let webUrl = serverUrl port

@@ -57,6 +57,12 @@ module Theory.Proof (
   -- ** Incremental proof construction
   , IncrementalProof
   , IncrementalDiffProof
+  , SystemRef(..)
+  , getSystemIfInMemory
+  , getOrRestoreSystem
+  , getOrRestoreProofSystem
+  , evictSystemsFromIncrementalProof
+  , restoreProofFromStore
   , Prover
   , DiffProver
   , runProver
@@ -83,8 +89,11 @@ module Theory.Proof (
   -- ** Explicit representation of a fully automatic prover
   , SolutionExtractor(..)
   , AutoProver(..)
+  , ProofStateRetention(..)
   , runAutoProver
   , runAutoDiffProver
+  , runAutoProverWith
+  , runAutoDiffProverWith
 
   -- ** Pretty Printing
   , prettyProof
@@ -112,6 +121,8 @@ import qualified Data.Map                         as M
 import           Data.Maybe
 -- import           Data.Monoid
 
+import           System.IO.Unsafe                 (unsafePerformIO)
+
 import           Debug.Trace
 
 import           Control.Basics
@@ -120,8 +131,16 @@ import qualified Control.Monad.State              as S
 import           Control.Parallel.Strategies
 
 import           Theory.Constraint.Solver
+import           Theory.Constraint.Solver.Store   (Ref, MethodEdge(..), isStoreOpen,
+                                                    readLemmaRootMaybe,
+                                                    readProofStepMaybe,
+                                                    readSystemLive,
+                                                    readSystemLiveMaybe,
+                                                    recordLemmaRoot,
+                                                    storeProofStep, storeSystem)
 import           Theory.Model
 import           Theory.Text.Pretty
+import qualified Data.Set as S
 
 
 
@@ -257,10 +276,10 @@ unproven = sorry Nothing
 
 -- | A proof denoting an unproven part of the proof.
 unprovenLookAhead :: ProofContext -> System -> IncrementalProof
-unprovenLookAhead ctxt sys = maybe (sorry Nothing (Just sys)) toNode (isFinished ctxt sys)
+unprovenLookAhead ctxt sys = maybe (sorry Nothing (Just (InMem sys))) toNode (isFinished ctxt sys)
   where
     toNode :: Result -> IncrementalProof
-    toNode r = LNode (ProofStep (Finished r) (Just sys)) M.empty
+    toNode r = LNode (ProofStep (Finished r) (Just (InMem sys))) M.empty
 
 -- | A proof denoting an unproven part of the proof.
 diffUnproven :: a -> DiffProof a
@@ -445,11 +464,11 @@ diffProofStepStatus (DiffProofStep _                (Just _)) = CompleteProof
 -- proof step without an annotated sequent. An unhandled case is denoted using
 -- the 'Sorry' proof method.
 checkProof :: ProofContext
-           -> (Int -> System -> Proof (Maybe System)) -- prover for new cases in depth
+           -> (Int -> System -> Proof (Maybe SystemRef)) -- prover for new cases in depth
            -> Int         -- ^ Original depth
            -> System
            -> Proof a
-           -> Proof (Maybe a, Maybe System)
+           -> Proof (Maybe a, Maybe SystemRef)
 checkProof ctxt prover =
     go
   where
@@ -462,7 +481,7 @@ checkProof ctxt prover =
         unhandledCase = mapProofInfo (Nothing,) . prover d
         checkChildren cases = mergeMapsWith unhandledCase noSystemPrf (go (d + 1)) cases cs
 
-        node m                 = LNode (ProofStep m (Just info, Just sys))
+        node m                 = LNode (ProofStep m (Just info, Just (InMem sys)))
         sorryNode reason cases = node (Sorry reason) (M.map noSystemPrf cases)
         noSystemPrf            = mapProofInfo (\i -> (Just i, Nothing))
 
@@ -497,9 +516,92 @@ checkDiffProof ctxt prover =
 -- Provers: the interface to the outside world.
 ------------------------------------------------------------------------------
 
+-- | A system in memory, stored and cached in memory, or only on disk.
+data SystemRef = InMem System | StoredInMem Ref System | OnDisk Ref
+    deriving( Eq, Ord, Show, Generic, NFData, Binary )
+
+-- | Return a system that is still in memory.
+getSystemIfInMemory :: SystemRef -> Maybe System
+getSystemIfInMemory (InMem sys)           = Just sys
+getSystemIfInMemory (StoredInMem _ sys)   = Just sys
+getSystemIfInMemory (OnDisk _)            = Nothing
+
+-- | Return a system, loading it from disk if necessary.
+getOrRestoreSystem :: SystemRef -> Maybe System
+getOrRestoreSystem (InMem sys)         = Just sys
+getOrRestoreSystem (StoredInMem _ sys) = Just sys
+getOrRestoreSystem (OnDisk r)          = unsafePerformIO (readSystemLiveMaybe r)
+{-# NOINLINE getOrRestoreSystem #-}
+
+getOrRestoreProofSystem :: IncrementalProof -> Maybe System
+getOrRestoreProofSystem proof = psInfo (root proof) >>= getOrRestoreSystem
+
+
+
+-- | Store every system in an incremental proof and retain only its reference.
+evictSystemsFromIncrementalProof :: IncrementalProof -> IO IncrementalProof
+evictSystemsFromIncrementalProof proof = do
+    storeOpen <- isStoreOpen
+    unless storeOpen $
+        error "evictSystemsFromIncrementalProof: store is not initialized"
+    evictProof proof
+  where
+    evictProof (LNode (ProofStep method systemInfo) childProofs) = do
+        evictedSystemInfo <- mapM evictSystemRef systemInfo
+        evictedChildProofs <- mapM evictProof childProofs
+
+        storeMethodEdge method evictedSystemInfo evictedChildProofs
+
+        pure (LNode (ProofStep method evictedSystemInfo)
+                    evictedChildProofs)
+
+    evictSystemRef (InMem system)      = OnDisk <$> storeSystem system
+    evictSystemRef (StoredInMem ref _) = pure (OnDisk ref)
+    evictSystemRef (OnDisk ref)        = pure (OnDisk ref)
+
+    storeMethodEdge Invalidated _ _ = pure ()
+    storeMethodEdge method (Just parentSystemRef) childProofs =
+        case traverse childRef childProofs of
+          Just childRefs -> storeProofStep (getStoredRef parentSystemRef) method childRefs
+          Nothing -> pure ()
+    storeMethodEdge _ _ _ =
+        pure ()
+
+    childRef childProof =
+        getStoredRef <$> psInfo (root childProof)
+
+
+-- | Rebuild a proof tree from the method edges recorded in the store.
+-- Nothing when the root has no recorded step, i.e. there is nothing to restore.
+restoreProofFromStore :: Ref -> IO (Maybe IncrementalProof)
+restoreProofFromStore rootRef = do
+    -- Try to get root node from Store first
+    rootStep <- readProofStepMaybe rootRef
+    case rootStep of
+      Nothing -> pure Nothing
+      Just _  -> Just <$> restoreNode S.empty rootRef
+  where
+    -- Restore
+    restoreNode ancestorRefs systemRef
+      | systemRef `S.member` ancestorRefs =
+          error ("restoreProofFromStore: cycle in stored method edges at "
+                 ++ show systemRef)
+      | otherwise = do
+          storedStep <- readProofStepMaybe systemRef
+          case storedStep of
+            -- A system that was stored but never expanded: the frontier where
+            -- the previous run stopped.
+            Nothing -> pure (LNode (ProofStep (Sorry (Just "not explored"))
+                                              (Just (OnDisk systemRef)))
+                                   M.empty)
+            Just (MethodEdge _ method caseRefs) -> do
+              childProofs <- traverse (restoreNode (S.insert systemRef ancestorRefs))
+                                      caseRefs
+              pure (LNode (ProofStep method (Just (OnDisk systemRef))) childProofs)
+
 -- | Incremental proofs are used to represent intermediate results of proof
 -- checking/construction.
-type IncrementalProof = Proof (Maybe System)
+type IncrementalProof = Proof (Maybe SystemRef)
 
 -- | Incremental diff proofs are used to represent intermediate results of proof
 -- checking/construction.
@@ -582,7 +684,7 @@ tryProver =  (`orelse` mempty)
 oneStepProver :: ProofMethod -> Prover
 oneStepProver method = Prover $ \ctxt _ se _ -> do
     cases <- execProofMethod ctxt method se
-    return $ LNode (ProofStep method (Just se)) (M.map (unprovenLookAhead ctxt) cases)
+    return $ LNode (ProofStep method (Just (InMem se))) (M.map (unprovenLookAhead ctxt) cases)
 
 -- | Try to execute one proof step using the given proof method.
 oneStepDiffProver :: DiffProofMethod -> DiffProver
@@ -592,7 +694,7 @@ oneStepDiffProver method = DiffProver $ \ctxt _ se _ -> do
 
 -- | Replace the current proof with a sorry step and the given reason.
 sorryProver :: Maybe String -> Prover
-sorryProver reason = Prover $ \_ _ se _ -> return $ sorry reason (Just se)
+sorryProver reason = Prover $ \_ _ se _ -> return $ sorry reason (Just (InMem se))
 
 -- | Replace the current proof with a sorry step and the given reason.
 sorryDiffProver :: Maybe String -> DiffProver
@@ -605,8 +707,11 @@ focus path prover =
     Prover $ \ctxt d _ prf ->
         modifyAtPath (prover' ctxt (d + length path)) path prf
   where
+    -- Restore from the store if this node was evicted: with eviction on, every
+    -- node below the root is OnDisk, so demanding an in-memory system here
+    -- fails every proof step at depth >= 1.
     prover' ctxt d prf = do
-        se <- psInfo (root prf)
+        se <- getOrRestoreProofSystem prf
         runProver prover ctxt d se prf
 
 -- | Apply a diff prover only to a sub-proof, fails if the subproof doesn't exist.
@@ -644,8 +749,10 @@ replaceSorryProver prover0 = Prover prover
   where
     prover ctxt d _ = return . replace
       where
-        replace prf@(LNode (ProofStep (Sorry _) (Just se)) _) =
-            fromMaybe prf $ runProver prover0 ctxt d se prf
+        replace prf@(LNode (ProofStep (Sorry _) (Just systemRef)) _) =
+            fromMaybe prf $ do
+                system <- getOrRestoreSystem systemRef
+                runProver prover0 ctxt d system prf
         replace (LNode ps cases) =
             LNode ps $ M.map replace cases
 
@@ -727,8 +834,20 @@ selectDiffTactic :: AutoProver -> DiffProofContext -> [Tactic ProofContext]
 selectDiffTactic prover ctx = fromMaybe [defaultTactic]
                                  (apDefaultTactic prover <|> L.get pcTactic (L.get dpcPCLeft ctx))
 
+-- | Choose whether proof nodes keep the states visited during search.
+-- 'ReleaseProofStates' lets unused states be collected and replays proof
+-- methods lazily if a caller requests a state.
+-- 'PersistProofStates' stores trace states, retaining newly generated children
+-- in memory until expansion. It requires an initialized store and is unsupported
+-- for diff proofs.
+data ProofStateRetention = RetainProofStates | ReleaseProofStates | PersistProofStates
+    deriving (Eq, Show)
+
 runAutoProver :: AutoProver -> Prover
-runAutoProver aut@(AutoProver _ _  bound cut _) =
+runAutoProver = runAutoProverWith RetainProofStates
+
+runAutoProverWith :: ProofStateRetention -> AutoProver -> Prover
+runAutoProverWith retention aut@(AutoProver _ _  bound cut _) =
     mapProverProof cutSolved $ maybe id boundProver bound autoProver
   where
     cutSolved = case cut of
@@ -742,7 +861,7 @@ runAutoProver aut@(AutoProver _ _  bound cut _) =
     -- tries to find one by itself.
     autoProver :: Prover
     autoProver = Prover $ \ctxt depth sysPath _ ->
-        return $ proveSystemDFS (selectHeuristic aut ctxt) (selectTactic aut ctxt) ctxt depth sysPath
+        return $ proveSystemDFS retention (selectHeuristic aut ctxt) (selectTactic aut ctxt) ctxt depth sysPath
 
     -- | Bound the depth of proofs generated by the given prover.
     boundProver :: Int -> Prover -> Prover
@@ -750,7 +869,12 @@ runAutoProver aut@(AutoProver _ _  bound cut _) =
         boundProofDepth b <$> runProver p ctxt d se prf
 
 runAutoDiffProver :: AutoProver -> DiffProver
-runAutoDiffProver aut@(AutoProver _ _ bound cut _) =
+runAutoDiffProver = runAutoDiffProverWith RetainProofStates
+
+runAutoDiffProverWith :: ProofStateRetention -> AutoProver -> DiffProver
+runAutoDiffProverWith PersistProofStates _ =
+    error "disk persistence is not supported for diff proofs"
+runAutoDiffProverWith retention aut@(AutoProver _ _ bound cut _) =
     mapDiffProverDiffProof cutSolved $ maybe id boundProver bound autoProver
   where
     cutSolved = case cut of
@@ -764,7 +888,7 @@ runAutoDiffProver aut@(AutoProver _ _ bound cut _) =
     -- tries to find one by itself.
     autoProver :: DiffProver
     autoProver = DiffProver $ \ctxt depth syss _ ->
-        return $ proveDiffSystemDFS (selectDiffHeuristic aut ctxt) (selectDiffTactic aut ctxt) ctxt depth syss
+        return $ proveDiffSystemDFS retention (selectDiffHeuristic aut ctxt) (selectDiffTactic aut ctxt) ctxt depth syss
 
     -- | Bound the depth of proofs generated by the given prover.
     boundProver :: Int -> DiffProver -> DiffProver
@@ -1014,34 +1138,152 @@ cutAfterFirstSorryDiff = snd . go False
 -- constraint system using a depth-first-search strategy to resolve the
 -- non-determinism wrt. what goal to solve next.  This proof can be of
 -- infinite depth, if the proof strategy loops.
-proveSystemDFS :: Heuristic ProofContext -> [Tactic ProofContext] -> ProofContext -> Int -> System -> Proof (Maybe System)
-proveSystemDFS heuristic tactics ctxt =
-    prove
+proveSystemDFS :: ProofStateRetention -> Heuristic ProofContext -> [Tactic ProofContext] -> ProofContext -> Int -> System -> Proof (Maybe SystemRef)
+proveSystemDFS retention heuristic tactics ctxt initialDepth initialSystem =
+    case retention of
+        RetainProofStates -> prove (Just . InMem) initialDepth initialSystem
+        ReleaseProofStates -> restoreStates initialSystem (prove (const ()) initialDepth initialSystem)
+        PersistProofStates -> proveSystemDFSEvicted heuristic tactics ctxt initialDepth initialSystem
   where
-    prove !depth sys =
-        case rankProofMethods (useHeuristic heuristic depth) tactics ctxt sys of
-          [] | finishedSubterms ctxt sys  -> node (Finished Solved) M.empty
-          []                              -> node (Finished Unfinishable) M.empty
-          (method, (cases, _expl)):_      -> node method cases
+    -- With 'ReleaseProofStates', completed nodes keep only their proof methods.
+    -- The initial system and states needed by the search frontier remain live.
+    prove :: (System -> a) -> Int -> System -> Proof a
+    prove annotate !depth sys =
+        let (method, cases) = nextProofStep heuristic tactics ctxt depth sys
+        in node method cases
       where
         node method cases =
-          LNode (ProofStep method (Just sys)) (M.map (prove (succ depth)) cases)
+          -- Force the unit annotation in release mode so it cannot retain sys.
+          let !info = annotate sys
+          in LNode (ProofStep method info) (M.map (prove annotate (succ depth)) cases)
+
+    -- Neither Just nor InMem forces the state. Child states replay the recorded
+    -- methods only when their contents are demanded.
+    restoreStates se (LNode (ProofStep method _) cases) =
+        LNode (ProofStep method (Just (InMem se))) $
+            M.mapWithKey (\name prf -> restoreStates (restoredCases M.! name) prf) cases
+      where
+        restoredCases = fromMaybe
+            (error "proveSystemDFS: cannot reconstruct a generated proof step")
+            (execProofMethod ctxt method se)
+
+-- | Select the next proof method and its cases.
+nextProofStep :: Heuristic ProofContext -> [Tactic ProofContext] -> ProofContext -> Int
+              -> System -> (ProofMethod, M.Map CaseName System)
+nextProofStep heuristic tactics ctxt depth sys =
+    case rankProofMethods (useHeuristic heuristic depth) tactics ctxt sys of
+      [] | finishedSubterms ctxt sys  -> node (Finished Solved) M.empty
+      []                              -> node (Finished Unfinishable) M.empty
+      (method, (cases, _expl)):_      -> node method cases
+  where
+    node method cases = (method, cases)
+
+
+-- | DFS with proof-state eviction and restore.
+proveSystemDFSEvicted :: Heuristic ProofContext -> [Tactic ProofContext] -> ProofContext -> Int -> System -> Proof (Maybe SystemRef)
+proveSystemDFSEvicted heuristic tactics ctxt depth0 initialSystem =
+    prove depth0 (StoredInMem rootRef initialSystem)
+  where
+    rootRef = storeInitialSystemUnsafe depth0 ctxt initialSystem
+
+    prove !depth systemRef =
+        let (parentRef, method, cases) = solveOrRestore heuristic tactics ctxt depth systemRef
+        -- The proof retains only the parent's Ref, not its System value.
+        in LNode (ProofStep method (Just (OnDisk parentRef)))
+                 (M.map (prove (succ depth)) cases)
+
+
+-- | Compute and store a new step or restore a stored step.
+solveOrRestore :: Heuristic ProofContext -> [Tactic ProofContext] -> ProofContext -> Int
+               -> SystemRef
+               -> (Ref, ProofMethod, M.Map CaseName SystemRef)
+solveOrRestore heuristic tactics ctxt depth systemRef = unsafePerformIO $ do
+    let parentRef = getStoredRef systemRef
+    -- Check if we already have a proof step for this system from a prev run
+    storedStep <- readProofStepMaybe parentRef
+    case storedStep of
+      Just step -> pure (restoreStep parentRef step)
+      Nothing   -> solveAndStore heuristic tactics ctxt depth parentRef systemRef
+{-# NOINLINE solveOrRestore #-}
+
+restoreStep :: Ref -> MethodEdge -> (Ref, ProofMethod, M.Map CaseName SystemRef)
+restoreStep parentRef (MethodEdge _ method caseRefs) =
+    (parentRef, method, M.map OnDisk caseRefs)
+
+solveAndStore :: Heuristic ProofContext -> [Tactic ProofContext] -> ProofContext -> Int
+              -> Ref -> SystemRef
+              -> IO (Ref, ProofMethod, M.Map CaseName SystemRef)
+solveAndStore heuristic tactics ctxt depth parentRef systemRef = do
+    -- Get the parents system (might be stored on disk)
+    system <- loadSystemFromRef systemRef
+    let (method, cases) = nextProofStep heuristic tactics ctxt depth system
+
+    -- Frontier eviction: each child is written so that its Ref is available for
+    -- the method edge, but the System is kept alongside the Ref. Descending into
+    -- a child therefore costs no read. Memory grows with the unexplored
+    -- frontier rather than with the whole tree.
+    casesWithRefs <- mapM storeCase cases
+
+    storeProofStep parentRef method (M.map getStoredRef casesWithRefs)
+    pure (parentRef, method, casesWithRefs)
+  where
+    storeCase system = do
+        ref <- storeSystem system
+        pure (StoredInMem ref system)
+
+getStoredRef :: SystemRef -> Ref
+getStoredRef (StoredInMem ref _) = ref
+getStoredRef (OnDisk ref)        = ref
+getStoredRef (InMem _)           = error "storedRef: system has not been stored"
+
+loadSystemFromRef :: SystemRef -> IO System
+loadSystemFromRef (InMem system)         = pure system
+loadSystemFromRef (StoredInMem _ system) = pure system
+loadSystemFromRef (OnDisk ref)           = readSystemLive ref
+
+storeInitialSystemUnsafe :: Int -> ProofContext -> System -> Ref
+storeInitialSystemUnsafe depth ctxt system = unsafePerformIO $ do
+    ref <- storeSystem system
+    when (depth == 0) $ do
+        let lemmaName = L.get pcLemmaName ctxt
+        storedRoot <- readLemmaRootMaybe lemmaName
+        when (storedRoot /= Just ref) $
+            recordLemmaRoot lemmaName
+                            (L.get pcTraceQuantifier ctxt)
+                            ref
+    pure ref
+{-# NOINLINE storeInitialSystemUnsafe #-}
+
 
 -- | @proveSystemDFS rules se@ explores all solutions of the initial
 -- constraint system using a depth-first-search strategy to resolve the
 -- non-determinism wrt. what goal to solve next.  This proof can be of
 -- infinite depth, if the proof strategy loops.
-proveDiffSystemDFS :: Heuristic ProofContext -> [Tactic ProofContext] -> DiffProofContext -> Int -> DiffSystem -> DiffProof (Maybe DiffSystem)
-proveDiffSystemDFS heuristic tactics ctxt =
-    prove
+proveDiffSystemDFS :: ProofStateRetention -> Heuristic ProofContext -> [Tactic ProofContext] -> DiffProofContext -> Int -> DiffSystem -> DiffProof (Maybe DiffSystem)
+proveDiffSystemDFS retention heuristic tactics ctxt initialDepth initialSystem =
+    case retention of
+        PersistProofStates -> error "disk persistence is not supported for diff proofs"
+        RetainProofStates -> prove Just initialDepth initialSystem
+        ReleaseProofStates -> restoreStates initialSystem (prove (const ()) initialDepth initialSystem)
   where
-    prove !depth sys =
+    prove :: (DiffSystem -> a) -> Int -> DiffSystem -> DiffProof a
+    prove annotate !depth sys =
         case rankDiffProofMethods (useHeuristic heuristic depth) tactics ctxt sys of
           []                         -> node (DiffSorry (Just "Cannot prove")) M.empty
           (method, (cases, _expl)):_ -> node method cases
       where
         node method cases =
-          LNode (DiffProofStep method (Just sys)) (M.map (prove (succ depth)) cases)
+          -- Force the unit annotation in release mode so it cannot retain sys.
+          let !info = annotate sys
+          in LNode (DiffProofStep method info) (M.map (prove annotate (succ depth)) cases)
+
+    restoreStates se (LNode (DiffProofStep method _) cases) =
+        LNode (DiffProofStep method (Just se)) $
+            M.mapWithKey (\name prf -> restoreStates (restoredCases M.! name) prf) cases
+      where
+        restoredCases = fromMaybe
+            (error "proveDiffSystemDFS: cannot reconstruct a generated proof step")
+            (execDiffProofMethod ctxt method se)
 
 ------------------------------------------------------------------------------
 -- Pretty printing
