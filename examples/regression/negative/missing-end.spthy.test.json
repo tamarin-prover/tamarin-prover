@@ -1,0 +1,10 @@
+{
+  "tests": [
+    {
+      "name": "missing-end",
+      "args": ["--parse-only"],
+      "exit_code": 1,
+      "contains": ["unexpected end of input"]
+    }
+  ]
+}
