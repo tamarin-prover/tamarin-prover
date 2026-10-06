@@ -1,0 +1,18 @@
+theory SoundnessSapicDestructorVariableClash
+begin
+
+builtins: dest-asymmetric-encryption
+
+// renameUnique gives the second role's input the name x.2. Destructor-equation
+// variables must be freshened so its internal x.2 does not become that input.
+let A = in(x); event Dummy(x)
+let B = new sk; out(pk(sk)); in(x); let m = adec(x, sk) in event Dec(m) else event Fail()
+process: A | B
+
+lemma dec_reach: exists-trace
+  "Ex #i. Dec('s')@i"
+
+lemma no_dec:
+  "All m #i. Dec(m)@i ==> F"
+
+end

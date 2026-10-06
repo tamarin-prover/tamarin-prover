@@ -1,0 +1,9 @@
+theory SoundnessSapicChannelEmbedded
+begin
+/* #938: publishing a channel through a let alias or an embedded rule must
+   allow adversary inputs. Constructor patterns are kept conservatively. */
+process: new c; [] --> [Out(c)];
+  (out(c, 'ok') | in(c, y); event Recv(y))
+lemma injection: exists-trace "Ex #i. Recv('adv')@i"
+lemma only_ok: "All y #i. Recv(y)@i ==> y = 'ok'"
+end

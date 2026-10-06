@@ -1,0 +1,12 @@
+theory SoundnessSapicStateDoubleInsert
+begin
+options: translation-state-optimisation
+/* #942: two writes in one critical section must not consume one lock twice. */
+process: new s; insert s, '0'; lock s; lookup s as v in
+  insert s, '1'; insert s, '2'; unlock s; event Done();
+  lock s; lookup s as w in event Value(w); insert s, w; unlock s
+lemma done_reachable: exists-trace "Ex #i. Done()@i"
+lemma no_done: "All #i. Done()@i ==> F"
+lemma latest_value: "All w #i. Value(w)@i ==> w = '2'"
+lemma read_reachable: exists-trace "Ex #i. Value('2')@i"
+end

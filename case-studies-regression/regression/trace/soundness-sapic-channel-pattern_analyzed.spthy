@@ -1,0 +1,266 @@
+theory SoundnessSapicChannelPattern
+
+begin
+
+// Function signature and definition of the equational theory E
+
+functions: fst/1, pair/2, snd/1
+equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
+
+heuristic: p
+
+lemma injection:
+  exists-trace "∃ #i. Recv( 'adv' ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #i. (Recv( 'adv' ) @ #i)"
+*/
+simplify
+solve( State_11121( c, x, 'adv', z ) ▶₀ #i )
+  case incy_1_1112
+  solve( !KU( ~n ) @ #vk.1 )
+    case outx_0_11
+    SOLVED // trace found
+  qed
+qed
+
+lemma only_ok:
+  all-traces "∀ y #i. (Recv( y ) @ #i) ⇒ (y = 'ok')"
+/*
+guarded formula characterizing all counter-examples:
+"∃ y #i. (Recv( y ) @ #i) ∧ ¬(y = 'ok')"
+*/
+simplify
+solve( State_11121( c, x, y, z ) ▶₀ #i )
+  case incy_1_1112_case_2
+  solve( !KU( ~n ) @ #vk.1 )
+    case outx_0_11
+    SOLVED // trace found
+  qed
+qed
+
+rule (modulo E) Init[color=#ffffff, process="new c.1;", issapicrule,
+                     role='Process']:
+   [ ] --[ Init( ) ]-> [ State_( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) newc_0_[color=#ffffff, process="new c.1;", issapicrule,
+                        role='Process']:
+   [ State_( ), Fr( c.1 ) ] --> [ State_1( c.1 ) ]
+
+  /*
+  rule (modulo AC) newc_0_[color=#ffffff, process="new c.1;", issapicrule,
+                           role='Process']:
+     [ State_( ), Fr( c ) ] --> [ State_1( c ) ]
+  */
+
+rule (modulo E) letxzctag_0_1[color=#ffffff,
+                              process="let <x.1, z.1>=<c.1, 'tag'>", issapicrule, role='Process']:
+   [ State_1( c.1 ) ] --> [ Let_11( <c.1, 'tag'>, c.1 ) ]
+
+  /*
+  rule (modulo AC) letxzctag_0_1[color=#ffffff,
+                                 process="let <x.1, z.1>=<c.1, 'tag'>", issapicrule, role='Process']:
+     [ State_1( c ) ] --> [ Let_11( <c, 'tag'>, c ) ]
+  */
+
+rule (modulo E) letxzctag_1_1[color=#ffffff,
+                              process="let <x.1, z.1>=<c.1, 'tag'>", issapicrule, role='Process']:
+   [ Let_11( <x.1, z.1>, c.1 ) ] --> [ State_11( c.1, x.1, z.1 ) ]
+
+  /*
+  rule (modulo AC) letxzctag_1_1[color=#ffffff,
+                                 process="let <x.1, z.1>=<c.1, 'tag'>", issapicrule, role='Process']:
+     [ Let_11( <x, z>, c ) ] --> [ State_11( c, x, z ) ]
+  */
+
+rule (modulo E) outx_0_11[color=#ffffff, process="out(x.1);",
+                          issapicrule, role='Process']:
+   [ State_11( c.1, x.1, z.1 ) ]
+  -->
+   [ State_111( c.1, x.1, z.1 ), Out( x.1 ) ]
+
+  /*
+  rule (modulo AC) outx_0_11[color=#ffffff, process="out(x.1);",
+                             issapicrule, role='Process']:
+     [ State_11( c, x, z ) ] --> [ State_111( c, x, z ), Out( x ) ]
+  */
+
+rule (modulo E) p_0_111[color=#ffffff, process="|", issapicrule,
+                        role='Process']:
+   [ State_111( c.1, x.1, z.1 ) ]
+  -->
+   [ State_1111( c.1, x.1, z.1 ), State_1112( c.1, x.1, z.1 ) ]
+
+  /*
+  rule (modulo AC) p_0_111[color=#ffffff, process="|", issapicrule,
+                           role='Process']:
+     [ State_111( c, x, z ) ]
+    -->
+     [ State_1111( c, x, z ), State_1112( c, x, z ) ]
+  */
+
+rule (modulo E) outcok_0_1111[color=#ffffff, process="out(c.1,'ok');",
+                              issapicrule, role='Process']:
+   [ State_1111( c.1, x.1, z.1 ), In( c.1 ) ]
+  -->
+   [ Out( 'ok' ), State_11111( c.1, x.1, z.1 ) ]
+
+  /*
+  rule (modulo AC) outcok_0_1111[color=#ffffff, process="out(c.1,'ok');",
+                                 issapicrule, role='Process']:
+     [ State_1111( c, x, z ), In( c ) ]
+    -->
+     [ Out( 'ok' ), State_11111( c, x, z ) ]
+  */
+
+rule (modulo E) outcok_1_1111[color=#ffffff, process="out(c.1,'ok');",
+                              issapicrule, role='Process']:
+   [ State_1111( c.1, x.1, z.1 ) ]
+  -->
+   [ Message( c.1, 'ok' ), Semistate_11111( c.1, x.1, z.1 ) ]
+
+  /*
+  rule (modulo AC) outcok_1_1111[color=#ffffff, process="out(c.1,'ok');",
+                                 issapicrule, role='Process']:
+     [ State_1111( c, x, z ) ]
+    -->
+     [ Message( c, 'ok' ), Semistate_11111( c, x, z ) ]
+  */
+
+rule (modulo E) outcok_2_1111[color=#ffffff, process="out(c.1,'ok');",
+                              issapicrule, role='Process']:
+   [ Semistate_11111( c.1, x.1, z.1 ), Ack( c.1, 'ok' ) ]
+  -->
+   [ State_11111( c.1, x.1, z.1 ) ]
+
+  /*
+  rule (modulo AC) outcok_2_1111[color=#ffffff, process="out(c.1,'ok');",
+                                 issapicrule, role='Process']:
+     [ Semistate_11111( c, x, z ), Ack( c, 'ok' ) ]
+    -->
+     [ State_11111( c, x, z ) ]
+  */
+
+rule (modulo E) p_0_11111[color=#ffffff, process="0", issapicrule,
+                          role='Process']:
+   [ State_11111( c.1, x.1, z.1 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_11111[color=#ffffff, process="0", issapicrule,
+                             role='Process']:
+     [ State_11111( c, x, z ) ] --> [ ]
+  */
+
+rule (modulo E) incy_0_1112[color=#ffffff, process="in(c.1,y.1);",
+                            issapicrule, role='Process']:
+   [ State_1112( c.1, x.1, z.1 ), Message( c.1, x.2 ) ]
+  -->
+   [ Let_11121( x.2, c.1, x.1, z.1 ), Ack( c.1, x.2 ) ]
+
+  /*
+  rule (modulo AC) incy_0_1112[color=#ffffff, process="in(c.1,y.1);",
+                               issapicrule, role='Process']:
+     [ State_1112( c, x, z ), Message( c, x.1 ) ]
+    -->
+     [ Let_11121( x.1, c, x, z ), Ack( c, x.1 ) ]
+  */
+
+rule (modulo E) incy_1_1112[color=#ffffff, process="in(c.1,y.1);",
+                            issapicrule, role='Process']:
+   [ Let_11121( y.1, c.1, x.1, z.1 ) ]
+  -->
+   [ State_11121( c.1, x.1, y.1, z.1 ) ]
+
+  /*
+  rule (modulo AC) incy_1_1112[color=#ffffff, process="in(c.1,y.1);",
+                               issapicrule, role='Process']:
+     [ Let_11121( y, c, x, z ) ] --> [ State_11121( c, x, y, z ) ]
+  */
+
+rule (modulo E) incy_2_1112[color=#ffffff, process="in(c.1,y.1);",
+                            issapicrule, role='Process']:
+   [ State_1112( c.1, x.1, z.1 ), In( <c.1, x.2> ) ]
+  -->
+   [ Let_11121( x.2, c.1, x.1, z.1 ) ]
+
+  /*
+  rule (modulo AC) incy_2_1112[color=#ffffff, process="in(c.1,y.1);",
+                               issapicrule, role='Process']:
+     [ State_1112( c, x, z ), In( <c, x.1> ) ]
+    -->
+     [ Let_11121( x.1, c, x, z ) ]
+  */
+
+rule (modulo E) incy_3_1112[color=#ffffff, process="in(c.1,y.1);",
+                            issapicrule, role='Process']:
+   [ Let_11121( y.1, c.1, x.1, z.1 ) ]
+  -->
+   [ State_11121( c.1, x.1, y.1, z.1 ) ]
+
+  /*
+  rule (modulo AC) incy_3_1112[color=#ffffff, process="in(c.1,y.1);",
+                               issapicrule, role='Process']:
+     [ Let_11121( y, c, x, z ) ] --> [ State_11121( c, x, y, z ) ]
+  */
+
+rule (modulo E) eventRecvy_0_11121[color=#ffffff,
+                                   process="event Recv( y.1 );", issapicrule, role='Process']:
+   [ State_11121( c.1, x.1, y.1, z.1 ) ]
+  --[ Recv( y.1 ) ]->
+   [ State_111211( c.1, x.1, y.1, z.1 ) ]
+
+  /*
+  rule (modulo AC) eventRecvy_0_11121[color=#ffffff,
+                                      process="event Recv( y.1 );", issapicrule, role='Process']:
+     [ State_11121( c, x, y, z ) ]
+    --[ Recv( y ) ]->
+     [ State_111211( c, x, y, z ) ]
+  */
+
+rule (modulo E) p_0_111211[color=#ffffff, process="0", issapicrule,
+                           role='Process']:
+   [ State_111211( c.1, x.1, y.1, z.1 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_111211[color=#ffffff, process="0", issapicrule,
+                              role='Process']:
+     [ State_111211( c, x, y, z ) ] --> [ ]
+  */
+
+restriction single_session:
+  "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
+  */
+
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.13.0
+Maude version 3.5.1
+Git revision: 75789dd37ec597af4859aa78d928136f33a697f6 (with uncommited changes), branch: sapic-optimisations
+Compiled at: 2026-09-25 19:56:56.873336963 UTC
+*/
+
+end
+/* Output
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/regression/trace/soundness-sapic-channel-pattern.spthy
+
+  output:          examples/regression/trace/soundness-sapic-channel-pattern.spthy.tmp
+  processing time: 0.42s
+  
+  injection (exists-trace): verified (4 steps)
+  only_ok (all-traces): falsified - found trace (4 steps)
+
+==============================================================================
+*/

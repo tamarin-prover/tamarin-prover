@@ -1,0 +1,10 @@
+theory SoundnessSapicProgressLet
+begin
+options: translation-progress
+/* #943: an omitted else is else 0, which also satisfies progress. */
+process: in(x); event Recv(x); let <a,b> = x in event A(a,b)
+lemma recv_pair: "All x #i. Recv(x)@i ==> Ex a b. x = <a,b>"
+lemma recv_nonpair: exists-trace "Ex #i. Recv('c')@i"
+lemma matching_input: exists-trace "Ex #i. A('a','b')@i"
+lemma success_matches: "All a b #i. A(a,b)@i ==> Ex #j. Recv(<a,b>)@j & j < i"
+end

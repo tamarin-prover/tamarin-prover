@@ -1,4 +1,9 @@
 * 1.12.0
+  - SAPIC evaluates the destructors in a let by all of their equations,
+    including equations whose result is not a variable, such as verify from
+    dest-signing. Earlier versions could silently take the else branch even
+    when evaluation should succeed.
+
   - GUI improvements for dependency graph display:
     - now in zoomable format (SVG)
     - different levels of abstraction for better readability
