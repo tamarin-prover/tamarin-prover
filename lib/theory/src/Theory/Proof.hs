@@ -760,28 +760,47 @@ runAutoDiffProver aut@(AutoProver _ _ bound cut _) =
         boundDiffProofDepth b <$> runDiffProver p ctxt d se prf
 
 
--- | Replace the sorry steps of an existing proof by proofs of the automatic
--- prover, and extract solutions from the resulting proof as a whole, as the
--- automatic prover does for a proof it constructs from scratch. Extracting
--- them for each replaced step separately would search every replaced step
--- until it finds a solution or ends, even when the existing proof or another
--- replaced step already contains one, and such a search need not terminate.
--- Stopping at a sorry instead applies only within each replacement: cutting
--- the whole tree at an unfinished sibling could discard a saved solution.
+-- | Extend the sorry cases of a replayed proof. When only one trace is
+-- requested, prefer an existing checked witness to searching unfinished cases.
 runAutoProverOnSorries :: AutoProver -> Prover
-runAutoProverOnSorries aut
-  | apCut aut == CutAfterSorry = replaceSorryProver $ runAutoProver aut
-  | otherwise = mapProverProof (extractSolutions (apCut aut)) $
-      replaceSorryProver $ runAutoProver aut { apCut = CutNothing }
+runAutoProverOnSorries aut = Prover $ \ctxt d se prf ->
+    savedWitness (apCut aut) proofStepStatus prf `mplus`
+      runProver extend ctxt d se prf
+  where
+    -- Search sorry cases lazily and select a witness from the combined proof.
+    -- Finishing each case first could hang despite a witness elsewhere.
+    -- Stop-at-sorry instead applies within each replacement, to avoid
+    -- discarding a saved witness in a later case.
+    extend
+      | apCut aut == CutAfterSorry = replaceSorryProver $ runAutoProver aut
+      | otherwise = mapProverProof (extractSolutions (apCut aut)) $
+          replaceSorryProver $ runAutoProver aut { apCut = CutNothing }
 
--- | Replace the sorry steps of an existing diff proof by proofs of the
--- automatic diff prover, and extract solutions from the resulting proof as a
--- whole; see 'runAutoProverOnSorries'.
+-- | Diff-proof counterpart of 'runAutoProverOnSorries'.
 runAutoDiffProverOnSorries :: AutoProver -> DiffProver
-runAutoDiffProverOnSorries aut
-  | apCut aut == CutAfterSorry = replaceDiffSorryProver $ runAutoDiffProver aut
-  | otherwise = mapDiffProverDiffProof (extractDiffSolutions (apCut aut)) $
-      replaceDiffSorryProver $ runAutoDiffProver aut { apCut = CutNothing }
+runAutoDiffProverOnSorries aut = DiffProver $ \ctxt d se prf ->
+    savedWitness (apCut aut) diffProofStepStatus prf `mplus`
+      runDiffProver extend ctxt d se prf
+  where
+    extend
+      | apCut aut == CutAfterSorry = replaceDiffSorryProver $ runAutoDiffProver aut
+      | otherwise = mapDiffProverDiffProof (extractDiffSolutions (apCut aut)) $
+          replaceDiffSorryProver $ runAutoDiffProver aut { apCut = CutNothing }
+
+-- | Keep the path to the first checked witness in case order.
+-- This can force replay of preceding cases; fallback search reuses those checks.
+-- Omit siblings so printing does not force their replay afterwards.
+savedWitness :: SolutionExtractor -> (a -> ProofStatus) -> LTree l a -> Maybe (LTree l a)
+savedWitness cut status
+  | cut `notElem` [CutDFS, CutBFS, CutSingleThreadDFS] = const Nothing
+  | otherwise = go
+  where
+    go (LNode step cases) = case status step of
+      UndeterminedProof -> Nothing
+      TraceFound -> Just $ LNode step M.empty
+      _ -> listToMaybe [LNode step (M.singleton name witness)
+                      | (name, child) <- M.toList cases
+                      , Just witness <- [go child]]
 
 -- | Keep only the part of a proof that the solution extractor selects.
 extractSolutions :: SolutionExtractor -> Proof (Maybe a) -> Proof (Maybe a)
