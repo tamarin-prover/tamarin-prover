@@ -1,0 +1,9 @@
+theory SapicDestructorDerivcheck
+begin
+functions: valid/1, okay/0, check/1 [destructor]
+equations: check(valid(x)) = okay
+
+// Matching the equation checks a destructor's domain; it need not reveal x
+// to the process. This generated step is exempt from derivation checking.
+process: in(t); let y = check(t) in event Seen(y)
+end

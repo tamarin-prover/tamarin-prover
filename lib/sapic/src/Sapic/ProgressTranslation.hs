@@ -30,6 +30,7 @@ import Text.RawString.QQ qualified as QQ
 import Theory
 import Theory.Sapic
 import Sapic.Facts
+import Sapic.Annotation
 import Sapic.ProgressFunction
 import Sapic.Basetranslation
 
@@ -119,12 +120,20 @@ progressTransAct anP tAct ac an pos tx = do
                 return (map (addProgressItems domPF invPF pos) rs0,extendVars domPF pos tx1)
 
 -- | Add ProgressTo or -From to rules generated on a combinator.
+-- A staged let carries the caller's progress variables through FLet facts.
+-- Only its final success or shared failure emits a child State, so internal
+-- evaluation cannot discharge progress before reaching a source continuation.
 progressTransComb :: (MonadCatch m, Show ann, Typeable ann) =>
                      LProcess ann
                     -> TransFComb (m TranslationResultComb)
                     -> TransFComb (m TranslationResultComb)
 progressTransComb anP tComb comb an pos tx =  do
-                (rs0,tx1,tx2) <- tComb comb an pos tx
+                -- An omitted else is else 0. Reaching it satisfies progress
+                -- when a let pattern fails, so its transition must be present.
+                let an' = case comb of
+                            Let {} -> an {elseBranch = True}
+                            _ -> an
+                (rs0,tx1,tx2) <- tComb comb an' pos tx
                 domPF <- pfFrom anP
                 invPF <- pfInv anP
                 return (map (addProgressItems domPF invPF pos) rs0

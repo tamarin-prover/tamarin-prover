@@ -1,0 +1,10 @@
+theory SoundnessSapicNestedDestructorFailureChain
+begin
+functions: d/1 [destructor], c/1
+equations: d(c(x)) = x
+// Eight failure continuations should translate linearly. The rule-count check
+// allows the separate equation and result matches without allowing duplication.
+process: let <'tag',x7> = <'tag',d('bad')> in event Success() else (let <'tag',x6> = <'tag',d('bad')> in event Success() else (let <'tag',x5> = <'tag',d('bad')> in event Success() else (let <'tag',x4> = <'tag',d('bad')> in event Success() else (let <'tag',x3> = <'tag',d('bad')> in event Success() else (let <'tag',x2> = <'tag',d('bad')> in event Success() else (let <'tag',x1> = <'tag',d('bad')> in event Success() else (let <'tag',x0> = <'tag',d('bad')> in event Success() else (event Finished()))))))))
+lemma finished: exists-trace "Ex #i. Finished()@i"
+lemma no_success: "All #i. Success()@i ==> F"
+end

@@ -17,6 +17,7 @@ import Control.Exception hiding (catch)
 import Control.Monad.Fresh
 import Control.Monad.Catch
 import Control.Monad.Trans.FastFresh ()
+import Data.List.NonEmpty qualified as NE
 import Data.Maybe
 import Data.Set qualified as S
 import Data.Typeable
@@ -38,6 +39,7 @@ import Sapic.Typing
 import Sapic.ProgressTranslation qualified as PT
 import Sapic.Warnings
 import Theory
+import TheoryObject (theoryMacros)
 import Theory.Sapic
 import Theory.Text.Parser
 
@@ -52,7 +54,7 @@ translate th =
              return th
     [p] -> do
       -- annotate
-      an_proc_pre <- translateLetDestr sigRules
+      an_proc_pre <- translateLetDestr (theoryMacros th) sigRules
         $ checkOps' (._transReport) translateTermsReport
         $ checkOps' (._stateChannelOpt) annotatePureStates
         $ annotateSecretChannels
@@ -145,9 +147,19 @@ gen (trans_null, trans_action, trans_comb) anP p tildex = do
       trans = (trans_null, trans_action, trans_comb)
       -- convert prems, acts and concls generated for current process
       -- into annotated rule
-      toAnnotatedRule proc (l,a,r,res) = AnnotatedRule Nothing proc (Left p) l a r res
-      mapToAnnotatedRule proc l = -- distinguishes rules by  adding the index of each element to it
-            snd $ foldl (\(i,l') r -> (i+1,l' ++ [toAnnotatedRule proc r i] )) (0,[]) l
+      mapToAnnotatedRule proc rules = zipWith toAnnotatedRule rules [0..]
+        where
+          -- Share the equation-pattern index across this node's generated rules.
+          -- Only internal equation matches skip derivation checking; user
+          -- patterns must still pass it.
+          equationPatterns = S.fromList
+            [ (letStagePosition p i, lhs)
+            | (i, LetStage _ alternatives _) <- zip [0..] (processGetAnnotation proc).letPlan
+            , (lhs, Just _) <- NE.toList alternatives ]
+          isEquationMatch (FLet pos term _) = (pos, term) `S.member` equationPatterns
+          isEquationMatch _ = False
+          toAnnotatedRule (l,a,r,res) =
+            AnnotatedRule Nothing proc (Left p) l a r res (any isEquationMatch l)
       handler:: (Typeable ann, Show ann) => LProcess ann ->  WFerror -> a
       handler anp (WFUnbound vs) = throw $ ProcessNotWellformed (WFUnbound vs) (Just anp)
       handler _ e = throw e

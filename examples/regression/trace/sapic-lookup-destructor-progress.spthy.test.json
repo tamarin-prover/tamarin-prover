@@ -1,0 +1,34 @@
+{
+  "tests": [
+    {
+      "name": "strict-compressed-lookup",
+      "args": [
+        "--quit-on-warning"
+      ]
+    },
+    {
+      "name": "nested-compressed-lookup",
+      "args": [
+        "--quit-on-warning",
+        "-DNESTED",
+        "--prove"
+      ],
+      "contains": [
+        "reachable (exists-trace): verified",
+        "value_preserved (all-traces): verified"
+      ]
+    },
+    {
+      "name": "unrelated-unbound-rejection",
+      "args": [
+        "--quit-on-warning",
+        "-DUNBOUND"
+      ],
+      "exit_code": 1,
+      "contains": [
+        "Unbound variables",
+        "unbound"
+      ]
+    }
+  ]
+}

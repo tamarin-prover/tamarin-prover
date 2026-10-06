@@ -99,6 +99,10 @@ new sk; new sk'; let x=adec(aenc(m,pk(sk)),sk') in P else Q
 ```
 always moves into `Q`. Destructors cannot appear elsewhere in the process.
 
+The SAPIC translation supports destructor equations whose results contain no
+further destructor calls. Results may be variables or constructor terms; calls
+introduced by an equation result are not evaluated and are rejected.
+
 Furthermore, `let`-bindings permit pattern matching. This is very useful for
 deconstructing messages. E.g.:
 ```

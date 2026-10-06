@@ -1,0 +1,53 @@
+theory SoundnessSapicDestructorNonvariableResult
+begin
+
+// Destructor equations whose right-hand side is not a variable. The
+// translation used to take the else branch whenever such an equation had to
+// be applied, so valid_succeeds and nested were falsified and no_failure had
+// a counterexample. A let must match its pattern against the actual reduct,
+// and fail only when no equation applies or the reduct does not match.
+
+builtins: dest-pairing
+functions: check/1 [destructor], valid/1, boxed/1, okay/0
+functions: open/1 [destructor], box/1
+equations: check(valid(x)) = okay
+equations: check(boxed(x)) = x
+equations: open(box(<x,y>)) = <x,y>
+
+process:
+  new s;
+  ( (let y = check(valid(s)) in event Success(y) else event Failure())
+  || (let y = check(boxed(s)) in event Unboxed(y) else event Failure())
+  || (let y = check(s) in event Wrong(y) else event Rejected())
+  || (let <'k', b> = open(box(<'k',s>)) in event Opened(b) else event Failure())
+  || (let <'z', b> = open(box(<'k',s>)) in event Wrong(b) else event PatternFailed())
+  || (let y = check(snd(open(box(<'k',valid(s)>)))) in event Nested(y) else event Failure()) )
+
+lemma valid_succeeds: exists-trace
+  "Ex #i. Success(okay)@i"
+
+lemma unboxed: exists-trace
+  "Ex y #i. Unboxed(y)@i"
+
+lemma rejected: exists-trace
+  "Ex #i. Rejected()@i"
+
+lemma opened: exists-trace
+  "Ex b #i. Opened(b)@i"
+
+lemma pattern_failed: exists-trace
+  "Ex #i. PatternFailed()@i"
+
+lemma nested: exists-trace
+  "Ex #i. Nested(okay)@i"
+
+lemma no_failure:
+  "All #i. Failure()@i ==> F"
+
+lemma no_wrong:
+  "All y #i. Wrong(y)@i ==> F"
+
+lemma success_okay:
+  "All y #i. Success(y)@i ==> y = okay"
+
+end

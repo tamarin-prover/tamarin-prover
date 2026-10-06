@@ -1,0 +1,32 @@
+theory SoundnessSapicDestructorAlternatives
+begin
+
+functions: d/1 [destructor], c1/1, c2/1
+equations:
+  d(c1(x)) = x,
+  d(c2(x)) = x
+
+let P1 = new s; let x = d(c1(s)) in event Success1(x) else event Failure1()
+let P2 = new s; let y = d(c2(s)) in event Success2(y) else event Failure2()
+let PI = let z = d('invalid') in event InvalidSuccess(z) else event InvalidFailure()
+process: P1 | P2 | PI
+
+lemma success1: exists-trace
+  "Ex x #i. Success1(x)@i"
+
+lemma success2: exists-trace
+  "Ex x #i. Success2(x)@i"
+
+lemma invalid_fails: exists-trace
+  "Ex #i. InvalidFailure()@i"
+
+lemma no_failure1:
+  "All #i. Failure1()@i ==> F"
+
+lemma no_failure2:
+  "All #i. Failure2()@i ==> F"
+
+lemma no_invalid_success:
+  "All x #i. InvalidSuccess(x)@i ==> F"
+
+end

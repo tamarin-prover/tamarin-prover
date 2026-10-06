@@ -14,7 +14,8 @@ module Sapic.Annotation
   , AnnotatedSapicException
   , annLock
   , annSecretChannel
-  , annDestructorEquation
+  , LetStage(..)
+  , letStagePosition
   , annUnlock
   , toAnProcess
   , toProcess
@@ -23,9 +24,12 @@ module Sapic.Annotation
   , unAnProcess
   , getProcessNames
   , setProcessNames
-  , annElse
+  , translationVars
   ) where
 
+import Data.List.NonEmpty (NonEmpty)
+import Data.Foldable qualified as F
+import Data.Set (Set)
 import Data.Binary
 import Data.Data
 import GHC.Generics (Generic)
@@ -43,6 +47,20 @@ newtype AnVar v = AnVar v
 instance Semigroup (AnVar v) where  -- override annotations if necessary
     (<>) _ b = b
 
+-- | One strict evaluation/matching step: the input, its alternative patterns
+-- and the variables the step binds. Only these bindings survive to the next
+-- step; variables local to equation alternatives never enter the state. An
+-- alternative with a reduct passes that reduct, instantiated by the match, to
+-- the next step as its input instead.
+data LetStage = LetStage LNTerm (NonEmpty (LNTerm, Maybe LNTerm)) (Set LVar)
+    deriving (Show, Typeable)
+
+-- | Position of the internal fact that feeds step @i@ of a let plan. The first
+-- step uses the let's success-branch position; later steps contain 0,
+-- which source process positions never use.
+letStagePosition :: ProcessPosition -> Int -> ProcessPosition
+letStagePosition p i = if i == 0 then p ++ [1] else p ++ [0, i]
+
 -- | Annotations used in the translation
 -- Reuses ProcessParsedAnnotation
 data ProcessAnnotation v = ProcessAnnotation
@@ -51,7 +69,7 @@ data ProcessAnnotation v = ProcessAnnotation
   , lock          :: Maybe (AnVar v)   -- Fresh variables annotating locking action and unlocking actions.
   , unlock        :: Maybe (AnVar v)   -- Matching actions should have the same variables.
   , secretChannel :: Maybe (AnVar v)   -- If a channel is secret, we can perform a silent transition.
-  , destructorEquation :: Maybe (LNTerm, LNTerm) -- the two terms that can be matched to model a let binding with a destructor on the right hand side.
+  , letPlan :: [LetStage] -- ordered internal stages, sharing the source continuations.
   , elseBranch         :: Bool --- do we have a non-zero else branch? Used for let translation
   , pureState :: Bool -- anotates locks, inserts and lookup that correspond to a Pure state, so that they are optimized.
                       -- A pure state corresponds to a process of form `insert k,v` or `lock k; lookup k; .. ; insert k,v; unlock k` or similar (see States.hs)
@@ -71,7 +89,7 @@ mayMerge _ t@(Just _) = t
 mayMerge Nothing Nothing = Nothing
 
 instance Monoid (ProcessAnnotation v) where
-    mempty = ProcessAnnotation mempty mempty mempty mempty Nothing True False mempty Nothing
+    mempty = ProcessAnnotation mempty mempty mempty mempty [] True False mempty Nothing
 
 instance Semigroup (ProcessAnnotation v) where
   (<>)  p1 p2 = ProcessAnnotation
@@ -79,7 +97,7 @@ instance Semigroup (ProcessAnnotation v) where
         (p1.lock <> p2.lock)
         (p1.unlock <> p2.unlock)
         (p1.secretChannel <> p2.secretChannel)
-        (mayMerge p1.destructorEquation p2.destructorEquation)
+        (if null p1.letPlan then p2.letPlan else p1.letPlan)
         p2.elseBranch
         (p1.pureState || p2.pureState)
         (p1.stateChannel <> p2.stateChannel)
@@ -104,6 +122,16 @@ newtype AnProcess ann = AnProcess (LProcess ann)
 type AnnotatedProcess = LProcess (ProcessAnnotation LVar)
 type AnnotatedSapicException = SapicException (ProcessAnnotation LVar)
 
+-- | Variables to reserve when allocating internal identifiers.
+-- Destructor-equation variables and intermediate results can occur only in
+-- let plans, where the ordinary process traversal cannot see them.
+translationVars :: AnnotatedProcess -> [LVar]
+translationVars p = map toLVar (F.toList $ varsProc p) ++ pfoldMap planVars p
+  where
+    planVars node = concat
+      [ frees (input, F.toList alternatives, bound)
+      | LetStage input alternatives bound <- (processGetAnnotation node).letPlan ]
+
 -- This instance is useful for modifying annotations, but not for much more.
 instance Functor AnProcess where
     fmap f (AnProcess process) = AnProcess (f' process)
@@ -125,12 +153,6 @@ annUnlock v = mempty {unlock = Just v}
 
 annSecretChannel :: AnVar v -> ProcessAnnotation v
 annSecretChannel v = mempty { secretChannel = Just v}
-
-annDestructorEquation :: LNTerm -> LNTerm -> Bool -> ProcessAnnotation v
-annDestructorEquation v1 v2 b =  mempty { destructorEquation = Just (v1, v2), elseBranch = b }
-
-annElse ::  Bool -> ProcessAnnotation v
-annElse b = mempty {elseBranch = b}
 
 -- | Convert to and from Process, i.e., LProcess with processnames only.
 toAnProcess :: GoodAnnotation an => PlainProcess -> LProcess an

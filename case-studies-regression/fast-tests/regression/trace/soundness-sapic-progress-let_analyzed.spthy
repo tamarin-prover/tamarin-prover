@@ -1,0 +1,223 @@
+theory SoundnessSapicProgressLet
+
+begin
+
+// Function signature and definition of the equational theory E
+
+functions: fst/1, pair/2, snd/1
+equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
+
+heuristic: p
+
+lemma recv_pair:
+  all-traces "∀ x #i. (Recv( x ) @ #i) ⇒ (∃ a b. x = <a, b>)"
+/*
+guarded formula characterizing all counter-examples:
+"∃ x #i. (Recv( x ) @ #i) ∧ ∀ a b. (x = <a, b>) ⇒ ⊥"
+*/
+simplify
+solve( State_1( ~prog_1, x ) ▶₀ #i )
+  case inx_0_
+  solve( (∃ #t. (ProgressTo_1111( ~prog_1 ) @ #t))  ∥
+         (∃ #t. (ProgressTo_112( ~prog_1 ) @ #t)) )
+    case case_2
+    solve( Let_111( x.1, ~prog_1, x.1 ) ▶₀ #t.1 )
+      case eventRecvx_0_1
+      SOLVED // trace found
+    qed
+  qed
+qed
+
+lemma recv_nonpair:
+  exists-trace "∃ #i. Recv( 'c' ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #i. (Recv( 'c' ) @ #i)"
+*/
+simplify
+solve( State_1( ~prog_1, 'c' ) ▶₀ #i )
+  case inx_0_
+  solve( (∃ #t. (ProgressTo_1111( ~prog_1 ) @ #t))  ∥
+         (∃ #t. (ProgressTo_112( ~prog_1 ) @ #t)) )
+    case case_2
+    solve( Let_111( x, ~prog_1, x ) ▶₀ #t.1 )
+      case eventRecvx_0_1
+      SOLVED // trace found
+    qed
+  qed
+qed
+
+lemma matching_input:
+  exists-trace "∃ #i. A( 'a', 'b' ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #i. (A( 'a', 'b' ) @ #i)"
+*/
+simplify
+solve( State_111( ~prog_1, 'a', 'b', x ) ▶₀ #i )
+  case letabx_1_11
+  solve( (∃ #t. (ProgressTo_1111( ~prog_1 ) @ #t))  ∥
+         (∃ #t. (ProgressTo_112( ~prog_1 ) @ #t)) )
+    case case_1
+    solve( State_111( ~prog_1, a, b, x ) ▶₀ #t.1 )
+      case letabx_1_11
+      SOLVED // trace found
+    qed
+  qed
+qed
+
+lemma success_matches:
+  all-traces
+  "∀ a b #i. (A( a, b ) @ #i) ⇒ (∃ #j. (Recv( <a, b> ) @ #j) ∧ (#j < #i))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ a b #i. (A( a, b ) @ #i) ∧ ∀ #j. (Recv( <a, b> ) @ #j) ⇒ ¬(#j < #i)"
+*/
+simplify
+solve( State_111( ~prog_1, a, b, x ) ▶₀ #i )
+  case letabx_1_11
+  by contradiction /* from formulas */
+qed
+
+rule (modulo E) Init[color=#ffffff, process="in(x.1);", issapicrule,
+                     role='Process']:
+   [ ] --[ Init( ) ]-> [ State_( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) inx_0_[color=#ffffff, process="in(x.1);", issapicrule,
+                       role='Process']:
+   [ Fr( ~prog_1 ), State_( ), In( x.1 ) ]
+  --[ ProgressFrom_1( ~prog_1 ) ]->
+   [ State_1( ~prog_1, x.1 ) ]
+
+  /*
+  rule (modulo AC) inx_0_[color=#ffffff, process="in(x.1);", issapicrule,
+                          role='Process']:
+     [ Fr( ~prog_1 ), State_( ), In( x ) ]
+    --[ ProgressFrom_1( ~prog_1 ) ]->
+     [ State_1( ~prog_1, x ) ]
+  */
+
+rule (modulo E) eventRecvx_0_1[color=#ffffff,
+                               process="let <a.1, b.1>=x.1", issapicrule, role='Process']:
+   [ State_1( ~prog_1, x.1 ) ]
+  --[ Recv( x.1 ) ]->
+   [ Let_111( x.1, ~prog_1, x.1 ) ]
+
+  /*
+  rule (modulo AC) eventRecvx_0_1[color=#ffffff,
+                                  process="let <a.1, b.1>=x.1", issapicrule, role='Process']:
+     [ State_1( ~prog_1, x ) ] --[ Recv( x ) ]-> [ Let_111( x, ~prog_1, x ) ]
+  */
+
+rule (modulo E) letabx_1_11[color=#ffffff, process="let <a.1, b.1>=x.1",
+                            issapicrule, role='Process']:
+   [ Let_111( <a.1, b.1>, ~prog_1, x.1 ) ]
+  -->
+   [ State_111( ~prog_1, a.1, b.1, x.1 ) ]
+
+  /*
+  rule (modulo AC) letabx_1_11[color=#ffffff, process="let <a.1, b.1>=x.1",
+                               issapicrule, role='Process']:
+     [ Let_111( <a, b>, ~prog_1, x ) ] --> [ State_111( ~prog_1, a, b, x ) ]
+  */
+
+rule (modulo E) eventAab_0_111[color=#ffffff, process="0", issapicrule,
+                               role='Process']:
+   [ State_111( ~prog_1, a.1, b.1, x.1 ) ]
+  --[ ProgressTo_1111( ~prog_1 ), A( a.1, b.1 ) ]->
+   [ ]
+
+  /*
+  rule (modulo AC) eventAab_0_111[color=#ffffff, process="0", issapicrule,
+                                  role='Process']:
+     [ State_111( ~prog_1, a, b, x ) ]
+    --[ ProgressTo_1111( ~prog_1 ), A( a, b ) ]->
+     [ ]
+  */
+
+restriction Restr_letabx_2_11_1:
+  "∀ x #NOW.
+    (Restr_letabx_2_11_1( x ) @ #NOW) ⇒ (∀ a b. (<a, b> = x) ⇒ (⊥))"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ x #NOW.
+    (Restr_letabx_2_11_1( x ) @ #NOW) ⇒ (∀ a b. (<a, b> = x) ⇒ (⊥))"
+  */
+
+rule (modulo E) letabx_2_11[color=#ffffff, process="let <a.1, b.1>=x.1",
+                            issapicrule, role='Process']:
+   [ Let_111( x.1, ~prog_1, x.1 ) ]
+  --[ ProgressTo_112( ~prog_1 ), Restr_letabx_2_11_1( x.1 ) ]->
+   [ State_112( ~prog_1, x.1 ) ]
+
+  /*
+  rule (modulo AC) letabx_2_11[color=#ffffff, process="let <a.1, b.1>=x.1",
+                               issapicrule, role='Process']:
+     [ Let_111( x, ~prog_1, x ) ]
+    --[ ProgressTo_112( ~prog_1 ), Restr_letabx_2_11_1( x ) ]->
+     [ State_112( ~prog_1, x ) ]
+  */
+
+restriction single_session:
+  "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
+  */
+
+restriction Progress_1_to_1111_or_112:
+  "∀ prog_1 #t.
+    (ProgressFrom_1( prog_1 ) @ #t) ⇒
+    ((∃ #t.1. ProgressTo_1111( prog_1 ) @ #t.1) ∨
+     (∃ #t.1. ProgressTo_112( prog_1 ) @ #t.1))"
+
+  /*
+  expanded formula:
+  "∀ prog_1 #t.
+    (ProgressFrom_1( prog_1 ) @ #t) ⇒
+    ((∃ #t.1. ProgressTo_1111( prog_1 ) @ #t.1) ∨
+     (∃ #t.1. ProgressTo_112( prog_1 ) @ #t.1))"
+  */
+
+restriction progressInit:
+  "∃ #t. Init( ) @ #t"
+
+  /*
+  expanded formula:
+  "∃ #t. Init( ) @ #t"
+  */
+
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.13.0
+Maude version 3.5.1
+Git revision: 5a753a172c7984e9403bc650a37a8223367bc1c5, branch: sapic-destructors
+Compiled at: 2026-09-25 19:30:59.558380567 UTC
+*/
+
+end
+/* Output
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/regression/trace/soundness-sapic-progress-let.spthy
+
+  output:          examples/regression/trace/soundness-sapic-progress-let.spthy.tmp
+  processing time: 0.12s
+  
+  recv_pair (all-traces): falsified - found trace (5 steps)
+  recv_nonpair (exists-trace): verified (5 steps)
+  matching_input (exists-trace): verified (5 steps)
+  success_matches (all-traces): verified (3 steps)
+
+==============================================================================
+*/

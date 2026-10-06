@@ -1,0 +1,43 @@
+theory SapicLetMacros
+begin
+#ifdef PROGRESS
+options: translation-progress
+#endif
+functions: c/1, d/1 [destructor], absent/1 [destructor]
+equations: d(c(x)) = x
+macros: wrap(x) = <x,'tag'>,
+        open(x) = d(x),
+        twice(x) = open(c(open(c(x)))),
+        ignore(x) = 'ok'
+
+// Macros are substitutions. Expand them before evaluating real destructors,
+// both at a let's root and inside its pattern or right-hand side.
+let Root = let y = wrap('ok') in event Result('root',y,<'ok','tag'>) else event Wrong()
+let Nested = let y = <wrap('ok'),'tail'> in event Result('nested',y,<<'ok','tag'>,'tail'>) else event Wrong()
+let Pattern = let <y,'tag'> = wrap('ok') in event Result('pattern',y,'ok') else event Wrong()
+let PatternMacro = let wrap(y) = wrap('ok') in event Result('pattern_macro',y,'ok') else event Wrong()
+let Composed = let y = wrap(wrap('ok')) in event Result('composed',y,<<'ok','tag'>,'tag'>) else event Wrong()
+let Evaluation = let y = twice('ok') in event Result('evaluation',y,'ok') else event Wrong()
+let Argument = let y = d(c(wrap('ok'))) in event Result('argument',y,<'ok','tag'>) else event Wrong()
+// A discarded macro argument is absent from the expanded term.
+let Discarded = let y = ignore(open('bad')) in event Result('discarded',y,'ok') else event Wrong()
+let Failing = let y = wrap(open('bad')) in event Wrong() else event Failed('destructor')
+let Undefined = let y = absent(wrap('ok')) in event Wrong() else event Failed('undefined')
+// Substitution must preserve the type annotation on an actual argument.
+let Typed = in(x:bitstring); let y = wrap(x) in event Result('typed',y,<x,'tag'>) else event Wrong()
+process: Root | Nested | Pattern | PatternMacro | Composed | Evaluation | Argument | Discarded | Failing | Undefined | Typed
+
+lemma root: exists-trace "Ex y e #i. Result('root',y,e)@i"
+lemma nested: exists-trace "Ex y e #i. Result('nested',y,e)@i"
+lemma pattern: exists-trace "Ex y e #i. Result('pattern',y,e)@i"
+lemma pattern_macro: exists-trace "Ex y e #i. Result('pattern_macro',y,e)@i"
+lemma composed: exists-trace "Ex y e #i. Result('composed',y,e)@i"
+lemma evaluation: exists-trace "Ex y e #i. Result('evaluation',y,e)@i"
+lemma argument: exists-trace "Ex y e #i. Result('argument',y,e)@i"
+lemma discarded: exists-trace "Ex y e #i. Result('discarded',y,e)@i"
+lemma typed: exists-trace "Ex y e #i. Result('typed',y,e)@i"
+lemma destructor_failure: exists-trace "Ex #i. Failed('destructor')@i"
+lemma undefined_failure: exists-trace "Ex #i. Failed('undefined')@i"
+lemma values: "All label y expected #i. Result(label,y,expected)@i ==> y = expected"
+lemma no_wrong: "All #i. Wrong()@i ==> F"
+end
