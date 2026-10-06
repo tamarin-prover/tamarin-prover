@@ -1,0 +1,9 @@
+{
+  "tests": [
+    {
+      "name": "partial-evaluation",
+      "args": ["--quit-on-warning"],
+      "checks": ["roundtrip", "partial-evaluation"]
+    }
+  ]
+}
