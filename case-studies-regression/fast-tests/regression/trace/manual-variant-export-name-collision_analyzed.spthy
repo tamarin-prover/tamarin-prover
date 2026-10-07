@@ -1,0 +1,105 @@
+theory ManualVariantExportNameCollision
+
+begin
+
+// Function signature and definition of the equational theory E
+
+functions: c/1, d/1, fst/1, pair/2, snd/1
+equations: d(c(x)) = x, fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
+
+rule (modulo E) R:
+   [ In( x ) ] --[ Original( x ) ]-> [ Out( d(c(x)) ) ]
+ variants
+  rule (modulo AC) R___VARIANT_1:
+     [ In( x ) ] --[ Original( x ), Annotated( x ) ]-> [ Out( x ) ]
+
+rule (modulo E) R___VARIANT_1:
+   [ ] --[ Other( ) ]-> [ ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Trivial:
+   [ In( x ) ] --[ Normal( x ) ]-> [ ]
+ variants
+  rule (modulo AC) Trivial___VARIANT_1:
+     [ In( y ) ] --[ Normal( y ), Added( y ) ]-> [ ]
+
+rule (modulo E) Trivial___VARIANT_1:
+   [ ] --[ OtherNormal( ) ]-> [ ]
+
+  /* has exactly the trivial AC variant */
+
+lemma original:
+  exists-trace "∃ #i. (Original( 'a' ) @ #i) ∧ (Annotated( 'a' ) @ #i)"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #i. (Original( 'a' ) @ #i) ∧ (Annotated( 'a' ) @ #i)"
+*/
+simplify
+SOLVED // trace found
+
+lemma other:
+  exists-trace "∃ #i. Other( ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #i. (Other( ) @ #i)"
+*/
+simplify
+SOLVED // trace found
+
+lemma normal:
+  exists-trace "∃ #i. (Normal( 'a' ) @ #i) ∧ (Added( 'a' ) @ #i)"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #i. (Normal( 'a' ) @ #i) ∧ (Added( 'a' ) @ #i)"
+*/
+simplify
+SOLVED // trace found
+
+lemma other_normal:
+  exists-trace "∃ #i. OtherNormal( ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #i. (OtherNormal( ) @ #i)"
+*/
+simplify
+SOLVED // trace found
+
+lemma false_safety:
+  all-traces "∀ x #i. (Annotated( x ) @ #i) ⇒ (⊥)"
+/*
+guarded formula characterizing all counter-examples:
+"∃ x #i. (Annotated( x ) @ #i)"
+*/
+simplify
+SOLVED // trace found
+
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.13.0
+Maude version 3.5.1
+Git revision: a29fff53cc2cbc5c7d0e8d19acb81dada0832470 (with uncommited changes), branch: msr-rule-handling
+Compiled at: 2026-10-07 07:50:49.373784664 UTC
+*/
+
+end
+/* Output
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/regression/trace/manual-variant-export-name-collision.spthy
+
+  output:          examples/regression/trace/manual-variant-export-name-collision.spthy.tmp
+  processing time: 0.11s
+  
+  original (exists-trace): verified (2 steps)
+  other (exists-trace): verified (2 steps)
+  normal (exists-trace): verified (2 steps)
+  other_normal (exists-trace): verified (2 steps)
+  false_safety (all-traces): falsified - found trace (2 steps)
+
+==============================================================================
+*/

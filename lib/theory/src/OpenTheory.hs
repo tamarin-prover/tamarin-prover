@@ -814,8 +814,11 @@ normalizeTheory =
 -- | Pretty print an open rule together with its assertion soundness proof.
 prettyOpenProtoRule :: (HighlightDocument d) => OpenProtoRule -> d
 prettyOpenProtoRule (OpenProtoRule ruE []) = prettyProtoRuleE ruE
-prettyOpenProtoRule (OpenProtoRule _ [ruAC])
-  | null (ruleProductsOutsideExponents ruAC) = prettyProtoRuleACasE ruAC
+prettyOpenProtoRule (OpenProtoRule ruE [ruAC])
+  -- A separately named variant may share its name with another top-level rule.
+  -- Keep its parent and variants clause rather than promoting it to that scope.
+  | ruleName ruAC == ruleName ruE
+  , null (ruleProductsOutsideExponents ruAC) = prettyProtoRuleACasE ruAC
 prettyOpenProtoRule (OpenProtoRule ruE variants) =
   prettyProtoRuleE ruE
     $-$ nest 1 (kwVariants $-$ nest 1 (ppList prettyProtoRuleAC variants))
@@ -834,8 +837,10 @@ prettyOpenProtoRuleAsClosedRule (OpenProtoRule ruE []) =
         emptyDoc
           $-$ multiComment_ ["has exactly the trivial AC variant"]
     )
-prettyOpenProtoRuleAsClosedRule (OpenProtoRule _ [ruAC@(Rule (ProtoRuleACInfo _ _ (Disj disj) _) _ _ _ _)])
-  | null (ruleProductsOutsideExponents ruAC) =
+prettyOpenProtoRuleAsClosedRule (OpenProtoRule ruE [ruAC@(Rule (ProtoRuleACInfo _ _ (Disj disj) _) _ _ _ _)])
+  -- Preserve the family scope here too; variant names need not be global.
+  | ruleName ruAC == ruleName ruE
+  , null (ruleProductsOutsideExponents ruAC) =
   prettyProtoRuleACasE ruAC
     $--$ ( nest 2 $
              prettyLoopBreakers (L.get rInfo ruAC)

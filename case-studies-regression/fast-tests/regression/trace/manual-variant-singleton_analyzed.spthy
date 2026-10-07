@@ -12,20 +12,23 @@ equations:
 
 macros: identity( x ) =  x
 
-rule (modulo E) Plain___VARIANT_1:
+rule (modulo E) Plain:
    [ In( x ) ] --[ Plain( x ) ]-> [ ]
+ variants
+  rule (modulo AC) Plain___VARIANT_1:
+     [ In( x ) ] --[ Plain( x ) ]-> [ ]
 
-  /* has exactly the trivial AC variant */
+rule (modulo E) Annotated:
+   [ In( x ) ] --[ Original( x ) ]-> [ Out( x ) ]
+ variants
+  rule (modulo AC) Annotated___VARIANT_1:
+     [ In( y ) ] --[ Original( y ), Added( y ) ]-> [ Out( y ) ]
 
-rule (modulo E) Annotated___VARIANT_1:
-   [ In( y ) ] --[ Original( y ), Added( y ) ]-> [ Out( y ) ]
-
-  /* has exactly the trivial AC variant */
-
-rule (modulo E) Macro___VARIANT_1:
-   [ In( y ) ] --[ Macro( y ) ]-> [ ]
-
-  /* has exactly the trivial AC variant */
+rule (modulo E) Macro:
+   [ In( x ) ] --[ Macro( identity(x) ) ]-> [ ]
+ variants
+  rule (modulo AC) Macro___VARIANT_1:
+     [ In( y ) ] --[ Macro( y ) ]-> [ ]
 
 lemma plain:
   exists-trace "∃ #i. Plain( 'a' ) @ #i"
@@ -69,8 +72,8 @@ SOLVED // trace found
 Generated from:
 Tamarin version 1.13.0
 Maude version 3.5.1
-Git revision: 5b6a770805e3ab24d2d727e270408eaf19df779d (with uncommited changes), branch: msr-rule-handling
-Compiled at: 2026-10-06 21:05:10.016846453 UTC
+Git revision: a29fff53cc2cbc5c7d0e8d19acb81dada0832470 (with uncommited changes), branch: msr-rule-handling
+Compiled at: 2026-10-07 07:50:49.373784664 UTC
 */
 
 end
@@ -82,7 +85,7 @@ summary of summaries:
 analyzed: examples/regression/trace/manual-variant-singleton.spthy
 
   output:          examples/regression/trace/manual-variant-singleton.spthy.tmp
-  processing time: 0.10s
+  processing time: 0.09s
   
   plain (exists-trace): verified (2 steps)
   annotated (exists-trace): verified (2 steps)

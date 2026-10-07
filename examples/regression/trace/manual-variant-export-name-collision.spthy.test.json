@@ -1,0 +1,14 @@
+{
+  "tests": [
+    {
+      "name": "preserve-singleton-family-names",
+      "args": ["--quit-on-warning"],
+      "checks": ["roundtrip", "partial-evaluation"]
+    },
+    {
+      "name": "preserve-singleton-family-names-auto-sources",
+      "args": ["--auto-sources", "--quit-on-warning"],
+      "checks": ["roundtrip", "partial-evaluation"]
+    }
+  ]
+}

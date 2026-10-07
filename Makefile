@@ -487,6 +487,7 @@ COMMON_REGRESSION_CASE_STUDIES=soundness-manual-variants-complete.spthy soundnes
 COMMON_REGRESSION_CASE_STUDIES+=manual-variant-auto-sources-roundtrip.spthy
 case-studies$(SUBDIR)regression/trace/manual-variant-auto-sources-roundtrip_analyzed.spthy: TRACE_EXTRA_ARGS=--auto-sources
 COMMON_REGRESSION_CASE_STUDIES+=covered-product-export.spthy
+COMMON_REGRESSION_CASE_STUDIES+=manual-variant-export-name-collision.spthy
 FAST_REGRESSION_CASE_STUDIES+=$(COMMON_REGRESSION_CASE_STUDIES)
 FAST_REGRESSION_TARGETS=$(subst .spthy,_analyzed.spthy,$(addprefix case-studies$(SUBDIR)regression/trace/,$(FAST_REGRESSION_CASE_STUDIES)))
 
