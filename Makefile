@@ -482,7 +482,7 @@ accountability-case-studies:	$(ACCOUNTABILITY_CS_TARGETS)
 ## Regression (old issues)
 ##########################
 
-FAST_REGRESSION_CASE_STUDIES=issue446-1.spthy issue446-2.spthy issue753-4.spthy issue753-5.spthy issue753-6.spthy issue834.spthy issue777.spthy issue770.spthy issue914.spthy negated-equivalence.spthy
+FAST_REGRESSION_CASE_STUDIES=issue446-1.spthy issue446-2.spthy issue753-4.spthy issue753-5.spthy issue753-6.spthy issue834.spthy issue777.spthy issue770.spthy issue914.spthy issue904.spthy issue905.spthy negated-equivalence.spthy
 COMMON_REGRESSION_CASE_STUDIES=soundness-manual-variants-complete.spthy soundness-partial-evaluation-variants.spthy partial-evaluation-export.spthy partial-evaluation-collision.spthy
 COMMON_REGRESSION_CASE_STUDIES+=manual-variant-auto-sources-roundtrip.spthy
 case-studies$(SUBDIR)regression/trace/manual-variant-auto-sources-roundtrip_analyzed.spthy: TRACE_EXTRA_ARGS=--auto-sources
