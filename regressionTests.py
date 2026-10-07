@@ -704,7 +704,12 @@ Parser test results:
 			cases = "case-studies" if settings.slow else "fast-case-studies sapic-case-studies-fast FAST=y"
 			command = ["make", "-j", str(settings.jobs), f"TAMARIN={settings.tamarin}", *cases.split()]
 			logging.warning(f"running '{command}' ...")
-			output = subprocess.check_output(command, stderr=subprocess.STDOUT).decode("utf-8")
+			try:
+				output = subprocess.check_output(command, stderr=subprocess.STDOUT).decode("utf-8")
+			except subprocess.CalledProcessError as error:
+				logging.error(error.output.decode("utf-8", errors="replace"))
+				logging.error("Case-study generation failed (exit status %s).", error.returncode)
+				exit(1)
 			logging.debug(output)
 
 		## compare time and steps ##
