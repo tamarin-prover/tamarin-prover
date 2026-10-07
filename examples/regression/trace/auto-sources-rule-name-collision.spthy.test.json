@@ -1,0 +1,24 @@
+{
+  "tests": [
+    {
+      "name": "auto-sources-colliding-rule-last",
+      "args": ["--auto-sources", "--quit-on-warning"],
+      "checks": ["roundtrip", "partial-evaluation"]
+    },
+    {
+      "name": "auto-sources-colliding-rule-first",
+      "args": ["--auto-sources", "--quit-on-warning", "-DFIRST"],
+      "checks": ["roundtrip", "partial-evaluation"]
+    },
+    {
+      "name": "auto-sources-finds-the-colliding-member",
+      "args": ["--auto-sources", "--quit-on-warning", "-DFIRST"],
+      "contains": ["AUTO_IN_TERM_", "AUTO_OUT_TERM_"]
+    },
+    {
+      "name": "auto-sources-repeated-original-families",
+      "args": ["--auto-sources", "--quit-on-warning", "-DDUPLICATE"],
+      "checks": ["roundtrip", "partial-evaluation"]
+    }
+  ]
+}

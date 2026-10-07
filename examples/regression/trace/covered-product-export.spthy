@@ -1,0 +1,16 @@
+theory CoveredProductExport
+begin
+builtins: diffie-hellman
+
+// The product is already present in the computed Power action, so the
+// complete manual family may mention it in an added action. Printing that
+// member as an original rule would put it outside the supported E-rule
+// fragment. Keep the parent and the explicit variant on export.
+rule Emit: [] --[ Power(('g'^'a')^'b') ]-> []
+variants
+rule (modulo AC) Emit___VARIANT_1:
+  [] --[ Power('g'^('a'*'b')), Added('a'*'b') ]-> []
+
+lemma witness: exists-trace "Ex x y #i. Power(x)@i & Added(y)@i"
+lemma no_added: "All x #i. Added(x)@i ==> F"
+end

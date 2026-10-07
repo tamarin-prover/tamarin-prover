@@ -316,6 +316,20 @@ class IntegrationTests(unittest.TestCase):
             regressionTests.main()
         self.assertEqual(stopped.exception.code, 1)
 
+    def test_make_failure_reports_output_and_skips_comparison(self):
+        failure = subprocess.CalledProcessError(2, ["make"],
+                                               output=b"prover failed: example.spthy\n\xff")
+        with patch.object(sys, "argv", ["regressionTests.py", "-noi"]), \
+                patch.object(regressionTests, "runCommandTests", return_value=True), \
+                patch.object(subprocess, "check_output", side_effect=failure), \
+                patch.object(regressionTests, "compare") as compare, \
+                self.assertLogs(level="ERROR") as logs, self.assertRaises(SystemExit) as stopped:
+            regressionTests.main()
+        self.assertEqual(stopped.exception.code, 1)
+        self.assertIn("prover failed: example.spthy", "\n".join(logs.output))
+        self.assertIn("exit status 2", "\n".join(logs.output))
+        compare.assert_not_called()
+
     def test_no_make_does_not_rerun_commands(self):
         with patch.object(sys, "argv", ["regressionTests.py", "-noi", "-nom"]), \
                 patch.object(regressionTests, "runCommandTests") as run, \
