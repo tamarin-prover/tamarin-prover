@@ -152,7 +152,9 @@ closeTheoryWithMaude sig thy0 autoSources showSaturation =
 
     -- extract protocol rules
     rules :: [TheoryItem ClosedProtoRule IncrementalProof s] -> [ClosedProtoRule]
-    rules its = theoryRules (Theory errClose errClose errClose errClose errClose errClose its errClose False)
+    -- Export merges identical members; use the same rule set for case names
+    -- during proving, so those proofs still replay after export.
+    rules its = nub $ theoryRules (Theory errClose errClose errClose errClose errClose errClose its errClose False)
     errClose = error "closeTheory"
 
     addSolvingLoopBreakers = useAutoLoopBreakersAC

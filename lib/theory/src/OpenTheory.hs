@@ -590,17 +590,19 @@ containsManualRuleVariants = foldl f False
 
 -- | Merges variants of the same protocol rule modulo E
 mergeOpenProtoRules :: [TheoryItem OpenProtoRule p s] -> [TheoryItem OpenProtoRule p s]
-mergeOpenProtoRules = concatMap (foldr mergeRules []) . groupBy comp
+mergeOpenProtoRules = concatMap mergeRules . groupBy comp
   where
     comp (RuleItem (OpenProtoRule ruE _)) (RuleItem (OpenProtoRule ruE' _)) = ruE == ruE'
     comp (RuleItem _) _ = False
     comp _ (RuleItem _) = False
     comp _ _ = True
 
-    mergeRules (RuleItem r) [] = [RuleItem r]
-    mergeRules (RuleItem (OpenProtoRule ruE' ruAC')) [RuleItem (OpenProtoRule ruE ruAC)] | ruE == ruE' = [RuleItem (OpenProtoRule ruE (ruAC' ++ ruAC))]
-    mergeRules (RuleItem _) _ = error "Error in mergeOpenProtoRules. Please report bug."
-    mergeRules item l = item : l
+    -- Identical repeated originals are allowed, but their members must only
+    -- appear once in the exported family: duplicate variant names cannot parse.
+    mergeRules group@(RuleItem (OpenProtoRule ruE _) : _) =
+      [RuleItem $ OpenProtoRule ruE $ nub
+        [ru | RuleItem (OpenProtoRule _ members) <- group, ru <- members]]
+    mergeRules group = group
 
 -- | Returns true if there are DiffProtoRules containing manual instances or variants
 containsManualRuleVariantsDiff :: [DiffTheoryItem DiffProtoRule r p p2] -> Bool

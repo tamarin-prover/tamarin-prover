@@ -9,6 +9,11 @@
       "name": "preserve-singleton-family-names-auto-sources",
       "args": ["--auto-sources", "--quit-on-warning"],
       "checks": ["roundtrip", "partial-evaluation"]
+    },
+    {
+      "name": "repeated-explicit-singleton-families",
+      "args": ["--quit-on-warning", "-DDUPLICATE"],
+      "checks": ["roundtrip", "partial-evaluation"]
     }
   ]
 }

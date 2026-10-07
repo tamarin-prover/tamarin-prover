@@ -6,6 +6,13 @@ builtins: symmetric-encryption
 rule Start:
   [Fr(~k), Fr(~v)] --[Sent(~v)]-> [!Key(~k), Out(senc(<'tag',~v>,~k))]
 
+// Repeated identical originals are accepted. Their annotated members must
+// not be duplicated when the family is reassembled for export.
+#ifdef DUPLICATE
+rule Start:
+  [Fr(~k), Fr(~v)] --[Sent(~v)]-> [!Key(~k), Out(senc(<'tag',~v>,~k))]
+#endif
+
 // Consume has a computed member named Consume___VARIANT_3. The independent
 // rule with that name must not receive its auto-source input annotation.
 // Check both orders: annotations and source-node lookup used to use names
@@ -16,6 +23,10 @@ rule Consume___VARIANT_3: [] --[Other()]-> []
 
 rule Consume:
   [!Key(k), In(c)] --[Got(snd(sdec(c,k)))]-> [Out(snd(sdec(c,k)))]
+#ifdef DUPLICATE
+rule Consume:
+  [!Key(k), In(c)] --[Got(snd(sdec(c,k)))]-> [Out(snd(sdec(c,k)))]
+#endif
 
 #ifdef FIRST
 #else

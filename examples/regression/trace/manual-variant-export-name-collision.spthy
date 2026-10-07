@@ -12,6 +12,15 @@ rule R:
 variants rule (modulo AC) R___VARIANT_1:
   [In(x)] --[Original(x), Annotated(x)]-> [Out(x)]
 
+// The parser also accepts repeated identical explicit families. Reopening
+// them must not turn their members into duplicate names within one family.
+#ifdef DUPLICATE
+rule R:
+  [In(x)] --[Original(x)]-> [Out(d(c(x)))]
+variants rule (modulo AC) R___VARIANT_1:
+  [In(x)] --[Original(x), Annotated(x)]-> [Out(x)]
+#endif
+
 rule R___VARIANT_1:
   [] --[Other()]-> []
 
@@ -20,6 +29,12 @@ rule Trivial:
   [In(x)] --[Normal(x)]-> []
 variants rule (modulo AC) Trivial___VARIANT_1:
   [In(y)] --[Normal(y), Added(y)]-> []
+#ifdef DUPLICATE
+rule Trivial:
+  [In(x)] --[Normal(x)]-> []
+variants rule (modulo AC) Trivial___VARIANT_1:
+  [In(y)] --[Normal(y), Added(y)]-> []
+#endif
 
 rule Trivial___VARIANT_1:
   [] --[OtherNormal()]-> []
