@@ -1,0 +1,491 @@
+==================================================
+Concatenated default oracle rankings
+==================================================
+
+theory T begin
+heuristic: osopo
+end
+
+---
+
+(theory
+  theory_name: (ident)
+  (global_heuristic
+    heuristic: (heuristic
+      (oracle_ranking)
+      (builtin_ranking)
+      (oracle_ranking)
+      (builtin_ranking)
+      (oracle_ranking))))
+
+==================================================
+Mixed uppercase and lowercase oracle rankings
+==================================================
+
+theory T begin
+heuristic: sOpiO
+end
+
+---
+
+(theory
+  theory_name: (ident)
+  (global_heuristic
+    heuristic: (heuristic
+      (builtin_ranking)
+      (oracle_ranking)
+      (builtin_ranking)
+      (builtin_ranking)
+      (oracle_ranking))))
+
+==================================================
+Lemma heuristic with default oracle rankings
+==================================================
+
+theory T begin
+lemma L [heuristic=soioo]: "T"
+end
+
+---
+
+(theory
+  theory_name: (ident)
+  (lemma
+    lemma_identifier: (ident)
+    (lemma_attrs
+      (lemma_attr
+        heuristic: (heuristic
+          (builtin_ranking)
+          (oracle_ranking)
+          (builtin_ranking)
+          (oracle_ranking)
+          (oracle_ranking))))
+    formula: (atom)))
+
+==================================================
+Explicit oracle paths between adjacent rankings
+==================================================
+
+theory T begin
+heuristic: o"oracle.py"O"../other/oracle"si
+end
+
+---
+
+(theory
+  theory_name: (ident)
+  (global_heuristic
+    heuristic: (heuristic
+      (oracle_ranking
+        path: (oracle_path))
+      (oracle_ranking
+        path: (oracle_path))
+      (builtin_ranking)
+      (builtin_ranking))))
+
+==================================================
+Spaces around oracle paths and tactics
+==================================================
+
+theory T begin
+heuristic: s o "my oracle.py" {custom} O "../oracle" i
+end
+
+---
+
+(theory
+  theory_name: (ident)
+  (global_heuristic
+    heuristic: (heuristic
+      (builtin_ranking)
+      (oracle_ranking
+        path: (oracle_path))
+      (tactic_reference
+        name: (tactic_name))
+      (oracle_ranking
+        path: (oracle_path))
+      (builtin_ranking))))
+
+==================================================
+Rankings do not consume the following declaration
+==================================================
+
+theory T begin
+heuristic: osopo
+section{* Comments after a heuristic *}
+process: out('x')
+end
+
+---
+
+(theory
+  theory_name: (ident)
+  (global_heuristic
+    heuristic: (heuristic
+      (oracle_ranking)
+      (builtin_ranking)
+      (oracle_ranking)
+      (builtin_ranking)
+      (oracle_ranking)))
+  (formal_comment
+    comment_identifier: (ident))
+  (process
+    (output
+      (mset_term
+        left: (nat_term
+          left: (xor_term
+            left: (mul_term
+              left: (exp_term
+                base: (pub_name)))))))))
+
+==================================================
+Oracle prefixes remain ordinary identifiers
+==================================================
+
+theory osopo begin
+functions: oracle/0
+rule orange: [] --> [Out(oracle)]
+end
+
+---
+
+(theory
+  theory_name: (ident)
+  (functions
+    (function_untyped
+      function_identifier: (ident)
+      arity: (natural)))
+  (rule
+    (simple_rule
+      rule_identifier: (ident)
+      (premise)
+      (conclusion
+        (linear_fact
+          fact_identifier: (ident)
+          (arguments
+            argument: (mset_term
+              left: (nat_term
+                left: (xor_term
+                  left: (mul_term
+                    left: (exp_term
+                      base: (msg_var_or_nullary_fun
+                        variable_identifier: (ident)))))))))))))
+
+==================================================
+Invalid ranking punctuation rejected
+:error
+==================================================
+
+theory T begin
+heuristic: os?po
+end
+
+---
+
+==================================================
+Non-oracle ranking cannot take a path
+:error
+==================================================
+
+theory T begin
+heuristic: si"oracle.py"
+end
+
+---
+
+==================================================
+Oracle path after a builtin
+==================================================
+
+theory T begin
+heuristic: sO"oracle.py"
+end
+
+---
+
+(theory
+  (ident)
+  (global_heuristic
+    (heuristic
+      (builtin_ranking)
+      (oracle_ranking
+        (oracle_path)))))
+
+==================================================
+Oracle paths remain available after builtins
+==================================================
+
+theory T begin
+heuristic: o"oracle.py"sO"../other/oracle"i
+end
+
+---
+
+(theory
+  (ident)
+  (global_heuristic
+    (heuristic
+      (oracle_ranking
+        (oracle_path))
+      (builtin_ranking)
+      (oracle_ranking
+        (oracle_path))
+      (builtin_ranking))))
+
+==================================================
+Long heuristic sequences are not presorts
+==================================================
+
+theory T begin
+heuristic: cispCISPosopo
+end
+
+---
+
+(theory
+  theory_name: (ident)
+  (global_heuristic
+    heuristic: (heuristic
+      (builtin_ranking)
+      (builtin_ranking)
+      (builtin_ranking)
+      (builtin_ranking)
+      (builtin_ranking)
+      (builtin_ranking)
+      (builtin_ranking)
+      (builtin_ranking)
+      (oracle_ranking)
+      (builtin_ranking)
+      (oracle_ranking)
+      (builtin_ranking)
+      (oracle_ranking))))
+
+==================================================
+Heuristic must not be empty
+:error
+==================================================
+
+theory T begin
+heuristic:
+end
+
+---
+
+==================================================
+Lemma heuristic must not be empty
+:error
+==================================================
+
+theory T begin
+lemma L [heuristic=]: "T"
+end
+
+---
+
+==================================================
+Whitespace before the first global ranking
+==================================================
+
+theory T begin
+heuristic:
+/* leading */ s
+end
+
+---
+
+(theory
+  (ident)
+  (global_heuristic
+    (multi_comment)
+    (heuristic
+      (builtin_ranking))))
+
+==================================================
+Whitespace before the first lemma ranking
+==================================================
+
+theory T begin
+lemma L [heuristic=
+/* leading */ so "path", reuse]: "T"
+end
+
+---
+
+(theory
+  (ident)
+  (lemma
+    (ident)
+    (lemma_attrs
+      (lemma_attr
+        (multi_comment)
+        (heuristic
+          (builtin_ranking)
+          (oracle_ranking
+            (oracle_path))))
+      (lemma_attr))
+    (atom)))
+
+==================================================
+Trailing comment after a lemma heuristic
+==================================================
+
+theory T begin
+lemma L [heuristic=s /* trailing */]: "T"
+end
+
+---
+
+(theory
+  (ident)
+  (lemma
+    (ident)
+    (lemma_attrs
+      (lemma_attr
+        (heuristic
+          (builtin_ranking))
+        (multi_comment)))
+    (atom)))
+
+==================================================
+Tactic names retain their content
+==================================================
+
+theory T begin
+heuristic: { Custom name} s
+
+end
+
+---
+
+(theory
+  (ident)
+  (global_heuristic
+    (heuristic
+      (tactic_reference
+        (tactic_name))
+      (builtin_ranking))))
+
+==================================================
+Comment ends the lemma heuristic
+:error
+==================================================
+
+theory T begin
+lemma L [heuristic=s /* boundary */o]: "T"
+end
+
+---
+
+==================================================
+Comment separates an oracle from its path
+:error
+==================================================
+
+theory T begin
+lemma L [heuristic=o /* boundary */"path"]: "T"
+end
+
+---
+
+==================================================
+Newline ends the lemma heuristic
+:error
+==================================================
+
+theory T begin
+lemma L [heuristic=s
+o]: "T"
+end
+
+---
+
+==================================================
+Global oracle path cannot cross a comment
+:error
+==================================================
+
+theory T begin
+heuristic:o /* boundary */"path"
+end
+
+---
+
+==================================================
+Oracle path cannot cross a newline
+:error
+==================================================
+
+theory T begin
+heuristic:o
+"path"
+end
+
+---
+
+==================================================
+Tactic name cannot cross a newline
+:error
+==================================================
+
+theory T begin
+heuristic:{Custom
+}
+end
+
+---
+
+==================================================
+Missing closing tactic brace
+:error
+==================================================
+
+theory T begin
+heuristic:{Custom
+end
+
+---
+
+==================================================
+Missing tactic name
+:error
+==================================================
+
+theory T begin
+heuristic:{}
+end
+
+---
+
+==================================================
+Empty oracle path rejected
+:error
+==================================================
+
+theory T begin
+heuristic:sO""
+end
+
+---
+
+==================================================
+Global heuristic needs a line or comment boundary
+:error
+==================================================
+
+theory T begin
+heuristic:s end
+end
+
+---
+
+==================================================
+Preprocessor directive needs a boundary after a heuristic
+:error
+==================================================
+
+theory T begin
+#ifdef X
+heuristic:s #endif
+end
+
+---

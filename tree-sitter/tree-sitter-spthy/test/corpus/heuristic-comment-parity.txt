@@ -1,0 +1,295 @@
+==================================================
+Builtin-named comment after a heuristic
+==================================================
+
+theory Test begin
+heuristic: s
+s{* hello *}
+end
+
+---
+
+(theory
+  theory_name: (ident)
+  (global_heuristic
+    heuristic: (heuristic
+      (builtin_ranking)))
+  (formal_comment
+    comment_identifier: (ident)))
+
+==================================================
+Oracle-named comment after a heuristic
+==================================================
+
+theory Test begin
+heuristic: s
+o{* hello *}
+end
+
+---
+
+(theory
+  theory_name: (ident)
+  (global_heuristic
+    heuristic: (heuristic
+      (builtin_ranking)))
+  (formal_comment
+    comment_identifier: (ident)))
+
+==================================================
+Rank-sequence-named comment after a heuristic
+==================================================
+
+theory Test begin
+heuristic: osopo
+CISPosopo{* hello *}
+end
+
+---
+
+(theory
+  theory_name: (ident)
+  (global_heuristic
+    heuristic: (heuristic
+      (oracle_ranking)
+      (builtin_ranking)
+      (oracle_ranking)
+      (builtin_ranking)
+      (oracle_ranking)))
+  (formal_comment
+    comment_identifier: (ident)))
+
+==================================================
+Rank-named comment after explicit oracle paths
+==================================================
+
+theory Test begin
+heuristic: o"oracle.py"O"other.py"si
+O{* hello *}
+end
+
+---
+
+(theory
+  theory_name: (ident)
+  (global_heuristic
+    heuristic: (heuristic
+      (oracle_ranking
+        path: (oracle_path))
+      (oracle_ranking
+        path: (oracle_path))
+      (builtin_ranking)
+      (builtin_ranking)))
+  (formal_comment
+    comment_identifier: (ident)))
+
+==================================================
+Rank-named comment after a tactic reference
+==================================================
+
+theory Test begin
+heuristic: {Custom}
+s{* hello *}
+end
+
+---
+
+(theory
+  theory_name: (ident)
+  (global_heuristic
+    heuristic: (heuristic
+      (tactic_reference
+        name: (tactic_name))))
+  (formal_comment
+    comment_identifier: (ident)))
+
+==================================================
+Rank-named comment without a heuristic
+==================================================
+
+theory Test begin
+osopo{* hello *}
+end
+
+---
+
+(theory
+  theory_name: (ident)
+  (formal_comment
+    comment_identifier: (ident)))
+
+==================================================
+Oracle path cannot be a formal comment name
+:error
+==================================================
+
+theory Test begin
+heuristic: s
+o"oracle.py"{* hello *}
+end
+
+---
+
+==================================================
+Indented rank comment after a newline
+==================================================
+
+theory Test begin
+heuristic: s
+    s{* hello *}
+end
+
+---
+
+(theory
+  theory_name: (ident)
+  (global_heuristic
+    heuristic: (heuristic
+      (builtin_ranking)))
+  (formal_comment
+    comment_identifier: (ident)))
+
+==================================================
+Tab ends a global heuristic
+==================================================
+
+theory Test begin
+heuristic: s	s{* hello *}
+end
+
+---
+
+(theory
+  theory_name: (ident)
+  (global_heuristic
+    heuristic: (heuristic
+      (builtin_ranking)))
+  (formal_comment
+    comment_identifier: (ident)))
+
+==================================================
+Line comment ends a global heuristic
+==================================================
+
+theory Test begin
+heuristic: s // boundary
+s{* hello *}
+end
+
+---
+
+(theory
+  theory_name: (ident)
+  (global_heuristic
+    heuristic: (heuristic
+      (builtin_ranking))
+    (single_comment))
+  (formal_comment
+    comment_identifier: (ident)))
+
+==================================================
+Block comment ends a global heuristic
+==================================================
+
+theory Test begin
+heuristic: s /* boundary */s{* hello *}
+end
+
+---
+
+(theory
+  theory_name: (ident)
+  (global_heuristic
+    heuristic: (heuristic
+      (builtin_ranking))
+    (multi_comment))
+  (formal_comment
+    comment_identifier: (ident)))
+
+==================================================
+Multiline block comment ends a global heuristic
+==================================================
+
+theory Test begin
+heuristic: s /*
+boundary */s{* hello *}
+end
+
+---
+
+(theory
+  theory_name: (ident)
+  (global_heuristic
+    heuristic: (heuristic
+      (builtin_ranking))
+    (multi_comment))
+  (formal_comment
+    comment_identifier: (ident)))
+
+==================================================
+Spaces continue a global heuristic
+==================================================
+
+theory Test begin
+heuristic: s o O"oracle.py" i
+s{* hello *}
+end
+
+---
+
+(theory
+  theory_name: (ident)
+  (global_heuristic
+    heuristic: (heuristic
+      (builtin_ranking)
+      (oracle_ranking)
+      (oracle_ranking
+        path: (oracle_path))
+      (builtin_ranking)))
+  (formal_comment
+    comment_identifier: (ident)))
+
+==================================================
+Global heuristic cannot continue on the next line
+:error
+==================================================
+
+theory Test begin
+heuristic: s
+o"oracle.py"
+end
+
+---
+
+==================================================
+Global heuristic cannot continue after a tab
+:error
+==================================================
+
+theory Test begin
+heuristic: s	o"oracle.py"
+end
+
+---
+
+==================================================
+Global heuristic cannot continue after a block comment
+:error
+==================================================
+
+theory Test begin
+heuristic: s /* boundary */o"oracle.py"
+end
+
+---
+
+==================================================
+Same-line unknown letters do not become a formal comment
+:error
+==================================================
+
+theory Test begin
+heuristic: s text{* hello *}
+end
+
+---
