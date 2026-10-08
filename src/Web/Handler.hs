@@ -418,6 +418,9 @@ reloadTheoryFromFile filePath idx isDiff replaceTrace replaceDiff successRoute =
       show (length report) ++ " error(s) found" ++ (if isDiff then " in diff theory" else "") ++
       ":\n\n" ++ renderHtmlDoc (htmlDoc $ prettyWfErrorReport report)
 
+    Left (UnsupportedInputError report) -> mkAlert $ "Unsupported rule semantics while reloading " ++ typeName ++ ":\n\n"
+      ++ filePath ++ "\n\n" ++ renderHtmlDoc (htmlDoc $ prettyWfErrorReport report)
+
     Left exportError@(ExportTranslationError _) ->
       mkAlert $ "Export error while reloading " ++ typeName ++ ":\n\n" ++ show exportError
     

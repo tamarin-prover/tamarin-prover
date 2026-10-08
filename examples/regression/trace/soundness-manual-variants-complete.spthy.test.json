@@ -1,0 +1,10 @@
+{
+  "tests": [
+    {
+      "name": "validation",
+      "args": [
+        "--quit-on-warning"
+      ]
+    }
+  ]
+}

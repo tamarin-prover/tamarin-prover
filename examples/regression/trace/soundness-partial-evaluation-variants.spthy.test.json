@@ -1,0 +1,17 @@
+{
+  "tests": [
+    {
+      "name": "partial-evaluation-verdicts",
+      "args": [
+        "--prove",
+        "--partial-evaluation=summary"
+      ],
+      "contains": [
+        "e_variant_reachable (exists-trace): verified",
+        "e_variant_not_unreachable (all-traces): falsified",
+        "imported_variant_reachable (exists-trace): verified",
+        "imported_variant_not_unreachable (all-traces): falsified"
+      ]
+    }
+  ]
+}

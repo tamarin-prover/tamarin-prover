@@ -1,0 +1,12 @@
+theory ManualVariantEmbeddedRestriction begin
+builtins: symmetric-encryption
+// Embedded restrictions in explicit variant members used to be dropped
+// silently, so b_exists was verified although the restriction forbids it.
+// Such members must be rejected.
+rule Emit: [In(x), In(k)] --> [Out(sdec(x,k))]
+variants
+rule (modulo AC) Emit___VARIANT_1: [In(x.2), In(k.1)] --[Emitted(x.2), _restrict(x.2 = 'a')]-> [Out(sdec(x.2,k.1))],
+rule (modulo AC) Emit___VARIANT_2: [In(senc(z.2,k.1)), In(k.1)] --[Emitted(z.2), _restrict(z.2 = 'a')]-> [Out(z.2)]
+lemma only_a: "All x #i. Emitted(x)@i ==> x = 'a'"
+lemma b_exists: exists-trace "Ex #i. Emitted('b')@i"
+end

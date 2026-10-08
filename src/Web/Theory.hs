@@ -735,7 +735,7 @@ subDiffProofSnippet renderUrl tidx ti lemma proofPath ctxt prf =
         ++
         mirrorSystem
         ++
-        [ preformatted (Just "sequent") (prettyNonGraphSystemDiff ctxt se)
+        [ preformatted (Just "sequent") (prettyNonGraphSystemDiff se)
         , withTag "h3" [] (text $ nCases ++ " sub-case(s)")
         ] ++
         subCases
@@ -818,7 +818,9 @@ subDiffProofSnippet renderUrl tidx ti lemma proofPath ctxt prf =
     refSubCase (name, prf') =
         [ withTag "h4" [] (text "Case" <-> text name)
         , maybe (text "no proof state available")
-                (const $ refDotInteractiveDiffPath renderUrl tidx (DiffTheoryDiffProof lemma (proofPath ++ [name])) False)
+                (\se -> if nonEmptyGraphDiff se
+                   then refDotInteractiveDiffPath renderUrl tidx (DiffTheoryDiffProof lemma (proofPath ++ [name])) False
+                   else emptyDoc)
                 (dpsInfo $ root prf')
         ]
 

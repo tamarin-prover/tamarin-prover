@@ -63,19 +63,24 @@ openProtoRule r = OpenProtoRule ruleE ruleAC
 unfoldRuleVariants :: ClosedProtoRule -> [ClosedProtoRule]
 unfoldRuleVariants (ClosedProtoRule ruE ruAC@(Rule ruACInfoOld ps cs as nvs))
    | isTrivialProtoVariantAC ruAC ruE = [ClosedProtoRule ruE ruAC]
+   -- Supplied or previously unfolded members already have their own names.
+   -- Re-unfolding their identity substitution must not append another suffix.
+   | L.get pracVariants ruACInfoOld == Disj [emptySubstVFresh]
+   , ruleName ruAC /= ruleName ruE = [ClosedProtoRule ruE ruAC]
    | otherwise = map toClosedProtoRule variants
         where
-          ruACInfo i = ProtoRuleACInfo (rName i (L.get pracName ruACInfoOld)) rAttributes (Disj [emptySubstVFresh]) loopBreakers
+          ruACInfo i = ProtoRuleACInfo (ruleVariantName i (L.get pracName ruACInfoOld)) rAttributes (Disj [emptySubstVFresh]) loopBreakers
           rAttributes = L.get pracAttributes ruACInfoOld
           loopBreakers = L.get pracLoopBreakers ruACInfoOld
-          rName i oldName = case oldName of
-            FreshRule -> FreshRule
-            StandRule s -> StandRule $ s ++ "___VARIANT_" ++ show i
-
           toClosedProtoRule (i, (ps', cs', as', nvs'))
             = ClosedProtoRule ruE (Rule (ruACInfo i) ps' cs' as' nvs')
           variants = zip [1::Int ..] $ map (\x -> apply x (ps, cs, as, nvs)) $ substs (L.get pracVariants ruACInfoOld)
           substs (Disj s) = map (`freshToFreeAvoiding` ruAC) s
+
+-- | Name of an explicitly numbered member of a rule's variant family.
+ruleVariantName :: Int -> ProtoRuleName -> ProtoRuleName
+ruleVariantName _ FreshRule = FreshRule
+ruleVariantName i (StandRule name) = StandRule $ name ++ "___VARIANT_" ++ show i
 
 -- | Close a protocol rule; i.e., compute AC variant and source assertion
 -- soundness sequent, if required.
@@ -83,7 +88,8 @@ closeProtoRule :: MaudeHandle -> [LNMacro] -> OpenProtoRule -> [ClosedProtoRule]
 -- if there are no macros, we do not call applyMacroInRule to make sure that new vars are not overwritten (important for diff mode)
 closeProtoRule hnd []     (OpenProtoRule ruE [])   = ClosedProtoRule ruE <$> maybeToList (variantsProtoRule hnd ruE)
 closeProtoRule hnd macros (OpenProtoRule ruE [])   = ClosedProtoRule ruE <$> maybeToList (variantsProtoRule hnd (applyMacroInRule macros ruE))
-closeProtoRule _   _      (OpenProtoRule ruE ruAC) = map (ClosedProtoRule ruE) ruAC
+closeProtoRule _   macros (OpenProtoRule ruE ruAC) =
+    map (ClosedProtoRule ruE . applyMacroInRulePreservingNewVars macros) ruAC
 
 
 -- | Returns true if the REFINED sources contain open chains.

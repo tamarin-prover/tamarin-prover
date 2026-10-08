@@ -1,0 +1,15 @@
+// Regression for issue #909: an implicit #j binder has the node type.
+// Bind k before the embedded rule to avoid the original example's unrelated
+// unbound-variable warning. The implicit temporal binder is unchanged.
+theory R4
+begin
+process:
+  in(m);
+  in(k);
+  [ ] --[ Ev(m), _restrict(Ex #j. K(k)@#j) ]-> [ ];
+  out(k)
+
+lemma reachable:
+  exists-trace
+  "Ex m #i. Ev(m) @ i"
+end

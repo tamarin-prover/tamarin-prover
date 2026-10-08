@@ -1,0 +1,21 @@
+theory NegatedEquivalence
+begin
+
+rule Step:
+  [] --[ Step() ]-> []
+
+// All four lemmas must verify. Negating an equivalence must disjoin,
+// rather than conjoin, the negations of its two implication arms.
+lemma negated_equivalence:
+  "not (T <=> F)"
+
+lemma expanded_equivalent:
+  "(T & not F) | (not T & F)"
+
+lemma exists_negated_equivalence:
+  exists-trace "not (T <=> F)"
+
+lemma exists_expanded_equivalent:
+  exists-trace "(T & not F) | (not T & F)"
+
+end

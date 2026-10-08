@@ -1,0 +1,41 @@
+theory ManualVariantRenamedMacros begin
+builtins: symmetric-encryption
+macros: identity(x) = x,
+        erase(x) = 'a',
+        duplicate(x) = <x,x>,
+        nested(x) = identity(duplicate(identity(x)))
+
+// Both equation cases, independently renamed, with macros in all fact roles.
+// The members are compared with the computed variants after macro expansion
+// and up to renaming, and the solver uses them expanded. The erased public
+// variable is absent from executable facts after expansion. Without the
+// second member the family is incomplete and is rejected.
+#ifdef INCOMPLETE
+rule Emit:
+  [In(<x,x>), In(k)] --[Original(sdec(x,k)), Public($p)]-> [Out(sdec(x,k))]
+variants
+rule (modulo AC) Emit___VARIANT_1:
+  [In(nested(cipher)), In(identity(key))]
+  --[Original(identity(sdec(cipher,key))), Public(identity($q)),
+     Added(erase($unused)), Seen(nested($q))]->
+  [Out(identity(sdec(cipher,key)))]
+#else
+rule Emit:
+  [In(<x,x>), In(k)] --[Original(sdec(x,k)), Public($p)]-> [Out(sdec(x,k))]
+variants
+rule (modulo AC) Emit___VARIANT_1:
+  [In(nested(cipher)), In(identity(key))]
+  --[Original(identity(sdec(cipher,key))), Public(identity($q)),
+     Added(erase($unused)), Seen(nested($q))]->
+  [Out(identity(sdec(cipher,key)))]
+,
+rule (modulo AC) Emit___VARIANT_2:
+  [In(nested(senc(plain,key))), In(identity(key))]
+  --[Original(identity(plain)), Public(identity($q)),
+     Added(erase($unused)), Seen(nested($q))]->
+  [Out(identity(plain))]
+#endif
+
+lemma witness: exists-trace "Ex #i. Added('a')@i & Seen(<'b','b'>)@i"
+lemma false_safety: "All #i. Added('a')@i ==> F"
+end

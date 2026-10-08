@@ -1,0 +1,40 @@
+theory SoundnessPartialEvaluationVariants
+begin
+
+functions: c/1, d/1
+equations: d(c(x)) = x
+
+rule Seed:
+  [ ] --> [ State('ok') ]
+
+// The abstract interpreter must start from the compiled E-variant. Its old
+// AC-only refinement did not see that this premise is State('ok') modulo E.
+rule UseModuloE:
+  [ State(d(c('ok'))) ]
+  --[ UsedModuloE() ]->
+  [ ]
+  variants
+  // Partial evaluation must also preserve this imported variant and its added
+  // action instead of recomputing variants from the original E-rule.
+  rule (modulo AC) UseModuloE___VARIANT_1:
+    [ State('ok') ]
+    --[ UsedModuloE(), UsedImportedVariant() ]->
+    [ ]
+
+lemma e_variant_reachable:
+  exists-trace
+  "Ex #i. UsedModuloE() @ #i"
+
+lemma e_variant_not_unreachable:
+  all-traces
+  "not (Ex #i. UsedModuloE() @ #i)"
+
+lemma imported_variant_reachable:
+  exists-trace
+  "Ex #i. UsedImportedVariant() @ #i"
+
+lemma imported_variant_not_unreachable:
+  all-traces
+  "not (Ex #i. UsedImportedVariant() @ #i)"
+
+end

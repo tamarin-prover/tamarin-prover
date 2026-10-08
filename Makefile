@@ -144,7 +144,7 @@ csf12-case-studies:	$(CSF12_CS_TARGETS)
 case-studies$(SUBDIR)%_analyzed.spthy:	examples/%.spthy $(TAMARIN)
 	mkdir -p $(dir $@)
 	# Use -N3, as the fourth core is used by the OS and the console
-	$(TAMARIN) $< --prove --stop-on-trace=dfs -d=0 +RTS -N3 -RTS -o$<.tmp >$<.out
+	$(TAMARIN) $< --prove --stop-on-trace=dfs -d=0 $(TRACE_EXTRA_ARGS) +RTS -N3 -RTS -o$<.tmp >$<.out
 	# We only produce the target after the run, otherwise aborted
 	# runs already 'finish' the case.
 	printf "\n/* Output\n" >>$<.tmp
@@ -482,11 +482,24 @@ accountability-case-studies:	$(ACCOUNTABILITY_CS_TARGETS)
 ## Regression (old issues)
 ##########################
 
-FAST_REGRESSION_CASE_STUDIES=issue446-1.spthy issue446-2.spthy issue753-4.spthy issue753-5.spthy issue753-6.spthy issue834.spthy issue777.spthy issue770.spthy issue914.spthy
+FAST_REGRESSION_CASE_STUDIES=issue446-1.spthy issue446-2.spthy issue753-4.spthy issue753-5.spthy issue753-6.spthy issue834.spthy issue777.spthy issue770.spthy issue914.spthy issue904.spthy issue905.spthy negated-equivalence.spthy
+COMMON_REGRESSION_CASE_STUDIES=soundness-manual-variants-complete.spthy soundness-partial-evaluation-variants.spthy partial-evaluation-export.spthy partial-evaluation-collision.spthy
+COMMON_REGRESSION_CASE_STUDIES+=manual-variant-auto-sources-roundtrip.spthy
+case-studies$(SUBDIR)regression/trace/manual-variant-auto-sources-roundtrip_analyzed.spthy: TRACE_EXTRA_ARGS=--auto-sources
+COMMON_REGRESSION_CASE_STUDIES+=covered-product-export.spthy
+COMMON_REGRESSION_CASE_STUDIES+=manual-variant-export-name-collision.spthy
+COMMON_REGRESSION_CASE_STUDIES+=auto-sources-rule-name-collision.spthy
+case-studies$(SUBDIR)regression/trace/auto-sources-rule-name-collision_analyzed.spthy: TRACE_EXTRA_ARGS=--auto-sources
+FAST_REGRESSION_CASE_STUDIES+=$(COMMON_REGRESSION_CASE_STUDIES)
 FAST_REGRESSION_TARGETS=$(subst .spthy,_analyzed.spthy,$(addprefix case-studies$(SUBDIR)regression/trace/,$(FAST_REGRESSION_CASE_STUDIES)))
 
 
+case-studies$(SUBDIR)regression/trace/soundness-partial-evaluation-variants_analyzed.spthy: TRACE_EXTRA_ARGS=--partial-evaluation=summary
+case-studies$(SUBDIR)regression/trace/partial-evaluation-export_analyzed.spthy: TRACE_EXTRA_ARGS=--partial-evaluation=summary
+case-studies$(SUBDIR)regression/trace/partial-evaluation-collision_analyzed.spthy: TRACE_EXTRA_ARGS=--partial-evaluation=summary
+
 REGRESSION_CASE_STUDIES=issue216.spthy issue193.spthy issue310.spthy issue519.spthy issue527.spthy issue515.spthy
+REGRESSION_CASE_STUDIES+=$(COMMON_REGRESSION_CASE_STUDIES)
 REGRESSION_TARGETS=$(subst .spthy,_analyzed.spthy,$(addprefix case-studies$(SUBDIR)regression/trace/,$(REGRESSION_CASE_STUDIES)))
 
 SEQDFS_CASE_STUDIES=seqdfsneeded.spthy
