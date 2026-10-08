@@ -285,6 +285,11 @@ matchToGoal ctxt th0 goalTerm =
             subst:_ ->
                 let refine = do
                         modM sEdges (substNodePrem pPat (iPat, premIdxTerm))
+                        -- The source's solved premise goal must move with
+                        -- its edge, otherwise it can solve a different
+                        -- premise when the source system is conjoined.
+                        modM sGoals (M.mapKeysWith combineGoalStatus
+                            (substGoalPrem pPat (iPat, premIdxTerm)))
                         refineSubst subst
                 in Just $ snd $ refineSource ctxt refine (set cdGoal goalTerm th)
 
@@ -312,6 +317,12 @@ matchToGoal ctxt th0 goalTerm =
 
     substNodePrem from to = S.map
         (\ e@(Edge c p) -> if p == from then Edge c to else e)
+
+    substGoalPrem from to (PremiseG p fa)
+        | p == from = PremiseG to fa
+    substGoalPrem from to (ChainG c p)
+        | p == from = ChainG c to
+    substGoalPrem _ _ goal = goal
 
     doMatch match = runReader (solveMatchLNTerm match) (get pcMaudeHandle ctxt)
 

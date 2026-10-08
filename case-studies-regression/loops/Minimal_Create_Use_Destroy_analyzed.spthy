@@ -116,13 +116,7 @@ next
       qed
     next
       case Use
-      solve( Object( ~n ) ▶₀ #i )
-        case Create
-        by contradiction /* cyclic */
-      next
-        case Use
-        by contradiction /* cyclic */
-      qed
+      by solve( Object( ~n ) ▶₀ #i )
     qed
   next
     case case_3
@@ -131,13 +125,7 @@ next
             (∀ #i. (Use( x ) @ #i) ⇒ ((last(#i)) ∨ (#i < #j))) ∧
             (∀ #i. (Destroy( x ) @ #i) ⇒ ((last(#i)) ∨ (#i = #j)))) )
       case case_1
-      solve( Object( ~n ) ▶₀ #j )
-        case Create
-        by contradiction /* cyclic */
-      next
-        case Use
-        by contradiction /* cyclic */
-      qed
+      by solve( Object( ~n ) ▶₀ #j )
     next
       case case_2
       solve( (#i < #j)  ∥ (#j < #i) )
@@ -148,21 +136,12 @@ next
         solve( Object( ~n ) ▶₀ #j )
           case Create
           solve( Object( ~n ) ▶₀ #i )
-            case Create
-            by contradiction /* cyclic */
-          next
             case Use
             by contradiction /* from formulas */
           qed
         next
           case Use
-          solve( Object( ~n ) ▶₀ #i )
-            case Create
-            by contradiction /* cyclic */
-          next
-            case Use
-            by contradiction /* cyclic */
-          qed
+          by solve( Object( ~n ) ▶₀ #i )
         qed
       qed
     qed
@@ -175,8 +154,8 @@ qed
 Generated from:
 Tamarin version 1.13.0
 Maude version 3.5.1
-Git revision: 41bc81379b23681e7057314a5cf66a25c45e1986, branch: canonicalise-subst
-Compiled at: 2026-07-27 16:11:34.947223 UTC
+Git revision: 5df53af2911dfd01204a9142e8237672e5d05dae (with uncommited changes), branch: msr-proof-correctness
+Compiled at: 2026-09-25 19:18:42.692960904 UTC
 */
 
 end
@@ -188,10 +167,10 @@ summary of summaries:
 analyzed: examples/loops/Minimal_Create_Use_Destroy.spthy
 
   output:          examples/loops/Minimal_Create_Use_Destroy.spthy.tmp
-  processing time: 0.04s
+  processing time: 0.21s
   
   Use_charn (all-traces): verified (7 steps)
-  Destroy_charn (all-traces): verified (27 steps)
+  Destroy_charn (all-traces): verified (20 steps)
 
 ==============================================================================
 */
