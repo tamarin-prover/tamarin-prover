@@ -9,9 +9,9 @@ SUBDIR=/
 ifdef FAST  
 	SUBDIR=/fast-tests/
 endif
-# Default installation via stack, multi-threaded
-# Try to install Tamarin
-default: tamarin
+# Default: build Tamarin via stack, multi-threaded, without installing it
+.PHONY: default
+default: build
 
 .PHONY: frontend
 frontend:
@@ -21,11 +21,21 @@ frontend:
 	cp frontend/dist/intdot-dynamicgraph.es.js data/js/
 	cp frontend/dist/intdot-style.css data/css/
 
-# Default Tamarin installation via stack, multi-threaded
-.PHONY: tamarin
-tamarin: frontend
+# Build Tamarin via stack, multi-threaded
+.PHONY: build
+build: frontend
+	stack setup
+	stack build
+
+# Install Tamarin to ~/.local/bin via stack, multi-threaded
+.PHONY: install
+install: frontend
 	stack setup
 	stack install
+
+# Kept for backwards compatibility: same as `make install`
+.PHONY: tamarin
+tamarin: install
 
 # Versioned Tamarin: `make git-version` installs as tamarin-prover-<git describe>.
 # If git describe fails, the name is tamarin-prover-unknown-git-version_sha256-<hash>.

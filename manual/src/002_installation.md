@@ -70,7 +70,7 @@ git clone https://github.com/tamarin-prover/tamarin-prover.git
 and you have the current development version ready for compilation. If you would prefer to use the
 master version, just run `git checkout master`.
 
-In either case, you can then run `make default` in the new directory, which will install an
+In either case, you can then run `make install` in the new directory, which will install an
 appropriate GHC (the Glasgow Haskell Compiler) for your system, including all dependencies. The
 `tamarin-prover` executable will be copied to `~/.local/bin/tamarin-prover`. Note that this process
 will take between 30 and 60 minutes, as all dependencies (roughly 120) are compiled from scratch. If
