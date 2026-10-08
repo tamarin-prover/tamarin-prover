@@ -68,7 +68,12 @@ closeTheoryWithMaude sig thy0 autoSources showSaturation =
     h          = L.get thyHeuristic thy0
     t          = L.get thyTactic thy0
     forcedInjFacts = L.get forcedInjectiveFacts $ L.get thyOptions thy0
-    cache its = closeRuleCache parameters restrictions (typAsms its) forcedInjFacts sig (rules its) (L.get thyCache thy0) (L.get (verboseOption . thyOptions) thy0) False (L.get thyIsSapic thy0)
+    cache its = closeRuleCache parameters restrictions (typAsms its) forcedInjFacts sig (cacheRules its) (L.get thyCache thy0) (L.get (verboseOption . thyOptions) thy0) False (L.get thyIsSapic thy0)
+    -- Injectivity and monotonicity must describe the expanded rules used by
+    -- the solver. Keep the original E-rules in the theory items for display.
+    cacheRules its = case theoryMacros thy0 of
+      []     -> rules its
+      macros -> L.modify cprRuleE (applyMacroInRule macros) <$> rules its
     checkProofM = checkAndExtendProver (sorryProver Nothing)
 
     -- Maude / Signature handle
@@ -462,7 +467,13 @@ closeRuleCache parameters restrictions typAsms forcedInjFacts sig protoRules int
 
     -- classifying the rules
     rulesAC = (fmap IntrInfo                    <$> intrRules) <|>
-              (fmap ProtoInfo . L.get cprRuleAC <$> protoRules)
+              (fmap ProtoInfo . cacheProtoRule <$> protoRules)
+
+    -- Only diff-cache copies use the parent name. Side proofs and export
+    -- retain the names of the supplied members.
+    cacheProtoRule (ClosedProtoRule ruE ruAC)
+      | isdiff = L.set (pracName . rInfo) (L.get (preName . rInfo) ruE) ruAC
+      | otherwise = ruAC
 
     anyOf ps = partition (\x -> any ($ x) ps)
 

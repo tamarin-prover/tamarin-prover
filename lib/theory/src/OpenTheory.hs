@@ -94,6 +94,7 @@ addAutoSourcesLemmaDiff hnd lemmaName crcLeft crcRight items =
       where
         f (DiffRuleItem r) = Just (DiffRuleItem r)
         f (DiffLemmaItem l) = Just (DiffLemmaItem l)
+        f (DiffMacroItem m) = Just (DiffMacroItem m)
         f (DiffTextItem t) = Just (DiffTextItem t)
         f (DiffConfigBlockItem b) = Just (DiffConfigBlockItem b)
         f _ = Nothing
@@ -604,79 +605,6 @@ mergeOpenProtoRules = concatMap mergeRules . groupBy comp
         [ru | RuleItem (OpenProtoRule _ members) <- group, ru <- members]]
     mergeRules group = group
 
--- | Returns true if there are DiffProtoRules containing manual instances or variants
-containsManualRuleVariantsDiff :: [DiffTheoryItem DiffProtoRule r p p2] -> Bool
-containsManualRuleVariantsDiff = foldl f False
-  where
-    f hasVariants (DiffRuleItem (DiffProtoRule _ Nothing)) = hasVariants
-    f _ (DiffRuleItem (DiffProtoRule _ (Just _))) = True
-    f hasVariants _ = hasVariants
-
--- | Merges variants of the same protocol rule modulo E
-mergeOpenProtoRulesDiff :: [DiffTheoryItem r OpenProtoRule p p2] -> [DiffTheoryItem r OpenProtoRule p p2]
-mergeOpenProtoRulesDiff = concatMap (foldr mergeRules []) . groupBy comp
-  where
-    comp (EitherRuleItem (s, OpenProtoRule ruE _)) (EitherRuleItem (s', OpenProtoRule ruE' _)) = ruE == ruE' && s == s'
-    comp (EitherRuleItem _) _ = False
-    comp _ (EitherRuleItem _) = False
-    comp _ _ = True
-
-    mergeRules (EitherRuleItem r) [] = [EitherRuleItem r]
-    mergeRules (EitherRuleItem (s, OpenProtoRule ruE' ruAC')) [EitherRuleItem (s', OpenProtoRule ruE ruAC)]
-      | ruE == ruE' && s == s' = [EitherRuleItem (s, OpenProtoRule ruE (ruAC' ++ ruAC))]
-    mergeRules (EitherRuleItem _) _ = error "Error in mergeOpenProtoRulesDiff. Please report bug."
-    mergeRules item l = item : l
-
--- | Merges left and right instances with initial diff rule
-mergeLeftRightRulesDiff :: (Show p, Show p2) => [DiffTheoryItem DiffProtoRule OpenProtoRule p p2] -> [DiffTheoryItem DiffProtoRule OpenProtoRule p p2]
-mergeLeftRightRulesDiff rs = map clean $ concatMap (foldr mergeRules []) $ groupBy comp' $ sortBy comp rs
-  where
-    comp (EitherRuleItem (_, OpenProtoRule ruE _)) (EitherRuleItem (_, OpenProtoRule ruE' _)) = compare (ruleName ruE) (ruleName ruE')
-    comp (EitherRuleItem (_, OpenProtoRule ruE _)) (DiffRuleItem (DiffProtoRule ruE' _)) = compare (ruleName ruE) (ruleName ruE')
-    comp (DiffRuleItem (DiffProtoRule ruE _)) (EitherRuleItem (_, OpenProtoRule ruE' _)) = compare (ruleName ruE) (ruleName ruE')
-    comp (DiffRuleItem (DiffProtoRule ruE _)) (DiffRuleItem (DiffProtoRule ruE' _)) = compare (ruleName ruE) (ruleName ruE')
-    comp (EitherRuleItem _) _ = LT
-    comp _ (EitherRuleItem _) = GT
-    comp (DiffRuleItem _) _ = LT
-    comp _ (DiffRuleItem _) = GT
-    comp _ _ = EQ
-
-    comp' a b = comp a b == EQ
-
-    mergeRules (EitherRuleItem r) [] = [EitherRuleItem r]
-    mergeRules (DiffRuleItem r) [] = [DiffRuleItem r]
-    mergeRules (EitherRuleItem (s, ru@(OpenProtoRule ruE _))) [EitherRuleItem (s', ru'@(OpenProtoRule ruE' _))]
-      | ruleName ruE == ruleName ruE' && s == LHS && s' == RHS = [DiffRuleItem (DiffProtoRule ruE (Just (ru, ru')))]
-    mergeRules (EitherRuleItem (s, ru@(OpenProtoRule ruE _))) [EitherRuleItem (s', ru'@(OpenProtoRule ruE' _))]
-      | ruleName ruE == ruleName ruE' && s == RHS && s' == LHS = [DiffRuleItem (DiffProtoRule ruE (Just (ru', ru)))]
-    mergeRules (EitherRuleItem (_, ru@(OpenProtoRule ruE _))) [DiffRuleItem (DiffProtoRule dru Nothing)]
-      | ruleName ruE == ruleName dru = [DiffRuleItem (DiffProtoRule dru (Just (ru, ru)))]
-    mergeRules (DiffRuleItem (DiffProtoRule dru Nothing)) [EitherRuleItem (_, ru@(OpenProtoRule ruE _))]
-      | ruleName ruE == ruleName dru = [DiffRuleItem (DiffProtoRule dru (Just (ru, ru)))]
-    mergeRules (EitherRuleItem (LHS, ru@(OpenProtoRule ruE _))) [DiffRuleItem (DiffProtoRule dru (Just (_, ru')))]
-      | ruleName ruE == ruleName dru = [DiffRuleItem (DiffProtoRule dru (Just (ru, ru')))]
-    mergeRules (EitherRuleItem (RHS, ru@(OpenProtoRule ruE _))) [DiffRuleItem (DiffProtoRule dru (Just (ru', _)))]
-      | ruleName ruE == ruleName dru = [DiffRuleItem (DiffProtoRule dru (Just (ru', ru)))]
-    mergeRules (DiffRuleItem (DiffProtoRule dru (Just (_, ru')))) [EitherRuleItem (LHS, ru@(OpenProtoRule ruE _))]
-      | ruleName ruE == ruleName dru = [DiffRuleItem (DiffProtoRule dru (Just (ru, ru')))]
-    mergeRules (DiffRuleItem (DiffProtoRule dru (Just (ru', _)))) [EitherRuleItem (RHS, ru@(OpenProtoRule ruE _))]
-      | ruleName ruE == ruleName dru = [DiffRuleItem (DiffProtoRule dru (Just (ru', ru)))]
-    mergeRules (DiffRuleItem (DiffProtoRule dru (Just (lr, rr)))) [DiffRuleItem (DiffProtoRule dru' Nothing)]
-      | ruleName dru == ruleName dru' = [DiffRuleItem (DiffProtoRule dru (Just (lr, rr)))]
-    mergeRules (DiffRuleItem (DiffProtoRule dru Nothing)) [DiffRuleItem (DiffProtoRule dru' (Just (lr, rr)))]
-      | ruleName dru == ruleName dru' = [DiffRuleItem (DiffProtoRule dru (Just (lr, rr)))]
-    mergeRules (DiffRuleItem (DiffProtoRule dru (Just (lr, rr)))) [DiffRuleItem (DiffProtoRule dru' (Just (lr', rr')))]
-      | ruleName dru == ruleName dru' && equalOpenRuleUpToDiffAnnotation lr lr' && equalOpenRuleUpToDiffAnnotation rr rr' = [DiffRuleItem (DiffProtoRule dru (Just (lr, rr)))]
-    mergeRules (EitherRuleItem _) _ = error "Error in mergeLeftRightRulesDiff. Please report bug."
-    mergeRules (DiffRuleItem _) _ = error "Error in mergeLeftRightRulesDiff. Please report bug."
-    mergeRules item l = item : l
-
-    clean (DiffRuleItem (DiffProtoRule ruE (Just (OpenProtoRule ruEL [], OpenProtoRule ruER []))))
-      | getLeftRule ruE `equalRuleUpToDiffAnnotation` ruEL
-          && getRightRule ruE `equalRuleUpToDiffAnnotation` ruER =
-          DiffRuleItem (DiffProtoRule ruE Nothing)
-    clean i = i
-
 -- | Find the open protocol rule with the given name.
 lookupOpenProtoRule :: ProtoRuleName -> OpenTheory -> Maybe OpenProtoRule
 lookupOpenProtoRule name =
@@ -701,28 +629,26 @@ addOpenProtoRule ru@(OpenProtoRule ruE ruAC) thy = do
       (S.size (S.fromList (ruleName ruE : map ruleName ruAC)))
         == ((length ruAC) + 1)
 
--- | Add a new protocol rules. Fails, if a protocol rule with the same name
--- exists.
+-- | Add a diff rule, ignoring identical declarations (for example from repeated
+-- includes). Reject a different declaration with the same parent name.
 addOpenProtoDiffRule :: DiffProtoRule -> OpenDiffTheory -> Maybe OpenDiffTheory
-addOpenProtoDiffRule ru@(DiffProtoRule _ Nothing) thy = do
-  guard nameNotUsedForDifferentRule
-  return $ modify diffThyItems (++ [DiffRuleItem ru]) thy
+addOpenProtoDiffRule ru thy =
+  case lookupOpenDiffProtoDiffRule (L.get (preName . rInfo . dprRule) ru) thy of
+    Just existing -> guard (ru == existing) >> return thy
+    Nothing -> do
+      case L.get dprLeftRight ru of
+        Nothing -> return ()
+        Just (lr, rr) -> do
+          guard $ validVariantNames lr
+          guard $ validVariantNames rr
+          guard $ ruleName ru == ruleName lr && ruleName lr == ruleName rr
+      return $ modify diffThyItems (++ [DiffRuleItem ru]) thy
   where
-    nameNotUsedForDifferentRule =
-      maybe True (ru ==) $ lookupOpenDiffProtoDiffRule (L.get (preName . rInfo . dprRule) ru) thy
-addOpenProtoDiffRule ru@(DiffProtoRule _ (Just (lr, rr))) thy = do
-  guard nameNotUsedForDifferentRule
-  guard $ allRuleNamesAreDifferent lr
-  guard $ allRuleNamesAreDifferent rr
-  guard leftAndRightHaveSameName
-  return $ modify diffThyItems (++ [DiffRuleItem ru]) thy
-  where
-    nameNotUsedForDifferentRule =
-      maybe True (ru ==) $ lookupOpenDiffProtoDiffRule (L.get (preName . rInfo . dprRule) ru) thy
-    allRuleNamesAreDifferent (OpenProtoRule ruE ruAC) =
-      (S.size (S.fromList (ruleName ruE : map ruleName ruAC)))
-        == ((length ruAC) + 1)
-    leftAndRightHaveSameName = ruleName ru == ruleName lr && ruleName lr == ruleName rr
+    validVariantNames (OpenProtoRule ruE ruAC) =
+      -- Imported and canonical compiled families may retain the parent name
+      -- on multiple annotated members. Other explicit names must be distinct.
+      all ((== ruleName ruE) . ruleName) ruAC ||
+      S.size (S.fromList (ruleName ruE : map ruleName ruAC)) == length ruAC + 1
 
 -- | Add new protocol rules. Fails, if a protocol rule with the same name
 -- exists. Ignore _restrict construct.
@@ -860,16 +786,30 @@ prettyOpenProtoRuleAsClosedRule (OpenProtoRule ruE variants) =
 
 -- | Pretty print a diff rule
 prettyDiffRule :: (HighlightDocument d) => DiffProtoRule -> d
-prettyDiffRule (DiffProtoRule ruE Nothing) = prettyProtoRuleE ruE
+prettyDiffRule (DiffProtoRule ruE Nothing) =
+  prettyNamedRuleWithActions (kwRuleModulo "E") (const emptyDoc) ruE
 prettyDiffRule (DiffProtoRule ruE (Just (ruL, ruR))) =
-  prettyProtoRuleE ruE
+  prettyNamedRuleWithActions (kwRuleModulo "E") (const emptyDoc) ruE
     $-$ nest
       1
       ( kwLeft
-          $-$ nest 1 (prettyOpenProtoRule ruL)
+          $-$ nest 1 (prettyDiffSideRule ruL)
           $-$ kwRight
-          $-$ nest 1 (prettyOpenProtoRule ruR)
+          $-$ nest 1 (prettyDiffSideRule ruR)
       )
+
+-- | A side's E-rule identifies its parent family. A singleton explicit member
+-- may have a different name or body, so it must not replace that E-rule.
+prettyDiffSideRule :: HighlightDocument d => OpenProtoRule -> d
+prettyDiffSideRule (OpenProtoRule ruE variants) =
+  prettyNamedRuleWithActions (kwRuleModulo "E") (const emptyDoc) ruE $-$ case variants of
+    [] -> emptyDoc
+    _  -> nest 1 (kwVariants $-$ nest 1 (members variants))
+  where
+    members [] = emptyDoc
+    members [ru] = member ru
+    members (ru:rest) = member ru $-$ comma $-$ members rest
+    member = prettyNamedRuleWithActions (kwRuleModulo "AC") prettyProtoRuleACInfo
 
 -- | Pretty print an either rule
 prettyEitherRule :: (HighlightDocument d) => (Side, OpenProtoRule) -> d

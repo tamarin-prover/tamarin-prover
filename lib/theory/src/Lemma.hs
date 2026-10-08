@@ -108,9 +108,13 @@ prettyLemmaAttribute _                  = emptyDoc
 --     prettyLemmaAttribute BothLemma      = text "both"
 
 
--- | Pretty print the diff lemma name
+-- | Pretty print the diff lemma name and attributes. In particular, omitting
+-- hide_lemma changes the assumptions available when replaying saved proofs.
 prettyDiffLemmaName :: HighlightDocument d => DiffLemma p -> d
-prettyDiffLemmaName l = text ((L.get lDiffName l))
+prettyDiffLemmaName l = case L.get lDiffAttributes l of
+      [] -> text (L.get lDiffName l)
+      as -> text (L.get lDiffName l) <->
+            (brackets $ fsep $ punctuate comma $ map prettyLemmaAttribute as)
 
 -- | Pretty print a lemma.
 prettyLemma :: HighlightDocument d => (p -> d) -> Lemma p -> d

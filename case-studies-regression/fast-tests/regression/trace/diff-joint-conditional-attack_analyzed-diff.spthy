@@ -1,0 +1,89 @@
+theory DiffJointConditionalAttack
+
+begin
+
+// Function signature and definition of the equational theory E
+
+builtins: multiset
+functions: fst/1, pair/2, snd/1
+equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
+
+rule (modulo E) Produce:
+   [ ] --> [ F( ('a'++'b') ) ]
+
+rule (modulo E) Consume:
+   [ F( (x++y) ) ] --[ Choice( x, y, $p, $q ) ]-> [ Out( <$p, $q> ) ]
+
+restriction Choices [right]:
+  "∀ x y p q #i.
+    (Choice( x, y, p, q ) @ #i) ⇒
+    (((x = 'a') ∨ (¬(q = 'b'))) ∧ ((x = 'b') ∨ (¬(p = 'a'))))"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ x y p q #i.
+    (Choice( x, y, p, q ) @ #i) ⇒
+    (((x = 'a') ∨ (¬(q = 'b'))) ∧ ((x = 'b') ∨ (¬(p = 'a'))))"
+  */
+
+lemma left_attack_assignment [left]:
+  exists-trace "∃ x y #i. Choice( x, y, 'a', 'b' ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ x y #i. (Choice( x, y, 'a', 'b' ) @ #i)"
+*/
+simplify
+solve( F( (x++y) ) ▶₀ #i )
+  case Produce_case_1
+  SOLVED // trace found
+qed
+
+lemma right_attack_assignment [right]:
+  exists-trace "∃ x y #i. Choice( x, y, 'a', 'b' ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ x y #i. (Choice( x, y, 'a', 'b' ) @ #i)"
+*/
+by simplify
+
+diffLemma Observational_equivalence:
+rule-equivalence
+  case Rule_Consume
+  backward-search
+    case LHS
+    step( simplify )
+    step( solve( F( (x++y) ) ▶₀ #i ) )
+      case Produce_case_1
+      by ATTACK // trace found
+    qed
+  qed
+qed
+
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.13.0
+Maude version 3.5.1
+Git revision: 4a4676de54da4a5081e344b98760d9d4e0f35d46 (with uncommited changes), branch: diff-mirror-proofs
+Compiled at: 2026-09-25 20:02:43.632305942 UTC
+*/
+
+end
+/* Output
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/regression/trace/diff-joint-conditional-attack.spthy
+
+  output:          examples/regression/trace/diff-joint-conditional-attack.spthy.tmp
+  processing time: 0.16s
+  
+  LHS :  left_attack_assignment (exists-trace): verified (3 steps)
+  RHS :  right_attack_assignment (exists-trace): falsified - no trace found (1 steps)
+  DiffLemma:  Observational_equivalence : falsified - found trace (5 steps)
+
+==============================================================================
+*/

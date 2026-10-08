@@ -1,0 +1,20 @@
+theory SoundnessDiffMirrorRestriction
+begin
+
+rule Emit:
+  [] --[ A(diff('a','b')) ]-> [ Out('hello') ]
+
+// The right mirror violates this restriction. Filtering it against the left
+// graph would discard it because A('b') does not unify with A('a').
+restriction BanRight:
+  "All #i. A('b')@i ==> F"
+
+lemma left_witness [left]: exists-trace
+  "Ex #i. A('a')@i"
+
+lemma right_blocked [right]: exists-trace
+  "Ex #i. A('b')@i"
+
+diffLemma Observational_equivalence:
+
+end

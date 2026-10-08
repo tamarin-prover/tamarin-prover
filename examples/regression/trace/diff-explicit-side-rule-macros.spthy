@@ -1,0 +1,17 @@
+theory DiffExplicitSideRuleMacros
+begin
+
+functions: h/1
+
+macros: m(x) = h(x)
+
+/* An explicit side rule may use macros: after expansion, this left rule
+   is the parent's projection. Both sides output h(x), so the equivalence
+   holds. */
+rule Hash: [ In(x) ] --[ H(x) ]-> [ Out(h(x)) ]
+left rule Hash: [ In(x) ] --[ H(x) ]-> [ Out(m(x)) ]
+right rule Hash: [ In(x) ] --[ H(x) ]-> [ Out(h(x)) ]
+
+diffLemma Observational_equivalence:
+
+end

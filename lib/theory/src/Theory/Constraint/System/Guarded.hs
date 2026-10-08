@@ -52,6 +52,9 @@ module Theory.Constraint.System.Guarded (
   , isAllGuarded
   , isExGuarded
   , isSafetyFormula
+  , isDiffLocalRestriction
+  , guardedConjuncts
+  , actionFactTags
 
   , guardFactTags
 
@@ -162,6 +165,44 @@ isSafetyFormula gf0 =
     noExistential (GGuarded All _ _ gf) = noExistential gf
     noExistential (GDisj disj)          = all noExistential $ getDisj disj
     noExistential (GConj conj)          = all noExistential $ getConj conj
+
+-- | A sufficient locality check for compositional diff proofs. A conjunction
+-- of restrictions can be checked component-wise. Every other component must
+-- mention actions at no more than one trace node: rule-equivalence explores
+-- one dependency graph at a time and cannot establish constraints that become
+-- false only after combining several copies of such graphs.
+isDiffLocalRestriction :: LNGuarded -> Bool
+isDiffLocalRestriction = all local . guardedConjuncts
+  where
+    local gf = length (nub (Precise.evalFresh (actionNodes gf) (avoidPrecise gf))) <= 1
+
+    actionNodes :: LNGuarded -> Precise.Fresh [LNTerm]
+    actionNodes (GAto ato) = pure $ case bvarToLVar ato of
+      Action node _ -> [node]
+      _             -> []
+    actionNodes (GDisj disj) = concat <$> traverse actionNodes (getDisj disj)
+    actionNodes (GConj conj) = concat <$> traverse actionNodes (getConj conj)
+    actionNodes gf@(GGuarded _ _ _ _) = do
+      opened <- openGuarded gf
+      case opened of
+        Nothing -> pure []
+        Just (_, _, atos, body) -> do
+          rest <- actionNodes body
+          pure $ [node | Action node _ <- atos] ++ rest
+
+-- | Split only conjunctions: different graphs cannot choose different
+-- disjuncts when establishing a restriction on their combined trace.
+guardedConjuncts :: Guarded s c v -> [Guarded s c v]
+guardedConjuncts (GConj conj) = concatMap guardedConjuncts $ getConj conj
+guardedConjuncts gf = [gf]
+
+-- | Action predicates anywhere in a formula, including quantified bodies.
+actionFactTags :: Guarded s c v -> [FactTag]
+actionFactTags = foldGuarded tags (concat . getDisj) (concat . getConj)
+    (\_ _ atoms inner -> concatMap tags atoms ++ inner)
+  where
+    tags (Action _ fact) = [factTag fact]
+    tags _ = []
 
 -- | All 'FactTag's that are used in guards.
 guardFactTags :: Guarded s c v -> [FactTag]
@@ -585,16 +626,20 @@ gnot =
 
 
 -- | Checks if a doubly guarded formula is satisfied by the empty trace;
--- returns @'Left' errMsg@ if the formula is not doubly guarded.
+-- returns @'Left' errMsg@ if the formula is not doubly guarded or if its
+-- value on the empty trace is not established.
 satisfiedByEmptyTrace :: Guarded s c v -> Either String Bool
 satisfiedByEmptyTrace =
   foldGuarded
     (\_ato -> throwError "atom outside the scope of a quantifier")
     (liftM or  . sequence . getDisj)
     (liftM and . sequence . getConj)
-    (\qua _ss _as _gf -> return $ qua == All)
-    -- the empty trace always satisfies guarded all-quantification
-    -- and always dissatisfies guarded ex-quantification
+    (\qua _ss as _gf ->
+      if any isActionAtom as then return $ qua == All
+      else throwError "formula has an equality-only guard whose value on the empty trace is unknown")
+    -- the empty trace always satisfies all-quantification guarded by an
+    -- action and always dissatisfies such ex-quantification. Equality-only
+    -- guards can already have witnesses on the empty trace.
 
 -- | Tries to convert a doubly guarded formula to an induction hypothesis.
 -- Returns @'Left' errMsg@ if the formula is not last-free or not doubly

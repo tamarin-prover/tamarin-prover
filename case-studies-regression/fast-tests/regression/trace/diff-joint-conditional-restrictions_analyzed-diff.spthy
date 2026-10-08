@@ -1,0 +1,559 @@
+theory DiffJointConditionalRestrictions
+
+begin
+
+// Function signature and definition of the equational theory E
+
+builtins: multiset
+functions: fst/1, pair/2, snd/1
+equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
+
+rule (modulo E) Produce:
+   [ ] --> [ F( ('a'++'b') ) ]
+
+rule (modulo E) Consume:
+   [ F( (x++y) ) ] --[ Choice( x, y, $p, $q ) ]-> [ Out( <$p, $q> ) ]
+
+restriction Original [left]:
+  "∀ x y #i. (Choice( x, y, 'a', 'b' ) @ #i) ⇒ (⊥)"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ x y #i. (Choice( x, y, 'a', 'b' ) @ #i) ⇒ (⊥)"
+  */
+
+restriction Choices [right]:
+  "∀ x y p q #i.
+    (Choice( x, y, p, q ) @ #i) ⇒
+    (((x = 'a') ∨ (¬(q = 'b'))) ∧ ((x = 'b') ∨ (¬(p = 'a'))))"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ x y p q #i.
+    (Choice( x, y, p, q ) @ #i) ⇒
+    (((x = 'a') ∨ (¬(q = 'b'))) ∧ ((x = 'b') ∨ (¬(p = 'a'))))"
+  */
+
+lemma left_possible [left]:
+  exists-trace "∃ x y #i. Choice( x, y, 'c', 'c' ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ x y #i. (Choice( x, y, 'c', 'c' ) @ #i)"
+*/
+simplify
+solve( F( (x++y) ) ▶₀ #i )
+  case Produce_case_1
+  SOLVED // trace found
+qed
+
+lemma right_possible [right]:
+  exists-trace "∃ x y #i. Choice( x, y, 'c', 'c' ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ x y #i. (Choice( x, y, 'c', 'c' ) @ #i)"
+*/
+simplify
+solve( F( (x++y) ) ▶₀ #i )
+  case Produce_case_1
+  SOLVED // trace found
+qed
+
+diffLemma Observational_equivalence:
+rule-equivalence
+  case Rule_Consume
+  backward-search
+    case LHS
+    step( simplify )
+    step( solve( F( (x++y) ) ▶₀ #i ) )
+      case Produce_case_1
+      MIRRORED
+    next
+      case Produce_case_2
+      MIRRORED
+    qed
+  next
+    case RHS
+    step( simplify )
+    step( solve( (x = 'a')  ∥ (¬($q = 'b')) ) )
+      case case_1
+      step( solve( F( ('a'++y) ) ▶₀ #i ) )
+        case Produce
+        MIRRORED
+      qed
+    next
+      case case_2
+      step( solve( (x = 'b')  ∥ (¬($p = 'a')) ) )
+        case case_1
+        step( solve( F( ('b'++y) ) ▶₀ #i ) )
+          case Produce
+          MIRRORED
+        qed
+      next
+        case case_2
+        step( solve( F( (x++y) ) ▶₀ #i ) )
+          case Produce_case_1
+          MIRRORED
+        next
+          case Produce_case_2
+          MIRRORED
+        qed
+      qed
+    qed
+  qed
+next
+  case Rule_Destrd_0_fst
+  backward-search
+    case LHS
+    step( simplify )
+    step( solve( !KD( <x, x.1> ) ▶₀ #i ) )
+      case Consume
+      by step( contradiction /* impossible chain */ )
+    qed
+  next
+    case RHS
+    step( simplify )
+    step( solve( !KD( <x, x.1> ) ▶₀ #i ) )
+      case Consume
+      by step( contradiction /* impossible chain */ )
+    qed
+  qed
+next
+  case Rule_Destrd_0_snd
+  backward-search
+    case LHS
+    step( simplify )
+    step( solve( !KD( <x, x.1> ) ▶₀ #i ) )
+      case Consume
+      by step( contradiction /* impossible chain */ )
+    qed
+  next
+    case RHS
+    step( simplify )
+    step( solve( !KD( <x, x.1> ) ▶₀ #i ) )
+      case Consume
+      by step( contradiction /* impossible chain */ )
+    qed
+  qed
+next
+  case Rule_Destrd_union
+  backward-search
+    case LHS
+    step( simplify )
+    step( solve( !KD( (x++y) ) ▶₀ #i ) )
+      case Consume
+      by step( contradiction /* impossible chain */ )
+    qed
+  next
+    case RHS
+    step( simplify )
+    step( solve( !KD( (x++y) ) ▶₀ #i ) )
+      case Consume
+      by step( contradiction /* impossible chain */ )
+    qed
+  qed
+next
+  case Rule_Equality
+  backward-search
+    case LHS
+    step( simplify )
+    step( solve( !KD( x ) ▶₁ #i ) )
+      case Consume
+      step( solve( (#vl, 0) ~~> (#i, 1) ) )
+        case d_0_fst
+        step( solve( (#vr.1, 0) ~~> (#i, 1) ) )
+          case Var_pub_p
+          step( solve( F( (x++y) ) ▶₀ #vr ) )
+            case Produce_case_1
+            step( solve( !KU( $p ) @ #vk ) )
+              case coerce
+              step( solve( !KD( $p ) ▶₀ #vk ) )
+                case Consume
+                by step( contradiction /* impossible chain */ )
+              qed
+            next
+              case pub
+              MIRRORED
+            qed
+          next
+            case Produce_case_2
+            step( solve( !KU( $p ) @ #vk ) )
+              case coerce
+              step( solve( !KD( $p ) ▶₀ #vk ) )
+                case Consume
+                by step( contradiction /* impossible chain */ )
+              qed
+            next
+              case pub
+              MIRRORED
+            qed
+          qed
+        qed
+      next
+        case d_0_snd
+        step( solve( (#vr.1, 0) ~~> (#i, 1) ) )
+          case Var_pub_q
+          step( solve( F( (x++y) ) ▶₀ #vr ) )
+            case Produce_case_1
+            step( solve( !KU( $q ) @ #vk ) )
+              case coerce
+              step( solve( !KD( $q ) ▶₀ #vk ) )
+                case Consume
+                by step( contradiction /* impossible chain */ )
+              qed
+            next
+              case pub
+              MIRRORED
+            qed
+          next
+            case Produce_case_2
+            step( solve( !KU( $q ) @ #vk ) )
+              case coerce
+              step( solve( !KD( $q ) ▶₀ #vk ) )
+                case Consume
+                by step( contradiction /* impossible chain */ )
+              qed
+            next
+              case pub
+              MIRRORED
+            qed
+          qed
+        qed
+      next
+        case pair
+        step( solve( F( (x++y) ) ▶₀ #vr ) )
+          case Produce_case_1
+          step( solve( !KU( $p ) @ #vk.1 ) )
+            case coerce
+            step( solve( !KD( $p ) ▶₀ #vk.1 ) )
+              case Consume
+              by step( contradiction /* impossible chain */ )
+            qed
+          next
+            case pub
+            step( solve( !KU( $q ) @ #vk.2 ) )
+              case coerce
+              step( solve( !KD( $q ) ▶₀ #vk.2 ) )
+                case Consume
+                by step( contradiction /* impossible chain */ )
+              qed
+            next
+              case pub
+              MIRRORED
+            qed
+          qed
+        next
+          case Produce_case_2
+          step( solve( !KU( $p ) @ #vk.1 ) )
+            case coerce
+            step( solve( !KD( $p ) ▶₀ #vk.1 ) )
+              case Consume
+              by step( contradiction /* impossible chain */ )
+            qed
+          next
+            case pub
+            step( solve( !KU( $q ) @ #vk.2 ) )
+              case coerce
+              step( solve( !KD( $q ) ▶₀ #vk.2 ) )
+                case Consume
+                by step( contradiction /* impossible chain */ )
+              qed
+            next
+              case pub
+              MIRRORED
+            qed
+          qed
+        qed
+      qed
+    qed
+  next
+    case RHS
+    step( simplify )
+    step( solve( !KD( x ) ▶₁ #i ) )
+      case Consume
+      step( solve( (#vl, 0) ~~> (#i, 1) ) )
+        case d_0_fst
+        step( solve( (#vr.1, 0) ~~> (#i, 1) ) )
+          case Var_pub_p
+          step( solve( (x = 'a')  ∥ (¬($q = 'b')) ) )
+            case case_1
+            step( solve( F( ('a'++y) ) ▶₀ #vr ) )
+              case Produce
+              step( solve( !KU( $p ) @ #vk ) )
+                case coerce
+                step( solve( !KD( $p ) ▶₀ #vk ) )
+                  case Consume
+                  by step( contradiction /* impossible chain */ )
+                qed
+              next
+                case pub
+                MIRRORED
+              qed
+            qed
+          next
+            case case_2
+            step( solve( (x = 'b')  ∥ (¬($p = 'a')) ) )
+              case case_1
+              step( solve( F( ('b'++y) ) ▶₀ #vr ) )
+                case Produce
+                step( solve( !KU( $p ) @ #vk ) )
+                  case coerce
+                  step( solve( !KD( $p ) ▶₀ #vk ) )
+                    case Consume
+                    by step( contradiction /* impossible chain */ )
+                  qed
+                next
+                  case pub
+                  MIRRORED
+                qed
+              qed
+            next
+              case case_2
+              step( solve( F( (x++y) ) ▶₀ #vr ) )
+                case Produce_case_1
+                step( solve( !KU( $p ) @ #vk ) )
+                  case coerce
+                  step( solve( !KD( $p ) ▶₀ #vk ) )
+                    case Consume
+                    by step( contradiction /* impossible chain */ )
+                  qed
+                next
+                  case pub
+                  MIRRORED
+                qed
+              next
+                case Produce_case_2
+                step( solve( !KU( $p ) @ #vk ) )
+                  case coerce
+                  step( solve( !KD( $p ) ▶₀ #vk ) )
+                    case Consume
+                    by step( contradiction /* impossible chain */ )
+                  qed
+                next
+                  case pub
+                  MIRRORED
+                qed
+              qed
+            qed
+          qed
+        qed
+      next
+        case d_0_snd
+        step( solve( (#vr.1, 0) ~~> (#i, 1) ) )
+          case Var_pub_q
+          step( solve( (x = 'a')  ∥ (¬($q = 'b')) ) )
+            case case_1
+            step( solve( F( ('a'++y) ) ▶₀ #vr ) )
+              case Produce
+              step( solve( !KU( $q ) @ #vk ) )
+                case coerce
+                step( solve( !KD( $q ) ▶₀ #vk ) )
+                  case Consume
+                  by step( contradiction /* impossible chain */ )
+                qed
+              next
+                case pub
+                MIRRORED
+              qed
+            qed
+          next
+            case case_2
+            step( solve( (x = 'b')  ∥ (¬($p = 'a')) ) )
+              case case_1
+              step( solve( F( ('b'++y) ) ▶₀ #vr ) )
+                case Produce
+                step( solve( !KU( $q ) @ #vk ) )
+                  case coerce
+                  step( solve( !KD( $q ) ▶₀ #vk ) )
+                    case Consume
+                    by step( contradiction /* impossible chain */ )
+                  qed
+                next
+                  case pub
+                  MIRRORED
+                qed
+              qed
+            next
+              case case_2
+              step( solve( F( (x++y) ) ▶₀ #vr ) )
+                case Produce_case_1
+                step( solve( !KU( $q ) @ #vk ) )
+                  case coerce
+                  step( solve( !KD( $q ) ▶₀ #vk ) )
+                    case Consume
+                    by step( contradiction /* impossible chain */ )
+                  qed
+                next
+                  case pub
+                  MIRRORED
+                qed
+              next
+                case Produce_case_2
+                step( solve( !KU( $q ) @ #vk ) )
+                  case coerce
+                  step( solve( !KD( $q ) ▶₀ #vk ) )
+                    case Consume
+                    by step( contradiction /* impossible chain */ )
+                  qed
+                next
+                  case pub
+                  MIRRORED
+                qed
+              qed
+            qed
+          qed
+        qed
+      next
+        case pair
+        step( solve( (x = 'a')  ∥ (¬($q = 'b')) ) )
+          case case_1
+          step( solve( F( ('a'++y) ) ▶₀ #vr ) )
+            case Produce
+            step( solve( !KU( $p ) @ #vk.1 ) )
+              case coerce
+              step( solve( !KD( $p ) ▶₀ #vk.1 ) )
+                case Consume
+                by step( contradiction /* impossible chain */ )
+              qed
+            next
+              case pub
+              step( solve( !KU( $q ) @ #vk.2 ) )
+                case coerce
+                step( solve( !KD( $q ) ▶₀ #vk.2 ) )
+                  case Consume
+                  by step( contradiction /* impossible chain */ )
+                qed
+              next
+                case pub
+                MIRRORED
+              qed
+            qed
+          qed
+        next
+          case case_2
+          step( solve( (x = 'b')  ∥ (¬($p = 'a')) ) )
+            case case_1
+            step( solve( F( ('b'++y) ) ▶₀ #vr ) )
+              case Produce
+              step( solve( !KU( $p ) @ #vk.1 ) )
+                case coerce
+                step( solve( !KD( $p ) ▶₀ #vk.1 ) )
+                  case Consume
+                  by step( contradiction /* impossible chain */ )
+                qed
+              next
+                case pub
+                step( solve( !KU( $q ) @ #vk.2 ) )
+                  case coerce
+                  step( solve( !KD( $q ) ▶₀ #vk.2 ) )
+                    case Consume
+                    by step( contradiction /* impossible chain */ )
+                  qed
+                next
+                  case pub
+                  MIRRORED
+                qed
+              qed
+            qed
+          next
+            case case_2
+            step( solve( F( (x++y) ) ▶₀ #vr ) )
+              case Produce_case_1
+              step( solve( !KU( $p ) @ #vk.1 ) )
+                case coerce
+                step( solve( !KD( $p ) ▶₀ #vk.1 ) )
+                  case Consume
+                  by step( contradiction /* impossible chain */ )
+                qed
+              next
+                case pub
+                step( solve( !KU( $q ) @ #vk.2 ) )
+                  case coerce
+                  step( solve( !KD( $q ) ▶₀ #vk.2 ) )
+                    case Consume
+                    by step( contradiction /* impossible chain */ )
+                  qed
+                next
+                  case pub
+                  MIRRORED
+                qed
+              qed
+            next
+              case Produce_case_2
+              step( solve( !KU( $p ) @ #vk.1 ) )
+                case coerce
+                step( solve( !KD( $p ) ▶₀ #vk.1 ) )
+                  case Consume
+                  by step( contradiction /* impossible chain */ )
+                qed
+              next
+                case pub
+                step( solve( !KU( $q ) @ #vk.2 ) )
+                  case coerce
+                  step( solve( !KD( $q ) ▶₀ #vk.2 ) )
+                    case Consume
+                    by step( contradiction /* impossible chain */ )
+                  qed
+                next
+                  case pub
+                  MIRRORED
+                qed
+              qed
+            qed
+          qed
+        qed
+      qed
+    qed
+  qed
+next
+  case Rule_Produce
+  backward-search
+    case LHS
+    step( simplify )
+    MIRRORED
+  next
+    case RHS
+    step( simplify )
+    MIRRORED
+  qed
+next
+  case Rule_Send
+  backward-search
+    case LHS
+    step( simplify )
+    MIRRORED
+  next
+    case RHS
+    step( simplify )
+    MIRRORED
+  qed
+qed
+
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.13.0
+Maude version 3.5.1
+Git revision: 4a4676de54da4a5081e344b98760d9d4e0f35d46 (with uncommited changes), branch: diff-mirror-proofs
+Compiled at: 2026-09-25 20:02:43.632305942 UTC
+*/
+
+end
+/* Output
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/regression/trace/diff-joint-conditional-restrictions.spthy
+
+  output:          examples/regression/trace/diff-joint-conditional-restrictions.spthy.tmp
+  processing time: 0.91s
+  
+  LHS :  left_possible (exists-trace): verified (3 steps)
+  RHS :  right_possible (exists-trace): verified (3 steps)
+  DiffLemma:  Observational_equivalence : verified (166 steps)
+
+==============================================================================
+*/

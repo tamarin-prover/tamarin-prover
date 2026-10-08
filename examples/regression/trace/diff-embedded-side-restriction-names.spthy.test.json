@@ -1,0 +1,25 @@
+{
+  "tests": [
+    {
+      "name": "meaning",
+      "args": [
+        "--diff",
+        "--prove",
+        "--quit-on-warning"
+      ],
+      "contains": [
+        "both (exists-trace): verified"
+      ]
+    },
+    {
+      "name": "roundtrip",
+      "args": [
+        "--diff",
+        "--quit-on-warning"
+      ],
+      "checks": [
+        "roundtrip"
+      ]
+    }
+  ]
+}

@@ -9,6 +9,7 @@ module Prover (
 import           Prelude                             hiding (id, (.))
 
 import qualified Data.Map                            as M
+import           Data.List                           (mapAccumL)
 import           Data.Maybe
 import qualified Data.Set                            as S
 
@@ -84,21 +85,26 @@ closeDiffTheoryWithMaude sig thy0 autoSources =
     parameters = Sources.IntegerParameters (L.get (openChainsLimit . diffThyOptions) thy0) (L.get (saturationLimit . diffThyOptions) thy0) True
     h              = L.get diffThyHeuristic thy0
     t              = L.get diffThyTactic thy0
-    diffCacheLeft  its = closeRuleCache parameters restrictionsLeft  (typAsms its) S.empty sig (leftClosedRules its)  (L.get diffThyDiffCacheLeft  thy0) (L.get (verboseOption . diffThyOptions) thy0) True (L.get diffThyIsSapic thy0)
-    diffCacheRight its = closeRuleCache parameters restrictionsRight (typAsms its) S.empty sig (rightClosedRules its) (L.get diffThyDiffCacheRight thy0) (L.get (verboseOption . diffThyOptions) thy0) True (L.get diffThyIsSapic thy0)
-    cacheLeft  its = closeRuleCache parameters restrictionsLeft  (typAsms its) S.empty sig (leftClosedRules its)  (L.get diffThyCacheLeft  thy0) (L.get (verboseOption . diffThyOptions) thy0) False (L.get diffThyIsSapic thy0)
-    cacheRight its = closeRuleCache parameters restrictionsRight (typAsms its) S.empty sig (rightClosedRules its) (L.get diffThyCacheRight thy0) (L.get (verboseOption . diffThyOptions) thy0) False (L.get diffThyIsSapic thy0)
+    diffCacheLeft  its = closeRuleCache parameters restrictionsLeft  (typAsms LHS its) S.empty sig (leftClosedRules its)  (L.get diffThyDiffCacheLeft  thy0) (L.get (verboseOption . diffThyOptions) thy0) True (L.get diffThyIsSapic thy0)
+    diffCacheRight its = closeRuleCache parameters restrictionsRight (typAsms RHS its) S.empty sig (rightClosedRules its) (L.get diffThyDiffCacheRight thy0) (L.get (verboseOption . diffThyOptions) thy0) True (L.get diffThyIsSapic thy0)
+    cacheLeft  its = closeRuleCache parameters restrictionsLeft  (typAsms LHS its) S.empty sig (leftClosedRules its)  (L.get diffThyCacheLeft  thy0) (L.get (verboseOption . diffThyOptions) thy0) False (L.get diffThyIsSapic thy0)
+    cacheRight its = closeRuleCache parameters restrictionsRight (typAsms RHS its) S.empty sig (rightClosedRules its) (L.get diffThyCacheRight thy0) (L.get (verboseOption . diffThyOptions) thy0) False (L.get diffThyIsSapic thy0)
 
     checkProofM = checkAndExtendProver (sorryProver Nothing)
     checkDiffProof = checkAndExtendDiffProver (sorryDiffProver Nothing)
-    diffRules  = map (applyMacroInDiffProtoRule (diffTheoryMacros thy0)) $ diffTheoryDiffRules thy0
+    diffRules  = map (applyMacroInDiffProtoRule (diffTheoryMacros thy0)) $ diffTheoryDiffRules preparedThy
     leftOpenRules  = map (addProtoRuleLabel . getLeftProtoRule)  diffRules
     rightOpenRules = map (addProtoRuleLabel . getRightProtoRule) diffRules
 
     -- Maude / Signature handle
     hnd = L.get sigmMaudeHandle sig
 
-    theoryItems = L.get diffThyItems thy0 ++ map (\x -> EitherRuleItem (LHS, x)) leftOpenRules ++ map (\x -> EitherRuleItem (RHS, x)) rightOpenRules
+    -- Explicit side rules are closed and reopened in their prepared form.
+    preparedThy = L.modify diffThyItems (map prepareItem) thy0
+    prepareItem (DiffRuleItem ru) = DiffRuleItem (prepareDiffSideRules hnd (diffTheoryMacros thy0) ru)
+    prepareItem item = item
+
+    theoryItems = L.get diffThyItems preparedThy ++ map (\x -> EitherRuleItem (LHS, x)) leftOpenRules ++ map (\x -> EitherRuleItem (RHS, x)) rightOpenRules
     -- Close all theory items: in parallel (especially useful for variants)
     --
     -- NOTE that 'rdeepseq' is OK here, as the proof has not yet been checked
@@ -111,8 +117,10 @@ closeDiffTheoryWithMaude sig thy0 autoSources =
       DiffRuleItem
       (EitherRuleItem . closeEitherProtoRule hnd)
       (DiffLemmaItem . fmap skeletonToIncrementalDiffProof)
-      (\(s, l) -> EitherLemmaItem (s, fmap skeletonToIncrementalProof l))
-      EitherRestrictionItem
+      (\(s, l) -> EitherLemmaItem
+          (s, fmap skeletonToIncrementalProof $ applyMacroInLemma (diffTheoryMacros thy0) l))
+      (\(s, r) -> EitherRestrictionItem
+          (s, applyMacroInRestriction (diffTheoryMacros thy0) r))
       DiffMacroItem
       DiffTextItem
       DiffConfigBlockItem
@@ -131,22 +139,48 @@ closeDiffTheoryWithMaude sig thy0 autoSources =
     -- Name of the auto-generated lemma
     lemmaName = "AUTO_typing"
 
-    itemsModAC = unfoldRules items
+    itemsModAC = unfoldRules uniqueItems
+
+    -- Auto-sources finds and annotates members by name. Give every identity
+    -- member a private name for this pass and restore its name afterwards.
+    -- This separates members sharing a parent's name and prevents unfolding
+    -- from renaming an annotated singleton to ___VARIANT_1.
+    ((_, originalNames), uniqueItems) = mapAccumL nameMember (usedNames, M.empty) items
+    memberName = L.get (pracName . rInfo . cprRuleAC)
+    usedNames = S.fromList $
+      [ L.get (preName . rInfo . dprRule) ru | DiffRuleItem ru <- items ] ++
+      [ memberName member | EitherRuleItem (_, ru) <- items
+                        , member <- ru : unfoldRuleVariants ru ]
+    nameMember (used, names) (EitherRuleItem (s, ru))
+      | L.get (pracVariants . rInfo . cprRuleAC) ru == Disj [emptySubstVFresh] =
+          let freshName = head [ name | i <- [1 :: Int ..]
+                               , let name = StandRule (getRuleName (L.get cprRuleAC ru) ++ "___AUTO_MEMBER_" ++ show i)
+                               , name `S.notMember` used ]
+          in ((S.insert freshName used, M.insert (s, freshName) (memberName ru) names),
+              EitherRuleItem (s, L.set (pracName . rInfo . cprRuleAC) freshName ru))
+    nameMember state item = (state, item)
+    restoreName (EitherRuleItem (s, ru)) = EitherRuleItem (s,
+      maybe ru (\name -> L.set (pracName . rInfo . cprRuleAC) name ru) $
+        M.lookup (s, memberName ru) originalNames)
+    restoreName item = item
 
     unfoldRules (EitherRuleItem (s,r):is) = map (\x -> EitherRuleItem (s,x)) (unfoldRuleVariants r) ++ unfoldRules is
     unfoldRules                    (i:is) = i:unfoldRules is
     unfoldRules                        [] = []
 
-    items' = addAutoSourcesLemmaDiff hnd lemmaName (cacheLeft itemsModAC) (cacheRight itemsModAC) itemsModAC
+    items' = map restoreName $
+      addAutoSourcesLemmaDiff hnd lemmaName (cacheLeft itemsModAC) (cacheRight itemsModAC) itemsModAC
 
     -- extract source restrictions and lemmas
     restrictionsLeft  = do EitherRestrictionItem (LHS, rstr) <- items
                            return $ formulaToGuarded_ $ L.get rstrFormula rstr
     restrictionsRight = do EitherRestrictionItem (RHS, rstr) <- items
                            return $ formulaToGuarded_ $ L.get rstrFormula rstr
-    typAsms its = do EitherLemmaItem (_, lem) <- its
-                     guard (isSourceLemma lem)
-                     return $ formulaToGuarded_ $ L.get lFormula lem
+    typAsms side its = do
+      EitherLemmaItem (lemmaSide, lem) <- its
+      guard (side == lemmaSide)
+      guard (isSourceLemma lem)
+      return $ formulaToGuarded_ $ L.get lFormula lem
 
     -- extract protocol rules
     leftClosedRules  :: [DiffTheoryItem DiffProtoRule ClosedProtoRule IncrementalDiffProof s] -> [ClosedProtoRule]
@@ -225,6 +259,8 @@ mkSystemDiff s ctxt restrictions previousItems =
         guard $    lemmaSourceKind lem <= kind && s==s''
                 && ReuseLemma `elem` L.get lAttributes lem
                 && AllTraces == L.get lTraceQuantifier lem
+                && L.get lName lem `notElem` L.get pcHiddenLemmas ctxt
+                && "ALL" `notElem` L.get pcHiddenLemmas ctxt
         return $ formulaToGuarded_ $ L.get lFormula lem
 
 -- | Construct a diff constraint system.
@@ -349,9 +385,10 @@ applyPartialEvaluation evalStyle autosources thy0 =
 
 -- | Apply partial evaluation.
 applyPartialEvaluationDiff :: EvaluationStyle -> Bool -> ClosedDiffTheory -> ClosedDiffTheory
-applyPartialEvaluationDiff evalStyle autoSources thy0 =
-    closeDiffTheoryWithMaude sig
-      (L.modify diffThyItems replaceProtoRules (openDiffTheory thy0)) autoSources
+applyPartialEvaluationDiff evalStyle _autoSources thy0 =
+    -- Reachability refinements are not a complete equation-variant family.
+    -- Keep the proof caches, annotations and opposite-side correspondence.
+    L.modify diffThyItems (++ [DiffTextItem ("text", render ppAbsState)]) thy0
   where
     sig            = L.get diffThySignature thy0
     ruEs s         = getProtoRuleEsDiff s thy0
@@ -360,18 +397,8 @@ applyPartialEvaluationDiff evalStyle autoSources thy0 =
     (stR', ruEsR') = (`runReader` L.get sigmMaudeHandle sig) $
                      partialEvaluation evalStyle (ruEs RHS)
 
-    replaceProtoRules [] = []
-    replaceProtoRules (item:items)
-      | isEitherRuleItem item  =
-          [ DiffTextItem ("text", render ppAbsState)
-       -- Here we loose imported variants!
-          ] ++ map (\x -> EitherRuleItem (LHS, OpenProtoRule x [])) ruEsL' ++ map (\x -> EitherRuleItem (RHS, OpenProtoRule x [])) ruEsR' ++ filter (not . isEitherRuleItem) items
-      | otherwise        = item : replaceProtoRules items
-
-    isEitherRuleItem (EitherRuleItem _) = True
-    isEitherRuleItem _                  = False
-
     ppAbsState =
+      text "Diff partial evaluation is diagnostic only: it uses E-rules, whose equation variants may expose further behaviour. Refined rules are not installed." $--$
       (text $ " the abstract state after partial evaluation"
               ++ " contains " ++ show (S.size stL') ++ " left facts:") $--$
       (numbered' $ map prettyLNFact $ S.toList stL') $--$
@@ -429,10 +456,19 @@ openTheory  (Theory n f h t sig c items opts sapic) = openTranslatedTheory(
 -- | Open a theory by dropping the closed world assumption and values whose
 -- soundness depends on it.
 openDiffTheory :: ClosedDiffTheory -> OpenDiffTheory
-openDiffTheory  (DiffTheory n f h t sig c1 c2 c3 c4 items opts sapic) =
-    -- We merge duplicate rules if they were split into variants
+openDiffTheory = openDiffTheoryWith openDiffRuleFamily
+
+-- | Reopen for text export, encoding complete explicit families where the
+-- original E-rule alone would lose compiled behavior or annotations.
+exportDiffTheory :: ClosedDiffTheory -> OpenDiffTheory
+exportDiffTheory thy = openDiffTheoryWith
+    (exportDiffRuleFamily (L.get (sigmMaudeHandle . diffThySignature) thy)) thy
+
+openDiffTheoryWith :: ([ClosedProtoRule] -> OpenProtoRule) -> ClosedDiffTheory -> OpenDiffTheory
+openDiffTheoryWith reopen (DiffTheory n f h t sig c1 c2 c3 c4 items opts sapic) =
     DiffTheory n f h t (toSignaturePure sig) (openRuleCache c1) (openRuleCache c2) (openRuleCache c3) (openRuleCache c4)
-      (mergeOpenProtoRulesDiff $ map (mapDiffTheoryItem id (\(x, y) -> (x, (openProtoRule y))) (\(DiffLemma s a p) -> (DiffLemma s a (incrementalToSkeletonDiffProof p))) (\(x, Lemma a p m b c c' d e) -> (x, Lemma a p m b c c' d (incrementalToSkeletonProof e)))) items)
+      (map (mapDiffTheoryItem id id (\(DiffLemma s a p) -> (DiffLemma s a (incrementalToSkeletonDiffProof p))) (\(x, Lemma a p m b c c' d e) -> (x, Lemma a p m b c c' d (incrementalToSkeletonProof e))))
+           (reconstructDiffRuleFamilies reopen items))
       opts sapic
 
 ------------------------------------------------------------------------------

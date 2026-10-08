@@ -1,0 +1,25 @@
+{
+  "tests": [
+    {
+      "name": "uncovered-action-rejection",
+      "args": [
+        "--diff",
+        "--quit-on-warning"
+      ],
+      "exit_code": 1,
+      "contains": [
+        "adds actions whose instances can leave normal form"
+      ]
+    },
+    {
+      "name": "default-rejection",
+      "args": [
+        "--diff"
+      ],
+      "exit_code": 1,
+      "contains": [
+        "adds actions whose instances can leave normal form"
+      ]
+    }
+  ]
+}

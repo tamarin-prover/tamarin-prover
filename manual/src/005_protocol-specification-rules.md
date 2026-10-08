@@ -256,7 +256,7 @@ rule B:
 ```
 
 where `formula` is a restriction. Note that embedded restrictions currently
-are only available in trace mode.
+are available in trace and diff mode.
 
 Modeling protocols
 ------------------

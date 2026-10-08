@@ -1,0 +1,307 @@
+theory SoundnessDiffPreservedRestrictions
+
+begin
+
+// Function signature and definition of the equational theory E
+
+functions: fst/1, h/1, pair/2, snd/1
+equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
+
+/* looping facts with injective instances: State/1 */
+
+/* looping facts with injective instances: State/1 */
+
+/* looping facts with injective instances: State/1 */
+
+/* looping facts with injective instances: State/1 */
+
+rule (modulo E) Start:
+   [ Fr( ~k ), Fr( ~m ) ]
+  --[ Setup( ), Started( ~k ) ]->
+   [ State( ~k ), Out( h(diff(~k, ~m)) ) ]
+
+rule (modulo E) Finish:
+   [ State( k ) ] --[ Finished( k ) ]-> [ State( k ), Out( 'ok' ) ]
+
+restriction OneSetup [right]:
+  "∀ #i #j. ((Setup( ) @ #i) ∧ (Setup( ) @ #j)) ⇒ (#i = #j)"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ #i #j. ((Setup( ) @ #i) ∧ (Setup( ) @ #j)) ⇒ (#i = #j)"
+  */
+
+restriction OneSetup [left]:
+  "∀ #i #j. ((Setup( ) @ #i) ∧ (Setup( ) @ #j)) ⇒ (#i = #j)"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ #i #j. ((Setup( ) @ #i) ∧ (Setup( ) @ #j)) ⇒ (#i = #j)"
+  */
+
+restriction OneFinishPerSession [right]:
+  "∀ k #i #j. ((Finished( k ) @ #i) ∧ (Finished( k ) @ #j)) ⇒ (#i = #j)"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ k #i #j. ((Finished( k ) @ #i) ∧ (Finished( k ) @ #j)) ⇒ (#i = #j)"
+  */
+
+restriction OneFinishPerSession [left]:
+  "∀ k #i #j. ((Finished( k ) @ #i) ∧ (Finished( k ) @ #j)) ⇒ (#i = #j)"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ k #i #j. ((Finished( k ) @ #i) ∧ (Finished( k ) @ #j)) ⇒ (#i = #j)"
+  */
+
+restriction FinishAfterStart [right]:
+  "∀ k #i. (Finished( k ) @ #i) ⇒ (∃ #j. (Started( k ) @ #j) ∧ (#j < #i))"
+
+  /*
+  expanded formula:
+  "∀ k #i. (Finished( k ) @ #i) ⇒ (∃ #j. (Started( k ) @ #j) ∧ (#j < #i))"
+  */
+
+restriction FinishAfterStart [left]:
+  "∀ k #i. (Finished( k ) @ #i) ⇒ (∃ #j. (Started( k ) @ #j) ∧ (#j < #i))"
+
+  /*
+  expanded formula:
+  "∀ k #i. (Finished( k ) @ #i) ⇒ (∃ #j. (Started( k ) @ #j) ∧ (#j < #i))"
+  */
+
+lemma completed [right]:
+  exists-trace
+  "∃ k #i #j. ((Started( k ) @ #i) ∧ (Finished( k ) @ #j)) ∧ (#i < #j)"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ k #i #j. (Started( k ) @ #i) ∧ (Finished( k ) @ #j) ∧ #i < #j"
+*/
+simplify
+solve( State( ~k ) ▶₀ #j )
+  case Start
+  SOLVED // trace found
+qed
+
+lemma completed [left]:
+  exists-trace
+  "∃ k #i #j. ((Started( k ) @ #i) ∧ (Finished( k ) @ #j)) ∧ (#i < #j)"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ k #i #j. (Started( k ) @ #i) ∧ (Finished( k ) @ #j) ∧ #i < #j"
+*/
+simplify
+solve( State( ~k ) ▶₀ #j )
+  case Start
+  SOLVED // trace found
+qed
+
+diffLemma Observational_equivalence:
+rule-equivalence
+  case Rule_Destrd_0_fst
+  backward-search
+    case LHS
+    step( simplify )
+    step( solve( !KD( <x, x.1> ) ▶₀ #i ) )
+      case Finish
+      by step( contradiction /* impossible chain */ )
+    next
+      case Start
+      by step( contradiction /* impossible chain */ )
+    qed
+  next
+    case RHS
+    step( simplify )
+    step( solve( !KD( <x, x.1> ) ▶₀ #i ) )
+      case Finish
+      by step( contradiction /* impossible chain */ )
+    next
+      case Start
+      by step( contradiction /* impossible chain */ )
+    qed
+  qed
+next
+  case Rule_Destrd_0_snd
+  backward-search
+    case LHS
+    step( simplify )
+    step( solve( !KD( <x, x.1> ) ▶₀ #i ) )
+      case Finish
+      by step( contradiction /* impossible chain */ )
+    next
+      case Start
+      by step( contradiction /* impossible chain */ )
+    qed
+  next
+    case RHS
+    step( simplify )
+    step( solve( !KD( <x, x.1> ) ▶₀ #i ) )
+      case Finish
+      by step( contradiction /* impossible chain */ )
+    next
+      case Start
+      by step( contradiction /* impossible chain */ )
+    qed
+  qed
+next
+  case Rule_Equality
+  backward-search
+    case LHS
+    step( simplify )
+    step( solve( !KD( x ) ▶₁ #i ) )
+      case Finish
+      step( solve( (#vl, 0) ~~> (#i, 1) ) )
+        case Const_pub_ok
+        step( solve( State( ~k ) ▶₀ #vr ) )
+          case Finish
+          by step( contradiction /* cyclic */ )
+        next
+          case Start
+          step( solve( !KU( 'ok' ) @ #vk ) )
+            case coerce
+            step( solve( !KD( 'ok' ) ▶₀ #vk ) )
+              case Finish
+              by step( contradiction /* impossible chain */ )
+            next
+              case Start
+              by step( contradiction /* impossible chain */ )
+            qed
+          next
+            case pub
+            MIRRORED
+          qed
+        qed
+      qed
+    next
+      case Start
+      step( solve( (#vl, 0) ~~> (#i, 1) ) )
+        case h
+        step( solve( !KU( h(~k) ) @ #vk ) )
+          case Start
+          MIRRORED
+        next
+          case c_h
+          by step( solve( !KU( ~k ) @ #vk.1 ) )
+        qed
+      qed
+    qed
+  next
+    case RHS
+    step( simplify )
+    step( solve( !KD( x ) ▶₁ #i ) )
+      case Finish
+      step( solve( (#vl, 0) ~~> (#i, 1) ) )
+        case Const_pub_ok
+        step( solve( State( ~k ) ▶₀ #vr ) )
+          case Finish
+          by step( contradiction /* cyclic */ )
+        next
+          case Start
+          step( solve( !KU( 'ok' ) @ #vk ) )
+            case coerce
+            step( solve( !KD( 'ok' ) ▶₀ #vk ) )
+              case Finish
+              by step( contradiction /* impossible chain */ )
+            next
+              case Start
+              by step( contradiction /* impossible chain */ )
+            qed
+          next
+            case pub
+            MIRRORED
+          qed
+        qed
+      qed
+    next
+      case Start
+      step( solve( (#vl, 0) ~~> (#i, 1) ) )
+        case h
+        step( solve( !KU( h(~m) ) @ #vk ) )
+          case Start
+          MIRRORED
+        next
+          case c_h
+          by step( solve( !KU( ~m ) @ #vk.1 ) )
+        qed
+      qed
+    qed
+  qed
+next
+  case Rule_Finish
+  backward-search
+    case LHS
+    step( simplify )
+    step( solve( State( ~k ) ▶₀ #i ) )
+      case Finish
+      MIRRORED
+    next
+      case Start
+      MIRRORED
+    qed
+  next
+    case RHS
+    step( simplify )
+    step( solve( State( ~k ) ▶₀ #i ) )
+      case Finish
+      MIRRORED
+    next
+      case Start
+      MIRRORED
+    qed
+  qed
+next
+  case Rule_Send
+  backward-search
+    case LHS
+    step( simplify )
+    MIRRORED
+  next
+    case RHS
+    step( simplify )
+    MIRRORED
+  qed
+next
+  case Rule_Start
+  backward-search
+    case LHS
+    step( simplify )
+    MIRRORED
+  next
+    case RHS
+    step( simplify )
+    MIRRORED
+  qed
+qed
+
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.13.0
+Maude version 3.5.1
+Git revision: 4a4676de54da4a5081e344b98760d9d4e0f35d46 (with uncommited changes), branch: diff-mirror-proofs
+Compiled at: 2026-09-25 20:02:43.632305942 UTC
+*/
+
+end
+/* Output
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/regression/trace/soundness-diff-preserved-restrictions.spthy
+
+  output:          examples/regression/trace/soundness-diff-preserved-restrictions.spthy.tmp
+  processing time: 0.18s
+  
+  RHS :  completed (exists-trace): verified (3 steps)
+  LHS :  completed (exists-trace): verified (3 steps)
+  DiffLemma:  Observational_equivalence : verified (67 steps)
+
+==============================================================================
+*/

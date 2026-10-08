@@ -43,7 +43,7 @@ import           Text.Parsec                hiding ((<|>))
 import           Text.Parsec.Error          (newErrorMessage, Message(..))
 import           Text.Parsec.Pos            (initialPos)
 import           Text.PrettyPrint.Class     (render)
-import           TheoryObject               (theoryMacros)
+import           TheoryObject               (theoryMacros, diffTheoryMacros)
 import           Theory
 import           Theory.Text.Parser.Token
 
@@ -402,12 +402,13 @@ diffTheory inFile = do
     symbol_ "theory"
     thyId <- identifier
     block <- try (symbol "configuration" <* colon) <|> symbol "begin" <?> "configuration or begin"
-    if block == "configuration"
+    parsed <- if block == "configuration"
         then do
             fileArgs <- stringLiteral <* symbol_ "begin"
             addItems inFile (set diffThyInFile (fromMaybe "" inFile) $ set diffThyName thyId (modify diffThyItems (++ [DiffConfigBlockItem fileArgs]) (defaultOpenDiffTheory ("diff" `S.member` flags0)))) <* reserved "end"
         else do
             addItems inFile (set diffThyInFile (fromMaybe "" inFile) $ set diffThyName thyId (defaultOpenDiffTheory ("diff" `S.member` flags0))) <* reserved "end"
+    expandRestrictions parsed
   where
     addItems :: Maybe FilePath -> OpenDiffTheory -> Parser OpenDiffTheory
     addItems inFile0 thy = asum
@@ -440,8 +441,9 @@ diffTheory inFile = do
       , do thy' <- liftedAddDiffLemma thy =<< diffLemma workDir
            addItems inFile0 thy'
       , do ru <- diffRule
-           thy' <- liftedAddDiffRule thy ru
-           addItems inFile0 thy'
+           case addOpenProtoDiffRule ru thy of
+             Just thy' -> addItems inFile0 thy'
+             Nothing -> fail $ "duplicate rule or inconsistent names: " ++ render (prettyRuleName (get dprRule ru))
       , do r <- intrRule
            addItems inFile0 (addIntrRuleACsDiffAll [r] thy)
       , do c <- formalComment
@@ -517,9 +519,81 @@ diffTheory inFile = do
         Just thy' -> return thy'
         Nothing   -> fail $ "default tactic already defined"
 
-    liftedAddDiffRule thy ru = case addOpenProtoDiffRule ru thy of
-        Just thy' -> return thy'
-        Nothing   -> fail $ "duplicate rule or inconsistent names: " ++ render (prettyRuleName $ get dprRule ru)
+    -- Reserve user-written names from the complete theory, including later
+    -- rules and formulas. Expanding during parsing could accidentally make an
+    -- unrelated action satisfy a generated restriction's guard.
+    expandRestrictions parsed = foldM addItem (set diffThyItems [] parsed) items
+      where
+        items = get diffThyItems parsed
+        reservedNames = S.fromList $ concatMap itemNames items
+        addItem thy (DiffRuleItem rule) = liftedAddDiffRule reservedNames thy rule
+        addItem thy item = return $ modify diffThyItems (++ [item]) thy
+        itemNames (DiffRuleItem (DiffProtoRule parent sides)) =
+          ruleNames parent ++ concat [openNames left ++ openNames right | (left, right) <- maybeToList sides]
+        itemNames (EitherRuleItem (_, rule)) = openNames rule
+        itemNames (EitherLemmaItem (_, lemma)) = formulaNames (get lFormula lemma)
+        itemNames (EitherRestrictionItem (_, restriction)) =
+          get rstrName restriction : formulaNames (get rstrFormula restriction)
+        itemNames _ = []
+        openNames (OpenProtoRule rule variants) = ruleNames rule ++ concatMap factNames variants
+        ruleNames rule = factNames rule ++ concatMap formulaNames (get (preRestriction . rInfo) rule)
+        factNames rule = concatMap nameOfFact (get rPrems rule ++ get rConcs rule ++ get rActs rule)
+        nameOfFact fact = case factTag fact of ProtoFact _ name _ -> [name]; _ -> []
+        formulaNames :: ProtoFormula syn s c v -> [String]
+        formulaNames = foldFormula atomNames (const []) id (const (++)) (\_ _ names -> names)
+        atomNames (Action _ fact) = nameOfFact fact
+        atomNames _ = []
+
+    -- Embedded restrictions of the parent constrain both sides; those of an
+    -- explicit side rule only its own side. Side rules replace the parent's
+    -- projection, so they also receive the parent's generated actions.
+    liftedAddDiffRule reservedNames thy (DiffProtoRule parent sides) = do
+        (restrictions, actions) <- expandEmbedded "" parent
+        let parent' = appendActions actions parent
+            choices = get rNewVars $ applyMacroInRule (diffTheoryMacros thy) parent'
+        (sides', sideRestrictions) <- case sides of
+            Nothing -> return (Nothing, [])
+            Just (left, right) -> do
+                (left', lr) <- expandSide LHS choices actions left
+                (right', rr) <- expandSide RHS choices actions right
+                return (Just (left', right'), lr ++ rr)
+        thy' <- foldM addEmbeddedRestriction thy $
+            [(side, r) | side <- [LHS, RHS], r <- restrictions] ++ sideRestrictions
+        let ru = DiffProtoRule parent' sides'
+        case addOpenProtoDiffRule ru thy' of
+            Just thy'' -> return thy''
+            Nothing -> fail $ "duplicate rule or inconsistent names: " ++ render (prettyRuleName parent)
+      where
+        -- Expand macros and generate actions before projection: a variable may
+        -- disappear on one side of a diff term, but the action arity must agree.
+        expandEmbedded suffix rule = do
+            formulas <- mapM (fmap (applyMacroInFormula $ diffTheoryMacros thy)
+                               . liftEitherToEx UndefinedPredicate . expandFormula [])
+                             (get (preRestriction . rInfo) rule)
+            return $ unzip [ fromRuleRestriction (freshName (getRuleName rule ++ suffix ++ "_" ++ show i)) f
+                           | (i, f) <- zip [1 :: Int ..] formulas ]
+        freshName stem = head [name | name <- stem : [stem ++ "_" ++ show n | n <- [1 :: Int ..]]
+                                   , ("Restr_" ++ name) `S.notMember` usedNames]
+        usedNames = reservedNames `S.union` S.fromList
+          [get rstrName restriction | (_, restriction) <- diffTheoryRestrictions thy]
+        appendActions actions rule =
+            let rule' = modify rActs (++ actions) rule
+            in set rNewVars (newVariables (get rPrems rule') (get rConcs rule' ++ get rActs rule')) rule'
+        expandSide side choices inherited (OpenProtoRule rule variants) = do
+            (restrictions, actions) <- expandEmbedded ("_" ++ show side) rule
+            let project = if side == LHS then getLeftFact else getRightFact
+                -- Only the expanded parent's choices correspond across sides.
+                -- Side-local choices (including names erased by a parent macro)
+                -- must not acquire positional counterparts in the other side.
+                rule' = set rNewVars choices $
+                          modify rActs (++ actions ++ map project inherited) rule
+            return (OpenProtoRule rule' variants, [(side, r) | r <- restrictions])
+        addEmbeddedRestriction thy'' (side, rstr) =
+            let project = if side == LHS then getLeftTerm else getRightTerm
+                rstr' = modify rstrFormula (mapAtoms $ const $ fmap project) rstr
+            in case addRestrictionDiff side rstr' thy'' of
+                 Just thy''' -> return thy'''
+                 Nothing -> fail $ "duplicate restriction: " ++ get rstrName rstr'
 
     liftedAddDiffLemma thy ru = case addDiffLemma ru thy of
         Just thy' -> return thy'
