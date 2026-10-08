@@ -1,0 +1,103 @@
+theory SoundnessManualVariantsComplete
+
+begin
+
+// Function signature and definition of the equational theory E
+
+functions: fst/1, pair/2, sdec/2, senc/2, snd/1
+equations:
+    fst(<x.1, x.2>) = x.1,
+    sdec(senc(x.1, x.2), x.2) = x.1,
+    snd(<x.1, x.2>) = x.2
+
+rule (modulo E) Key:
+   [ Fr( ~k ) ] --> [ !Key( ~k ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Secret:
+   [ Fr( ~m ), !Key( ~k ) ] --[ Secret( ~m ) ]-> [ Out( senc(~m, ~k) ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Dec:
+   [ In( x ), !Key( k ) ] --> [ Out( sdec(x, k) ) ]
+ variants
+  rule (modulo AC) Dec___VARIANT_2:
+     [ In( senc(z.2, k.1) ), !Key( k.1 ) ]
+    --[ Decrypted( z.2 ) ]->
+     [ Out( z.2 ) ]
+  ,
+  rule (modulo AC) Dec___VARIANT_1:
+     [ In( x.2 ), !Key( k.1 ) ]
+    --[ Decrypted( sdec(x.2, k.1) ) ]->
+     [ Out( sdec(x.2, k.1) ) ]
+
+lemma secrecy:
+  all-traces "∀ m #i. (Secret( m ) @ #i) ⇒ (¬(∃ #j. K( m ) @ #j))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ m #i. (Secret( m ) @ #i) ∧ ∃ #j. (K( m ) @ #j)"
+*/
+simplify
+solve( !Key( ~k ) ▶₁ #i )
+  case Key
+  solve( !KU( ~m ) @ #vk )
+    case Dec___VARIANT_2
+    solve( !KU( senc(t, ~k.1) ) @ #vk.1 )
+      case Secret
+      solve( (#vl, 0) ~~> (#vk, 0) )
+        case Var_fresh_1_m
+        SOLVED // trace found
+      qed
+    qed
+  qed
+qed
+
+lemma annotated_variant_reachable:
+  exists-trace "∃ m #i #j. (Secret( m ) @ #i) ∧ (Decrypted( m ) @ #j)"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ m #i #j. (Secret( m ) @ #i) ∧ (Decrypted( m ) @ #j)"
+*/
+simplify
+solve( !Key( ~k ) ▶₁ #i )
+  case Key
+  solve( Decrypted( ~m ) @ #j )
+    case Dec___VARIANT_2
+    solve( !Key( k.1 ) ▶₁ #j )
+      case Key
+      solve( !KU( senc(~m, ~k.1) ) @ #vk )
+        case Secret
+        SOLVED // trace found
+      qed
+    qed
+  qed
+qed
+
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.13.0
+Maude version 3.5.1
+Git revision: b4ca08a3ebf7e1a7a16db04a62f1e23d3438dd04 (with uncommited changes), branch: msr-rule-handling
+Compiled at: 2026-10-07 11:28:33.82755466 UTC
+*/
+
+end
+/* Output
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/regression/trace/soundness-manual-variants-complete.spthy
+
+  output:          examples/regression/trace/soundness-manual-variants-complete.spthy.tmp
+  processing time: 0.13s
+  
+  secrecy (all-traces): falsified - found trace (6 steps)
+  annotated_variant_reachable (exists-trace): verified (6 steps)
+
+==============================================================================
+*/

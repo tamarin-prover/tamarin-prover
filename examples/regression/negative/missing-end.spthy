@@ -1,0 +1,3 @@
+theory MissingEnd
+begin
+// Deliberately omit 'end': the parser must reject this input (#766).

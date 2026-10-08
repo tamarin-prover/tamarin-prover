@@ -1,0 +1,33 @@
+{
+  "tests": [
+    {
+      "name": "trace-exponents-supported",
+      "args": [
+        "--prove",
+        "--quit-on-warning"
+      ],
+      "contains": [
+        "power_neutral_exists (exists-trace): verified",
+        "power_premise_exists (exists-trace): verified"
+      ]
+    },
+    {
+      "name": "diff-exponents-supported",
+      "args": [
+        "--diff",
+        "--prove",
+        "--quit-on-warning"
+      ],
+      "matches": [
+        {
+          "regex": "power_neutral_exists.*verified",
+          "min": 2
+        },
+        {
+          "regex": "power_premise_exists.*verified",
+          "min": 2
+        }
+      ]
+    }
+  ]
+}

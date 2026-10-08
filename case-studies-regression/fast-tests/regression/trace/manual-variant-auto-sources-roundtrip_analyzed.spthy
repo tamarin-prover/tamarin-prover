@@ -1,0 +1,151 @@
+theory ManualVariantAutoSourcesRoundtrip
+
+begin
+
+// Function signature and definition of the equational theory E
+
+functions: fst/1, pair/2, sdec/2, senc/2, snd/1
+equations:
+    fst(<x.1, x.2>) = x.1,
+    sdec(senc(x.1, x.2), x.2) = x.1,
+    snd(<x.1, x.2>) = x.2
+
+macros: identity( x ) =  x
+
+rule (modulo E) Emit:
+   [ In( <x, x> ), In( k ) ]
+  --[ Original( sdec(x, k) ) ]->
+   [ Out( sdec(x, k) ) ]
+ variants
+  rule (modulo AC) Emit___VARIANT_1:
+     [ In( <cipher, cipher> ), In( key ) ]
+    --[ Original( sdec(cipher, key) ), Added( 'a' ) ]->
+     [ Out( sdec(cipher, key) ) ]
+  ,
+  rule (modulo AC) Emit___VARIANT_2:
+     [ In( <senc(plain, key), senc(plain, key)> ), In( key ) ]
+    --[
+    AUTO_IN_TERM_0_0_1_0__Emit___VARIANT_2( senc(plain, key), plain ),
+    AUTO_IN_TERM_0_0_0_0__Emit___VARIANT_2( senc(plain, key), plain ),
+    Original( plain ), Added( 'a' )
+    ]->
+     [ Out( plain ) ]
+
+lemma witness:
+  exists-trace "∃ #i. Added( 'a' ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #i. (Added( 'a' ) @ #i)"
+*/
+simplify
+solve( Added( 'a' ) @ #i )
+  case Emit___VARIANT_1
+  SOLVED // trace found
+qed
+
+lemma false_safety:
+  all-traces "∀ #i. (Added( 'a' ) @ #i) ⇒ (⊥)"
+/*
+guarded formula characterizing all counter-examples:
+"∃ #i. (Added( 'a' ) @ #i)"
+*/
+simplify
+solve( Added( 'a' ) @ #i )
+  case Emit___VARIANT_1
+  SOLVED // trace found
+qed
+
+lemma AUTO_typing [sources]:
+  all-traces
+  "((⊤) ∧
+    (∀ x m #i.
+      (AUTO_IN_TERM_0_0_0_0__Emit___VARIANT_2( m, x ) @ #i) ⇒
+      (∃ #j. (!KU( x ) @ #j) ∧ (#j < #i)))) ∧
+   (∀ x m #i.
+     (AUTO_IN_TERM_0_0_1_0__Emit___VARIANT_2( m, x ) @ #i) ⇒
+     (∃ #j. (!KU( x ) @ #j) ∧ (#j < #i)))"
+/*
+guarded formula characterizing all counter-examples:
+"((∃ x m #i.
+    (AUTO_IN_TERM_0_0_0_0__Emit___VARIANT_2( m, x ) @ #i)
+   ∧
+    ∀ #j. (!KU( x ) @ #j) ⇒ ¬(#j < #i)) ∨
+  (∃ x m #i.
+    (AUTO_IN_TERM_0_0_1_0__Emit___VARIANT_2( m, x ) @ #i)
+   ∧
+    ∀ #j. (!KU( x ) @ #j) ⇒ ¬(#j < #i)))"
+*/
+induction
+  case empty_trace
+  by contradiction /* from formulas */
+next
+  case non_empty_trace
+  solve( (∃ x m #i.
+           (AUTO_IN_TERM_0_0_0_0__Emit___VARIANT_2( m, x ) @ #i)
+          ∧
+           ∀ #j. (!KU( x ) @ #j) ⇒ ¬(#j < #i))  ∥
+         (∃ x m #i.
+           (AUTO_IN_TERM_0_0_1_0__Emit___VARIANT_2( m, x ) @ #i)
+          ∧
+           ∀ #j. (!KU( x ) @ #j) ⇒ ¬(#j < #i)) )
+    case case_1
+    solve( (last(#i))  ∥
+           (∃ #j. (!KU( x ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #i)) )
+      case case_1
+      solve( !KU( senc(x, key) ) @ #vk.1 )
+        case Emit___VARIANT_2
+        by contradiction /* cyclic */
+      next
+        case c_senc
+        by contradiction /* from formulas */
+      qed
+    next
+      case case_2
+      by contradiction /* from formulas */
+    qed
+  next
+    case case_2
+    solve( (last(#i))  ∥
+           (∃ #j. (!KU( x ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #i)) )
+      case case_1
+      solve( !KU( senc(x, key) ) @ #vk.1 )
+        case Emit___VARIANT_2
+        by contradiction /* cyclic */
+      next
+        case c_senc
+        by contradiction /* from formulas */
+      qed
+    next
+      case case_2
+      by contradiction /* from formulas */
+    qed
+  qed
+qed
+
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.13.0
+Maude version 3.5.1
+Git revision: b4ca08a3ebf7e1a7a16db04a62f1e23d3438dd04 (with uncommited changes), branch: msr-rule-handling
+Compiled at: 2026-10-07 11:28:33.82755466 UTC
+*/
+
+end
+/* Output
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/regression/trace/manual-variant-auto-sources-roundtrip.spthy
+
+  output:          examples/regression/trace/manual-variant-auto-sources-roundtrip.spthy.tmp
+  processing time: 0.11s
+  
+  witness (exists-trace): verified (3 steps)
+  false_safety (all-traces): falsified - found trace (3 steps)
+  AUTO_typing (all-traces): verified (13 steps)
+
+==============================================================================
+*/

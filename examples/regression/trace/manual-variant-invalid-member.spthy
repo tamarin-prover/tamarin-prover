@@ -1,0 +1,27 @@
+theory ManualVariantInvalidMember
+begin
+
+builtins: symmetric-encryption
+
+rule Key:
+  [ Fr(~k) ] --> [ !Key(~k) ]
+
+rule Secret:
+  [ Fr(~m), !Key(~k) ] --[ Secret(~m) ]-> [ Out(senc(~m,~k)) ]
+
+// The first member is not a variant of Dec: it outputs the key instead of
+// the decryption. This changes the rule's conclusion, so the family must
+// be rejected. The secrecy lemma is already false for the original rule:
+// an attacker can submit Secret's ciphertext to Dec.
+rule Dec:
+  [ In(x), !Key(k) ] --> [ Out(sdec(x,k)) ]
+  variants
+  rule (modulo AC) Dec___VARIANT_1:
+    [ In(x.2), !Key(k.1) ] --> [ Out(k.1) ],
+  rule (modulo AC) Dec___VARIANT_2:
+    [ In(senc(z.2,k.1)), !Key(k.1) ] --> [ Out(z.2) ]
+
+lemma secrecy:
+  "All m #i. Secret(m)@i ==> not Ex #j. K(m)@j"
+
+end

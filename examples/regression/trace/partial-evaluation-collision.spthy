@@ -1,0 +1,14 @@
+theory PartialEvaluationCollision
+begin
+builtins: symmetric-encryption
+
+// A generated variant of Dec has the same name as the independent Marker rule.
+// Retaining Dec on export must not erase the other rule's refinement.
+rule Dec:
+  [ In(x) ] --> [ Out(sdec(x,'k')) ]
+rule Dec___VARIANT_2:
+  [] --[ Marker() ]-> []
+
+lemma reachable: exists-trace "Ex #i. Marker() @ i"
+lemma false_safety: "not (Ex #i. Marker() @ i)"
+end

@@ -1,0 +1,104 @@
+theory PartialEvaluationExport
+begin
+
+builtins: symmetric-encryption, natural-numbers
+
+macros: identity(x) = x
+
+rule Key:
+  [ Fr(~k) ] --> [ !Key(~k) ]
+
+rule Secret:
+  [ Fr(~m), !Key(~k) ]
+  --[ Secret(~m) ]->
+  [ Out(senc(~m,~k)) ]
+
+rule Dec:
+  [ In(x), !Key(k) ] --> [ Out(sdec(x,k)) ]
+  variants
+  rule (modulo AC) Dec___VARIANT_2:
+    [ In(senc(z.2,k.1)), !Key(k.1) ] --[ Decrypted(z.2) ]-> [ Out(z.2) ],
+  rule (modulo AC) Dec___VARIANT_1:
+    [ In(x.2), !Key(k.1) ]
+    --[ Unreduced(sdec(x.2,k.1)) ]->
+    [ Out(sdec(x.2,k.1)) ]
+
+// The generic variant applies only when the decryption does not reduce.
+// Exporting it as an E-rule after partial evaluation used to introduce a
+// cancelling variant with the Unreduced action, making this trace possible.
+lemma unreduced_secret:
+  exists-trace
+  "Ex m #i #j. Secret(m) @ i & Unreduced(m) @ j"
+
+lemma decrypted_reachable:
+  exists-trace
+  "Ex m #i. Decrypted(m) @ i"
+
+lemma unreduced_reachable:
+  exists-trace
+  "Ex m #i. Unreduced(m) @ i"
+
+// Partial evaluation splits Use into two rules. Both must survive export
+// with distinct names, without colliding with the existing Use_PE_1 rule.
+rule SeedA:
+  [ ] --> [ State('a') ]
+
+// Identical originals are accepted and share one family.
+rule SeedA:
+  [ ] --> [ State('a') ]
+
+rule SeedB:
+  [ ] --> [ State('b') ]
+
+rule Use:
+  [ State(x) ] --[ Used(x) ]-> [ ]
+
+rule Use_PE_1:
+  [ ] --[ ReservedName() ]-> [ ]
+
+// This family has no reachable instance and must be dropped by the plan.
+rule Unreachable:
+  [ State('unseeded') ] --[ Pruned() ]-> [ ]
+
+lemma pruned_family_unreachable:
+  exists-trace
+  "Ex #i. Pruned() @ i"
+
+lemma first_specialization_reachable:
+  exists-trace
+  "Ex #i. Used('a') @ i"
+
+lemma second_specialization_reachable:
+  exists-trace
+  "Ex #i. Used('b') @ i"
+
+lemma existing_rule_reachable:
+  exists-trace
+  "Ex #i. ReservedName() @ i"
+
+// Embedded restrictions are materialized as a separate restriction/action
+// before partial evaluation. Macro expansion and export must preserve it.
+rule NaturalSeedOne:
+  [ ] --> [ NaturalState(%1) ]
+
+rule NaturalSeedTwo:
+  [ ] --> [ NaturalState(%1 %+ %1) ]
+
+rule NaturalUse:
+  [ NaturalState(x) ]
+  --[ NaturalUsed(x), _restrict(x << %1 %+ %1) ]->
+  [ NaturalState(identity(x)) ]
+
+lemma embedded_restriction_first:
+  exists-trace
+  "Ex #i. NaturalUsed(%1) @ i"
+
+lemma embedded_restriction_second:
+  exists-trace
+  "Ex #i. NaturalUsed(%1 %+ %1) @ i"
+
+lemma embedded_restriction_repeated:
+  exists-trace
+  "Ex x #i #j. NaturalUsed(x) @ i & NaturalUsed(x) @ j & #i < #j"
+
+end
