@@ -14,13 +14,24 @@ restriction BlockSometimes [right]:
   "∀ t #e. (RNeq( t, t ) @ #e) ⇒ (⊥)"
   // safety formula
 
+  /*
+  expanded formula:
+  "∀ t #e. (RNeq( t, t ) @ #e) ⇒ (⊥)"
+  */
+
 diffLemma Observational_equivalence:
 rule-equivalence
   case Rule_not_match
   backward-search
     case LHS
     step( simplify )
-    by ATTACK // trace found
+    step( solve( !KU( x ) @ #vk ) )
+      case pub
+      step( solve( !KU( $x ) @ #vk ) )
+        case pub
+        by ATTACK // trace found
+      qed
+    qed
   qed
 qed
 
@@ -30,8 +41,8 @@ qed
 Generated from:
 Tamarin version 1.13.0
 Maude version 3.5.1
-Git revision: 41bc81379b23681e7057314a5cf66a25c45e1986, branch: canonicalise-subst
-Compiled at: 2026-07-27 16:11:34.947223 UTC
+Git revision: 4a4676de54da4a5081e344b98760d9d4e0f35d46 (with uncommited changes), branch: diff-mirror-proofs
+Compiled at: 2026-09-25 20:02:43.632305942 UTC
 */
 
 end
@@ -43,9 +54,9 @@ summary of summaries:
 analyzed: examples/features/equivalence/AxiomDiffTest4.spthy
 
   output:          examples/features/equivalence/AxiomDiffTest4.spthy.tmp
-  processing time: 0.02s
+  processing time: 0.17s
   
-  DiffLemma:  Observational_equivalence : falsified - found trace (4 steps)
+  DiffLemma:  Observational_equivalence : falsified - found trace (6 steps)
 
 ==============================================================================
 */

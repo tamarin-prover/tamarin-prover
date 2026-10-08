@@ -234,7 +234,7 @@ case-studies$(SUBDIR)%_analyzed-diff.spthy:	examples/%.spthy $(TAMARIN)
 	mkdir -p $(dir $@)
 	# Use -N3, as the fourth core is used by the OS and the console
 	# For execution on server using -N14 for faster completion!
-	$(TAMARIN) $< --prove --diff --stop-on-trace=dfs -d=0 +RTS -N14 -RTS -o$<.tmp >$<.out
+	$(TAMARIN) $< --prove --diff --stop-on-trace=dfs -d=0 $(DIFF_EXTRA_ARGS) +RTS -N14 -RTS -o$<.tmp >$<.out
 	# We only produce the target after the run, otherwise aborted
 	# runs already 'finish' the case.
 	printf "\n/* Output\n" >>$<.tmp
@@ -493,7 +493,7 @@ accountability-case-studies:	$(ACCOUNTABILITY_CS_TARGETS)
 ##########################
 
 FAST_REGRESSION_CASE_STUDIES=issue446-1.spthy issue446-2.spthy issue753-4.spthy issue753-5.spthy issue753-6.spthy issue834.spthy issue777.spthy issue770.spthy issue914.spthy issue904.spthy issue905.spthy negated-equivalence.spthy
-COMMON_REGRESSION_CASE_STUDIES=soundness-manual-variants-complete.spthy soundness-partial-evaluation-variants.spthy partial-evaluation-export.spthy partial-evaluation-collision.spthy
+COMMON_REGRESSION_CASE_STUDIES=msr-macro-injectivity.spthy msr-injective-last.spthy msr-source-premise-index.spthy nat-subterm-sorts.spthy soundness-subterm-witness.spthy soundness-manual-variants-complete.spthy soundness-safety-false.spthy soundness-partial-evaluation-variants.spthy partial-evaluation-export.spthy partial-evaluation-collision.spthy soundness-induction-empty-equality.spthy
 COMMON_REGRESSION_CASE_STUDIES+=manual-variant-auto-sources-roundtrip.spthy
 case-studies$(SUBDIR)regression/trace/manual-variant-auto-sources-roundtrip_analyzed.spthy: TRACE_EXTRA_ARGS=--auto-sources
 COMMON_REGRESSION_CASE_STUDIES+=covered-product-export.spthy
@@ -502,6 +502,20 @@ COMMON_REGRESSION_CASE_STUDIES+=auto-sources-rule-name-collision.spthy
 case-studies$(SUBDIR)regression/trace/auto-sources-rule-name-collision_analyzed.spthy: TRACE_EXTRA_ARGS=--auto-sources
 FAST_REGRESSION_CASE_STUDIES+=$(COMMON_REGRESSION_CASE_STUDIES)
 FAST_REGRESSION_TARGETS=$(subst .spthy,_analyzed.spthy,$(addprefix case-studies$(SUBDIR)regression/trace/,$(FAST_REGRESSION_CASE_STUDIES)))
+DIFF_REGRESSION_CASE_STUDIES=soundness-diff-source-side.spthy soundness-diff-hidden-reuse.spthy soundness-diff-macros.spthy
+DIFF_REGRESSION_CASE_STUDIES+=diff-embedded-restriction-names.spthy diff-embedded-side-restriction-names.spthy
+DIFF_REGRESSION_CASE_STUDIES+=diff-auto-source-macros.spthy diff-embedded-restrictions.spthy diff-embedded-restriction-projections.spthy
+DIFF_REGRESSION_CASE_STUDIES+=diff-preserved-restriction-binders.spthy
+DIFF_REGRESSION_CASE_STUDIES+=soundness-diff-mirror-restriction.spthy soundness-diff-mirror-false-restriction.spthy soundness-diff-mixed-restriction.spthy
+DIFF_REGRESSION_CASE_STUDIES+=soundness-diff-multisession-restriction.spthy soundness-diff-preserved-restrictions.spthy diff-multisession-observable-restriction.spthy
+DIFF_REGRESSION_CASE_STUDIES+=soundness-diff-mirror-unifiers.spthy soundness-diff-unreachable-trivial-goal.spthy soundness-diff-conditional-restriction.spthy
+DIFF_REGRESSION_CASE_STUDIES+=diff-alternative-conditional-restrictions.spthy diff-joint-conditional-restrictions.spthy diff-joint-conditional-attack.spthy
+DIFF_REGRESSION_CASE_STUDIES+=diff-mirror-reuse-specialization.spthy
+DIFF_REGRESSION_CASE_STUDIES+=diff-disequality-attack.spthy
+case-studies$(SUBDIR)regression/trace/diff-auto-source-macros_analyzed-diff.spthy: DIFF_EXTRA_ARGS=--auto-sources --bound=8 --quit-on-warning
+case-studies$(SUBDIR)regression/trace/diff-multisession-observable-restriction_analyzed-diff.spthy: DIFF_EXTRA_ARGS=--bound=6
+DIFF_REGRESSION_CASE_STUDIES+=diff-side-restriction-choices.spthy
+DIFF_REGRESSION_TARGETS=$(subst .spthy,_analyzed-diff.spthy,$(addprefix case-studies$(SUBDIR)regression/trace/,$(DIFF_REGRESSION_CASE_STUDIES)))
 
 
 case-studies$(SUBDIR)regression/trace/soundness-partial-evaluation-variants_analyzed.spthy: TRACE_EXTRA_ARGS=--partial-evaluation=summary
@@ -519,7 +533,7 @@ DEFAULTORACLE_CASE_STUDIES=defaultoracle.spthy
 DEFAULTORACLE_CASE_TARGETS=$(subst .spthy,_analyzed-deforacle.spthy, $(addprefix case-studies$(SUBDIR)regression/trace/,$(DEFAULTORACLE_CASE_STUDIES)))
 
 # case studies
-regression-case-studies:	$(REGRESSION_TARGETS) $(SEQDFS_TARGETS) $(DEFAULTORACLE_CASE_TARGETS) $(FAST_REGRESSION_TARGETS)
+regression-case-studies:	$(REGRESSION_TARGETS) $(DIFF_REGRESSION_TARGETS) $(SEQDFS_TARGETS) $(DEFAULTORACLE_CASE_TARGETS) $(FAST_REGRESSION_TARGETS)
 	grep "verified\|falsified\|processing time" case-studies$(SUBDIR)regression/trace/*.spthy
 
 ## SAPIC output in Tamarin
@@ -608,7 +622,7 @@ else 	# ($(UNAME_S),Darwin)
 endif
 #	top -b | head >> $@
 
-CS_TARGETS=case-studies$(SUBDIR)Tutorial_analyzed.spthy $(CSF19_WRAPPING_TARGETS) $(CSF12_CS_TARGETS) $(CLASSIC_CS_TARGETS) $(IND_CS_TARGETS) $(AKE_DH_CS_TARGETS) $(AKE_BP_CS_TARGETS) $(FEATURES_CS_TARGETS) $(OBSEQ_TARGETS) $(SAPIC_CS_TARGETS_FAST) $(SAPIC_CS_TARGETS_SLOW) $(POST17_TARGETS) $(REGRESSION_TARGETS) $(XOR_TARGETS) $(AUTO_SOURCES_CS_TARGETS) $(ACCOUNTABILITY_CS_TARGETS) $(DERIVATION_CHECK_CS_TARGETS) $(FAST_AC_CS_TARGETS) $(FAST_AC_DIFF_CS_TARGETS) $(AC_MIXNET_TARGETS)
+CS_TARGETS=case-studies$(SUBDIR)Tutorial_analyzed.spthy $(CSF19_WRAPPING_TARGETS) $(CSF12_CS_TARGETS) $(CLASSIC_CS_TARGETS) $(IND_CS_TARGETS) $(AKE_DH_CS_TARGETS) $(AKE_BP_CS_TARGETS) $(FEATURES_CS_TARGETS) $(OBSEQ_TARGETS) $(SAPIC_CS_TARGETS_FAST) $(SAPIC_CS_TARGETS_SLOW) $(POST17_TARGETS) $(REGRESSION_TARGETS) $(DIFF_REGRESSION_TARGETS) $(XOR_TARGETS) $(AUTO_SOURCES_CS_TARGETS) $(ACCOUNTABILITY_CS_TARGETS) $(DERIVATION_CHECK_CS_TARGETS) $(FAST_AC_CS_TARGETS) $(FAST_AC_DIFF_CS_TARGETS) $(AC_MIXNET_TARGETS)
 
 case-studies: 	case-studies$(SUBDIR)system.info $(CS_TARGETS)
 	grep -R "verified\|falsified\|processing time" case-studies$(SUBDIR)
@@ -617,7 +631,7 @@ case-studies: 	case-studies$(SUBDIR)system.info $(CS_TARGETS)
 ## Fast case studies
 ####################
 
-FAST_CS_TARGETS = case-studies$(SUBDIR)Tutorial_analyzed.spthy $(CCS15_PCS_TARGETS) $(TESTOBSEQ_TARGETS) $(FEATURES_CS_TARGETS) $(REGRESSION_OBSEQ_TARGETS) $(CSF12_CS_TARGETS) $(IND_CS_TARGETS) $(CCS15_CS_TARGETS) $(XOR_TRACE_TARGETS) $(POST17_TRACE_TARGETS) $(CLASSIC_CS_TARGETS) $(AKE_BP_CS_TARGETS) $(SEQDFS_TARGETS) $(DEFAULTORACLE_CASE_TARGETS) $(FAST_REGRESSION_TARGETS) $(XOR_DIFF_OBSEQONLY_TARGETS) $(DERIVATION_CHECK_CS_TARGETS) $(FAST_AC_CS_TARGETS) $(FAST_AC_DIFF_CS_TARGETS)
+FAST_CS_TARGETS = case-studies$(SUBDIR)Tutorial_analyzed.spthy $(CCS15_PCS_TARGETS) $(TESTOBSEQ_TARGETS) $(FEATURES_CS_TARGETS) $(REGRESSION_OBSEQ_TARGETS) $(CSF12_CS_TARGETS) $(IND_CS_TARGETS) $(CCS15_CS_TARGETS) $(XOR_TRACE_TARGETS) $(POST17_TRACE_TARGETS) $(CLASSIC_CS_TARGETS) $(AKE_BP_CS_TARGETS) $(SEQDFS_TARGETS) $(DEFAULTORACLE_CASE_TARGETS) $(FAST_REGRESSION_TARGETS) $(DIFF_REGRESSION_TARGETS) $(XOR_DIFF_OBSEQONLY_TARGETS) $(DERIVATION_CHECK_CS_TARGETS) $(FAST_AC_CS_TARGETS) $(FAST_AC_DIFF_CS_TARGETS)
 
 fast-case-studies: case-studies$(SUBDIR)system.info $(FAST_CS_TARGETS)
 	mkdir -p case-studies$(SUBDIR)

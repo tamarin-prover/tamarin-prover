@@ -1,0 +1,53 @@
+theory SoundnessInductionEmptyEquality
+begin
+
+// This rule supplies the action-bearing part of the formula that made the
+// old induction applicability check accept the lemma. A is reachable: the
+// intruder can generate a fresh name and send it.
+rule Receive:
+  [ In(~x) ]
+  --[ A() ]->
+  []
+
+// Message quantifiers range over terms even on the empty trace. In particular,
+// x='a' has the witness x='a', so this conjunction is false on every trace.
+lemma false_direct:
+  "(All x. x='a' ==> F) & (All #i. A()@i ==> T)"
+
+lemma false_induction [use_induction]:
+  "(All x. x='a' ==> F) & (All #i. A()@i ==> T)"
+
+rule Fixed:
+  [] --[ B('a') ]-> []
+
+// These negated universal lemmas start with a disjunction. Rejecting induction
+// must leave that disjunction available for case splitting, not claim a trace
+// just because no proof method applies. Both conjuncts hold on every trace.
+lemma true_direct:
+  "(All x. x='a' ==> x='a') & (All x #i. B(x)@i ==> x='a')"
+
+lemma true_induction [use_induction]:
+  "(All x. x='a' ==> x='a') & (All x #i. B(x)@i ==> x='a')"
+
+// Neither disjunct has a witness. Without its case-split goal, the initial
+// system was incorrectly reported as SOLVED before checking either one.
+lemma impossible: exists-trace
+  "(Ex x. x='a' & not (x='a')) | (Ex x #i. B(x)@i & not (x='a'))"
+
+// The second disjunct does have a witness here.
+lemma possible: exists-trace
+  "(Ex x. x='a' & not (x='a')) | (Ex x #i. B(x)@i & x='a')"
+
+rule OtherFixed:
+  [] --[ C('b') ]-> []
+
+// Induction is valid before simplifying this conjunction. Once simplification
+// creates a disjunction goal, search must solve it rather than emit an induction
+// step that saved-proof replay rejects. Both proof paths should replay.
+lemma action_conjunction:
+  "(All x #i. B(x)@i ==> x='a') & (All y #j. C(y)@j ==> y='b')"
+
+lemma action_conjunction_induction [use_induction]:
+  "(All x #i. B(x)@i ==> x='a') & (All y #j. C(y)@j ==> y='b')"
+
+end

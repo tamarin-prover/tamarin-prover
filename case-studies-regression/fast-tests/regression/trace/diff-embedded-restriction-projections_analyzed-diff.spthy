@@ -1,0 +1,256 @@
+theory DiffEmbeddedRestrictionProjections
+
+begin
+
+// Function signature and definition of the equational theory E
+
+functions: fst/1, pair/2, snd/1
+equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
+
+macros: identity( x ) =  x,
+        choice( ) =  diff('a', 'b')
+
+rule (modulo E) Choose:
+   [ In( <x, y> ) ]
+  --[ Chosen( x, y ), Restr_Choose_1( x ), Restr_Choose_2( y ) ]->
+   [ ]
+ left
+  rule (modulo E) Choose:
+     [ In( <x, y> ) ]
+    --[ Chosen( x, y ), Restr_Choose_1( x ), Restr_Choose_2( y ) ]->
+     [ ]
+ right
+  rule (modulo E) Choose:
+     [ In( <x, y> ) ]
+    --[ Chosen( x, y ), Restr_Choose_1( x ), Restr_Choose_2( y ) ]->
+     [ ]
+
+rule (modulo E) Local:
+   [ In( x ) ] --[ Local( x ) ]-> [ ]
+ left
+  rule (modulo E) Local:
+     [ In( x ) ] --[ Local( x ), Restr_Local_LHS_1( x ) ]-> [ ]
+ right
+  rule (modulo E) Local:
+     [ In( x ) ] --[ Local( x ), Restr_Local_RHS_1( x ) ]-> [ ]
+
+rule (modulo E) Mixed:
+   [ In( x ) ] --[ Mixed( x ), Restr_Mixed_1( diff(x, 'a'), x ) ]-> [ ]
+
+restriction Restr_Choose_1 [left]:
+  "∀ x #NOW. (Restr_Choose_1( x ) @ #NOW) ⇒ (x = 'a')"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ x #NOW. (Restr_Choose_1( x ) @ #NOW) ⇒ (x = 'a')"
+  */
+
+restriction Restr_Choose_2 [left]:
+  "∀ x #NOW. (Restr_Choose_2( x ) @ #NOW) ⇒ (x = 'tag')"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ x #NOW. (Restr_Choose_2( x ) @ #NOW) ⇒ (x = 'tag')"
+  */
+
+restriction Restr_Choose_1 [right]:
+  "∀ x #NOW. (Restr_Choose_1( x ) @ #NOW) ⇒ (x = 'b')"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ x #NOW. (Restr_Choose_1( x ) @ #NOW) ⇒ (x = 'b')"
+  */
+
+restriction Restr_Choose_2 [right]:
+  "∀ x #NOW. (Restr_Choose_2( x ) @ #NOW) ⇒ (x = 'tag')"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ x #NOW. (Restr_Choose_2( x ) @ #NOW) ⇒ (x = 'tag')"
+  */
+
+restriction Restr_Local_LHS_1 [left]:
+  "∀ x #NOW. (Restr_Local_LHS_1( x ) @ #NOW) ⇒ (x = 'a')"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ x #NOW. (Restr_Local_LHS_1( x ) @ #NOW) ⇒ (x = 'a')"
+  */
+
+restriction Restr_Local_RHS_1 [right]:
+  "∀ x #NOW. (Restr_Local_RHS_1( x ) @ #NOW) ⇒ (x = 'b')"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ x #NOW. (Restr_Local_RHS_1( x ) @ #NOW) ⇒ (x = 'b')"
+  */
+
+restriction Restr_Mixed_1 [left]:
+  "∀ x #NOW x.1. (Restr_Mixed_1( x, x.1 ) @ #NOW) ⇒ (x = x.1)"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ x #NOW x.1. (Restr_Mixed_1( x, x.1 ) @ #NOW) ⇒ (x = x.1)"
+  */
+
+restriction Restr_Mixed_1 [right]:
+  "∀ x #NOW x.1. (Restr_Mixed_1( x, x.1 ) @ #NOW) ⇒ (x = x.1)"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ x #NOW x.1. (Restr_Mixed_1( x, x.1 ) @ #NOW) ⇒ (x = x.1)"
+  */
+
+lemma left_choice [left]:
+  all-traces "∀ x y #i. (Chosen( x, y ) @ #i) ⇒ ((x = 'a') ∧ (y = 'tag'))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ x y #i. (Chosen( x, y ) @ #i) ∧ ((¬(x = 'a')) ∨ (¬(y = 'tag')))"
+*/
+simplify
+by contradiction /* from formulas */
+
+lemma right_choice [right]:
+  all-traces "∀ x y #i. (Chosen( x, y ) @ #i) ⇒ ((x = 'b') ∧ (y = 'tag'))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ x y #i. (Chosen( x, y ) @ #i) ∧ ((¬(x = 'b')) ∨ (¬(y = 'tag')))"
+*/
+simplify
+by contradiction /* from formulas */
+
+lemma left_reachable [left]:
+  exists-trace "∃ #i. Chosen( 'a', 'tag' ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #i. (Chosen( 'a', 'tag' ) @ #i)"
+*/
+simplify
+SOLVED // trace found
+
+lemma right_reachable [right]:
+  exists-trace "∃ #i. Chosen( 'b', 'tag' ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #i. (Chosen( 'b', 'tag' ) @ #i)"
+*/
+simplify
+SOLVED // trace found
+
+lemma left_local [left]:
+  all-traces "∀ x #i. (Local( x ) @ #i) ⇒ (x = 'a')"
+/*
+guarded formula characterizing all counter-examples:
+"∃ x #i. (Local( x ) @ #i) ∧ ¬(x = 'a')"
+*/
+simplify
+by contradiction /* from formulas */
+
+lemma right_local [right]:
+  all-traces "∀ x #i. (Local( x ) @ #i) ⇒ (x = 'b')"
+/*
+guarded formula characterizing all counter-examples:
+"∃ x #i. (Local( x ) @ #i) ∧ ¬(x = 'b')"
+*/
+simplify
+by contradiction /* from formulas */
+
+lemma left_local_reachable [left]:
+  exists-trace "∃ #i. Local( 'a' ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #i. (Local( 'a' ) @ #i)"
+*/
+simplify
+SOLVED // trace found
+
+lemma right_local_reachable [right]:
+  exists-trace "∃ #i. Local( 'b' ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #i. (Local( 'b' ) @ #i)"
+*/
+simplify
+SOLVED // trace found
+
+lemma left_mixed [left]:
+  exists-trace "∃ #i. Mixed( 'b' ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #i. (Mixed( 'b' ) @ #i)"
+*/
+simplify
+SOLVED // trace found
+
+lemma right_mixed [right]:
+  all-traces "∀ x #i. (Mixed( x ) @ #i) ⇒ (x = 'a')"
+/*
+guarded formula characterizing all counter-examples:
+"∃ x #i. (Mixed( x ) @ #i) ∧ ¬(x = 'a')"
+*/
+simplify
+by contradiction /* from formulas */
+
+lemma right_mixed_reachable [right]:
+  exists-trace "∃ #i. Mixed( 'a' ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #i. (Mixed( 'a' ) @ #i)"
+*/
+simplify
+SOLVED // trace found
+
+diffLemma Observational_equivalence:
+rule-equivalence
+  case Rule_Mixed
+  backward-search
+    case LHS
+    step( simplify )
+    by ATTACK // trace found
+  qed
+qed
+
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.13.0
+Maude version 3.5.1
+Git revision: 4a4676de54da4a5081e344b98760d9d4e0f35d46 (with uncommited changes), branch: diff-mirror-proofs
+Compiled at: 2026-09-25 20:02:43.632305942 UTC
+*/
+
+end
+/* Output
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/regression/trace/diff-embedded-restriction-projections.spthy
+
+  output:          examples/regression/trace/diff-embedded-restriction-projections.spthy.tmp
+  processing time: 0.10s
+  
+  LHS :  left_choice (all-traces): verified (2 steps)
+  RHS :  right_choice (all-traces): verified (2 steps)
+  LHS :  left_reachable (exists-trace): verified (2 steps)
+  RHS :  right_reachable (exists-trace): verified (2 steps)
+  LHS :  left_local (all-traces): verified (2 steps)
+  RHS :  right_local (all-traces): verified (2 steps)
+  LHS :  left_local_reachable (exists-trace): verified (2 steps)
+  RHS :  right_local_reachable (exists-trace): verified (2 steps)
+  LHS :  left_mixed (exists-trace): verified (2 steps)
+  RHS :  right_mixed (all-traces): verified (2 steps)
+  RHS :  right_mixed_reachable (exists-trace): verified (2 steps)
+  DiffLemma:  Observational_equivalence : falsified - found trace (4 steps)
+
+==============================================================================
+*/

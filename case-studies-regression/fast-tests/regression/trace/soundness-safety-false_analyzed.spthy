@@ -1,0 +1,67 @@
+theory SoundnessSafetyFalse
+
+begin
+
+// Function signature and definition of the equational theory E
+
+functions: fst/1, pair/2, snd/1
+equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
+
+rule (modulo E) Emit:
+   [ ] --[ A( ) ]-> [ ]
+
+  /* has exactly the trivial AC variant */
+
+restriction Impossible:
+  "⊥"
+  // safety formula
+
+  /*
+  expanded formula:
+  "⊥"
+  */
+
+lemma impossible:
+  exists-trace "∃ #i. A( ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #i. (A( ) @ #i)"
+*/
+simplify
+by contradiction /* from formulas */
+
+lemma vacuous:
+  all-traces "∀ #i. (A( ) @ #i) ⇒ (⊥)"
+/*
+guarded formula characterizing all counter-examples:
+"∃ #i. (A( ) @ #i)"
+*/
+simplify
+by contradiction /* from formulas */
+
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.13.0
+Maude version 3.5.1
+Git revision: 5df53af2911dfd01204a9142e8237672e5d05dae (with uncommited changes), branch: msr-proof-correctness
+Compiled at: 2026-09-25 19:18:42.692960904 UTC
+*/
+
+end
+/* Output
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/regression/trace/soundness-safety-false.spthy
+
+  output:          examples/regression/trace/soundness-safety-false.spthy.tmp
+  processing time: 0.05s
+  
+  impossible (exists-trace): falsified - no trace found (2 steps)
+  vacuous (all-traces): verified (2 steps)
+
+==============================================================================
+*/

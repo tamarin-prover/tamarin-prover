@@ -1,0 +1,10 @@
+// The receive rule generates a source lemma. Its exported theory must
+// retain the macro used by the original rule and side lemma.
+theory MacroAuto begin
+builtins: symmetric-encryption
+macros: w(x) = <x, 'tag'>
+rule Setup: [Fr(~k)] --> [!Key(~k)]
+rule Send: [!Key(k), Fr(~m)] --[ Sent(~m) ]-> [Out(senc(w(~m),k))]
+rule Recv: [!Key(k), In(senc(y,k))] --[ Got(y) ]-> [Out(y)]
+lemma got_tagged [left]: "All y #i. Got(w(y))@i ==> Ex #j. Sent(y)@j"
+end
