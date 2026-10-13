@@ -134,7 +134,7 @@ License
 -------
 
 Tamarin Prover Manual, by The Tamarin Team.
-Copyright © 2016--2024.
+Copyright © 2016--2026.
 
 [tamarin-prover.com](https://tamarin-prover.com)
 
