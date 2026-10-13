@@ -7,7 +7,7 @@ PDF book.
 
 The source files can be found in the `src` directory.
 
-[![Build Status](https://api.travis-ci.com/tamarin-prover/manual.svg?branch=master)](https://app.travis-ci.com/tamarin-prover/manual) Travis monitors the master branch of this repository. Commits to master trigger a new Travis build, which will commit the updated manual to the gh-pages branch of this repository. This is served by Github Pages at https://tamarin-prover.com/manual.
+[![Deploy to GitHub Pages](https://github.com/tamarin-prover/tamarin-prover/actions/workflows/deploy.yml/badge.svg)](https://github.com/tamarin-prover/tamarin-prover/actions/workflows/deploy.yml) GitHub Actions monitors the master and develop branches of this repository. Commits to either branch trigger a build that publishes the generated manual to the `gh-pages` branch of the manual repository. It is served by GitHub Pages at https://tamarin-prover.com/manual.
 
 ## Prerequisites
 
