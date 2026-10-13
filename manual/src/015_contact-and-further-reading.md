@@ -46,6 +46,8 @@ The manual's source can be found in
 <https://github.com/tamarin-prover/tamarin-prover/tree/master/manual/src>.
 You are invited to also contribute to this manual, just send us a pull request.
 
+The sources for the manual of the development branch are located at <https://github.com/tamarin-prover/tamarin-prover/tree/develop/manual/src>.
+
 Tamarin Mailing list
 --------------------
 
