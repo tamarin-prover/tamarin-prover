@@ -5,7 +5,7 @@ Installation {#sec:installation}
 ## Installation on macOS or Linux {#sec:maclinux}
 
 The easiest way to install Tamarin on macOS or Linux is to use
-[Homebrew](http://brew.sh/):
+[Homebrew](https://brew.sh/):
 
   * `brew install tamarin-prover/tap/tamarin-prover`
 
@@ -49,7 +49,7 @@ Alternatively, you can install them yourself:
     upgrade` afterwards, as that version of stack is usually out-of-date.
 
   - **Graphviz** Graphviz should be available using your standard package manager, or directly from
-    <http://www.graphviz.org/>
+    <https://www.graphviz.org/>
 
   - **Maude** You can install Maude using your package manager (make sure to have version 2.7.1. or
     newer). You can also install Maude manually from the
@@ -166,7 +166,7 @@ the `git` tool installed.
 
 ### Notepad++
 
-Follow steps from the [Notepad++ Wiki](http://docs.notepad-plus-plus.org/index.php/User_Defined_Language_Files#How_to_install_user_defined_language_files) using the [notepad_plus_plus_spthy.xml](https://github.com/tamarin-prover/tamarin-prover/blob/develop/etc/notepad_plus_plus_spthy.xml) file.
+Follow steps from the [Notepad++ manual](https://npp-user-manual.org/docs/user-defined-language-system/#import-a-udl) using the [notepad_plus_plus_spthy.xml](https://github.com/tamarin-prover/tamarin-prover/blob/develop/etc/notepad_plus_plus_spthy.xml) file.
 
 ### Emacs
 

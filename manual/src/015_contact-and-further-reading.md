@@ -9,7 +9,7 @@ Tamarin Web Page
 ----------------
 
 The official Tamarin web page is available at 
-<http://tamarin-prover.com/>.
+<https://tamarin-prover.com/>.
 
 Tamarin Repository
 ------------------
@@ -54,13 +54,13 @@ Scientific Papers and Theory
 ----------------------------
 
 The paper and theses documenting the theory are available at the Tamarin web 
-page: <http://tamarin-prover.com/>.
+page: <https://tamarin-prover.com/>.
 
 Acknowledgments
 ---------------
 
 Tamarin was initially developed at the [Institute of Information Security at 
-ETH Zurich](http://www.infsec.ethz.ch/) by Simon Meier and Benedikt Schmidt, 
+ETH Zurich](https://www.infsec.ethz.ch/) by Simon Meier and Benedikt Schmidt, 
 working with David Basin and Cas Cremers.
 
 Cedric Staub contributed to the graphical user interface.
