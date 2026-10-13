@@ -74,6 +74,10 @@ a new user can download, install, and use the system. We do not
 attempt to describe Tamarin's formal foundations and refer the reader
 to the related theses and scientific papers for these details.
 
+This manual complements the [Tamarin book](https://tamarin-prover.com/book/index.html), which is freely available
+at the Tamarin website. The book explains more about the underlying mathematical model, algorithm, and best practices. 
+The manual is updated more frequently, and contains the most recent additions, including those on the development branch.
+
 Highlights
 ----------
 

@@ -34,6 +34,11 @@ send us a pull request once your feature is stable. See
 <https://github.com/tamarin-prover/tamarin-prover/blob/develop/CONTRIBUTING.md> 
 for more details.
 
+Tamarin Book
+------------
+
+The [Tamarin book](https://tamarin-prover.com/book/index.html) is available on the [Tamarin website](https://tamarin-prover.com/index.html).
+
 Tamarin Manual
 --------------
 
