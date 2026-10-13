@@ -11,10 +11,10 @@ The source files can be found in the `src` directory.
 
 ## Prerequisites
 
-To compile the manual, you need [pandoc](https://pandoc.org) and pandoc-citeproc.
-We recommend to use [stack](https://docs.haskellstack.org/en/stable/) to install these dependencies.
+To compile the manual, you need [pandoc](https://pandoc.org), which includes citeproc support.
+We recommend using [stack](https://docs.haskellstack.org/en/stable/) to install it.
 
-    stack install pandoc pandoc-citeproc
+    stack install pandoc
 
 (If you get any errors while running this, make sure you're running the latest version of Stack: 
 `stack update && stack upgrade` then try again.)
