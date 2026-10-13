@@ -50,8 +50,19 @@ without arguments, i.e.:
 
     make
 
-In this case, the starting page would be `index.html` which would link directly
-to `book/001_introduction.html`.
+Open `book/001_introduction.html` to read the local build. From the repository
+root on macOS, build and open it with:
+
+    make -C manual && open manual/book/001_introduction.html
+
+`index.html` is the hosted site's version selector; its `master/` and `develop/`
+links do not point to the local build.
+
+The HTML theme lives in `templates/template.html`, `book/book.css`, and
+`book/book.js`. It follows the Tamarin website's colors and Figtree typography,
+with a desktop chapter sidebar and a collapsible mobile menu. Figtree is bundled
+in `images/fonts/` under the accompanying SIL Open Font License so the theme
+also works offline. The logo is copied from `../images/tamarin-logo-vector.svg`.
 
 ### PDF
 
