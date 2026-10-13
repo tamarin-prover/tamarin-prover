@@ -52,7 +52,7 @@ Tamarin Mailing list
 --------------------
 
 There is a low-volume mailing-list used by the developers and users of Tamarin: 
-<https://groups.google.com/group/tamarin-prover>
+<https://groups.google.com/g/tamarin-prover>
 
 It can be used to get help from the community, and to contact the developers 
 and experienced users.
@@ -67,7 +67,7 @@ Acknowledgments
 ---------------
 
 Tamarin was initially developed at the [Institute of Information Security at 
-ETH Zurich](https://www.infsec.ethz.ch/) by Simon Meier and Benedikt Schmidt, 
+ETH Zurich](https://infsec.ethz.ch/) by Simon Meier and Benedikt Schmidt, 
 working with David Basin and Cas Cremers.
 
 Cedric Staub contributed to the graphical user interface.

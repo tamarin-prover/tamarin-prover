@@ -7,12 +7,12 @@ PDF book.
 
 The source files can be found in the `src` directory.
 
-[![Build Status](https://travis-ci.org/tamarin-prover/manual.svg?branch=master)](https://travis-ci.org/tamarin-prover/manual) Travis monitors the master branch of this repository. Commits to master trigger a new Travis build, which will commit the updated manual to the gh-pages branch of this repository. This is served by Github Pages at https://tamarin-prover.com/manual.
+[![Build Status](https://api.travis-ci.com/tamarin-prover/manual.svg?branch=master)](https://app.travis-ci.com/tamarin-prover/manual) Travis monitors the master branch of this repository. Commits to master trigger a new Travis build, which will commit the updated manual to the gh-pages branch of this repository. This is served by Github Pages at https://tamarin-prover.com/manual.
 
 ## Prerequisites
 
 To compile the manual, you need [pandoc](https://pandoc.org) and pandoc-citeproc.
-We recommend to use [stack](https://www.haskellstack.org/) to install these dependencies.
+We recommend to use [stack](https://docs.haskellstack.org/en/stable/) to install these dependencies.
 
     stack install pandoc pandoc-citeproc
 

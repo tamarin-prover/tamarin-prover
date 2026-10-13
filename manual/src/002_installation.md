@@ -18,9 +18,9 @@ It's separately packaged for
 You can also [download binaries directly from GitHub](https://github.com/tamarin-prover/tamarin-prover/releases)
 and [manually install dependencies yourself](#sec:dependencies), or [compile from source](#sec:LinuxSrcInstall).
 
-## Installation on Windows 10 {#sec:windows}
+## Installation on Windows {#sec:windows}
 
-You can install Tamarin (with GUI) under Windows 10 using the [Windows Subsystem for Linux (WSL)](https://docs.microsoft.com/windows/wsl/install-win10).
+You can install Tamarin (with GUI) under Windows 10 using the [Windows Subsystem for Linux (WSL)](https://learn.microsoft.com/windows/wsl/install).
 For performance and compatibility reasons, we recommend using WSL2 with Ubuntu.
 Once you have WSL and Ubuntu installed, start the Ubuntu app and install Tamarin following the [installation instructions for Linux](#sec:maclinux) above.
 You can then run Tamarin inside the the Ubuntu app using the usual command.
