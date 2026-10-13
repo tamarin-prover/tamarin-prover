@@ -6,34 +6,28 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Tamarin Prover Manual</title>
   <link rel="stylesheet" type="text/css" href="book.css">
-  <script src="book.js"></script>
-  <link rel="stylesheet" href="styles/github.css">
-  <!--    <script src="highlight.pack.js"></script>
-    <script>hljs.initHighlightingOnLoad();</script>
--->
+  <script src="book.js" defer></script>
   $if(math)$
   $math$
   $endif$
 </head>
 
 <body class="tamarindoc">
-  <!--[if lte IE 8]>
-    <div class="warning">
-        This old browser is unsupported and will most likely display funky
-        things.
-    </div>
-    <![endif]-->
-  <div id="nav">
-    <button id="toggle-nav">
-      <span class="sr-only">Toggle navigation</span>
-      <span class="bar"></span>
-      <span class="bar"></span>
-      <span class="bar"></span>
+  <a class="skip-link" href="#page">Skip to content</a>
+  <header class="site-header">
+    <a class="brand" href="https://tamarin-prover.com/">
+      <img src="../images/tamarin-logo.svg" width="28" height="28" alt="">
+      TAMARIN Prover
+    </a>
+    <a class="manual-home" href="001_introduction.html">Manual</a>
+    <button id="toggle-nav" type="button" aria-controls="toc" aria-expanded="false" hidden>
+      Chapters <span aria-hidden="true">☰</span>
     </button>
-  </div>
-  <div id='toc' class='mobile-hidden'>
+  </header>
+  <nav id="toc" aria-label="Manual chapters">
+    <p class="toc-title">Tamarin manual</p>
+    <p class="toc-caption">Security protocol verification</p>
     <ul class='chapter'>
-      <!-- <li><a href='000_prelims.html'><b>0. </b>Preliminaries</a></li> -->
       <li><a href='001_introduction.html'><b>1. </b> Introduction</a></li>
       <li><a href='002_installation.html'><b>2. </b> Installation</a></li>
       <li><a href='003_example.html'><b>3. </b> First Example</a></li>
@@ -51,13 +45,11 @@
       <li><a href='015_contact-and-further-reading.html'><b>15.</b> Contact Information and Further Reading</a></li>
       <li><a href='016_syntax_description.html'><b>16.</b> Syntax Description</a></li>
     </ul>
-  </div>
-  <div id='page-wrapper'>
-    <div id='page'>
-      <p class="halfbreak">
-      </p>
+  </nav>
+  <div id="page-wrapper">
+    <main id="page" tabindex="-1">
       $body$
-    </div>
+    </main>
   </div>
 </body>
 
