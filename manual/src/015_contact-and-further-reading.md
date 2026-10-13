@@ -43,7 +43,7 @@ Tamarin Manual
 --------------
 
 The manual's source can be found in 
-<https://github.com/tamarin-prover/manual-pandoc>.
+<https://github.com/tamarin-prover/tamarin-prover/tree/master/manual/src>.
 You are invited to also contribute to this manual, just send us a pull request.
 
 Tamarin Mailing list
