@@ -1,0 +1,54 @@
+theory MarkerSecrecy
+
+begin
+
+// Function signature and definition of the equational theory E
+
+builtins: multiset
+functions: fst/1, pair/2, snd/1, tamXCAfoo/1
+equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
+
+rule (modulo E) Gen:
+   [ Fr( ~s ) ]
+  --[ Secret( ~s ) ]->
+   [ Out( ('c'++fst(<tamXCAfoo(~s), 'c'>)) ) ]
+
+  /*
+  rule (modulo AC) Gen:
+     [ Fr( ~s ) ] --[ Secret( ~s ) ]-> [ Out( ('c'++tamXCAfoo(~s)) ) ]
+  */
+
+lemma secret:
+  all-traces "∀ s #i. (Secret( s ) @ #i) ⇒ (¬(∃ #j. K( s ) @ #j))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ s #i. (Secret( s ) @ #i) ∧ ∃ #j. (K( s ) @ #j)"
+*/
+simplify
+by solve( !KU( ~s ) @ #vk )
+
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.13.0
+Maude version 3.5.1
+Git revision: 112ad1d3c06eb40e6451e9d3f37eee965162e037 (with uncommited changes), branch: 904-909-fixes
+Compiled at: 2026-09-13 16:11:31.605296528 UTC
+*/
+
+end
+/* Output
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/regression/trace/issue904.spthy
+
+  output:          examples/regression/trace/issue904.spthy.tmp
+  processing time: 0.06s
+  
+  secret (all-traces): verified (2 steps)
+
+==============================================================================
+*/

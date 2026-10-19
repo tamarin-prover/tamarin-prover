@@ -1,0 +1,38 @@
+theory SavedProofProveStopOnSorry
+begin
+
+builtins: symmetric-encryption
+
+// A precedes Key in case order and cannot supply the encryption key. With
+// --bound=0 it stays unfinished; the later saved Key proof must survive.
+rule A:
+  [ Fr(~k) ] --> [ !Key(~k) ]
+
+rule Key:
+  [ Fr(~k) ] --> [ !Key(~k), Out(~k) ]
+
+rule R:
+  [ In(x), In(y), !Key(k) ] --[ Got(y), UsesKey(k) ]-> [ Out(sdec(x,k)) ]
+
+// A saved proof, as written by --prove --output. It keeps only the branch
+// that leads to the trace, so checking it leaves sorry steps in the other
+// branches. Once the trace is found these need no proof, and the proof
+// search in some of them does not terminate.
+lemma got_enc:
+  exists-trace "Ex k #i. Got(senc('m',k))@i & UsesKey(k)@i"
+simplify
+solve( !Key( k ) ▶₂ #i )
+  case Key
+  solve( splitEqs(0) )
+    case split_case_1
+    solve( !KU( senc('m', ~k) ) @ #vk.1 )
+      case c_senc
+      solve( !KU( ~k ) @ #vk.3 )
+        case Key
+        SOLVED // trace found
+      qed
+    qed
+  qed
+qed
+
+end

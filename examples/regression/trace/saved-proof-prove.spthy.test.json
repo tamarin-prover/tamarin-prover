@@ -1,0 +1,14 @@
+{
+  "tests": [
+    {
+      "name": "prove-saved-trace",
+      "args": [
+        "--prove"
+      ],
+      "timeout": 60,
+      "contains": [
+        "got_enc (exists-trace): verified (6 steps)"
+      ]
+    }
+  ]
+}

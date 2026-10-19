@@ -1,0 +1,72 @@
+theory SavedProofProveDiff
+begin
+
+builtins: symmetric-encryption
+
+rule Key:
+  [ Fr(~k) ] --> [ !Key(~k), Out(~k) ]
+
+rule R:
+  [ In(x), In(y), !Key(k) ] --[ Got(y), UsesKey(k) ]-> [ Out(sdec(x,k)) ]
+
+rule C:
+  [ Fr(~a) ] --> [ Out(diff(~a, 'z')) ]
+
+// Saved proofs, as written by --diff --prove --output. They keep only the
+// branches that lead to a trace or an attack, so checking them leaves sorry
+// steps in the other branches. Once the trace or attack is found these need
+// no proof, and the proof search in some of them does not terminate.
+lemma got_enc [right]:
+  exists-trace "Ex k #i. Got(senc('m',k))@i & UsesKey(k)@i"
+simplify
+solve( !Key( k ) ▶₂ #i )
+  case Key
+  solve( splitEqs(0) )
+    case split_case_1
+    solve( !KU( senc('m', ~k) ) @ #vk.1 )
+      case c_senc
+      solve( !KU( ~k ) @ #vk.3 )
+        case Key
+        SOLVED // trace found
+      qed
+    qed
+  qed
+qed
+
+lemma got_enc [left]:
+  exists-trace "Ex k #i. Got(senc('m',k))@i & UsesKey(k)@i"
+simplify
+solve( !Key( k ) ▶₂ #i )
+  case Key
+  solve( splitEqs(0) )
+    case split_case_1
+    solve( !KU( senc('m', ~k) ) @ #vk.1 )
+      case c_senc
+      solve( !KU( ~k ) @ #vk.3 )
+        case Key
+        SOLVED // trace found
+      qed
+    qed
+  qed
+qed
+
+diffLemma Observational_equivalence:
+rule-equivalence
+  case Rule_Equality
+  backward-search
+    case RHS
+    step( simplify )
+    step( solve( !KD( x ) ▶₁ #i ) )
+      case C
+      step( solve( (#vl, 0) ~~> (#i, 1) ) )
+        case Const_pub_z
+        step( solve( !KU( 'z' ) @ #vk ) )
+          case pub
+          by ATTACK // trace found
+        qed
+      qed
+    qed
+  qed
+qed
+
+end

@@ -1,0 +1,91 @@
+{
+  "tests": [
+    {
+      "name": "keep-selected-witness-dfs",
+      "args": [
+        "--prove",
+        "--stop-on-trace=dfs"
+      ],
+      "contains": [
+        "choose (exists-trace): verified"
+      ],
+      "matches": [
+        {
+          "regex": "case B\\s+SOLVED",
+          "min": 1,
+          "max": 1,
+          "theory_only": true
+        },
+        {
+          "regex": "case A",
+          "max": 0,
+          "theory_only": true
+        }
+      ]
+    },
+    {
+      "name": "keep-selected-witness-bfs",
+      "args": [
+        "--prove",
+        "--stop-on-trace=bfs"
+      ],
+      "contains": [
+        "choose (exists-trace): verified"
+      ],
+      "matches": [
+        {
+          "regex": "case B\\s+SOLVED",
+          "min": 1,
+          "max": 1,
+          "theory_only": true
+        },
+        {
+          "regex": "case A",
+          "max": 0,
+          "theory_only": true
+        }
+      ]
+    },
+    {
+      "name": "keep-selected-witness-seqdfs",
+      "args": [
+        "--prove",
+        "--stop-on-trace=seqdfs"
+      ],
+      "contains": [
+        "choose (exists-trace): verified"
+      ],
+      "matches": [
+        {
+          "regex": "case B\\s+SOLVED",
+          "min": 1,
+          "max": 1,
+          "theory_only": true
+        },
+        {
+          "regex": "case A",
+          "max": 0,
+          "theory_only": true
+        }
+      ]
+    },
+    {
+      "name": "explicitly-extend-all-cases",
+      "args": [
+        "--prove",
+        "--stop-on-trace=none"
+      ],
+      "contains": [
+        "choose (exists-trace): verified"
+      ],
+      "matches": [
+        {
+          "regex": "^\\s*SOLVED",
+          "min": 2,
+          "max": 2,
+          "theory_only": true
+        }
+      ]
+    }
+  ]
+}

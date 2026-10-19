@@ -1,0 +1,5 @@
+// Regression for https://github.com/tamarin-prover/tamarin-prover/issues/906
+theory T begin
+rule R1: [ ] --[ A() ]-> [ ]
+endrule R2: [ ] --[ B() ]-> [ ]
+end

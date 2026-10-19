@@ -1,0 +1,48 @@
+theory ManualVariantExportNameCollision
+begin
+
+functions: c/1, d/1
+equations: d(c(x)) = x
+
+// A variant name only needs to be distinct within its family. Promoting this
+// singleton to a top-level E-rule would duplicate the next rule's name and
+// make the exported theory impossible to reload.
+rule R:
+  [In(x)] --[Original(x)]-> [Out(d(c(x)))]
+variants rule (modulo AC) R___VARIANT_1:
+  [In(x)] --[Original(x), Annotated(x)]-> [Out(x)]
+
+// The parser also accepts repeated identical explicit families. Reopening
+// them must not turn their members into duplicate names within one family.
+#ifdef DUPLICATE
+rule R:
+  [In(x)] --[Original(x)]-> [Out(d(c(x)))]
+variants rule (modulo AC) R___VARIANT_1:
+  [In(x)] --[Original(x), Annotated(x)]-> [Out(x)]
+#endif
+
+rule R___VARIANT_1:
+  [] --[Other()]-> []
+
+// The same collision can occur with an already-normal singleton.
+rule Trivial:
+  [In(x)] --[Normal(x)]-> []
+variants rule (modulo AC) Trivial___VARIANT_1:
+  [In(y)] --[Normal(y), Added(y)]-> []
+#ifdef DUPLICATE
+rule Trivial:
+  [In(x)] --[Normal(x)]-> []
+variants rule (modulo AC) Trivial___VARIANT_1:
+  [In(y)] --[Normal(y), Added(y)]-> []
+#endif
+
+rule Trivial___VARIANT_1:
+  [] --[OtherNormal()]-> []
+
+lemma original: exists-trace "Ex #i. Original('a')@i & Annotated('a')@i"
+lemma other: exists-trace "Ex #i. Other()@i"
+lemma normal: exists-trace "Ex #i. Normal('a')@i & Added('a')@i"
+lemma other_normal: exists-trace "Ex #i. OtherNormal()@i"
+lemma false_safety: "All x #i. Annotated(x)@i ==> F"
+
+end

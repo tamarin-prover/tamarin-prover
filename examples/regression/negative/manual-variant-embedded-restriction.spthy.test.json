@@ -1,0 +1,14 @@
+{
+  "tests": [
+    {
+      "name": "embedded-restriction",
+      "args": [
+        "--prove"
+      ],
+      "exit_code": 1,
+      "contains": [
+        "Embedded restrictions in explicit AC variants are not supported"
+      ]
+    }
+  ]
+}

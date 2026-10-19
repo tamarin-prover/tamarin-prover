@@ -1,0 +1,46 @@
+theory AutoSourcesRuleNameCollision
+begin
+
+builtins: symmetric-encryption
+
+rule Start:
+  [Fr(~k), Fr(~v)] --[Sent(~v)]-> [!Key(~k), Out(senc(<'tag',~v>,~k))]
+
+// Repeated identical originals are accepted. Their annotated members must
+// not be duplicated when the family is reassembled for export.
+#ifdef DUPLICATE
+rule Start:
+  [Fr(~k), Fr(~v)] --[Sent(~v)]-> [!Key(~k), Out(senc(<'tag',~v>,~k))]
+#endif
+
+// Consume has a computed member named Consume___VARIANT_3. The independent
+// rule with that name must not receive its auto-source input annotation.
+// Check both orders: annotations and source-node lookup used to use names
+// alone, either modifying the wrong rule or looking up the wrong premise.
+#ifdef FIRST
+rule Consume___VARIANT_3: [] --[Other()]-> []
+#endif
+
+rule Consume:
+  [!Key(k), In(c)] --[Got(snd(sdec(c,k)))]-> [Out(snd(sdec(c,k)))]
+#ifdef DUPLICATE
+rule Consume:
+  [!Key(k), In(c)] --[Got(snd(sdec(c,k)))]-> [Out(snd(sdec(c,k)))]
+#endif
+
+#ifdef FIRST
+#else
+rule Consume___VARIANT_3: [] --[Other()]-> []
+#endif
+
+// An internal alias must also avoid names which are already in use.
+rule Consume___VARIANT_3___AUTO_1: [] --[Reserved()]-> []
+
+lemma delivery: exists-trace "Ex v #i #j. Sent(v)@i & Got(v)@j"
+lemma disclosure: exists-trace "Ex v #i #j. Sent(v)@i & K(v)@j"
+lemma other: exists-trace "Ex #i. Other()@i"
+lemma reserved: exists-trace "Ex #i. Reserved()@i"
+
+// --auto-sources also generates AUTO_typing. It should verify, and the
+// exported rules and lemma should remain valid when their proof is reloaded.
+end

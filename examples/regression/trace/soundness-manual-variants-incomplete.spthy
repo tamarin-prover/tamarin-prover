@@ -1,0 +1,24 @@
+theory SoundnessManualVariantsIncomplete
+begin
+
+builtins: symmetric-encryption
+
+rule Key:
+  [ Fr(~k) ] --> [ !Key(~k) ]
+
+rule Secret:
+  [ Fr(~m), !Key(~k) ] --[ Secret(~m) ]-> [ Out(senc(~m,~k)) ]
+
+// This is a valid variant, but the decryption case is missing, so the
+// family must be rejected even though each member is a variant.
+rule Dec:
+  [ In(x), !Key(k) ] --> [ Out(sdec(x,k)) ]
+  variants
+  rule (modulo AC) Dec___VARIANT_1:
+    [ In(x.2), !Key(k.1) ] --> [ Out(sdec(x.2,k.1)) ]
+
+// Unsoundly verified if the incomplete variants are silently accepted.
+lemma secrecy:
+  "All m #i. Secret(m)@i ==> not Ex #j. K(m)@j"
+
+end

@@ -1,0 +1,30 @@
+{
+  "tests": [
+    {
+      "name": "default-rejection",
+      "args": [
+        "--prove"
+      ],
+      "exit_code": 1,
+      "contains": [
+        "cannot confirm manual variants:",
+        "Unsupported rule semantics - aborting before proof search."
+      ],
+      "matches": [
+        {
+          "regex": "summary of summaries:",
+          "max": 0
+        }
+      ]
+    },
+    {
+      "name": "export-reports-warning",
+      "args": [
+        "-m=msr"
+      ],
+      "contains": [
+        "cannot confirm manual variants:"
+      ]
+    }
+  ]
+}

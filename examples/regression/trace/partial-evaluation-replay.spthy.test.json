@@ -1,0 +1,12 @@
+{
+  "tests": [
+    {
+      "name": "repeat-partial-evaluation-replay",
+      "args": ["--partial-evaluation=summary", "--quit-on-warning"],
+      "contains": ["use (exists-trace): verified"],
+      "matches": [
+        {"regex": "Seed___VARIANT_", "max": 0, "theory_only": true}
+      ]
+    }
+  ]
+}

@@ -1,0 +1,291 @@
+theory PartialEvaluationExport
+
+begin
+
+// Function signature and definition of the equational theory E
+
+builtins: natural-numbers
+functions: fst/1, pair/2, sdec/2, senc/2, snd/1
+equations:
+    fst(<x.1, x.2>) = x.1,
+    sdec(senc(x.1, x.2), x.2) = x.1,
+    snd(<x.1, x.2>) = x.2
+
+macros: identity( x ) =  x
+
+text{* the abstract state after partial evaluation contains 9 facts:
+
+1. !Key( ~k )
+
+2. NaturalState( %x )
+
+3. NaturalState( %z )
+
+4. NaturalState( %1 )
+
+5. State( 'a' )
+
+6. State( 'b' )
+
+7. Fr( ~z )
+
+8. Out( z )
+
+9. In( z )
+
+This abstract state results in 11 refined multiset rewriting rules.
+Kept 1 original rule families to preserve their variants on export.
+Note that the original number of multiset rewriting rules was 11.
+
+*}
+
+rule (modulo E) Key:
+   [ Fr( ~k ) ] --> [ !Key( ~k ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Secret:
+   [ Fr( ~m.1 ), !Key( ~k ) ]
+  --[ Secret( ~m.1 ) ]->
+   [ Out( senc(~m.1, ~k) ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Dec:
+   [ In( x ), !Key( k ) ] --> [ Out( sdec(x, k) ) ]
+ variants
+  rule (modulo AC) Dec___VARIANT_2:
+     [ In( senc(z.2, k.1) ), !Key( k.1 ) ]
+    --[ Decrypted( z.2 ) ]->
+     [ Out( z.2 ) ]
+  ,
+  rule (modulo AC) Dec___VARIANT_1:
+     [ In( x.2 ), !Key( k.1 ) ]
+    --[ Unreduced( sdec(x.2, k.1) ) ]->
+     [ Out( sdec(x.2, k.1) ) ]
+
+lemma unreduced_secret:
+  exists-trace "∃ m #i #j. (Secret( m ) @ #i) ∧ (Unreduced( m ) @ #j)"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ m #i #j. (Secret( m ) @ #i) ∧ (Unreduced( m ) @ #j)"
+*/
+by simplify
+
+lemma decrypted_reachable:
+  exists-trace "∃ m #i. Decrypted( m ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ m #i. (Decrypted( m ) @ #i)"
+*/
+simplify
+solve( !Key( k ) ▶₁ #i )
+  case Key
+  solve( !KU( senc(m, ~k) ) @ #vk )
+    case Secret
+    SOLVED // trace found
+  qed
+qed
+
+lemma unreduced_reachable:
+  exists-trace "∃ m #i. Unreduced( m ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ m #i. (Unreduced( m ) @ #i)"
+*/
+simplify
+solve( !Key( k ) ▶₁ #i )
+  case Key
+  SOLVED // trace found
+qed
+
+rule (modulo E) SeedA:
+   [ ] --> [ State( 'a' ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) SeedB:
+   [ ] --> [ State( 'b' ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Use:
+   [ State( 'a' ) ] --[ Used( 'a' ) ]-> [ ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Use_PE_2:
+   [ State( 'b' ) ] --[ Used( 'b' ) ]-> [ ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Use_PE_1:
+   [ ] --[ ReservedName( ) ]-> [ ]
+
+  /* has exactly the trivial AC variant */
+
+lemma pruned_family_unreachable:
+  exists-trace "∃ #i. Pruned( ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #i. (Pruned( ) @ #i)"
+*/
+simplify
+by solve( Pruned( ) @ #i )
+
+lemma first_specialization_reachable:
+  exists-trace "∃ #i. Used( 'a' ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #i. (Used( 'a' ) @ #i)"
+*/
+simplify
+solve( Used( 'a' ) @ #i )
+  case Use
+  solve( State( 'a' ) ▶₀ #i )
+    case SeedA
+    SOLVED // trace found
+  qed
+qed
+
+lemma second_specialization_reachable:
+  exists-trace "∃ #i. Used( 'b' ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #i. (Used( 'b' ) @ #i)"
+*/
+simplify
+solve( Used( 'b' ) @ #i )
+  case Use_PE_2
+  solve( State( 'b' ) ▶₀ #i )
+    case SeedB
+    SOLVED // trace found
+  qed
+qed
+
+lemma existing_rule_reachable:
+  exists-trace "∃ #i. ReservedName( ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #i. (ReservedName( ) @ #i)"
+*/
+simplify
+SOLVED // trace found
+
+rule (modulo E) NaturalSeedOne:
+   [ ] --> [ NaturalState( %1 ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) NaturalSeedTwo:
+   [ ] --> [ NaturalState( (%1%+%1) ) ]
+
+  /* has exactly the trivial AC variant */
+
+restriction Restr_NaturalUse_1:
+  "∀ x #NOW. (Restr_NaturalUse_1( x ) @ #NOW) ⇒ (x ⊏ (%1%+%1))"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ x #NOW. (Restr_NaturalUse_1( x ) @ #NOW) ⇒ (x ⊏ (%1%+%1))"
+  */
+
+rule (modulo E) NaturalUse:
+   [ NaturalState( %x ) ]
+  --[ NaturalUsed( %x ), Restr_NaturalUse_1( %x ) ]->
+   [ NaturalState( %x ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) NaturalUse_PE_1:
+   [ NaturalState( %1 ) ]
+  --[ NaturalUsed( %1 ), Restr_NaturalUse_1( %1 ) ]->
+   [ NaturalState( %1 ) ]
+
+  /* has exactly the trivial AC variant */
+
+lemma embedded_restriction_first:
+  exists-trace "∃ #i. NaturalUsed( %1 ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #i. (NaturalUsed( %1 ) @ #i)"
+*/
+simplify
+solve( NaturalUsed( %1 ) @ #i )
+  case NaturalUse
+  solve( NaturalState( %1 ) ▶₀ #i )
+    case NaturalSeedOne
+    SOLVED // trace found
+  qed
+qed
+
+lemma embedded_restriction_second:
+  exists-trace "∃ #i. NaturalUsed( (%1%+%1) ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #i. (NaturalUsed( (%1%+%1) ) @ #i)"
+*/
+simplify
+solve( NaturalUsed( (%1%+%1) ) @ #i )
+  case NaturalUse
+  by contradiction /* contradictory subterm store */
+qed
+
+lemma embedded_restriction_repeated:
+  exists-trace
+  "∃ x #i #j.
+    ((NaturalUsed( x ) @ #i) ∧ (NaturalUsed( x ) @ #j)) ∧ (#i < #j)"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ x #i #j. (NaturalUsed( x ) @ #i) ∧ (NaturalUsed( x ) @ #j) ∧ #i < #j"
+*/
+simplify
+solve( NaturalUsed( x ) @ #i )
+  case NaturalUse
+  solve( NaturalUsed( %1 ) @ #j )
+    case NaturalUse
+    solve( NaturalState( %1 ) ▶₀ #i )
+      case NaturalSeedOne
+      solve( NaturalState( %1 ) ▶₀ #j )
+        case NaturalSeedOne
+        SOLVED // trace found
+      qed
+    qed
+  qed
+qed
+
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.13.0
+Maude version 3.5.1
+Git revision: b4ca08a3ebf7e1a7a16db04a62f1e23d3438dd04 (with uncommited changes), branch: msr-rule-handling
+Compiled at: 2026-10-07 11:28:33.82755466 UTC
+*/
+
+end
+/* Output
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/regression/trace/partial-evaluation-export.spthy
+
+  output:          examples/regression/trace/partial-evaluation-export.spthy.tmp
+  processing time: 0.15s
+  
+  unreduced_secret (exists-trace): falsified - no trace found (1 steps)
+  decrypted_reachable (exists-trace): verified (4 steps)
+  unreduced_reachable (exists-trace): verified (3 steps)
+  pruned_family_unreachable (exists-trace): falsified - no trace found (2 steps)
+  first_specialization_reachable (exists-trace): verified (4 steps)
+  second_specialization_reachable (exists-trace): verified (4 steps)
+  existing_rule_reachable (exists-trace): verified (2 steps)
+  embedded_restriction_first (exists-trace): verified (4 steps)
+  embedded_restriction_second (exists-trace): falsified - no trace found (3 steps)
+  embedded_restriction_repeated (exists-trace): verified (6 steps)
+
+==============================================================================
+*/

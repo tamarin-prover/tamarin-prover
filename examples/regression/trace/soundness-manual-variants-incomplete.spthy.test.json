@@ -1,0 +1,15 @@
+{
+  "tests": [
+    {
+      "name": "default-rejection",
+      "args": [
+        "--prove"
+      ],
+      "exit_code": 1,
+      "contains": [
+        "cannot confirm manual variants:",
+        "Unsupported rule semantics - aborting before proof search."
+      ]
+    }
+  ]
+}

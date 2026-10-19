@@ -25,6 +25,7 @@ import           Control.Basics
 import           Control.Monad.Bind
 import           Control.Monad.Reader
 
+import           Data.Function        (on)
 import           Data.Label
 import           Data.List
 import qualified Data.Set             as S
@@ -86,16 +87,22 @@ interpretAbstractly unifyFactEqs initState addFact stateFacts rus =
 data EvaluationStyle = Silent | Summary | Tracing
   deriving Show
 
--- | Concrete partial evaluator activated with flag: --partial-evaluation
-partialEvaluation :: EvaluationStyle
-                  -> [ProtoRuleE] -> WithMaude (S.Set LNFact, [ProtoRuleE])
-partialEvaluation evalStyle ruEs = reader $ \hnd ->
+-- | Concrete partial evaluator activated with flag: --partial-evaluation.
+-- Refinement uses the AC unifier used by the constraint solver. To preserve
+-- reachability modulo E, callers must supply a complete, unfolded set of
+-- E-variants, as the trace-theory applyPartialEvaluation caller does. The
+-- legacy applyPartialEvaluationDiff caller supplies original E-rules instead;
+-- this precondition does not establish soundness for that path.
+partialEvaluation :: (Eq i, Show i, HasFrees i, Apply LNSubst i)
+                  => EvaluationStyle
+                  -> [Rule i] -> WithMaude (S.Set LNFact, [Rule i])
+partialEvaluation evalStyle rules = reader $ \hnd ->
     consumeEvaluation $ interpretAbstractly
-        ((`runReader` hnd) . unifyLNFactEqs)  -- FIXME: Use E-unification here
+        ((`runReader` hnd) . unifyLNFactEqs)
         S.empty
         (S.insert . absFact)
         S.toList
-        ruEs
+        rules
   where
     consumeEvaluation [] = error "partialEvaluation: impossible"
     consumeEvaluation ((st0, rus0) : rest0) =
@@ -103,7 +110,10 @@ partialEvaluation evalStyle ruEs = reader $ \hnd ->
       where
         go _ st rus [] =
           ( st
-          , nubBy eqModuloFreshnessNoAC $                 -- remove duplicates
+          , map fst $ nubBy ((==) `on` snd) $
+            -- Share one comparison key per candidate; retain original hints
+            -- and the first representative. Equality comparisons remain quadratic.
+            map (\ru -> (ru, canonicalizeFreshnessNoAC ru)) $
             map ((`evalFresh` nothingUsed) . rename) rus
           )
         go i st _   ((st', rus') : rest) =
