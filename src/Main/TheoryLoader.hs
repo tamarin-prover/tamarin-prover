@@ -68,8 +68,7 @@ import Theory.Module
 import Theory.Constraint.Solver.Store
   ( Kind (KTheoryContext),
     Ref,
-    readLemmaRootMaybe,
-    readProofStepMaybe,
+    readMatchingProofRootMaybe,
     recordLemmaRoot,
     setTheoryContext,
     storeSystem,
@@ -743,6 +742,15 @@ closeTranslatedTheory thyOpts sign srcThy = do
           (proveDiffTheory selector prover diffProver)
           partialThy
 
+  -- Store the proofs as they will be printed, so a restore gives them back exactly.
+  if thyOpts.proveMode && isJust thyOpts.persistProofStateDir
+    then case provedThy of
+      Left provedTheory -> do
+        let selectedLemmas = filter selector (theoryLemmas provedTheory)
+        liftIO (mapM_ storeProvedProof selectedLemmas)
+      Right _ -> pure ()
+    else pure ()
+
   traceM ("[Theory " ++ theoryName srcThy ++ "] Theory closed")
 
   pure provedThy
@@ -779,18 +787,29 @@ storeLemmaRootAndInputProof lemma = do
     Just (InMem lemmaRootSystem) -> do
       lemmaRootRef <- storeSystem lemmaRootSystem
 
-      storedRootStep <- readProofStepMaybe lemmaName lemmaRootRef
-      if isNothing storedRootStep
-        then do
-          _ <- evictSystemsFromIncrementalProof lemmaName lemmaProof
-          pure ()
-        else pure ()
+      let inputProofRef = proofSkeletonRef lemmaProof
 
-      storedRootRef <- readLemmaRootMaybe lemmaName
-      if storedRootRef == Just lemmaRootRef
+      recordLemmaRoot lemmaName traceQuantifier lemmaRootRef inputProofRef
+
+      storedProof <- readMatchingProofRootMaybe lemmaName lemmaRootRef inputProofRef
+
+      if isJust storedProof
         then pure ()
-        else recordLemmaRoot lemmaName traceQuantifier lemmaRootRef
+        else do
+          _ <- evictSystemsFromIncrementalProof lemmaName lemmaProof
+
+          pure ()
     _ -> fail ("Expected an in-memory root system for lemma " ++ lemmaName)
+
+-- | Make a proved lemma's proof its current stored proof.
+storeProvedProof :: Lemma IncrementalProof -> IO ()
+storeProvedProof lemma = do
+  let lemmaName = lemma._lName
+      lemmaProof = lemma._lProof
+
+  _ <- evictSystemsFromIncrementalProof lemmaName lemmaProof
+
+  pure ()
 
 -- | Fingerprint everything a stored proof step's validity depends on. Lemma
 -- formulas are checked separately through their root-system references.

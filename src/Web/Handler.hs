@@ -66,7 +66,8 @@ module Web.Handler
   )
 where
 
-import Theory.Constraint.Solver.Store (isStoreOpen, recordLemmaRoot, storeSystem)
+import Theory.Constraint.Solver.Store
+  ( isStoreOpen, readMatchingProofRootMaybe, recordLemmaRoot, storeSystem )
 import Theory
   ( Theory(..), DiffTheory(..), ClosedTheory, ClosedDiffTheory, Side
   , ClosedTheory, ClosedDiffTheory, Side, Signature(..)
@@ -113,6 +114,9 @@ import Theory.Proof
   , LTree(..)
   , ProofStep(..)
   , ProofMethod(..)
+  , IncrementalProof
+  , evictSystemsFromIncrementalProof
+  , proofSkeletonRef
   )
 
 import Web.Hamlet
@@ -214,7 +218,7 @@ editProof idx name = withTheory idx $ \ti -> do
             case maybe_nthy of
                 Nothing -> pure $ Left "Lemma editing failed"
                 Just nthy -> do
-                    storeInteractiveLemmaRoot n tq gsys
+                    storeInteractiveLemmaRoot n tq gsys lp
                     nidx <- replaceTheory (Just ti) Nothing nthy ("modified" ++ show idx) idx
                     pure $ Right nidx
 
@@ -267,29 +271,47 @@ deleteLemma idx name = withTheory idx $ \ti -> do
 addLemma :: Int -> Maybe Int -> Lemma ProofSkeleton -> Handler (Either String TheoryIdx)
 addLemma idx maybelemmaIndex (Lemma n pt _ tq f ofm a lp) = withTheory idx $ \ti -> do
     let ctxt = getProofContext (Lemma n pt True tq f ofm a lp) ti.theory
-        preI = getLemmaPreItems n ti.theory
-        gsys = mkSystem ctxt (theoryRestrictions ti.theory) preI f
     case formulaToGuarded f of
         Left d -> pure $ Left $ render d
         Right _ ->
             case maybelemmaIndex of
                 Nothing -> pure $ Left "Lemma not found"
                 Just lemmaIndex -> do
-                    let newThy = addLemmaAtIndex (Lemma n pt True tq f ofm a $ unproven (Just (InMem gsys))) lemmaIndex ti.theory
+                    -- Use the items before the insertion point, just as a
+                    -- fresh load does. The GUI and snapshot need the same root.
+                    let precedingItems = take lemmaIndex ti.theory._thyItems
+                        restrictions = theoryRestrictions ti.theory
+                        lemmaRootSystem = mkSystem ctxt restrictions precedingItems f
+                        newProof = unproven (Just (InMem lemmaRootSystem))
+                        newThy = addLemmaAtIndex (Lemma n pt True tq f ofm a newProof) lemmaIndex ti.theory
                     case newThy of
                          Nothing -> pure $ Left "lemma editing failed"
                          (Just nthy) -> do
-                             storeInteractiveLemmaRoot n tq gsys
+                             storeInteractiveLemmaRoot n tq lemmaRootSystem newProof
+
                              Right <$> replaceTheory (Just ti) Nothing nthy ("modified" ++ show idx) idx
 
-storeInteractiveLemmaRoot :: String -> TraceQuantifier -> System -> Handler ()
-storeInteractiveLemmaRoot lemmaName traceQuantifier lemmaRootSystem = do
+storeInteractiveLemmaRoot :: String -> TraceQuantifier -> System -> IncrementalProof -> Handler ()
+storeInteractiveLemmaRoot lemmaName traceQuantifier lemmaRootSystem lemmaProof = do
     storeOpen <- liftIO isStoreOpen
     if storeOpen
       then liftIO $ do
         lemmaRootRef <- storeSystem lemmaRootSystem
+
         let systemTraceQuantifier = toSystemTraceQuantifier traceQuantifier
+            inputProofRef = proofSkeletonRef lemmaProof
+
         recordLemmaRoot lemmaName systemTraceQuantifier lemmaRootRef
+                                 inputProofRef
+
+        storedProof <- readMatchingProofRootMaybe lemmaName lemmaRootRef inputProofRef
+
+        case storedProof of
+          Just _ -> pure ()
+          Nothing -> do
+            _ <- evictSystemsFromIncrementalProof lemmaName lemmaProof
+
+            pure ()
       else pure ()
 
 -- | Deletes, adds or modifies a lemma depending on the path
@@ -512,8 +534,16 @@ loadAndCloseTheory srcContent filePath = do
     let sig = either (._thySignature) (._diffThySignature) openThy
     sig' <- liftIO $ toSignatureWithMaude yesod.thyOpts.maudePath sig
     (report, closedThy) <- yesod.closeThy sig' openThy
+
+    -- Record lemma roots and restore stored proofs, as on the initial load.
+    restoredThy <- case closedThy of
+      Left theory -> do
+        restoredTheory <- liftIO (restoreLemmaProofs theory)
+        pure (Left restoredTheory)
+      Right diffTheory -> pure (Right diffTheory)
+
     let wfErrors = makeWfErrorsHtml report
-    pure (report, closedThy, wfErrors)
+    pure (report, restoredThy, wfErrors)
 
 -- | Delete theory.
 delTheory :: TheoryIdx -> Handler ()

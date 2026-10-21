@@ -63,6 +63,7 @@ module Theory.Proof (
   , getOrRestoreProofSystem
   , evictSystemsFromIncrementalProof
   , restoreProofFromStore
+  , proofSkeletonRef
   , Prover
   , DiffProver
   , runProver
@@ -132,13 +133,18 @@ import           Control.Parallel.Strategies
 
 import           Theory.Constraint.Solver
 import           Theory.Constraint.Solver.Store   (Ref, MethodEdge(..), isStoreOpen,
+                                                    ProofNode(..), storeProofNode,
+                                                    recordProofHead, restoreStoredProof,
+                                                    LemmaRoot(..),
+                                                    readLemmaRootMaybe, fileProofRef,
+                                                    searchContextForDepth, searchKey,
+                                                    recordSearchStart,
                                                     readProofStepMaybe,
                                                     readSystemLive,
                                                     readSystemLiveMaybe,
                                                     storeProofStep, storeSystem)
 import           Theory.Model
 import           Theory.Text.Pretty
-import qualified Data.Set as S
 
 
 
@@ -542,62 +548,67 @@ evictSystemsFromIncrementalProof lemmaName proof = do
     storeOpen <- isStoreOpen
     unless storeOpen $
         error "evictSystemsFromIncrementalProof: store is not initialized"
-    evictProof proof
+
+    (evictedProof, rootProofNodeRef) <- evictProof proof
+
+    lemmaRoot <- readLemmaRootMaybe lemmaName
+    let inputProofRef = case lemmaRoot of
+          Just storedRoot -> lrFileProof storedRoot
+          Nothing         -> proofSkeletonRef proof
+
+    -- The head is written last, so a crash keeps the previous proof intact.
+    recordProofHead lemmaName rootProofNodeRef inputProofRef
+
+    pure evictedProof
   where
+    -- Each recursive call returns the proof with its systems evicted, plus the
+    -- Ref of the ProofNode we stored for it. Children must be stored before
+    -- their parent because their Refs are part of the parent's hash.
+    evictProof :: IncrementalProof -> IO (IncrementalProof, Ref)
     evictProof (LNode (ProofStep method systemInfo) childProofs) = do
         evictedSystemInfo <- mapM evictSystemRef systemInfo
-        evictedChildProofs <- mapM evictProof childProofs
 
-        storeMethodEdge method evictedSystemInfo evictedChildProofs
+        storedChildren <- mapM evictProof childProofs
 
-        pure (LNode (ProofStep method evictedSystemInfo)
-                    evictedChildProofs)
+        let evictedChildProofs = M.map fst storedChildren
+            childProofNodeRefs = M.map snd storedChildren
+            maybeSystemRef = case evictedSystemInfo of
+              Just systemRef -> Just (getStoredRef systemRef)
+              Nothing        -> Nothing
+            proofNode = ProofNode
+              { pnMethod = method
+              , pnSystem = maybeSystemRef
+              , pnChildren = childProofNodeRefs
+              }
+
+        proofNodeRef <- storeProofNode proofNode
+
+        let evictedProof = LNode (ProofStep method evictedSystemInfo) evictedChildProofs
+        pure (evictedProof, proofNodeRef)
 
     evictSystemRef (InMem system)      = OnDisk <$> storeSystem system
     evictSystemRef (StoredInMem ref _) = pure (OnDisk ref)
     evictSystemRef (OnDisk ref)        = pure (OnDisk ref)
 
-    storeMethodEdge Invalidated _ _ = pure ()
-    storeMethodEdge (Sorry _) _ _ = pure ()
-    storeMethodEdge method (Just parentSystemRef) childProofs =
-        case traverse childRef childProofs of
-          Just childRefs ->
-              storeProofStep lemmaName (getStoredRef parentSystemRef) method childRefs
-          Nothing -> pure ()
-    storeMethodEdge _ _ _ =
-        pure ()
 
-    childRef childProof =
-        getStoredRef <$> psInfo (root childProof)
-
-
--- | Rebuild a proof tree from the method edges recorded in the store.
--- Nothing when the root has no recorded step, i.e. there is nothing to restore.
-restoreProofFromStore :: String -> Ref -> IO (Maybe IncrementalProof)
-restoreProofFromStore lemmaName rootRef = do
-    -- Try to get root node from Store first
-    rootStep <- readProofStepMaybe lemmaName rootRef
-    case rootStep of
-      Nothing -> pure Nothing
-      Just _  -> Just <$> restoreNode S.empty rootRef
+-- | Rebuild the lemma's current stored proof exactly as it was stored.
+-- Nothing when no proof was stored for this root system and file proof.
+-- A sorry where a search started after the proof was stored, e.g. one that
+-- was interrupted, shows that search instead.
+restoreProofFromStore :: String -> Ref -> Ref -> IO (Maybe IncrementalProof)
+restoreProofFromStore lemmaName rootSystemRef inputProofRef =
+    restoreStoredProof makeProofNode lemmaName rootSystemRef inputProofRef
   where
-    -- Restore
-    restoreNode ancestorRefs systemRef
-      | systemRef `S.member` ancestorRefs =
-          error ("restoreProofFromStore: cycle in stored method edges at "
-                 ++ show systemRef)
-      | otherwise = do
-          storedStep <- readProofStepMaybe lemmaName systemRef
-          case storedStep of
-            -- A system that was stored but never expanded: the frontier where
-            -- the previous run stopped.
-            Nothing -> pure (LNode (ProofStep (Sorry (Just "not explored"))
-                                              (Just (OnDisk systemRef)))
-                                   M.empty)
-            Just (MethodEdge _ _ method caseRefs) -> do
-              childProofs <- traverse (restoreNode (S.insert systemRef ancestorRefs))
-                                      caseRefs
-              pure (LNode (ProofStep method (Just (OnDisk systemRef))) childProofs)
+    makeProofNode method maybeSystemRef childProofs =
+        let systemInfo = fmap OnDisk maybeSystemRef
+        in LNode (ProofStep method systemInfo) childProofs
+
+-- | Identify a proof by its methods and case names, ignoring its systems.
+proofSkeletonRef :: Proof a -> Ref
+proofSkeletonRef (LNode step childProofs) =
+    let method = psMethod step
+        childSkeletonRefs = M.map proofSkeletonRef childProofs
+    in fileProofRef method childSkeletonRefs
 
 -- | Incremental proofs are used to represent intermediate results of proof
 -- checking/construction.
@@ -1184,54 +1195,58 @@ proveSystemDFSEvicted :: Heuristic ProofContext -> [Tactic ProofContext] -> Proo
 proveSystemDFSEvicted heuristic tactics ctxt depth0 initialSearchSystem =
     prove depth0 (StoredInMem initialSearchSystemRef initialSearchSystem)
   where
-    initialSearchSystemRef = storeInitialSearchSystemUnsafe initialSearchSystem
+    initialSearchSystemRef =
+        storeSearchStartUnsafe (L.get pcLemmaName ctxt) (contextAtDepth depth0) initialSearchSystem
+
+    contextAtDepth = searchContextForDepth heuristic tactics ctxt
+    storeStep = storeProofStep (L.get pcLemmaName ctxt) contextAtDepth
 
     prove !depth systemRef =
-        let (parentRef, method, cases) = solveOrRestore heuristic tactics ctxt depth systemRef
+        let (method, cases) = solveOrRestore depth systemRef
+            !parentRef = getStoredRef systemRef
         -- The proof retains only the parent's Ref, not its System value.
         in LNode (ProofStep method (Just (OnDisk parentRef)))
                  (M.map (prove (succ depth)) cases)
 
+    -- These helpers share this search's settings and prepared context hashes.
+    solveOrRestore :: Int -> SystemRef -> (ProofMethod, M.Map CaseName SystemRef)
+    solveOrRestore depth systemRef = unsafePerformIO $ do
+        let parentRef = getStoredRef systemRef
+            searchStepKey = searchKey (contextAtDepth depth) parentRef
 
--- | Compute and store a new step or restore a stored step.
-solveOrRestore :: Heuristic ProofContext -> [Tactic ProofContext] -> ProofContext -> Int
-               -> SystemRef
-               -> (Ref, ProofMethod, M.Map CaseName SystemRef)
-solveOrRestore heuristic tactics ctxt depth systemRef = unsafePerformIO $ do
-    let parentRef = getStoredRef systemRef
-    -- Check if we already have a proof step for this system from a prev run
-    storedStep <- readProofStepMaybe (L.get pcLemmaName ctxt) parentRef
-    case storedStep of
-      Just (MethodEdge _ _ (Sorry _) _) -> solveAndStore heuristic tactics ctxt depth parentRef systemRef
-      Just step -> pure (restoreStep parentRef step)
-      Nothing   -> solveAndStore heuristic tactics ctxt depth parentRef systemRef
-{-# NOINLINE solveOrRestore #-}
+        storedStep <- readProofStepMaybe searchStepKey
 
-restoreStep :: Ref -> MethodEdge -> (Ref, ProofMethod, M.Map CaseName SystemRef)
-restoreStep parentRef (MethodEdge _ _ method caseRefs) =
-    (parentRef, method, M.map OnDisk caseRefs)
+        case storedStep of
+          Just (MethodEdge _ _ (Sorry _) _ _) ->
+              solveAndStore depth parentRef systemRef
+          Just step -> pure (restoreStep step)
+          Nothing -> solveAndStore depth parentRef systemRef
+    {-# NOINLINE solveOrRestore #-}
 
-solveAndStore :: Heuristic ProofContext -> [Tactic ProofContext] -> ProofContext -> Int
-              -> Ref -> SystemRef
-              -> IO (Ref, ProofMethod, M.Map CaseName SystemRef)
-solveAndStore heuristic tactics ctxt depth parentRef systemRef = do
-    -- Get the parents system (might be stored on disk)
-    system <- loadSystemFromRef systemRef
-    let (method, cases) = nextProofStep heuristic tactics ctxt depth system
+    solveAndStore :: Int -> Ref -> SystemRef
+                  -> IO (ProofMethod, M.Map CaseName SystemRef)
+    solveAndStore depth parentRef systemRef = do
+        system <- loadSystemFromRef systemRef
 
-    -- Frontier eviction: each child is written so that its Ref is available for
-    -- the method edge, but the System is kept alongside the Ref. Descending into
-    -- a child therefore costs no read. Memory grows with the unexplored
-    -- frontier rather than with the whole tree.
-    casesWithRefs <- mapM storeCase cases
+        let (method, cases) = nextProofStep heuristic tactics ctxt depth system
 
-    storeProofStep (L.get pcLemmaName ctxt) parentRef method
-                   (M.map getStoredRef casesWithRefs)
-    pure (parentRef, method, casesWithRefs)
-  where
-    storeCase system = do
-        ref <- storeSystem system
-        pure (StoredInMem ref system)
+        -- Store child systems before the edge, but keep their in-memory copies
+        -- on the unexplored frontier so descending into them needs no read.
+        casesWithRefs <- mapM storeCase cases
+
+        let childSystemRefs = M.map getStoredRef casesWithRefs
+
+        storeStep depth parentRef method childSystemRefs
+
+        pure (method, casesWithRefs)
+      where
+        storeCase system = do
+            ref <- storeSystem system
+            pure (StoredInMem ref system)
+
+restoreStep :: MethodEdge -> (ProofMethod, M.Map CaseName SystemRef)
+restoreStep (MethodEdge _ _ method caseRefs _) =
+    (method, M.map OnDisk caseRefs)
 
 getStoredRef :: SystemRef -> Ref
 getStoredRef (StoredInMem ref _) = ref
@@ -1243,10 +1258,18 @@ loadSystemFromRef (InMem system)         = pure system
 loadSystemFromRef (StoredInMem _ system) = pure system
 loadSystemFromRef (OnDisk ref)           = readSystemLive ref
 
-storeInitialSearchSystemUnsafe :: System -> Ref
-storeInitialSearchSystemUnsafe initialSearchSystem =
-    unsafePerformIO (storeSystem initialSearchSystem)
-{-# NOINLINE storeInitialSearchSystemUnsafe #-}
+-- | Store a search's initial system and record that the search starts there
+-- with the step stored under the given context.
+storeSearchStartUnsafe :: String -> Ref -> System -> Ref
+storeSearchStartUnsafe lemmaName contextRef initialSearchSystem = unsafePerformIO $ do
+    systemRef <- storeSystem initialSearchSystem
+
+    let firstSearchStepKey = searchKey contextRef systemRef
+
+    recordSearchStart lemmaName systemRef firstSearchStepKey
+
+    pure systemRef
+{-# NOINLINE storeSearchStartUnsafe #-}
 
 
 -- | @proveSystemDFS rules se@ explores all solutions of the initial

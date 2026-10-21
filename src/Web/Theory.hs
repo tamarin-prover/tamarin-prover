@@ -82,7 +82,7 @@ import Web.Types
 import           Web.Utils
 import qualified Control.Monad.State.Lazy     as State
 
-import Theory.Constraint.Solver.Store (isStoreOpen, readLemmaRootMaybe, recordLemmaRoot, storeSystem)
+import Theory.Constraint.Solver.Store (isStoreOpen, recordLemmaRoot, storeSystem)
 
 ------------------------------------------------------------------------------
 -- Various other functions
@@ -110,8 +110,8 @@ evictSystemsFromLemmas selectedLemma (Just theory) = do
     evictItem item = pure item
 
 
--- | Restore each lemma's proof from the store when its root system matches,
--- and otherwise record the current root so a later run can restore it.
+-- | Restore each lemma's proof when its root system and file proof match.
+-- Otherwise save the input proof before a search can start.
 restoreLemmaProofs :: ClosedTheory -> IO ClosedTheory
 restoreLemmaProofs theory = do
     -- Perform checks that the theory did not change and then restore lemma
@@ -129,21 +129,28 @@ restoreLemmaProofs theory = do
         case getOrRestoreProofSystem lemma._lProof of
           Nothing            -> pure lemma
           Just initialSystem -> do
+            -- This ref identifies the root System. The saved root ProofNode
+            -- has a separate ref, kept in the lemma's ProofHead.
             currentRootRef <- storeSystem initialSystem
-            storedRootRef  <- readLemmaRootMaybe lemma._lName
-            if storedRootRef /= Just currentRootRef
-              then do
-                recordLemmaRoot lemma._lName
-                                (toSystemTraceQuantifier lemma._lTraceQuantifier)
-                                currentRootRef
-                pure lemma
-              else do
-                restored <- restoreProofFromStore lemma._lName currentRootRef
-                case restored of
-                  Nothing    -> pure lemma
-                  Just proof -> do
-                    hPutStrLn stderr ("restored proof for lemma " ++ lemma._lName)
-                    pure lemma { _lProof = proof }
+
+            let lemmaName = lemma._lName
+                inputProofRef = proofSkeletonRef lemma._lProof
+                traceQuantifier = toSystemTraceQuantifier lemma._lTraceQuantifier
+
+            recordLemmaRoot lemmaName traceQuantifier currentRootRef inputProofRef
+
+            restoredProof <- restoreProofFromStore lemmaName currentRootRef inputProofRef
+
+            case restoredProof of
+              Nothing -> do
+                -- Interrupted searches need a saved tree to restore into.
+                savedProof <- evictSystemsFromIncrementalProof lemmaName lemma._lProof
+
+                pure lemma { _lProof = savedProof }
+              Just proof -> do
+                hPutStrLn stderr ("restored proof for lemma " ++ lemmaName)
+
+                pure lemma { _lProof = proof }
 
 
 applyMethodAtPath :: ClosedTheory -> String -> ProofPath

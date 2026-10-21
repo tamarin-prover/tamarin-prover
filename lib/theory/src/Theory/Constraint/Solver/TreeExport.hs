@@ -12,7 +12,9 @@ module Theory.Constraint.Solver.TreeExport
 import           Theory.Constraint.Solver.ProofMethod (ProofMethod (..), Result (..))
 import           Theory.Constraint.Solver.Store       (Kind (..), LemmaRoot (..),
                                                         MethodEdge (..),
-                                                        Ref, StoredRecord (..),
+                                                        ProofHead (..), ProofNode (..),
+                                                        Ref, SearchStart (..),
+                                                        StoredRecord (..),
                                                         decodeStoredRecord, readStoreRecords,
                                                         refText, valueRef, writeStoreJSON)
 import           Theory.Constraint.System             (SystemTraceQuantifier (..),
@@ -42,14 +44,27 @@ writeLemmaTrees storeDirectory storedRecords = mapM writeLemmaTree lemmaRoots
     lemmaRoots :: [LemmaRoot]
     lemmaRoots = sortOn (\root -> root.lrLemma) $ Map.elems $ Map.fromList
       [ (lemmaRoot.lrLemma, lemmaRoot)
-      | lemmaRoot <- decodeRecords KLemmaRoot storedRecords
+      | (_, lemmaRoot) <- decodeRecords KLemmaRoot storedRecords
       ]
 
-    methodEdgesBySystem :: Map.Map (String, Ref) MethodEdge
-    methodEdgesBySystem = Map.fromList
-      [ ((methodEdge.meLemma, methodEdge.meParent), methodEdge)
-      | methodEdge <- decodeRecords KMethodEdge storedRecords
+    proofNodesByRef :: Map.Map Ref ProofNode
+    proofNodesByRef = Map.fromList (decodeRecords KProofNode storedRecords)
+
+    -- Records are in log order, so the newest record of a key wins.
+    proofHeadsByLemma :: Map.Map String (Int, ProofHead)
+    proofHeadsByLemma = Map.fromList
+      [ (proofHead.phLemma, (position, proofHead))
+      | (position, proofHead) <- decodeRecordsAt KProofHead storedRecords
       ]
+
+    searchStartsBySystem :: Map.Map (String, Ref) (Int, Ref)
+    searchStartsBySystem = Map.fromList
+      [ ((lemmaName, systemRef), (position, searchKey))
+      | (position, SearchStart lemmaName systemRef searchKey) <- decodeRecordsAt KSearchStart storedRecords
+      ]
+
+    methodEdgesByKey :: Map.Map Ref MethodEdge
+    methodEdgesByKey = Map.fromList (decodeRecords KMethodEdge storedRecords)
 
     storedSystemRefs :: Set.Set Ref
     storedSystemRefs = Set.fromList
@@ -61,8 +76,19 @@ writeLemmaTrees storeDirectory storedRecords = mapM writeLemmaTree lemmaRoots
     writeLemmaTree :: LemmaRoot -> IO FilePath
     writeLemmaTree lemmaRoot = do
         let (rootJSON, proofStatus) =
-              buildTreeNode storedSystemRefs methodEdgesBySystem
-                            lemmaRoot.lrLemma Set.empty lemmaRoot.lrRoot
+              case Map.lookup lemmaRoot.lrLemma proofHeadsByLemma of
+                Nothing -> unexpandedNode lemmaRoot.lrRoot
+                Just (headPosition, proofHead) ->
+                  case Map.lookup proofHead.phRoot proofNodesByRef of
+                    Nothing -> unexpandedNode lemmaRoot.lrRoot
+                    Just rootProofNode ->
+                      let sameRootSystem = rootProofNode.pnSystem == Just lemmaRoot.lrRoot
+                          sameFileProof = proofHead.phBasedOn == lemmaRoot.lrFileProof
+                      -- Ignore a saved proof if the formula or its file proof changed.
+                      in if sameRootSystem && sameFileProof
+                         then buildTreeNode storedSystemRefs proofNodesByRef
+                                            (findLaterSearch headPosition) proofHead.phRoot
+                         else unexpandedNode lemmaRoot.lrRoot
             treePath = storeDirectory
                        </> (sanitizeFileName lemmaRoot.lrLemma ++ ".tree.json")
         JSON.encodeFile treePath $ object
@@ -72,50 +98,113 @@ writeLemmaTrees storeDirectory storedRecords = mapM writeLemmaTree lemmaRoots
           , "root"       .= rootJSON
           ]
         pure treePath
+      where
+        -- A search that started at a system after the head was stored.
+        findLaterSearch headPosition systemRef =
+          case Map.lookup (lemmaRoot.lrLemma, systemRef) searchStartsBySystem of
+            Nothing -> Nothing
+            Just (startPosition, searchKey) ->
+              let startedAfterSave = startPosition > headPosition
+                  firstStepIsStored = Map.member searchKey methodEdgesByKey
+              in if startedAfterSave && firstStepIsStored
+                 then Just (buildSearchNode methodEdgesByKey Set.empty systemRef searchKey)
+                 else Nothing
 
--- | Build one nested proof tree and its aggregate status.
+-- | A lemma root without a stored proof, or a search step never taken.
+unexpandedNode :: Ref -> (Value, ExportStatus)
+unexpandedNode systemRef =
+    ( object [ "method"   .= ("unexpanded" :: String)
+             , "system"   .= refText systemRef
+             , "children" .= object []
+             ]
+    , ExportIncomplete
+    )
+
+-- | Build one nested proof tree and its aggregate status. A sorry shows the
+-- search that started at its system after the proof was stored, if any.
 buildTreeNode :: Set.Set Ref
-              -> Map.Map (String, Ref) MethodEdge
-              -> String
-              -> Set.Set Ref
+              -> Map.Map Ref ProofNode
+              -> (Ref -> Maybe (Value, ExportStatus))
               -> Ref
               -> (Value, ExportStatus)
-buildTreeNode storedSystemRefs methodEdgesBySystem lemmaName ancestorRefs systemRef
-  | systemRef `Set.member` ancestorRefs =
-      error ("cycle in stored method edges at " ++ show systemRef)
-  | systemRef `Set.notMember` storedSystemRefs =
-      error ("lemma tree references missing system " ++ show systemRef)
-  | otherwise =
-      case Map.lookup (lemmaName, systemRef) methodEdgesBySystem of
-        Nothing         -> unexpandedNode
-        Just methodEdge -> expandedNode methodEdge
+buildTreeNode storedSystemRefs proofNodesByRef findLaterSearch proofNodeRef =
+    case Map.lookup proofNodeRef proofNodesByRef of
+      Nothing -> error ("lemma tree references missing proof node " ++ show proofNodeRef)
+      Just proofNode ->
+        case proofNode.pnMethod of
+          Sorry _ ->
+            case proofNode.pnSystem of
+              Nothing -> exportProofNode proofNode
+              Just systemRef ->
+                case findLaterSearch systemRef of
+                  Nothing -> exportProofNode proofNode
+                  Just searchTree -> searchTree
+          _ -> exportProofNode proofNode
   where
-    unexpandedNode :: (Value, ExportStatus)
-    unexpandedNode =
-      ( object [ "method"   .= ("unexpanded" :: String)
-               , "system"   .= refText systemRef
-               , "children" .= object []
-               ]
-      , ExportIncomplete
-      )
-
-    expandedNode :: MethodEdge -> (Value, ExportStatus)
-    expandedNode methodEdge =
-        let nextAncestorRefs = Set.insert systemRef ancestorRefs
-            childResults = Map.map
-              (buildTreeNode storedSystemRefs methodEdgesBySystem
-                             lemmaName nextAncestorRefs)
-              methodEdge.meChildren
+    exportProofNode :: ProofNode -> (Value, ExportStatus)
+    exportProofNode proofNode =
+        let buildChildNode childProofNodeRef =
+              buildTreeNode storedSystemRefs proofNodesByRef findLaterSearch childProofNodeRef
+            childResults = Map.map buildChildNode proofNode.pnChildren
             childNodes = Map.map fst childResults
             childStatuses = map snd (Map.elems childResults)
-            proofStatus = maximum
-              (exportStatusForMethod methodEdge.meMethod : childStatuses)
-        in ( object [ "method"   .= methodToJSON methodEdge.meMethod
-                    , "system"   .= refText systemRef
+            -- Unused script steps have no system. Preserve them in JSON,
+            -- but let only checked steps contribute a proof status.
+            stepStatus = case proofNode.pnSystem of
+              Nothing -> ExportComplete
+              Just _  -> exportStatusForMethod proofNode.pnMethod
+            proofStatus = maximum (stepStatus : childStatuses)
+        in ( object [ "method"   .= methodToJSON proofNode.pnMethod
+                    , "node"     .= refText proofNodeRef
+                    , "system"   .= fmap systemText proofNode.pnSystem
                     , "children" .= childNodes
                     ]
            , proofStatus
            )
+
+    systemText systemRef
+      | systemRef `Set.member` storedSystemRefs = refText systemRef
+      | otherwise = error ("lemma tree references missing system " ++ show systemRef)
+
+-- | Build the tree of a stored search by following its step keys. Steps that
+-- were never taken are unexpanded, and a key repeated on the path is a cycle.
+buildSearchNode :: Map.Map Ref MethodEdge
+                -> Set.Set Ref
+                -> Ref
+                -> Ref
+                -> (Value, ExportStatus)
+buildSearchNode methodEdgesByKey ancestorSearchKeys systemRef searchKey
+  | searchKey `Set.member` ancestorSearchKeys =
+      ( object [ "method"   .= methodToJSON cycleMethod
+               , "system"   .= refText systemRef
+               , "children" .= object []
+               ]
+      , exportStatusForMethod cycleMethod
+      )
+  | otherwise =
+      case Map.lookup searchKey methodEdgesByKey of
+        Nothing   -> unexpandedNode systemRef
+        Just methodEdge ->
+          let nextAncestorSearchKeys = Set.insert searchKey ancestorSearchKeys
+              buildChildSearch childSystemRef childSearchKey =
+                buildSearchNode methodEdgesByKey nextAncestorSearchKeys childSystemRef childSearchKey
+              -- Each child needs both a system ref and a search key. Keep
+              -- only case names present in both maps, as in the stored search.
+              childResults = Map.intersectionWith buildChildSearch
+                methodEdge.meChildren methodEdge.meChildKeys
+              childNodes = Map.map fst childResults
+              childStatuses = map snd (Map.elems childResults)
+              proofStatus = maximum
+                (exportStatusForMethod methodEdge.meMethod : childStatuses)
+          in ( object [ "method"   .= methodToJSON methodEdge.meMethod
+                      , "node"     .= refText searchKey
+                      , "system"   .= refText systemRef
+                      , "children" .= childNodes
+                      ]
+             , proofStatus
+             )
+  where
+    cycleMethod = Sorry (Just "cycle in stored search")
 
 -- | Export a proof method in the existing tree-file schema.
 methodToJSON :: ProofMethod -> Value
@@ -164,7 +253,7 @@ quantifierText ExistsNoTrace   = "AllTraces"
 quantifierText ExistsSomeTrace = "ExistsTrace"
 
 -- | Decode every record of one kind or fail with record identity.
-decodeRecords :: Binary.Binary a => Kind -> [StoredRecord] -> [a]
+decodeRecords :: Binary.Binary a => Kind -> [StoredRecord] -> [(Ref, a)]
 decodeRecords requestedKind storedRecords = map decodeRecord matchingRecords
   where
     matchingRecords :: [StoredRecord]
@@ -175,10 +264,30 @@ decodeRecords requestedKind storedRecords = map decodeRecord matchingRecords
 
     decodeRecord record =
         case decodeStoredRecord record of
-          Right value       -> value
+          Right value       -> (record.storedKey, value)
           Left decodeError  -> error
             ("binary decode of " ++ show record.storedKey ++ " ("
              ++ show record.storedKind ++ "): " ++ decodeError)
+
+-- | Like 'decodeRecords', with each record's position in the log.
+decodeRecordsAt :: Binary.Binary a => Kind -> [StoredRecord] -> [(Int, a)]
+decodeRecordsAt requestedKind storedRecords = decodeMatchingRecords recordsWithPositions
+  where
+    -- Count every record before filtering by kind. The positions must describe
+    -- the shared log, so heads and search starts can be compared.
+    recordsWithPositions = zip [0 ..] storedRecords
+
+    decodeMatchingRecords [] = []
+    decodeMatchingRecords ((position, record) : remainingRecords)
+      | record.storedKind /= requestedKind =
+          decodeMatchingRecords remainingRecords
+      | otherwise =
+          case decodeStoredRecord record of
+            Right value ->
+              (position, value) : decodeMatchingRecords remainingRecords
+            Left decodeError -> error
+              ("binary decode of " ++ show record.storedKey ++ " ("
+               ++ show record.storedKind ++ "): " ++ decodeError)
 
 sanitizeFileName :: String -> String
 sanitizeFileName name = map replaceCharacter name

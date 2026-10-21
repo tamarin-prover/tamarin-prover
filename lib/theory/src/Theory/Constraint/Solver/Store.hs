@@ -35,22 +35,36 @@ module Theory.Constraint.Solver.Store
   , decodeStoredRecord
   , valueRef
   , MethodEdge(..)
+  , searchContextForDepth
+  , searchKey
   , storeProofStep
   , readProofStepMaybe
+  , SearchStart(..)
+  , recordSearchStart
+  , readSearchStartAfter
   , LemmaRoot(..)
   , recordLemmaRoot
   , readLemmaRootMaybe
+  , ProofNode(..)
+  , ProofHead(..)
+  , storeProofNode
+  , readProofNode
+  , recordProofHead
+  , readMatchingProofRootMaybe
+  , restoreStoredProof
+  , fileProofRef
   , setTheoryContext
   ) where
 
 import           Theory.Constraint.System
 import           Theory.Model
 import           Theory.Constraint.Solver.JSON ()   -- ToJSON for the System closure
-import           Theory.Constraint.Solver.ProofMethod (ProofMethod, CaseName)
+import           Theory.Constraint.Solver.ProofMethod (ProofMethod(..), CaseName)
 import           Control.DeepSeq         (NFData (rnf))
+import qualified Data.Label              as L
 
 import           Control.Concurrent.MVar (MVar, modifyMVarMasked, newMVar)
-import           Control.Exception       (evaluate)
+import           Control.Exception       (evaluate, onException)
 import           Control.Monad           (unless, when)
 import           Crypto.Hash             (Digest, SHA256, hashlazy)
 import           Data.Aeson              (ToJSON, object, (.=))
@@ -78,6 +92,7 @@ import           System.IO               (Handle, IOMode (ReadWriteMode),
                                           hFileSize, hFlush, hSeek,
                                           hSetFileSize, openFile)
 import           System.IO.Unsafe        (unsafePerformIO)
+import           System.Posix.Files      (setFdSize)
 import           System.Posix.IO         (closeFd, handleToFd)
 import           System.Posix.IO.ByteString.Ext (fdPread, fdPwrite)
 import           System.Posix.Types      (ByteCount, Fd, FileOffset)
@@ -115,9 +130,12 @@ data Kind
   | KSubtermStore  -- ^ the whole '_sSubtermStore'
   | KEqStore       -- ^ the whole '_sEqStore'
   | KShell         -- ^ a spilled system (heavy fields as refs)
-  | KMethodEdge    -- ^ applied method + case refs, keyed by lemma and parent system
+  | KMethodEdge    -- ^ applied method + case refs, keyed by search context and parent system
   | KLemmaRoot     -- ^ lemma name -> root system and metadata, keyed by the name
   | KTheoryContext  -- ^ the theory context every tree in this store was built against
+  | KProofNode     -- ^ one step of a stored proof tree, with its children's node refs
+  | KProofHead     -- ^ lemma name -> root node of its latest stored proof, keyed by the name
+  | KSearchStart   -- ^ lemma name and start system -> key of the search's first step
   deriving (Eq, Ord, Show, Enum, Bounded)
 
 kindTag :: Kind -> T.Text
@@ -132,6 +150,9 @@ kindTag KShell        = "shell"
 kindTag KMethodEdge   = "methodEdge"
 kindTag KLemmaRoot    = "lemmaRoot"
 kindTag KTheoryContext = "theoryContext"
+kindTag KProofNode    = "proofNode"
+kindTag KProofHead    = "proofHead"
+kindTag KSearchStart  = "searchStart"
 
 theoryContextKey :: Ref
 theoryContextKey = keyOf KTheoryContext (Bin.encode ("theory-context" :: String))
@@ -351,6 +372,7 @@ appendRecord store index appendOffset kind key payload = do
         location     = RecordLocation appendOffset
                                        (fromIntegral (BL.length framedRecord))
     writeToFile store.storeFd (fromIntegral appendOffset) framedRecord
+      `onException` setFdSize store.storeFd (fromIntegral appendOffset)
     atomicWriteIORef store.storeIndex $! M.insert key location index
     pure location
 
@@ -577,33 +599,126 @@ storeSystem system = do
 
 -- | The selected method and all child cases for one system in one lemma.
 data MethodEdge = MethodEdge
-  { meLemma    :: String
-  , meParent   :: Ref
-  , meMethod   :: ProofMethod
-  , meChildren :: M.Map CaseName Ref
+  { meLemma     :: String
+  , meParent    :: Ref                 -- ^ the parent system's ref
+  , meMethod    :: ProofMethod
+  , meChildren  :: M.Map CaseName Ref  -- ^ child system refs, not proof node refs
+  , meChildKeys :: M.Map CaseName Ref  -- ^ the key each child's step is stored under
   } deriving (Generic)
 
 instance Bin.Binary MethodEdge
 
 instance ToJSON MethodEdge where
-  toJSON edge = object [ "lemma"    .= edge.meLemma
-                       , "subject"  .= edge.meParent
-                       , "method"   .= show edge.meMethod
-                       , "children" .= edge.meChildren ]
+  toJSON edge = object [ "lemma"     .= edge.meLemma
+                       , "subject"   .= edge.meParent
+                       , "method"    .= show edge.meMethod
+                       , "children"  .= edge.meChildren
+                       , "childKeys" .= edge.meChildKeys ]
 
--- | Derive the lookup key for a system's method edge.
-edgeKey :: String -> Ref -> Ref
-edgeKey lemmaName parent = keyOf KMethodEdge (Bin.encode (lemmaName, parent))
+-- | Prepare the search-context hashes once, then select one by proof depth.
+-- Each heuristic slot has its own shared hash because it can choose a
+-- different method for the same system.
+searchContextForDepth :: Heuristic ProofContext -> [Tactic ProofContext]
+                      -> ProofContext -> Int -> Ref
+searchContextForDepth heuristic tactics ctxt = contextAtDepth
+  where
+    Heuristic rankings = heuristic
+    rankingCount = length rankings
+    slotContexts = map contextForSlot [0 .. rankingCount - 1]
 
--- | Store the method applied at a system.
-storeProofStep :: String -> Ref -> ProofMethod -> M.Map CaseName Ref -> IO ()
-storeProofStep lemmaName parent method children =
-    writeKeyed KMethodEdge (edgeKey lemmaName parent)
-               (MethodEdge lemmaName parent method children)
+    contextForSlot slot =
+        let lemmaName = L.get pcLemmaName ctxt
+            useInduction = L.get pcUseInduction ctxt
+            traceQuantifier = L.get pcTraceQuantifier ctxt
+            hiddenLemmas = L.get pcHiddenLemmas ctxt
+            sourceKind = L.get pcSourceKind ctxt
+            searchSettings = ( lemmaName, useInduction, traceQuantifier
+                             , hiddenLemmas, sourceKind, heuristic, tactics, slot )
+            taggedContext = ("search-context" :: String, searchSettings)
+        in keyOf KMethodEdge (Bin.encode taggedContext)
+
+    contextAtDepth depth =
+        let slot = depth `mod` rankingCount
+        in slotContexts !! slot
+
+-- | Derive the lookup key for a system's method edge in a search context.
+searchKey :: Ref -> Ref -> Ref
+searchKey contextRef systemRef =
+    let searchStep = (contextRef, systemRef)
+    in keyOf KMethodEdge (Bin.encode searchStep)
+
+-- | Record a search step. Prepare this function with the lemma and its context
+-- selector once; each call then supplies the depth, system, method and children.
+storeProofStep :: String -> (Int -> Ref) -> Int -> Ref -> ProofMethod
+               -> M.Map CaseName Ref -> IO ()
+storeProofStep lemmaName contextAtDepth depth parentSystemRef method childSystemRefs = do
+    let searchStepKey = searchKey (contextAtDepth depth) parentSystemRef
+        childContextRef = contextAtDepth (succ depth)
+        childSearchKeys = M.map (searchKey childContextRef) childSystemRefs
+        methodEdge = MethodEdge
+          { meLemma = lemmaName
+          , meParent = parentSystemRef
+          , meMethod = method
+          , meChildren = childSystemRefs
+          , meChildKeys = childSearchKeys
+          }
+
+    writeKeyed KMethodEdge searchStepKey methodEdge
 
 -- | Read the stored proof step, if present.
-readProofStepMaybe :: String -> Ref -> IO (Maybe MethodEdge)
-readProofStepMaybe lemmaName parent = readKeyedMaybe (edgeKey lemmaName parent)
+readProofStepMaybe :: Ref -> IO (Maybe MethodEdge)
+readProofStepMaybe searchStepKey = readKeyedMaybe searchStepKey
+
+-- search starts
+
+-- | A search of a lemma that started at a system, and its first step's key.
+data SearchStart = SearchStart
+  { ssLemma  :: String
+  , ssSystem :: Ref  -- ^ the system where the search starts
+  , ssKey    :: Ref  -- ^ the first method edge's search key
+  } deriving (Generic)
+
+instance Bin.Binary SearchStart
+
+instance ToJSON SearchStart where
+  toJSON start = object
+    [ "lemma"  .= start.ssLemma
+    , "system" .= start.ssSystem
+    , "key"    .= start.ssKey
+    ]
+
+-- | Derive the lookup key for the searches of a lemma started at a system.
+searchStartKey :: String -> Ref -> Ref
+searchStartKey lemmaName systemRef =
+    keyOf KSearchStart (Bin.encode (lemmaName, systemRef))
+
+-- | Record that a search starts at a system. The newest record counts.
+recordSearchStart :: String -> Ref -> Ref -> IO ()
+recordSearchStart lemmaName systemRef searchStepKey =
+    let key = searchStartKey lemmaName systemRef
+        searchStart = SearchStart
+          { ssLemma  = lemmaName
+          , ssSystem = systemRef
+          , ssKey    = searchStepKey
+          }
+    in writeKeyed KSearchStart key searchStart
+
+-- | The first step's key of the newest search started at a system, if that
+-- search started after the record at the given offset.
+readSearchStartAfter :: Word64 -> String -> Ref -> IO (Maybe Ref)
+readSearchStartAfter savedProofOffset lemmaName systemRef = do
+    let key = searchStartKey lemmaName systemRef
+
+    storedStart <- readKeyedAtMaybe key
+
+    let newerSearchKey = case storedStart of
+          Nothing -> Nothing
+          Just (startOffset, SearchStart _ _ searchStepKey) ->
+            if startOffset > savedProofOffset
+              then Just searchStepKey
+              else Nothing
+
+    pure newerSearchKey
 
 -- lemma roots
 
@@ -611,8 +726,9 @@ readProofStepMaybe lemmaName parent = readKeyedMaybe (edgeKey lemmaName parent)
 data LemmaRoot = LemmaRoot
   { lrLemma           :: String
   , lrTraceQuantifier :: SystemTraceQuantifier
-  , lrRoot            :: Ref
-  } deriving (Generic)
+  , lrRoot            :: Ref  -- ^ root system ref
+  , lrFileProof       :: Ref  -- ^ 'fileProofRef' of the lemma's proof in the theory
+  } deriving (Eq, Generic)
 
 instance Bin.Binary LemmaRoot
 
@@ -621,26 +737,207 @@ instance ToJSON LemmaRoot where
     [ "lemma" .= root.lrLemma
     , "traceQuantifier" .= show root.lrTraceQuantifier
     , "root" .= root.lrRoot
+    , "fileProof" .= root.lrFileProof
     ]
 
 -- | Derive the lookup key for a lemma root.
 rootKey :: String -> Ref
 rootKey lemmaName = keyOf KLemmaRoot (Bin.encode lemmaName)
 
--- | Record a lemma's root system and the metadata needed for tree export.
-recordLemmaRoot :: String -> SystemTraceQuantifier -> Ref -> IO ()
-recordLemmaRoot lemmaName traceQuantifier root =
-    writeKeyed KLemmaRoot (rootKey lemmaName)
-               (LemmaRoot lemmaName traceQuantifier root)
+-- | Record a lemma's root system and metadata, unless the record is unchanged.
+recordLemmaRoot :: String -> SystemTraceQuantifier -> Ref -> Ref -> IO ()
+recordLemmaRoot lemmaName traceQuantifier rootSystemRef inputProofRef = do
+    storedRoot <- readLemmaRootMaybe lemmaName
+
+    let lemmaRoot = LemmaRoot
+          { lrLemma           = lemmaName
+          , lrTraceQuantifier = traceQuantifier
+          , lrRoot            = rootSystemRef
+          , lrFileProof       = inputProofRef
+          }
+
+    if storedRoot == Just lemmaRoot
+      then pure ()
+      else writeKeyed KLemmaRoot (rootKey lemmaName) lemmaRoot
 
 -- | Read a lemma root, if present.
-readLemmaRootMaybe :: String -> IO (Maybe Ref)
-readLemmaRootMaybe lemmaName =
-    fmap lrRoot <$> readKeyedMaybe (rootKey lemmaName)
+readLemmaRootMaybe :: String -> IO (Maybe LemmaRoot)
+readLemmaRootMaybe lemmaName = readKeyedMaybe (rootKey lemmaName)
+
+-- proof trees
+
+-- | One step of a stored proof. Its ref hashes its method, system ref and
+-- child proof node refs. Equal systems can therefore have different proof
+-- nodes, while identical complete subtrees share the same proof node ref.
+-- Children are stored before their parents; a node does not point back to
+-- itself just because a child has the same system.
+data ProofNode = ProofNode
+  { pnMethod   :: ProofMethod
+  , pnSystem   :: Maybe Ref           -- ^ a system ref, when this step has a system
+  , pnChildren :: M.Map CaseName Ref  -- ^ child proof node refs, not system refs
+  } deriving (Generic)
+
+instance Bin.Binary ProofNode
+
+instance ToJSON ProofNode where
+  toJSON node = object
+    [ "method"   .= show node.pnMethod
+    , "system"   .= node.pnSystem
+    , "children" .= node.pnChildren
+    ]
+
+-- | The root node of a lemma's latest stored proof.
+data ProofHead = ProofHead
+  { phLemma   :: String
+  , phRoot    :: Ref  -- ^ the root proof node's ref, not its system's ref
+  , phBasedOn :: Ref  -- ^ the lemma root's file proof when the proof was stored
+  } deriving (Generic)
+
+instance Bin.Binary ProofHead
+
+instance ToJSON ProofHead where
+  toJSON proofHead = object
+    [ "lemma"   .= proofHead.phLemma
+    , "root"    .= proofHead.phRoot
+    , "basedOn" .= proofHead.phBasedOn
+    ]
+
+-- | Store a proof node once and return its Ref.
+storeProofNode :: ProofNode -> IO Ref
+storeProofNode proofNode = writeOnce KProofNode proofNode
+
+-- | Read a proof node, if present.
+readProofNode :: Ref -> IO (Maybe ProofNode)
+readProofNode proofNodeRef = readKeyedMaybe proofNodeRef
+
+-- | Derive the lookup key for a lemma's proof head.
+headKey :: String -> Ref
+headKey lemmaName = keyOf KProofHead (Bin.encode lemmaName)
+
+-- | Make a stored proof the lemma's current proof. Its nodes must be stored.
+recordProofHead :: String -> Ref -> Ref -> IO ()
+recordProofHead lemmaName rootProofNodeRef inputProofRef =
+    let proofHead = ProofHead
+          { phLemma   = lemmaName
+          , phRoot    = rootProofNodeRef
+          , phBasedOn = inputProofRef
+          }
+    in writeKeyed KProofHead (headKey lemmaName) proofHead
+
+-- | Read a lemma's saved root node and its head's log offset when both the
+-- root system and input proof match.
+readMatchingProofRootMaybe :: String -> Ref -> Ref -> IO (Maybe (Word64, ProofNode))
+readMatchingProofRootMaybe lemmaName rootSystemRef inputProofRef = do
+    storedHead <- readKeyedAtMaybe (headKey lemmaName)
+
+    case storedHead of
+      Nothing -> pure Nothing
+      Just (headOffset, proofHead) -> do
+        storedRootNode <- readProofNode proofHead.phRoot
+
+        case storedRootNode of
+          Nothing -> pure Nothing
+          Just rootNode -> do
+            let sameRootSystem = pnSystem rootNode == Just rootSystemRef
+                sameInputProof = phBasedOn proofHead == inputProofRef
+
+            if sameRootSystem && sameInputProof
+              then pure (Just (headOffset, rootNode))
+              else pure Nothing
+
+-- | Restore the saved proof and any searches started at its sorries after it
+-- was saved. The caller builds each node from its method, optional System ref
+-- and restored children, so the store need not depend on the in-memory proof type.
+restoreStoredProof :: (ProofMethod -> Maybe Ref -> M.Map CaseName proof -> proof)
+                   -> String -> Ref -> Ref -> IO (Maybe proof)
+restoreStoredProof makeNode lemmaName rootSystemRef inputProofRef = do
+    storedRoot <- readMatchingProofRootMaybe lemmaName rootSystemRef inputProofRef
+
+    case storedRoot of
+      Nothing -> pure Nothing
+      Just (headOffset, rootProofNode) -> do
+        restoredProof <- restoreNode headOffset rootProofNode
+
+        pure (Just restoredProof)
+  where
+    restoreNode headOffset (ProofNode method maybeSystemRef childProofNodeRefs) = do
+        newerSearch <- laterSearch headOffset method maybeSystemRef
+
+        case newerSearch of
+          Just (systemRef, searchStepKey) -> unfoldSearch S.empty systemRef searchStepKey
+          Nothing -> do
+            childProofs <- traverse (restoreChildNode headOffset) childProofNodeRefs
+
+            pure (makeNode method maybeSystemRef childProofs)
+
+    restoreChildNode headOffset proofNodeRef = do
+        storedNode <- readProofNode proofNodeRef
+
+        case storedNode of
+          Just proofNode -> restoreNode headOffset proofNode
+          Nothing -> error ("restoreProofFromStore: missing proof node " ++ show proofNodeRef)
+
+    -- Only replace a saved sorry if a search started there after this snapshot
+    -- and recorded at least one step. Otherwise keep the saved proof as it is.
+    laterSearch headOffset (Sorry _) (Just systemRef) = do
+        searchStart <- readSearchStartAfter headOffset lemmaName systemRef
+
+        case searchStart of
+          Nothing -> pure Nothing
+          Just searchStepKey -> do
+            firstStep <- readProofStepMaybe searchStepKey
+
+            case firstStep of
+              Nothing -> pure Nothing
+              Just _  -> pure (Just (systemRef, searchStepKey))
+    laterSearch _ _ _ = pure Nothing
+
+    -- These are the search keys on this path, not every key in the tree.
+    -- Reusing a key in another branch is fine; repeating it on this path
+    -- would make restoration loop forever.
+    unfoldSearch pathKeys systemRef searchStepKey
+      | searchStepKey `S.member` pathKeys =
+          pure (leaf (Sorry (Just "cycle in stored search")))
+      | otherwise = do
+          storedStep <- readProofStepMaybe searchStepKey
+
+          case storedStep of
+            Nothing   -> pure (leaf (Sorry (Just "not explored")))
+            Just step -> do
+              let nextPathKeys = S.insert searchStepKey pathKeys
+                  -- Match each child's system Ref with its search key by case
+                  -- name. Keep only cases present in both maps.
+                  childSystemsAndKeys = M.intersectionWith (,)
+                      (meChildren step) (meChildKeys step)
+
+              childProofs <- traverse (restoreSearchChild nextPathKeys) childSystemsAndKeys
+
+              pure (makeNode (meMethod step) (Just systemRef) childProofs)
+      where
+        leaf method = makeNode method (Just systemRef) M.empty
+
+    restoreSearchChild pathKeys (childSystemRef, childSearchKey) =
+        unfoldSearch pathKeys childSystemRef childSearchKey
+
+-- | Identify a proof by its methods and case names, given its children's
+-- identities. This is not the key of a stored record.
+fileProofRef :: ProofMethod -> M.Map CaseName Ref -> Ref
+fileProofRef method childProofRefs =
+    let taggedProof = ("file-proof" :: String, method, childProofRefs)
+    in keyOf KProofHead (Bin.encode taggedProof)
 
 -- | Read a subject-addressed record, if present.
 readKeyedMaybe :: Bin.Binary a => Ref -> IO (Maybe a)
 readKeyedMaybe key = do
+    storedRecord <- readKeyedAtMaybe key
+    let storedValue = case storedRecord of
+          Nothing -> Nothing
+          Just recordAtOffset -> Just (snd recordAtOffset)
+    pure storedValue
+
+-- | Read a subject-addressed record and its offset in the log, if present.
+readKeyedAtMaybe :: Bin.Binary a => Ref -> IO (Maybe (Word64, a))
+readKeyedAtMaybe key = do
     existing <- readIORef globalStore
     case existing of
       Nothing    -> pure Nothing
@@ -651,7 +948,7 @@ readKeyedMaybe key = do
           Just location -> do
             payload <- readRecordPayloadAt store location
             value <- decodePayload key payload
-            pure (Just value)
+            pure (Just (location.recordOffset, value))
 
 -- Store snapshots and JSON dump
 
@@ -716,6 +1013,9 @@ writeStoreJSON dir records = do
       KMethodEdge    -> decodeJSON record (undefined :: MethodEdge)
       KLemmaRoot     -> decodeJSON record (undefined :: LemmaRoot)
       KTheoryContext -> decodeJSON record (undefined :: Ref)
+      KProofNode     -> decodeJSON record (undefined :: ProofNode)
+      KProofHead     -> decodeJSON record (undefined :: ProofHead)
+      KSearchStart   -> decodeJSON record (undefined :: SearchStart)
 
     decodeJSON :: (Bin.Binary a, ToJSON a) => StoredRecord -> a -> A.Value
     decodeJSON record expectedType =
