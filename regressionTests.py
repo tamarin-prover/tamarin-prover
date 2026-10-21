@@ -1,5 +1,6 @@
 from html import parser
 import subprocess, sys, re, os, argparse, logging, datetime, shutil, tempfile
+from regressionTestCommands import run_tests as runCommandTests
 
 
 class colors:
@@ -263,13 +264,13 @@ def testOutputFileParsing(path):
 	"""
 	try:
 		flags = "--diff" if isDiffOutputFile(path) else ""
-		command = f"tamarin-prover --parse-only {flags} {path}"
+		command = [settings.tamarin, "--parse-only", *([flags] if flags else []), path]
 		
 		if isSapicOrAccountabilityFile(path) and settings.no_sapic_output_parse_test:
 			logging.warning(f"Skipping output parse test for {path} since it is a SAPIC or accountability file and the flag --no-sapic-output-parse-test is set.")
 			return True, None
 
-		process = subprocess.run(command, shell=True, capture_output=True, text=True)
+		process = subprocess.run(command, capture_output=True, text=True)
 		if process.returncode == 0:
 			return True, None
 		else:
@@ -302,14 +303,14 @@ def testParseOnlyRoundTrip(source, diff):
 			return True, None
 
 		flags = ["--diff"] if diff else []
-		first = subprocess.run(["tamarin-prover", "--parse-only", *flags, source], capture_output=True, encoding="utf-8")
+		first = subprocess.run([settings.tamarin, "--parse-only", *flags, source], capture_output=True, encoding="utf-8")
 		if first.returncode != 0:
 			return False, first.stderr
 		with tempfile.TemporaryDirectory() as tmpDir:
 			tmpPath = os.path.join(tmpDir, os.path.basename(source))
 			with open(tmpPath, "w", encoding="utf-8") as tmpFile:
 				tmpFile.write(first.stdout)
-			second = subprocess.run(["tamarin-prover", "--parse-only", *flags, tmpPath], capture_output=True, encoding="utf-8")
+			second = subprocess.run([settings.tamarin, "--parse-only", *flags, tmpPath], capture_output=True, encoding="utf-8")
 		if second.returncode != 0:
 			return False, f"The printed theory cannot be parsed again:\n{second.stderr}"
 		if second.stdout != first.stdout:
@@ -596,7 +597,7 @@ def getArguments():
 	parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter)
 	parser.add_argument("-s", "--slow", help = "Run slow tests (instead of fast tests)", action="store_true")
 	parser.add_argument("-noi", "--no-install", help = "Do not call 'stack install' before starting the tests", action="store_true")
-	parser.add_argument("-nom", "--no-make", help = "Do not run regression tests, i.e., do not call 'make case-studies'", action="store_true")
+	parser.add_argument("-nom", "--no-make", help = "Skip command checks and case-study generation; compare existing outputs", action="store_true")
 	parser.add_argument("-j", "--jobs", help = "The amount of Tamarin instances used simultaneously. Each Tamarin instance should have 3 threads and 16GB RAM available", type=int, default=1)
 	parser.add_argument("-d", "--directory", help = "The directory to compare the test results with. The default is case-studies-regression", type=str, default="case-studies-regression")
 	parser.add_argument("-r", "--repeat", help = "Repeat everything r times (except for 'stack install'). This gives more confidence in time measurements", type=int, default=1)
@@ -615,9 +616,14 @@ def getArguments():
 	parser.add_argument("--no-sapic-output-parse-test", dest="no_sapic_output_parse_test", help="Disable SAPIC/accountability output parse tests", action="store_true")
 	
 
+	parser.add_argument("--command-tests-only", nargs="*", metavar="FILE", help="Run only command checks (all sidecars, or the specified .spthy.test.json files)")
+	parser.add_argument("--tamarin", default=os.environ.get("TAMARIN", "tamarin-prover"), help="Tamarin executable (default: TAMARIN environment variable or tamarin-prover)")
+
 	## save the settings ##
 	global settings
 	settings = parser.parse_args()
+	if settings.command_tests_only is not None and settings.no_make:
+		parser.error("--command-tests-only cannot be combined with --no-make")
 	settings.folderA = settings.directory
 	settings.folderB = "case-studies"
 
@@ -644,9 +650,12 @@ def main():
 		output = subprocess.check_output("stack install", shell=True, stderr=subprocess.STDOUT).decode("utf-8")
 		logging.debug(output)
 
+	settings.tamarin = shutil.which(settings.tamarin) or settings.tamarin
+	command_tests_only = settings.command_tests_only is not None
+
 	## test the spthy parser
 	parsingSuccessful = True
-	if settings.parser_test:
+	if settings.parser_test and not command_tests_only:
 		logging.info("running the parser tests ...")
 		tree_sitter_spthy_dir = './tree-sitter/tree-sitter-spthy'
 
@@ -681,17 +690,26 @@ Parser test results:
 	successful = True
 	for r in range(settings.repeat):
 		if (settings.repeat != 1):
-			shutil.rmtree(settings.folderB, ignore_errors=True)
+			if not command_tests_only:
+				shutil.rmtree(settings.folderB, ignore_errors=True)
 			logging.warning("\n" + "="*80 + "\n")
 			logging.warning(color(colors.BOLD, f"This is repetition number {r+1}\n"))
 
 
 		## make case-studies ##
 		if not settings.no_make:
+			successful = runCommandTests(settings.tamarin, settings.directory, settings.slow, settings.command_tests_only) & successful
+			if command_tests_only:
+				continue
 			cases = "case-studies" if settings.slow else "fast-case-studies sapic-case-studies-fast FAST=y"
-			command = f"make -j {settings.jobs} {cases} 2>/dev/null"
+			command = ["make", "-j", str(settings.jobs), f"TAMARIN={settings.tamarin}", *cases.split()]
 			logging.warning(f"running '{command}' ...")
-			output = subprocess.check_output(command, shell=True, stderr=subprocess.STDOUT).decode("utf-8")
+			try:
+				output = subprocess.check_output(command, stderr=subprocess.STDOUT).decode("utf-8")
+			except subprocess.CalledProcessError as error:
+				logging.error(error.output.decode("utf-8", errors="replace"))
+				logging.error("Case-study generation failed (exit status %s).", error.returncode)
+				exit(1)
 			logging.debug(output)
 
 		## compare time and steps ##

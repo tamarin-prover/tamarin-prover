@@ -1,0 +1,28 @@
+{
+  "tests": [
+    {
+      "name": "inconsistent-arity",
+      "args": [
+        "--quit-on-warning"
+      ],
+      "exit_code": 1,
+      "contains": [
+        "Fact arity issues"
+      ]
+    },
+    {
+      "name": "parse-only",
+      "args": [
+        "--parse-only"
+      ],
+      "matches": [
+        {
+          "regex": "^rule ",
+          "min": 2,
+          "max": 2,
+          "theory_only": true
+        }
+      ]
+    }
+  ]
+}

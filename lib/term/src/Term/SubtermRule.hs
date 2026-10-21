@@ -48,7 +48,8 @@ data CtxtStRule = CtxtStRule LNTerm StRhs
 -- | Convert a rewrite rule to a context subterm rewrite rule if possible.
 rRuleToCtxtStRule :: RRule LNTerm -> Maybe CtxtStRule
 rRuleToCtxtStRule (lhs `RRule` rhs)
-  | frees rhs == [] = Just $ CtxtStRule lhs (StRhs (constantPositions lhs) rhs)
+  | Lit _ <- viewTerm lhs = Nothing  -- e.g. "x = c" is not a valid rewrite rule
+  | frees rhs == []       = Just $ CtxtStRule lhs (StRhs (constantPositions lhs) rhs)
   | otherwise       = do
                          sbtms <- findAllSubterms lhs rhs
                          case sbtms of

@@ -94,6 +94,7 @@ module Theory.Model.Rule (
   , builtInDestrRuleInclPair
   , containsNewVars
   , getRuleName
+  , ruleProductsOutsideExponents
   , getRuleNameDiff
   , getDestrRuleFunction
   , getRemainingRuleApplications
@@ -110,6 +111,7 @@ module Theory.Model.Rule (
   , compareRulesUpToNewVars
   , equalUpToAddedActions
   , equalUpToTerms
+  , alignRuleUpToRenaming
 
   -- ** Conversion
   , ruleACToIntrRuleAC
@@ -133,6 +135,7 @@ module Theory.Model.Rule (
   , xorRuleInstance
   , addAction
   , applyMacroInRule
+  , applyMacroInRulePreservingNewVars
 
   -- ** Unification
   , unifyRuleACInstEqs
@@ -792,6 +795,18 @@ isTrivialProtoVariantAC (Rule info ps as cs nvs) (Rule _ ps' as' cs' nvs') =
     L.get pracVariants info == Disj [emptySubstVFresh]
     && ps == ps' && as == as' && cs == cs' && nvs == nvs'
 
+-- | Products in rule facts that would be unsupported in an
+-- original E-rule. Keep this check shared by validation and rule export.
+ruleProductsOutsideExponents :: Rule i -> [LNTerm]
+ruleProductsOutsideExponents ru = concatMap products $
+    concatMap factTerms (L.get rPrems ru ++ L.get rActs ru ++ L.get rConcs ru)
+  where
+    products t = case viewTerm t of
+      FApp (AC Mult) _                         -> [t]
+      FApp (NoEq sym) [base, _] | sym == expSym -> products base
+      FApp _ args                              -> concatMap products args
+      _                                        -> []
+
 -- | Returns a rule's name
 getRuleName :: HasRuleName (Rule i) => Rule i -> String
 getRuleName ru = case ruleName ru of
@@ -954,6 +969,148 @@ equalUpToAddedActions ruAC@(Rule _ ps cs as _) ruE@(Rule _ ps' cs' as' _) =
     compareActions (a:ass) (a':ass') = if a == a'
       then compareActions ass ass'
       else compareActions ass (a':ass')
+
+-- | @alignRuleUpToRenaming member computed@ checks that @member@ equals
+-- @computed@ up to a bijective, sort-preserving renaming of variables and up
+-- to added actions: the premises and conclusions of @member@ are the renamed
+-- ones of @computed@, and the renamed actions of @computed@ occur in order
+-- among the actions of @member@. It returns those actions of @member@, that
+-- is, the actions of @computed@ in the variable names of @member@; the other
+-- actions of @member@ are added. The first alignment found is returned.
+-- Terms are compared modulo AC, and macros must already be expanded.
+alignRuleUpToRenaming :: (HasRuleName (Rule i), HasRuleName (Rule j))
+                      => Rule i -> Rule j -> WithMaude (Maybe [LNFact])
+alignRuleUpToRenaming member computed
+  | ruleName member /= ruleName computed = return Nothing
+  | equalUpToAddedActions member computed = return (Just acts')
+  | length (L.get rPrems member) /= length expectedPrems ||
+    length (L.get rConcs member) /= length expectedConcs = return Nothing
+  | otherwise = reader $ \hnd -> listToMaybe
+      [ chosen
+      | renaming <- maybeToList $ matchFacts M.empty fixed expectedFixed
+      , chosen <- orderedChoices renaming initialVariables
+          (zip [0 :: Int ..] $ L.get rActs member) expectedActs
+      -- The partial mapping only prunes candidates; this checks the full alignment.
+      , isRenamingOf hnd (facts' chosen) expected ]
+  where
+    acts' = L.get rActs computed
+    facts' as = (L.get rPrems member, L.get rConcs member, as)
+    -- Rename apart, so that the unifier relates two disjoint sets of variables.
+    expected@(expectedPrems, expectedConcs, expectedActs) =
+      (L.get rPrems computed, L.get rConcs computed, acts')
+        `renameAvoiding` facts' (L.get rActs member)
+    fixed = L.get rPrems member ++ L.get rConcs member
+    expectedFixed = expectedPrems ++ expectedConcs
+    -- A bijective renaming preserves distinct variables of each sort, both in
+    -- each fact and across a selected prefix. This also holds below AC symbols:
+    -- choosing the same variable pair twice cannot match two disjoint pairs.
+    -- Cache fact variables for the scans; extend prefix sets as actions are chosen.
+    factVariables = M.fromList
+      [ (fa, S.fromList $ frees fa)
+      | fa <- fixed ++ expectedFixed ++ L.get rActs member ++ expectedActs ]
+    variables fa = factVariables M.! fa
+    counts = M.fromListWith (+) . map (\v -> (lvarSort v, 1 :: Int)) . S.toList
+    factCounts = M.map counts factVariables
+    initialVariables = (S.unions $ map variables fixed,
+                        S.unions $ map variables expectedFixed)
+    -- Test each action pair against the current bindings, without committing to
+    -- bindings from other tentative pairs. Two greedy scans find the earliest
+    -- and latest possible position of each inherited action. No sequence means
+    -- no alignment; equal positions force a pairing.
+    -- Repeat after learning bindings, which may rule out other positions.
+    actionBounds renaming actions expectedActions = do
+      guard $ skeleton renaming fixed == skeleton renaming expectedFixed
+      earliest <- scan renaming actions expectedActions
+      latest <- reverse <$> scan renaming (reverse actions) (reverse expectedActions)
+      renaming' <- foldM force renaming $ zip3 earliest latest expectedActions
+      if renaming' == renaming
+        then return (renaming, zip (map fst earliest) (map fst latest))
+        else actionBounds renaming' actions expectedActions
+      where
+        force r ((i, a), (j, _), e)
+          | i == j    = matchFacts r [a] [e]
+          | otherwise = Just r
+    scan _ _ [] = Just []
+    scan renaming actions (e:es) =
+      case dropWhile (\(_, a) -> isNothing $ matchFacts renaming [a] [e]) actions of
+        []     -> Nothing
+        (a:as) -> (a :) <$> scan renaming as es
+    -- Search only within the feasible positions. AC unification waits until a
+    -- complete selection: later actions can fix an ambiguous AC renaming.
+    -- Bounds are only necessary conditions, so a failed final check must still
+    -- allow other selections.
+    orderedChoices renaming prefixVariables actions expectedActions = do
+      (renaming', bounds) <- maybeToList $ actionBounds renaming actions expectedActions
+      boundedChoices renaming' prefixVariables actions $ zip expectedActions bounds
+    boundedChoices _ _ _ [] = [[]]
+    boundedChoices renaming (actualVariables, expectedVariables) actions ((e, (lo, hi)):es) =
+      choose renaming S.empty $ dropWhile ((< lo) . fst) actions
+      where
+        expectedVariables' = S.union expectedVariables (variables e)
+        expectedCounts = counts expectedVariables'
+        choose _ _ [] = []
+        -- An earlier copy of the same fact leaves every suffix available to a
+        -- later copy, with the same bindings, so retrying the later copy cannot
+        -- rescue a failed match. Reset seen for each expected action: repeated
+        -- inherited actions must still consume separate copies.
+        choose r seen ((i, a):as)
+          | i > hi = []
+          | a `S.member` seen = choose r seen as
+          | otherwise =
+              [ a : rest
+              | let actualVariables' = S.union actualVariables (variables a)
+              , counts actualVariables' == expectedCounts
+              , r' <- maybeToList $ matchFacts r [a] [e]
+              , let prefixVariables' = (actualVariables', expectedVariables')
+              -- Taking the earliest position without new bindings leaves the
+              -- suffix bounds unchanged. Other choices can tighten them.
+              , rest <- if i == lo && r' == r
+                          then boundedChoices r' prefixVariables' as es
+                          else orderedChoices r' prefixVariables' as (map fst es) ] ++
+              choose r (S.insert a seen) as
+    -- Skeleton checks establish matching constructors and sorts. For an ordered
+    -- constructor, f(x,y) matching f(a,b) forces x to map to a and y to b. Under
+    -- AC or commutative symbols, argument positions need not correspond, so
+    -- collect no bindings from those subterms.
+    matchFacts renaming actual expectedFacts = do
+      guard $ map (factCounts M.!) actual == map (factCounts M.!) expectedFacts
+      guard $ skeleton renaming actual == skeleton renaming expectedFacts
+      renaming' <- foldM bind renaming $
+        concat $ zipWith forcedPairs (concatMap factTerms actual) (concatMap factTerms expectedFacts)
+      guard $ skeleton renaming' actual == skeleton renaming' expectedFacts
+      return renaming'
+    forcedPairs t u = case (viewTerm t, viewTerm u) of
+      (Lit (Var v), Lit (Var w))       -> [(v, w)]
+      (FApp (NoEq _) ts, FApp (NoEq _) us) -> concat $ zipWith forcedPairs ts us
+      (FApp List ts, FApp List us)    -> concat $ zipWith forcedPairs ts us
+      _                              -> []
+    -- Reject both conflicting bindings (x -> a, then x -> b) and merging
+    -- variables (x -> a, then y -> a). renameAvoiding makes the variable sets
+    -- disjoint, so forward and reverse bindings can share one map.
+    bind renaming (v, w)
+      | maybe True (== w) (M.lookup v renaming) &&
+        maybe True (== v) (M.lookup w renaming) =
+          Just $ M.insert v w $ M.insert w v renaming
+      | otherwise = Nothing
+    -- Give each fixed pair the same representative on both sides; erase only
+    -- unmapped variables. This preserves known bindings even beneath AC symbols,
+    -- so incompatible actions can be skipped without enumerating AC unifiers.
+    -- Equal skeletons remain only necessary: the final check enforces a bijection.
+    skeleton :: M.Map LVar LVar -> [LNFact] -> [LNFact]
+    skeleton renaming fs = apply (substFromList
+                                     [ (v, varTerm $ maybe (LVar "_" (lvarSort v) 0) (min v) (M.lookup v renaming))
+                                       | v <- frees fs ] :: LNSubst) fs
+    isRenamingOf hnd actual@(ps, cs, as) (ps', cs', as') =
+      case concat <$> sequence (zipWith factEqs (ps ++ cs ++ as) (ps' ++ cs' ++ as')) of
+        Just eqs | length ps == length ps' && length cs == length cs' ->
+          any renamesBoth (unifyLNTerm eqs `runReader` hnd)
+        _ -> False
+      where
+        renamesBoth subst = isRenaming (restrictVFresh (frees actual) subst)
+                         && isRenaming (restrictVFresh (frees (ps', cs', as')) subst)
+    factEqs (Fact tag _ ts) (Fact tag' _ ts')
+      | tag == tag' && length ts == length ts' = Just (zipWith Equal ts ts')
+      | otherwise                              = Nothing
 
 -- | returns true if the first Rule has the same name, premise, conclusion and
 -- action facts, ignoring terms
@@ -1119,6 +1276,15 @@ applyMacroInRule mcs (Rule info ruPrems ruConcs ruActs _) = Rule info mRuPrems m
     mRuConcs   = map (applyMacroInFact mcs) ruConcs
     mRuActs    = map (applyMacroInFact mcs) ruActs
     mRuNewVars = newVariables mRuPrems (mRuConcs ++ mRuActs)
+
+-- | Expand macros in an explicit variant member. Its new variables are kept
+-- in their positions, with macros expanded, instead of being recomputed from
+-- the expanded facts.
+applyMacroInRulePreservingNewVars :: [LNMacro] -> Rule i -> Rule i
+applyMacroInRulePreservingNewVars [] ru = ru
+applyMacroInRulePreservingNewVars mcs ru =
+    L.set rNewVars (map (applyMacros mcs) (L.get rNewVars ru)) $
+      applyMacroInRule mcs ru
 
 
 -- Unification

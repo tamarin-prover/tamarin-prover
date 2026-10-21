@@ -16,6 +16,7 @@ import           Prelude                             hiding (id, (.))
 import qualified Data.ByteString.Char8 as BC
 import           Data.Function (on)
 import           Data.List
+import qualified Data.Map                            as M
 import           Data.Maybe
 import qualified Data.Set                            as S
 
@@ -109,13 +110,38 @@ closeTheoryWithMaude sig thy0 autoSources showSaturation =
     unfoldRules          (i:is) = i:unfoldRules is
     unfoldRules              [] = []
 
-    -- The partial-deconstructions trigger check and the auto-sources lemma
-    -- share one preliminary cache. It must be built from the unfolded rule
-    -- variants because addAutoSourcesLemma matches its source systems
-    -- against the unfolded rules by name.
-    cachePre = cache itemsModAC
+    -- Auto-sources finds source rules and routes annotations by AC name. A
+    -- member can share its name with another family's E-rule, so give those
+    -- rules distinct names in both the preliminary cache and its rule list.
+    -- Restore the public names afterwards; the generated action names remain
+    -- shared by their annotations and lemma and need no renaming.
+    (itemsForAutoSources, (_, _, originalNames)) = MS.runState
+      (mapM nameForAutoSources itemsModAC) (S.empty, M.empty, M.empty)
+    reservedNames = S.fromList $ concat
+      [ [L.get (pracName . rInfo . cprRuleAC) ru, L.get (preName . rInfo . cprRuleE) ru]
+      | RuleItem ru <- itemsModAC ]
+    nameForAutoSources (RuleItem ru) = do
+      (used, assigned, originals) <- MS.get
+      -- Identical repeated rules are allowed and must receive the same labels.
+      name <- case M.lookup ru assigned of
+        Just name -> return name
+        Nothing -> do
+          let old = L.get (pracName . rInfo . cprRuleAC) ru
+              name = if old `S.notMember` used then old else head
+                [ candidate | i <- [1 :: Integer ..]
+                , let candidate = StandRule $ getRuleName (L.get cprRuleAC ru) ++ "___AUTO_" ++ show i
+                , candidate `S.notMember` reservedNames, candidate `S.notMember` used ]
+          MS.put (S.insert name used, M.insert ru name assigned,
+                  if name == old then originals else M.insert name old originals)
+          return name
+      return $ RuleItem $ L.set (pracName . rInfo . cprRuleAC) name ru
+    nameForAutoSources item = return item
+    restoreName (RuleItem ru) = RuleItem $ L.modify (pracName . rInfo . cprRuleAC)
+      (\name -> M.findWithDefault name name originalNames) ru
+    restoreName item = item
 
-    items' = addAutoSourcesLemma hnd lemmaName cachePre itemsModAC
+    cachePre = cache itemsForAutoSources
+    items' = map restoreName $ addAutoSourcesLemma hnd lemmaName cachePre itemsForAutoSources
 
     -- extract source restrictions and lemmas
     restrictions = do RestrictionItem rstr <- items
@@ -126,7 +152,9 @@ closeTheoryWithMaude sig thy0 autoSources showSaturation =
 
     -- extract protocol rules
     rules :: [TheoryItem ClosedProtoRule IncrementalProof s] -> [ClosedProtoRule]
-    rules its = theoryRules (Theory errClose errClose errClose errClose errClose errClose its errClose False)
+    -- Export merges identical members; use the same rule set for case names
+    -- during proving, so those proofs still replay after export.
+    rules its = nub $ theoryRules (Theory errClose errClose errClose errClose errClose errClose its errClose False)
     errClose = error "closeTheory"
 
     addSolvingLoopBreakers = useAutoLoopBreakersAC

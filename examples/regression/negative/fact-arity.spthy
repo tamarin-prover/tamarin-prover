@@ -1,0 +1,8 @@
+theory FactArity
+begin
+
+// Parsing succeeds, but strict validation must reject the inconsistent arities.
+rule First: [] --> [A('a')]
+rule Second: [] --> [A('a','b')]
+
+end

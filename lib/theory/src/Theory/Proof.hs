@@ -95,6 +95,10 @@ module Theory.Proof (
   , runAutoDiffProver
   , runAutoProverWith
   , runAutoDiffProverWith
+  , runAutoProverOnSorries
+  , runAutoProverOnSorriesWith
+  , runAutoDiffProverOnSorries
+  , runAutoDiffProverOnSorriesWith
 
   -- ** Pretty Printing
   , prettyProof
@@ -859,15 +863,8 @@ runAutoProver = runAutoProverWith RetainProofStates
 
 runAutoProverWith :: ProofStateRetention -> AutoProver -> Prover
 runAutoProverWith retention aut@(AutoProver _ _  bound cut _) =
-    mapProverProof cutSolved $ maybe id boundProver bound autoProver
+    mapProverProof (extractSolutions cut) $ maybe id boundProver bound autoProver
   where
-    cutSolved = case cut of
-      CutDFS             -> cutOnSolvedDFS
-      CutBFS             -> cutOnSolvedBFS
-      CutSingleThreadDFS -> cutOnSolvedSingleThreadDFS
-      CutNothing         -> id
-      CutAfterSorry      -> cutAfterFirstSorry
-
     -- | The standard automatic prover that ignores the existing proof and
     -- tries to find one by itself.
     autoProver :: Prover
@@ -886,15 +883,8 @@ runAutoDiffProverWith :: ProofStateRetention -> AutoProver -> DiffProver
 runAutoDiffProverWith PersistProofStates _ =
     error "disk persistence is not supported for diff proofs"
 runAutoDiffProverWith retention aut@(AutoProver _ _ bound cut _) =
-    mapDiffProverDiffProof cutSolved $ maybe id boundProver bound autoProver
+    mapDiffProverDiffProof (extractDiffSolutions cut) $ maybe id boundProver bound autoProver
   where
-    cutSolved = case cut of
-      CutDFS             -> cutOnSolvedDFSDiff
-      CutBFS             -> cutOnSolvedBFSDiff
-      CutSingleThreadDFS -> cutOnSolvedSingleThreadDFSDiff
-      CutAfterSorry      -> cutAfterFirstSorryDiff
-      CutNothing         -> id
-
     -- | The standard automatic prover that ignores the existing proof and
     -- tries to find one by itself.
     autoProver :: DiffProver
@@ -906,6 +896,72 @@ runAutoDiffProverWith retention aut@(AutoProver _ _ bound cut _) =
     boundProver b p = DiffProver $ \ctxt d se prf ->
         boundDiffProofDepth b <$> runDiffProver p ctxt d se prf
 
+
+-- | Extend the sorry cases of a replayed proof. When only one trace is
+-- requested, prefer an existing checked witness to searching unfinished cases.
+runAutoProverOnSorries :: AutoProver -> Prover
+runAutoProverOnSorries = runAutoProverOnSorriesWith RetainProofStates
+
+runAutoProverOnSorriesWith :: ProofStateRetention -> AutoProver -> Prover
+runAutoProverOnSorriesWith retention aut = Prover $ \ctxt d se prf ->
+    savedWitness (apCut aut) proofStepStatus prf `mplus`
+      runProver extend ctxt d se prf
+  where
+    -- Search sorry cases lazily and select a witness from the combined proof.
+    -- Finishing each case first could hang despite a witness elsewhere.
+    -- Stop-at-sorry instead applies within each replacement, to avoid
+    -- discarding a saved witness in a later case.
+    extend
+      | apCut aut == CutAfterSorry = replaceSorryProver $ runAutoProverWith retention aut
+      | otherwise = mapProverProof (extractSolutions (apCut aut)) $
+          replaceSorryProver $ runAutoProverWith retention aut { apCut = CutNothing }
+
+-- | Diff-proof counterpart of 'runAutoProverOnSorries'.
+runAutoDiffProverOnSorries :: AutoProver -> DiffProver
+runAutoDiffProverOnSorries = runAutoDiffProverOnSorriesWith RetainProofStates
+
+runAutoDiffProverOnSorriesWith :: ProofStateRetention -> AutoProver -> DiffProver
+runAutoDiffProverOnSorriesWith retention aut = DiffProver $ \ctxt d se prf ->
+    savedWitness (apCut aut) diffProofStepStatus prf `mplus`
+      runDiffProver extend ctxt d se prf
+  where
+    extend
+      | apCut aut == CutAfterSorry = replaceDiffSorryProver $ runAutoDiffProverWith retention aut
+      | otherwise = mapDiffProverDiffProof (extractDiffSolutions (apCut aut)) $
+          replaceDiffSorryProver $ runAutoDiffProverWith retention aut { apCut = CutNothing }
+
+-- | Keep the path to the first checked witness in case order.
+-- This can force replay of preceding cases; fallback search reuses those checks.
+-- Omit siblings so printing does not force their replay afterwards.
+savedWitness :: SolutionExtractor -> (a -> ProofStatus) -> LTree l a -> Maybe (LTree l a)
+savedWitness cut status
+  | cut `notElem` [CutDFS, CutBFS, CutSingleThreadDFS] = const Nothing
+  | otherwise = go
+  where
+    go (LNode step cases) = case status step of
+      UndeterminedProof -> Nothing
+      TraceFound -> Just $ LNode step M.empty
+      _ -> listToMaybe [LNode step (M.singleton name witness)
+                      | (name, child) <- M.toList cases
+                      , Just witness <- [go child]]
+
+-- | Keep only the part of a proof that the solution extractor selects.
+extractSolutions :: SolutionExtractor -> Proof (Maybe a) -> Proof (Maybe a)
+extractSolutions cut = case cut of
+    CutDFS             -> cutOnSolvedDFS
+    CutBFS             -> cutOnSolvedBFS
+    CutSingleThreadDFS -> cutOnSolvedSingleThreadDFS
+    CutNothing         -> id
+    CutAfterSorry      -> cutAfterFirstSorry
+
+-- | Keep only the part of a diff proof that the solution extractor selects.
+extractDiffSolutions :: SolutionExtractor -> DiffProof (Maybe a) -> DiffProof (Maybe a)
+extractDiffSolutions cut = case cut of
+    CutDFS             -> cutOnSolvedDFSDiff
+    CutBFS             -> cutOnSolvedBFSDiff
+    CutSingleThreadDFS -> cutOnSolvedSingleThreadDFSDiff
+    CutAfterSorry      -> cutAfterFirstSorryDiff
+    CutNothing         -> id
 
 -- | The result of one pass of iterative deepening.
 data IterDeepRes = NoSolution | MaybeNoSolution | Solution ProofPath

@@ -1,0 +1,31 @@
+{
+  "tests": [
+    {
+      "name": "prove-saved-diff",
+      "args": [
+        "--diff",
+        "--prove"
+      ],
+      "timeout": 60,
+      "contains": [
+        "RHS :  got_enc (exists-trace): verified (6 steps)",
+        "LHS :  got_enc (exists-trace): verified (6 steps)",
+        "DiffLemma:  Observational_equivalence : falsified - found trace (7 steps)"
+      ]
+    },
+    {
+      "name": "retain-later-saved-attack",
+      "args": [
+        "--diff",
+        "--prove",
+        "--stop-on-trace=sorry",
+        "--bound=0"
+      ],
+      "contains": [
+        "RHS :  got_enc (exists-trace): verified",
+        "LHS :  got_enc (exists-trace): verified",
+        "DiffLemma:  Observational_equivalence : falsified - found trace"
+      ]
+    }
+  ]
+}

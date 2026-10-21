@@ -1,0 +1,15 @@
+{
+  "tests": [
+    {
+      "name": "issue905-undeclared-em",
+      "args": [
+        "--parse-only"
+      ],
+      "exit_code": 1,
+      "contains": [
+        "unexpected \"(\""
+      ],
+      "timeout": 60
+    }
+  ]
+}

@@ -5,6 +5,7 @@ dist-newstyle
 cabal-dev
 testbed
 case-studies/**/*.spthy
+case-studies/command-tests/
 case-studies/**/system.info
 case-studies-regression/fast-tests/system.info
 case-studies-sapic

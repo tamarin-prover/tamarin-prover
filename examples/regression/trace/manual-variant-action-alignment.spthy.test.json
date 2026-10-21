@@ -1,0 +1,150 @@
+{
+  "tests": [
+    {
+      "name": "alignment-roundtrip",
+      "args": [
+        "--quit-on-warning"
+      ],
+      "checks": [
+        "roundtrip",
+        "partial-evaluation"
+      ],
+      "timeout": 15
+    },
+    {
+      "name": "reject-late-conflict",
+      "args": [
+        "-DLATE_CONFLICT",
+        "--quit-on-warning"
+      ],
+      "exit_code": 1,
+      "contains": [
+        "cannot confirm manual variants",
+        "Unsupported rule semantics - aborting before proof search."
+      ],
+      "timeout": 15
+    },
+    {
+      "name": "reject-missing-action",
+      "args": [
+        "-DMISSING_ACTION",
+        "--quit-on-warning"
+      ],
+      "exit_code": 1,
+      "contains": [
+        "cannot confirm manual variants",
+        "Unsupported rule semantics - aborting before proof search."
+      ],
+      "timeout": 15
+    },
+    {
+      "name": "reject-ac-conflict",
+      "args": [
+        "-DAC_CONFLICT",
+        "--quit-on-warning"
+      ],
+      "exit_code": 1,
+      "contains": [
+        "cannot confirm manual variants",
+        "Unsupported rule semantics - aborting before proof search."
+      ],
+      "timeout": 15
+    },
+    {
+      "name": "pinned-ac-alignment",
+      "args": [
+        "-DPINNED_AC",
+        "--precompute-only",
+        "--quit-on-warning"
+      ],
+      "timeout": 15
+    },
+    {
+      "name": "complete-ac-backtracking",
+      "args": [
+        "-DAC_BACKTRACK",
+        "--precompute-only",
+        "--quit-on-warning"
+      ],
+      "timeout": 15
+    },
+    {
+      "name": "late-pinned-ac-alignment",
+      "args": [
+        "-DLATE_PINNED_AC",
+        "--precompute-only",
+        "--quit-on-warning"
+      ],
+      "timeout": 15
+    },
+    {
+      "name": "reject-reordered-pins",
+      "args": [
+        "-DREORDERED_PINS",
+        "--precompute-only",
+        "--quit-on-warning"
+      ],
+      "exit_code": 1,
+      "contains": [
+        "cannot confirm manual variants",
+        "Unsupported rule semantics - aborting before proof search."
+      ],
+      "timeout": 15
+    },
+    {
+      "name": "propagate-ordered-bindings",
+      "args": [
+        "-DPROPAGATION",
+        "--precompute-only",
+        "--quit-on-warning"
+      ],
+      "timeout": 15
+    },
+    {
+      "name": "reject-impossible-action-order",
+      "args": [
+        "-DIMPOSSIBLE_ORDER",
+        "--precompute-only",
+        "--quit-on-warning"
+      ],
+      "timeout": 15,
+      "exit_code": 1,
+      "contains": [
+        "cannot confirm manual variants",
+        "Unsupported rule semantics - aborting before proof search."
+      ]
+    },
+    {
+      "name": "accept-ordered-extra-actions",
+      "args": [
+        "-DORDERED_EXTRA_ACTIONS",
+        "--precompute-only",
+        "--quit-on-warning"
+      ],
+      "timeout": 15
+    },
+    {
+      "name": "ac-variable-sharing",
+      "args": [
+        "-DAC_VARIABLE_SHARING",
+        "--precompute-only",
+        "--quit-on-warning"
+      ],
+      "timeout": 15
+    },
+    {
+      "name": "reject-ac-nonlinear-alignment",
+      "args": [
+        "-DAC_NONLINEAR",
+        "--precompute-only",
+        "--quit-on-warning"
+      ],
+      "exit_code": 1,
+      "contains": [
+        "cannot confirm manual variants",
+        "Unsupported rule semantics - aborting before proof search."
+      ],
+      "timeout": 15
+    }
+  ]
+}

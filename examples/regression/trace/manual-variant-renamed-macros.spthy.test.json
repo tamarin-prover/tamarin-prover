@@ -1,0 +1,27 @@
+{
+  "tests": [
+    {
+      "name": "renamed-macro-verdicts",
+      "args": [
+        "--prove",
+        "--quit-on-warning"
+      ],
+      "contains": [
+        "witness (exists-trace): verified",
+        "false_safety (all-traces): falsified"
+      ]
+    },
+    {
+      "name": "incomplete-rejection",
+      "args": [
+        "--prove",
+        "-DINCOMPLETE"
+      ],
+      "exit_code": 1,
+      "contains": [
+        "cannot confirm manual variants:",
+        "Unsupported rule semantics - aborting before proof search."
+      ]
+    }
+  ]
+}

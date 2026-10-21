@@ -456,12 +456,18 @@ lemmaSelector thyOpts lem
 data TheoryLoadError
   = ParserError ParseError
   | WarningError WfErrorReport
+  -- ^ Wellformedness warnings under --quit-on-warning.
+  | UnsupportedInputError WfErrorReport
+  -- ^ Rule input outside the supported fragment, for which proof search can
+  --   return a wrong verdict. Raised independently of --quit-on-warning, and
+  --   only when a theory is closed for proving.
   | StoreContextError String
   | ExportTranslationError Export.ExportError
 
 instance Show TheoryLoadError where
   show (ParserError e) = show e
   show (WarningError e) = Pretty.render (prettyWfErrorReport e)
+  show (UnsupportedInputError e) = Pretty.render (prettyWfErrorReport e)
   show (StoreContextError e) = e
   show (ExportTranslationError e) = e.exportErrorCode ++ ": " ++ e.exportErrorMessage
 
@@ -578,16 +584,25 @@ checkCloseIntrRuleDiff sign name diffThy = if deductionChainCheckBool then (sigW
 -- | Perform wellformedness and deducability checks on a theory.
 checkTranslatedTheory ::
   (MonadIO m, MonadError TheoryLoadError m) =>
+  Bool ->
+  -- ^ Reject unsupported rule input. Export-only modes report it as a
+  --   warning instead, since no verdict is computed.
   TheoryLoadOptions ->
   SignatureWithMaude ->
   Either OpenTranslatedTheory OpenDiffTheory ->
   m (WfErrorReport, SignatureWithMaude, Either OpenTranslatedTheory OpenDiffTheory)
-checkTranslatedTheory thyOpts sign thy = do
+checkTranslatedTheory rejectUnsupported thyOpts sign thy = do
   let transReport =
         either
           (\openThy -> checkWellformedness incompleteMSRs openThy sign)
           (`checkWellformednessDiff` sign)
           thy
+
+  -- Reject known unsound inputs before derivation checking or closing can use
+  -- their supplied rules. This is independent of the general warning policy.
+  let fatalReport = fatalWfErrors transReport
+  when (rejectUnsupported && not (null fatalReport))
+    (throwError $ UnsupportedInputError fatalReport)
 
   deducThy0 <- bitraverse (\x -> return ((addMessageDeductionRuleVariants x) `runReader` (mh)))
                           (\x -> return ((addMessageDeductionRuleVariantsDiff x) `runReader` (mh))) thy
@@ -765,11 +780,11 @@ closeTranslatedTheory thyOpts sign srcThy = do
       | otherwise = thyOpts.proofStateRetention
 
     prover
-      | thyOpts.proveMode = replaceSorryProver $ runAutoProverWith retention $ constructAutoProver thyOpts
+      | thyOpts.proveMode = runAutoProverOnSorriesWith retention $ constructAutoProver thyOpts
       | otherwise = mempty
 
     diffProver
-      | thyOpts.proveMode = replaceDiffSorryProver $ runAutoDiffProverWith thyOpts.proofStateRetention $ constructAutoProver thyOpts
+      | thyOpts.proveMode = runAutoDiffProverOnSorriesWith thyOpts.proofStateRetention $ constructAutoProver thyOpts
       | otherwise = mempty
 
     withDiffTheory = bitraverse pure
@@ -840,7 +855,7 @@ closeTheory ::
 closeTheory version loadedThyOpts sign srcThy = do
   (preReport, transThy) <- translateTheory thyOpts srcThy
   let removedThy = first removeTranslationItems transThy
-  (postReport, sign', checkedThy) <- checkTranslatedTheory thyOpts sign removedThy
+  (postReport, sign', checkedThy) <- checkTranslatedTheory True thyOpts sign removedThy
   closedThy <- closeTranslatedTheory thyOpts sign' checkedThy
   finalThy <- withVersionAndReport version thyOpts (preReport ++ postReport) closedThy
 
@@ -890,7 +905,7 @@ translateAndCheckTheory ::
 translateAndCheckTheory _version thyOpts sign srcThy = do
   (preReport, transThy) <- translateTheory thyOpts srcThy
   let removedThy = first removeTranslationItems transThy
-  (postReport, _, _) <- checkTranslatedTheory thyOpts sign removedThy
+  (postReport, _, _) <- checkTranslatedTheory False thyOpts sign removedThy
   finalThy <-
     case transThy of
       Left _ -> pure transThy

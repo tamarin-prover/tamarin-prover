@@ -29,7 +29,7 @@ import Web.Types (OutputCommand(..), OutputFormat(..))
 toolFlags :: [Flag Arguments]
 toolFlags =
   [ flagOpt "dot" ["with-dot"] (updateArg "withDot") "FILE" "Path to GraphViz 'dot' tool"
-  , flagOpt "json" ["with-json"] (updateArg "withJson") "FILE" "Path to JSON rendering tool (not working with --diff)"
+  , flagOpt "json" ["with-json"] (updateArg "withJson") "FILE" "Path to JSON rendering tool (--with-json is unavailable in --diff mode)"
   , flagOpt "maude" ["with-maude"] (updateArg "withMaude") "FILE" "Path to 'maude' rewriting tool"
   ]
 

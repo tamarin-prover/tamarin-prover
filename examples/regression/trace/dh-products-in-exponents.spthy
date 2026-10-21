@@ -1,0 +1,19 @@
+theory DHProductsInExponents
+begin
+builtins: diffie-hellman
+
+// Products in exponent positions remain supported. Cancellation can give
+// the neutral exponent, so this rule can emit Power('g').
+rule Power:
+  [ In(x), In(y) ] --[ Power('g'^(x*y)) ]-> []
+
+// Premise products under an exponent also get their cancelling variants.
+rule SeedPower:
+  [] --> [ SeededPower('g') ]
+
+rule MatchPower:
+  [ SeededPower('g'^(x*y)), In(x), In(y) ] --[ MatchedPower() ]-> []
+
+lemma power_neutral_exists: exists-trace "Ex #i. Power('g')@i"
+lemma power_premise_exists: exists-trace "Ex #i. MatchedPower()@i"
+end

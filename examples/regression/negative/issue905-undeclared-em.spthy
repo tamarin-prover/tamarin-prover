@@ -1,0 +1,5 @@
+// Regression for https://github.com/tamarin-prover/tamarin-prover/issues/905
+theory EmUndecl
+begin
+rule R: [ Fr(~s) ] --[ S(em(~s, 'a')) ]-> [ ]
+end

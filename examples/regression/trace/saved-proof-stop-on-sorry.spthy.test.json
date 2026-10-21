@@ -1,0 +1,15 @@
+{
+  "tests": [
+    {
+      "name": "retain-later-saved-trace",
+      "args": [
+        "--prove",
+        "--stop-on-trace=sorry",
+        "--bound=0"
+      ],
+      "contains": [
+        "got_enc (exists-trace): verified"
+      ]
+    }
+  ]
+}

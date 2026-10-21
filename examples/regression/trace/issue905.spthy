@@ -1,0 +1,11 @@
+// Regression for issue #905: user-declared em/3 is an ordinary function.
+theory Em3A
+begin
+functions: em/3
+
+rule Test:
+  [ ] --[ Test(em('g', 'h', 'k')) ]-> [ ]
+
+// The issue's formula used to crash when viewing a ternary EMap.
+lemma L1: "All #i. Test(em('g', 'h', 'k')) @ #i ==> F"
+end
