@@ -66,9 +66,12 @@ module Web.Handler
   )
 where
 
+import Theory.Constraint.Solver.Store
+  ( isStoreOpen, readMatchingProofRootMaybe, recordLemmaRoot, storeSystem )
 import Theory
   ( Theory(..), DiffTheory(..), ClosedTheory, ClosedDiffTheory, Side
   , ClosedTheory, ClosedDiffTheory, Side, Signature(..)
+  , SystemRef(..)
   , removeLemma
   , lookupLemmaIndex
   , addLemmaAtIndex
@@ -79,6 +82,8 @@ import Theory
   , openTheory
   , sorryProver
   , runAutoProver
+  , runAutoProverWith
+  , ProofStateRetention(..)
   , sorryDiffProver
   , runAutoDiffProver
   , prettyClosedTheory
@@ -99,6 +104,7 @@ import Theory
   , checkAndExtendProver
   , theoryRestrictions
   , Prover (runProver), unproven
+  , System
   )
 
 import Theory.Proof
@@ -108,6 +114,9 @@ import Theory.Proof
   , LTree(..)
   , ProofStep(..)
   , ProofMethod(..)
+  , IncrementalProof
+  , evictSystemsFromIncrementalProof
+  , proofSkeletonRef
   )
 
 import Web.Hamlet
@@ -209,6 +218,7 @@ editProof idx name = withTheory idx $ \ti -> do
             case maybe_nthy of
                 Nothing -> pure $ Left "Lemma editing failed"
                 Just nthy -> do
+                    storeInteractiveLemmaRoot n tq gsys lp
                     nidx <- replaceTheory (Just ti) Nothing nthy ("modified" ++ show idx) idx
                     pure $ Right nidx
 
@@ -261,18 +271,48 @@ deleteLemma idx name = withTheory idx $ \ti -> do
 addLemma :: Int -> Maybe Int -> Lemma ProofSkeleton -> Handler (Either String TheoryIdx)
 addLemma idx maybelemmaIndex (Lemma n pt _ tq f ofm a lp) = withTheory idx $ \ti -> do
     let ctxt = getProofContext (Lemma n pt True tq f ofm a lp) ti.theory
-        preI = getLemmaPreItems n ti.theory
-        gsys = mkSystem ctxt (theoryRestrictions ti.theory) preI f
     case formulaToGuarded f of
         Left d -> pure $ Left $ render d
         Right _ ->
             case maybelemmaIndex of
                 Nothing -> pure $ Left "Lemma not found"
                 Just lemmaIndex -> do
-                    let newThy = addLemmaAtIndex (Lemma n pt True tq f ofm a $ unproven (Just gsys)) lemmaIndex ti.theory
+                    -- Use the items before the insertion point, just as a
+                    -- fresh load does. The GUI and snapshot need the same root.
+                    let precedingItems = take lemmaIndex ti.theory._thyItems
+                        restrictions = theoryRestrictions ti.theory
+                        lemmaRootSystem = mkSystem ctxt restrictions precedingItems f
+                        newProof = unproven (Just (InMem lemmaRootSystem))
+                        newThy = addLemmaAtIndex (Lemma n pt True tq f ofm a newProof) lemmaIndex ti.theory
                     case newThy of
                          Nothing -> pure $ Left "lemma editing failed"
-                         (Just nthy) -> Right <$> replaceTheory (Just ti) Nothing nthy ("modified" ++ show idx) idx
+                         (Just nthy) -> do
+                             storeInteractiveLemmaRoot n tq lemmaRootSystem newProof
+
+                             Right <$> replaceTheory (Just ti) Nothing nthy ("modified" ++ show idx) idx
+
+storeInteractiveLemmaRoot :: String -> TraceQuantifier -> System -> IncrementalProof -> Handler ()
+storeInteractiveLemmaRoot lemmaName traceQuantifier lemmaRootSystem lemmaProof = do
+    storeOpen <- liftIO isStoreOpen
+    if storeOpen
+      then liftIO $ do
+        lemmaRootRef <- storeSystem lemmaRootSystem
+
+        let systemTraceQuantifier = toSystemTraceQuantifier traceQuantifier
+            inputProofRef = proofSkeletonRef lemmaProof
+
+        recordLemmaRoot lemmaName systemTraceQuantifier lemmaRootRef
+                                 inputProofRef
+
+        storedProof <- readMatchingProofRootMaybe lemmaName lemmaRootRef inputProofRef
+
+        case storedProof of
+          Just _ -> pure ()
+          Nothing -> do
+            _ <- evictSystemsFromIncrementalProof lemmaName lemmaProof
+
+            pure ()
+      else pure ()
 
 -- | Deletes, adds or modifies a lemma depending on the path
 editLemma :: Int -> TheoryPath -> Lemma ProofSkeleton -> Handler (Either String TheoryIdx)
@@ -412,6 +452,9 @@ reloadTheoryFromFile filePath idx isDiff replaceTrace replaceDiff successRoute =
   case result of
     Left (ParserError e) ->
       mkAlert $ "Parse error while reloading " ++ typeName ++ ":\n\n" ++ filePath ++ "\n\n" ++ show e
+
+    Left (StoreContextError message) ->
+      mkAlert $ "Unable to reload " ++ typeName ++ ":\n\n" ++ message
     
     Left (WarningError report) -> mkAlert $ "Wellformedness errors while reloading " ++ typeName ++ ":\n\n"
       ++ filePath ++ "\n\n" ++
@@ -494,8 +537,16 @@ loadAndCloseTheory srcContent filePath = do
     let sig = either (._thySignature) (._diffThySignature) openThy
     sig' <- liftIO $ toSignatureWithMaude yesod.thyOpts.maudePath sig
     (report, closedThy) <- yesod.closeThy sig' openThy
+
+    -- Record lemma roots and restore stored proofs, as on the initial load.
+    restoredThy <- case closedThy of
+      Left theory -> do
+        restoredTheory <- liftIO (restoreLemmaProofs theory)
+        pure (Left restoredTheory)
+      Right diffTheory -> pure (Right diffTheory)
+
     let wfErrors = makeWfErrorsHtml report
-    pure (report, closedThy, wfErrors)
+    pure (report, restoredThy, wfErrors)
 
 -- | Delete theory.
 delTheory :: TheoryIdx -> Handler ()
@@ -1082,7 +1133,7 @@ getTheoryPathMR idx path = do
     where
         go:: RenderUrl -> TheoryPath -> TheoryInfo -> HandlerFor WebUI Value
         go _ (TheoryMethod lemma proofPath i) ti = modifyTheory ti
-            (\thy -> pure $ applyMethodAtPath thy lemma proofPath ti.autoProver i)
+            (\thy -> evictSystemsFromLemmas (Just lemma) (applyMethodAtPath thy lemma proofPath ti.autoProver i))
             (\thy -> nextSmartThyPath thy (TheoryProof lemma proofPath))
             (JsonAlert "Sorry, but the prover failed on the selected method!")
 
@@ -1134,7 +1185,8 @@ getProverR (name, mkProver) idx path = do
   pure $ RepJson $ toContent jsonValue
   where
     go (TheoryProof lemma proofPath) ti = modifyTheory ti
-        (\thy -> pure $ applyProverAtPath thy lemma proofPath autoProver)
+        (\thy -> evictSystemsFromLemmas (Just lemma)
+                   (applyProverAtPath thy lemma proofPath autoProver))
         (`nextSmartThyPath` path)
         (JsonAlert $ "Sorry, but " <> name <> " failed!")
       where
@@ -1158,7 +1210,10 @@ getProverAllR (name, mkProver) idx = do
       where
         names thy = (._lName) <$> getLemmas thy
         autoProver = mkProver ti.autoProver
-        proveAll thy = pure $ foldM (\tha lemma -> applyProverAtPath tha lemma [] autoProver) thy $ names thy
+        proveAll thy = evictSystemsFromLemmas Nothing $
+          foldM (\tha lemma -> applyProverAtPath tha lemma [] autoProver)
+                thy
+                (names thy)
 
 -- | Run the some prover on a given proof path.
 getProverDiffR
@@ -1238,8 +1293,10 @@ getAutoProverR
   -> Bool  -- Quit on empty oracle
   -> TheoryPath
   -> Handler RepJson
-getAutoProverR idx extractor bound quitOnEmpty =
-  getProverR (fullName, runAutoProver . adapt) idx
+getAutoProverR idx extractor bound quitOnEmpty path = do
+  persistent <- liftIO isStoreOpen
+  let retention = if persistent then PersistProofStates else RetainProofStates
+  getProverR (fullName, runAutoProverWith retention . adapt) idx path
   where
     adapt autoProver = autoProver
       { apBound = actualBound
@@ -1268,8 +1325,10 @@ getAutoProverAllR
   -> Int  -- autoprover bound to use
   -> TheoryPath
   -> Handler RepJson
-getAutoProverAllR idx extractor bound _ =
-  getProverAllR (fullName, runAutoProver . adapt) idx
+getAutoProverAllR idx extractor bound _ = do
+  persistent <- liftIO isStoreOpen
+  let retention = if persistent then PersistProofStates else RetainProofStates
+  getProverAllR (fullName, runAutoProverWith retention . adapt) idx
   where
     adapt autoProver = autoProver { apBound = actualBound, apCut = extractor }
 
@@ -1695,7 +1754,7 @@ getDeleteStepR idx path = do
       (JsonAlert "Sorry, but removing the selected lemma failed!")
 
     go (TheoryProof lemma proofPath) ti = modifyTheory ti
-      (\thy -> pure $
+      (\thy -> evictSystemsFromLemmas (Just lemma) $
           applyProverAtPath thy lemma proofPath (sorryProver (Just "removed")))
       (const path)
       (JsonAlert "Sorry, but removing the selected proof step failed!")

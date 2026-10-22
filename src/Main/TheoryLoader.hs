@@ -46,7 +46,7 @@ import Data.Char (toLower)
 import Data.FileEmbed (embedFile)
 import Data.Function (on)
 import Data.Map (keys)
-import Data.Maybe (fromMaybe, isNothing)
+import Data.Maybe (fromMaybe, isJust, isNothing)
 import Data.Set qualified
 import Debug.Trace
 import Data.List (isPrefixOf, intercalate, find, groupBy, sortOn)
@@ -65,6 +65,15 @@ import Text.Parsec (ParseError)
 import Text.Read (readEither)
 import Theory hiding (closeTheory, transReport)
 import Theory.Module
+import Theory.Constraint.Solver.Store
+  ( Kind (KTheoryContext),
+    Ref,
+    readMatchingProofRootMaybe,
+    recordLemmaRoot,
+    setTheoryContext,
+    storeSystem,
+    valueRef,
+  )
 import Theory.Text.Parser (diffTheory, parseIntruderRules, theory)
 import Theory.Text.Parser.Token
 import Theory.Text.Pretty qualified as Pretty
@@ -80,7 +89,7 @@ import Theory.Tools.IntruderRules
   )
 import Theory.Tools.MessageDerivationChecks
 import Theory.Tools.Wellformedness
-import TheoryObject (diffTheoryConfigBlock, theoryConfigBlock, theoryConfigBlock, deductionChainCheck)
+import TheoryObject (diffTheoryConfigBlock, theoryConfigBlock, theoryConfigBlock, deductionChainCheck, toSystemTraceQuantifier)
 
 ------------------------------------------------------------------------------
 -- Theory loading: shared between interactive and batch mode
@@ -93,7 +102,12 @@ import TheoryObject (diffTheoryConfigBlock, theoryConfigBlock, theoryConfigBlock
 -- | Flags for loading a theory.
 theoryLoadFlags :: [Flag Arguments]
 theoryLoadFlags =
-  [ flagOpt
+  [ flagReq
+      ["persist-proof-state"]
+      (updateArg "persistProofState")
+      "DIR"
+      "store expanded proof systems in DIR/store.bin and drop them from memory (see --persist-proof-state-json)",
+    flagOpt
       ""
       ["prove"]
       (updateArg "prove")
@@ -223,6 +237,7 @@ theoryLoadFlags =
 
 data TheoryLoadOptions = TheoryLoadOptions
   { proveMode :: Bool,
+    proofStateRetention :: ProofStateRetention, -- Internal policy; not a command-line option.
     lemmaNames :: [String],
     stopOnTrace :: Maybe SolutionExtractor,
     proofBound :: Maybe Int,
@@ -247,7 +262,8 @@ data TheoryLoadOptions = TheoryLoadOptions
     ndcCheck :: Bool, -- ^ Whether to run the no deconstruction chain (NDC) check (enabled by default).
     noMultiset :: Bool,
     noPrecise :: Bool,
-    replicationBound :: Int
+    replicationBound :: Int,
+    persistProofStateDir :: Maybe FilePath -- ^ --persist-proof-state: spill+drop systems during the search
   }
   deriving (Show)
 
@@ -255,6 +271,7 @@ defaultTheoryLoadOptions :: TheoryLoadOptions
 defaultTheoryLoadOptions =
   TheoryLoadOptions
     { proveMode = False,
+      proofStateRetention = RetainProofStates,
       lemmaNames = [],
       stopOnTrace = Nothing,
       proofBound = Nothing,
@@ -279,7 +296,8 @@ defaultTheoryLoadOptions =
       ndcCheck = True,
       noMultiset = False,
       noPrecise = False,
-      replicationBound = 3
+      replicationBound = 3,
+      persistProofStateDir = Nothing
     }
 
 toParserFlags :: TheoryLoadOptions -> [String]
@@ -296,6 +314,7 @@ mkTheoryLoadOptions :: (MonadError ArgumentError m) => Arguments -> m TheoryLoad
 mkTheoryLoadOptions as =
   TheoryLoadOptions
     <$> proveMode
+    <*> pure RetainProofStates
     <*> lemmaNames
     <*> stopOnTrace as
     <*> proofBound
@@ -321,9 +340,12 @@ mkTheoryLoadOptions as =
     <*> noMultiset
     <*> noPrecise
     <*> replicationBound
+    <*> persistProofStateDir
   where
     proveMode = pure $ argExists "prove" as
     lemmaNames = pure $ findArg "prove" as ++ findArg "lemma" as
+
+    persistProofStateDir = pure (findArg "persistProofState" as :: Maybe FilePath)
 
     parseIntArg args defaultValue conv errMsg = case args of
       [] -> pure defaultValue
@@ -439,12 +461,14 @@ data TheoryLoadError
   -- ^ Rule input outside the supported fragment, for which proof search can
   --   return a wrong verdict. Raised independently of --quit-on-warning, and
   --   only when a theory is closed for proving.
+  | StoreContextError String
   | ExportTranslationError Export.ExportError
 
 instance Show TheoryLoadError where
   show (ParserError e) = show e
   show (WarningError e) = Pretty.render (prettyWfErrorReport e)
   show (UnsupportedInputError e) = Pretty.render (prettyWfErrorReport e)
+  show (StoreContextError e) = e
   show (ExportTranslationError e) = e.exportErrorCode ++ ": " ++ e.exportErrorMessage
 
 -- | Load an open theory from a string with the given options.
@@ -684,7 +708,7 @@ withVersionAndReport version thyOpts report thy = do
 
 -- | Close a translated theory.
 closeTranslatedTheory
-  :: (MonadError TheoryLoadError m)
+  :: (MonadIO m, MonadError TheoryLoadError m)
   => TheoryLoadOptions
   -> SignatureWithMaude
   -> Either OpenTranslatedTheory OpenDiffTheory
@@ -704,11 +728,43 @@ closeTranslatedTheory thyOpts sign srcThy = do
               (applyPartialEvaluationDiff style autoSources)
               closedThy
           Nothing -> closedThy
-      provedThy =
+
+  evictionContextMatches <- case thyOpts.persistProofStateDir of
+      Nothing ->
+        pure True
+      Just _ -> case partialThy of
+        Left closedTheory ->
+          liftIO $ setTheoryContext (theoryContextFingerprint thyOpts closedTheory)
+        Right _ ->
+          throwError $ StoreContextError
+            "--persist-proof-state is not supported for diff theories"
+
+  unless evictionContextMatches $
+    throwError $ StoreContextError
+      "eviction store belongs to a different theory; use a fresh --persist-proof-state directory"
+
+  if thyOpts.proveMode && isJust thyOpts.persistProofStateDir
+    then case partialThy of
+      Left closedTheory -> do
+        let selectedLemmas = filter selector (theoryLemmas closedTheory)
+        liftIO (mapM_ storeLemmaRootAndInputProof selectedLemmas)
+      Right _ -> pure ()
+    else pure ()
+
+  let provedThy =
         bimap
           (proveTheory selector prover)
           (proveDiffTheory selector prover diffProver)
           partialThy
+
+  -- Store the proofs as they will be printed, so a restore gives them back exactly.
+  if thyOpts.proveMode && isJust thyOpts.persistProofStateDir
+    then case provedThy of
+      Left provedTheory -> do
+        let selectedLemmas = filter selector (theoryLemmas provedTheory)
+        liftIO (mapM_ storeProvedProof selectedLemmas)
+      Right _ -> pure ()
+    else pure ()
 
   traceM ("[Theory " ++ theoryName srcThy ++ "] Theory closed")
 
@@ -719,17 +775,74 @@ closeTranslatedTheory thyOpts sign srcThy = do
     selector :: (HasLemmaName l, HasLemmaAttributes l) => l -> Bool
     selector l = lemmaSelectorByModule thyOpts l && lemmaSelector thyOpts l
 
+    retention
+      | isJust thyOpts.persistProofStateDir = PersistProofStates
+      | otherwise = thyOpts.proofStateRetention
+
     prover
-      | thyOpts.proveMode = runAutoProverOnSorries $ constructAutoProver thyOpts
+      | thyOpts.proveMode = runAutoProverOnSorriesWith retention $ constructAutoProver thyOpts
       | otherwise = mempty
 
     diffProver
-      | thyOpts.proveMode = runAutoDiffProverOnSorries $ constructAutoProver thyOpts
+      | thyOpts.proveMode = runAutoDiffProverOnSorriesWith thyOpts.proofStateRetention $ constructAutoProver thyOpts
       | otherwise = mempty
 
     withDiffTheory = bitraverse pure
 
     theoryName = either (._thyName) (._diffThyName)
+
+storeLemmaRootAndInputProof :: Lemma IncrementalProof -> IO ()
+storeLemmaRootAndInputProof lemma = do
+  let lemmaName = lemma._lName
+  let lemmaProof = lemma._lProof
+  let rootProofStep = root lemmaProof
+  let traceQuantifier = toSystemTraceQuantifier lemma._lTraceQuantifier
+
+  case psInfo rootProofStep of
+    Just (InMem lemmaRootSystem) -> do
+      lemmaRootRef <- storeSystem lemmaRootSystem
+
+      let inputProofRef = proofSkeletonRef lemmaProof
+
+      recordLemmaRoot lemmaName traceQuantifier lemmaRootRef inputProofRef
+
+      storedProof <- readMatchingProofRootMaybe lemmaName lemmaRootRef inputProofRef
+
+      if isJust storedProof
+        then pure ()
+        else do
+          _ <- evictSystemsFromIncrementalProof lemmaName lemmaProof
+
+          pure ()
+    _ -> fail ("Expected an in-memory root system for lemma " ++ lemmaName)
+
+-- | Make a proved lemma's proof its current stored proof.
+storeProvedProof :: Lemma IncrementalProof -> IO ()
+storeProvedProof lemma = do
+  let lemmaName = lemma._lName
+      lemmaProof = lemma._lProof
+
+  _ <- evictSystemsFromIncrementalProof lemmaName lemmaProof
+
+  pure ()
+
+-- | Fingerprint everything a stored proof step's validity depends on. Lemma
+-- formulas are checked separately through their root-system references.
+theoryContextFingerprint :: TheoryLoadOptions -> ClosedTheory -> Ref
+theoryContextFingerprint thyOpts closedTheory =
+  valueRef KTheoryContext
+    ( "theory-context-v1" :: String
+    , ruleCache._crcRules
+    , ruleCache._crcRawSources
+    , ruleCache._crcRefinedSources
+    , ruleCache._crcInjectiveFactInsts
+    , toSignaturePure closedTheory._thySignature
+    , constructAutoProver thyOpts
+    , closedTheory._thyHeuristic
+    , closedTheory._thyTactic
+    )
+  where
+    ruleCache = closedTheory._thyCache
 
 -- | Translate an open theory, perform checks on the translated theory and finally close it.
 closeTheory ::
