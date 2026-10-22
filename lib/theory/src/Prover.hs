@@ -84,10 +84,10 @@ closeDiffTheoryWithMaude sig thy0 autoSources =
     parameters = Sources.IntegerParameters (L.get (openChainsLimit . diffThyOptions) thy0) (L.get (saturationLimit . diffThyOptions) thy0) True
     h              = L.get diffThyHeuristic thy0
     t              = L.get diffThyTactic thy0
-    diffCacheLeft  its = closeRuleCache parameters restrictionsLeft  (typAsms its) S.empty sig (leftClosedRules its)  (L.get diffThyDiffCacheLeft  thy0) (L.get (verboseOption . diffThyOptions) thy0) True (L.get diffThyIsSapic thy0)
-    diffCacheRight its = closeRuleCache parameters restrictionsRight (typAsms its) S.empty sig (rightClosedRules its) (L.get diffThyDiffCacheRight thy0) (L.get (verboseOption . diffThyOptions) thy0) True (L.get diffThyIsSapic thy0)
-    cacheLeft  its = closeRuleCache parameters restrictionsLeft  (typAsms its) S.empty sig (leftClosedRules its)  (L.get diffThyCacheLeft  thy0) (L.get (verboseOption . diffThyOptions) thy0) False (L.get diffThyIsSapic thy0)
-    cacheRight its = closeRuleCache parameters restrictionsRight (typAsms its) S.empty sig (rightClosedRules its) (L.get diffThyCacheRight thy0) (L.get (verboseOption . diffThyOptions) thy0) False (L.get diffThyIsSapic thy0)
+    diffCacheLeft  its = closeRuleCache parameters restrictionsLeft  (typAsms LHS its) S.empty sig (leftClosedRules its)  (L.get diffThyDiffCacheLeft  thy0) (L.get (verboseOption . diffThyOptions) thy0) True (L.get diffThyIsSapic thy0)
+    diffCacheRight its = closeRuleCache parameters restrictionsRight (typAsms RHS its) S.empty sig (rightClosedRules its) (L.get diffThyDiffCacheRight thy0) (L.get (verboseOption . diffThyOptions) thy0) True (L.get diffThyIsSapic thy0)
+    cacheLeft  its = closeRuleCache parameters restrictionsLeft  (typAsms LHS its) S.empty sig (leftClosedRules its)  (L.get diffThyCacheLeft  thy0) (L.get (verboseOption . diffThyOptions) thy0) False (L.get diffThyIsSapic thy0)
+    cacheRight its = closeRuleCache parameters restrictionsRight (typAsms RHS its) S.empty sig (rightClosedRules its) (L.get diffThyCacheRight thy0) (L.get (verboseOption . diffThyOptions) thy0) False (L.get diffThyIsSapic thy0)
 
     checkProofM = checkAndExtendProver (sorryProver Nothing)
     checkDiffProof = checkAndExtendDiffProver (sorryDiffProver Nothing)
@@ -111,8 +111,10 @@ closeDiffTheoryWithMaude sig thy0 autoSources =
       DiffRuleItem
       (EitherRuleItem . closeEitherProtoRule hnd)
       (DiffLemmaItem . fmap skeletonToIncrementalDiffProof)
-      (\(s, l) -> EitherLemmaItem (s, fmap skeletonToIncrementalProof l))
-      EitherRestrictionItem
+      (\(s, l) -> EitherLemmaItem
+          (s, fmap skeletonToIncrementalProof $ applyMacroInLemma (diffTheoryMacros thy0) l))
+      (\(s, r) -> EitherRestrictionItem
+          (s, applyMacroInRestriction (diffTheoryMacros thy0) r))
       DiffMacroItem
       DiffTextItem
       DiffConfigBlockItem
@@ -144,9 +146,11 @@ closeDiffTheoryWithMaude sig thy0 autoSources =
                            return $ formulaToGuarded_ $ L.get rstrFormula rstr
     restrictionsRight = do EitherRestrictionItem (RHS, rstr) <- items
                            return $ formulaToGuarded_ $ L.get rstrFormula rstr
-    typAsms its = do EitherLemmaItem (_, lem) <- its
-                     guard (isSourceLemma lem)
-                     return $ formulaToGuarded_ $ L.get lFormula lem
+    typAsms side its = do
+      EitherLemmaItem (lemmaSide, lem) <- its
+      guard (side == lemmaSide)
+      guard (isSourceLemma lem)
+      return $ formulaToGuarded_ $ L.get lFormula lem
 
     -- extract protocol rules
     leftClosedRules  :: [DiffTheoryItem DiffProtoRule ClosedProtoRule IncrementalDiffProof s] -> [ClosedProtoRule]
@@ -225,6 +229,8 @@ mkSystemDiff s ctxt restrictions previousItems =
         guard $    lemmaSourceKind lem <= kind && s==s''
                 && ReuseLemma `elem` L.get lAttributes lem
                 && AllTraces == L.get lTraceQuantifier lem
+                && L.get lName lem `notElem` L.get pcHiddenLemmas ctxt
+                && "ALL" `notElem` L.get pcHiddenLemmas ctxt
         return $ formulaToGuarded_ $ L.get lFormula lem
 
 -- | Construct a diff constraint system.

@@ -22,6 +22,7 @@ module Theory.Constraint.Solver.ProofMethod (
   , execProofMethod
   , execDiffProofMethod
   , isFinished
+  , restrictionPreservationReason
 
   -- ** Heuristics
   , rankProofMethods
@@ -197,7 +198,7 @@ data Result =
   -- ^ A contradiction could be derived, possibly with a reason. The single
   --    formula constraint in the system.
   | Unfinishable
-  -- ^ The proof cannot be finished (due to reducible operators in subterms or
+  -- ^ The proof cannot be finished (due to unresolved subterm constraints or
   --   because a solution was found after weakening).
   deriving( Eq, Ord, Show, Generic, NFData, Binary )
 
@@ -218,7 +219,7 @@ data DiffProofMethod =
     DiffSorry (Maybe String)                 -- ^ Proof was not completed
   | DiffMirrored                             -- ^ No attack was found
   | DiffAttack                               -- ^ A potential attack was found
-  | DiffUnfinishable                         -- ^ The backward search is complete (but there are reducible operators in subterms)
+  | DiffUnfinishable                         -- ^ The backward search has unresolved subterm constraints
   | DiffRuleEquivalence                      -- ^ Consider all rules
   | DiffBackwardSearch                       -- ^ Do the backward search starting from a rule
   | DiffBackwardSearchStep ProofMethod       -- ^ A step in the backward search starting from a rule
@@ -254,20 +255,12 @@ checkAndExecProofMethod :: ProofContext -> ProofMethod -> System -> Maybe (M.Map
 checkAndExecProofMethod ctxt method sys = do
     case method of
       Finished r -> isFinished ctxt sys >>= guard . equalReason r
-      Induction -> canApplyInduction
+      Induction -> Just ()
       SolveGoal goal -> guard (goal `M.member` L.get sGoals sys)
       Simplify -> Just ()
       Sorry _ -> Just ()
     execProofMethod ctxt method sys
   where
-    canApplyInduction :: Maybe ()
-    canApplyInduction = do
-      guard (M.null $ L.get sNodes sys)
-      guard (S.null $ L.get sSolvedFormulas sys)
-      guard (M.null $ L.get sGoals sys)
-      (_, t) <- uncons $ S.toList $ L.get sFormulas sys
-      guard (null t)
-
     equalReason :: Result -> Result -> Bool
     equalReason (Contradictory _) (Contradictory _) = True
     equalReason r1 r2 = r1 == r2
@@ -319,10 +312,15 @@ execProofMethod ctxt method sys =
                 (solveWithSource ctxt ths goal)
 
     -- Induction is only possible if the system contains only
-    -- a single, last-free, closed formula.
+    -- a single, last-free, closed formula. Check here so automatic search and
+    -- saved-proof replay agree, including after simplification creates goals.
     getInductionCases :: System -> Maybe (LNGuarded, LNGuarded)
     getInductionCases s = do
-      (h, _) <- uncons $ S.toList $ L.get sFormulas s
+      guard (M.null $ L.get sNodes s)
+      guard (S.null $ L.get sSolvedFormulas s)
+      guard (M.null $ L.get sGoals s)
+      (h, t) <- uncons $ S.toList $ L.get sFormulas s
+      guard (null t)
       either (const Nothing) Just (ginduct h)
 
     induction :: (LNGuarded, LNGuarded) -> Reduction String
@@ -348,6 +346,15 @@ execDiffProofMethod :: DiffProofContext
                 -> DiffProofMethod -> DiffSystem -> Maybe (M.Map CaseName DiffSystem)
 execDiffProofMethod ctxt method sys =
   case method of
+    DiffSorry (Just reason) | reason == restrictionPreservationReason -> do
+      -- Closing this case as MIRRORED is unjustified when an opposite
+      -- restriction is neither local nor preserved. Stop here with
+      -- a reason: the compositional check cannot establish this restriction
+      -- for every mirrored trace from this dependency graph.
+      side <- mside
+      guard $ not $ null $ unsupportedDiffRestrictions ctxt (opposite side)
+      mirroredOnGraph
+      return M.empty
     DiffSorry _ -> return M.empty
     DiffBackwardSearch -> do
       guard (L.get dsProofType sys == Just RuleEquivalence)
@@ -362,29 +369,31 @@ execDiffProofMethod ctxt method sys =
       s <- L.get dsSide sys
       applyStep meth s =<< sequent
     DiffMirrored -> do
-      guard (L.get dsProofType sys == Just RuleEquivalence)
-      guard (isJust $ L.get dsCurrentRule sys)
-      msys' >>= guard . trivial
-      mallSubtermsFinished >>= guard
-      mirrorSyss <- mmirrorSyss
-      solved <- isSolved <$> mside <*> msys'
-      guard (fst (evaluateRestrictions ctxt sys mirrorSyss solved) == TTrue)
+      -- The mirrors are checked on this graph only. That establishes an
+      -- opposite restriction on the mirrored trace only if it is local, or
+      -- shared with all its actions preserved.
+      side <- mside
+      guard $ null $ unsupportedDiffRestrictions ctxt (opposite side)
+      mirroredOnGraph
       return M.empty
     DiffAttack -> do
       guard (L.get dsProofType sys == Just RuleEquivalence)
       guard (isJust $ L.get dsCurrentRule sys)
-      s <- L.get dsSide sys
-      solved <- isSolved <$> mside <*> msys'
-      sys' <- L.get dsSystem sys
-      notContradictory <- not . contradictorySystem (eitherProofContext ctxt s) <$> sequent
-      -- In the second case, the system is trivial, has no mirror and restrictions do not get in the way.
-      -- If we solve arbitrarily the last remaining trivial goals,
-      -- then there will be an attack.
-      guard (solved || (trivial sys' && notContradictory))
+      side <- mside
+      original <- msys'
+      let solved = isSolved side original
+      -- An attack requires a completed original trace. Even independent
+      -- trivial goals can have only producers that violate a restriction, so
+      -- their syntactic shape alone does not establish reachability. Open
+      -- attacker inputs are the exception: fresh public names complete them,
+      -- and the evaluator checks that completed instance.
+      guard (solved || openGoalsAreAttackerInputs original)
       allSubtermsFinished <- mallSubtermsFinished
       guard allSubtermsFinished
       mirrorSyss <- mmirrorSyss
-      guard (fst (evaluateRestrictions ctxt sys mirrorSyss solved) == TFalse)
+      -- The solved original already supplies an admitted witness. With no
+      -- mirrors, do not ask the partial evaluator to reprove its restrictions.
+      guard ((solved && null mirrorSyss) || fst (evaluateRestrictionsFor MirrorAttack (certifyOn side) ctxt sys mirrorSyss solved) == TFalse)
       return M.empty
     DiffRuleEquivalence -> do
       guard (isNothing $ L.get dsProofType sys)
@@ -398,6 +407,38 @@ execDiffProofMethod ctxt method sys =
       guard (not allSubtermsFinished)
       return M.empty
   where
+    -- The mirrors of this trivial graph satisfy the opposite restrictions.
+    mirroredOnGraph = do
+      guard (L.get dsProofType sys == Just RuleEquivalence)
+      guard (isJust $ L.get dsCurrentRule sys)
+      msys' >>= guard . trivial
+      mallSubtermsFinished >>= guard
+      side <- mside
+      mirrorSyss <- mmirrorSyss
+      solved <- isSolved side <$> msys'
+      -- A shared non-local conjunct whose actions are preserved holds on
+      -- the full mirror. Its witness need not occur in this dependency graph.
+      -- Keep unsupported conjuncts here (the diagnostic path uses this check
+      -- too), and keep every original restriction for admission checks.
+      let needsChecking f = classifyDiffRestriction ctxt (opposite side) f /= DiffPreserved
+          mirrorCtxt = L.modify dpcRestrictions
+            (map (\(s, fs) -> (s, if s == opposite side
+                then filter needsChecking (concatMap guardedConjuncts fs) else fs))) ctxt
+      guard (fst (evaluateRestrictionsFor MirrorCoverage (certifyOn side) mirrorCtxt sys mirrorSyss solved) == TTrue)
+
+    -- Specialization can activate reusable assumptions whose guards did not
+    -- match before. Ordinary simplification applies their consequences and
+    -- may split or reject the candidate. Unchanged is not rejection, and new
+    -- open obligations do not yet describe a completed attack witness.
+    certifyOn s original = map admission candidates
+      where
+        originalCtxt = eitherProofContext ctxt s
+        candidates = maybe [original] M.elems $
+          execProofMethod originalCtxt Simplify original
+        admission candidate = case isFinished originalCtxt candidate of
+          Just (Contradictory _) -> MirrorRejected
+          Just Solved           -> MirrorAdmitted candidate
+          _                     -> MirrorUnresolved
     sequent              = L.get dsSystem sys
     mside                = L.get dsSide sys
     msys'                = L.get dsSystem sys
@@ -406,8 +447,11 @@ execDiffProofMethod ctxt method sys =
     mmirrorCtxt          = eitherProofContext ctxt . opposite <$> mside
     mallSubtermsFinished = do
       finished <- finishedSubterms <$> mctxt <*> msys'
-      -- Mirroring changes only the nodes, so every mirror shares this subterm
-      -- store. Check it once without enumerating all alternative mirrors.
+      -- Mirroring preserves the subterm store, goals and formulas, and gives
+      -- node message variables fresh names. Original residual containers thus
+      -- do not occur in mirror nodes: once their witness checks pass here,
+      -- the node-dependent checks cannot fail on a mirror. Check once per
+      -- context without enumerating all alternative mirrors.
       finishedMirrored <- finishedSubterms <$> mmirrorCtxt <*> msys'
       mirrors <- mmirrorSyss
       return $ finished && (finishedMirrored || null mirrors)
@@ -460,9 +504,133 @@ execDiffProofMethod ctxt method sys =
       cases <- checkAndExecProofMethod (eitherProofContext ctxt s) m dsSys
       return $ M.map (\x -> L.set dsSystem (Just x) sys) cases
 
--- | returns True if there are no reducible operators on top of a right side of a subterm in the subterm store
+-- | The reason recorded when a rule-equivalence case would be closed as
+-- MIRRORED but an opposite restriction is neither local nor preserved.
+restrictionPreservationReason :: String
+restrictionPreservationReason = "restriction preservation not established"
+
+-- | Whether the remaining subterm constraints permit extracting a trace.
 finishedSubterms :: ProofContext -> System -> Bool
-finishedSubterms pc sys = hasReducibleOperatorsOnTop (reducibleFunSyms $ mhMaudeSig $ L.get pcMaudeHandle pc) (L.get sSubtermStore sys)
+finishedSubterms pc sys =
+    subtermStoreIsFinished (reducibleFunSyms msig)
+      (L.modify posSubterms (S.filter unresolved) sst)
+  where
+    msig = mhMaudeSig $ L.get pcMaudeHandle pc
+    sst  = L.get sSubtermStore sys
+    -- Every residual with the same containing variable has the same witness
+    -- check. Inspect the system once for that variable, then remove its group.
+    witnessed = S.filter (witnessedSubterm msig sys) $ S.fromList
+      [ x | (_, viewTerm -> Lit (Var x)) <- S.toList (L.get posSubterms sst)
+          , lvarSort x == LSortMsg ]
+    unresolved (_, viewTerm -> Lit (Var x)) = x `S.notMember` witnessed
+    unresolved _ = True
+
+-- | Whether a residual positive subterm constraint @s << x@ of a system
+-- without open goals, where @x@ is a message variable, has a witness that
+-- the system cannot tell apart from an ordinary choice of @x@.
+--
+-- A trace is extracted from such a system by instantiating its remaining
+-- message variables with distinct fresh public names. Instead, instantiate
+-- @x@ with @<s1, <s2, ..., <sn, c>>>@, where @s1 << x, ..., sn << x@ are its
+-- residuals, instantiated like the rest of the system, and @c@ is a fresh
+-- public name, distinct for each containing variable. Then each @si@ is a
+-- proper subterm of @x@. The adversary can build this value at any time when
+-- every @si@ consists of public names, public and message variables (which
+-- become public names) and public constructors
+-- (condition 1), so the knowledge goals of @x@ remain solvable. The rest of
+-- the system does not depend on the choice when:
+--
+-- 2. @x@ occurs in no other subterm constraint and in no formula, so neither
+--    disequalities, negative subterm constraints nor instantiated
+--    restrictions mention it;
+-- 3. in the facts of the nodes and in the action goals, @x@ occurs only below
+--    constructors that neither rewrite nor are AC, so the instantiated
+--    actions still denote what the formulas were checked against;
+-- 4. no formula has a KU guard, because building the value adds KU actions
+--    for @c@ and for the subterms of each @si@;
+-- 5. no guard of a formula can match an action containing @x@ after, but not
+--    before, the instantiation: along every occurrence of @x@ in such an
+--    action, the guard either has a variable or differs in a function
+--    symbol or constant, and the guard has no equation, which could
+--    constrain the variable bound to a term containing @x@.
+--
+-- Otherwise, for example for a fresh name, a private symbol, a disequality
+-- or a negative subterm constraint on @x@, the residual stays unresolved.
+witnessedSubterm :: MaudeSig -> System -> LVar -> Bool
+witnessedSubterm msig sys = witnessed
+  where
+    -- Share the system-wide data between all candidate containing variables.
+    sst = L.get sSubtermStore sys
+    posSts = S.toList (L.get posSubterms sst)
+    residualVars = S.fromList [ v | (_, viewTerm -> Lit (Var v)) <- posSts, lvarSort v == LSortMsg ]
+    fixedSubtermVars = S.fromList $ frees $
+      [ t | (small, big) <- S.toList (L.get negSubterms sst), t <- [small, big] ] ++
+      [ small | (small, _) <- posSts ]
+    formulas = S.toList (L.get sFormulas sys) ++ S.toList (L.get sSolvedFormulas sys)
+               ++ S.toList (L.get sLemmas sys)
+    formulaVars = S.fromList (frees formulas)
+    guards = concatMap guardAtomGroups formulas
+    nodeFacts = [ fa | ru <- M.elems (L.get sNodes sys)
+                     , fa <- L.get rPrems ru ++ L.get rConcs ru ++ L.get rActs ru ]
+    actionGoals = unsolvedActionAtoms sys
+    systemActions = map snd (allActions sys)
+    reducible = reducibleFunSyms msig
+
+    witnessed x =
+        all (constructible . fst) residuals
+        && x `S.notMember` fixedSubtermVars
+        && x `notElem` frees otherContainers
+        && x `S.notMember` formulaVars
+        && all (onlyBelowFreeConstructors . factTerms) nodeFacts
+        && all (onlyBelowFreeConstructors . factTerms . snd) actionGoals
+        && all safeGuard guards
+      where
+        residuals = [ st | st@(_, t) <- posSts, t == varTerm x ]
+        otherContainers = [ big | (_, big) <- posSts, big /= varTerm x ]
+
+        -- 1. Built by the adversary from public names alone.
+        constructible t = sortOfLNTerm t /= LSortNat && case viewTerm t of
+          Lit (Con (Name PubName _)) -> True
+          Lit (Con _)                -> False
+          Lit (Var v)                -> lvarSort v == LSortPub ||
+                                        (lvarSort v == LSortMsg && v /= x && v `S.notMember` residualVars)
+          FApp o@(NoEq (_, (_, Public, Constructor, _))) as ->
+            o `S.notMember` reducible && all constructible as
+          FApp _ _                   -> False
+
+        -- 3. Free constructors are irreducible and not AC.
+        onlyBelowFreeConstructors = all belowFree
+        belowFree t = case viewTerm t of
+          Lit _                                                  -> True
+          FApp o@(NoEq _) as | o `S.member` irreducibleFunSyms msig -> all belowFree as
+          FApp _ as                                              -> x `notElem` frees as
+
+        -- 4-5. Check knowledge and shape constraints on the same guard groups.
+        safeGuard atoms = null [ () | Action _ (Fact KUFact _ _) <- atoms ]
+                       && not (guardInspectsX atoms)
+
+        -- 5. Guards are patterns that are matched against the system's actions.
+        guardInspectsX atoms = or
+          [ hasEquation || or (zipWith inspects ps ts)
+          | Action _ (Fact tag _ ps) <- atoms
+          , Fact tag' _ ts <- systemActions
+          , tag == tag', length ps == length ts, x `elem` frees ts ]
+          where hasEquation = not (null [ () | EqE _ _ <- atoms ])
+        inspects p t
+          | x `notElem` frees t = False
+          | otherwise = case (viewTerm p, viewTerm t) of
+              (Lit (Var _), _)       -> False
+              (FApp _ _, Lit (Var _)) -> True
+              (FApp f ps, FApp g ts) | f == g && length ps == length ts -> or (zipWith inspects ps ts)
+              _                      -> False
+
+-- | The guards of a formula and of all formulas nested in it.
+guardAtomGroups :: LNGuarded -> [[Atom (VTerm Name (BVar LVar))]]
+guardAtomGroups gf = case gf of
+    GAto _                  -> []
+    GDisj disj              -> concatMap guardAtomGroups (getDisj disj)
+    GConj conj              -> concatMap guardAtomGroups (getConj conj)
+    GGuarded _ _ atoms body -> atoms : guardAtomGroups body
 
 ------------------------------------------------------------------------------
 -- Heuristics
@@ -560,6 +728,7 @@ rankDiffProofMethods ranking tactics ctxt sys = do
             [ (DiffRuleEquivalence, "Prove equivalence using rule equivalence")
             , (DiffMirrored, "Backward search completed")
             , (DiffAttack, "Found attack")
+            , (DiffSorry (Just restrictionPreservationReason), "Restriction preservation not established")
             , (DiffUnfinishable, "Proof cannot be finished")
             , (DiffBackwardSearch, "Do backward search from rule")]
         ++  maybe []
@@ -1178,7 +1347,7 @@ prettyProofMethod method = case method of
     Invalidated -> lineComment_ "proof may have been invalidated by editing a reuse lemma above. You should "
     Finished Solved -> keyword_ "SOLVED" <-> lineComment_ "trace found"
     Induction  -> keyword_ "induction"
-    Finished Unfinishable -> keyword_ "UNFINISHABLE" <-> lineComment_ "reducible operator in subterm"
+    Finished Unfinishable -> keyword_ "UNFINISHABLE" <-> lineComment_ "unresolved subterm constraints"
     Sorry reason ->
         fsep [keyword_ "sorry", maybe emptyDoc closedComment_ reason]
     SolveGoal goal -> keyword_ "solve(" <-> prettyGoal goal <-> keyword_ ")"
@@ -1193,7 +1362,7 @@ prettyDiffProofMethod :: HighlightDocument d => DiffProofMethod -> d
 prettyDiffProofMethod method = case method of
     DiffMirrored             -> keyword_ "MIRRORED"
     DiffAttack               -> keyword_ "ATTACK" <-> lineComment_ "trace found"
-    DiffUnfinishable         -> keyword_ "UNFINISHABLEdiff" <-> lineComment_ "reducible operator in subterm"
+    DiffUnfinishable         -> keyword_ "UNFINISHABLEdiff" <-> lineComment_ "unresolved subterm constraints"
     DiffSorry reason         ->
         fsep [keyword_ "sorry", maybe emptyDoc lineComment_ reason]
 -- MERGED with solved.
@@ -1201,4 +1370,3 @@ prettyDiffProofMethod method = case method of
     DiffRuleEquivalence      -> keyword_ "rule-equivalence"
     DiffBackwardSearch       -> keyword_ "backward-search"  
     DiffBackwardSearchStep s -> keyword_ "step(" <-> prettyProofMethod s <-> keyword_ ")"
-

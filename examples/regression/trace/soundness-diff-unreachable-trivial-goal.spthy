@@ -1,0 +1,26 @@
+theory SoundnessDiffUnreachableTrivialGoal
+begin
+
+// The only source of F is forbidden on both sides, so Unreachable cannot
+// execute. BanA is therefore redundant and both restricted trace sets agree.
+rule Produce:
+  [] --[ P() ]-> [ F('a') ]
+
+rule Unreachable:
+  [ F(x) ] --[ A(x) ]-> [ Out('ok') ]
+
+restriction BanA [right]:
+  "All x #i. A(x)@i ==> F"
+
+restriction BanProduce:
+  "All #i. P()@i ==> F"
+
+lemma left_unreachable [left]:
+  "All x #i. A(x)@i ==> F"
+
+lemma right_unreachable [right]:
+  "All x #i. A(x)@i ==> F"
+
+diffLemma Observational_equivalence:
+
+end
