@@ -1,0 +1,188 @@
+theory NatSubtermSorts
+
+begin
+
+// Function signature and definition of the equational theory E
+
+builtins: natural-numbers
+functions: fst/1, h/1, pair/2, snd/1
+equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
+
+rule (modulo E) Hash:
+   [ In( %n ) ] --[ Hash( h('a'), %n ) ]-> [ ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Compare:
+   [ In( x ), In( %n ) ] --[ Compare( x, %n ) ]-> [ ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Restricted:
+   [ In( x ), In( %n ) ] --[ A( x ), B( x, %n ) ]-> [ ]
+
+  /* has exactly the trivial AC variant */
+
+restriction no_nat:
+  "∀ %m #i. (A( %m ) @ #i) ⇒ (⊥)"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ %m #i. (A( %m ) @ #i) ⇒ (⊥)"
+  */
+
+lemma hash_is_smaller:
+  all-traces "∀ x %n #i. (Hash( x, %n ) @ #i) ⇒ (x ⊏ %n)"
+/*
+guarded formula characterizing all counter-examples:
+"∃ x %n #i. (Hash( x, %n ) @ #i) ∧ ¬(x ⊏ %n)"
+*/
+simplify
+SOLVED // trace found
+
+lemma hash_is_not_smaller:
+  all-traces "∀ x %n #i. (Hash( x, %n ) @ #i) ⇒ (¬(x ⊏ %n))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ x %n #i. (Hash( x, %n ) @ #i) ∧ x ⊏ %n"
+*/
+simplify
+by contradiction /* contradictory subterm store */
+
+lemma hash_event_exists:
+  exists-trace "∃ x %n #i. Hash( x, %n ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ x %n #i. (Hash( x, %n ) @ #i)"
+*/
+simplify
+SOLVED // trace found
+
+lemma mixed_positive_exists:
+  exists-trace "∃ x %n #i. (Compare( x, %n ) @ #i) ∧ (x ⊏ %n)"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ x %n #i. (Compare( x, %n ) @ #i) ∧ x ⊏ %n"
+*/
+simplify
+solve( x ⊏ %n )
+  case SubtermSplit1
+  SOLVED // trace found
+qed
+
+lemma mixed_negative_exists:
+  exists-trace "∃ x %n #i. (Compare( x, %n ) @ #i) ∧ (¬(x ⊏ %n))"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ x %n #i. (Compare( x, %n ) @ #i) ∧ ¬(x ⊏ %n)"
+*/
+simplify
+SOLVED // trace found
+
+lemma mixed_negative_equal_exists:
+  exists-trace
+  "∃ x %n #i. ((Compare( x, %n ) @ #i) ∧ (x = %n)) ∧ (¬(x ⊏ %n))"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ x %n #i. (Compare( x, %n ) @ #i) ∧ (x = %n) ∧ ¬(x ⊏ %n)"
+*/
+simplify
+SOLVED // trace found
+
+lemma typed_successor_exists:
+  exists-trace "∃ #i. (Compare( %1, (%1%+%1) ) @ #i) ∧ (%1 ⊏ (%1%+%1))"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #i. (Compare( %1, (%1%+%1) ) @ #i) ∧ %1 ⊏ (%1%+%1)"
+*/
+simplify
+SOLVED // trace found
+
+lemma typed_not_reflexive:
+  all-traces "∀ %n #i. (Compare( %n, %n ) @ #i) ⇒ (¬(%n ⊏ %n))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ %n #i. (Compare( %n, %n ) @ #i) ∧ %n ⊏ %n"
+*/
+simplify
+by contradiction /* contradictory subterm store */
+
+lemma typed_total_order:
+  all-traces
+  "∀ %m %n #i.
+    (Compare( %m, %n ) @ #i) ⇒ (((%m ⊏ %n) ∨ (%n ⊏ %m)) ∨ (%m = %n))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ %m %n #i.
+  (Compare( %m, %n ) @ #i) ∧ (¬(%m ⊏ %n)) ∧ (¬(%n ⊏ %m)) ∧ (¬(%m = %n))"
+*/
+simplify
+by contradiction /* from formulas */
+
+lemma restricted_subterm:
+  all-traces "∀ x %n #i. (B( x, %n ) @ #i) ⇒ (¬(x ⊏ %n))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ x %n #i. (B( x, %n ) @ #i) ∧ x ⊏ %n"
+*/
+simplify
+solve( x ⊏ %n )
+  case SubtermSplit1
+  by contradiction /* from formulas */
+qed
+
+lemma restricted_equality:
+  all-traces "∀ x %n #i. (B( x, %n ) @ #i) ⇒ (¬(x = %n))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ x %n #i. (B( x, %n ) @ #i) ∧ x = %n"
+*/
+simplify
+by contradiction /* from formulas */
+
+lemma restricted_non_nat_exists:
+  exists-trace "∃ %n #i. B( 'a', %n ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ %n #i. (B( 'a', %n ) @ #i)"
+*/
+simplify
+SOLVED // trace found
+
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.13.0
+Maude version 3.5.1
+Git revision: 5df53af2911dfd01204a9142e8237672e5d05dae (with uncommited changes), branch: msr-proof-correctness
+Compiled at: 2026-09-25 19:18:42.692960904 UTC
+*/
+
+end
+/* Output
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/regression/trace/nat-subterm-sorts.spthy
+
+  output:          examples/regression/trace/nat-subterm-sorts.spthy.tmp
+  processing time: 0.15s
+  
+  hash_is_smaller (all-traces): falsified - found trace (2 steps)
+  hash_is_not_smaller (all-traces): verified (2 steps)
+  hash_event_exists (exists-trace): verified (2 steps)
+  mixed_positive_exists (exists-trace): verified (3 steps)
+  mixed_negative_exists (exists-trace): verified (2 steps)
+  mixed_negative_equal_exists (exists-trace): verified (2 steps)
+  typed_successor_exists (exists-trace): verified (2 steps)
+  typed_not_reflexive (all-traces): verified (2 steps)
+  typed_total_order (all-traces): verified (2 steps)
+  restricted_subterm (all-traces): verified (3 steps)
+  restricted_equality (all-traces): verified (2 steps)
+  restricted_non_nat_exists (exists-trace): verified (2 steps)
+
+==============================================================================
+*/

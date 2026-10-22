@@ -1,0 +1,127 @@
+theory SoundnessSubtermWitness
+
+begin
+
+// Function signature and definition of the equational theory E
+
+functions: fst/1, h/1, pair/2, snd/1
+equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
+
+rule (modulo E) Gen:
+   [ Fr( ~n ) ] --[ Secret( ~n ) ]-> [ ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Recv:
+   [ In( x ) ] --[ Recv( x ) ]-> [ ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) PublishHash:
+   [ Fr( ~n ) ] --[ Published( ~n ) ]-> [ Out( h(~n) ) ]
+
+  /* has exactly the trivial AC variant */
+
+lemma hidden_subterm:
+  all-traces
+  "∀ n x #i #j. ((Secret( n ) @ #i) ∧ (Recv( x ) @ #j)) ⇒ (¬(n ⊏ x))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ n x #i #j. (Secret( n ) @ #i) ∧ (Recv( x ) @ #j) ∧ n ⊏ x"
+*/
+simplify
+by UNFINISHABLE // unresolved subterm constraints
+
+lemma hidden_subterm_exists:
+  exists-trace
+  "∃ n x #i #j. ((Secret( n ) @ #i) ∧ (Recv( x ) @ #j)) ∧ (n ⊏ x)"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ n x #i #j. (Secret( n ) @ #i) ∧ (Recv( x ) @ #j) ∧ n ⊏ x"
+*/
+simplify
+by UNFINISHABLE // unresolved subterm constraints
+
+lemma hidden_nested_subterm:
+  exists-trace
+  "∃ n x #i #j. ((Secret( n ) @ #i) ∧ (Recv( x ) @ #j)) ∧ (n ⊏ h(x))"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ n x #i #j. (Secret( n ) @ #i) ∧ (Recv( x ) @ #j) ∧ n ⊏ h(x)"
+*/
+simplify
+solve( ~n ⊏ h(x) )
+  case SubtermSplit1
+  by UNFINISHABLE // unresolved subterm constraints
+next
+  case SubtermSplit2
+  by solve( !KU( ~n ) @ #vk )
+qed
+
+lemma public_subterm:
+  exists-trace "∃ x #i. ((Recv( x ) @ #i) ∧ (x = h('a'))) ∧ ('a' ⊏ x)"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ x #i. (Recv( x ) @ #i) ∧ (x = h('a')) ∧ 'a' ⊏ x"
+*/
+simplify
+solve( !KU( h('a') ) @ #vk )
+  case c_h
+  SOLVED // trace found
+qed
+
+lemma opaque_subterm:
+  exists-trace
+  "∃ n x #i #j.
+    (((Published( n ) @ #i) ∧ (Recv( x ) @ #j)) ∧ (x = h(n))) ∧ (n ⊏ x)"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ n x #i #j.
+  (Published( n ) @ #i) ∧ (Recv( x ) @ #j) ∧ (x = h(n)) ∧ n ⊏ x"
+*/
+simplify
+solve( !KU( h(~n) ) @ #vk )
+  case PublishHash
+  SOLVED // trace found
+qed
+
+lemma absent_subterm:
+  exists-trace
+  "∃ n x #i #j. ((Secret( n ) @ #i) ∧ (Recv( x ) @ #j)) ∧ (¬(n ⊏ x))"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ n x #i #j. (Secret( n ) @ #i) ∧ (Recv( x ) @ #j) ∧ ¬(n ⊏ x)"
+*/
+simplify
+SOLVED // trace found
+
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.13.0
+Maude version 3.5.1
+Git revision: 5df53af2911dfd01204a9142e8237672e5d05dae (with uncommited changes), branch: msr-proof-correctness
+Compiled at: 2026-09-25 19:18:42.692960904 UTC
+*/
+
+end
+/* Output
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/regression/trace/soundness-subterm-witness.spthy
+
+  output:          examples/regression/trace/soundness-subterm-witness.spthy.tmp
+  processing time: 0.13s
+  
+  hidden_subterm (all-traces): analysis cannot be finished (unresolved subterm constraints) (2 steps)
+  hidden_subterm_exists (exists-trace): analysis cannot be finished (unresolved subterm constraints) (2 steps)
+  hidden_nested_subterm (exists-trace): analysis cannot be finished (unresolved subterm constraints) (4 steps)
+  public_subterm (exists-trace): verified (3 steps)
+  opaque_subterm (exists-trace): verified (3 steps)
+  absent_subterm (exists-trace): verified (2 steps)
+
+==============================================================================
+*/

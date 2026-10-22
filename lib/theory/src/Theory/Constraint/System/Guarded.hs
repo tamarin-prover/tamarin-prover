@@ -585,16 +585,20 @@ gnot =
 
 
 -- | Checks if a doubly guarded formula is satisfied by the empty trace;
--- returns @'Left' errMsg@ if the formula is not doubly guarded.
+-- returns @'Left' errMsg@ if the formula is not doubly guarded or if its
+-- value on the empty trace is not established.
 satisfiedByEmptyTrace :: Guarded s c v -> Either String Bool
 satisfiedByEmptyTrace =
   foldGuarded
     (\_ato -> throwError "atom outside the scope of a quantifier")
     (liftM or  . sequence . getDisj)
     (liftM and . sequence . getConj)
-    (\qua _ss _as _gf -> return $ qua == All)
-    -- the empty trace always satisfies guarded all-quantification
-    -- and always dissatisfies guarded ex-quantification
+    (\qua _ss as _gf ->
+      if any isActionAtom as then return $ qua == All
+      else throwError "formula has an equality-only guard whose value on the empty trace is unknown")
+    -- the empty trace always satisfies all-quantification guarded by an
+    -- action and always dissatisfies such ex-quantification. Equality-only
+    -- guards can already have witnesses on the empty trace.
 
 -- | Tries to convert a doubly guarded formula to an induction hypothesis.
 -- Returns @'Left' errMsg@ if the formula is not last-free or not doubly

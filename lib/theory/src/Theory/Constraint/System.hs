@@ -1119,7 +1119,10 @@ impliedFormulas hnd sys gf0 = res
             succedent'               = gall [] otherAtoms succedent
         subst <- candidateSubsts emptySubst actionsEqs
         return $ unskolemizeLNGuarded $ applySkGuarded subst succedent'
-      _ -> []
+      -- Non-universal safety assumptions still need ordinary formula
+      -- reduction (including F, ground atoms, and Boolean combinations).
+      -- Do not force existential reusable lemmas into every proof state.
+      _ -> [gf0 | isSafetyFormula gf0]
     gf = skolemizeGuarded gf0
 
     prepare (Action i fa) = Left  (GAction i fa)
