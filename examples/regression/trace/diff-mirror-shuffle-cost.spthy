@@ -1,0 +1,21 @@
+theory DiffMirrorShuffleCost
+begin
+
+/* Take has 5! = 120 AC-unifier mirrors, but only five distinct action
+   rule-instance maps, distinguished by Eq($P0, $Ai). Restriction
+   evaluation keeps one of each identical node map. Take with $P0
+   distinct from every $Ai has no right mirror: the equivalence is
+   falsified. */
+
+builtins: multiset
+
+rule Setup:
+  [ Fr(~s) ] --[ ]-> [ Shuffle($A0 + $A1 + $A2 + $A3 + $A4) ]
+
+rule Take:
+  [ Shuffle(x0 + x1 + x2 + x3 + x4) ] --[ Eq($P0, x0) ]-> [ ]
+
+restriction eq [right]:
+  "All u v #i. Eq(u, v)@i ==> u = v"
+
+end

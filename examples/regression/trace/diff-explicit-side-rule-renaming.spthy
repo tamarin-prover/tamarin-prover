@@ -1,0 +1,26 @@
+theory DiffExplicitSideRuleRenaming
+begin
+
+/* Explicit side rules that rename the parent's variables are justified by
+   the parent, as explicit variant members are by the computed variants.
+   Every side below is its parent's projection, so the equivalence holds. */
+
+// The left rule renames $p to $z. Its own new variables would sort as
+// [$q, $z] against the parent's [$p, $q]; mirroring pairs new variables by
+// position, so the side rule takes the parent's slots in its names.
+// Develop, which only warned, falsified the equivalence.
+rule Pick: [ ] --[ A($p, $q) ]-> [ Out(<$p, $q>) ]
+left rule Pick: [ ] --[ A($z, $q) ]-> [ Out(<$z, $q>) ]
+right rule Pick: [ ] --[ A($p, $q) ]-> [ Out(<$p, $q>) ]
+
+restriction distinct:
+  "All x y #i. A(x, y)@i ==> not (x = y)"
+
+// The left rule renames a premise variable.
+rule Hash: [ In(x) ] --[ H(x) ]-> [ Out(<x, x>) ]
+left rule Hash: [ In(y) ] --[ H(y) ]-> [ Out(<y, y>) ]
+right rule Hash: [ In(x) ] --[ H(x) ]-> [ Out(<x, x>) ]
+
+diffLemma Observational_equivalence:
+
+end

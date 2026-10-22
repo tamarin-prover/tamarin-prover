@@ -1,0 +1,39 @@
+theory DiffAsymmetricExplicitVariants
+begin
+builtins: symmetric-encryption
+
+// The left side has two decryption variants; the right has one identity
+// variant. Mirror lookup must use their common parent Dec, not a variant
+// number that may be absent on the other side. Diff proof cases must use
+// the same parent name as the generated action labels.
+
+rule Dec:
+  [ In(x), In(k) ] --> [ Out(diff(sdec(x,k),x)) ]
+left rule Dec:
+  [ In(x), In(k) ] --> [ Out(sdec(x,k)) ]
+  variants
+  rule (modulo AC) Dec___VARIANT_2:
+    [ In(senc(z.2,k.1)), In(k.1) ] --[ Decrypted(z.2) ]-> [ Out(z.2) ],
+  rule (modulo AC) Dec___VARIANT_1:
+    [ In(x.2), In(k.1) ] --[ Unreduced(sdec(x.2,k.1)) ]-> [ Out(sdec(x.2,k.1)) ]
+right rule Dec:
+  [ In(x), In(k) ] --> [ Out(x) ]
+  variants
+  rule (modulo AC) Dec:
+    [ In(x), In(k) ] --[ Echoed(x) ]-> [ Out(x) ]
+
+// A generic decryption cannot produce a plain constant. The other lemmas
+// check that each variant's added action survives proof search and reload.
+lemma unreduced_plain [left]: exists-trace
+  "Ex #i. Unreduced('plain') @ i"
+lemma decrypted_reachable [left]: exists-trace
+  "Ex #i. Decrypted('plain') @ i"
+lemma unreduced_reachable [left]: exists-trace
+  "Ex x #i. Unreduced(x) @ i"
+lemma echo_reachable [right]: exists-trace
+  "Ex #i. Echoed('plain') @ i"
+
+// With x = senc('plain','key') and k = 'key', the left returns 'plain'
+// and the right returns the ciphertext. Diff equivalence must be falsified.
+diffLemma Observational_equivalence:
+end

@@ -1,0 +1,20 @@
+theory SoundnessDiffMixedRestriction
+begin
+
+rule Emit:
+  [] --[ A('b') ]-> [ Out('ok') ]
+
+// The false equalities make every right-side trace invalid. The unrelated
+// action guard nested beside them cannot make the Boolean formula irrelevant.
+restriction Impossible [right]:
+  "(('a' = 'b') & (All #i. A('a')@i ==> F)) | ('c' = 'd')"
+
+lemma left_witness [left]: exists-trace
+  "Ex #i. A('b')@i"
+
+lemma right_blocked [right]: exists-trace
+  "Ex #i. A('b')@i"
+
+diffLemma Observational_equivalence:
+
+end

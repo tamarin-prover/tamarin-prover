@@ -1,0 +1,10 @@
+theory EmptyLeftSilent begin
+// The left family compiles to nothing (a fresh name as a known input is
+// impossible); the right rule is executable but produces no output.
+// This tests inclusion of right-only rule-correspondence cases. A failed
+// correspondence here does not establish attacker-observable inequivalence.
+rule Emit: [Fr(~n), In(diff(~n,'known'))] --[Emitted()]-> []
+lemma emitted [right]: exists-trace "Ex #i. Emitted()@i"
+lemma not_emitted [left]: "All #i. Emitted()@i ==> F"
+diffLemma Observational_equivalence:
+end

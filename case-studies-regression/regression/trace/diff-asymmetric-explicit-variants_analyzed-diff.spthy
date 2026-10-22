@@ -1,0 +1,120 @@
+theory DiffAsymmetricExplicitVariants
+
+begin
+
+// Function signature and definition of the equational theory E
+
+functions: fst/1, pair/2, sdec/2, senc/2, snd/1
+equations:
+    fst(<x.1, x.2>) = x.1,
+    sdec(senc(x.1, x.2), x.2) = x.1,
+    snd(<x.1, x.2>) = x.2
+
+rule (modulo E) Dec:
+   [ In( x ), In( k ) ] --> [ Out( diff(sdec(x, k), x) ) ]
+ left
+  rule (modulo E) Dec:
+     [ In( x ), In( k ) ] --> [ Out( sdec(x, k) ) ]
+   variants
+    rule (modulo AC) Dec___VARIANT_2:
+       [ In( senc(z.2, k.1) ), In( k.1 ) ]
+      --[ Decrypted( z.2 ) ]->
+       [ Out( z.2 ) ]
+    ,
+    rule (modulo AC) Dec___VARIANT_1:
+       [ In( x.2 ), In( k.1 ) ]
+      --[ Unreduced( sdec(x.2, k.1) ) ]->
+       [ Out( sdec(x.2, k.1) ) ]
+ right
+  rule (modulo E) Dec:
+     [ In( x ), In( k ) ] --> [ Out( x ) ]
+   variants
+    rule (modulo AC) Dec:
+       [ In( x ), In( k ) ] --[ Echoed( x ) ]-> [ Out( x ) ]
+
+lemma unreduced_plain [left]:
+  exists-trace "∃ #i. Unreduced( 'plain' ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #i. (Unreduced( 'plain' ) @ #i)"
+*/
+by simplify
+
+lemma decrypted_reachable [left]:
+  exists-trace "∃ #i. Decrypted( 'plain' ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #i. (Decrypted( 'plain' ) @ #i)"
+*/
+simplify
+solve( !KU( senc('plain', k) ) @ #vk )
+  case c_senc
+  SOLVED // trace found
+qed
+
+lemma unreduced_reachable [left]:
+  exists-trace "∃ x #i. Unreduced( x ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ x #i. (Unreduced( x ) @ #i)"
+*/
+simplify
+SOLVED // trace found
+
+lemma echo_reachable [right]:
+  exists-trace "∃ #i. Echoed( 'plain' ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #i. (Echoed( 'plain' ) @ #i)"
+*/
+simplify
+SOLVED // trace found
+
+diffLemma Observational_equivalence:
+rule-equivalence
+  case Rule_Equality
+  backward-search
+    case LHS
+    step( simplify )
+    step( solve( !KD( x ) ▶₁ #i ) )
+      case Dec_case_1
+      step( solve( !KU( senc(t, k) ) @ #vk.1 ) )
+        case c_senc
+        step( solve( (#vl, 0) ~~> (#i, 1) ) )
+          case Var_msg_t
+          by ATTACK // trace found
+        qed
+      qed
+    qed
+  qed
+qed
+
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.13.0
+Maude version 3.5.1
+Git revision: c4572aa2bab99bb68de09813420a8c2172b99182 (with uncommited changes), branch: diff-rule-families
+Compiled at: 2026-09-25 20:20:40.787603735 UTC
+*/
+
+end
+/* Output
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/regression/trace/diff-asymmetric-explicit-variants.spthy
+
+  output:          examples/regression/trace/diff-asymmetric-explicit-variants.spthy.tmp
+  processing time: 0.20s
+  
+  LHS :  unreduced_plain (exists-trace): falsified - no trace found (1 steps)
+  LHS :  decrypted_reachable (exists-trace): verified (3 steps)
+  LHS :  unreduced_reachable (exists-trace): verified (2 steps)
+  RHS :  echo_reachable (exists-trace): verified (2 steps)
+  DiffLemma:  Observational_equivalence : falsified - found trace (7 steps)
+
+==============================================================================
+*/

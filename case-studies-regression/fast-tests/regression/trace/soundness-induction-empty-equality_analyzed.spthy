@@ -1,0 +1,183 @@
+theory SoundnessInductionEmptyEquality
+
+begin
+
+// Function signature and definition of the equational theory E
+
+functions: fst/1, pair/2, snd/1
+equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
+
+rule (modulo E) Receive:
+   [ In( ~x ) ] --[ A( ) ]-> [ ]
+
+  /* has exactly the trivial AC variant */
+
+lemma false_direct:
+  all-traces "(∀ x. (x = 'a') ⇒ (⊥)) ∧ (∀ #i. (A( ) @ #i) ⇒ (⊤))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ x. (x = 'a')"
+*/
+simplify
+SOLVED // trace found
+
+lemma false_induction [use_induction]:
+  all-traces "(∀ x. (x = 'a') ⇒ (⊥)) ∧ (∀ #i. (A( ) @ #i) ⇒ (⊤))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ x. (x = 'a')"
+*/
+simplify
+SOLVED // trace found
+
+rule (modulo E) Fixed:
+   [ ] --[ B( 'a' ) ]-> [ ]
+
+  /* has exactly the trivial AC variant */
+
+lemma true_direct:
+  all-traces
+  "(∀ x. (x = 'a') ⇒ (x = 'a')) ∧ (∀ x #i. (B( x ) @ #i) ⇒ (x = 'a'))"
+/*
+guarded formula characterizing all counter-examples:
+"((∃ x. (x = 'a') ∧ ¬(x = 'a')) ∨ (∃ x #i. (B( x ) @ #i) ∧ ¬(x = 'a')))"
+*/
+simplify
+solve( (∃ x. (x = 'a') ∧ ¬(x = 'a'))  ∥
+       (∃ x #i. (B( x ) @ #i) ∧ ¬(x = 'a')) )
+  case case_1
+  by contradiction /* from formulas */
+next
+  case case_2
+  by contradiction /* from formulas */
+qed
+
+lemma true_induction [use_induction]:
+  all-traces
+  "(∀ x. (x = 'a') ⇒ (x = 'a')) ∧ (∀ x #i. (B( x ) @ #i) ⇒ (x = 'a'))"
+/*
+guarded formula characterizing all counter-examples:
+"((∃ x. (x = 'a') ∧ ¬(x = 'a')) ∨ (∃ x #i. (B( x ) @ #i) ∧ ¬(x = 'a')))"
+*/
+simplify
+solve( (∃ x. (x = 'a') ∧ ¬(x = 'a'))  ∥
+       (∃ x #i. (B( x ) @ #i) ∧ ¬(x = 'a')) )
+  case case_1
+  by contradiction /* from formulas */
+next
+  case case_2
+  by contradiction /* from formulas */
+qed
+
+lemma impossible:
+  exists-trace
+  "(∃ x. (x = 'a') ∧ (¬(x = 'a'))) ∨
+   (∃ x #i. (B( x ) @ #i) ∧ (¬(x = 'a')))"
+/*
+guarded formula characterizing all satisfying traces:
+"((∃ x. (x = 'a') ∧ ¬(x = 'a')) ∨ (∃ x #i. (B( x ) @ #i) ∧ ¬(x = 'a')))"
+*/
+simplify
+solve( (∃ x. (x = 'a') ∧ ¬(x = 'a'))  ∥
+       (∃ x #i. (B( x ) @ #i) ∧ ¬(x = 'a')) )
+  case case_1
+  by contradiction /* from formulas */
+next
+  case case_2
+  by contradiction /* from formulas */
+qed
+
+lemma possible:
+  exists-trace
+  "(∃ x. (x = 'a') ∧ (¬(x = 'a'))) ∨ (∃ x #i. (B( x ) @ #i) ∧ (x = 'a'))"
+/*
+guarded formula characterizing all satisfying traces:
+"((∃ x. (x = 'a') ∧ ¬(x = 'a')) ∨ (∃ x #i. (B( x ) @ #i) ∧ (x = 'a')))"
+*/
+simplify
+solve( (∃ x. (x = 'a') ∧ ¬(x = 'a'))  ∥
+       (∃ x #i. (B( x ) @ #i) ∧ (x = 'a')) )
+  case case_2
+  SOLVED // trace found
+qed
+
+rule (modulo E) OtherFixed:
+   [ ] --[ C( 'b' ) ]-> [ ]
+
+  /* has exactly the trivial AC variant */
+
+lemma action_conjunction:
+  all-traces
+  "(∀ x #i. (B( x ) @ #i) ⇒ (x = 'a')) ∧
+   (∀ y #j. (C( y ) @ #j) ⇒ (y = 'b'))"
+/*
+guarded formula characterizing all counter-examples:
+"((∃ x #i. (B( x ) @ #i) ∧ ¬(x = 'a')) ∨
+  (∃ y #j. (C( y ) @ #j) ∧ ¬(y = 'b')))"
+*/
+simplify
+solve( (∃ x #i. (B( x ) @ #i) ∧ ¬(x = 'a'))  ∥
+       (∃ y #j. (C( y ) @ #j) ∧ ¬(y = 'b')) )
+  case case_1
+  by contradiction /* from formulas */
+next
+  case case_2
+  by contradiction /* from formulas */
+qed
+
+lemma action_conjunction_induction [use_induction]:
+  all-traces
+  "(∀ x #i. (B( x ) @ #i) ⇒ (x = 'a')) ∧
+   (∀ y #j. (C( y ) @ #j) ⇒ (y = 'b'))"
+/*
+guarded formula characterizing all counter-examples:
+"((∃ x #i. (B( x ) @ #i) ∧ ¬(x = 'a')) ∨
+  (∃ y #j. (C( y ) @ #j) ∧ ¬(y = 'b')))"
+*/
+induction
+  case empty_trace
+  by contradiction /* from formulas */
+next
+  case non_empty_trace
+  solve( (∃ x #i. (B( x ) @ #i) ∧ ¬(x = 'a'))  ∥
+         (∃ y #j. (C( y ) @ #j) ∧ ¬(y = 'b')) )
+    case case_1
+    by contradiction /* from formulas */
+  next
+    case case_2
+    by contradiction /* from formulas */
+  qed
+qed
+
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.13.0
+Maude version 3.5.1
+Git revision: bf8b4562cda02dcb0eae43025aa18f138e58e053 (with uncommited changes), branch: msr-proof-correctness
+Compiled at: 2026-10-07 07:38:45.43500403 UTC
+*/
+
+end
+/* Output
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/regression/trace/soundness-induction-empty-equality.spthy
+
+  output:          examples/regression/trace/soundness-induction-empty-equality.spthy.tmp
+  processing time: 0.13s
+  
+  false_direct (all-traces): falsified - found trace (2 steps)
+  false_induction (all-traces): falsified - found trace (2 steps)
+  true_direct (all-traces): verified (4 steps)
+  true_induction (all-traces): verified (4 steps)
+  impossible (exists-trace): falsified - no trace found (4 steps)
+  possible (exists-trace): verified (3 steps)
+  action_conjunction (all-traces): verified (4 steps)
+  action_conjunction_induction (all-traces): verified (5 steps)
+
+==============================================================================
+*/
