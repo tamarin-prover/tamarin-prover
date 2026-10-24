@@ -1,0 +1,69 @@
+==================================================
+Legacy typing attribute on trace lemma
+==================================================
+
+theory Test begin
+lemma L [typing]: "T"
+end
+
+---
+
+(theory
+  theory_name: (ident)
+  (lemma
+    lemma_identifier: (ident)
+    (lemma_attrs
+      (lemma_attr))
+    formula: (atom)))
+
+==================================================
+Legacy typing attribute on diff lemma
+==================================================
+
+theory Test begin
+diffLemma D [typing]:
+end
+
+---
+
+(theory
+  theory_name: (ident)
+  (diff_lemma
+    lemma_identifier: (ident)
+    (lemma_attrs
+      (lemma_attr))))
+
+==================================================
+Diff reuse attribute on trace lemma
+==================================================
+
+theory Test begin
+lemma L [diff_reuse]: "T"
+end
+
+---
+
+(theory
+  theory_name: (ident)
+  (lemma
+    lemma_identifier: (ident)
+    (lemma_attrs
+      (lemma_attr))
+    formula: (atom)))
+
+==================================================
+Diff reuse attribute on diff lemma
+==================================================
+
+theory Test begin
+diffLemma D [diff_reuse]:
+end
+
+---
+
+(theory
+  theory_name: (ident)
+  (diff_lemma
+    lemma_identifier: (ident)
+    (lemma_attrs
+      (lemma_attr))))

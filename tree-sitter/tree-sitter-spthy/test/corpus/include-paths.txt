@@ -1,0 +1,72 @@
+==================================================
+Include file extensions and directory separators
+==================================================
+
+theory T begin
+#include "include_2.spthy"
+#include "include/include3.spthy"
+#include "../shared/key-file.spthy"
+#include "/tmp/theory.spthy"
+#include "..\shared\theory.spthy"
+#include "é/鍵.spthy"
+end
+
+---
+
+(theory
+  theory_name: (ident)
+  (preprocessor
+    (include
+      (path)))
+  (preprocessor
+    (include
+      (path)))
+  (preprocessor
+    (include
+      (path)))
+  (preprocessor
+    (include
+      (path)))
+  (preprocessor
+    (include
+      (path)))
+  (preprocessor
+    (include
+      (path))))
+
+==================================================
+Empty include path is syntactically allowed
+==================================================
+
+theory T begin
+#include ""
+end
+
+---
+
+(theory
+  theory_name: (ident)
+  (preprocessor
+    (include)))
+
+==================================================
+Invalid include path punctuation rejected
+:error
+==================================================
+
+theory T begin
+#include "dir@name.spthy"
+end
+
+---
+
+==================================================
+Unclosed include path rejected
+:error
+==================================================
+
+theory T begin
+#include "file.spthy
+end
+
+---
