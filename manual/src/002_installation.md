@@ -5,7 +5,7 @@ Installation {#sec:installation}
 ## Installation on macOS or Linux {#sec:maclinux}
 
 The easiest way to install Tamarin on macOS or Linux is to use
-[Homebrew](http://brew.sh/):
+[Homebrew](https://brew.sh/):
 
   * `brew install tamarin-prover/tap/tamarin-prover`
 
@@ -18,9 +18,9 @@ It's separately packaged for
 You can also [download binaries directly from GitHub](https://github.com/tamarin-prover/tamarin-prover/releases)
 and [manually install dependencies yourself](#sec:dependencies), or [compile from source](#sec:LinuxSrcInstall).
 
-## Installation on Windows 10 {#sec:windows}
+## Installation on Windows {#sec:windows}
 
-You can install Tamarin (with GUI) under Windows 10 using the [Windows Subsystem for Linux (WSL)](https://docs.microsoft.com/windows/wsl/install-win10).
+You can install Tamarin (with GUI) under Windows 10 using the [Windows Subsystem for Linux (WSL)](https://learn.microsoft.com/windows/wsl/install).
 For performance and compatibility reasons, we recommend using WSL2 with Ubuntu.
 Once you have WSL and Ubuntu installed, start the Ubuntu app and install Tamarin following the [installation instructions for Linux](#sec:maclinux) above.
 You can then run Tamarin inside the the Ubuntu app using the usual command.
@@ -49,7 +49,7 @@ Alternatively, you can install them yourself:
     upgrade` afterwards, as that version of stack is usually out-of-date.
 
   - **Graphviz** Graphviz should be available using your standard package manager, or directly from
-    <http://www.graphviz.org/>
+    <https://www.graphviz.org/>
 
   - **Maude** You can install Maude using your package manager (make sure to have version 2.7.1. or
     newer). You can also install Maude manually from the
@@ -166,7 +166,7 @@ the `git` tool installed.
 
 ### Notepad++
 
-Follow steps from the [Notepad++ Wiki](http://docs.notepad-plus-plus.org/index.php/User_Defined_Language_Files#How_to_install_user_defined_language_files) using the [notepad_plus_plus_spthy.xml](https://github.com/tamarin-prover/tamarin-prover/blob/develop/etc/notepad_plus_plus_spthy.xml) file.
+Follow steps from the [Notepad++ manual](https://npp-user-manual.org/docs/user-defined-language-system/#import-a-udl) using the [notepad_plus_plus_spthy.xml](https://github.com/tamarin-prover/tamarin-prover/blob/develop/etc/notepad_plus_plus_spthy.xml) file.
 
 ### Emacs
 
