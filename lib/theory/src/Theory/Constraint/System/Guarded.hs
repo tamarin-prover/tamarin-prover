@@ -73,6 +73,8 @@ module Theory.Constraint.System.Guarded (
   , unskolemizeLNGuarded
   , applySkGuarded
   , skolemizeGuarded
+  , SkTerm
+  , SkFact
   , skolemizeTerm
   , skolemizeFact
   , matchAction
