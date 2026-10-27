@@ -1104,9 +1104,10 @@ formulaReports thy = do
 formulaReportsDiff :: OpenDiffTheory -> WfErrorReport
 formulaReportsDiff thy = do
     (header, fm) <- annFormulas
-    msum [ ((,) (underlineTopic "Quantifier sorts")) <$> checkQuantifiers header fm
-         , ((,) (underlineTopic "Formula terms"))    <$> checkTerms header ( get (sigpMaudeSig . diffThySignature) thy) fm
-         , ((,) (underlineTopic "Formula guardedness"))      <$> checkGuarded header fm
+    msum [ (,) (underlineTopic "Quantifier sorts")    <$> checkQuantifiers header fm
+         , (,) (underlineTopic "Formula terms")       <$> checkTerms header ( get (sigpMaudeSig . diffThySignature) thy) fm
+         , (,) (underlineTopic "Formula guardedness") <$> checkGuarded header fm
+         , (,) (underlineTopic "Last atom usage")     <$> checkNoLast header fm
          ]
   where
     annFormulas = do EitherLemmaItem (s, l) <- get diffThyItems thy
