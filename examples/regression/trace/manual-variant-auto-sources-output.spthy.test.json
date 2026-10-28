@@ -1,0 +1,16 @@
+{
+  "tests": [
+    {
+      "name": "generated-added-actions",
+      "args": [
+        "--prove",
+        "--quit-on-warning"
+      ],
+      "contains": [
+        "got_sent (exists-trace): verified",
+        "secret (all-traces): falsified",
+        "AUTO_typing (all-traces): verified"
+      ]
+    }
+  ]
+}

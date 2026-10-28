@@ -1,0 +1,55 @@
+theory ManualVariantAutoSourcesOutput
+begin
+
+builtins: symmetric-encryption
+
+// The output of --auto-sources for a theory whose Resp rule has an open
+// chain. Resp___VARIANT_3 adds an AUTO_IN_TERM action that the E-rule and the
+// other members lack. Its terms occur in the member's premises, so the added
+// action is covered and Tamarin must accept its own output.
+
+rule Init:
+   [ Fr( ~k ), Fr( ~m ) ]
+  --[
+  AUTO_OUT_TERM_1_0_0_1__Resp___VARIANT_3( senc(<'1', ~m>, ~k) ),
+  Sent( ~m )
+  ]->
+   [ !Key( ~k ), Out( senc(<'1', ~m>, ~k) ) ]
+
+rule Resp:
+   [ !Key( k ), In( c ) ]
+  --[ Got( snd(sdec(c, k)) ) ]->
+   [ Out( snd(sdec(c, k)) ) ]
+ variants
+  rule (modulo AC) Resp___VARIANT_1:
+     [ !Key( k.2 ), In( c.1 ) ]
+    --[ Got( snd(sdec(c.1, k.2)) ) ]->
+     [ Out( snd(sdec(c.1, k.2)) ) ]
+  ,
+  rule (modulo AC) Resp___VARIANT_2:
+     [ !Key( k.1 ), In( senc(x.2, k.1) ) ]
+    --[ Got( snd(x.2) ) ]->
+     [ Out( snd(x.2) ) ]
+  ,
+  rule (modulo AC) Resp___VARIANT_3:
+     [ !Key( k.1 ), In( senc(<x.3, z.2>, k.1) ) ]
+    --[
+    AUTO_IN_TERM_1_0_0_1__Resp___VARIANT_3( senc(<x.3, z.2>, k.1), z.2 ),
+    Got( z.2 )
+    ]->
+     [ Out( z.2 ) ]
+
+lemma got_sent:
+  exists-trace "Ex m #i #j. Sent( m ) @ #i & Got( m ) @ #j"
+
+lemma secret:
+  all-traces "All m #i. Sent( m ) @ #i ==> not (Ex #j. K( m ) @ #j)"
+
+lemma AUTO_typing [sources]:
+  all-traces
+  "All x m #i.
+     AUTO_IN_TERM_1_0_0_1__Resp___VARIANT_3( m, x ) @ #i ==>
+     ((Ex #j. !KU( x ) @ #j & #j < #i) |
+      (Ex #j. AUTO_OUT_TERM_1_0_0_1__Resp___VARIANT_3( m ) @ #j & #j < #i))"
+
+end

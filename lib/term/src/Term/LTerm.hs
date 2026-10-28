@@ -90,6 +90,7 @@ module Term.LTerm (
   , rename
   , renameIgnoring
   , eqModuloFreshnessNoAC
+  , canonicalizeFreshnessNoAC
   , avoid
   , evalFreshAvoiding
   , evalFreshTAvoiding
@@ -664,10 +665,15 @@ eqModuloFreshnessNoAC :: (HasFrees a, Eq a) => a -> a -> Bool
 eqModuloFreshnessNoAC t1 =
      -- this formulation shares normalisation of t1 among further calls to
      -- different t2.
-    (normIndices t1 ==) . normIndices
-  where
-    normIndices = (`evalFresh` nothingUsed) . (`evalBindT` noBindings) .
-                  mapFrees (Arbitrary $ \x -> importBinding (`LVar` lvarSort x) x "")
+    (canonicalizeFreshnessNoAC t1 ==) . canonicalizeFreshnessNoAC
+
+-- | Comparison key for 'eqModuloFreshnessNoAC'. Discards variable name
+-- hints and assigns indices in traversal order, retaining sorts. This is not
+-- an AC normal form; keep the original value when retaining representatives.
+canonicalizeFreshnessNoAC :: HasFrees a => a -> a
+canonicalizeFreshnessNoAC =
+    (`evalFresh` nothingUsed) . (`evalBindT` noBindings) .
+    mapFrees (Arbitrary $ \x -> importBinding (`LVar` lvarSort x) x "")
 
 -- | The mininum and maximum index of all free variables.
 {-# INLINABLE boundsVarIdx #-}

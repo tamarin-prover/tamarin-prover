@@ -1,0 +1,11 @@
+{
+  "tests": [
+    {
+      "name": "issue908-unguardable-restriction",
+      "contains": [
+        "cannot be converted to a guarded formula"
+      ],
+      "timeout": 60
+    }
+  ]
+}

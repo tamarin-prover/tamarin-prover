@@ -8,6 +8,7 @@ module Prover (
 
 import           Prelude                             hiding (id, (.))
 
+import qualified Data.Map                            as M
 import           Data.Maybe
 import qualified Data.Set                            as S
 
@@ -27,6 +28,7 @@ import           Theory.Proof
 import           Theory.Text.Pretty
 import           Theory.Tools.AbstractInterpretation
 import           Theory.Tools.LoopBreakers
+import           Theory.Tools.RuleVariants           (variantsProtoRule)
 import           Lemma
 import           ClosedTheory
 import           TheoryObject
@@ -234,6 +236,11 @@ mkDiffSystem _ _ _ = emptyDiffSystem
 -- Partial evaluation / abstract interpretation
 -----------------------------------------------
 
+-- | Export disposition for one original rule family.
+data PartialEvaluationFamilyPlan
+    = KeepOriginal
+    | EmitRefinements [ProtoRuleE]
+
 -- | Apply partial evaluation.
 applyPartialEvaluation :: EvaluationStyle -> Bool -> ClosedTheory -> ClosedTheory
 applyPartialEvaluation evalStyle autosources thy0 =
@@ -242,26 +249,103 @@ applyPartialEvaluation evalStyle autosources thy0 =
       autosources True
   where
     sig          = L.get thySignature thy0
-    ruEs         = getProtoRuleEs thy0
-    (st', ruEs') = (`runReader` L.get sigmMaudeHandle sig) $
-                   partialEvaluation evalStyle ruEs
+    originals = getProtoRuleEs thy0
+    familyIds = M.fromList $ zip originals [0 :: Int ..]
+    familyId ru = familyIds M.! ru
+    -- Keep ownership separate from names: a generated variant name can also
+    -- be the name of an independent E-rule. All imported variants belong to
+    -- the same original E-rule, and this ID survives refinement and renaming.
+    -- Parser/SAPIC insertion checks E-name uniqueness, but programmatic
+    -- addRules/closeTheoryWithMaude callers need not, so names cannot be IDs.
+    rules =
+      [ fmap (\info -> (familyId (L.get cprRuleE ru), info))
+          (compiledRule variant)
+      | ru <- theoryRules thy0, variant <- evaluationVariants ru ]
+    -- An identity singleton is already unfolded. Keep its AC name even if
+    -- reloading changed variable indices relative to its E-rule; unfolding it
+    -- again would rename an unchanged rule and invalidate saved proof cases.
+    evaluationVariants ru
+      | L.get (pracVariants . rInfo . cprRuleAC) ru == Disj [emptySubstVFresh] = [ru]
+      | otherwise = unfoldRuleVariants ru
+    originalRuleCount = length originals
+    (st', rules') = (`runReader` L.get sigmMaudeHandle sig) $
+                    partialEvaluation evalStyle rules
+
+    -- A compiled AC variant is not necessarily an equivalent E-rule: exporting
+    -- it as one can introduce further variants on reload, with the wrong added
+    -- actions. Keep the original family if any refinement would change under
+    -- E-variant computation, or would fail the original-rule product check.
+    -- Restoring the complete family preserves its added
+    -- actions and keeps manual-variant completeness checks applicable.
+    -- Prepend each refinement, then restore family order once. Appending to
+    -- the growing bucket would repeatedly copy its prefix.
+    refinements = M.map reverse $ M.fromListWith (++)
+      [ (fst (L.get rInfo ru), [fmap snd ru])
+      | ru <- rules' ]
+    -- Include pruned families explicitly, so deletion is never inferred from
+    -- a missing lookup. All original rules have an entry, including duplicates.
+    familyPlans = M.fromList
+      [ (familyId ru, planFamily (M.findWithDefault [] (familyId ru) refinements))
+      | ru <- originals ]
+    planFamily rs
+      | any (not . exportable) rs = KeepOriginal
+      | otherwise = EmitRefinements rs
+    exportable ru = null (ruleProductsOutsideExponents ru) &&
+      case variantsProtoRule (L.get sigmMaudeHandle sig) ru of
+        Just ac -> eqModuloFreshnessNoAC ac (compiledRuleAC ru)
+        Nothing -> False
+
+    -- Refinement can split one rule into several rules with the same name.
+    -- Allocate distinct export names before closing the theory, so proofs and
+    -- printed rules use the same names. Reserve even names of removed rules.
+    namedFamilyPlans = MS.evalState (traverse nameFamily familyPlans)
+      (retainedNames, reservedNames)
+    nameFamily (EmitRefinements rs) = EmitRefinements <$> mapM nameRefinement rs
+    nameFamily plan = return plan
+    retainedNames = S.fromList
+      [ getRuleName ru | ru <- originals,
+                         KeepOriginal <- [familyPlans M.! familyId ru] ]
+    reservedNames = S.fromList $ map getRuleName originals ++
+      map (getRuleName . fmap snd) rules
+    nameRefinement ru = do
+      (used, reserved) <- MS.get
+      let originalName = getRuleName ru
+          name = if originalName `S.notMember` used then originalName else
+            head [ candidate | i <- [1 :: Integer ..],
+                   let candidate = originalName ++ "_PE_" ++ show i,
+                   candidate `S.notMember` reserved ]
+          renamed = if name == originalName then ru else
+            L.set (preName . rInfo) (StandRule name) ru
+      MS.put (S.insert name used, S.insert name reserved)
+      return renamed
+
+    replaceRule (RuleItem ru) = case namedFamilyPlans M.! owner of
+      KeepOriginal -> [RuleItem ru]
+      EmitRefinements rs -> map (RuleItem . openCompiledRule) rs
+      where
+        owner = familyId (L.get oprRuleE ru)
+    replaceRule item = [item]
 
     replaceProtoRules [] = []
     replaceProtoRules (item:items)
       | isRuleItem item  =
           [ TextItem ("text", render ppAbsState)
-       -- Here we loose imported variants!
-          ] ++ map (\x -> RuleItem (OpenProtoRule x [])) ruEs' ++ filter (not . isRuleItem) items
+          ] ++ concatMap replaceRule (item:items)
       | otherwise        = item : replaceProtoRules items
+
+    retainedCount = length [() | KeepOriginal <- M.elems familyPlans]
 
     ppAbsState =
       (text $ " the abstract state after partial evaluation"
               ++ " contains " ++ show (S.size st') ++ " facts:") $--$
       (numbered' $ map prettyLNFact $ S.toList st') $--$
-      (text $ "This abstract state results in " ++ show (length ruEs') ++
+      (text $ "This abstract state results in " ++ show (sum [length rs | EmitRefinements rs <- M.elems familyPlans]) ++
               " refined multiset rewriting rules.\n" ++
+              (if retainedCount == 0 then "" else
+                "Kept " ++ show retainedCount ++
+                " original rule families to preserve their variants on export.\n") ++
               "Note that the original number of multiset rewriting rules was "
-              ++ show (length ruEs) ++ ".\n\n")
+              ++ show originalRuleCount ++ ".\n\n")
 
 -- | Apply partial evaluation.
 applyPartialEvaluationDiff :: EvaluationStyle -> Bool -> ClosedDiffTheory -> ClosedDiffTheory
@@ -302,6 +386,35 @@ applyPartialEvaluationDiff evalStyle autoSources thy0 =
               " right refined multiset rewriting rules.\n" ++
               "Note that the original number of multiset rewriting rules was "
               ++ show (length (ruEs RHS)) ++ ".\n\n")
+
+
+-- Partial evaluation only needs unification modulo AC when it starts from the
+-- already computed E-variants. Representing each compiled variant as an E-rule
+-- lets us reinstall its refined AC rule without recomputing or losing imported
+-- variants. Embedded restrictions are already separate theory items here; an
+-- empty local list avoids inferring monotonicity from a restriction whose
+-- variables were renamed while its E-variant was computed.
+compiledRule :: ClosedProtoRule -> ProtoRuleE
+compiledRule cru = case L.get cprRuleAC cru of
+  Rule info prems concs acts newVars ->
+    Rule (ProtoRuleEInfo
+            (L.get pracName info)
+            (L.get pracAttributes info)
+            [])
+         prems concs acts newVars
+
+openCompiledRule :: ProtoRuleE -> OpenProtoRule
+openCompiledRule ruE = OpenProtoRule ruE [compiledRuleAC ruE]
+
+compiledRuleAC :: ProtoRuleE -> ProtoRuleAC
+compiledRuleAC (Rule eInfo prems concs acts newVars) =
+    Rule acInfo prems concs acts newVars
+  where
+    acInfo = ProtoRuleACInfo
+               (L.get preName eInfo)
+               (L.get preAttributes eInfo)
+               (Disj [emptySubstVFresh])
+               []
 
 
 -- | Open a theory by dropping the closed world assumption and values whose

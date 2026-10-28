@@ -150,6 +150,8 @@ protoRuleAC = do
         fail $ "cannot use reserved rule name '" ++ name ++ "'"
     subst <- option emptySubst letBlock
     (ps0,as0,cs0,rs0) <- genericRule msgvar nodevar
+    unless (null rs0) $
+        fail "Embedded restrictions in explicit AC variants are not supported; use named restrictions and action facts instead."
     let (ps,as,cs,_) = apply subst (ps0,as0,cs0,rs0)
     return $ Rule ri ps cs as (newVariables ps $ cs ++ as)
 

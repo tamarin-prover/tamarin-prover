@@ -1,0 +1,23 @@
+theory ManualVariantAutoSourcesRoundtrip
+begin
+builtins: symmetric-encryption
+macros: identity(x) = x
+
+// Auto-sources unfolds these already explicit members before adding its
+// actions. Their names must still match the computed family on reload,
+// including when partial evaluation keeps that family for safe export.
+rule Emit:
+  [In(<x,x>), In(k)] --[Original(sdec(x,k))]-> [Out(sdec(x,k))]
+variants
+rule (modulo AC) Emit___VARIANT_1:
+  [In(<cipher,cipher>), In(identity(key))]
+  --[Original(identity(sdec(cipher,key))), Added('a')]->
+  [Out(identity(sdec(cipher,key)))]
+,
+rule (modulo AC) Emit___VARIANT_2:
+  [In(<senc(plain,key),senc(plain,key)>), In(identity(key))]
+  --[Original(identity(plain)), Added('a')]-> [Out(identity(plain))]
+
+lemma witness: exists-trace "Ex #i. Added('a')@i"
+lemma false_safety: "All #i. Added('a')@i ==> F"
+end

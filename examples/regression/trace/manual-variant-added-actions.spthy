@@ -1,0 +1,34 @@
+theory ManualVariantAddedActions begin
+builtins: symmetric-encryption, xor, diffie-hellman
+// Each family adds an action over inherited terms that some instance makes
+// reducible or cancels: y = senc('m',k.1) for sdec, y = k.1 for xor, and
+// y = inv(k.1) for the exponent product. The solver discards rule instances
+// with terms that are not in normal form, so accepting these families would
+// silently drop the traces that the lemmas below need.
+rule Key: [ Fr(~k) ] --> [ !Key(~k), Out(~k) ]
+
+rule Dec: [ In(x), In(y), !Key(k) ] --[ Got(y), UsesKey(k) ]-> [ Out(sdec(x,k)) ]
+variants
+rule (modulo AC) Dec___VARIANT_1:
+  [ In(x.2), In(y), !Key(k.1) ] --[ Got(y), UsesKey(k.1), Dec(sdec(y,k.1)) ]-> [ Out(sdec(x.2,k.1)) ],
+rule (modulo AC) Dec___VARIANT_2:
+  [ In(senc(z.2,k.1)), In(y), !Key(k.1) ] --[ Got(y), UsesKey(k.1), Dec(sdec(y,k.1)) ]-> [ Out(z.2) ]
+
+rule Xor: [ In(x), In(y), !Key(k) ] --> [ Out(sdec(x,k)) ]
+variants
+rule (modulo AC) Xor___VARIANT_1:
+  [ In(x.2), In(y), !Key(k.1) ] --[ X(y XOR k.1) ]-> [ Out(sdec(x.2,k.1)) ],
+rule (modulo AC) Xor___VARIANT_2:
+  [ In(senc(z.2,k.1)), In(y), !Key(k.1) ] --[ X(y XOR k.1) ]-> [ Out(z.2) ]
+
+rule Exp: [ In(x), In(y), !Key(k) ] --> [ Out(sdec(x,k)) ]
+variants
+rule (modulo AC) Exp___VARIANT_1:
+  [ In(x.2), In(y), !Key(k.1) ] --[ E('g'^(y*k.1)) ]-> [ Out(sdec(x.2,k.1)) ],
+rule (modulo AC) Exp___VARIANT_2:
+  [ In(senc(z.2,k.1)), In(y), !Key(k.1) ] --[ E('g'^(y*k.1)) ]-> [ Out(z.2) ]
+
+lemma got_enc: exists-trace "Ex k #i. Got(senc('m',k))@i & UsesKey(k)@i"
+lemma zero_exists: exists-trace "Ex #i. X(zero)@i"
+lemma g_exists: exists-trace "Ex #i. E('g')@i"
+end

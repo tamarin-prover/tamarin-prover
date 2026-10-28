@@ -1,0 +1,20 @@
+theory PartialEvaluationReplay
+begin
+
+// A small saved result of partial evaluation. On reloading, the compiled
+// Seed rule can have different variable indices from its E-rule. Evaluating
+// it again must keep its name, so the saved case below still replays.
+rule Seed:
+  [ Fr(~s.1), Fr(~k) ] --[ Seeded(~s.1) ]-> [ !Key(~k) ]
+
+rule Use:
+  [ !Key(~k) ] --[ Used(~k) ]-> []
+
+lemma use: exists-trace "Ex k #i. Used(k)@i"
+simplify
+solve( !Key(~k) ▶₀ #i )
+  case Seed
+  SOLVED // trace found
+qed
+
+end
