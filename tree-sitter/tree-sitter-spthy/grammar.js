@@ -3,6 +3,12 @@
  * @author Lennard Tworeck
  */
 
+// Data.Char.isSpace, excluding ASCII space: spaces can continue a heuristic,
+// whereas the other whitespace characters terminate a global sequence.
+const nonSpaceWhitespace = /[\t-\r\u00a0\u1680\u2000-\u200a\u2028\u2029\u202f\u205f\u3000]/;
+
+const whitespace = new RegExp(nonSpaceWhitespace.source + '| ');
+
 module.exports = grammar({
   name: 'spthy',
 
@@ -10,7 +16,7 @@ module.exports = grammar({
   extras: $ => [
       $.multi_comment,
       $.single_comment,
-      /\s|\\\r?\n|\u00A0/
+      new RegExp(whitespace.source + '|' + /\\\r?\n/.source)
   ],
 
   conflicts: $ => [
@@ -147,7 +153,7 @@ module.exports = grammar({
 
       include: $ => seq(
           '#include',
-          '"', $.path, '"'
+          '"', optional($.path), '"'
       ),
 
       _ifdef_formula: $ => choice(
@@ -328,25 +334,46 @@ module.exports = grammar({
       global_heuristic: $ => seq(
           'heuristic',
           ':',
-          field('proof_method_ranking', repeat1($._proof_method_ranking))
+          optional($._heuristic_leading_space),
+          field('heuristic', $.heuristic),
+          $._heuristic_end
       ),
 
-      _proof_method_ranking: $ => choice(
-          $.standard_proof_method_ranking,
-          $.oracle_proof_method_ranking,
-          $.tactic_proof_method_ranking
+      // The initial token follows the ordinary lexer; subsequent tokens allow
+      // only ASCII spaces. Comments must explicitly end the sequence because
+      // named extras can otherwise be skipped even before immediate tokens.
+      _heuristic_leading_space: $ => repeat1(choice(whitespace, $.single_comment, $.multi_comment)),
+
+      _heuristic_end: $ => choice(
+          token.immediate(seq(/ */, nonSpaceWhitespace)),
+          $.single_comment,
+          $.multi_comment
       ),
 
-      standard_proof_method_ranking: $ => /[CISPcisp][CISPcisp]?[CISPcisp]?[CISPcisp]?/,
+      heuristic: $ => repeat1(choice(
+          alias($._heuristic_builtin, $.builtin_ranking),
+          $.oracle_ranking,
+          $.tactic_reference
+      )),
 
-      oracle_proof_method_ranking: $ => seq(
-          choice('O', 'o'),
-          optional(seq('"', $.param, '"'))
+      builtin_ranking: $ => builtinRanking(),
+
+      _heuristic_builtin: $ => token.immediate(prec(1, seq(/ */, builtinRanking()))),
+
+      oracle_ranking: $ => prec.right(seq(
+          token.immediate(prec(1, / *[Oo]/)),
+          optional(field('path', $.oracle_path))
+      )),
+
+      oracle_path: $ => token.immediate(seq(/ */, '"', /[^"\n\r]+/, '"')),
+
+      tactic_reference: $ => seq(
+          token.immediate(/ *\{ */),
+          field('name', $.tactic_name),
+          token.immediate('}')
       ),
 
-      tactic_proof_method_ranking: $ => seq(
-          '{', $.ident, '}' // in this case ident has to be a tactic name
-      ),
+      tactic_name: $ => token.immediate(/[^"\n\r{}]+/),
 
 
       /*
@@ -356,21 +383,13 @@ module.exports = grammar({
           'tactic', ':',
           $.ident,
           optional($.presort),
-          choice(
-              seq(
-                  repeat1($.prio),
-                  repeat($.deprio)
-              ),
-              seq(
-                  repeat($.prio),
-                  repeat1($.deprio)
-              )
-          )
+          repeat($.prio),
+          repeat($.deprio)
       ),
 
       presort: $ => seq(
           'presort', ':',
-          $.standard_proof_method_ranking
+          field('ranking', $.builtin_ranking)
       ),
 
       prio: $ => seq(
@@ -576,11 +595,40 @@ module.exports = grammar({
 
       read_state: $ => prec.right('LOOKUP', seq(
           'lookup', field('from', $.mset_term),
-          'as', field('to',$._lvar),
+          'as', field('to', choice(
+              $._lookup_var_no_suffix,
+              alias($._typed_lookup_var, $.custom_var),
+              alias($._any_lookup_var, $.any_var)
+          )),
           'in', field('in', $._process),
           optional(seq('else', field('else', $._process))),
           optional(seq(';', $._process))
       )),
+
+      _typed_lookup_var: $ => seq(
+          $._lookup_var_no_suffix, ':', field('variable_type', $.ident)
+      ),
+
+      _any_lookup_var: $ => seq($._lookup_var_no_suffix, ':', 'ANY'),
+
+      // SAPIC accepts a sort prefix and one type annotation, not x:pub:type.
+      _lookup_var_no_suffix: $ => choice(
+          alias($._lookup_var_identifier, $.msg_var_or_nullary_fun),
+          alias($._lookup_pub_var, $.pub_var),
+          alias($._lookup_fresh_var, $.fresh_var),
+          alias($._lookup_temporal_var, $.temporal_var),
+          alias($._lookup_nat_var, $.nat_var)
+      ),
+
+      _lookup_pub_var: $ => seq('$', $._lookup_var_identifier),
+      _lookup_fresh_var: $ => seq('~', $._lookup_var_identifier),
+      _lookup_temporal_var: $ => seq('#', $._lookup_var_identifier),
+      _lookup_nat_var: $ => seq('%', $._lookup_var_identifier),
+
+      _lookup_var_identifier: $ => seq(
+          field('variable_identifier', $._term_ident),
+          optional(seq('.', $.natural))
+      ),
 
       set_lock: $ => prec.right(seq(
           'lock', $.mset_term,
@@ -900,31 +948,25 @@ module.exports = grammar({
           'lemma',
           optional($.modulo),
           field('lemma_identifier', $.ident),
-          optional($.diff_lemma_attrs),
+          optional($.lemma_attrs),
           ':',
           optional($.trace_quantifier),
           '"', field('formula', $._formula), '"',
           optional(field('proof_skeleton', $._proof_skeleton))
       ),
 
-      // lemma_attrs: $ => seq(
-      //     '[',
-      //     $.lemma_attr,
-      //     repeat(seq(
-      //         ',',
-      //         $.lemma_attr
-      //     )),
-      //     optional(','),
-      //     ']'
-      // ),
-
       lemma_attr: $ => choice(
+          'typing', // Legacy alias for sources, still accepted by Haskell.
           'sources',
           'reuse',
+          'diff_reuse',
           'use_induction',
-          seq('output=', '[', $.language, repeat(seq(',', $.language)), ']'),
-          seq('hide_lemma=', $.ident),
-          seq('heuristic=', field('proof_method_ranking', repeat1($._proof_method_ranking)))
+          seq('output', '=', '[', commaSep($.language), ']'),
+          seq('hide_lemma', '=', $.ident),
+          seq('heuristic', '=',
+              optional($._heuristic_leading_space),
+              field('heuristic', $.heuristic),
+              optional(choice($.single_comment, $.multi_comment)))
       ),
 
       language: $ => choice(
@@ -940,19 +982,14 @@ module.exports = grammar({
           'diffLemma',
           optional($.modulo),
           field('lemma_identifier', $.ident),
-          optional($.diff_lemma_attrs),
+          optional($.lemma_attrs),
           ':',
           optional(field('proof_skeleton', $._proof_skeleton))
       ),
 
-      diff_lemma_attrs: $ => seq(
+      lemma_attrs: $ => seq(
           '[',
-          choice($.diff_lemma_attr,$.lemma_attr),
-          repeat(seq(
-              ',',
-              choice($.diff_lemma_attr,$.lemma_attr)
-          )),
-          optional(','),
+          commaSep(choice($.diff_lemma_attr, $.lemma_attr)),
           ']'
       ),
 
@@ -1488,7 +1525,9 @@ module.exports = grammar({
 
       param: $ => /[^"]*/,
 
-      path: $ => /[A-Za-z0-9-\_]*/,
+      // Match filePath's letters/numbers and punctuation, with either host's
+      // directory separator. Empty paths are handled by the include rule.
+      path: $ => /[\p{L}\p{N}._/\\-]+/,
 
       export_query: $ => /(\\"|[^"])*/,
 
@@ -1513,3 +1552,15 @@ module.exports = grammar({
 
   }
 });
+
+// A tactic presort selects one builtin; a heuristic can concatenate these
+// with oracle rankings. Keep their shared alphabet in one place.
+// Literal choices also give presorts the grammar's identifier boundaries.
+function builtinRanking() {
+    return choice('C', 'I', 'S', 'P', 'c', 'i', 's', 'p');
+}
+
+// Match the Haskell parser's list: zero or more items with a trailing comma.
+function commaSep(rule) {
+    return optional(seq(rule, repeat(seq(',', rule)), optional(',')));
+}

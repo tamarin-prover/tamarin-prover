@@ -1,0 +1,162 @@
+==================================================
+Empty trace lemma attributes
+==================================================
+
+theory Test begin
+lemma L []: "T"
+end
+
+---
+
+(theory
+  theory_name: (ident)
+  (lemma
+    lemma_identifier: (ident)
+    (lemma_attrs)
+    formula: (atom)))
+
+==================================================
+Empty diff lemma attributes
+==================================================
+
+theory Test begin
+diffLemma D []:
+end
+
+---
+
+(theory
+  theory_name: (ident)
+  (diff_lemma
+    lemma_identifier: (ident)
+    (lemma_attrs)))
+
+==================================================
+Empty trace lemma output list
+==================================================
+
+theory Test begin
+lemma L [output=[]]: "T"
+end
+
+---
+
+(theory
+  theory_name: (ident)
+  (lemma
+    lemma_identifier: (ident)
+    (lemma_attrs
+      (lemma_attr))
+    formula: (atom)))
+
+==================================================
+Empty diff lemma output list
+==================================================
+
+theory Test begin
+diffLemma D [output=[]]:
+end
+
+---
+
+(theory
+  theory_name: (ident)
+  (diff_lemma
+    lemma_identifier: (ident)
+    (lemma_attrs
+      (lemma_attr))))
+
+==================================================
+Trailing commas in trace lemma lists
+==================================================
+
+theory Test begin
+lemma L [output=[spthy,msr,],reuse,]: "T"
+end
+
+---
+
+(theory
+  theory_name: (ident)
+  (lemma
+    lemma_identifier: (ident)
+    (lemma_attrs
+      (lemma_attr
+        (language)
+        (language))
+      (lemma_attr))
+    formula: (atom)))
+
+==================================================
+Trailing commas in diff lemma lists
+==================================================
+
+theory Test begin
+diffLemma D [output=[spthy,],right,]:
+end
+
+---
+
+(theory
+  theory_name: (ident)
+  (diff_lemma
+    lemma_identifier: (ident)
+    (lemma_attrs
+      (lemma_attr
+        (language))
+      (diff_lemma_attr))))
+
+==================================================
+Empty attribute list cannot contain a comma
+:error
+==================================================
+
+theory Test begin
+lemma L [,]: "T"
+end
+
+---
+
+==================================================
+Empty output list cannot contain a comma
+:error
+==================================================
+
+theory Test begin
+lemma L [output=[,]]: "T"
+end
+
+---
+
+==================================================
+Attribute lists reject consecutive commas
+:error
+==================================================
+
+theory Test begin
+lemma L [reuse,,]: "T"
+end
+
+---
+
+==================================================
+Output lists reject consecutive commas
+:error
+==================================================
+
+theory Test begin
+lemma L [output=[spthy,,]]: "T"
+end
+
+---
+
+==================================================
+Output languages need a separator
+:error
+==================================================
+
+theory Test begin
+lemma L [output=[spthy msr]]: "T"
+end
+
+---

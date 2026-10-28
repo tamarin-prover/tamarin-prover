@@ -18,6 +18,7 @@ import Main.Console
 import Main.Environment
 
 import Term.UnitTests qualified as Term (tests)
+import Test.ParserTests qualified as Parser (testHeuristics)
 import Data.Maybe (isJust)
 
 
@@ -85,6 +86,9 @@ run _thisMode as = do
   --}
 
   --------------------------------------------------------------------------
+  nextTopic "Testing heuristic parsing"
+  successParser <- runUnitTest Parser.testHeuristics
+
   nextTopic "Testing the unification infrastructure"
   successTerm  <- runUnitTest =<< Term.tests (maudePath as)
 
@@ -93,7 +97,7 @@ run _thisMode as = do
   --
 
   nextTopic "TEST SUMMARY"
-  let success = successMaude && successGraphVizDot && successTerm -- , successParser, successProver ]
+  let success = successMaude && successGraphVizDot && successParser && successTerm -- , successProver ]
   if success then do
     putStrLn "All tests successful."
     putStrLn $ "The " ++ programName ++ " should work as intended."
