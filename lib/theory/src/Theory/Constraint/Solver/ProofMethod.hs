@@ -61,6 +61,7 @@ import           Safe
 import           System.IO.Unsafe
 import           System.Process
 
+import qualified Theory.Constraint.System.StoredFormulas as Stored
 import           Theory.Constraint.Solver.Sources
 import           Theory.Constraint.Solver.Contradictions
 import           Theory.Constraint.Solver.Goals
@@ -316,16 +317,16 @@ execProofMethod ctxt method sys =
     getInductionCases :: System -> Maybe (LNGuarded, LNGuarded)
     getInductionCases s = do
       guard (M.null $ L.get sNodes s)
-      guard (S.null $ L.get sSolvedFormulas s)
+      guard (Stored.null $ L.get sSolvedFormulas s)
       guard (M.null $ L.get sGoals s)
-      (h, t) <- uncons $ S.toList $ L.get sFormulas s
+      (h, t) <- uncons $ Stored.toList $ L.get sFormulas s
       guard (null t)
       either (const Nothing) Just (ginduct h)
 
     induction :: (LNGuarded, LNGuarded) -> Reduction String
     induction (baseCase, stepCase) = do
       (caseName, caseFormula) <- disjunctionOfList [("empty_trace", baseCase), ("non_empty_trace", stepCase)]
-      L.setM sFormulas (S.singleton caseFormula)
+      L.setM sFormulas (Stored.singleton caseFormula)
       return caseName
 
     distinguish n =
@@ -517,8 +518,8 @@ witnessedSubterm msig sys = witnessed
     fixedSubtermVars = S.fromList $ frees $
       [ t | (small, big) <- S.toList (L.get negSubterms sst), t <- [small, big] ] ++
       [ small | (small, _) <- posSts ]
-    formulas = S.toList (L.get sFormulas sys) ++ S.toList (L.get sSolvedFormulas sys)
-               ++ S.toList (L.get sLemmas sys)
+    formulas = Stored.toList (L.get sFormulas sys) ++ Stored.toList (L.get sSolvedFormulas sys)
+               ++ Stored.toList (L.get sLemmas sys)
     formulaVars = S.fromList (frees formulas)
     guards = concatMap guardAtomGroups formulas
     nodeFacts = [ fa | ru <- M.elems (L.get sNodes sys)

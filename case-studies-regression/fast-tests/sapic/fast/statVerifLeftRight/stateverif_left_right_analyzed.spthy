@@ -216,116 +216,110 @@ next
                         case unlocks_0_1111112111111111
                         solve( State_1111112111111111( ~n.3, req, ~n.1, sk, status ) ▶₀ #t2.2 )
                           case insertFstatussreq_0_111111211111111
-                          solve( (#t2.1 < #t2.3)  ∥ (#t2.1 = #t2.3) )
-                            case case_1
+                          solve( !KU( aenc(<m, y>, pk(~n.2)) ) @ #vk )
+                            case c_aenc
                             by contradiction /* from formulas */
                           next
-                            case case_2
-                            solve( !KU( aenc(<m, y>, pk(~n.2)) ) @ #vk )
-                              case c_aenc
-                              by contradiction /* from formulas */
+                            case outaenclmrmpksk_0_1111211111
+                            by contradiction /* from formulas */
+                          next
+                            case outx_0_111111212111111
+                            solve( (∃ #j. (!KU( t ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.26))  ∥
+                                   (∃ x #j. (Exclusive( x, t ) @ #j) ∧ ¬(last(#j)))  ∥
+                                   (∃ y #j. (Exclusive( t, y ) @ #j) ∧ ¬(last(#j))) )
+                              case case_1
+                              by contradiction /* cyclic */
                             next
-                              case outaenclmrmpksk_0_1111211111
-                              by contradiction /* from formulas */
-                            next
-                              case outx_0_111111212111111
-                              solve( (∃ #j. (!KU( t ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.26))  ∥
-                                     (∃ x #j. (Exclusive( x, t ) @ #j) ∧ ¬(last(#j)))  ∥
-                                     (∃ y #j. (Exclusive( t, y ) @ #j) ∧ ¬(last(#j))) )
+                              case case_2
+                              solve( (#vr.39 < #t2.3)  ∥ (#vr.39 = #t2.3) )
                                 case case_1
-                                by contradiction /* cyclic */
+                                solve( Insert( <'F_status', ~n.6>, 'left' ) @ #t2.3 )
+                                  case insertFstatussreq_0_111111211111111
+                                  solve( State_111121111( x, t, s, sk ) ▶₀ #j )
+                                    case newrm_0_11112111
+                                    by contradiction /* impossible chain */
+                                  qed
+                                next
+                                  case insertFstatussreq_0_1111112111111211
+                                  solve( State_111121111( x, t, s, sk ) ▶₀ #j )
+                                    case newrm_0_11112111
+                                    by contradiction /* impossible chain */
+                                  qed
+                                qed
                               next
                                 case case_2
-                                solve( (#vr.39 < #t2.3)  ∥ (#vr.39 = #t2.3) )
-                                  case case_1
-                                  solve( Insert( <'F_status', ~n.6>, 'left' ) @ #t2.3 )
-                                    case insertFstatussreq_0_111111211111111
-                                    solve( State_111121111( x, t, s, sk ) ▶₀ #j )
-                                      case newrm_0_11112111
-                                      by contradiction /* impossible chain */
-                                    qed
-                                  next
-                                    case insertFstatussreq_0_1111112111111211
-                                    solve( State_111121111( x, t, s, sk ) ▶₀ #j )
-                                      case newrm_0_11112111
-                                      by contradiction /* impossible chain */
-                                    qed
-                                  qed
-                                next
-                                  case case_2
-                                  by solve( Insert( <'F_status', ~n.4>, 'left' ) @ #t2.3 )
-                                qed
-                              next
-                                case case_3
-                                solve( (#vr.39 < #t2.3)  ∥ (#vr.39 = #t2.3) )
-                                  case case_1
-                                  solve( Insert( <'F_status', ~n.6>, 'left' ) @ #t2.3 )
-                                    case insertFstatussreq_0_111111211111111
-                                    solve( State_111121111( t, y.1, s, sk ) ▶₀ #j )
-                                      case newrm_0_11112111
-                                      by contradiction /* impossible chain */
-                                    qed
-                                  next
-                                    case insertFstatussreq_0_1111112111111211
-                                    solve( State_111121111( t, y.1, s, sk ) ▶₀ #j )
-                                      case newrm_0_11112111
-                                      by contradiction /* impossible chain */
-                                    qed
-                                  qed
-                                next
-                                  case case_2
-                                  by solve( Insert( <'F_status', ~n.4>, 'left' ) @ #t2.3 )
-                                qed
+                                by solve( Insert( <'F_status', ~n.4>, 'left' ) @ #t2.3 )
                               qed
                             next
-                              case outy_0_1111112121111211
-                              solve( (∃ #j. (!KU( t ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.26))  ∥
-                                     (∃ x #j. (Exclusive( x, t ) @ #j) ∧ ¬(last(#j)))  ∥
-                                     (∃ y #j. (Exclusive( t, y ) @ #j) ∧ ¬(last(#j))) )
+                              case case_3
+                              solve( (#vr.39 < #t2.3)  ∥ (#vr.39 = #t2.3) )
                                 case case_1
-                                by contradiction /* cyclic */
+                                solve( Insert( <'F_status', ~n.6>, 'left' ) @ #t2.3 )
+                                  case insertFstatussreq_0_111111211111111
+                                  solve( State_111121111( t, y.1, s, sk ) ▶₀ #j )
+                                    case newrm_0_11112111
+                                    by contradiction /* impossible chain */
+                                  qed
+                                next
+                                  case insertFstatussreq_0_1111112111111211
+                                  solve( State_111121111( t, y.1, s, sk ) ▶₀ #j )
+                                    case newrm_0_11112111
+                                    by contradiction /* impossible chain */
+                                  qed
+                                qed
                               next
                                 case case_2
-                                solve( (#vr.40 < #t2.3)  ∥ (#vr.40 = #t2.3) )
-                                  case case_1
-                                  solve( Insert( <'F_status', ~n.6>, 'right' ) @ #t2.3 )
-                                    case insertFstatussreq_0_111111211111111
-                                    solve( State_111121111( x, t, s, sk ) ▶₀ #j )
-                                      case newrm_0_11112111
-                                      by contradiction /* impossible chain */
-                                    qed
-                                  next
-                                    case insertFstatussreq_0_1111112111111211
-                                    solve( State_111121111( x, t, s, sk ) ▶₀ #j )
-                                      case newrm_0_11112111
-                                      by contradiction /* impossible chain */
-                                    qed
+                                by solve( Insert( <'F_status', ~n.4>, 'left' ) @ #t2.3 )
+                              qed
+                            qed
+                          next
+                            case outy_0_1111112121111211
+                            solve( (∃ #j. (!KU( t ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.26))  ∥
+                                   (∃ x #j. (Exclusive( x, t ) @ #j) ∧ ¬(last(#j)))  ∥
+                                   (∃ y #j. (Exclusive( t, y ) @ #j) ∧ ¬(last(#j))) )
+                              case case_1
+                              by contradiction /* cyclic */
+                            next
+                              case case_2
+                              solve( (#vr.40 < #t2.3)  ∥ (#vr.40 = #t2.3) )
+                                case case_1
+                                solve( Insert( <'F_status', ~n.6>, 'right' ) @ #t2.3 )
+                                  case insertFstatussreq_0_111111211111111
+                                  solve( State_111121111( x, t, s, sk ) ▶₀ #j )
+                                    case newrm_0_11112111
+                                    by contradiction /* impossible chain */
                                   qed
                                 next
-                                  case case_2
-                                  by solve( Insert( <'F_status', ~n.4>, 'right' ) @ #t2.3 )
+                                  case insertFstatussreq_0_1111112111111211
+                                  solve( State_111121111( x, t, s, sk ) ▶₀ #j )
+                                    case newrm_0_11112111
+                                    by contradiction /* impossible chain */
+                                  qed
                                 qed
                               next
-                                case case_3
-                                solve( (#vr.40 < #t2.3)  ∥ (#vr.40 = #t2.3) )
-                                  case case_1
-                                  solve( Insert( <'F_status', ~n.6>, 'right' ) @ #t2.3 )
-                                    case insertFstatussreq_0_111111211111111
-                                    solve( State_111121111( t, y.1, s, sk ) ▶₀ #j )
-                                      case newrm_0_11112111
-                                      by contradiction /* impossible chain */
-                                    qed
-                                  next
-                                    case insertFstatussreq_0_1111112111111211
-                                    solve( State_111121111( t, y.1, s, sk ) ▶₀ #j )
-                                      case newrm_0_11112111
-                                      by contradiction /* impossible chain */
-                                    qed
+                                case case_2
+                                by solve( Insert( <'F_status', ~n.4>, 'right' ) @ #t2.3 )
+                              qed
+                            next
+                              case case_3
+                              solve( (#vr.40 < #t2.3)  ∥ (#vr.40 = #t2.3) )
+                                case case_1
+                                solve( Insert( <'F_status', ~n.6>, 'right' ) @ #t2.3 )
+                                  case insertFstatussreq_0_111111211111111
+                                  solve( State_111121111( t, y.1, s, sk ) ▶₀ #j )
+                                    case newrm_0_11112111
+                                    by contradiction /* impossible chain */
                                   qed
                                 next
-                                  case case_2
-                                  by solve( Insert( <'F_status', ~n.4>, 'right' ) @ #t2.3 )
+                                  case insertFstatussreq_0_1111112111111211
+                                  solve( State_111121111( t, y.1, s, sk ) ▶₀ #j )
+                                    case newrm_0_11112111
+                                    by contradiction /* impossible chain */
+                                  qed
                                 qed
+                              next
+                                case case_2
+                                by solve( Insert( <'F_status', ~n.4>, 'right' ) @ #t2.3 )
                               qed
                             qed
                           qed
@@ -444,116 +438,110 @@ next
                         case unlocks_0_11111121111112111
                         solve( State_11111121111112111( ~n.3, req, ~n.1, sk, status ) ▶₀ #t2.2 )
                           case insertFstatussreq_0_1111112111111211
-                          solve( (#t2.1 < #t2.3)  ∥ (#t2.1 = #t2.3) )
-                            case case_1
+                          solve( !KU( aenc(<x, m>, pk(~n.2)) ) @ #vk )
+                            case c_aenc
                             by contradiction /* from formulas */
                           next
-                            case case_2
-                            solve( !KU( aenc(<x, m>, pk(~n.2)) ) @ #vk )
-                              case c_aenc
-                              by contradiction /* from formulas */
+                            case outaenclmrmpksk_0_1111211111
+                            by contradiction /* from formulas */
+                          next
+                            case outx_0_111111212111111
+                            solve( (∃ #j. (!KU( t ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.28))  ∥
+                                   (∃ x #j. (Exclusive( x, t ) @ #j) ∧ ¬(last(#j)))  ∥
+                                   (∃ y #j. (Exclusive( t, y ) @ #j) ∧ ¬(last(#j))) )
+                              case case_1
+                              by contradiction /* cyclic */
                             next
-                              case outaenclmrmpksk_0_1111211111
-                              by contradiction /* from formulas */
-                            next
-                              case outx_0_111111212111111
-                              solve( (∃ #j. (!KU( t ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.28))  ∥
-                                     (∃ x #j. (Exclusive( x, t ) @ #j) ∧ ¬(last(#j)))  ∥
-                                     (∃ y #j. (Exclusive( t, y ) @ #j) ∧ ¬(last(#j))) )
+                              case case_2
+                              solve( (#vr.41 < #t2.3)  ∥ (#vr.41 = #t2.3) )
                                 case case_1
-                                by contradiction /* cyclic */
+                                solve( Insert( <'F_status', ~n.6>, 'left' ) @ #t2.3 )
+                                  case insertFstatussreq_0_111111211111111
+                                  solve( State_111121111( x.1, t, s, sk ) ▶₀ #j )
+                                    case newrm_0_11112111
+                                    by contradiction /* impossible chain */
+                                  qed
+                                next
+                                  case insertFstatussreq_0_1111112111111211
+                                  solve( State_111121111( x.1, t, s, sk ) ▶₀ #j )
+                                    case newrm_0_11112111
+                                    by contradiction /* impossible chain */
+                                  qed
+                                qed
                               next
                                 case case_2
-                                solve( (#vr.41 < #t2.3)  ∥ (#vr.41 = #t2.3) )
-                                  case case_1
-                                  solve( Insert( <'F_status', ~n.6>, 'left' ) @ #t2.3 )
-                                    case insertFstatussreq_0_111111211111111
-                                    solve( State_111121111( x.1, t, s, sk ) ▶₀ #j )
-                                      case newrm_0_11112111
-                                      by contradiction /* impossible chain */
-                                    qed
-                                  next
-                                    case insertFstatussreq_0_1111112111111211
-                                    solve( State_111121111( x.1, t, s, sk ) ▶₀ #j )
-                                      case newrm_0_11112111
-                                      by contradiction /* impossible chain */
-                                    qed
-                                  qed
-                                next
-                                  case case_2
-                                  by solve( Insert( <'F_status', ~n.4>, 'left' ) @ #t2.3 )
-                                qed
-                              next
-                                case case_3
-                                solve( (#vr.41 < #t2.3)  ∥ (#vr.41 = #t2.3) )
-                                  case case_1
-                                  solve( Insert( <'F_status', ~n.6>, 'left' ) @ #t2.3 )
-                                    case insertFstatussreq_0_111111211111111
-                                    solve( State_111121111( t, y, s, sk ) ▶₀ #j )
-                                      case newrm_0_11112111
-                                      by contradiction /* impossible chain */
-                                    qed
-                                  next
-                                    case insertFstatussreq_0_1111112111111211
-                                    solve( State_111121111( t, y, s, sk ) ▶₀ #j )
-                                      case newrm_0_11112111
-                                      by contradiction /* impossible chain */
-                                    qed
-                                  qed
-                                next
-                                  case case_2
-                                  by solve( Insert( <'F_status', ~n.4>, 'left' ) @ #t2.3 )
-                                qed
+                                by solve( Insert( <'F_status', ~n.4>, 'left' ) @ #t2.3 )
                               qed
                             next
-                              case outy_0_1111112121111211
-                              solve( (∃ #j. (!KU( t ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.28))  ∥
-                                     (∃ x #j. (Exclusive( x, t ) @ #j) ∧ ¬(last(#j)))  ∥
-                                     (∃ y #j. (Exclusive( t, y ) @ #j) ∧ ¬(last(#j))) )
+                              case case_3
+                              solve( (#vr.41 < #t2.3)  ∥ (#vr.41 = #t2.3) )
                                 case case_1
-                                by contradiction /* cyclic */
+                                solve( Insert( <'F_status', ~n.6>, 'left' ) @ #t2.3 )
+                                  case insertFstatussreq_0_111111211111111
+                                  solve( State_111121111( t, y, s, sk ) ▶₀ #j )
+                                    case newrm_0_11112111
+                                    by contradiction /* impossible chain */
+                                  qed
+                                next
+                                  case insertFstatussreq_0_1111112111111211
+                                  solve( State_111121111( t, y, s, sk ) ▶₀ #j )
+                                    case newrm_0_11112111
+                                    by contradiction /* impossible chain */
+                                  qed
+                                qed
                               next
                                 case case_2
-                                solve( (#vr.42 < #t2.3)  ∥ (#vr.42 = #t2.3) )
-                                  case case_1
-                                  solve( Insert( <'F_status', ~n.6>, 'right' ) @ #t2.3 )
-                                    case insertFstatussreq_0_111111211111111
-                                    solve( State_111121111( x.1, t, s, sk ) ▶₀ #j )
-                                      case newrm_0_11112111
-                                      by contradiction /* impossible chain */
-                                    qed
-                                  next
-                                    case insertFstatussreq_0_1111112111111211
-                                    solve( State_111121111( x.1, t, s, sk ) ▶₀ #j )
-                                      case newrm_0_11112111
-                                      by contradiction /* impossible chain */
-                                    qed
+                                by solve( Insert( <'F_status', ~n.4>, 'left' ) @ #t2.3 )
+                              qed
+                            qed
+                          next
+                            case outy_0_1111112121111211
+                            solve( (∃ #j. (!KU( t ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.28))  ∥
+                                   (∃ x #j. (Exclusive( x, t ) @ #j) ∧ ¬(last(#j)))  ∥
+                                   (∃ y #j. (Exclusive( t, y ) @ #j) ∧ ¬(last(#j))) )
+                              case case_1
+                              by contradiction /* cyclic */
+                            next
+                              case case_2
+                              solve( (#vr.42 < #t2.3)  ∥ (#vr.42 = #t2.3) )
+                                case case_1
+                                solve( Insert( <'F_status', ~n.6>, 'right' ) @ #t2.3 )
+                                  case insertFstatussreq_0_111111211111111
+                                  solve( State_111121111( x.1, t, s, sk ) ▶₀ #j )
+                                    case newrm_0_11112111
+                                    by contradiction /* impossible chain */
                                   qed
                                 next
-                                  case case_2
-                                  by solve( Insert( <'F_status', ~n.4>, 'right' ) @ #t2.3 )
+                                  case insertFstatussreq_0_1111112111111211
+                                  solve( State_111121111( x.1, t, s, sk ) ▶₀ #j )
+                                    case newrm_0_11112111
+                                    by contradiction /* impossible chain */
+                                  qed
                                 qed
                               next
-                                case case_3
-                                solve( (#vr.42 < #t2.3)  ∥ (#vr.42 = #t2.3) )
-                                  case case_1
-                                  solve( Insert( <'F_status', ~n.6>, 'right' ) @ #t2.3 )
-                                    case insertFstatussreq_0_111111211111111
-                                    solve( State_111121111( t, y, s, sk ) ▶₀ #j )
-                                      case newrm_0_11112111
-                                      by contradiction /* impossible chain */
-                                    qed
-                                  next
-                                    case insertFstatussreq_0_1111112111111211
-                                    solve( State_111121111( t, y, s, sk ) ▶₀ #j )
-                                      case newrm_0_11112111
-                                      by contradiction /* impossible chain */
-                                    qed
+                                case case_2
+                                by solve( Insert( <'F_status', ~n.4>, 'right' ) @ #t2.3 )
+                              qed
+                            next
+                              case case_3
+                              solve( (#vr.42 < #t2.3)  ∥ (#vr.42 = #t2.3) )
+                                case case_1
+                                solve( Insert( <'F_status', ~n.6>, 'right' ) @ #t2.3 )
+                                  case insertFstatussreq_0_111111211111111
+                                  solve( State_111121111( t, y, s, sk ) ▶₀ #j )
+                                    case newrm_0_11112111
+                                    by contradiction /* impossible chain */
                                   qed
                                 next
-                                  case case_2
-                                  by solve( Insert( <'F_status', ~n.4>, 'right' ) @ #t2.3 )
+                                  case insertFstatussreq_0_1111112111111211
+                                  solve( State_111121111( t, y, s, sk ) ▶₀ #j )
+                                    case newrm_0_11112111
+                                    by contradiction /* impossible chain */
+                                  qed
                                 qed
+                              next
+                                case case_2
+                                by solve( Insert( <'F_status', ~n.4>, 'right' ) @ #t2.3 )
                               qed
                             qed
                           qed
@@ -802,12 +790,9 @@ solve( State_111121111( x, y, s, sk ) ▶₀ #i )
                   case unlocks_0_1111112111111111
                   solve( State_1111112111111111( ~n.4, req, ~n.5, sk, status ) ▶₀ #t2.2 )
                     case insertFstatussreq_0_111111211111111
-                    solve( (#t2.1 < #t2.3)  ∥ (#t2.1 = #t2.3) )
-                      case case_2
-                      solve( !KU( aenc(<~n, y>, pk(~n.6)) ) @ #vk.1 )
-                        case outaenclmrmpksk_0_1111211111
-                        SOLVED // trace found
-                      qed
+                    solve( !KU( aenc(<~n, y>, pk(~n.6)) ) @ #vk.1 )
+                      case outaenclmrmpksk_0_1111211111
+                      SOLVED // trace found
                     qed
                   qed
                 qed
@@ -862,12 +847,9 @@ solve( State_111121111( x, y, s, sk ) ▶₀ #i )
                   case unlocks_0_11111121111112111
                   solve( State_11111121111112111( ~n.4, req, ~n.5, sk, status ) ▶₀ #t2.2 )
                     case insertFstatussreq_0_1111112111111211
-                    solve( (#t2.1 < #t2.3)  ∥ (#t2.1 = #t2.3) )
-                      case case_2
-                      solve( !KU( aenc(<x, ~n.1>, pk(~n.6)) ) @ #vk.1 )
-                        case outaenclmrmpksk_0_1111211111
-                        SOLVED // trace found
-                      qed
+                    solve( !KU( aenc(<x, ~n.1>, pk(~n.6)) ) @ #vk.1 )
+                      case outaenclmrmpksk_0_1111211111
+                      SOLVED // trace found
                     qed
                   qed
                 qed
@@ -980,252 +962,234 @@ solve( State_111121111( x, y, s, sk ) ▶₀ #i )
                   case unlocks_0_1111112111111111
                   solve( State_1111112111111111( ~n.4, req, ~n.5, sk, status ) ▶₀ #t2.2 )
                     case insertFstatussreq_0_111111211111111
-                    solve( (#t2.1 < #t2.3)  ∥ (#t2.1 = #t2.3) )
-                      case case_1
-                      by contradiction /* from formulas */
-                    next
-                      case case_2
-                      solve( !KU( ~n.1 ) @ #vk.1 )
+                    solve( !KU( ~n.1 ) @ #vk.1 )
+                      case outaenclmrmpksk_0_1111211111
+                      solve( !KU( aenc(<~n, y>, pk(~n.6)) ) @ #vk.2 )
+                        case c_aenc
+                        by contradiction /* cyclic */
+                      next
                         case outaenclmrmpksk_0_1111211111
-                        solve( !KU( aenc(<~n, y>, pk(~n.6)) ) @ #vk.2 )
-                          case c_aenc
-                          by contradiction /* cyclic */
-                        next
-                          case outaenclmrmpksk_0_1111211111
-                          by solve( !KU( ~n.3 ) @ #vk.4 )
-                        qed
-                      next
-                        case outx_0_111111212111111
-                        solve( (#vr.51 < #t2.3)  ∥ (#vr.51 = #t2.3) )
-                          case case_1
-                          solve( Insert( <'F_status', ~n.10>, 'left' ) @ #t2.3 )
-                            case insertFstatussreq_0_111111211111111
-                            solve( State_111111211111111( lock, 'left', ~n.7, sk, status ) ▶₀ #t2.3 )
-                              case eventInitDevices_0_11111121111111
-                              solve( ((#vr.42 < #vr.60) ∧
-                                      (∃ #t2.
-                                        (Unlock_1( '1', ~n.11, ~n.8 ) @ #t2)
-                                       ∧
-                                        (#vr.42 < #t2) ∧
-                                        (#t2 < #vr.60) ∧
-                                        (∀ #t0 pp. (Unlock( pp, ~n.11, ~n.8 ) @ #t0) ⇒ #t0 = #t2) ∧
-                                        (∀ pp lpp #t0.
-                                          (Lock( pp, lpp, ~n.8 ) @ #t0)
-                                         ⇒
-                                          ((#t0 < #vr.42) ∨ (#t0 = #vr.42) ∨ (#t2 < #t0))) ∧
-                                        (∀ pp lpp #t0.
-                                          (Unlock( pp, lpp, ~n.8 ) @ #t0)
-                                         ⇒
-                                          ((#t0 < #vr.42) ∨ (#t2 < #t0) ∨ (#t2 = #t0)))))  ∥
-                                     (#vr.60 < #vr.42) )
+                        by solve( !KU( ~n.3 ) @ #vk.4 )
+                      qed
+                    next
+                      case outx_0_111111212111111
+                      solve( (#vr.51 < #t2.3)  ∥ (#vr.51 = #t2.3) )
+                        case case_1
+                        solve( Insert( <'F_status', ~n.10>, 'left' ) @ #t2.3 )
+                          case insertFstatussreq_0_111111211111111
+                          solve( State_111111211111111( lock, 'left', ~n.7, sk, status ) ▶₀ #t2.3 )
+                            case eventInitDevices_0_11111121111111
+                            solve( ((#vr.42 < #vr.60) ∧
+                                    (∃ #t2.
+                                      (Unlock_1( '1', ~n.11, ~n.8 ) @ #t2)
+                                     ∧
+                                      (#vr.42 < #t2) ∧
+                                      (#t2 < #vr.60) ∧
+                                      (∀ #t0 pp. (Unlock( pp, ~n.11, ~n.8 ) @ #t0) ⇒ #t0 = #t2) ∧
+                                      (∀ pp lpp #t0.
+                                        (Lock( pp, lpp, ~n.8 ) @ #t0)
+                                       ⇒
+                                        ((#t0 < #vr.42) ∨ (#t0 = #vr.42) ∨ (#t2 < #t0))) ∧
+                                      (∀ pp lpp #t0.
+                                        (Unlock( pp, lpp, ~n.8 ) @ #t0)
+                                       ⇒
+                                        ((#t0 < #vr.42) ∨ (#t2 < #t0) ∨ (#t2 = #t0)))))  ∥
+                                   (#vr.60 < #vr.42) )
+                              case case_1
+                              solve( (#vr.51 < #t2.4)  ∥ (#vr.51 = #t2.4) )
                                 case case_1
-                                solve( (#vr.51 < #t2.4)  ∥ (#vr.51 = #t2.4) )
-                                  case case_1
-                                  solve( Insert( <'F_status', ~n.8>, 'init' ) @ #t2.4 )
-                                    case insertFstatussinit_0_111
-                                    solve( State_111( ~n.8, sk ) ▶₀ #t2.4 )
-                                      case news_0_11
-                                      by contradiction /* cyclic */
-                                    qed
-                                  next
-                                    case insertFstatussreq_0_111111211111111
-                                    by solve( State_111111211111111( lock, 'init', ~n.8, sk, status
-                                              ) ▶₀ #t2.4 )
-                                  next
-                                    case insertFstatussreq_0_1111112111111211
-                                    by solve( State_1111112111111211( lock, 'init', ~n.8, sk, status
-                                              ) ▶₀ #t2.4 )
+                                solve( Insert( <'F_status', ~n.8>, 'init' ) @ #t2.4 )
+                                  case insertFstatussinit_0_111
+                                  solve( State_111( ~n.8, sk ) ▶₀ #t2.4 )
+                                    case news_0_11
+                                    by contradiction /* cyclic */
                                   qed
                                 next
-                                  case case_2
-                                  solve( Insert( <'F_status', ~n.8>, 'init' ) @ #t2.4 )
-                                    case insertFstatussinit_0_111
-                                    solve( Unlock_1( '1', ~n.11, ~n.8 ) @ #t2.5 )
-                                      case unlocks_0_1111112121111111
-                                      by contradiction /* cyclic */
-                                    next
-                                      case unlocks_0_11111121211112111
-                                      by contradiction /* cyclic */
-                                    next
-                                      case unlocks_0_111111212111122
-                                      by contradiction /* cyclic */
-                                    qed
-                                  qed
+                                  case insertFstatussreq_0_111111211111111
+                                  by solve( State_111111211111111( lock, 'init', ~n.8, sk, status
+                                            ) ▶₀ #t2.4 )
+                                next
+                                  case insertFstatussreq_0_1111112111111211
+                                  by solve( State_1111112111111211( lock, 'init', ~n.8, sk, status
+                                            ) ▶₀ #t2.4 )
                                 qed
                               next
                                 case case_2
-                                solve( (#vr.51 < #t2.4)  ∥ (#vr.51 = #t2.4) )
-                                  case case_1
-                                  solve( Insert( <'F_status', ~n.8>, 'init' ) @ #t2.4 )
-                                    case insertFstatussinit_0_111
-                                    solve( State_111( ~n.8, sk ) ▶₀ #t2.4 )
-                                      case news_0_11
-                                      by contradiction /* cyclic */
-                                    qed
+                                solve( Insert( <'F_status', ~n.8>, 'init' ) @ #t2.4 )
+                                  case insertFstatussinit_0_111
+                                  solve( Unlock_1( '1', ~n.11, ~n.8 ) @ #t2.5 )
+                                    case unlocks_0_1111112121111111
+                                    by contradiction /* cyclic */
                                   next
-                                    case insertFstatussreq_0_111111211111111
-                                    by solve( State_111111211111111( lock, 'init', ~n.8, sk, status
-                                              ) ▶₀ #t2.4 )
+                                    case unlocks_0_11111121211112111
+                                    by contradiction /* cyclic */
                                   next
-                                    case insertFstatussreq_0_1111112111111211
-                                    by solve( State_1111112111111211( lock, 'init', ~n.8, sk, status
-                                              ) ▶₀ #t2.4 )
+                                    case unlocks_0_111111212111122
+                                    by contradiction /* cyclic */
+                                  qed
+                                qed
+                              qed
+                            next
+                              case case_2
+                              solve( (#vr.51 < #t2.4)  ∥ (#vr.51 = #t2.4) )
+                                case case_1
+                                solve( Insert( <'F_status', ~n.8>, 'init' ) @ #t2.4 )
+                                  case insertFstatussinit_0_111
+                                  solve( State_111( ~n.8, sk ) ▶₀ #t2.4 )
+                                    case news_0_11
+                                    by contradiction /* cyclic */
                                   qed
                                 next
-                                  case case_2
-                                  solve( Insert( <'F_status', ~n.8>, 'init' ) @ #t2.4 )
-                                    case insertFstatussinit_0_111
-                                    solve( Unlock_0( '0', ~n.7, ~n.8 ) @ #t2.5 )
-                                      case unlocks_0_1111112111111111
-                                      solve( State_1111112111111111( ~n.7, req, ~n.8, sk, status ) ▶₀ #t2.5 )
-                                        case insertFstatussreq_0_111111211111111
-                                        solve( (#t2.4 < #t2.6)  ∥ (#t2.4 = #t2.6) )
-                                          case case_1
-                                          by contradiction /* from formulas */
-                                        next
-                                          case case_2
-                                          solve( !KU( aenc(<~n, y>, pk(~n.6)) ) @ #vk.2 )
-                                            case c_aenc
-                                            by contradiction /* cyclic */
-                                          next
-                                            case outaenclmrmpksk_0_1111211111
-                                            solve( !KU( aenc(<~n.1, y>, pk(~n.7)) ) @ #vk.4 )
-                                              case c_aenc
-                                              by contradiction /* cyclic */
-                                            qed
-                                          qed
+                                  case insertFstatussreq_0_111111211111111
+                                  by solve( State_111111211111111( lock, 'init', ~n.8, sk, status
+                                            ) ▶₀ #t2.4 )
+                                next
+                                  case insertFstatussreq_0_1111112111111211
+                                  by solve( State_1111112111111211( lock, 'init', ~n.8, sk, status
+                                            ) ▶₀ #t2.4 )
+                                qed
+                              next
+                                case case_2
+                                solve( Insert( <'F_status', ~n.8>, 'init' ) @ #t2.4 )
+                                  case insertFstatussinit_0_111
+                                  solve( Unlock_0( '0', ~n.7, ~n.8 ) @ #t2.5 )
+                                    case unlocks_0_1111112111111111
+                                    solve( State_1111112111111111( ~n.7, req, ~n.8, sk, status ) ▶₀ #t2.5 )
+                                      case insertFstatussreq_0_111111211111111
+                                      solve( !KU( aenc(<~n, y>, pk(~n.6)) ) @ #vk.2 )
+                                        case c_aenc
+                                        by contradiction /* cyclic */
+                                      next
+                                        case outaenclmrmpksk_0_1111211111
+                                        solve( !KU( aenc(<~n.1, y>, pk(~n.7)) ) @ #vk.4 )
+                                          case c_aenc
+                                          by contradiction /* cyclic */
                                         qed
                                       qed
-                                    next
-                                      case unlocks_0_11111121111112111
-                                      by solve( State_11111121111112111( ~n.7, req, ~n.8, sk, status
-                                                ) ▶₀ #t2.5 )
                                     qed
+                                  next
+                                    case unlocks_0_11111121111112111
+                                    by solve( State_11111121111112111( ~n.7, req, ~n.8, sk, status
+                                              ) ▶₀ #t2.5 )
                                   qed
                                 qed
                               qed
                             qed
-                          next
-                            case insertFstatussreq_0_1111112111111211
-                            by solve( State_1111112111111211( lock, 'left', ~n.7, sk, status
-                                      ) ▶₀ #t2.3 )
                           qed
                         next
-                          case case_2
-                          by solve( Insert( <'F_status', ~n.7>, 'left' ) @ #t2.3 )
+                          case insertFstatussreq_0_1111112111111211
+                          by solve( State_1111112111111211( lock, 'left', ~n.7, sk, status
+                                    ) ▶₀ #t2.3 )
                         qed
                       next
-                        case outy_0_1111112121111211
-                        solve( (#vr.52 < #t2.3)  ∥ (#vr.52 = #t2.3) )
-                          case case_1
-                          solve( Insert( <'F_status', ~n.10>, 'right' ) @ #t2.3 )
-                            case insertFstatussreq_0_111111211111111
-                            by solve( State_111111211111111( lock, 'right', ~n.7, sk, status
-                                      ) ▶₀ #t2.3 )
-                          next
-                            case insertFstatussreq_0_1111112111111211
-                            solve( State_1111112111111211( lock, 'right', ~n.7, sk, status
-                                   ) ▶₀ #t2.3 )
-                              case eventInitDevices_0_111111211111121
-                              solve( ((#vr.43 < #vr.62) ∧
-                                      (∃ #t2.
-                                        (Unlock_1( '1', ~n.11, ~n.8 ) @ #t2)
-                                       ∧
-                                        (#vr.43 < #t2) ∧
-                                        (#t2 < #vr.62) ∧
-                                        (∀ #t0 pp. (Unlock( pp, ~n.11, ~n.8 ) @ #t0) ⇒ #t0 = #t2) ∧
-                                        (∀ pp lpp #t0.
-                                          (Lock( pp, lpp, ~n.8 ) @ #t0)
-                                         ⇒
-                                          ((#t0 < #vr.43) ∨ (#t0 = #vr.43) ∨ (#t2 < #t0))) ∧
-                                        (∀ pp lpp #t0.
-                                          (Unlock( pp, lpp, ~n.8 ) @ #t0)
-                                         ⇒
-                                          ((#t0 < #vr.43) ∨ (#t2 < #t0) ∨ (#t2 = #t0)))))  ∥
-                                     (#vr.62 < #vr.43) )
+                        case case_2
+                        by solve( Insert( <'F_status', ~n.7>, 'left' ) @ #t2.3 )
+                      qed
+                    next
+                      case outy_0_1111112121111211
+                      solve( (#vr.52 < #t2.3)  ∥ (#vr.52 = #t2.3) )
+                        case case_1
+                        solve( Insert( <'F_status', ~n.10>, 'right' ) @ #t2.3 )
+                          case insertFstatussreq_0_111111211111111
+                          by solve( State_111111211111111( lock, 'right', ~n.7, sk, status
+                                    ) ▶₀ #t2.3 )
+                        next
+                          case insertFstatussreq_0_1111112111111211
+                          solve( State_1111112111111211( lock, 'right', ~n.7, sk, status
+                                 ) ▶₀ #t2.3 )
+                            case eventInitDevices_0_111111211111121
+                            solve( ((#vr.43 < #vr.62) ∧
+                                    (∃ #t2.
+                                      (Unlock_1( '1', ~n.11, ~n.8 ) @ #t2)
+                                     ∧
+                                      (#vr.43 < #t2) ∧
+                                      (#t2 < #vr.62) ∧
+                                      (∀ #t0 pp. (Unlock( pp, ~n.11, ~n.8 ) @ #t0) ⇒ #t0 = #t2) ∧
+                                      (∀ pp lpp #t0.
+                                        (Lock( pp, lpp, ~n.8 ) @ #t0)
+                                       ⇒
+                                        ((#t0 < #vr.43) ∨ (#t0 = #vr.43) ∨ (#t2 < #t0))) ∧
+                                      (∀ pp lpp #t0.
+                                        (Unlock( pp, lpp, ~n.8 ) @ #t0)
+                                       ⇒
+                                        ((#t0 < #vr.43) ∨ (#t2 < #t0) ∨ (#t2 = #t0)))))  ∥
+                                   (#vr.62 < #vr.43) )
+                              case case_1
+                              solve( (#vr.52 < #t2.4)  ∥ (#vr.52 = #t2.4) )
                                 case case_1
-                                solve( (#vr.52 < #t2.4)  ∥ (#vr.52 = #t2.4) )
-                                  case case_1
-                                  solve( Insert( <'F_status', ~n.8>, 'init' ) @ #t2.4 )
-                                    case insertFstatussinit_0_111
-                                    solve( State_111( ~n.8, sk ) ▶₀ #t2.4 )
-                                      case news_0_11
-                                      by contradiction /* cyclic */
-                                    qed
-                                  next
-                                    case insertFstatussreq_0_111111211111111
-                                    by solve( State_111111211111111( lock, 'init', ~n.8, sk, status
-                                              ) ▶₀ #t2.4 )
-                                  next
-                                    case insertFstatussreq_0_1111112111111211
-                                    by solve( State_1111112111111211( lock, 'init', ~n.8, sk, status
-                                              ) ▶₀ #t2.4 )
+                                solve( Insert( <'F_status', ~n.8>, 'init' ) @ #t2.4 )
+                                  case insertFstatussinit_0_111
+                                  solve( State_111( ~n.8, sk ) ▶₀ #t2.4 )
+                                    case news_0_11
+                                    by contradiction /* cyclic */
                                   qed
                                 next
-                                  case case_2
-                                  solve( Insert( <'F_status', ~n.8>, 'init' ) @ #t2.4 )
-                                    case insertFstatussinit_0_111
-                                    solve( Unlock_1( '1', ~n.11, ~n.8 ) @ #t2.5 )
-                                      case unlocks_0_1111112121111111
-                                      by contradiction /* cyclic */
-                                    next
-                                      case unlocks_0_11111121211112111
-                                      by contradiction /* cyclic */
-                                    next
-                                      case unlocks_0_111111212111122
-                                      by contradiction /* cyclic */
-                                    qed
-                                  qed
+                                  case insertFstatussreq_0_111111211111111
+                                  by solve( State_111111211111111( lock, 'init', ~n.8, sk, status
+                                            ) ▶₀ #t2.4 )
+                                next
+                                  case insertFstatussreq_0_1111112111111211
+                                  by solve( State_1111112111111211( lock, 'init', ~n.8, sk, status
+                                            ) ▶₀ #t2.4 )
                                 qed
                               next
                                 case case_2
-                                solve( (#vr.52 < #t2.4)  ∥ (#vr.52 = #t2.4) )
-                                  case case_1
-                                  solve( Insert( <'F_status', ~n.8>, 'init' ) @ #t2.4 )
-                                    case insertFstatussinit_0_111
-                                    solve( State_111( ~n.8, sk ) ▶₀ #t2.4 )
-                                      case news_0_11
-                                      by contradiction /* cyclic */
-                                    qed
+                                solve( Insert( <'F_status', ~n.8>, 'init' ) @ #t2.4 )
+                                  case insertFstatussinit_0_111
+                                  solve( Unlock_1( '1', ~n.11, ~n.8 ) @ #t2.5 )
+                                    case unlocks_0_1111112121111111
+                                    by contradiction /* cyclic */
                                   next
-                                    case insertFstatussreq_0_111111211111111
-                                    by solve( State_111111211111111( lock, 'init', ~n.8, sk, status
-                                              ) ▶₀ #t2.4 )
+                                    case unlocks_0_11111121211112111
+                                    by contradiction /* cyclic */
                                   next
-                                    case insertFstatussreq_0_1111112111111211
-                                    by solve( State_1111112111111211( lock, 'init', ~n.8, sk, status
-                                              ) ▶₀ #t2.4 )
+                                    case unlocks_0_111111212111122
+                                    by contradiction /* cyclic */
+                                  qed
+                                qed
+                              qed
+                            next
+                              case case_2
+                              solve( (#vr.52 < #t2.4)  ∥ (#vr.52 = #t2.4) )
+                                case case_1
+                                solve( Insert( <'F_status', ~n.8>, 'init' ) @ #t2.4 )
+                                  case insertFstatussinit_0_111
+                                  solve( State_111( ~n.8, sk ) ▶₀ #t2.4 )
+                                    case news_0_11
+                                    by contradiction /* cyclic */
                                   qed
                                 next
-                                  case case_2
-                                  solve( Insert( <'F_status', ~n.8>, 'init' ) @ #t2.4 )
-                                    case insertFstatussinit_0_111
-                                    solve( Unlock_0( '0', ~n.7, ~n.8 ) @ #t2.5 )
-                                      case unlocks_0_1111112111111111
-                                      by solve( State_1111112111111111( ~n.7, req, ~n.8, sk, status
-                                                ) ▶₀ #t2.5 )
-                                    next
-                                      case unlocks_0_11111121111112111
-                                      solve( State_11111121111112111( ~n.7, req, ~n.8, sk, status ) ▶₀ #t2.5 )
-                                        case insertFstatussreq_0_1111112111111211
-                                        solve( (#t2.4 < #t2.6)  ∥ (#t2.4 = #t2.6) )
-                                          case case_1
-                                          by contradiction /* from formulas */
+                                  case insertFstatussreq_0_111111211111111
+                                  by solve( State_111111211111111( lock, 'init', ~n.8, sk, status
+                                            ) ▶₀ #t2.4 )
+                                next
+                                  case insertFstatussreq_0_1111112111111211
+                                  by solve( State_1111112111111211( lock, 'init', ~n.8, sk, status
+                                            ) ▶₀ #t2.4 )
+                                qed
+                              next
+                                case case_2
+                                solve( Insert( <'F_status', ~n.8>, 'init' ) @ #t2.4 )
+                                  case insertFstatussinit_0_111
+                                  solve( Unlock_0( '0', ~n.7, ~n.8 ) @ #t2.5 )
+                                    case unlocks_0_1111112111111111
+                                    by solve( State_1111112111111111( ~n.7, req, ~n.8, sk, status
+                                              ) ▶₀ #t2.5 )
+                                  next
+                                    case unlocks_0_11111121111112111
+                                    solve( State_11111121111112111( ~n.7, req, ~n.8, sk, status ) ▶₀ #t2.5 )
+                                      case insertFstatussreq_0_1111112111111211
+                                      solve( !KU( aenc(<~n, y>, pk(~n.6)) ) @ #vk.2 )
+                                        case c_aenc
+                                        by contradiction /* cyclic */
+                                      next
+                                        case outaenclmrmpksk_0_1111211111
+                                        solve( !KU( aenc(<x, ~n.1>, pk(~n.7)) ) @ #vk.4 )
+                                          case c_aenc
+                                          by contradiction /* cyclic */
                                         next
-                                          case case_2
-                                          solve( !KU( aenc(<~n, y>, pk(~n.6)) ) @ #vk.2 )
-                                            case c_aenc
-                                            by contradiction /* cyclic */
-                                          next
-                                            case outaenclmrmpksk_0_1111211111
-                                            solve( !KU( aenc(<x, ~n.1>, pk(~n.7)) ) @ #vk.4 )
-                                              case c_aenc
-                                              by contradiction /* cyclic */
-                                            next
-                                              case outaenclmrmpksk_0_1111211111
-                                              by contradiction /* cyclic */
-                                            qed
-                                          qed
+                                          case outaenclmrmpksk_0_1111211111
+                                          by contradiction /* cyclic */
                                         qed
                                       qed
                                     qed
@@ -1234,10 +1198,10 @@ solve( State_111121111( x, y, s, sk ) ▶₀ #i )
                               qed
                             qed
                           qed
-                        next
-                          case case_2
-                          by solve( Insert( <'F_status', ~n.7>, 'right' ) @ #t2.3 )
                         qed
+                      next
+                        case case_2
+                        by solve( Insert( <'F_status', ~n.7>, 'right' ) @ #t2.3 )
                       qed
                     qed
                   qed
@@ -1352,235 +1316,217 @@ solve( State_111121111( x, y, s, sk ) ▶₀ #i )
                   case unlocks_0_11111121111112111
                   solve( State_11111121111112111( ~n.4, req, ~n.5, sk, status ) ▶₀ #t2.2 )
                     case insertFstatussreq_0_1111112111111211
-                    solve( (#t2.1 < #t2.3)  ∥ (#t2.1 = #t2.3) )
-                      case case_1
-                      by contradiction /* from formulas */
+                    solve( !KU( ~n.1 ) @ #vk.1 )
+                      case outaenclmrmpksk_0_1111211111
+                      solve( !KU( aenc(<x, ~n>, pk(~n.6)) ) @ #vk.2 )
+                        case c_aenc
+                        by contradiction /* cyclic */
+                      qed
                     next
-                      case case_2
-                      solve( !KU( ~n.1 ) @ #vk.1 )
-                        case outaenclmrmpksk_0_1111211111
-                        solve( !KU( aenc(<x, ~n>, pk(~n.6)) ) @ #vk.2 )
-                          case c_aenc
-                          by contradiction /* cyclic */
-                        qed
-                      next
-                        case outx_0_111111212111111
-                        solve( (#vr.53 < #t2.3)  ∥ (#vr.53 = #t2.3) )
-                          case case_1
-                          solve( Insert( <'F_status', ~n.10>, 'left' ) @ #t2.3 )
-                            case insertFstatussreq_0_111111211111111
-                            solve( State_111111211111111( lock, 'left', ~n.7, sk, status ) ▶₀ #t2.3 )
-                              case eventInitDevices_0_11111121111111
-                              solve( ((#vr.44 < #vr.62) ∧
-                                      (∃ #t2.
-                                        (Unlock_1( '1', ~n.11, ~n.8 ) @ #t2)
-                                       ∧
-                                        (#vr.44 < #t2) ∧
-                                        (#t2 < #vr.62) ∧
-                                        (∀ #t0 pp. (Unlock( pp, ~n.11, ~n.8 ) @ #t0) ⇒ #t0 = #t2) ∧
-                                        (∀ pp lpp #t0.
-                                          (Lock( pp, lpp, ~n.8 ) @ #t0)
-                                         ⇒
-                                          ((#t0 < #vr.44) ∨ (#t0 = #vr.44) ∨ (#t2 < #t0))) ∧
-                                        (∀ pp lpp #t0.
-                                          (Unlock( pp, lpp, ~n.8 ) @ #t0)
-                                         ⇒
-                                          ((#t0 < #vr.44) ∨ (#t2 < #t0) ∨ (#t2 = #t0)))))  ∥
-                                     (#vr.62 < #vr.44) )
+                      case outx_0_111111212111111
+                      solve( (#vr.53 < #t2.3)  ∥ (#vr.53 = #t2.3) )
+                        case case_1
+                        solve( Insert( <'F_status', ~n.10>, 'left' ) @ #t2.3 )
+                          case insertFstatussreq_0_111111211111111
+                          solve( State_111111211111111( lock, 'left', ~n.7, sk, status ) ▶₀ #t2.3 )
+                            case eventInitDevices_0_11111121111111
+                            solve( ((#vr.44 < #vr.62) ∧
+                                    (∃ #t2.
+                                      (Unlock_1( '1', ~n.11, ~n.8 ) @ #t2)
+                                     ∧
+                                      (#vr.44 < #t2) ∧
+                                      (#t2 < #vr.62) ∧
+                                      (∀ #t0 pp. (Unlock( pp, ~n.11, ~n.8 ) @ #t0) ⇒ #t0 = #t2) ∧
+                                      (∀ pp lpp #t0.
+                                        (Lock( pp, lpp, ~n.8 ) @ #t0)
+                                       ⇒
+                                        ((#t0 < #vr.44) ∨ (#t0 = #vr.44) ∨ (#t2 < #t0))) ∧
+                                      (∀ pp lpp #t0.
+                                        (Unlock( pp, lpp, ~n.8 ) @ #t0)
+                                       ⇒
+                                        ((#t0 < #vr.44) ∨ (#t2 < #t0) ∨ (#t2 = #t0)))))  ∥
+                                   (#vr.62 < #vr.44) )
+                              case case_1
+                              solve( (#vr.53 < #t2.4)  ∥ (#vr.53 = #t2.4) )
                                 case case_1
-                                solve( (#vr.53 < #t2.4)  ∥ (#vr.53 = #t2.4) )
-                                  case case_1
-                                  solve( Insert( <'F_status', ~n.8>, 'init' ) @ #t2.4 )
-                                    case insertFstatussinit_0_111
-                                    solve( State_111( ~n.8, sk ) ▶₀ #t2.4 )
-                                      case news_0_11
-                                      by contradiction /* cyclic */
-                                    qed
-                                  next
-                                    case insertFstatussreq_0_111111211111111
-                                    by solve( State_111111211111111( lock, 'init', ~n.8, sk, status
-                                              ) ▶₀ #t2.4 )
-                                  next
-                                    case insertFstatussreq_0_1111112111111211
-                                    by solve( State_1111112111111211( lock, 'init', ~n.8, sk, status
-                                              ) ▶₀ #t2.4 )
+                                solve( Insert( <'F_status', ~n.8>, 'init' ) @ #t2.4 )
+                                  case insertFstatussinit_0_111
+                                  solve( State_111( ~n.8, sk ) ▶₀ #t2.4 )
+                                    case news_0_11
+                                    by contradiction /* cyclic */
                                   qed
                                 next
-                                  case case_2
-                                  solve( Insert( <'F_status', ~n.8>, 'init' ) @ #t2.4 )
-                                    case insertFstatussinit_0_111
-                                    solve( Unlock_1( '1', ~n.11, ~n.8 ) @ #t2.5 )
-                                      case unlocks_0_1111112121111111
-                                      by contradiction /* cyclic */
-                                    next
-                                      case unlocks_0_11111121211112111
-                                      by contradiction /* cyclic */
-                                    next
-                                      case unlocks_0_111111212111122
-                                      by contradiction /* cyclic */
-                                    qed
-                                  qed
+                                  case insertFstatussreq_0_111111211111111
+                                  by solve( State_111111211111111( lock, 'init', ~n.8, sk, status
+                                            ) ▶₀ #t2.4 )
+                                next
+                                  case insertFstatussreq_0_1111112111111211
+                                  by solve( State_1111112111111211( lock, 'init', ~n.8, sk, status
+                                            ) ▶₀ #t2.4 )
                                 qed
                               next
                                 case case_2
-                                solve( (#vr.53 < #t2.4)  ∥ (#vr.53 = #t2.4) )
-                                  case case_1
-                                  solve( Insert( <'F_status', ~n.8>, 'init' ) @ #t2.4 )
-                                    case insertFstatussinit_0_111
-                                    solve( State_111( ~n.8, sk ) ▶₀ #t2.4 )
-                                      case news_0_11
-                                      by contradiction /* cyclic */
-                                    qed
+                                solve( Insert( <'F_status', ~n.8>, 'init' ) @ #t2.4 )
+                                  case insertFstatussinit_0_111
+                                  solve( Unlock_1( '1', ~n.11, ~n.8 ) @ #t2.5 )
+                                    case unlocks_0_1111112121111111
+                                    by contradiction /* cyclic */
                                   next
-                                    case insertFstatussreq_0_111111211111111
-                                    by solve( State_111111211111111( lock, 'init', ~n.8, sk, status
-                                              ) ▶₀ #t2.4 )
+                                    case unlocks_0_11111121211112111
+                                    by contradiction /* cyclic */
                                   next
-                                    case insertFstatussreq_0_1111112111111211
-                                    by solve( State_1111112111111211( lock, 'init', ~n.8, sk, status
-                                              ) ▶₀ #t2.4 )
+                                    case unlocks_0_111111212111122
+                                    by contradiction /* cyclic */
+                                  qed
+                                qed
+                              qed
+                            next
+                              case case_2
+                              solve( (#vr.53 < #t2.4)  ∥ (#vr.53 = #t2.4) )
+                                case case_1
+                                solve( Insert( <'F_status', ~n.8>, 'init' ) @ #t2.4 )
+                                  case insertFstatussinit_0_111
+                                  solve( State_111( ~n.8, sk ) ▶₀ #t2.4 )
+                                    case news_0_11
+                                    by contradiction /* cyclic */
                                   qed
                                 next
-                                  case case_2
-                                  solve( Insert( <'F_status', ~n.8>, 'init' ) @ #t2.4 )
-                                    case insertFstatussinit_0_111
-                                    solve( Unlock_0( '0', ~n.7, ~n.8 ) @ #t2.5 )
-                                      case unlocks_0_1111112111111111
-                                      solve( State_1111112111111111( ~n.7, req, ~n.8, sk, status ) ▶₀ #t2.5 )
-                                        case insertFstatussreq_0_111111211111111
-                                        solve( (#t2.4 < #t2.6)  ∥ (#t2.4 = #t2.6) )
-                                          case case_1
-                                          by contradiction /* from formulas */
-                                        next
-                                          case case_2
-                                          solve( !KU( aenc(<x, ~n>, pk(~n.6)) ) @ #vk.2 )
-                                            case c_aenc
-                                            by contradiction /* cyclic */
-                                          qed
-                                        qed
+                                  case insertFstatussreq_0_111111211111111
+                                  by solve( State_111111211111111( lock, 'init', ~n.8, sk, status
+                                            ) ▶₀ #t2.4 )
+                                next
+                                  case insertFstatussreq_0_1111112111111211
+                                  by solve( State_1111112111111211( lock, 'init', ~n.8, sk, status
+                                            ) ▶₀ #t2.4 )
+                                qed
+                              next
+                                case case_2
+                                solve( Insert( <'F_status', ~n.8>, 'init' ) @ #t2.4 )
+                                  case insertFstatussinit_0_111
+                                  solve( Unlock_0( '0', ~n.7, ~n.8 ) @ #t2.5 )
+                                    case unlocks_0_1111112111111111
+                                    solve( State_1111112111111111( ~n.7, req, ~n.8, sk, status ) ▶₀ #t2.5 )
+                                      case insertFstatussreq_0_111111211111111
+                                      solve( !KU( aenc(<x, ~n>, pk(~n.6)) ) @ #vk.2 )
+                                        case c_aenc
+                                        by contradiction /* cyclic */
                                       qed
-                                    next
-                                      case unlocks_0_11111121111112111
-                                      by solve( State_11111121111112111( ~n.7, req, ~n.8, sk, status
-                                                ) ▶₀ #t2.5 )
                                     qed
+                                  next
+                                    case unlocks_0_11111121111112111
+                                    by solve( State_11111121111112111( ~n.7, req, ~n.8, sk, status
+                                              ) ▶₀ #t2.5 )
                                   qed
                                 qed
                               qed
                             qed
-                          next
-                            case insertFstatussreq_0_1111112111111211
-                            by solve( State_1111112111111211( lock, 'left', ~n.7, sk, status
-                                      ) ▶₀ #t2.3 )
                           qed
                         next
-                          case case_2
-                          by solve( Insert( <'F_status', ~n.7>, 'left' ) @ #t2.3 )
+                          case insertFstatussreq_0_1111112111111211
+                          by solve( State_1111112111111211( lock, 'left', ~n.7, sk, status
+                                    ) ▶₀ #t2.3 )
                         qed
                       next
-                        case outy_0_1111112121111211
-                        solve( (#vr.54 < #t2.3)  ∥ (#vr.54 = #t2.3) )
-                          case case_1
-                          solve( Insert( <'F_status', ~n.10>, 'right' ) @ #t2.3 )
-                            case insertFstatussreq_0_111111211111111
-                            by solve( State_111111211111111( lock, 'right', ~n.7, sk, status
-                                      ) ▶₀ #t2.3 )
-                          next
-                            case insertFstatussreq_0_1111112111111211
-                            solve( State_1111112111111211( lock, 'right', ~n.7, sk, status
-                                   ) ▶₀ #t2.3 )
-                              case eventInitDevices_0_111111211111121
-                              solve( ((#vr.45 < #vr.64) ∧
-                                      (∃ #t2.
-                                        (Unlock_1( '1', ~n.11, ~n.8 ) @ #t2)
-                                       ∧
-                                        (#vr.45 < #t2) ∧
-                                        (#t2 < #vr.64) ∧
-                                        (∀ #t0 pp. (Unlock( pp, ~n.11, ~n.8 ) @ #t0) ⇒ #t0 = #t2) ∧
-                                        (∀ pp lpp #t0.
-                                          (Lock( pp, lpp, ~n.8 ) @ #t0)
-                                         ⇒
-                                          ((#t0 < #vr.45) ∨ (#t0 = #vr.45) ∨ (#t2 < #t0))) ∧
-                                        (∀ pp lpp #t0.
-                                          (Unlock( pp, lpp, ~n.8 ) @ #t0)
-                                         ⇒
-                                          ((#t0 < #vr.45) ∨ (#t2 < #t0) ∨ (#t2 = #t0)))))  ∥
-                                     (#vr.64 < #vr.45) )
+                        case case_2
+                        by solve( Insert( <'F_status', ~n.7>, 'left' ) @ #t2.3 )
+                      qed
+                    next
+                      case outy_0_1111112121111211
+                      solve( (#vr.54 < #t2.3)  ∥ (#vr.54 = #t2.3) )
+                        case case_1
+                        solve( Insert( <'F_status', ~n.10>, 'right' ) @ #t2.3 )
+                          case insertFstatussreq_0_111111211111111
+                          by solve( State_111111211111111( lock, 'right', ~n.7, sk, status
+                                    ) ▶₀ #t2.3 )
+                        next
+                          case insertFstatussreq_0_1111112111111211
+                          solve( State_1111112111111211( lock, 'right', ~n.7, sk, status
+                                 ) ▶₀ #t2.3 )
+                            case eventInitDevices_0_111111211111121
+                            solve( ((#vr.45 < #vr.64) ∧
+                                    (∃ #t2.
+                                      (Unlock_1( '1', ~n.11, ~n.8 ) @ #t2)
+                                     ∧
+                                      (#vr.45 < #t2) ∧
+                                      (#t2 < #vr.64) ∧
+                                      (∀ #t0 pp. (Unlock( pp, ~n.11, ~n.8 ) @ #t0) ⇒ #t0 = #t2) ∧
+                                      (∀ pp lpp #t0.
+                                        (Lock( pp, lpp, ~n.8 ) @ #t0)
+                                       ⇒
+                                        ((#t0 < #vr.45) ∨ (#t0 = #vr.45) ∨ (#t2 < #t0))) ∧
+                                      (∀ pp lpp #t0.
+                                        (Unlock( pp, lpp, ~n.8 ) @ #t0)
+                                       ⇒
+                                        ((#t0 < #vr.45) ∨ (#t2 < #t0) ∨ (#t2 = #t0)))))  ∥
+                                   (#vr.64 < #vr.45) )
+                              case case_1
+                              solve( (#vr.54 < #t2.4)  ∥ (#vr.54 = #t2.4) )
                                 case case_1
-                                solve( (#vr.54 < #t2.4)  ∥ (#vr.54 = #t2.4) )
-                                  case case_1
-                                  solve( Insert( <'F_status', ~n.8>, 'init' ) @ #t2.4 )
-                                    case insertFstatussinit_0_111
-                                    solve( State_111( ~n.8, sk ) ▶₀ #t2.4 )
-                                      case news_0_11
-                                      by contradiction /* cyclic */
-                                    qed
-                                  next
-                                    case insertFstatussreq_0_111111211111111
-                                    by solve( State_111111211111111( lock, 'init', ~n.8, sk, status
-                                              ) ▶₀ #t2.4 )
-                                  next
-                                    case insertFstatussreq_0_1111112111111211
-                                    by solve( State_1111112111111211( lock, 'init', ~n.8, sk, status
-                                              ) ▶₀ #t2.4 )
+                                solve( Insert( <'F_status', ~n.8>, 'init' ) @ #t2.4 )
+                                  case insertFstatussinit_0_111
+                                  solve( State_111( ~n.8, sk ) ▶₀ #t2.4 )
+                                    case news_0_11
+                                    by contradiction /* cyclic */
                                   qed
                                 next
-                                  case case_2
-                                  solve( Insert( <'F_status', ~n.8>, 'init' ) @ #t2.4 )
-                                    case insertFstatussinit_0_111
-                                    solve( Unlock_1( '1', ~n.11, ~n.8 ) @ #t2.5 )
-                                      case unlocks_0_1111112121111111
-                                      by contradiction /* cyclic */
-                                    next
-                                      case unlocks_0_11111121211112111
-                                      by contradiction /* cyclic */
-                                    next
-                                      case unlocks_0_111111212111122
-                                      by contradiction /* cyclic */
-                                    qed
-                                  qed
+                                  case insertFstatussreq_0_111111211111111
+                                  by solve( State_111111211111111( lock, 'init', ~n.8, sk, status
+                                            ) ▶₀ #t2.4 )
+                                next
+                                  case insertFstatussreq_0_1111112111111211
+                                  by solve( State_1111112111111211( lock, 'init', ~n.8, sk, status
+                                            ) ▶₀ #t2.4 )
                                 qed
                               next
                                 case case_2
-                                solve( (#vr.54 < #t2.4)  ∥ (#vr.54 = #t2.4) )
-                                  case case_1
-                                  solve( Insert( <'F_status', ~n.8>, 'init' ) @ #t2.4 )
-                                    case insertFstatussinit_0_111
-                                    solve( State_111( ~n.8, sk ) ▶₀ #t2.4 )
-                                      case news_0_11
-                                      by contradiction /* cyclic */
-                                    qed
+                                solve( Insert( <'F_status', ~n.8>, 'init' ) @ #t2.4 )
+                                  case insertFstatussinit_0_111
+                                  solve( Unlock_1( '1', ~n.11, ~n.8 ) @ #t2.5 )
+                                    case unlocks_0_1111112121111111
+                                    by contradiction /* cyclic */
                                   next
-                                    case insertFstatussreq_0_111111211111111
-                                    by solve( State_111111211111111( lock, 'init', ~n.8, sk, status
-                                              ) ▶₀ #t2.4 )
+                                    case unlocks_0_11111121211112111
+                                    by contradiction /* cyclic */
                                   next
-                                    case insertFstatussreq_0_1111112111111211
-                                    by solve( State_1111112111111211( lock, 'init', ~n.8, sk, status
-                                              ) ▶₀ #t2.4 )
+                                    case unlocks_0_111111212111122
+                                    by contradiction /* cyclic */
+                                  qed
+                                qed
+                              qed
+                            next
+                              case case_2
+                              solve( (#vr.54 < #t2.4)  ∥ (#vr.54 = #t2.4) )
+                                case case_1
+                                solve( Insert( <'F_status', ~n.8>, 'init' ) @ #t2.4 )
+                                  case insertFstatussinit_0_111
+                                  solve( State_111( ~n.8, sk ) ▶₀ #t2.4 )
+                                    case news_0_11
+                                    by contradiction /* cyclic */
                                   qed
                                 next
-                                  case case_2
-                                  solve( Insert( <'F_status', ~n.8>, 'init' ) @ #t2.4 )
-                                    case insertFstatussinit_0_111
-                                    solve( Unlock_0( '0', ~n.7, ~n.8 ) @ #t2.5 )
-                                      case unlocks_0_1111112111111111
-                                      by solve( State_1111112111111111( ~n.7, req, ~n.8, sk, status
-                                                ) ▶₀ #t2.5 )
-                                    next
-                                      case unlocks_0_11111121111112111
-                                      solve( State_11111121111112111( ~n.7, req, ~n.8, sk, status ) ▶₀ #t2.5 )
-                                        case insertFstatussreq_0_1111112111111211
-                                        solve( (#t2.4 < #t2.6)  ∥ (#t2.4 = #t2.6) )
-                                          case case_1
-                                          by contradiction /* from formulas */
-                                        next
-                                          case case_2
-                                          solve( !KU( aenc(<x, ~n>, pk(~n.6)) ) @ #vk.2 )
-                                            case c_aenc
-                                            by contradiction /* cyclic */
-                                          qed
-                                        qed
+                                  case insertFstatussreq_0_111111211111111
+                                  by solve( State_111111211111111( lock, 'init', ~n.8, sk, status
+                                            ) ▶₀ #t2.4 )
+                                next
+                                  case insertFstatussreq_0_1111112111111211
+                                  by solve( State_1111112111111211( lock, 'init', ~n.8, sk, status
+                                            ) ▶₀ #t2.4 )
+                                qed
+                              next
+                                case case_2
+                                solve( Insert( <'F_status', ~n.8>, 'init' ) @ #t2.4 )
+                                  case insertFstatussinit_0_111
+                                  solve( Unlock_0( '0', ~n.7, ~n.8 ) @ #t2.5 )
+                                    case unlocks_0_1111112111111111
+                                    by solve( State_1111112111111111( ~n.7, req, ~n.8, sk, status
+                                              ) ▶₀ #t2.5 )
+                                  next
+                                    case unlocks_0_11111121111112111
+                                    solve( State_11111121111112111( ~n.7, req, ~n.8, sk, status ) ▶₀ #t2.5 )
+                                      case insertFstatussreq_0_1111112111111211
+                                      solve( !KU( aenc(<x, ~n>, pk(~n.6)) ) @ #vk.2 )
+                                        case c_aenc
+                                        by contradiction /* cyclic */
                                       qed
                                     qed
                                   qed
@@ -1588,10 +1534,10 @@ solve( State_111121111( x, y, s, sk ) ▶₀ #i )
                               qed
                             qed
                           qed
-                        next
-                          case case_2
-                          by solve( Insert( <'F_status', ~n.7>, 'right' ) @ #t2.3 )
                         qed
+                      next
+                        case case_2
+                        by solve( Insert( <'F_status', ~n.7>, 'right' ) @ #t2.3 )
                       qed
                     qed
                   qed
@@ -2567,8 +2513,8 @@ restriction locking_1:
 Generated from:
 Tamarin version 1.13.0
 Maude version 3.5.1
-Git revision: 41bc81379b23681e7057314a5cf66a25c45e1986, branch: canonicalise-subst
-Compiled at: 2026-07-27 16:11:34.947223 UTC
+Git revision: c827ceb2418a7d5390dac6671f01a07f7f0ac087 (with uncommited changes), branch: HEAD
+Compiled at: 2026-09-15 17:34:25.020280498 UTC
 */
 
 end
@@ -2580,12 +2526,12 @@ summary of summaries:
 analyzed: examples/sapic/fast/statVerifLeftRight/stateverif_left_right.spthy
 
   output:          examples/sapic/fast/statVerifLeftRight/stateverif_left_right.spthy.tmp
-  processing time: 2.94s
+  processing time: 4.39s
   
-  source (all-traces): verified (171 steps)
-  reachability_left (exists-trace): verified (14 steps)
-  reachability_right (exists-trace): verified (14 steps)
-  secrecy (all-traces): verified (198 steps)
+  source (all-traces): verified (167 steps)
+  reachability_left (exists-trace): verified (13 steps)
+  reachability_right (exists-trace): verified (13 steps)
+  secrecy (all-traces): verified (186 steps)
 
 ==============================================================================
 */
