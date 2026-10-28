@@ -85,7 +85,7 @@ options:
                         Disable SAPIC/accountability output parse tests
   --command-tests-only [FILE ...]
                         Run only command checks (all sidecars, or the specified .spthy.test.json files)
-  --tamarin TAMARIN     Tamarin executable (default: TAMARIN environment variable or tamarin-prover)
+  --tamarin TAMARIN     Tamarin executable (default: TAMARIN environment variable or tamarin-prover in the directory reported by 'stack path --local-bin')
 ```
 
 
