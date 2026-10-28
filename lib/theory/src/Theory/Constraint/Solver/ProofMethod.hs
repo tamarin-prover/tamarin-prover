@@ -61,6 +61,7 @@ import           Safe
 import           System.IO.Unsafe
 import           System.Process
 
+import qualified Theory.Constraint.System.StoredFormulas as Stored
 import           Theory.Constraint.Solver.Sources
 import           Theory.Constraint.Solver.Contradictions
 import           Theory.Constraint.Solver.Goals
@@ -263,9 +264,9 @@ checkAndExecProofMethod ctxt method sys = do
     canApplyInduction :: Maybe ()
     canApplyInduction = do
       guard (M.null $ L.get sNodes sys)
-      guard (S.null $ L.get sSolvedFormulas sys)
+      guard (Stored.null $ L.get sSolvedFormulas sys)
       guard (M.null $ L.get sGoals sys)
-      (_, t) <- uncons $ S.toList $ L.get sFormulas sys
+      (_, t) <- uncons $ Stored.toList $ L.get sFormulas sys
       guard (null t)
 
     equalReason :: Result -> Result -> Bool
@@ -322,13 +323,13 @@ execProofMethod ctxt method sys =
     -- a single, last-free, closed formula.
     getInductionCases :: System -> Maybe (LNGuarded, LNGuarded)
     getInductionCases s = do
-      (h, _) <- uncons $ S.toList $ L.get sFormulas s
+      (h, _) <- uncons $ Stored.toList $ L.get sFormulas s
       either (const Nothing) Just (ginduct h)
 
     induction :: (LNGuarded, LNGuarded) -> Reduction String
     induction (baseCase, stepCase) = do
       (caseName, caseFormula) <- disjunctionOfList [("empty_trace", baseCase), ("non_empty_trace", stepCase)]
-      L.setM sFormulas (S.singleton caseFormula)
+      L.setM sFormulas (Stored.singleton caseFormula)
       return caseName
 
     distinguish n =

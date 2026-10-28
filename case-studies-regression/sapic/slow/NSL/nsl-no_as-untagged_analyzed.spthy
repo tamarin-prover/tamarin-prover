@@ -271,77 +271,26 @@ solve( State_1111111111111111( Na, cypher, k, pk(skB), skA, xNb
             case c_pk
             solve( !KU( ~n.3 ) @ #t2 )
               case outaencxNbkpkB_0_111111111111111
-              solve( !KU( pk(~n) ) @ #vk.4 )
-                case c_pk
-                solve( !KU( ~n.2 ) @ #vk.5 )
-                  case outaencNapkskApkB_0_111111111
-                  by solve( !KU( ~n.1 ) @ #vk.6 )
-                next
-                  case outaencxNaNbpkskBpkA_0_121111111111
-                  solve( (∃ #j. (!KU( ~n.2 ) @ #j) ∧ #j < #vr.31)  ∥
-                         (∃ #j. (OUT_I_1( aenc(<~n.2, pk(~n)>, pk(~n.1)) ) @ #j))  ∥
-                         (∃ #j. (OUT_I_2( aenc(<~n.2, pk(~n)>, pk(~n.1)) ) @ #j)) )
-                    case case_1
-                    by contradiction /* cyclic */
-                  next
-                    case case_2
-                    solve( State_11111111( ~n.2, pk(~n.1), ~n ) ▶₀ #j )
-                      case newNa_0_1111111
-                      by solve( !KU( ~n.1 ) @ #vk.6 )
-                    qed
-                  next
-                    case case_3
-                    by solve( State_11111111111111( Na, cypher, pk(~n), pk(~n.1), skA, ~n.2
-                              ) ▶₀ #j )
-                  qed
-                qed
-              next
+              solve( !KU( ~n.2 ) @ #vk.5 )
                 case outaencNapkskApkB_0_111111111
-                solve( !KU( ~n.2 ) @ #vk.5 )
-                  case outaencNapkskApkB_0_111111111
-                  by solve( !KU( ~n.1 ) @ #vk.6 )
-                next
-                  case outaencxNaNbpkskBpkA_0_121111111111
-                  solve( (∃ #j. (!KU( ~n.2 ) @ #j) ∧ #j < #vr.38)  ∥
-                         (∃ #j. (OUT_I_1( aenc(<~n.2, pk(~n)>, pk(~n.1)) ) @ #j))  ∥
-                         (∃ #j. (OUT_I_2( aenc(<~n.2, pk(~n)>, pk(~n.1)) ) @ #j)) )
-                    case case_1
-                    by contradiction /* cyclic */
-                  next
-                    case case_2
-                    solve( State_11111111( ~n.2, pk(~n.1), ~n ) ▶₀ #j )
-                      case newNa_0_1111111
-                      by solve( !KU( ~n.1 ) @ #vk.6 )
-                    qed
-                  next
-                    case case_3
-                    by solve( State_11111111111111( Na, cypher, pk(~n), pk(~n.1), skA, ~n.2
-                              ) ▶₀ #j )
-                  qed
-                qed
+                by solve( !KU( ~n.1 ) @ #vk.6 )
               next
-                case outpkskA_0_1111
-                solve( !KU( ~n.2 ) @ #vk.5 )
-                  case outaencNapkskApkB_0_111111111
-                  by solve( !KU( ~n.1 ) @ #vk.6 )
+                case outaencxNaNbpkskBpkA_0_121111111111
+                solve( (∃ #j. (!KU( ~n.2 ) @ #j) ∧ #j < #vr.31)  ∥
+                       (∃ #j. (OUT_I_1( aenc(<~n.2, pk(~n)>, pk(~n.1)) ) @ #j))  ∥
+                       (∃ #j. (OUT_I_2( aenc(<~n.2, pk(~n)>, pk(~n.1)) ) @ #j)) )
+                  case case_1
+                  by contradiction /* cyclic */
                 next
-                  case outaencxNaNbpkskBpkA_0_121111111111
-                  solve( (∃ #j. (!KU( ~n.2 ) @ #j) ∧ #j < #vr.31)  ∥
-                         (∃ #j. (OUT_I_1( aenc(<~n.2, pk(~n)>, pk(~n.1)) ) @ #j))  ∥
-                         (∃ #j. (OUT_I_2( aenc(<~n.2, pk(~n)>, pk(~n.1)) ) @ #j)) )
-                    case case_1
-                    by contradiction /* cyclic */
-                  next
-                    case case_2
-                    solve( State_11111111( ~n.2, pk(~n.1), ~n ) ▶₀ #j )
-                      case newNa_0_1111111
-                      by solve( !KU( ~n.1 ) @ #vk.6 )
-                    qed
-                  next
-                    case case_3
-                    by solve( State_11111111111111( Na, cypher, pk(~n), pk(~n.1), skA, ~n.2
-                              ) ▶₀ #j )
+                  case case_2
+                  solve( State_11111111( ~n.2, pk(~n.1), ~n ) ▶₀ #j )
+                    case newNa_0_1111111
+                    by solve( !KU( ~n.1 ) @ #vk.6 )
                   qed
+                next
+                  case case_3
+                  by solve( State_11111111111111( Na, cypher, pk(~n), pk(~n.1), skA, ~n.2
+                            ) ▶₀ #j )
                 qed
               qed
             qed
@@ -353,113 +302,38 @@ solve( State_1111111111111111( Na, cypher, k, pk(skB), skA, xNb
               case case_1
               solve( !KU( ~n.3 ) @ #t2 )
                 case outaencxNbkpkB_0_111111111111111
-                solve( !KU( pk(~n) ) @ #vk.4 )
-                  case c_pk
-                  solve( !KU( ~n.2 ) @ #vk.5 )
-                    case outaencNapkskApkB_0_111111111
-                    solve( !KU( aenc(<xNa, pk(x)>, pk(~n.1)) ) @ #vk.7 )
-                      case c_aenc
-                      by contradiction /* cyclic */
-                    next
-                      case outaencNapkskApkB_0_111111111
-                      by contradiction /* cyclic */
-                    qed
-                  next
-                    case outaencxNaNbpkskBpkA_0_121111111111
-                    solve( (∃ #j. (!KU( ~n.2 ) @ #j) ∧ #j < #vr.44)  ∥
-                           (∃ #j. (OUT_I_1( aenc(<~n.2, pk(~n)>, pk(~n.1)) ) @ #j))  ∥
-                           (∃ #j. (OUT_I_2( aenc(<~n.2, pk(~n)>, pk(~n.1)) ) @ #j)) )
-                      case case_1
-                      by contradiction /* cyclic */
-                    next
-                      case case_2
-                      solve( State_11111111( ~n.2, pk(~n.1), ~n ) ▶₀ #j )
-                        case newNa_0_1111111
-                        solve( !KU( aenc(<xNa, pk(x)>, pk(~n.1)) ) @ #vk.7 )
-                          case c_aenc
-                          by contradiction /* cyclic */
-                        next
-                          case outaencNapkskApkB_0_111111111
-                          by contradiction /* cyclic */
-                        qed
-                      qed
-                    next
-                      case case_3
-                      by solve( State_11111111111111( Na, cypher, pk(~n), pk(~n.1), skA, ~n.2
-                                ) ▶₀ #j )
-                    qed
-                  qed
-                next
+                solve( !KU( ~n.2 ) @ #vk.5 )
                   case outaencNapkskApkB_0_111111111
-                  solve( !KU( ~n.2 ) @ #vk.5 )
-                    case outaencNapkskApkB_0_111111111
-                    solve( !KU( aenc(<xNa, pk(x)>, pk(~n.1)) ) @ #vk.7 )
-                      case c_aenc
-                      by contradiction /* cyclic */
-                    next
-                      case outaencNapkskApkB_0_111111111
-                      by contradiction /* cyclic */
-                    qed
+                  solve( !KU( aenc(<xNa, pk(x)>, pk(~n.1)) ) @ #vk.7 )
+                    case c_aenc
+                    by contradiction /* cyclic */
                   next
-                    case outaencxNaNbpkskBpkA_0_121111111111
-                    solve( (∃ #j. (!KU( ~n.2 ) @ #j) ∧ #j < #vr.51)  ∥
-                           (∃ #j. (OUT_I_1( aenc(<~n.2, pk(~n)>, pk(~n.1)) ) @ #j))  ∥
-                           (∃ #j. (OUT_I_2( aenc(<~n.2, pk(~n)>, pk(~n.1)) ) @ #j)) )
-                      case case_1
-                      by contradiction /* cyclic */
-                    next
-                      case case_2
-                      solve( State_11111111( ~n.2, pk(~n.1), ~n ) ▶₀ #j )
-                        case newNa_0_1111111
-                        solve( !KU( aenc(<xNa, pk(x)>, pk(~n.1)) ) @ #vk.7 )
-                          case c_aenc
-                          by contradiction /* cyclic */
-                        next
-                          case outaencNapkskApkB_0_111111111
-                          by contradiction /* cyclic */
-                        qed
-                      qed
-                    next
-                      case case_3
-                      by solve( State_11111111111111( Na, cypher, pk(~n), pk(~n.1), skA, ~n.2
-                                ) ▶₀ #j )
-                    qed
+                    case outaencNapkskApkB_0_111111111
+                    by contradiction /* cyclic */
                   qed
                 next
-                  case outpkskA_0_1111
-                  solve( !KU( ~n.2 ) @ #vk.5 )
-                    case outaencNapkskApkB_0_111111111
-                    solve( !KU( aenc(<xNa, pk(x)>, pk(~n.1)) ) @ #vk.7 )
-                      case c_aenc
-                      by contradiction /* cyclic */
-                    next
-                      case outaencNapkskApkB_0_111111111
-                      by contradiction /* cyclic */
+                  case outaencxNaNbpkskBpkA_0_121111111111
+                  solve( (∃ #j. (!KU( ~n.2 ) @ #j) ∧ #j < #vr.44)  ∥
+                         (∃ #j. (OUT_I_1( aenc(<~n.2, pk(~n)>, pk(~n.1)) ) @ #j))  ∥
+                         (∃ #j. (OUT_I_2( aenc(<~n.2, pk(~n)>, pk(~n.1)) ) @ #j)) )
+                    case case_1
+                    by contradiction /* cyclic */
+                  next
+                    case case_2
+                    solve( State_11111111( ~n.2, pk(~n.1), ~n ) ▶₀ #j )
+                      case newNa_0_1111111
+                      solve( !KU( aenc(<xNa, pk(x)>, pk(~n.1)) ) @ #vk.7 )
+                        case c_aenc
+                        by contradiction /* cyclic */
+                      next
+                        case outaencNapkskApkB_0_111111111
+                        by contradiction /* cyclic */
+                      qed
                     qed
                   next
-                    case outaencxNaNbpkskBpkA_0_121111111111
-                    solve( (∃ #j. (!KU( ~n.2 ) @ #j) ∧ #j < #vr.44)  ∥
-                           (∃ #j. (OUT_I_1( aenc(<~n.2, pk(~n)>, pk(~n.1)) ) @ #j))  ∥
-                           (∃ #j. (OUT_I_2( aenc(<~n.2, pk(~n)>, pk(~n.1)) ) @ #j)) )
-                      case case_1
-                      by contradiction /* cyclic */
-                    next
-                      case case_2
-                      solve( State_11111111( ~n.2, pk(~n.1), ~n ) ▶₀ #j )
-                        case newNa_0_1111111
-                        solve( !KU( aenc(<xNa, pk(x)>, pk(~n.1)) ) @ #vk.7 )
-                          case c_aenc
-                          by contradiction /* cyclic */
-                        next
-                          case outaencNapkskApkB_0_111111111
-                          by contradiction /* cyclic */
-                        qed
-                      qed
-                    next
-                      case case_3
-                      by solve( State_11111111111111( Na, cypher, pk(~n), pk(~n.1), skA, ~n.2
-                                ) ▶₀ #j )
-                    qed
+                    case case_3
+                    by solve( State_11111111111111( Na, cypher, pk(~n), pk(~n.1), skA, ~n.2
+                              ) ▶₀ #j )
                   qed
                 qed
               qed
@@ -478,77 +352,26 @@ solve( State_1111111111111111( Na, cypher, k, pk(skB), skA, xNb
             case outpkskB_0_12111
             solve( !KU( ~n.3 ) @ #t2 )
               case outaencxNbkpkB_0_111111111111111
-              solve( !KU( pk(~n) ) @ #vk.4 )
-                case c_pk
-                solve( !KU( ~n.2 ) @ #vk.5 )
-                  case outaencNapkskApkB_0_111111111
-                  by solve( !KU( ~n.1 ) @ #vk.6 )
-                next
-                  case outaencxNaNbpkskBpkA_0_121111111111
-                  solve( (∃ #j. (!KU( ~n.2 ) @ #j) ∧ #j < #vr.32)  ∥
-                         (∃ #j. (OUT_I_1( aenc(<~n.2, pk(~n)>, pk(~n.1)) ) @ #j))  ∥
-                         (∃ #j. (OUT_I_2( aenc(<~n.2, pk(~n)>, pk(~n.1)) ) @ #j)) )
-                    case case_1
-                    by contradiction /* cyclic */
-                  next
-                    case case_2
-                    solve( State_11111111( ~n.2, pk(~n.1), ~n ) ▶₀ #j )
-                      case newNa_0_1111111
-                      by solve( !KU( ~n.1 ) @ #vk.6 )
-                    qed
-                  next
-                    case case_3
-                    by solve( State_11111111111111( Na, cypher, pk(~n), pk(~n.1), skA, ~n.2
-                              ) ▶₀ #j )
-                  qed
-                qed
-              next
+              solve( !KU( ~n.2 ) @ #vk.5 )
                 case outaencNapkskApkB_0_111111111
-                solve( !KU( ~n.2 ) @ #vk.5 )
-                  case outaencNapkskApkB_0_111111111
-                  by solve( !KU( ~n.1 ) @ #vk.6 )
-                next
-                  case outaencxNaNbpkskBpkA_0_121111111111
-                  solve( (∃ #j. (!KU( ~n.2 ) @ #j) ∧ #j < #vr.39)  ∥
-                         (∃ #j. (OUT_I_1( aenc(<~n.2, pk(~n)>, pk(~n.1)) ) @ #j))  ∥
-                         (∃ #j. (OUT_I_2( aenc(<~n.2, pk(~n)>, pk(~n.1)) ) @ #j)) )
-                    case case_1
-                    by contradiction /* cyclic */
-                  next
-                    case case_2
-                    solve( State_11111111( ~n.2, pk(~n.1), ~n ) ▶₀ #j )
-                      case newNa_0_1111111
-                      by solve( !KU( ~n.1 ) @ #vk.6 )
-                    qed
-                  next
-                    case case_3
-                    by solve( State_11111111111111( Na, cypher, pk(~n), pk(~n.1), skA, ~n.2
-                              ) ▶₀ #j )
-                  qed
-                qed
+                by solve( !KU( ~n.1 ) @ #vk.6 )
               next
-                case outpkskA_0_1111
-                solve( !KU( ~n.2 ) @ #vk.5 )
-                  case outaencNapkskApkB_0_111111111
-                  by solve( !KU( ~n.1 ) @ #vk.6 )
+                case outaencxNaNbpkskBpkA_0_121111111111
+                solve( (∃ #j. (!KU( ~n.2 ) @ #j) ∧ #j < #vr.32)  ∥
+                       (∃ #j. (OUT_I_1( aenc(<~n.2, pk(~n)>, pk(~n.1)) ) @ #j))  ∥
+                       (∃ #j. (OUT_I_2( aenc(<~n.2, pk(~n)>, pk(~n.1)) ) @ #j)) )
+                  case case_1
+                  by contradiction /* cyclic */
                 next
-                  case outaencxNaNbpkskBpkA_0_121111111111
-                  solve( (∃ #j. (!KU( ~n.2 ) @ #j) ∧ #j < #vr.32)  ∥
-                         (∃ #j. (OUT_I_1( aenc(<~n.2, pk(~n)>, pk(~n.1)) ) @ #j))  ∥
-                         (∃ #j. (OUT_I_2( aenc(<~n.2, pk(~n)>, pk(~n.1)) ) @ #j)) )
-                    case case_1
-                    by contradiction /* cyclic */
-                  next
-                    case case_2
-                    solve( State_11111111( ~n.2, pk(~n.1), ~n ) ▶₀ #j )
-                      case newNa_0_1111111
-                      by solve( !KU( ~n.1 ) @ #vk.6 )
-                    qed
-                  next
-                    case case_3
-                    by solve( State_11111111111111( Na, cypher, pk(~n), pk(~n.1), skA, ~n.2
-                              ) ▶₀ #j )
+                  case case_2
+                  solve( State_11111111( ~n.2, pk(~n.1), ~n ) ▶₀ #j )
+                    case newNa_0_1111111
+                    by solve( !KU( ~n.1 ) @ #vk.6 )
                   qed
+                next
+                  case case_3
+                  by solve( State_11111111111111( Na, cypher, pk(~n), pk(~n.1), skA, ~n.2
+                            ) ▶₀ #j )
                 qed
               qed
             qed
@@ -561,165 +384,33 @@ solve( State_1111111111111111( Na, cypher, k, pk(skB), skA, xNb
             case case_1
             solve( !KU( ~n.4 ) @ #t2 )
               case outaencxNbkpkB_0_111111111111111
-              solve( !KU( pk(~n.1) ) @ #vk.1 )
-                case c_pk
-                solve( !KU( aenc(<~n.2, pk(~n)>, pk(~n.1)) ) @ #vk.2 )
-                  case c_aenc
-                  solve( !KU( ~n.3 ) @ #j )
-                    case outaencxNaNbpkskBpkA_0_121111111111
-                    solve( !KU( ~n.3 ) @ #j.1 )
-                      case outaencNapkskApkB_0_111111111
-                      by solve( !KU( ~n.1 ) @ #vk.4 )
-                    next
-                      case outaencxNaNbpkskBpkA_0_121111111111
-                      by contradiction /* cyclic */
-                    qed
-                  next
-                    case outaencxNbkpkB_0_111111111111111
-                    by contradiction /* cyclic */
-                  qed
-                next
-                  case outaencNapkskApkB_0_111111111
-                  solve( !KU( ~n.3 ) @ #j )
-                    case outaencxNaNbpkskBpkA_0_121111111111
-                    solve( !KU( ~n.3 ) @ #j.1 )
-                      case outaencNapkskApkB_0_111111111
-                      by solve( !KU( ~n.1 ) @ #vk.3 )
-                    next
-                      case outaencxNaNbpkskBpkA_0_121111111111
-                      solve( (∃ #j. (!KU( ~n.3 ) @ #j) ∧ #j < #vr.44)  ∥
-                             (∃ #j. (OUT_I_1( aenc(<~n.3, pk(~n)>, pk(~n.1)) ) @ #j))  ∥
-                             (∃ #j. (OUT_I_2( aenc(<~n.3, pk(~n)>, pk(~n.1)) ) @ #j)) )
-                        case case_1
-                        by contradiction /* cyclic */
-                      next
-                        case case_2
-                        solve( State_11111111( ~n.3, pk(~n.1), ~n ) ▶₀ #j.2 )
-                          case newNa_0_1111111
-                          by solve( !KU( ~n.1 ) @ #vk.3 )
-                        qed
-                      next
-                        case case_3
-                        by solve( State_11111111111111( Na, cypher, pk(~n), pk(~n.1), skA, ~n.3
-                                  ) ▶₀ #j.2 )
-                      qed
-                    qed
-                  next
-                    case outaencxNbkpkB_0_111111111111111
-                    by contradiction /* cyclic */
-                  qed
-                qed
-              next
+              solve( !KU( ~n.3 ) @ #j )
                 case outaencxNaNbpkskBpkA_0_121111111111
-                solve( (∃ #j. (!KU( xNa ) @ #j) ∧ #j < #vr.42)  ∥
-                       (∃ #j. (OUT_I_1( aenc(<xNa, pk(x)>, pk(~n.1)) ) @ #j))  ∥
-                       (∃ #j. (OUT_I_2( aenc(<xNa, pk(x)>, pk(~n.1)) ) @ #j)) )
-                  case case_1
-                  solve( !KU( aenc(<~n.2, pk(~n)>, pk(~n.1)) ) @ #vk.2 )
-                    case c_aenc
-                    solve( !KU( ~n.3 ) @ #j )
-                      case outaencxNaNbpkskBpkA_0_121111111111
-                      solve( !KU( ~n.3 ) @ #j.1 )
-                        case outaencNapkskApkB_0_111111111
-                        by solve( !KU( ~n.1 ) @ #vk.4 )
-                      next
-                        case outaencxNaNbpkskBpkA_0_121111111111
-                        by contradiction /* cyclic */
-                      qed
-                    next
-                      case outaencxNbkpkB_0_111111111111111
-                      by contradiction /* cyclic */
+                solve( !KU( ~n.3 ) @ #j.1 )
+                  case outaencNapkskApkB_0_111111111
+                  by solve( !KU( ~n.1 ) @ #vk.3 )
+                next
+                  case outaencxNaNbpkskBpkA_0_121111111111
+                  solve( (∃ #j. (!KU( ~n.3 ) @ #j) ∧ #j < #vr.44)  ∥
+                         (∃ #j. (OUT_I_1( aenc(<~n.3, pk(~n)>, pk(~n.1)) ) @ #j))  ∥
+                         (∃ #j. (OUT_I_2( aenc(<~n.3, pk(~n)>, pk(~n.1)) ) @ #j)) )
+                    case case_1
+                    by contradiction /* cyclic */
+                  next
+                    case case_2
+                    solve( State_11111111( ~n.3, pk(~n.1), ~n ) ▶₀ #j.2 )
+                      case newNa_0_1111111
+                      by solve( !KU( ~n.1 ) @ #vk.3 )
                     qed
                   next
-                    case outaencNapkskApkB_0_111111111
-                    solve( !KU( ~n.3 ) @ #j )
-                      case outaencxNaNbpkskBpkA_0_121111111111
-                      solve( !KU( ~n.3 ) @ #j.1 )
-                        case outaencNapkskApkB_0_111111111
-                        by solve( !KU( ~n.1 ) @ #vk.3 )
-                      next
-                        case outaencxNaNbpkskBpkA_0_121111111111
-                        solve( (∃ #j. (!KU( ~n.3 ) @ #j) ∧ #j < #vr.55)  ∥
-                               (∃ #j. (OUT_I_1( aenc(<~n.3, pk(~n)>, pk(~n.1)) ) @ #j))  ∥
-                               (∃ #j. (OUT_I_2( aenc(<~n.3, pk(~n)>, pk(~n.1)) ) @ #j)) )
-                          case case_1
-                          by contradiction /* cyclic */
-                        next
-                          case case_2
-                          solve( State_11111111( ~n.3, pk(~n.1), ~n ) ▶₀ #j.2 )
-                            case newNa_0_1111111
-                            by solve( !KU( ~n.1 ) @ #vk.3 )
-                          qed
-                        next
-                          case case_3
-                          by solve( State_11111111111111( Na, cypher, pk(~n), pk(~n.1), skA, ~n.3
-                                    ) ▶₀ #j.2 )
-                        qed
-                      qed
-                    next
-                      case outaencxNbkpkB_0_111111111111111
-                      by contradiction /* cyclic */
-                    qed
+                    case case_3
+                    by solve( State_11111111111111( Na, cypher, pk(~n), pk(~n.1), skA, ~n.3
+                              ) ▶₀ #j.2 )
                   qed
-                next
-                  case case_2
-                  solve( State_11111111( xNa, pk(~n.1), x ) ▶₀ #j )
-                    case newNa_0_1111111
-                    by contradiction /* cyclic */
-                  qed
-                next
-                  case case_3
-                  by solve( State_11111111111111( Na, cypher, pk(x), pk(~n.1), skA, xNa
-                            ) ▶₀ #j )
                 qed
               next
-                case outpkskB_0_12111
-                solve( !KU( aenc(<~n.2, pk(~n)>, pk(~n.1)) ) @ #vk.2 )
-                  case c_aenc
-                  solve( !KU( ~n.3 ) @ #j )
-                    case outaencxNaNbpkskBpkA_0_121111111111
-                    solve( !KU( ~n.3 ) @ #j.1 )
-                      case outaencNapkskApkB_0_111111111
-                      by solve( !KU( ~n.1 ) @ #vk.4 )
-                    next
-                      case outaencxNaNbpkskBpkA_0_121111111111
-                      by contradiction /* cyclic */
-                    qed
-                  next
-                    case outaencxNbkpkB_0_111111111111111
-                    by contradiction /* cyclic */
-                  qed
-                next
-                  case outaencNapkskApkB_0_111111111
-                  solve( !KU( ~n.3 ) @ #j )
-                    case outaencxNaNbpkskBpkA_0_121111111111
-                    solve( !KU( ~n.3 ) @ #j.1 )
-                      case outaencNapkskApkB_0_111111111
-                      by solve( !KU( ~n.1 ) @ #vk.3 )
-                    next
-                      case outaencxNaNbpkskBpkA_0_121111111111
-                      solve( (∃ #j. (!KU( ~n.3 ) @ #j) ∧ #j < #vr.44)  ∥
-                             (∃ #j. (OUT_I_1( aenc(<~n.3, pk(~n)>, pk(~n.1)) ) @ #j))  ∥
-                             (∃ #j. (OUT_I_2( aenc(<~n.3, pk(~n)>, pk(~n.1)) ) @ #j)) )
-                        case case_1
-                        by contradiction /* cyclic */
-                      next
-                        case case_2
-                        solve( State_11111111( ~n.3, pk(~n.1), ~n ) ▶₀ #j.2 )
-                          case newNa_0_1111111
-                          by solve( !KU( ~n.1 ) @ #vk.3 )
-                        qed
-                      next
-                        case case_3
-                        by solve( State_11111111111111( Na, cypher, pk(~n), pk(~n.1), skA, ~n.3
-                                  ) ▶₀ #j.2 )
-                      qed
-                    qed
-                  next
-                    case outaencxNbkpkB_0_111111111111111
-                    by contradiction /* cyclic */
-                  qed
-                qed
+                case outaencxNbkpkB_0_111111111111111
+                by contradiction /* cyclic */
               qed
             qed
           next
@@ -728,84 +419,12 @@ solve( State_1111111111111111( Na, cypher, k, pk(skB), skA, xNb
               case newNa_0_1111111
               solve( !KU( ~n.4 ) @ #t2 )
                 case outaencxNbkpkB_0_111111111111111
-                solve( !KU( pk(~n.1) ) @ #vk.1 )
-                  case c_pk
-                  solve( !KU( aenc(<~n.2, pk(~n)>, pk(~n.1)) ) @ #vk.2 )
-                    case c_aenc
-                    solve( !KU( ~n.3 ) @ #j.1 )
-                      case outaencxNaNbpkskBpkA_0_121111111111
-                      by solve( !KU( ~n.1 ) @ #vk.3 )
-                    next
-                      case outaencxNbkpkB_0_111111111111111
-                      by contradiction /* cyclic */
-                    qed
-                  next
-                    case outaencNapkskApkB_0_111111111
-                    solve( !KU( ~n.3 ) @ #j.1 )
-                      case outaencxNaNbpkskBpkA_0_121111111111
-                      by solve( !KU( ~n.1 ) @ #vk.3 )
-                    next
-                      case outaencxNbkpkB_0_111111111111111
-                      by contradiction /* cyclic */
-                    qed
-                  qed
-                next
+                solve( !KU( ~n.3 ) @ #j.1 )
                   case outaencxNaNbpkskBpkA_0_121111111111
-                  solve( (∃ #j. (!KU( xNa ) @ #j) ∧ #j < #vr.41)  ∥
-                         (∃ #j. (OUT_I_1( aenc(<xNa, pk(x)>, pk(~n.1)) ) @ #j))  ∥
-                         (∃ #j. (OUT_I_2( aenc(<xNa, pk(x)>, pk(~n.1)) ) @ #j)) )
-                    case case_1
-                    solve( !KU( aenc(<~n.2, pk(~n)>, pk(~n.1)) ) @ #vk.2 )
-                      case c_aenc
-                      solve( !KU( ~n.3 ) @ #j.1 )
-                        case outaencxNaNbpkskBpkA_0_121111111111
-                        by solve( !KU( ~n.1 ) @ #vk.3 )
-                      next
-                        case outaencxNbkpkB_0_111111111111111
-                        by contradiction /* cyclic */
-                      qed
-                    next
-                      case outaencNapkskApkB_0_111111111
-                      solve( !KU( ~n.3 ) @ #j.1 )
-                        case outaencxNaNbpkskBpkA_0_121111111111
-                        by solve( !KU( ~n.1 ) @ #vk.3 )
-                      next
-                        case outaencxNbkpkB_0_111111111111111
-                        by contradiction /* cyclic */
-                      qed
-                    qed
-                  next
-                    case case_2
-                    solve( State_11111111( xNa, pk(~n.1), x ) ▶₀ #j.1 )
-                      case newNa_0_1111111
-                      by contradiction /* cyclic */
-                    qed
-                  next
-                    case case_3
-                    by solve( State_11111111111111( Na, cypher, pk(x), pk(~n.1), skA, xNa
-                              ) ▶₀ #j.1 )
-                  qed
+                  by solve( !KU( ~n.1 ) @ #vk.3 )
                 next
-                  case outpkskB_0_12111
-                  solve( !KU( aenc(<~n.2, pk(~n)>, pk(~n.1)) ) @ #vk.2 )
-                    case c_aenc
-                    solve( !KU( ~n.3 ) @ #j.1 )
-                      case outaencxNaNbpkskBpkA_0_121111111111
-                      by solve( !KU( ~n.1 ) @ #vk.3 )
-                    next
-                      case outaencxNbkpkB_0_111111111111111
-                      by contradiction /* cyclic */
-                    qed
-                  next
-                    case outaencNapkskApkB_0_111111111
-                    solve( !KU( ~n.3 ) @ #j.1 )
-                      case outaencxNaNbpkskBpkA_0_121111111111
-                      by solve( !KU( ~n.1 ) @ #vk.3 )
-                    next
-                      case outaencxNbkpkB_0_111111111111111
-                      by contradiction /* cyclic */
-                    qed
-                  qed
+                  case outaencxNbkpkB_0_111111111111111
+                  by contradiction /* cyclic */
                 qed
               qed
             qed
@@ -833,524 +452,65 @@ solve( State_1111111111111111( Na, cypher, k, pk(skB), skA, xNb
               case c_aenc
               solve( !KU( ~n.4 ) @ #t2 )
                 case outaencxNbkpkB_0_111111111111111
-                solve( !KU( pk(~n.1) ) @ #vk.2 )
-                  case c_pk
-                  solve( !KU( aenc(<~n.3, pk(~n)>, pk(~n.1)) ) @ #vk.4 )
-                    case c_aenc
-                    solve( !KU( ~n.3 ) @ #j.1 )
-                      case outaencNapkskApkB_0_111111111
-                      solve( !KU( pk(~n) ) @ #vk.6 )
-                        case c_pk
-                        solve( !KU( ~n.2 ) @ #vk.7 )
-                          case outaencxNaNbpkskBpkA_0_121111111111
-                          by solve( !KU( ~n.1 ) @ #vk.8 )
-                        next
-                          case outaencxNbkpkB_0_111111111111111
-                          by contradiction /* cyclic */
-                        qed
-                      next
-                        case outaencNapkskApkB_0_111111111
-                        solve( !KU( ~n.2 ) @ #vk.7 )
-                          case outaencxNaNbpkskBpkA_0_121111111111
-                          by solve( !KU( ~n.1 ) @ #vk.8 )
-                        next
-                          case outaencxNbkpkB_0_111111111111111
-                          by contradiction /* cyclic */
-                        qed
-                      next
-                        case outpkskA_0_1111
-                        solve( !KU( ~n.2 ) @ #vk.7 )
-                          case outaencxNaNbpkskBpkA_0_121111111111
-                          by solve( !KU( ~n.1 ) @ #vk.8 )
-                        next
-                          case outaencxNbkpkB_0_111111111111111
-                          by contradiction /* cyclic */
-                        qed
-                      qed
-                    next
-                      case outaencxNaNbpkskBpkA_0_121111111111
-                      by contradiction /* cyclic */
-                    qed
+                solve( !KU( ~n.3 ) @ #j.1 )
+                  case outaencNapkskApkB_0_111111111
+                  solve( !KU( ~n.2 ) @ #vk.6 )
+                    case outaencxNaNbpkskBpkA_0_121111111111
+                    by solve( !KU( ~n.1 ) @ #vk.7 )
                   next
-                    case outaencNapkskApkB_0_111111111
-                    solve( !KU( ~n.3 ) @ #j.1 )
-                      case outaencNapkskApkB_0_111111111
-                      solve( !KU( pk(~n) ) @ #vk.5 )
-                        case c_pk
-                        solve( !KU( ~n.2 ) @ #vk.6 )
-                          case outaencxNaNbpkskBpkA_0_121111111111
-                          by solve( !KU( ~n.1 ) @ #vk.7 )
-                        next
-                          case outaencxNbkpkB_0_111111111111111
-                          by contradiction /* cyclic */
-                        qed
-                      next
-                        case outaencNapkskApkB_0_111111111
-                        solve( !KU( ~n.2 ) @ #vk.6 )
-                          case outaencxNaNbpkskBpkA_0_121111111111
-                          by solve( !KU( ~n.1 ) @ #vk.7 )
-                        next
-                          case outaencxNbkpkB_0_111111111111111
-                          by contradiction /* cyclic */
-                        qed
-                      next
-                        case outpkskA_0_1111
-                        solve( !KU( ~n.2 ) @ #vk.6 )
-                          case outaencxNaNbpkskBpkA_0_121111111111
-                          by solve( !KU( ~n.1 ) @ #vk.7 )
-                        next
-                          case outaencxNbkpkB_0_111111111111111
-                          by contradiction /* cyclic */
-                        qed
-                      qed
-                    next
-                      case outaencxNaNbpkskBpkA_0_121111111111
-                      solve( (∃ #j. (!KU( ~n.3 ) @ #j) ∧ #j < #vr.39)  ∥
-                             (∃ #j. (OUT_I_1( aenc(<~n.3, pk(~n)>, pk(~n.1)) ) @ #j))  ∥
-                             (∃ #j. (OUT_I_2( aenc(<~n.3, pk(~n)>, pk(~n.1)) ) @ #j)) )
-                        case case_1
-                        by contradiction /* cyclic */
-                      next
-                        case case_2
-                        solve( State_11111111( ~n.3, pk(~n.1), ~n ) ▶₀ #j.2 )
-                          case newNa_0_1111111
-                          solve( !KU( pk(~n) ) @ #vk.5 )
-                            case c_pk
-                            solve( !KU( ~n.2 ) @ #vk.6 )
-                              case outaencxNaNbpkskBpkA_0_121111111111
-                              by solve( !KU( ~n.1 ) @ #vk.7 )
-                            next
-                              case outaencxNbkpkB_0_111111111111111
-                              by contradiction /* cyclic */
-                            qed
-                          next
-                            case outaencNapkskApkB_0_111111111
-                            solve( !KU( ~n.2 ) @ #vk.6 )
-                              case outaencxNaNbpkskBpkA_0_121111111111
-                              by solve( !KU( ~n.1 ) @ #vk.7 )
-                            next
-                              case outaencxNbkpkB_0_111111111111111
-                              by contradiction /* cyclic */
-                            qed
-                          next
-                            case outpkskA_0_1111
-                            solve( !KU( ~n.2 ) @ #vk.6 )
-                              case outaencxNaNbpkskBpkA_0_121111111111
-                              by solve( !KU( ~n.1 ) @ #vk.7 )
-                            next
-                              case outaencxNbkpkB_0_111111111111111
-                              by contradiction /* cyclic */
-                            qed
-                          qed
-                        qed
-                      next
-                        case case_3
-                        by solve( State_11111111111111( Na, cypher, pk(~n), pk(~n.1), skA, ~n.3
-                                  ) ▶₀ #j.2 )
-                      qed
-                    qed
+                    case outaencxNbkpkB_0_111111111111111
+                    by contradiction /* cyclic */
                   qed
                 next
                   case outaencxNaNbpkskBpkA_0_121111111111
-                  solve( (∃ #j. (!KU( xNa ) @ #j) ∧ #j < #vr.40)  ∥
-                         (∃ #j. (OUT_I_1( aenc(<xNa, pk(x)>, pk(~n.1)) ) @ #j))  ∥
-                         (∃ #j. (OUT_I_2( aenc(<xNa, pk(x)>, pk(~n.1)) ) @ #j)) )
+                  solve( (∃ #j. (!KU( ~n.3 ) @ #j) ∧ #j < #vr.39)  ∥
+                         (∃ #j. (OUT_I_1( aenc(<~n.3, pk(~n)>, pk(~n.1)) ) @ #j))  ∥
+                         (∃ #j. (OUT_I_2( aenc(<~n.3, pk(~n)>, pk(~n.1)) ) @ #j)) )
                     case case_1
-                    solve( !KU( aenc(<~n.3, pk(~n)>, pk(~n.1)) ) @ #vk.4 )
-                      case c_aenc
-                      solve( !KU( ~n.3 ) @ #j.1 )
-                        case outaencNapkskApkB_0_111111111
-                        solve( !KU( pk(~n) ) @ #vk.6 )
-                          case c_pk
-                          solve( !KU( ~n.2 ) @ #vk.7 )
-                            case outaencxNaNbpkskBpkA_0_121111111111
-                            by solve( !KU( ~n.1 ) @ #vk.8 )
-                          next
-                            case outaencxNbkpkB_0_111111111111111
-                            by contradiction /* cyclic */
-                          qed
-                        next
-                          case outaencNapkskApkB_0_111111111
-                          solve( !KU( ~n.2 ) @ #vk.7 )
-                            case outaencxNaNbpkskBpkA_0_121111111111
-                            by solve( !KU( ~n.1 ) @ #vk.8 )
-                          next
-                            case outaencxNbkpkB_0_111111111111111
-                            by contradiction /* cyclic */
-                          qed
-                        next
-                          case outpkskA_0_1111
-                          solve( !KU( ~n.2 ) @ #vk.7 )
-                            case outaencxNaNbpkskBpkA_0_121111111111
-                            by solve( !KU( ~n.1 ) @ #vk.8 )
-                          next
-                            case outaencxNbkpkB_0_111111111111111
-                            by contradiction /* cyclic */
-                          qed
-                        qed
-                      next
-                        case outaencxNaNbpkskBpkA_0_121111111111
-                        by contradiction /* cyclic */
-                      qed
-                    next
-                      case outaencNapkskApkB_0_111111111
-                      solve( !KU( ~n.3 ) @ #j.1 )
-                        case outaencNapkskApkB_0_111111111
-                        solve( !KU( pk(~n) ) @ #vk.5 )
-                          case c_pk
-                          solve( !KU( ~n.2 ) @ #vk.6 )
-                            case outaencxNaNbpkskBpkA_0_121111111111
-                            by solve( !KU( ~n.1 ) @ #vk.7 )
-                          next
-                            case outaencxNbkpkB_0_111111111111111
-                            by contradiction /* cyclic */
-                          qed
-                        next
-                          case outaencNapkskApkB_0_111111111
-                          solve( !KU( ~n.2 ) @ #vk.6 )
-                            case outaencxNaNbpkskBpkA_0_121111111111
-                            by solve( !KU( ~n.1 ) @ #vk.7 )
-                          next
-                            case outaencxNbkpkB_0_111111111111111
-                            by contradiction /* cyclic */
-                          qed
-                        next
-                          case outpkskA_0_1111
-                          solve( !KU( ~n.2 ) @ #vk.6 )
-                            case outaencxNaNbpkskBpkA_0_121111111111
-                            by solve( !KU( ~n.1 ) @ #vk.7 )
-                          next
-                            case outaencxNbkpkB_0_111111111111111
-                            by contradiction /* cyclic */
-                          qed
-                        qed
-                      next
-                        case outaencxNaNbpkskBpkA_0_121111111111
-                        solve( (∃ #j. (!KU( ~n.3 ) @ #j) ∧ #j < #vr.50)  ∥
-                               (∃ #j. (OUT_I_1( aenc(<~n.3, pk(~n)>, pk(~n.1)) ) @ #j))  ∥
-                               (∃ #j. (OUT_I_2( aenc(<~n.3, pk(~n)>, pk(~n.1)) ) @ #j)) )
-                          case case_1
-                          by contradiction /* cyclic */
-                        next
-                          case case_2
-                          solve( State_11111111( ~n.3, pk(~n.1), ~n ) ▶₀ #j.2 )
-                            case newNa_0_1111111
-                            solve( !KU( pk(~n) ) @ #vk.5 )
-                              case c_pk
-                              solve( !KU( ~n.2 ) @ #vk.6 )
-                                case outaencxNaNbpkskBpkA_0_121111111111
-                                by solve( !KU( ~n.1 ) @ #vk.7 )
-                              next
-                                case outaencxNbkpkB_0_111111111111111
-                                by contradiction /* cyclic */
-                              qed
-                            next
-                              case outaencNapkskApkB_0_111111111
-                              solve( !KU( ~n.2 ) @ #vk.6 )
-                                case outaencxNaNbpkskBpkA_0_121111111111
-                                by solve( !KU( ~n.1 ) @ #vk.7 )
-                              next
-                                case outaencxNbkpkB_0_111111111111111
-                                by contradiction /* cyclic */
-                              qed
-                            next
-                              case outpkskA_0_1111
-                              solve( !KU( ~n.2 ) @ #vk.6 )
-                                case outaencxNaNbpkskBpkA_0_121111111111
-                                by solve( !KU( ~n.1 ) @ #vk.7 )
-                              next
-                                case outaencxNbkpkB_0_111111111111111
-                                by contradiction /* cyclic */
-                              qed
-                            qed
-                          qed
-                        next
-                          case case_3
-                          by solve( State_11111111111111( Na, cypher, pk(~n), pk(~n.1), skA, ~n.3
-                                    ) ▶₀ #j.2 )
-                        qed
-                      qed
-                    qed
+                    by contradiction /* cyclic */
                   next
                     case case_2
-                    solve( State_11111111( xNa, pk(~n.1), x ) ▶₀ #j.1 )
+                    solve( State_11111111( ~n.3, pk(~n.1), ~n ) ▶₀ #j.2 )
                       case newNa_0_1111111
-                      by contradiction /* cyclic */
+                      solve( !KU( ~n.2 ) @ #vk.6 )
+                        case outaencxNaNbpkskBpkA_0_121111111111
+                        by solve( !KU( ~n.1 ) @ #vk.7 )
+                      next
+                        case outaencxNbkpkB_0_111111111111111
+                        by contradiction /* cyclic */
+                      qed
                     qed
                   next
                     case case_3
-                    by solve( State_11111111111111( Na, cypher, pk(x), pk(~n.1), skA, xNa
-                              ) ▶₀ #j.1 )
-                  qed
-                next
-                  case outpkskB_0_12111
-                  solve( !KU( aenc(<~n.3, pk(~n)>, pk(~n.1)) ) @ #vk.4 )
-                    case c_aenc
-                    solve( !KU( ~n.3 ) @ #j.1 )
-                      case outaencNapkskApkB_0_111111111
-                      solve( !KU( pk(~n) ) @ #vk.6 )
-                        case c_pk
-                        solve( !KU( ~n.2 ) @ #vk.7 )
-                          case outaencxNaNbpkskBpkA_0_121111111111
-                          by solve( !KU( ~n.1 ) @ #vk.8 )
-                        next
-                          case outaencxNbkpkB_0_111111111111111
-                          by contradiction /* cyclic */
-                        qed
-                      next
-                        case outaencNapkskApkB_0_111111111
-                        solve( !KU( ~n.2 ) @ #vk.7 )
-                          case outaencxNaNbpkskBpkA_0_121111111111
-                          by solve( !KU( ~n.1 ) @ #vk.8 )
-                        next
-                          case outaencxNbkpkB_0_111111111111111
-                          by contradiction /* cyclic */
-                        qed
-                      next
-                        case outpkskA_0_1111
-                        solve( !KU( ~n.2 ) @ #vk.7 )
-                          case outaencxNaNbpkskBpkA_0_121111111111
-                          by solve( !KU( ~n.1 ) @ #vk.8 )
-                        next
-                          case outaencxNbkpkB_0_111111111111111
-                          by contradiction /* cyclic */
-                        qed
-                      qed
-                    next
-                      case outaencxNaNbpkskBpkA_0_121111111111
-                      by contradiction /* cyclic */
-                    qed
-                  next
-                    case outaencNapkskApkB_0_111111111
-                    solve( !KU( ~n.3 ) @ #j.1 )
-                      case outaencNapkskApkB_0_111111111
-                      solve( !KU( pk(~n) ) @ #vk.5 )
-                        case c_pk
-                        solve( !KU( ~n.2 ) @ #vk.6 )
-                          case outaencxNaNbpkskBpkA_0_121111111111
-                          by solve( !KU( ~n.1 ) @ #vk.7 )
-                        next
-                          case outaencxNbkpkB_0_111111111111111
-                          by contradiction /* cyclic */
-                        qed
-                      next
-                        case outaencNapkskApkB_0_111111111
-                        solve( !KU( ~n.2 ) @ #vk.6 )
-                          case outaencxNaNbpkskBpkA_0_121111111111
-                          by solve( !KU( ~n.1 ) @ #vk.7 )
-                        next
-                          case outaencxNbkpkB_0_111111111111111
-                          by contradiction /* cyclic */
-                        qed
-                      next
-                        case outpkskA_0_1111
-                        solve( !KU( ~n.2 ) @ #vk.6 )
-                          case outaencxNaNbpkskBpkA_0_121111111111
-                          by solve( !KU( ~n.1 ) @ #vk.7 )
-                        next
-                          case outaencxNbkpkB_0_111111111111111
-                          by contradiction /* cyclic */
-                        qed
-                      qed
-                    next
-                      case outaencxNaNbpkskBpkA_0_121111111111
-                      solve( (∃ #j. (!KU( ~n.3 ) @ #j) ∧ #j < #vr.39)  ∥
-                             (∃ #j. (OUT_I_1( aenc(<~n.3, pk(~n)>, pk(~n.1)) ) @ #j))  ∥
-                             (∃ #j. (OUT_I_2( aenc(<~n.3, pk(~n)>, pk(~n.1)) ) @ #j)) )
-                        case case_1
-                        by contradiction /* cyclic */
-                      next
-                        case case_2
-                        solve( State_11111111( ~n.3, pk(~n.1), ~n ) ▶₀ #j.2 )
-                          case newNa_0_1111111
-                          solve( !KU( pk(~n) ) @ #vk.5 )
-                            case c_pk
-                            solve( !KU( ~n.2 ) @ #vk.6 )
-                              case outaencxNaNbpkskBpkA_0_121111111111
-                              by solve( !KU( ~n.1 ) @ #vk.7 )
-                            next
-                              case outaencxNbkpkB_0_111111111111111
-                              by contradiction /* cyclic */
-                            qed
-                          next
-                            case outaencNapkskApkB_0_111111111
-                            solve( !KU( ~n.2 ) @ #vk.6 )
-                              case outaencxNaNbpkskBpkA_0_121111111111
-                              by solve( !KU( ~n.1 ) @ #vk.7 )
-                            next
-                              case outaencxNbkpkB_0_111111111111111
-                              by contradiction /* cyclic */
-                            qed
-                          next
-                            case outpkskA_0_1111
-                            solve( !KU( ~n.2 ) @ #vk.6 )
-                              case outaencxNaNbpkskBpkA_0_121111111111
-                              by solve( !KU( ~n.1 ) @ #vk.7 )
-                            next
-                              case outaencxNbkpkB_0_111111111111111
-                              by contradiction /* cyclic */
-                            qed
-                          qed
-                        qed
-                      next
-                        case case_3
-                        by solve( State_11111111111111( Na, cypher, pk(~n), pk(~n.1), skA, ~n.3
-                                  ) ▶₀ #j.2 )
-                      qed
-                    qed
+                    by solve( State_11111111111111( Na, cypher, pk(~n), pk(~n.1), skA, ~n.3
+                              ) ▶₀ #j.2 )
                   qed
                 qed
               qed
             next
               case outaencxNaNbpkskBpkA_0_121111111111
-              solve( !KU( pk(~n.1) ) @ #vk.1 )
-                case c_pk
-                solve( !KU( ~n.4 ) @ #t2 )
-                  case outaencxNbkpkB_0_111111111111111
-                  solve( !KU( aenc(<~n.3, pk(~n)>, pk(~n.1)) ) @ #vk.2 )
-                    case c_aenc
-                    solve( !KU( ~n.3 ) @ #j.1 )
-                      case outaencNapkskApkB_0_111111111
-                      by solve( !KU( ~n.1 ) @ #vk.4 )
-                    next
-                      case outaencxNaNbpkskBpkA_0_121111111111
-                      by contradiction /* cyclic */
-                    qed
-                  next
-                    case outaencNapkskApkB_0_111111111
-                    solve( !KU( ~n.3 ) @ #j.1 )
-                      case outaencNapkskApkB_0_111111111
-                      by solve( !KU( ~n.1 ) @ #vk.3 )
-                    next
-                      case outaencxNaNbpkskBpkA_0_121111111111
-                      solve( (∃ #j. (!KU( ~n.3 ) @ #j) ∧ #j < #vr.40)  ∥
-                             (∃ #j. (OUT_I_1( aenc(<~n.3, pk(~n)>, pk(~n.1)) ) @ #j))  ∥
-                             (∃ #j. (OUT_I_2( aenc(<~n.3, pk(~n)>, pk(~n.1)) ) @ #j)) )
-                        case case_1
-                        by contradiction /* cyclic */
-                      next
-                        case case_2
-                        solve( State_11111111( ~n.3, pk(~n.1), ~n ) ▶₀ #j.2 )
-                          case newNa_0_1111111
-                          by solve( !KU( ~n.1 ) @ #vk.3 )
-                        qed
-                      next
-                        case case_3
-                        by solve( State_11111111111111( Na, cypher, pk(~n), pk(~n.1), skA, ~n.3
-                                  ) ▶₀ #j.2 )
-                      qed
-                    qed
-                  qed
-                qed
-              next
-                case outaencxNaNbpkskBpkA_0_121111111111
-                solve( (∃ #j. (!KU( xNa ) @ #j) ∧ #j < #vr.39)  ∥
-                       (∃ #j. (OUT_I_1( aenc(<xNa, pk(x)>, pk(~n.1)) ) @ #j))  ∥
-                       (∃ #j. (OUT_I_2( aenc(<xNa, pk(x)>, pk(~n.1)) ) @ #j)) )
-                  case case_1
-                  solve( !KU( ~n.4 ) @ #t2 )
-                    case outaencxNbkpkB_0_111111111111111
-                    solve( !KU( aenc(<~n.3, pk(~n)>, pk(~n.1)) ) @ #vk.2 )
-                      case c_aenc
-                      solve( !KU( ~n.3 ) @ #j.1 )
-                        case outaencNapkskApkB_0_111111111
-                        solve( !KU( aenc(<xNa, pk(x)>, pk(~n.1)) ) @ #vk.5 )
-                          case c_aenc
-                          by contradiction /* cyclic */
-                        next
-                          case outaencNapkskApkB_0_111111111
-                          by contradiction /* cyclic */
-                        qed
-                      next
-                        case outaencxNaNbpkskBpkA_0_121111111111
-                        by contradiction /* cyclic */
-                      qed
-                    next
-                      case outaencNapkskApkB_0_111111111
-                      solve( !KU( ~n.3 ) @ #j.1 )
-                        case outaencNapkskApkB_0_111111111
-                        solve( !KU( aenc(<xNa, pk(x)>, pk(~n.1)) ) @ #vk.4 )
-                          case c_aenc
-                          by contradiction /* cyclic */
-                        next
-                          case outaencNapkskApkB_0_111111111
-                          by contradiction /* cyclic */
-                        qed
-                      next
-                        case outaencxNaNbpkskBpkA_0_121111111111
-                        solve( (∃ #j. (!KU( ~n.3 ) @ #j) ∧ #j < #vr.51)  ∥
-                               (∃ #j. (OUT_I_1( aenc(<~n.3, pk(~n)>, pk(~n.1)) ) @ #j))  ∥
-                               (∃ #j. (OUT_I_2( aenc(<~n.3, pk(~n)>, pk(~n.1)) ) @ #j)) )
-                          case case_1
-                          by contradiction /* cyclic */
-                        next
-                          case case_2
-                          solve( State_11111111( ~n.3, pk(~n.1), ~n ) ▶₀ #j.2 )
-                            case newNa_0_1111111
-                            solve( !KU( aenc(<xNa, pk(x)>, pk(~n.1)) ) @ #vk.4 )
-                              case c_aenc
-                              by contradiction /* cyclic */
-                            next
-                              case outaencNapkskApkB_0_111111111
-                              by contradiction /* cyclic */
-                            qed
-                          qed
-                        next
-                          case case_3
-                          by solve( State_11111111111111( Na, cypher, pk(~n), pk(~n.1), skA, ~n.3
-                                    ) ▶₀ #j.2 )
-                        qed
-                      qed
-                    qed
-                  qed
+              solve( !KU( ~n.4 ) @ #t2 )
+                case outaencxNbkpkB_0_111111111111111
+                solve( !KU( ~n.3 ) @ #j.1 )
+                  case outaencNapkskApkB_0_111111111
+                  by solve( !KU( ~n.1 ) @ #vk.3 )
                 next
-                  case case_2
-                  solve( State_11111111( xNa, pk(~n.1), x ) ▶₀ #j.1 )
-                    case newNa_0_1111111
+                  case outaencxNaNbpkskBpkA_0_121111111111
+                  solve( (∃ #j. (!KU( ~n.3 ) @ #j) ∧ #j < #vr.40)  ∥
+                         (∃ #j. (OUT_I_1( aenc(<~n.3, pk(~n)>, pk(~n.1)) ) @ #j))  ∥
+                         (∃ #j. (OUT_I_2( aenc(<~n.3, pk(~n)>, pk(~n.1)) ) @ #j)) )
+                    case case_1
                     by contradiction /* cyclic */
-                  qed
-                next
-                  case case_3
-                  by solve( State_11111111111111( Na, cypher, pk(x), pk(~n.1), skA, xNa
-                            ) ▶₀ #j.1 )
-                qed
-              next
-                case outpkskB_0_12111
-                solve( !KU( ~n.4 ) @ #t2 )
-                  case outaencxNbkpkB_0_111111111111111
-                  solve( !KU( aenc(<~n.3, pk(~n)>, pk(~n.1)) ) @ #vk.2 )
-                    case c_aenc
-                    solve( !KU( ~n.3 ) @ #j.1 )
-                      case outaencNapkskApkB_0_111111111
-                      by solve( !KU( ~n.1 ) @ #vk.4 )
-                    next
-                      case outaencxNaNbpkskBpkA_0_121111111111
-                      by contradiction /* cyclic */
+                  next
+                    case case_2
+                    solve( State_11111111( ~n.3, pk(~n.1), ~n ) ▶₀ #j.2 )
+                      case newNa_0_1111111
+                      by solve( !KU( ~n.1 ) @ #vk.3 )
                     qed
                   next
-                    case outaencNapkskApkB_0_111111111
-                    solve( !KU( ~n.3 ) @ #j.1 )
-                      case outaencNapkskApkB_0_111111111
-                      by solve( !KU( ~n.1 ) @ #vk.3 )
-                    next
-                      case outaencxNaNbpkskBpkA_0_121111111111
-                      solve( (∃ #j. (!KU( ~n.3 ) @ #j) ∧ #j < #vr.40)  ∥
-                             (∃ #j. (OUT_I_1( aenc(<~n.3, pk(~n)>, pk(~n.1)) ) @ #j))  ∥
-                             (∃ #j. (OUT_I_2( aenc(<~n.3, pk(~n)>, pk(~n.1)) ) @ #j)) )
-                        case case_1
-                        by contradiction /* cyclic */
-                      next
-                        case case_2
-                        solve( State_11111111( ~n.3, pk(~n.1), ~n ) ▶₀ #j.2 )
-                          case newNa_0_1111111
-                          by solve( !KU( ~n.1 ) @ #vk.3 )
-                        qed
-                      next
-                        case case_3
-                        by solve( State_11111111111111( Na, cypher, pk(~n), pk(~n.1), skA, ~n.3
-                                  ) ▶₀ #j.2 )
-                      qed
-                    qed
+                    case case_3
+                    by solve( State_11111111111111( Na, cypher, pk(~n), pk(~n.1), skA, ~n.3
+                              ) ▶₀ #j.2 )
                   qed
                 qed
               qed
@@ -1363,547 +523,43 @@ solve( State_1111111111111111( Na, cypher, k, pk(skB), skA, xNb
                 case c_aenc
                 solve( !KU( ~n.4 ) @ #t2 )
                   case outaencxNbkpkB_0_111111111111111
-                  solve( !KU( pk(~n.1) ) @ #vk.1 )
-                    case c_pk
-                    solve( !KU( aenc(<~n.3, pk(~n)>, pk(~n.1)) ) @ #vk.4 )
-                      case c_aenc
-                      solve( !KU( pk(~n) ) @ #vk.5 )
-                        case c_pk
-                        solve( !KU( ~n.3 ) @ #vk.7 )
-                          case outaencNapkskApkB_0_111111111
-                          solve( !KU( ~n.2 ) @ #vk.8 )
-                            case outaencxNaNbpkskBpkA_0_121111111111
-                            by solve( !KU( ~n.1 ) @ #vk.9 )
-                          next
-                            case outaencxNbkpkB_0_111111111111111
-                            by contradiction /* cyclic */
-                          qed
-                        next
-                          case outaencxNaNbpkskBpkA_0_121111111111
-                          by contradiction /* cyclic */
-                        qed
-                      next
-                        case outaencNapkskApkB_0_111111111
-                        solve( !KU( ~n.3 ) @ #vk.7 )
-                          case outaencNapkskApkB_0_111111111
-                          solve( !KU( ~n.2 ) @ #vk.8 )
-                            case outaencxNaNbpkskBpkA_0_121111111111
-                            by solve( !KU( ~n.1 ) @ #vk.9 )
-                          next
-                            case outaencxNbkpkB_0_111111111111111
-                            by contradiction /* cyclic */
-                          qed
-                        next
-                          case outaencxNaNbpkskBpkA_0_121111111111
-                          by contradiction /* cyclic */
-                        qed
-                      next
-                        case outpkskA_0_1111
-                        solve( !KU( ~n.3 ) @ #vk.7 )
-                          case outaencNapkskApkB_0_111111111
-                          solve( !KU( ~n.2 ) @ #vk.8 )
-                            case outaencxNaNbpkskBpkA_0_121111111111
-                            by solve( !KU( ~n.1 ) @ #vk.9 )
-                          next
-                            case outaencxNbkpkB_0_111111111111111
-                            by contradiction /* cyclic */
-                          qed
-                        next
-                          case outaencxNaNbpkskBpkA_0_121111111111
-                          by contradiction /* cyclic */
-                        qed
-                      qed
+                  solve( !KU( ~n.3 ) @ #vk.6 )
+                    case outaencNapkskApkB_0_111111111
+                    solve( !KU( ~n.2 ) @ #vk.7 )
+                      case outaencxNaNbpkskBpkA_0_121111111111
+                      by solve( !KU( ~n.1 ) @ #vk.8 )
                     next
-                      case outaencNapkskApkB_0_111111111
-                      solve( !KU( pk(~n) ) @ #vk.5 )
-                        case c_pk
-                        solve( !KU( ~n.3 ) @ #vk.6 )
-                          case outaencNapkskApkB_0_111111111
-                          solve( !KU( ~n.2 ) @ #vk.7 )
-                            case outaencxNaNbpkskBpkA_0_121111111111
-                            by solve( !KU( ~n.1 ) @ #vk.8 )
-                          next
-                            case outaencxNbkpkB_0_111111111111111
-                            by contradiction /* cyclic */
-                          qed
-                        next
-                          case outaencxNaNbpkskBpkA_0_121111111111
-                          solve( (∃ #j. (!KU( ~n.3 ) @ #j) ∧ #j < #vr.38)  ∥
-                                 (∃ #j. (OUT_I_1( aenc(<~n.3, pk(~n)>, pk(~n.1)) ) @ #j))  ∥
-                                 (∃ #j. (OUT_I_2( aenc(<~n.3, pk(~n)>, pk(~n.1)) ) @ #j)) )
-                            case case_1
-                            by contradiction /* cyclic */
-                          next
-                            case case_2
-                            solve( !KU( ~n.2 ) @ #vk.7 )
-                              case outaencxNaNbpkskBpkA_0_121111111111
-                              by solve( !KU( ~n.1 ) @ #vk.8 )
-                            next
-                              case outaencxNbkpkB_0_111111111111111
-                              by contradiction /* cyclic */
-                            qed
-                          next
-                            case case_3
-                            by solve( State_11111111111111( Na, cypher, pk(~n), pk(~n.1), skA, ~n.3
-                                      ) ▶₀ #j.2 )
-                          qed
-                        qed
-                      next
-                        case outaencNapkskApkB_0_111111111
-                        solve( !KU( ~n.3 ) @ #vk.6 )
-                          case outaencNapkskApkB_0_111111111
-                          solve( !KU( ~n.2 ) @ #vk.7 )
-                            case outaencxNaNbpkskBpkA_0_121111111111
-                            by solve( !KU( ~n.1 ) @ #vk.8 )
-                          next
-                            case outaencxNbkpkB_0_111111111111111
-                            by contradiction /* cyclic */
-                          qed
-                        next
-                          case outaencxNaNbpkskBpkA_0_121111111111
-                          solve( (∃ #j. (!KU( ~n.3 ) @ #j) ∧ #j < #vr.45)  ∥
-                                 (∃ #j. (OUT_I_1( aenc(<~n.3, pk(~n)>, pk(~n.1)) ) @ #j))  ∥
-                                 (∃ #j. (OUT_I_2( aenc(<~n.3, pk(~n)>, pk(~n.1)) ) @ #j)) )
-                            case case_1
-                            by contradiction /* cyclic */
-                          next
-                            case case_2
-                            solve( !KU( ~n.2 ) @ #vk.7 )
-                              case outaencxNaNbpkskBpkA_0_121111111111
-                              by solve( !KU( ~n.1 ) @ #vk.8 )
-                            next
-                              case outaencxNbkpkB_0_111111111111111
-                              by contradiction /* cyclic */
-                            qed
-                          next
-                            case case_3
-                            by solve( State_11111111111111( Na, cypher, pk(~n), pk(~n.1), skA, ~n.3
-                                      ) ▶₀ #j.2 )
-                          qed
-                        qed
-                      next
-                        case outpkskA_0_1111
-                        solve( !KU( ~n.3 ) @ #vk.6 )
-                          case outaencNapkskApkB_0_111111111
-                          solve( !KU( ~n.2 ) @ #vk.7 )
-                            case outaencxNaNbpkskBpkA_0_121111111111
-                            by solve( !KU( ~n.1 ) @ #vk.8 )
-                          next
-                            case outaencxNbkpkB_0_111111111111111
-                            by contradiction /* cyclic */
-                          qed
-                        next
-                          case outaencxNaNbpkskBpkA_0_121111111111
-                          solve( (∃ #j. (!KU( ~n.3 ) @ #j) ∧ #j < #vr.38)  ∥
-                                 (∃ #j. (OUT_I_1( aenc(<~n.3, pk(~n)>, pk(~n.1)) ) @ #j))  ∥
-                                 (∃ #j. (OUT_I_2( aenc(<~n.3, pk(~n)>, pk(~n.1)) ) @ #j)) )
-                            case case_1
-                            by contradiction /* cyclic */
-                          next
-                            case case_2
-                            solve( !KU( ~n.2 ) @ #vk.7 )
-                              case outaencxNaNbpkskBpkA_0_121111111111
-                              by solve( !KU( ~n.1 ) @ #vk.8 )
-                            next
-                              case outaencxNbkpkB_0_111111111111111
-                              by contradiction /* cyclic */
-                            qed
-                          next
-                            case case_3
-                            by solve( State_11111111111111( Na, cypher, pk(~n), pk(~n.1), skA, ~n.3
-                                      ) ▶₀ #j.2 )
-                          qed
-                        qed
-                      qed
+                      case outaencxNbkpkB_0_111111111111111
+                      by contradiction /* cyclic */
                     qed
                   next
                     case outaencxNaNbpkskBpkA_0_121111111111
-                    solve( (∃ #j. (!KU( xNa ) @ #j) ∧ #j < #vr.39)  ∥
-                           (∃ #j. (OUT_I_1( aenc(<xNa, pk(x)>, pk(~n.1)) ) @ #j))  ∥
-                           (∃ #j. (OUT_I_2( aenc(<xNa, pk(x)>, pk(~n.1)) ) @ #j)) )
+                    solve( (∃ #j. (!KU( ~n.3 ) @ #j) ∧ #j < #vr.38)  ∥
+                           (∃ #j. (OUT_I_1( aenc(<~n.3, pk(~n)>, pk(~n.1)) ) @ #j))  ∥
+                           (∃ #j. (OUT_I_2( aenc(<~n.3, pk(~n)>, pk(~n.1)) ) @ #j)) )
                       case case_1
-                      solve( !KU( aenc(<~n.3, pk(~n)>, pk(~n.1)) ) @ #vk.4 )
-                        case c_aenc
-                        solve( !KU( pk(~n) ) @ #vk.5 )
-                          case c_pk
-                          solve( !KU( ~n.3 ) @ #vk.7 )
-                            case outaencNapkskApkB_0_111111111
-                            solve( !KU( ~n.2 ) @ #vk.8 )
-                              case outaencxNaNbpkskBpkA_0_121111111111
-                              by solve( !KU( ~n.1 ) @ #vk.9 )
-                            next
-                              case outaencxNbkpkB_0_111111111111111
-                              by contradiction /* cyclic */
-                            qed
-                          next
-                            case outaencxNaNbpkskBpkA_0_121111111111
-                            by contradiction /* cyclic */
-                          qed
-                        next
-                          case outaencNapkskApkB_0_111111111
-                          solve( !KU( ~n.3 ) @ #vk.7 )
-                            case outaencNapkskApkB_0_111111111
-                            solve( !KU( ~n.2 ) @ #vk.8 )
-                              case outaencxNaNbpkskBpkA_0_121111111111
-                              by solve( !KU( ~n.1 ) @ #vk.9 )
-                            next
-                              case outaencxNbkpkB_0_111111111111111
-                              by contradiction /* cyclic */
-                            qed
-                          next
-                            case outaencxNaNbpkskBpkA_0_121111111111
-                            by contradiction /* cyclic */
-                          qed
-                        next
-                          case outpkskA_0_1111
-                          solve( !KU( ~n.3 ) @ #vk.7 )
-                            case outaencNapkskApkB_0_111111111
-                            solve( !KU( ~n.2 ) @ #vk.8 )
-                              case outaencxNaNbpkskBpkA_0_121111111111
-                              by solve( !KU( ~n.1 ) @ #vk.9 )
-                            next
-                              case outaencxNbkpkB_0_111111111111111
-                              by contradiction /* cyclic */
-                            qed
-                          next
-                            case outaencxNaNbpkskBpkA_0_121111111111
-                            by contradiction /* cyclic */
-                          qed
-                        qed
-                      next
-                        case outaencNapkskApkB_0_111111111
-                        solve( !KU( pk(~n) ) @ #vk.5 )
-                          case c_pk
-                          solve( !KU( ~n.3 ) @ #vk.6 )
-                            case outaencNapkskApkB_0_111111111
-                            solve( !KU( ~n.2 ) @ #vk.7 )
-                              case outaencxNaNbpkskBpkA_0_121111111111
-                              by solve( !KU( ~n.1 ) @ #vk.8 )
-                            next
-                              case outaencxNbkpkB_0_111111111111111
-                              by contradiction /* cyclic */
-                            qed
-                          next
-                            case outaencxNaNbpkskBpkA_0_121111111111
-                            solve( (∃ #j. (!KU( ~n.3 ) @ #j) ∧ #j < #vr.49)  ∥
-                                   (∃ #j. (OUT_I_1( aenc(<~n.3, pk(~n)>, pk(~n.1)) ) @ #j))  ∥
-                                   (∃ #j. (OUT_I_2( aenc(<~n.3, pk(~n)>, pk(~n.1)) ) @ #j)) )
-                              case case_1
-                              by contradiction /* cyclic */
-                            next
-                              case case_2
-                              solve( !KU( ~n.2 ) @ #vk.7 )
-                                case outaencxNaNbpkskBpkA_0_121111111111
-                                by solve( !KU( ~n.1 ) @ #vk.8 )
-                              next
-                                case outaencxNbkpkB_0_111111111111111
-                                by contradiction /* cyclic */
-                              qed
-                            next
-                              case case_3
-                              by solve( State_11111111111111( Na, cypher, pk(~n), pk(~n.1), skA, ~n.3
-                                        ) ▶₀ #j.2 )
-                            qed
-                          qed
-                        next
-                          case outaencNapkskApkB_0_111111111
-                          solve( !KU( ~n.3 ) @ #vk.6 )
-                            case outaencNapkskApkB_0_111111111
-                            solve( !KU( ~n.2 ) @ #vk.7 )
-                              case outaencxNaNbpkskBpkA_0_121111111111
-                              by solve( !KU( ~n.1 ) @ #vk.8 )
-                            next
-                              case outaencxNbkpkB_0_111111111111111
-                              by contradiction /* cyclic */
-                            qed
-                          next
-                            case outaencxNaNbpkskBpkA_0_121111111111
-                            solve( (∃ #j. (!KU( ~n.3 ) @ #j) ∧ #j < #vr.56)  ∥
-                                   (∃ #j. (OUT_I_1( aenc(<~n.3, pk(~n)>, pk(~n.1)) ) @ #j))  ∥
-                                   (∃ #j. (OUT_I_2( aenc(<~n.3, pk(~n)>, pk(~n.1)) ) @ #j)) )
-                              case case_1
-                              by contradiction /* cyclic */
-                            next
-                              case case_2
-                              solve( !KU( ~n.2 ) @ #vk.7 )
-                                case outaencxNaNbpkskBpkA_0_121111111111
-                                by solve( !KU( ~n.1 ) @ #vk.8 )
-                              next
-                                case outaencxNbkpkB_0_111111111111111
-                                by contradiction /* cyclic */
-                              qed
-                            next
-                              case case_3
-                              by solve( State_11111111111111( Na, cypher, pk(~n), pk(~n.1), skA, ~n.3
-                                        ) ▶₀ #j.2 )
-                            qed
-                          qed
-                        next
-                          case outpkskA_0_1111
-                          solve( !KU( ~n.3 ) @ #vk.6 )
-                            case outaencNapkskApkB_0_111111111
-                            solve( !KU( ~n.2 ) @ #vk.7 )
-                              case outaencxNaNbpkskBpkA_0_121111111111
-                              by solve( !KU( ~n.1 ) @ #vk.8 )
-                            next
-                              case outaencxNbkpkB_0_111111111111111
-                              by contradiction /* cyclic */
-                            qed
-                          next
-                            case outaencxNaNbpkskBpkA_0_121111111111
-                            solve( (∃ #j. (!KU( ~n.3 ) @ #j) ∧ #j < #vr.49)  ∥
-                                   (∃ #j. (OUT_I_1( aenc(<~n.3, pk(~n)>, pk(~n.1)) ) @ #j))  ∥
-                                   (∃ #j. (OUT_I_2( aenc(<~n.3, pk(~n)>, pk(~n.1)) ) @ #j)) )
-                              case case_1
-                              by contradiction /* cyclic */
-                            next
-                              case case_2
-                              solve( !KU( ~n.2 ) @ #vk.7 )
-                                case outaencxNaNbpkskBpkA_0_121111111111
-                                by solve( !KU( ~n.1 ) @ #vk.8 )
-                              next
-                                case outaencxNbkpkB_0_111111111111111
-                                by contradiction /* cyclic */
-                              qed
-                            next
-                              case case_3
-                              by solve( State_11111111111111( Na, cypher, pk(~n), pk(~n.1), skA, ~n.3
-                                        ) ▶₀ #j.2 )
-                            qed
-                          qed
-                        qed
-                      qed
+                      by contradiction /* cyclic */
                     next
                       case case_2
-                      solve( State_11111111( xNa, pk(~n.1), x ) ▶₀ #j.2 )
-                        case newNa_0_1111111
+                      solve( !KU( ~n.2 ) @ #vk.7 )
+                        case outaencxNaNbpkskBpkA_0_121111111111
+                        by solve( !KU( ~n.1 ) @ #vk.8 )
+                      next
+                        case outaencxNbkpkB_0_111111111111111
                         by contradiction /* cyclic */
                       qed
                     next
                       case case_3
-                      by solve( State_11111111111111( Na, cypher, pk(x), pk(~n.1), skA, xNa
+                      by solve( State_11111111111111( Na, cypher, pk(~n), pk(~n.1), skA, ~n.3
                                 ) ▶₀ #j.2 )
-                    qed
-                  next
-                    case outpkskB_0_12111
-                    solve( !KU( aenc(<~n.3, pk(~n)>, pk(~n.1)) ) @ #vk.4 )
-                      case c_aenc
-                      solve( !KU( pk(~n) ) @ #vk.5 )
-                        case c_pk
-                        solve( !KU( ~n.3 ) @ #vk.7 )
-                          case outaencNapkskApkB_0_111111111
-                          solve( !KU( ~n.2 ) @ #vk.8 )
-                            case outaencxNaNbpkskBpkA_0_121111111111
-                            by solve( !KU( ~n.1 ) @ #vk.9 )
-                          next
-                            case outaencxNbkpkB_0_111111111111111
-                            by contradiction /* cyclic */
-                          qed
-                        next
-                          case outaencxNaNbpkskBpkA_0_121111111111
-                          by contradiction /* cyclic */
-                        qed
-                      next
-                        case outaencNapkskApkB_0_111111111
-                        solve( !KU( ~n.3 ) @ #vk.7 )
-                          case outaencNapkskApkB_0_111111111
-                          solve( !KU( ~n.2 ) @ #vk.8 )
-                            case outaencxNaNbpkskBpkA_0_121111111111
-                            by solve( !KU( ~n.1 ) @ #vk.9 )
-                          next
-                            case outaencxNbkpkB_0_111111111111111
-                            by contradiction /* cyclic */
-                          qed
-                        next
-                          case outaencxNaNbpkskBpkA_0_121111111111
-                          by contradiction /* cyclic */
-                        qed
-                      next
-                        case outpkskA_0_1111
-                        solve( !KU( ~n.3 ) @ #vk.7 )
-                          case outaencNapkskApkB_0_111111111
-                          solve( !KU( ~n.2 ) @ #vk.8 )
-                            case outaencxNaNbpkskBpkA_0_121111111111
-                            by solve( !KU( ~n.1 ) @ #vk.9 )
-                          next
-                            case outaencxNbkpkB_0_111111111111111
-                            by contradiction /* cyclic */
-                          qed
-                        next
-                          case outaencxNaNbpkskBpkA_0_121111111111
-                          by contradiction /* cyclic */
-                        qed
-                      qed
-                    next
-                      case outaencNapkskApkB_0_111111111
-                      solve( !KU( pk(~n) ) @ #vk.5 )
-                        case c_pk
-                        solve( !KU( ~n.3 ) @ #vk.6 )
-                          case outaencNapkskApkB_0_111111111
-                          solve( !KU( ~n.2 ) @ #vk.7 )
-                            case outaencxNaNbpkskBpkA_0_121111111111
-                            by solve( !KU( ~n.1 ) @ #vk.8 )
-                          next
-                            case outaencxNbkpkB_0_111111111111111
-                            by contradiction /* cyclic */
-                          qed
-                        next
-                          case outaencxNaNbpkskBpkA_0_121111111111
-                          solve( (∃ #j. (!KU( ~n.3 ) @ #j) ∧ #j < #vr.38)  ∥
-                                 (∃ #j. (OUT_I_1( aenc(<~n.3, pk(~n)>, pk(~n.1)) ) @ #j))  ∥
-                                 (∃ #j. (OUT_I_2( aenc(<~n.3, pk(~n)>, pk(~n.1)) ) @ #j)) )
-                            case case_1
-                            by contradiction /* cyclic */
-                          next
-                            case case_2
-                            solve( !KU( ~n.2 ) @ #vk.7 )
-                              case outaencxNaNbpkskBpkA_0_121111111111
-                              by solve( !KU( ~n.1 ) @ #vk.8 )
-                            next
-                              case outaencxNbkpkB_0_111111111111111
-                              by contradiction /* cyclic */
-                            qed
-                          next
-                            case case_3
-                            by solve( State_11111111111111( Na, cypher, pk(~n), pk(~n.1), skA, ~n.3
-                                      ) ▶₀ #j.2 )
-                          qed
-                        qed
-                      next
-                        case outaencNapkskApkB_0_111111111
-                        solve( !KU( ~n.3 ) @ #vk.6 )
-                          case outaencNapkskApkB_0_111111111
-                          solve( !KU( ~n.2 ) @ #vk.7 )
-                            case outaencxNaNbpkskBpkA_0_121111111111
-                            by solve( !KU( ~n.1 ) @ #vk.8 )
-                          next
-                            case outaencxNbkpkB_0_111111111111111
-                            by contradiction /* cyclic */
-                          qed
-                        next
-                          case outaencxNaNbpkskBpkA_0_121111111111
-                          solve( (∃ #j. (!KU( ~n.3 ) @ #j) ∧ #j < #vr.45)  ∥
-                                 (∃ #j. (OUT_I_1( aenc(<~n.3, pk(~n)>, pk(~n.1)) ) @ #j))  ∥
-                                 (∃ #j. (OUT_I_2( aenc(<~n.3, pk(~n)>, pk(~n.1)) ) @ #j)) )
-                            case case_1
-                            by contradiction /* cyclic */
-                          next
-                            case case_2
-                            solve( !KU( ~n.2 ) @ #vk.7 )
-                              case outaencxNaNbpkskBpkA_0_121111111111
-                              by solve( !KU( ~n.1 ) @ #vk.8 )
-                            next
-                              case outaencxNbkpkB_0_111111111111111
-                              by contradiction /* cyclic */
-                            qed
-                          next
-                            case case_3
-                            by solve( State_11111111111111( Na, cypher, pk(~n), pk(~n.1), skA, ~n.3
-                                      ) ▶₀ #j.2 )
-                          qed
-                        qed
-                      next
-                        case outpkskA_0_1111
-                        solve( !KU( ~n.3 ) @ #vk.6 )
-                          case outaencNapkskApkB_0_111111111
-                          solve( !KU( ~n.2 ) @ #vk.7 )
-                            case outaencxNaNbpkskBpkA_0_121111111111
-                            by solve( !KU( ~n.1 ) @ #vk.8 )
-                          next
-                            case outaencxNbkpkB_0_111111111111111
-                            by contradiction /* cyclic */
-                          qed
-                        next
-                          case outaencxNaNbpkskBpkA_0_121111111111
-                          solve( (∃ #j. (!KU( ~n.3 ) @ #j) ∧ #j < #vr.38)  ∥
-                                 (∃ #j. (OUT_I_1( aenc(<~n.3, pk(~n)>, pk(~n.1)) ) @ #j))  ∥
-                                 (∃ #j. (OUT_I_2( aenc(<~n.3, pk(~n)>, pk(~n.1)) ) @ #j)) )
-                            case case_1
-                            by contradiction /* cyclic */
-                          next
-                            case case_2
-                            solve( !KU( ~n.2 ) @ #vk.7 )
-                              case outaencxNaNbpkskBpkA_0_121111111111
-                              by solve( !KU( ~n.1 ) @ #vk.8 )
-                            next
-                              case outaencxNbkpkB_0_111111111111111
-                              by contradiction /* cyclic */
-                            qed
-                          next
-                            case case_3
-                            by solve( State_11111111111111( Na, cypher, pk(~n), pk(~n.1), skA, ~n.3
-                                      ) ▶₀ #j.2 )
-                          qed
-                        qed
-                      qed
                     qed
                   qed
                 qed
               next
                 case outaencxNaNbpkskBpkA_0_121111111111
-                solve( !KU( pk(~n.1) ) @ #vk.1 )
-                  case c_pk
-                  solve( !KU( ~n.4 ) @ #t2 )
-                    case outaencxNbkpkB_0_111111111111111
-                    solve( !KU( aenc(<~n.3, pk(~n)>, pk(~n.1)) ) @ #vk.2 )
-                      case c_aenc
-                      by solve( !KU( ~n.1 ) @ #vk.3 )
-                    next
-                      case outaencNapkskApkB_0_111111111
-                      by solve( !KU( ~n.1 ) @ #vk.3 )
-                    qed
-                  qed
-                next
-                  case outaencxNaNbpkskBpkA_0_121111111111
-                  solve( (∃ #j. (!KU( xNa ) @ #j) ∧ #j < #vr.38)  ∥
-                         (∃ #j. (OUT_I_1( aenc(<xNa, pk(x)>, pk(~n.1)) ) @ #j))  ∥
-                         (∃ #j. (OUT_I_2( aenc(<xNa, pk(x)>, pk(~n.1)) ) @ #j)) )
-                    case case_1
-                    solve( !KU( ~n.4 ) @ #t2 )
-                      case outaencxNbkpkB_0_111111111111111
-                      solve( !KU( aenc(<~n.3, pk(~n)>, pk(~n.1)) ) @ #vk.2 )
-                        case c_aenc
-                        solve( !KU( aenc(<xNa, pk(x)>, pk(~n.1)) ) @ #vk.4 )
-                          case c_aenc
-                          by contradiction /* cyclic */
-                        next
-                          case outaencNapkskApkB_0_111111111
-                          by contradiction /* cyclic */
-                        qed
-                      next
-                        case outaencNapkskApkB_0_111111111
-                        solve( !KU( aenc(<xNa, pk(x)>, pk(~n.1)) ) @ #vk.4 )
-                          case c_aenc
-                          by contradiction /* cyclic */
-                        next
-                          case outaencNapkskApkB_0_111111111
-                          by contradiction /* cyclic */
-                        qed
-                      qed
-                    qed
-                  next
-                    case case_2
-                    solve( State_11111111( xNa, pk(~n.1), x ) ▶₀ #j.2 )
-                      case newNa_0_1111111
-                      by contradiction /* cyclic */
-                    qed
-                  next
-                    case case_3
-                    by solve( State_11111111111111( Na, cypher, pk(x), pk(~n.1), skA, xNa
-                              ) ▶₀ #j.2 )
-                  qed
-                next
-                  case outpkskB_0_12111
-                  solve( !KU( ~n.4 ) @ #t2 )
-                    case outaencxNbkpkB_0_111111111111111
-                    solve( !KU( aenc(<~n.3, pk(~n)>, pk(~n.1)) ) @ #vk.2 )
-                      case c_aenc
-                      by solve( !KU( ~n.1 ) @ #vk.3 )
-                    next
-                      case outaencNapkskApkB_0_111111111
-                      by solve( !KU( ~n.1 ) @ #vk.3 )
-                    qed
-                  qed
+                solve( !KU( ~n.4 ) @ #t2 )
+                  case outaencxNbkpkB_0_111111111111111
+                  by solve( !KU( ~n.1 ) @ #vk.3 )
                 qed
               qed
             qed
@@ -2529,8 +1185,8 @@ restriction single_session:
 Generated from:
 Tamarin version 1.13.0
 Maude version 3.5.1
-Git revision: 41bc81379b23681e7057314a5cf66a25c45e1986, branch: canonicalise-subst
-Compiled at: 2026-07-27 16:11:34.947223 UTC
+Git revision: a74473b29ed4a598fb06f7461c9c72e9e3c1c4d8, branch: 881-normalisation
+Compiled at: 2026-09-15 13:52:02.61164042 UTC
 */
 
 end
@@ -2542,12 +1198,12 @@ summary of summaries:
 analyzed: examples/sapic/slow/NSL/nsl-no_as-untagged.spthy
 
   output:          examples/sapic/slow/NSL/nsl-no_as-untagged.spthy.tmp
-  processing time: 6.60s
+  processing time: 3.06s
   
   sanity1 (all-traces): falsified - found trace (8 steps)
   sanity2 (all-traces): falsified - found trace (8 steps)
   source (all-traces): verified (41 steps)
-  secrecy (all-traces): verified (519 steps)
+  secrecy (all-traces): verified (97 steps)
 
 ==============================================================================
 */

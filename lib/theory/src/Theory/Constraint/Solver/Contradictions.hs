@@ -47,6 +47,7 @@ import           Control.Monad.Reader
 import qualified Extension.Data.Label           as L
 import           Extension.Prelude
 
+import qualified Theory.Constraint.System.StoredFormulas as Stored
 import           Theory.Constraint.System
 import           Theory.Model
 import           Theory.Tools.IntruderRules
@@ -112,7 +113,7 @@ contradictions ctxt sys = F.asum
     -- CR-rules *S_≐* and *S_≈* are implemented via the equation store
     , guard (eqsIsFalse $ L.get sEqStore sys)       $> IncompatibleEqs
     -- CR-rules *S_⟂*, *S_{¬,last,1}*, *S_{¬,≐}*, *S_{¬,≈}*
-    , guard (S.member gfalse $ L.get sFormulas sys) $> FormulasFalse
+    , guard (Stored.member gfalse $ L.get sFormulas sys) $> FormulasFalse
     ]
     ++
     -- This rule is not yet documented. It removes constraint systems that
