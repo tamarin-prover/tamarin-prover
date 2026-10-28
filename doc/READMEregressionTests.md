@@ -156,8 +156,9 @@ use the path relative to `examples/`.
 
 `--tamarin` selects the executable for command checks, case-study generation,
 and existing output-parsing checks. It defaults to the `TAMARIN` environment
-variable, or `tamarin-prover` on `PATH`. Use `-noi` with an already built executable;
-otherwise the usual `stack install` runs first.
+variable, or if that is undefined to `tamarin-prover` at the `stack install`
+path. Use `-noi` with an already built executable; otherwise the usual `stack
+install` runs first.
 
 ### Negative tests
 
