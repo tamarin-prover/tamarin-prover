@@ -57,6 +57,13 @@ module Theory.Proof (
   -- ** Incremental proof construction
   , IncrementalProof
   , IncrementalDiffProof
+  , SystemRef(..)
+  , getSystemIfInMemory
+  , getOrRestoreSystem
+  , getOrRestoreProofSystem
+  , evictSystemsFromIncrementalProof
+  , restoreProofFromStore
+  , proofSkeletonRef
   , Prover
   , DiffProver
   , runProver
@@ -83,10 +90,15 @@ module Theory.Proof (
   -- ** Explicit representation of a fully automatic prover
   , SolutionExtractor(..)
   , AutoProver(..)
+  , ProofStateRetention(..)
   , runAutoProver
   , runAutoDiffProver
+  , runAutoProverWith
+  , runAutoDiffProverWith
   , runAutoProverOnSorries
+  , runAutoProverOnSorriesWith
   , runAutoDiffProverOnSorries
+  , runAutoDiffProverOnSorriesWith
 
   -- ** Pretty Printing
   , prettyProof
@@ -114,6 +126,8 @@ import qualified Data.Map                         as M
 import           Data.Maybe
 -- import           Data.Monoid
 
+import           System.IO.Unsafe                 (unsafePerformIO)
+
 import           Debug.Trace
 
 import           Control.Basics
@@ -122,6 +136,17 @@ import qualified Control.Monad.State              as S
 import           Control.Parallel.Strategies
 
 import           Theory.Constraint.Solver
+import           Theory.Constraint.Solver.Store   (Ref, MethodEdge(..), isStoreOpen,
+                                                    ProofNode(..), storeProofNode,
+                                                    recordProofHead, restoreStoredProof,
+                                                    LemmaRoot(..),
+                                                    readLemmaRootMaybe, fileProofRef,
+                                                    searchContextForDepth, searchKey,
+                                                    recordSearchStart,
+                                                    readProofStepMaybe,
+                                                    readSystemLive,
+                                                    readSystemLiveMaybe,
+                                                    storeProofStep, storeSystem)
 import           Theory.Model
 import           Theory.Text.Pretty
 
@@ -259,10 +284,10 @@ unproven = sorry Nothing
 
 -- | A proof denoting an unproven part of the proof.
 unprovenLookAhead :: ProofContext -> System -> IncrementalProof
-unprovenLookAhead ctxt sys = maybe (sorry Nothing (Just sys)) toNode (isFinished ctxt sys)
+unprovenLookAhead ctxt sys = maybe (sorry Nothing (Just (InMem sys))) toNode (isFinished ctxt sys)
   where
     toNode :: Result -> IncrementalProof
-    toNode r = LNode (ProofStep (Finished r) (Just sys)) M.empty
+    toNode r = LNode (ProofStep (Finished r) (Just (InMem sys))) M.empty
 
 -- | A proof denoting an unproven part of the proof.
 diffUnproven :: a -> DiffProof a
@@ -447,11 +472,11 @@ diffProofStepStatus (DiffProofStep _                (Just _)) = CompleteProof
 -- proof step without an annotated sequent. An unhandled case is denoted using
 -- the 'Sorry' proof method.
 checkProof :: ProofContext
-           -> (Int -> System -> Proof (Maybe System)) -- prover for new cases in depth
+           -> (Int -> System -> Proof (Maybe SystemRef)) -- prover for new cases in depth
            -> Int         -- ^ Original depth
            -> System
            -> Proof a
-           -> Proof (Maybe a, Maybe System)
+           -> Proof (Maybe a, Maybe SystemRef)
 checkProof ctxt prover =
     go
   where
@@ -464,7 +489,7 @@ checkProof ctxt prover =
         unhandledCase = mapProofInfo (Nothing,) . prover d
         checkChildren cases = mergeMapsWith unhandledCase noSystemPrf (go (d + 1)) cases cs
 
-        node m                 = LNode (ProofStep m (Just info, Just sys))
+        node m                 = LNode (ProofStep m (Just info, Just (InMem sys)))
         sorryNode reason cases = node (Sorry reason) (M.map noSystemPrf cases)
         noSystemPrf            = mapProofInfo (\i -> (Just i, Nothing))
 
@@ -499,9 +524,99 @@ checkDiffProof ctxt prover =
 -- Provers: the interface to the outside world.
 ------------------------------------------------------------------------------
 
+-- | A system in memory, stored and cached in memory, or only on disk.
+data SystemRef = InMem System | StoredInMem Ref System | OnDisk Ref
+    deriving( Eq, Ord, Show, Generic, NFData, Binary )
+
+-- | Return a system that is still in memory.
+getSystemIfInMemory :: SystemRef -> Maybe System
+getSystemIfInMemory (InMem sys)           = Just sys
+getSystemIfInMemory (StoredInMem _ sys)   = Just sys
+getSystemIfInMemory (OnDisk _)            = Nothing
+
+-- | Return a system, loading it from disk if necessary.
+getOrRestoreSystem :: SystemRef -> Maybe System
+getOrRestoreSystem (InMem sys)         = Just sys
+getOrRestoreSystem (StoredInMem _ sys) = Just sys
+getOrRestoreSystem (OnDisk r)          = unsafePerformIO (readSystemLiveMaybe r)
+{-# NOINLINE getOrRestoreSystem #-}
+
+getOrRestoreProofSystem :: IncrementalProof -> Maybe System
+getOrRestoreProofSystem proof = psInfo (root proof) >>= getOrRestoreSystem
+
+
+
+-- | Store every system in an incremental proof and retain only its reference.
+evictSystemsFromIncrementalProof :: String -> IncrementalProof -> IO IncrementalProof
+evictSystemsFromIncrementalProof lemmaName proof = do
+    storeOpen <- isStoreOpen
+    unless storeOpen $
+        error "evictSystemsFromIncrementalProof: store is not initialized"
+
+    (evictedProof, rootProofNodeRef) <- evictProof proof
+
+    lemmaRoot <- readLemmaRootMaybe lemmaName
+    let inputProofRef = case lemmaRoot of
+          Just storedRoot -> lrFileProof storedRoot
+          Nothing         -> proofSkeletonRef proof
+
+    -- The head is written last, so a crash keeps the previous proof intact.
+    recordProofHead lemmaName rootProofNodeRef inputProofRef
+
+    pure evictedProof
+  where
+    -- Each recursive call returns the proof with its systems evicted, plus the
+    -- Ref of the ProofNode we stored for it. Children must be stored before
+    -- their parent because their Refs are part of the parent's hash.
+    evictProof :: IncrementalProof -> IO (IncrementalProof, Ref)
+    evictProof (LNode (ProofStep method systemInfo) childProofs) = do
+        evictedSystemInfo <- mapM evictSystemRef systemInfo
+
+        storedChildren <- mapM evictProof childProofs
+
+        let evictedChildProofs = M.map fst storedChildren
+            childProofNodeRefs = M.map snd storedChildren
+            maybeSystemRef = case evictedSystemInfo of
+              Just systemRef -> Just (getStoredRef systemRef)
+              Nothing        -> Nothing
+            proofNode = ProofNode
+              { pnMethod = method
+              , pnSystem = maybeSystemRef
+              , pnChildren = childProofNodeRefs
+              }
+
+        proofNodeRef <- storeProofNode proofNode
+
+        let evictedProof = LNode (ProofStep method evictedSystemInfo) evictedChildProofs
+        pure (evictedProof, proofNodeRef)
+
+    evictSystemRef (InMem system)      = OnDisk <$> storeSystem system
+    evictSystemRef (StoredInMem ref _) = pure (OnDisk ref)
+    evictSystemRef (OnDisk ref)        = pure (OnDisk ref)
+
+
+-- | Rebuild the lemma's current stored proof exactly as it was stored.
+-- Nothing when no proof was stored for this root system and file proof.
+-- A sorry where a search started after the proof was stored, e.g. one that
+-- was interrupted, shows that search instead.
+restoreProofFromStore :: String -> Ref -> Ref -> IO (Maybe IncrementalProof)
+restoreProofFromStore lemmaName rootSystemRef inputProofRef =
+    restoreStoredProof makeProofNode lemmaName rootSystemRef inputProofRef
+  where
+    makeProofNode method maybeSystemRef childProofs =
+        let systemInfo = fmap OnDisk maybeSystemRef
+        in LNode (ProofStep method systemInfo) childProofs
+
+-- | Identify a proof by its methods and case names, ignoring its systems.
+proofSkeletonRef :: Proof a -> Ref
+proofSkeletonRef (LNode step childProofs) =
+    let method = psMethod step
+        childSkeletonRefs = M.map proofSkeletonRef childProofs
+    in fileProofRef method childSkeletonRefs
+
 -- | Incremental proofs are used to represent intermediate results of proof
 -- checking/construction.
-type IncrementalProof = Proof (Maybe System)
+type IncrementalProof = Proof (Maybe SystemRef)
 
 -- | Incremental diff proofs are used to represent intermediate results of proof
 -- checking/construction.
@@ -584,7 +699,7 @@ tryProver =  (`orelse` mempty)
 oneStepProver :: ProofMethod -> Prover
 oneStepProver method = Prover $ \ctxt _ se _ -> do
     cases <- execProofMethod ctxt method se
-    return $ LNode (ProofStep method (Just se)) (M.map (unprovenLookAhead ctxt) cases)
+    return $ LNode (ProofStep method (Just (InMem se))) (M.map (unprovenLookAhead ctxt) cases)
 
 -- | Try to execute one proof step using the given proof method.
 oneStepDiffProver :: DiffProofMethod -> DiffProver
@@ -594,7 +709,7 @@ oneStepDiffProver method = DiffProver $ \ctxt _ se _ -> do
 
 -- | Replace the current proof with a sorry step and the given reason.
 sorryProver :: Maybe String -> Prover
-sorryProver reason = Prover $ \_ _ se _ -> return $ sorry reason (Just se)
+sorryProver reason = Prover $ \_ _ se _ -> return $ sorry reason (Just (InMem se))
 
 -- | Replace the current proof with a sorry step and the given reason.
 sorryDiffProver :: Maybe String -> DiffProver
@@ -607,8 +722,11 @@ focus path prover =
     Prover $ \ctxt d _ prf ->
         modifyAtPath (prover' ctxt (d + length path)) path prf
   where
+    -- Restore from the store if this node was evicted: with eviction on, every
+    -- node below the root is OnDisk, so demanding an in-memory system here
+    -- fails every proof step at depth >= 1.
     prover' ctxt d prf = do
-        se <- psInfo (root prf)
+        se <- getOrRestoreProofSystem prf
         runProver prover ctxt d se prf
 
 -- | Apply a diff prover only to a sub-proof, fails if the subproof doesn't exist.
@@ -646,8 +764,10 @@ replaceSorryProver prover0 = Prover prover
   where
     prover ctxt d _ = return . replace
       where
-        replace prf@(LNode (ProofStep (Sorry _) (Just se)) _) =
-            fromMaybe prf $ runProver prover0 ctxt d se prf
+        replace prf@(LNode (ProofStep (Sorry _) (Just systemRef)) _) =
+            fromMaybe prf $ do
+                system <- getOrRestoreSystem systemRef
+                runProver prover0 ctxt d system prf
         replace (LNode ps cases) =
             LNode ps $ M.map replace cases
 
@@ -729,15 +849,27 @@ selectDiffTactic :: AutoProver -> DiffProofContext -> [Tactic ProofContext]
 selectDiffTactic prover ctx = fromMaybe [defaultTactic]
                                  (apDefaultTactic prover <|> L.get pcTactic (L.get dpcPCLeft ctx))
 
+-- | Choose whether proof nodes keep the states visited during search.
+-- 'ReleaseProofStates' lets unused states be collected and replays proof
+-- methods lazily if a caller requests a state.
+-- 'PersistProofStates' stores trace states, retaining newly generated children
+-- in memory until expansion. It requires an initialized store and is unsupported
+-- for diff proofs.
+data ProofStateRetention = RetainProofStates | ReleaseProofStates | PersistProofStates
+    deriving (Eq, Show)
+
 runAutoProver :: AutoProver -> Prover
-runAutoProver aut@(AutoProver _ _  bound cut _) =
+runAutoProver = runAutoProverWith RetainProofStates
+
+runAutoProverWith :: ProofStateRetention -> AutoProver -> Prover
+runAutoProverWith retention aut@(AutoProver _ _  bound cut _) =
     mapProverProof (extractSolutions cut) $ maybe id boundProver bound autoProver
   where
     -- | The standard automatic prover that ignores the existing proof and
     -- tries to find one by itself.
     autoProver :: Prover
     autoProver = Prover $ \ctxt depth sysPath _ ->
-        return $ proveSystemDFS (selectHeuristic aut ctxt) (selectTactic aut ctxt) ctxt depth sysPath
+        return $ proveSystemDFS retention (selectHeuristic aut ctxt) (selectTactic aut ctxt) ctxt depth sysPath
 
     -- | Bound the depth of proofs generated by the given prover.
     boundProver :: Int -> Prover -> Prover
@@ -745,14 +877,19 @@ runAutoProver aut@(AutoProver _ _  bound cut _) =
         boundProofDepth b <$> runProver p ctxt d se prf
 
 runAutoDiffProver :: AutoProver -> DiffProver
-runAutoDiffProver aut@(AutoProver _ _ bound cut _) =
+runAutoDiffProver = runAutoDiffProverWith RetainProofStates
+
+runAutoDiffProverWith :: ProofStateRetention -> AutoProver -> DiffProver
+runAutoDiffProverWith PersistProofStates _ =
+    error "disk persistence is not supported for diff proofs"
+runAutoDiffProverWith retention aut@(AutoProver _ _ bound cut _) =
     mapDiffProverDiffProof (extractDiffSolutions cut) $ maybe id boundProver bound autoProver
   where
     -- | The standard automatic prover that ignores the existing proof and
     -- tries to find one by itself.
     autoProver :: DiffProver
     autoProver = DiffProver $ \ctxt depth syss _ ->
-        return $ proveDiffSystemDFS (selectDiffHeuristic aut ctxt) (selectDiffTactic aut ctxt) ctxt depth syss
+        return $ proveDiffSystemDFS retention (selectDiffHeuristic aut ctxt) (selectDiffTactic aut ctxt) ctxt depth syss
 
     -- | Bound the depth of proofs generated by the given prover.
     boundProver :: Int -> DiffProver -> DiffProver
@@ -763,7 +900,10 @@ runAutoDiffProver aut@(AutoProver _ _ bound cut _) =
 -- | Extend the sorry cases of a replayed proof. When only one trace is
 -- requested, prefer an existing checked witness to searching unfinished cases.
 runAutoProverOnSorries :: AutoProver -> Prover
-runAutoProverOnSorries aut = Prover $ \ctxt d se prf ->
+runAutoProverOnSorries = runAutoProverOnSorriesWith RetainProofStates
+
+runAutoProverOnSorriesWith :: ProofStateRetention -> AutoProver -> Prover
+runAutoProverOnSorriesWith retention aut = Prover $ \ctxt d se prf ->
     savedWitness (apCut aut) proofStepStatus prf `mplus`
       runProver extend ctxt d se prf
   where
@@ -772,20 +912,23 @@ runAutoProverOnSorries aut = Prover $ \ctxt d se prf ->
     -- Stop-at-sorry instead applies within each replacement, to avoid
     -- discarding a saved witness in a later case.
     extend
-      | apCut aut == CutAfterSorry = replaceSorryProver $ runAutoProver aut
+      | apCut aut == CutAfterSorry = replaceSorryProver $ runAutoProverWith retention aut
       | otherwise = mapProverProof (extractSolutions (apCut aut)) $
-          replaceSorryProver $ runAutoProver aut { apCut = CutNothing }
+          replaceSorryProver $ runAutoProverWith retention aut { apCut = CutNothing }
 
 -- | Diff-proof counterpart of 'runAutoProverOnSorries'.
 runAutoDiffProverOnSorries :: AutoProver -> DiffProver
-runAutoDiffProverOnSorries aut = DiffProver $ \ctxt d se prf ->
+runAutoDiffProverOnSorries = runAutoDiffProverOnSorriesWith RetainProofStates
+
+runAutoDiffProverOnSorriesWith :: ProofStateRetention -> AutoProver -> DiffProver
+runAutoDiffProverOnSorriesWith retention aut = DiffProver $ \ctxt d se prf ->
     savedWitness (apCut aut) diffProofStepStatus prf `mplus`
       runDiffProver extend ctxt d se prf
   where
     extend
-      | apCut aut == CutAfterSorry = replaceDiffSorryProver $ runAutoDiffProver aut
+      | apCut aut == CutAfterSorry = replaceDiffSorryProver $ runAutoDiffProverWith retention aut
       | otherwise = mapDiffProverDiffProof (extractDiffSolutions (apCut aut)) $
-          replaceDiffSorryProver $ runAutoDiffProver aut { apCut = CutNothing }
+          replaceDiffSorryProver $ runAutoDiffProverWith retention aut { apCut = CutNothing }
 
 -- | Keep the path to the first checked witness in case order.
 -- This can force replay of preceding cases; fallback search reuses those checks.
@@ -1062,34 +1205,158 @@ cutAfterFirstSorryDiff = snd . go False
 -- constraint system using a depth-first-search strategy to resolve the
 -- non-determinism wrt. what goal to solve next.  This proof can be of
 -- infinite depth, if the proof strategy loops.
-proveSystemDFS :: Heuristic ProofContext -> [Tactic ProofContext] -> ProofContext -> Int -> System -> Proof (Maybe System)
-proveSystemDFS heuristic tactics ctxt =
-    prove
+proveSystemDFS :: ProofStateRetention -> Heuristic ProofContext -> [Tactic ProofContext] -> ProofContext -> Int -> System -> Proof (Maybe SystemRef)
+proveSystemDFS retention heuristic tactics ctxt initialDepth initialSystem =
+    case retention of
+        RetainProofStates -> prove (Just . InMem) initialDepth initialSystem
+        ReleaseProofStates -> restoreStates initialSystem (prove (const ()) initialDepth initialSystem)
+        PersistProofStates -> proveSystemDFSEvicted heuristic tactics ctxt initialDepth initialSystem
   where
-    prove !depth sys =
-        case rankProofMethods (useHeuristic heuristic depth) tactics ctxt sys of
-          [] | finishedSubterms ctxt sys  -> node (Finished Solved) M.empty
-          []                              -> node (Finished Unfinishable) M.empty
-          (method, (cases, _expl)):_      -> node method cases
+    -- With 'ReleaseProofStates', completed nodes keep only their proof methods.
+    -- The initial system and states needed by the search frontier remain live.
+    prove :: (System -> a) -> Int -> System -> Proof a
+    prove annotate !depth sys =
+        let (method, cases) = nextProofStep heuristic tactics ctxt depth sys
+        in node method cases
       where
         node method cases =
-          LNode (ProofStep method (Just sys)) (M.map (prove (succ depth)) cases)
+          -- Force the unit annotation in release mode so it cannot retain sys.
+          let !info = annotate sys
+          in LNode (ProofStep method info) (M.map (prove annotate (succ depth)) cases)
+
+    -- Neither Just nor InMem forces the state. Child states replay the recorded
+    -- methods only when their contents are demanded.
+    restoreStates se (LNode (ProofStep method _) cases) =
+        LNode (ProofStep method (Just (InMem se))) $
+            M.mapWithKey (\name prf -> restoreStates (restoredCases M.! name) prf) cases
+      where
+        restoredCases = fromMaybe
+            (error "proveSystemDFS: cannot reconstruct a generated proof step")
+            (execProofMethod ctxt method se)
+
+-- | Select the next proof method and its cases.
+nextProofStep :: Heuristic ProofContext -> [Tactic ProofContext] -> ProofContext -> Int
+              -> System -> (ProofMethod, M.Map CaseName System)
+nextProofStep heuristic tactics ctxt depth sys =
+    case rankProofMethods (useHeuristic heuristic depth) tactics ctxt sys of
+      [] | finishedSubterms ctxt sys  -> node (Finished Solved) M.empty
+      []                              -> node (Finished Unfinishable) M.empty
+      (method, (cases, _expl)):_      -> node method cases
+  where
+    node method cases = (method, cases)
+
+
+-- | DFS with proof-state eviction and restore.
+proveSystemDFSEvicted :: Heuristic ProofContext -> [Tactic ProofContext] -> ProofContext -> Int -> System -> Proof (Maybe SystemRef)
+proveSystemDFSEvicted heuristic tactics ctxt depth0 initialSearchSystem =
+    prove depth0 (StoredInMem initialSearchSystemRef initialSearchSystem)
+  where
+    initialSearchSystemRef =
+        storeSearchStartUnsafe (L.get pcLemmaName ctxt) (contextAtDepth depth0) initialSearchSystem
+
+    contextAtDepth = searchContextForDepth heuristic tactics ctxt
+    storeStep = storeProofStep (L.get pcLemmaName ctxt) contextAtDepth
+
+    prove !depth systemRef =
+        let (method, cases) = solveOrRestore depth systemRef
+            !parentRef = getStoredRef systemRef
+        -- The proof retains only the parent's Ref, not its System value.
+        in LNode (ProofStep method (Just (OnDisk parentRef)))
+                 (M.map (prove (succ depth)) cases)
+
+    -- These helpers share this search's settings and prepared context hashes.
+    solveOrRestore :: Int -> SystemRef -> (ProofMethod, M.Map CaseName SystemRef)
+    solveOrRestore depth systemRef = unsafePerformIO $ do
+        let parentRef = getStoredRef systemRef
+            searchStepKey = searchKey (contextAtDepth depth) parentRef
+
+        storedStep <- readProofStepMaybe searchStepKey
+
+        case storedStep of
+          Just (MethodEdge _ _ (Sorry _) _ _) ->
+              solveAndStore depth parentRef systemRef
+          Just step -> pure (restoreStep step)
+          Nothing -> solveAndStore depth parentRef systemRef
+    {-# NOINLINE solveOrRestore #-}
+
+    solveAndStore :: Int -> Ref -> SystemRef
+                  -> IO (ProofMethod, M.Map CaseName SystemRef)
+    solveAndStore depth parentRef systemRef = do
+        system <- loadSystemFromRef systemRef
+
+        let (method, cases) = nextProofStep heuristic tactics ctxt depth system
+
+        -- Store child systems before the edge, but keep their in-memory copies
+        -- on the unexplored frontier so descending into them needs no read.
+        casesWithRefs <- mapM storeCase cases
+
+        let childSystemRefs = M.map getStoredRef casesWithRefs
+
+        storeStep depth parentRef method childSystemRefs
+
+        pure (method, casesWithRefs)
+      where
+        storeCase system = do
+            ref <- storeSystem system
+            pure (StoredInMem ref system)
+
+restoreStep :: MethodEdge -> (ProofMethod, M.Map CaseName SystemRef)
+restoreStep (MethodEdge _ _ method caseRefs _) =
+    (method, M.map OnDisk caseRefs)
+
+getStoredRef :: SystemRef -> Ref
+getStoredRef (StoredInMem ref _) = ref
+getStoredRef (OnDisk ref)        = ref
+getStoredRef (InMem _)           = error "storedRef: system has not been stored"
+
+loadSystemFromRef :: SystemRef -> IO System
+loadSystemFromRef (InMem system)         = pure system
+loadSystemFromRef (StoredInMem _ system) = pure system
+loadSystemFromRef (OnDisk ref)           = readSystemLive ref
+
+-- | Store a search's initial system and record that the search starts there
+-- with the step stored under the given context.
+storeSearchStartUnsafe :: String -> Ref -> System -> Ref
+storeSearchStartUnsafe lemmaName contextRef initialSearchSystem = unsafePerformIO $ do
+    systemRef <- storeSystem initialSearchSystem
+
+    let firstSearchStepKey = searchKey contextRef systemRef
+
+    recordSearchStart lemmaName systemRef firstSearchStepKey
+
+    pure systemRef
+{-# NOINLINE storeSearchStartUnsafe #-}
+
 
 -- | @proveSystemDFS rules se@ explores all solutions of the initial
 -- constraint system using a depth-first-search strategy to resolve the
 -- non-determinism wrt. what goal to solve next.  This proof can be of
 -- infinite depth, if the proof strategy loops.
-proveDiffSystemDFS :: Heuristic ProofContext -> [Tactic ProofContext] -> DiffProofContext -> Int -> DiffSystem -> DiffProof (Maybe DiffSystem)
-proveDiffSystemDFS heuristic tactics ctxt =
-    prove
+proveDiffSystemDFS :: ProofStateRetention -> Heuristic ProofContext -> [Tactic ProofContext] -> DiffProofContext -> Int -> DiffSystem -> DiffProof (Maybe DiffSystem)
+proveDiffSystemDFS retention heuristic tactics ctxt initialDepth initialSystem =
+    case retention of
+        PersistProofStates -> error "disk persistence is not supported for diff proofs"
+        RetainProofStates -> prove Just initialDepth initialSystem
+        ReleaseProofStates -> restoreStates initialSystem (prove (const ()) initialDepth initialSystem)
   where
-    prove !depth sys =
+    prove :: (DiffSystem -> a) -> Int -> DiffSystem -> DiffProof a
+    prove annotate !depth sys =
         case rankDiffProofMethods (useHeuristic heuristic depth) tactics ctxt sys of
           []                         -> node (DiffSorry (Just "Cannot prove")) M.empty
           (method, (cases, _expl)):_ -> node method cases
       where
         node method cases =
-          LNode (DiffProofStep method (Just sys)) (M.map (prove (succ depth)) cases)
+          -- Force the unit annotation in release mode so it cannot retain sys.
+          let !info = annotate sys
+          in LNode (DiffProofStep method info) (M.map (prove annotate (succ depth)) cases)
+
+    restoreStates se (LNode (DiffProofStep method _) cases) =
+        LNode (DiffProofStep method (Just se)) $
+            M.mapWithKey (\name prf -> restoreStates (restoredCases M.! name) prf) cases
+      where
+        restoredCases = fromMaybe
+            (error "proveDiffSystemDFS: cannot reconstruct a generated proof step")
+            (execDiffProofMethod ctxt method se)
 
 ------------------------------------------------------------------------------
 -- Pretty printing

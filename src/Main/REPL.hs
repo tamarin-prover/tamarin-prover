@@ -69,7 +69,7 @@ collectPaths ctxt prf = M.fromList $ zip [0..] $ map (\p -> (p, getMethods p)) $
 
     getMethods :: ProofPath -> [ProofMethod]
     getMethods path = fromMaybe (error "illegal path") $ do
-      sys <- prf `atPath` path >>= psInfo . root
+      sys <- prf `atPath` path >>= psInfo . root >>= getOrRestoreSystem
       return $ rankMethods ctxt sys (length path)
 
 getProofForLemma :: String -> REPL REPLProof
@@ -94,7 +94,7 @@ solve pathIdx methodIdx prf =
   in do
   (path, methods) <- maybeREPL "illegal path index" mPath
   method <- maybeREPL "illegal method index" (methods !?! methodIdx)
-  sys <- maybeREPL "illegal path" (iPrf `atPath` path >>= psInfo . root)
+  sys <- maybeREPL "illegal path" (iPrf `atPath` path >>= psInfo . root >>= getOrRestoreSystem)
   iPrf' <- maybeREPL "applying method failed" $ modifyAtPath (runProver (oneStepProver method) ctxt (length path) sys) path iPrf
   return (REPLProof iPrf' ctxt (collectPaths ctxt iPrf'))
   where
@@ -111,7 +111,7 @@ systemAt pathIdx prf =
       iPrf = prf.rpProof
   in do
     (path, _) <- maybeREPL "illegal path index" mPath
-    maybeREPL "illegal path" (iPrf `atPath` path >>= psInfo . root)
+    maybeREPL "illegal path" (iPrf `atPath` path >>= psInfo . root >>= getOrRestoreSystem)
 
 getMethodsAt :: Int -> REPLProof -> REPL [ProofMethod]
 getMethodsAt i prf = maybe (fail "illegal index") (return . snd) (M.lookup i prf.rpPaths)
