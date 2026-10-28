@@ -1,0 +1,397 @@
+theory DiffMultisessionObservableRestriction
+
+begin
+
+// Function signature and definition of the equational theory E
+
+functions: fst/1, h/1, pair/2, sdec/2, senc/2, snd/1
+equations:
+    fst(<x.1, x.2>) = x.1,
+    sdec(senc(x.1, x.2), x.2) = x.1,
+    snd(<x.1, x.2>) = x.2
+
+rule (modulo E) Init:
+   [ Fr( ~k ), Fr( ~s ) ]
+  --[ Secret( ~s ) ]->
+   [ First( ~k ), Second( ~k, ~s ), Out( h(~s) ) ]
+
+rule (modulo E) EmitKey:
+   [ First( k ) ] --[ EmitFor( k ), KeySent( k ) ]-> [ Out( k ) ]
+
+rule (modulo E) EmitCiphertext:
+   [ Second( k, s ) ]
+  --[ EmitFor( k ), CiphertextSent( s, k ) ]->
+   [ Out( senc(s, k) ) ]
+
+restriction OneEmission [right]:
+  "∀ k #i #j. ((EmitFor( k ) @ #i) ∧ (EmitFor( k ) @ #j)) ⇒ (#i = #j)"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ k #i #j. ((EmitFor( k ) @ #i) ∧ (EmitFor( k ) @ #j)) ⇒ (#i = #j)"
+  */
+
+lemma left_leaks [left]:
+  exists-trace "∃ s #i #j. (Secret( s ) @ #i) ∧ (K( s ) @ #j)"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ s #i #j. (Secret( s ) @ #i) ∧ (K( s ) @ #j)"
+*/
+simplify
+solve( !KU( ~s ) @ #vk )
+  case EmitCiphertext
+  solve( !KU( ~k ) @ #vk.1 )
+    case EmitKey
+    SOLVED // trace found
+  qed
+qed
+
+lemma right_secret [right]:
+  all-traces "∀ s #i #j. ((Secret( s ) @ #i) ∧ (K( s ) @ #j)) ⇒ (⊥)"
+/*
+guarded formula characterizing all counter-examples:
+"∃ s #i #j. (Secret( s ) @ #i) ∧ (K( s ) @ #j)"
+*/
+simplify
+solve( !KU( ~s ) @ #vk )
+  case EmitCiphertext
+  by solve( !KU( ~k ) @ #vk.1 )
+qed
+
+lemma right_key_reachable [right]:
+  exists-trace "∃ k #i. KeySent( k ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ k #i. (KeySent( k ) @ #i)"
+*/
+simplify
+solve( First( k ) ▶₀ #i )
+  case Init
+  SOLVED // trace found
+qed
+
+lemma right_ciphertext_reachable [right]:
+  exists-trace "∃ s k #i. CiphertextSent( s, k ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ s k #i. (CiphertextSent( s, k ) @ #i)"
+*/
+simplify
+solve( Second( k, s ) ▶₀ #i )
+  case Init
+  SOLVED // trace found
+qed
+
+diffLemma Observational_equivalence:
+rule-equivalence
+  case Rule_Destrd_0_fst
+  backward-search
+    case LHS
+    step( simplify )
+    step( solve( !KD( <x, x.1> ) ▶₀ #i ) )
+      case EmitCiphertext
+      step( solve( (#vl, 0) ~~> (#i, 0) ) )
+        case d_0_sdec
+        step( solve( Second( k, s ) ▶₀ #vr ) )
+          case Init
+          by sorry // bound 6 hit
+        qed
+      qed
+    next
+      case EmitKey
+      step( solve( First( t ) ▶₀ #vr ) )
+        case Init
+        by step( contradiction /* impossible chain */ )
+      qed
+    next
+      case Init
+      by step( contradiction /* impossible chain */ )
+    qed
+  next
+    case RHS
+    step( simplify )
+    step( solve( !KD( <x, x.1> ) ▶₀ #i ) )
+      case EmitCiphertext
+      step( solve( (#vl, 0) ~~> (#i, 0) ) )
+        case d_0_sdec
+        step( solve( Second( k, s ) ▶₀ #vr ) )
+          case Init
+          by sorry // bound 6 hit
+        qed
+      qed
+    next
+      case EmitKey
+      step( solve( First( t ) ▶₀ #vr ) )
+        case Init
+        by step( contradiction /* impossible chain */ )
+      qed
+    next
+      case Init
+      by step( contradiction /* impossible chain */ )
+    qed
+  qed
+next
+  case Rule_Destrd_0_sdec
+  backward-search
+    case LHS
+    step( simplify )
+    step( solve( !KD( senc(x, x.1) ) ▶₀ #i ) )
+      case EmitCiphertext
+      step( solve( (#vl, 0) ~~> (#i, 0) ) )
+        case d_0_sdec
+        step( solve( Second( k, s ) ▶₀ #vr ) )
+          case Init
+          by sorry // bound 6 hit
+        qed
+      next
+        case senc
+        step( solve( Second( k, s ) ▶₀ #vr ) )
+          case Init
+          by sorry // bound 6 hit
+        qed
+      qed
+    next
+      case EmitKey
+      step( solve( First( t ) ▶₀ #vr ) )
+        case Init
+        by step( contradiction /* impossible chain */ )
+      qed
+    next
+      case Init
+      by step( contradiction /* impossible chain */ )
+    qed
+  next
+    case RHS
+    step( simplify )
+    step( solve( !KD( senc(x, x.1) ) ▶₀ #i ) )
+      case EmitCiphertext
+      step( solve( (#vl, 0) ~~> (#i, 0) ) )
+        case d_0_sdec
+        step( solve( Second( k, s ) ▶₀ #vr ) )
+          case Init
+          by sorry // bound 6 hit
+        qed
+      next
+        case senc
+        step( solve( Second( k, s ) ▶₀ #vr ) )
+          case Init
+          by sorry // bound 6 hit
+        qed
+      qed
+    next
+      case EmitKey
+      step( solve( First( t ) ▶₀ #vr ) )
+        case Init
+        by step( contradiction /* impossible chain */ )
+      qed
+    next
+      case Init
+      by step( contradiction /* impossible chain */ )
+    qed
+  qed
+next
+  case Rule_Destrd_0_snd
+  backward-search
+    case LHS
+    step( simplify )
+    step( solve( !KD( <x, x.1> ) ▶₀ #i ) )
+      case EmitCiphertext
+      step( solve( (#vl, 0) ~~> (#i, 0) ) )
+        case d_0_sdec
+        step( solve( Second( k, s ) ▶₀ #vr ) )
+          case Init
+          by sorry // bound 6 hit
+        qed
+      qed
+    next
+      case EmitKey
+      step( solve( First( t ) ▶₀ #vr ) )
+        case Init
+        by step( contradiction /* impossible chain */ )
+      qed
+    next
+      case Init
+      by step( contradiction /* impossible chain */ )
+    qed
+  next
+    case RHS
+    step( simplify )
+    step( solve( !KD( <x, x.1> ) ▶₀ #i ) )
+      case EmitCiphertext
+      step( solve( (#vl, 0) ~~> (#i, 0) ) )
+        case d_0_sdec
+        step( solve( Second( k, s ) ▶₀ #vr ) )
+          case Init
+          by sorry // bound 6 hit
+        qed
+      qed
+    next
+      case EmitKey
+      step( solve( First( t ) ▶₀ #vr ) )
+        case Init
+        by step( contradiction /* impossible chain */ )
+      qed
+    next
+      case Init
+      by step( contradiction /* impossible chain */ )
+    qed
+  qed
+next
+  case Rule_EmitCiphertext
+  backward-search
+    case LHS
+    step( simplify )
+    by sorry // restriction preservation not established
+  next
+    case RHS
+    step( simplify )
+    MIRRORED
+  qed
+next
+  case Rule_EmitKey
+  backward-search
+    case LHS
+    step( simplify )
+    by sorry // restriction preservation not established
+  next
+    case RHS
+    step( simplify )
+    MIRRORED
+  qed
+next
+  case Rule_Equality
+  backward-search
+    case LHS
+    step( simplify )
+    step( solve( !KD( x ) ▶₁ #i ) )
+      case EmitCiphertext
+      step( solve( (#vl, 0) ~~> (#i, 1) ) )
+        case d_0_sdec
+        step( solve( Second( k, s ) ▶₀ #vr ) )
+          case Init
+          by sorry // bound 6 hit
+        qed
+      next
+        case senc
+        step( solve( Second( k, s ) ▶₀ #vr ) )
+          case Init
+          by sorry // bound 6 hit
+        qed
+      qed
+    next
+      case EmitKey
+      step( solve( First( t ) ▶₀ #vr ) )
+        case Init
+        step( solve( (#vl, 0) ~~> (#i, 1) ) )
+          case Var_fresh_k
+          by sorry // bound 6 hit
+        qed
+      qed
+    next
+      case Init
+      step( solve( (#vl, 0) ~~> (#i, 1) ) )
+        case h
+        step( solve( !KU( h(~s) ) @ #vk ) )
+          case Init
+          by sorry // bound 6 hit
+        next
+          case c_h
+          by sorry // bound 6 hit
+        qed
+      qed
+    qed
+  next
+    case RHS
+    step( simplify )
+    step( solve( !KD( x ) ▶₁ #i ) )
+      case EmitCiphertext
+      step( solve( (#vl, 0) ~~> (#i, 1) ) )
+        case d_0_sdec
+        step( solve( Second( k, s ) ▶₀ #vr ) )
+          case Init
+          by sorry // bound 6 hit
+        qed
+      next
+        case senc
+        step( solve( Second( k, s ) ▶₀ #vr ) )
+          case Init
+          by sorry // bound 6 hit
+        qed
+      qed
+    next
+      case EmitKey
+      step( solve( First( t ) ▶₀ #vr ) )
+        case Init
+        step( solve( (#vl, 0) ~~> (#i, 1) ) )
+          case Var_fresh_k
+          by sorry // bound 6 hit
+        qed
+      qed
+    next
+      case Init
+      step( solve( (#vl, 0) ~~> (#i, 1) ) )
+        case h
+        step( solve( !KU( h(~s) ) @ #vk ) )
+          case Init
+          by sorry // bound 6 hit
+        next
+          case c_h
+          by sorry // bound 6 hit
+        qed
+      qed
+    qed
+  qed
+next
+  case Rule_Init
+  backward-search
+    case LHS
+    step( simplify )
+    by sorry // restriction preservation not established
+  next
+    case RHS
+    step( simplify )
+    MIRRORED
+  qed
+next
+  case Rule_Send
+  backward-search
+    case LHS
+    step( simplify )
+    by sorry // restriction preservation not established
+  next
+    case RHS
+    step( simplify )
+    MIRRORED
+  qed
+qed
+
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.13.0
+Maude version 3.5.1
+Git revision: 4a4676de54da4a5081e344b98760d9d4e0f35d46 (with uncommited changes), branch: diff-mirror-proofs
+Compiled at: 2026-09-25 20:02:43.632305942 UTC
+*/
+
+end
+/* Output
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/regression/trace/diff-multisession-observable-restriction.spthy
+
+  output:          examples/regression/trace/diff-multisession-observable-restriction.spthy.tmp
+  processing time: 0.19s
+  
+  LHS :  left_leaks (exists-trace): verified (4 steps)
+  RHS :  right_secret (all-traces): verified (3 steps)
+  RHS :  right_key_reachable (exists-trace): verified (3 steps)
+  RHS :  right_ciphertext_reachable (exists-trace): verified (3 steps)
+  DiffLemma:  Observational_equivalence : analysis incomplete (105 steps)
+
+==============================================================================
+*/

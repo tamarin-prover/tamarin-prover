@@ -1,0 +1,58 @@
+theory DiffExplicitVariantExport
+begin
+
+builtins: symmetric-encryption
+
+// Closing labels every variant with its parent rule's name. Printing used to
+// compare against labels based on the variant names and crash while merging
+// these explicit side families. Export and reload must preserve both variants
+// and their added actions, with and without partial evaluation.
+
+rule Key:
+  [ Fr(~k) ] --> [ !Key(~k) ]
+
+rule Secret:
+  [ Fr(~m), !Key(~k) ]
+  --[ Secret(~m) ]->
+  [ Out(senc(~m,~k)) ]
+
+rule Dec:
+  [ In(x), !Key(k) ] --> [ Out(sdec(x,k)) ]
+left rule Dec:
+  [ In(x), !Key(k) ] --> [ Out(sdec(x,k)) ]
+  variants
+  rule (modulo AC) Dec___VARIANT_2:
+    [ In(senc(z.2,k.1)), !Key(k.1) ] --[ Decrypted(z.2) ]-> [ Out(z.2) ],
+  rule (modulo AC) Dec___VARIANT_1:
+    [ In(x.2), !Key(k.1) ]
+    --[ Unreduced(sdec(x.2,k.1)) ]->
+    [ Out(sdec(x.2,k.1)) ]
+right rule Dec:
+  [ In(x), !Key(k) ] --> [ Out(sdec(x,k)) ]
+  variants
+  rule (modulo AC) Dec___VARIANT_2:
+    [ In(senc(z.2,k.1)), !Key(k.1) ] --[ Decrypted(z.2) ]-> [ Out(z.2) ],
+  rule (modulo AC) Dec___VARIANT_1:
+    [ In(x.2), !Key(k.1) ]
+    --[ Unreduced(sdec(x.2,k.1)) ]->
+    [ Out(sdec(x.2,k.1)) ]
+
+// The generic variant applies only when the decryption does not reduce.
+// The secret cannot occur in an Unreduced action. This also checks that
+// export does not turn the generic variant into an unrestricted E-rule.
+lemma unreduced_secret:
+  exists-trace
+  "Ex m #i #j. Secret(m) @ i & Unreduced(m) @ j"
+
+lemma decrypted_reachable:
+  exists-trace
+  "Ex m #i. Decrypted(m) @ i"
+
+lemma unreduced_reachable:
+  exists-trace
+  "Ex m #i. Unreduced(m) @ i"
+
+// Diff search remains incomplete at the regression bound of six. The export
+// checks compare this result as well as the completed side-lemma proofs.
+diffLemma Observational_equivalence:
+end

@@ -705,91 +705,65 @@ guarded formula characterizing all counter-examples:
    ∧
     ∀ #j. (Comm_S_ySG( S, x ) @ #j) ⇒ ¬(#j < #i)))"
 */
-induction
-  case empty_trace
-  by contradiction /* from formulas */
-next
-  case non_empty_trace
-  solve( (∃ H S x #i.
-           (Learn_H_Ys( H, S, x ) @ #i)
-          ∧
-           ∀ #j. (Comm_S_Ys( S, x ) @ #j) ⇒ ¬(#j < #i))  ∥
-         (∃ H S x #i.
-           (Learn_H_ySG( H, S, x ) @ #i)
-          ∧
-           ∀ #j. (Comm_S_ySG( S, x ) @ #j) ⇒ ¬(#j < #i)) )
-    case case_1
-    solve( (last(#i))  ∥
-           (∃ #j.
-             (Comm_S_Ys( $S, <'ys', (y1 add y2)> ) @ #j)
-            ∧
-             (¬(last(#j))) ∧ (#j < #i)) )
-      case case_1
-      solve( AgSt_H0( <$H, $D, $S, $BB> ) ▶₀ #i )
-        case Setup_case_1
-        solve( In_S( 'D2', 'H2', yD ) ▶₁ #i )
-          case ChanIn_S
-          solve( In_A( 'BB', <'ys', (y1 add y2)> ) ▶₂ #i )
-            case ChanIn_A_case_1
-            by contradiction /* from formulas */
-          next
-            case ChanIn_A_case_2
-            by contradiction /* from formulas */
-          qed
-        qed
+simplify
+solve( (∃ H S x #i.
+         (Learn_H_Ys( H, S, x ) @ #i)
+        ∧
+         ∀ #j. (Comm_S_Ys( S, x ) @ #j) ⇒ ¬(#j < #i))  ∥
+       (∃ H S x #i.
+         (Learn_H_ySG( H, S, x ) @ #i)
+        ∧
+         ∀ #j. (Comm_S_ySG( S, x ) @ #j) ⇒ ¬(#j < #i)) )
+  case case_1
+  solve( AgSt_H0( <$H, $D, $S, $BB> ) ▶₀ #i )
+    case Setup_case_1
+    solve( In_S( 'D2', 'H2', yD ) ▶₁ #i )
+      case ChanIn_S
+      solve( In_A( 'BB', <'ys', (y1 add y2)> ) ▶₂ #i )
+        case ChanIn_A_case_1
+        by contradiction /* from formulas */
       next
-        case Setup_case_2
-        solve( In_S( 'D1', 'H1', yD ) ▶₁ #i )
-          case ChanIn_S
-          solve( In_A( 'BB', <'ys', (y1 add y2)> ) ▶₂ #i )
-            case ChanIn_A_case_1
-            by contradiction /* from formulas */
-          next
-            case ChanIn_A_case_2
-            by contradiction /* from formulas */
-          qed
-        qed
+        case ChanIn_A_case_2
+        by contradiction /* from formulas */
       qed
-    next
-      case case_2_case_1
-      by contradiction /* from formulas */
-    next
-      case case_2_case_2
+    qed
+  next
+    case Setup_case_2
+    solve( In_S( 'D1', 'H1', yD ) ▶₁ #i )
+      case ChanIn_S
+      solve( In_A( 'BB', <'ys', (y1 add y2)> ) ▶₂ #i )
+        case ChanIn_A_case_1
+        by contradiction /* from formulas */
+      next
+        case ChanIn_A_case_2
+        by contradiction /* from formulas */
+      qed
+    qed
+  qed
+next
+  case case_2
+  solve( AgSt_H5( $H, <$D, $S, $BB, yD, y1, y2> ) ▶₀ #i )
+    case H_5_case_1
+    solve( In_A( 'BB', <'ySG', ySG> ) ▶₁ #i )
+      case ChanIn_A
       by contradiction /* from formulas */
     qed
   next
-    case case_2
-    solve( (last(#i))  ∥
-           (∃ #j.
-             (Comm_S_ySG( $S, <'ySG', ySG> ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #i)) )
-      case case_1
-      solve( AgSt_H5( $H, <$D, $S, $BB, yD, y1, y2> ) ▶₀ #i )
-        case H_5_case_1
-        solve( In_A( 'BB', <'ySG', ySG> ) ▶₁ #i )
-          case ChanIn_A
-          by contradiction /* from formulas */
-        qed
-      next
-        case H_5_case_2
-        solve( In_A( 'BB', <'ySG', ySG> ) ▶₁ #i )
-          case ChanIn_A
-          by contradiction /* from formulas */
-        qed
-      next
-        case H_5_case_3
-        solve( In_A( 'BB', <'ySG', ySG> ) ▶₁ #i )
-          case ChanIn_A
-          by contradiction /* from formulas */
-        qed
-      next
-        case H_5_case_4
-        solve( In_A( 'BB', <'ySG', ySG> ) ▶₁ #i )
-          case ChanIn_A
-          by contradiction /* from formulas */
-        qed
-      qed
-    next
-      case case_2
+    case H_5_case_2
+    solve( In_A( 'BB', <'ySG', ySG> ) ▶₁ #i )
+      case ChanIn_A
+      by contradiction /* from formulas */
+    qed
+  next
+    case H_5_case_3
+    solve( In_A( 'BB', <'ySG', ySG> ) ▶₁ #i )
+      case ChanIn_A
+      by contradiction /* from formulas */
+    qed
+  next
+    case H_5_case_4
+    solve( In_A( 'BB', <'ySG', ySG> ) ▶₁ #i )
+      case ChanIn_A
       by contradiction /* from formulas */
     qed
   qed
@@ -814,91 +788,65 @@ guarded formula characterizing all counter-examples:
    ∧
     ∀ #j. (Comm_S_ySG( S, x ) @ #j) ⇒ ¬(#j < #i)))"
 */
-induction
-  case empty_trace
-  by contradiction /* from formulas */
-next
-  case non_empty_trace
-  solve( (∃ H S x #i.
-           (Learn_H_Ys( H, S, x ) @ #i)
-          ∧
-           ∀ #j. (Comm_S_Ys( S, x ) @ #j) ⇒ ¬(#j < #i))  ∥
-         (∃ H S x #i.
-           (Learn_H_ySG( H, S, x ) @ #i)
-          ∧
-           ∀ #j. (Comm_S_ySG( S, x ) @ #j) ⇒ ¬(#j < #i)) )
-    case case_1
-    solve( (last(#i))  ∥
-           (∃ #j.
-             (Comm_S_Ys( $S, <'ys', (y1 add y2)> ) @ #j)
-            ∧
-             (¬(last(#j))) ∧ (#j < #i)) )
-      case case_1
-      solve( AgSt_H0( <$H, $D, $S, $BB> ) ▶₀ #i )
-        case Setup_case_1
-        solve( In_S( 'D1', 'H1', yD ) ▶₁ #i )
-          case ChanIn_S
-          solve( In_A( 'BB', <'ys', (y1 add y2)> ) ▶₂ #i )
-            case ChanIn_A_case_1
-            by contradiction /* from formulas */
-          next
-            case ChanIn_A_case_2
-            by contradiction /* from formulas */
-          qed
-        qed
+simplify
+solve( (∃ H S x #i.
+         (Learn_H_Ys( H, S, x ) @ #i)
+        ∧
+         ∀ #j. (Comm_S_Ys( S, x ) @ #j) ⇒ ¬(#j < #i))  ∥
+       (∃ H S x #i.
+         (Learn_H_ySG( H, S, x ) @ #i)
+        ∧
+         ∀ #j. (Comm_S_ySG( S, x ) @ #j) ⇒ ¬(#j < #i)) )
+  case case_1
+  solve( AgSt_H0( <$H, $D, $S, $BB> ) ▶₀ #i )
+    case Setup_case_1
+    solve( In_S( 'D1', 'H1', yD ) ▶₁ #i )
+      case ChanIn_S
+      solve( In_A( 'BB', <'ys', (y1 add y2)> ) ▶₂ #i )
+        case ChanIn_A_case_1
+        by contradiction /* from formulas */
       next
-        case Setup_case_2
-        solve( In_S( 'D2', 'H2', yD ) ▶₁ #i )
-          case ChanIn_S
-          solve( In_A( 'BB', <'ys', (y1 add y2)> ) ▶₂ #i )
-            case ChanIn_A_case_1
-            by contradiction /* from formulas */
-          next
-            case ChanIn_A_case_2
-            by contradiction /* from formulas */
-          qed
-        qed
+        case ChanIn_A_case_2
+        by contradiction /* from formulas */
       qed
-    next
-      case case_2_case_1
-      by contradiction /* from formulas */
-    next
-      case case_2_case_2
+    qed
+  next
+    case Setup_case_2
+    solve( In_S( 'D2', 'H2', yD ) ▶₁ #i )
+      case ChanIn_S
+      solve( In_A( 'BB', <'ys', (y1 add y2)> ) ▶₂ #i )
+        case ChanIn_A_case_1
+        by contradiction /* from formulas */
+      next
+        case ChanIn_A_case_2
+        by contradiction /* from formulas */
+      qed
+    qed
+  qed
+next
+  case case_2
+  solve( AgSt_H5( $H, <$D, $S, $BB, yD, y1, y2> ) ▶₀ #i )
+    case H_5_case_1
+    solve( In_A( 'BB', <'ySG', ySG> ) ▶₁ #i )
+      case ChanIn_A
       by contradiction /* from formulas */
     qed
   next
-    case case_2
-    solve( (last(#i))  ∥
-           (∃ #j.
-             (Comm_S_ySG( $S, <'ySG', ySG> ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #i)) )
-      case case_1
-      solve( AgSt_H5( $H, <$D, $S, $BB, yD, y1, y2> ) ▶₀ #i )
-        case H_5_case_1
-        solve( In_A( 'BB', <'ySG', ySG> ) ▶₁ #i )
-          case ChanIn_A
-          by contradiction /* from formulas */
-        qed
-      next
-        case H_5_case_2
-        solve( In_A( 'BB', <'ySG', ySG> ) ▶₁ #i )
-          case ChanIn_A
-          by contradiction /* from formulas */
-        qed
-      next
-        case H_5_case_3
-        solve( In_A( 'BB', <'ySG', ySG> ) ▶₁ #i )
-          case ChanIn_A
-          by contradiction /* from formulas */
-        qed
-      next
-        case H_5_case_4
-        solve( In_A( 'BB', <'ySG', ySG> ) ▶₁ #i )
-          case ChanIn_A
-          by contradiction /* from formulas */
-        qed
-      qed
-    next
-      case case_2
+    case H_5_case_2
+    solve( In_A( 'BB', <'ySG', ySG> ) ▶₁ #i )
+      case ChanIn_A
+      by contradiction /* from formulas */
+    qed
+  next
+    case H_5_case_3
+    solve( In_A( 'BB', <'ySG', ySG> ) ▶₁ #i )
+      case ChanIn_A
+      by contradiction /* from formulas */
+    qed
+  next
+    case H_5_case_4
+    solve( In_A( 'BB', <'ySG', ySG> ) ▶₁ #i )
+      case ChanIn_A
       by contradiction /* from formulas */
     qed
   qed
@@ -3584,8 +3532,8 @@ qed
 Generated from:
 Tamarin version 1.13.0
 Maude version 3.5.1
-Git revision: 41bc81379b23681e7057314a5cf66a25c45e1986, branch: canonicalise-subst
-Compiled at: 2026-07-27 16:11:34.947223 UTC
+Git revision: d2ccaf31b4ff8aecbb7de84895b9825b299c1b13 (with uncommited changes), branch: msr-proof-correctness
+Compiled at: 2026-10-07 20:46:17.79718658 UTC
 */
 
 end
@@ -3597,7 +3545,7 @@ summary of summaries:
 analyzed: examples/csf26-ac/fast/diff/alethea_selectionphase_anonymity.spthy
 
   output:          examples/csf26-ac/fast/diff/alethea_selectionphase_anonymity.spthy.tmp
-  processing time: 2.89s
+  processing time: 6.82s
   
   RHS :  functional (exists-trace): verified (20 steps)
   LHS :  functional (exists-trace): verified (20 steps)
@@ -3607,8 +3555,8 @@ analyzed: examples/csf26-ac/fast/diff/alethea_selectionphase_anonymity.spthy
   LHS :  individualVerifiability_sel (all-traces): verified (16 steps)
   RHS :  secret_x (all-traces): verified (8 steps)
   LHS :  secret_x (all-traces): verified (8 steps)
-  RHS :  agreementHwrtS (all-traces): verified (26 steps)
-  LHS :  agreementHwrtS (all-traces): verified (26 steps)
+  RHS :  agreementHwrtS (all-traces): verified (20 steps)
+  LHS :  agreementHwrtS (all-traces): verified (20 steps)
   RHS :  agreementDwrtS (all-traces): verified (6 steps)
   LHS :  agreementDwrtS (all-traces): verified (6 steps)
   DiffLemma:  Observational_equivalence : verified (896 steps)

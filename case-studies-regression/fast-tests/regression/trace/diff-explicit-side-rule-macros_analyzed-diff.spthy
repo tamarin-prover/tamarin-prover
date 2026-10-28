@@ -1,0 +1,133 @@
+theory DiffExplicitSideRuleMacros
+
+begin
+
+// Function signature and definition of the equational theory E
+
+functions: fst/1, h/1, pair/2, snd/1
+equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
+
+macros: m( x ) =  h(x)
+
+rule (modulo E) Hash:
+   [ In( x ) ] --[ H( x ) ]-> [ Out( h(x) ) ]
+
+diffLemma Observational_equivalence:
+rule-equivalence
+  case Rule_Destrd_0_fst
+  backward-search
+    case LHS
+    step( simplify )
+    step( solve( !KD( <x, x.1> ) ▶₀ #i ) )
+      case Hash
+      by step( solve( (#vl, 0) ~~> (#i, 0) ) )
+    qed
+  next
+    case RHS
+    step( simplify )
+    step( solve( !KD( <x, x.1> ) ▶₀ #i ) )
+      case Hash
+      by step( solve( (#vl, 0) ~~> (#i, 0) ) )
+    qed
+  qed
+next
+  case Rule_Destrd_0_snd
+  backward-search
+    case LHS
+    step( simplify )
+    step( solve( !KD( <x, x.1> ) ▶₀ #i ) )
+      case Hash
+      by step( solve( (#vl, 0) ~~> (#i, 0) ) )
+    qed
+  next
+    case RHS
+    step( simplify )
+    step( solve( !KD( <x, x.1> ) ▶₀ #i ) )
+      case Hash
+      by step( solve( (#vl, 0) ~~> (#i, 0) ) )
+    qed
+  qed
+next
+  case Rule_Equality
+  backward-search
+    case LHS
+    step( simplify )
+    step( solve( !KD( x ) ▶₁ #i ) )
+      case Hash
+      step( solve( (#vl, 0) ~~> (#i, 1) ) )
+        case h
+        step( solve( !KU( h(x) ) @ #vk ) )
+          case Hash
+          MIRRORED
+        next
+          case c_h
+          MIRRORED
+        qed
+      qed
+    qed
+  next
+    case RHS
+    step( simplify )
+    step( solve( !KD( x ) ▶₁ #i ) )
+      case Hash
+      step( solve( (#vl, 0) ~~> (#i, 1) ) )
+        case h
+        step( solve( !KU( h(x) ) @ #vk ) )
+          case Hash
+          MIRRORED
+        next
+          case c_h
+          MIRRORED
+        qed
+      qed
+    qed
+  qed
+next
+  case Rule_Hash
+  backward-search
+    case LHS
+    step( simplify )
+    MIRRORED
+  next
+    case RHS
+    step( simplify )
+    MIRRORED
+  qed
+next
+  case Rule_Send
+  backward-search
+    case LHS
+    step( simplify )
+    MIRRORED
+  next
+    case RHS
+    step( simplify )
+    MIRRORED
+  qed
+qed
+
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.13.0
+Maude version 3.5.1
+Git revision: c4572aa2bab99bb68de09813420a8c2172b99182 (with uncommited changes), branch: diff-rule-families
+Compiled at: 2026-09-25 20:20:40.787603735 UTC
+*/
+
+end
+/* Output
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/regression/trace/diff-explicit-side-rule-macros.spthy
+
+  output:          examples/regression/trace/diff-explicit-side-rule-macros.spthy.tmp
+  processing time: 0.11s
+  
+  DiffLemma:  Observational_equivalence : verified (38 steps)
+
+==============================================================================
+*/

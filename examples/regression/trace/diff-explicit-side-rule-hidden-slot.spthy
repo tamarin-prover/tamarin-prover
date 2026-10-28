@@ -1,0 +1,15 @@
+theory DiffExplicitSideRuleHiddenSlot
+begin
+
+/* $a occurs only on the right, so the parent's new-variable slots are
+   [$a, $p] while the exact left rule alone has [$p]. Develop crashed
+   ("different number of new variables") when mirroring; with the parent's
+   slots, the left output $p and the right output $a are told apart and the
+   equivalence is falsified. */
+rule R: [ ] --[ A($p) ]-> [ Out(diff($p, $a)) ]
+left rule R: [ ] --[ A($p) ]-> [ Out($p) ]
+right rule R: [ ] --[ A($p) ]-> [ Out($a) ]
+
+diffLemma Observational_equivalence:
+
+end

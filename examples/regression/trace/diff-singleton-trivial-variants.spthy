@@ -1,0 +1,50 @@
+theory DiffSingletonTrivialVariants
+begin
+
+// These explicit variants are identical to their parent side rules. Omitting
+// them when reopening the theory used to make printing crash while merging
+// the reopened side rules with the original diff declarations.
+rule Both: [] --[ Emit('both') ]-> [ Out('both') ]
+left rule Both: [] --[ Emit('both') ]-> [ Out('both') ]
+  variants rule (modulo AC) Both:
+    [] --[ Emit('both') ]-> [ Out('both') ]
+right rule Both: [] --[ Emit('both') ]-> [ Out('both') ]
+  variants rule (modulo AC) Both:
+    [] --[ Emit('both') ]-> [ Out('both') ]
+
+// Repeating an identical explicit family must be idempotent, including
+// the names and annotations of all of its members.
+rule Both: [] --[ Emit('both') ]-> [ Out('both') ]
+left rule Both: [] --[ Emit('both') ]-> [ Out('both') ]
+  variants rule (modulo AC) Both:
+    [] --[ Emit('both') ]-> [ Out('both') ]
+right rule Both: [] --[ Emit('both') ]-> [ Out('both') ]
+  variants rule (modulo AC) Both:
+    [] --[ Emit('both') ]-> [ Out('both') ]
+
+// The decision to preserve a declaration must be made separately per side.
+rule LeftOnly: [] --[ Emit('left') ]-> [ Out('left') ]
+left rule LeftOnly: [] --[ Emit('left') ]-> [ Out('left') ]
+  variants rule (modulo AC) LeftOnly:
+    [] --[ Emit('left') ]-> [ Out('left') ]
+right rule LeftOnly: [] --[ Emit('left') ]-> [ Out('left') ]
+
+rule RightOnly: [] --[ Emit('right') ]-> [ Out('right') ]
+left rule RightOnly: [] --[ Emit('right') ]-> [ Out('right') ]
+right rule RightOnly: [] --[ Emit('right') ]-> [ Out('right') ]
+  variants rule (modulo AC) RightOnly:
+    [] --[ Emit('right') ]-> [ Out('right') ]
+
+// An automatically computed trivial variant needs no explicit declaration.
+rule Automatic: [] --[ Emit('automatic') ]-> [ Out('automatic') ]
+// Repeated automatic declarations must not multiply members on each export.
+rule Automatic: [] --[ Emit('automatic') ]-> [ Out('automatic') ]
+
+lemma both_reachable: exists-trace "Ex #i. Emit('both')@i"
+lemma left_reachable: exists-trace "Ex #i. Emit('left')@i"
+lemma right_reachable: exists-trace "Ex #i. Emit('right')@i"
+lemma automatic_reachable: exists-trace "Ex #i. Emit('automatic')@i"
+
+// All four rules have identical behavior on the two sides.
+diffLemma Observational_equivalence:
+end

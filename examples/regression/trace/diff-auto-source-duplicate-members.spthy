@@ -1,0 +1,41 @@
+theory DiffAutoSourceDuplicateMembers
+begin
+builtins: asymmetric-encryption
+
+rule Keys:
+  [ Fr(~k) ] --> [ !Key($A,~k), !Pub($A,pk(~k)), Out(pk(~k)) ]
+
+// These are distinct annotated members, not repeated declarations. Their
+// bodies use different variable names, so an auto-source action for one must
+// not be attached to the other. Export must keep both reloadable members.
+rule Send:
+  [ Fr(~n), !Pub($B,p) ] --> [ Out(aenc(<~n,'tag'>,p)) ]
+left rule Send:
+  [ Fr(~n), !Pub($B,p) ] --> [ Out(aenc(<~n,'tag'>,p)) ]
+  variants
+  rule (modulo AC) Send:
+    [ Fr(~n), !Pub($B,p) ] --[ First(~n) ]-> [ Out(aenc(<~n,'tag'>,p)) ],
+  rule (modulo AC) Send:
+    [ Fr(~m), !Pub($C,q) ] --[ Second(~m) ]-> [ Out(aenc(<~m,'tag'>,q)) ]
+right rule Send:
+  [ Fr(~n), !Pub($B,p) ] --> [ Out(aenc(<~n,'tag'>,p)) ]
+  variants
+  rule (modulo AC) Send:
+    [ Fr(~n), !Pub($B,p) ] --[ First(~n) ]-> [ Out(aenc(<~n,'tag'>,p)) ],
+  rule (modulo AC) Send:
+    [ Fr(~m), !Pub($C,q) ] --[ Second(~m) ]-> [ Out(aenc(<~m,'tag'>,q)) ]
+
+// A user rule may already have a name that the private naming pass would try.
+rule Send___AUTO_MEMBER_1:
+  [] --[ Collision() ]-> []
+
+rule Forward:
+  [ !Key($A,k), !Pub($B,p), In(aenc(<x,'tag'>,pk(k))) ]
+  --[ Seen(x) ]-> [ Out(aenc(x,p)) ]
+
+lemma first [left]: exists-trace "Ex x #i. First(x)@i"
+lemma second [left]: exists-trace "Ex x #i. Second(x)@i"
+lemma collision [left]: exists-trace "Ex #i. Collision()@i"
+
+diffLemma Observational_equivalence:
+end

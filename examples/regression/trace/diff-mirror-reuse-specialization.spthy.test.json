@@ -1,0 +1,22 @@
+{
+  "tests": [
+    {
+      "name": "conditional-reuse-context",
+      "args": ["--diff", "--prove", "--bound=12", "--quit-on-warning"],
+      "matches": [
+        {"regex": "DiffLemma:  D : (verified|analysis incomplete)", "min": 1, "max": 1},
+        {"regex": "DiffLemma:.*: falsified", "max": 0}
+      ]
+    },
+    {
+      "name": "real-attack-control",
+      "args": ["--diff", "--prove", "--bound=12", "--quit-on-warning", "-DATTACK"],
+      "contains": ["DiffLemma:  D : falsified"]
+    },
+    {
+      "name": "restriction-coverage-control",
+      "args": ["--diff", "--prove", "--bound=12", "--quit-on-warning", "-DRESTRICTION"],
+      "contains": ["DiffLemma:  D : verified"]
+    }
+  ]
+}

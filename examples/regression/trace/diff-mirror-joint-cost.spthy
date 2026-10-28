@@ -1,0 +1,18 @@
+theory DiffMirrorJointCost
+begin
+
+/* Six AC-unifier mirrors, each with three conditional instances of a
+   one-sided restriction. Evaluating the full trivalent joint failure answer
+   explores 3^6 branches at every trivial node; the proof methods only need
+   coverage or a definite attack, which is decided quickly. Take with public
+   names $P0, $P1, $P2 distinct from $A0, $A1, $A2 has no right mirror, so the
+   equivalence is falsified. */
+
+builtins: multiset
+rule Setup:
+  [ Fr(~s) ] --[ ]-> [ Shuffle($A0 + $A1 + $A2) ]
+rule Take:
+  [ Shuffle(x0 + x1 + x2) ] --[ Eq($P0, x0), Eq($P1, x1), Eq($P2, x2) ]-> [ ]
+restriction eq [right]:
+  "All u v #i. Eq(u, v)@i ==> u = v"
+end

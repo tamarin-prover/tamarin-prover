@@ -1,0 +1,18 @@
+theory DiffAutoSourceVariableAlignment
+begin
+builtins: asymmetric-encryption
+
+// Auto-sources adds actions to Send and Forward, requiring explicit AC
+// families on export. Send's new-variable vector includes both $x and $y
+// on both sides, although $y occurs only in the right side's facts.
+rule Keys:
+  [ Fr(~k) ] --> [ !Key($A,~k), !Pub($A,pk(~k)), Out(pk(~k)) ]
+rule Send:
+  [ Fr(~n), !Pub($B,p) ] -->
+  [ Out(aenc(<~n,'tag'>,p)), Out(diff($x,<$x,$y>)) ]
+rule Forward:
+  [ !Key($A,k), !Pub($B,p), In(aenc(<x,'tag'>,pk(k))) ]
+  --[ Seen(x) ]-> [ Out(aenc(x,p)) ]
+
+diffLemma Observational_equivalence:
+end

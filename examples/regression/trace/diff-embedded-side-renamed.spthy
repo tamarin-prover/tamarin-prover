@@ -1,0 +1,9 @@
+theory EmbeddedSideRenamed begin
+// Parent carries an embedded restriction on x; the explicit sides rename x to y.
+rule Emit: [In(x)] --[Emitted(x), _restrict(x = 'a')]-> []
+left rule Emit: [In(y)] --[Emitted(y)]-> []
+right rule Emit: [In(y)] --[Emitted(y)]-> []
+lemma only_a [left]: "All x #i. Emitted(x)@i ==> x = 'a'"
+lemma a_exists [left]: exists-trace "Ex #i. Emitted('a')@i"
+lemma b_exists [left]: exists-trace "Ex #i. Emitted('b')@i"
+end

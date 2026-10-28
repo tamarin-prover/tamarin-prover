@@ -1,0 +1,13 @@
+theory DiffPreservedRestrictionBinders
+begin
+// Renaming bound variables leaves the restriction unchanged. A different
+// consequence, selected by DIFFERENT, must still be checked independently.
+rule A: [] --[A()]-> []
+restriction Left [left]: "All #i #j. A()@i & A()@j ==> #i=#j"
+#ifdef DIFFERENT
+restriction Right [right]: "All #k #l. A()@k & A()@l ==> not(#k=#l)"
+#else
+restriction Right [right]: "All #k #l. A()@k & A()@l ==> #k=#l"
+#endif
+diffLemma D:
+end

@@ -1,0 +1,14 @@
+{
+  "tests": [
+    {
+      "name": "joint-failure-roundtrip",
+      "args": [
+        "--diff",
+        "--quit-on-warning"
+      ],
+      "checks": [
+        "roundtrip"
+      ]
+    }
+  ]
+}

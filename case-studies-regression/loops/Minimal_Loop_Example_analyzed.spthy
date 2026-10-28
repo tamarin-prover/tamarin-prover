@@ -82,13 +82,7 @@ next
   case non_empty_trace
   solve( A( ~n ) ▶₀ #j )
     case Loop
-    solve( A( ~n ) ▶₀ #i )
-      case Loop
-      by contradiction /* cyclic */
-    next
-      case Start
-      by contradiction /* cyclic */
-    qed
+    by solve( A( ~n ) ▶₀ #i )
   next
     case Start
     solve( A( ~n ) ▶₀ #i )
@@ -154,8 +148,8 @@ qed
 Generated from:
 Tamarin version 1.13.0
 Maude version 3.5.1
-Git revision: 41bc81379b23681e7057314a5cf66a25c45e1986, branch: canonicalise-subst
-Compiled at: 2026-07-27 16:11:34.947223 UTC
+Git revision: 5df53af2911dfd01204a9142e8237672e5d05dae (with uncommited changes), branch: msr-proof-correctness
+Compiled at: 2026-09-25 19:18:42.692960904 UTC
 */
 
 end
@@ -167,11 +161,11 @@ summary of summaries:
 analyzed: examples/loops/Minimal_Loop_Example.spthy
 
   output:          examples/loops/Minimal_Loop_Example.spthy.tmp
-  processing time: 0.03s
+  processing time: 0.16s
   
   Start_before_Loop (all-traces): verified (7 steps)
   Start_before_Stop (all-traces): verified (4 steps)
-  Loop_before_Stop (all-traces): verified (8 steps)
+  Loop_before_Stop (all-traces): verified (6 steps)
   Stop_unique (all-traces): verified (12 steps)
   Satisfied_by_empty_trace_only (exists-trace): verified (2 steps)
 

@@ -1,0 +1,15 @@
+{
+  "tests": [
+    {
+      "name": "right-only-correspondence",
+      "args": [
+        "--diff",
+        "--quit-on-warning"
+      ],
+      "checks": [
+        "roundtrip",
+        "partial-evaluation"
+      ]
+    }
+  ]
+}
