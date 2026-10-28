@@ -22,10 +22,7 @@ rule-equivalence
         case h
         step( solve( !KU( h($A) ) @ #vk ) )
           case c_h
-          step( solve( !KU( $A ) @ #vk.1 ) )
-            case pub
-            by ATTACK // trace found
-          qed
+          by ATTACK // trace found
         qed
       qed
     qed
@@ -38,8 +35,8 @@ qed
 Generated from:
 Tamarin version 1.13.0
 Maude version 3.5.1
-Git revision: 41bc81379b23681e7057314a5cf66a25c45e1986, branch: canonicalise-subst
-Compiled at: 2026-07-27 16:11:34.947223 UTC
+Git revision: 4a4676de54da4a5081e344b98760d9d4e0f35d46 (with uncommited changes), branch: diff-mirror-proofs
+Compiled at: 2026-09-25 20:02:43.632305942 UTC
 */
 
 end
@@ -51,9 +48,9 @@ summary of summaries:
 analyzed: examples/features/equivalence/N5N6DiffTest.spthy
 
   output:          examples/features/equivalence/N5N6DiffTest.spthy.tmp
-  processing time: 0.03s
+  processing time: 0.09s
   
-  DiffLemma:  Observational_equivalence : falsified - found trace (8 steps)
+  DiffLemma:  Observational_equivalence : falsified - found trace (7 steps)
 
 ==============================================================================
 */

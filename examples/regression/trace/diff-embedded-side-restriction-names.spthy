@@ -1,0 +1,10 @@
+theory DiffEmbeddedSideRestrictionNames
+begin
+// P's left annotation and the ordinary rule P_LHS used to generate the same
+// restriction name. Both tautologies should leave these rules available.
+rule P: [] --[A()]-> []
+left rule P: [] --[A(), _restrict(T)]-> []
+right rule P: [] --[A()]-> []
+rule P_LHS: [] --[B(), _restrict(T)]-> []
+lemma both: exists-trace "Ex #i #j. A()@i & B()@j"
+end

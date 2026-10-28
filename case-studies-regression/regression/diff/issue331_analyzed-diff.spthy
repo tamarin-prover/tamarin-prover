@@ -16,9 +16,19 @@ restriction secrecy [right]:
   "¬(∃ #i1 #i2 k. (A( k ) @ #i1) ∧ (!KU( k ) @ #i2))"
   // safety formula
 
+  /*
+  expanded formula:
+  "¬(∃ #i1 #i2 k. (A( k ) @ #i1) ∧ (!KU( k ) @ #i2))"
+  */
+
 restriction secrecy [left]:
   "¬(∃ #i1 #i2 k. (A( k ) @ #i1) ∧ (!KU( k ) @ #i2))"
   // safety formula
+
+  /*
+  expanded formula:
+  "¬(∃ #i1 #i2 k. (A( k ) @ #i1) ∧ (!KU( k ) @ #i2))"
+  */
 
 diffLemma Observational_equivalence:
 rule-equivalence
@@ -66,7 +76,7 @@ next
         case g
         step( solve( !KU( g(~k, ~p) ) @ #vk ) )
           case R
-          MIRRORED
+          by sorry // restriction preservation not established
         next
           case c_g
           by step( contradiction /* from formulas */ )
@@ -82,7 +92,7 @@ next
         case Var_fresh_n
         step( solve( !KU( ~n ) @ #vk ) )
           case R
-          MIRRORED
+          by sorry // restriction preservation not established
         qed
       qed
     qed
@@ -92,22 +102,22 @@ next
   backward-search
     case LHS
     step( simplify )
-    MIRRORED
+    by sorry // restriction preservation not established
   next
     case RHS
     step( simplify )
-    MIRRORED
+    by sorry // restriction preservation not established
   qed
 next
   case Rule_Send
   backward-search
     case LHS
     step( simplify )
-    MIRRORED
+    by sorry // restriction preservation not established
   next
     case RHS
     step( simplify )
-    MIRRORED
+    by sorry // restriction preservation not established
   qed
 qed
 
@@ -117,8 +127,8 @@ qed
 Generated from:
 Tamarin version 1.13.0
 Maude version 3.5.1
-Git revision: 41bc81379b23681e7057314a5cf66a25c45e1986, branch: canonicalise-subst
-Compiled at: 2026-07-27 16:11:34.947223 UTC
+Git revision: 4a4676de54da4a5081e344b98760d9d4e0f35d46 (with uncommited changes), branch: diff-mirror-proofs
+Compiled at: 2026-09-25 20:02:43.632305942 UTC
 */
 
 end
@@ -130,9 +140,9 @@ summary of summaries:
 analyzed: examples/regression/diff/issue331.spthy
 
   output:          examples/regression/diff/issue331.spthy.tmp
-  processing time: 0.03s
+  processing time: 0.13s
   
-  DiffLemma:  Observational_equivalence : verified (37 steps)
+  DiffLemma:  Observational_equivalence : analysis incomplete (37 steps)
 
 ==============================================================================
 */

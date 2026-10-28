@@ -921,6 +921,7 @@ module.exports = grammar({
       lemma_attr: $ => choice(
           'sources',
           'reuse',
+          'diff_reuse',
           'use_induction',
           seq('output=', '[', $.language, repeat(seq(',', $.language)), ']'),
           seq('hide_lemma=', $.ident),

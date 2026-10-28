@@ -1,0 +1,24 @@
+theory SoundnessDiffMacros
+begin
+
+macros: m(x) = x
+
+rule EmitA:
+  [] --[ A('a') ]-> []
+
+rule EmitB:
+  [] --[ B('b') ]-> []
+
+// Side lemmas and restrictions must be closed with the same macro expansion
+// as rules. The first lemma has a concrete counterexample; the second trace
+// is excluded by the macro-bearing restriction.
+lemma macro_lemma [left]:
+  "All #i. A(m('a'))@i ==> F"
+
+restriction BanB:
+  "All #i. B(m('b'))@i ==> F"
+
+lemma blocked_by_macro_restriction [left]: exists-trace
+  "Ex #i. B('b')@i"
+
+end

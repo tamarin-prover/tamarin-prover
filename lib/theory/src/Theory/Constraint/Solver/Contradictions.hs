@@ -19,6 +19,7 @@ module Theory.Constraint.Solver.Contradictions (
   , substCreatesNonNormalTerms
   , contradictions
   , contradictorySystem
+  , injectiveInterferenceCandidates
 
   -- ** Pretty-printing
   , prettyContradiction
@@ -188,29 +189,38 @@ substCreatesNonNormalTerms hnd sys fsubst =
 -- temporal orderings.
 nonInjectiveFactInstances :: ProofContext -> System -> [(NodeId, NodeId, NodeId)]
 nonInjectiveFactInstances ctxt se = do
-    Edge c@(i, _) (k, _) <- S.toList $ L.get sEdges se
-    let kFaPrem            = nodeConcFact c se
-        kTag               = factTag kFaPrem
-        kTerm              = firstTerm kFaPrem
-        conflictingFact fa = factTag fa == kTag && firstTerm fa == kTerm
-
-    guard (kTag `S.member` S.map fst (L.get pcInjectiveFactInsts ctxt))
-    j <- S.toList $ D.reachableSet [i] less
-
-    let isCounterExample = (j /= i) && (j /= k) &&
-                           maybe False checkRule (M.lookup j $ L.get sNodes se)
-
-        -- FIXME: There should be a weaker version of the rule that just
-        -- introduces the constraint 'k < j || k == j' here.
-        checkRule jRu    = any conflictingFact (L.get rPrems jRu ++ L.get rConcs jRu) &&
-                           (k `S.member` D.reachableSet [j] less
-                             || isLast se k)
-
-    guard isCounterExample
-    return (i, j, k) -- counter-example to unique fact instances
+    candidate@(_, j, k) <- injectiveInterferenceCandidates (const True) ctxt se
+    -- The trace simplifier merges last-node candidates. Direct callers still
+    -- need to reject a last node that cannot unify with the interfering node.
+    guard (k `S.member` D.reachableSet [j] (rawLessRel se) ||
+           (isLast se k && nonUnifiableNodes j k))
+    return candidate
   where
-    less      = rawLessRel se
-    firstTerm = headMay . factTerms
+    nonUnifiableNodes i j = maybe False (not . runMaude) $
+        unifiableRuleACInsts <$> M.lookup i (L.get sNodes se)
+                             <*> M.lookup j (L.get sNodes se)
+    runMaude = (`runReader` L.get pcMaudeHandle ctxt)
+
+-- | An injective fact flows from i to k while a different node variable j
+-- occurs after i and mentions the same identifier. j may still denote k.
+-- The endpoint filter lets last-node merging prune edges before looking
+-- for interfering nodes.
+injectiveInterferenceCandidates :: (NodeId -> Bool) -> ProofContext -> System
+                                -> [(NodeId, NodeId, NodeId)]
+injectiveInterferenceCandidates endpoint ctxt se = do
+    Edge c@(i, _) (k, _) <- S.toList $ L.get sEdges se
+    guard (endpoint k)
+    let fact = nodeConcFact c se
+        sameInstance other = factTag other == factTag fact &&
+            headMay (factTerms other) == headMay (factTerms fact)
+    guard (factTag fact `S.member` injectiveTags)
+    j <- S.toList $ D.reachableSet [i] (rawLessRel se)
+    guard (j /= i && j /= k)
+    Just ru <- [M.lookup j $ L.get sNodes se]
+    guard (any sameInstance (L.get rPrems ru ++ L.get rConcs ru))
+    return (i, j, k)
+  where
+    injectiveTags = S.map fst $ L.get pcInjectiveFactInsts ctxt
 
 -- | The node-ids that must be instantiated to the trace, but are temporally
 -- after the last node.

@@ -771,7 +771,7 @@ subDiffProofSnippet renderUrl tidx ti lemma proofPath ctxt prf =
         else if dpsMethod (root prf) == DiffUnfinishable
            then [ text "", withTag "h3" [] (text "mirror:") ] ++
                 [ refDotInteractiveDiffPath renderUrl tidx (DiffTheoryDiffProof lemma proofPath) True] ++
-                [ text "The proof cannot be finished as there are reducible operators at the top of subterms in the subterm store." ] ++
+                [ text "The proof cannot be finished because subterm constraints remain unresolved (a containing message is undetermined, or a subterm has a reducible operator)." ] ++
                 [ text "" ]
            else []
 

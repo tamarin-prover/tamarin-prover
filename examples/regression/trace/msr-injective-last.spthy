@@ -1,0 +1,66 @@
+theory InjectiveLast
+begin
+
+rule Create: [Fr(~id)] --[Cr(~id)]-> [S(~id), Once(~id)]
+rule Use: [S(id), Once(id)] --[Use(id)]-> [S(id)]
+rule Fin: [S(id)] --[Fin(id), FinArgument(id,$x)]-> []
+
+tactic: prem
+presort: S
+prio:
+  regex "last\(#j\)"
+prio:
+  regex "▶₀ #j"
+
+// Both Fin variables can denote the same event. Induction introduces last
+// internally; the input formula does not use that internal atom.
+lemma induction_counterexample [use_induction, heuristic={prem}]:
+  "All id #i #j #k. Cr(id)@i & Fin(id)@j & Fin(id)@k & #i < #j & #i < #k
+    & not (Ex #u. Use(id)@u) ==> F"
+lemma direct_counterexample:
+  "All id #i #j #k. Cr(id)@i & Fin(id)@j & Fin(id)@k & #i < #j & #i < #k
+    & not (Ex #u. Use(id)@u) ==> F"
+lemma witness: exists-trace
+  "Ex id #i #j. Cr(id)@i & Fin(id)@j & #i < #j & not (Ex #u. Use(id)@u)"
+
+// A counterexample requires distinct Fin nodes. Merging them must expose the
+// contradictory disequality to the existing formula simplifier.
+lemma distinct_finals_impossible [use_induction, heuristic={prem}]:
+  "All id #i #j #k. Cr(id)@i & Fin(id)@j & Fin(id)@k & #i < #j & #i < #k
+    ==> #j=#k"
+
+// The merge requires an edge ending at the last node. An earlier use can
+// consume and reproduce the state before Fin consumes its successor.
+lemma used_witness: exists-trace
+  "Ex id #i #j #k. Cr(id)@i & Use(id)@j & Fin(id)@k & #i < #j & #j < #k"
+
+// Strict ordering prevents the two Fin nodes from denoting the same event,
+// in either direction and when the ordering follows a longer path.
+lemma ordered_finals_impossible [use_induction, heuristic={prem}]:
+  "All id #i #j #k. Cr(id)@i & Fin(id)@j & Fin(id)@k
+    & #i < #j & #j < #k ==> F"
+lemma reverse_ordered_finals_impossible [use_induction, heuristic={prem}]:
+  "All id #i #j #k. Cr(id)@i & Fin(id)@j & Fin(id)@k
+    & #i < #k & #k < #j ==> F"
+lemma transitively_ordered_finals_impossible [use_induction, heuristic={prem}]:
+  "All id #i #j #u #k. Cr(id)@i & Fin(id)@j & Use(id)@u & Fin(id)@k
+    & #i < #j & #j < #u & #u < #k ==> F"
+
+// An ordering inside a disjunction is not yet a strict-order constraint.
+// The equality branch still has a witness, so this lemma must be falsified.
+lemma equality_or_order_counterexample [use_induction, heuristic={prem}]:
+  "All id #i #j #k. Cr(id)@i & Fin(id)@j & Fin(id)@k
+    & #i < #j & #i < #k & (#j = #k | #j < #k) ==> F"
+
+// The public argument appears only in the action. Merging last nodes must
+// unify the entire rule instances, including this argument.
+lemma incompatible_final_arguments [use_induction, heuristic={prem}]:
+  "All id #i #j #k. Cr(id)@i & FinArgument(id,'a')@j & FinArgument(id,'b')@k
+    & #i < #j & #i < #k ==> F"
+
+// Both requests can refer to the same event with the same argument.
+lemma equal_final_arguments_counterexample [use_induction, heuristic={prem}]:
+  "All id #i #j #k. Cr(id)@i & FinArgument(id,'a')@j & FinArgument(id,'a')@k
+    & #i < #j & #i < #k ==> F"
+
+end
