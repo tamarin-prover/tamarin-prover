@@ -45,6 +45,7 @@ import           Extension.Data.Label               hiding (modify)
 import           Extension.Prelude
 
 import qualified Theory.Constraint.System.StoredFormulas as Stored
+import           Theory.Constraint.Solver.Contradictions (injectiveInterferenceCandidates)
 import           Theory.Constraint.Solver.Goals
 import           Theory.Constraint.Solver.Reduction
 import           Theory.Constraint.System
@@ -133,7 +134,8 @@ simplifySystem = do
               c9 <- freshOrdering
               c10 <- simpSubterms
               c11 <- simpInjectiveFactEqMon
-              c8 <- insertImpliedFormulas $ mconcat [c1,c2,c3,c4,c5,c6,c7,c9,c10,c11] == Unchanged
+              c12 <- mergeLastInjectiveFactNodes
+              c8 <- insertImpliedFormulas $ mconcat [c1,c2,c3,c4,c5,c6,c7,c9,c10,c11,c12] == Unchanged
 
               -- Report on looping behaviour if necessary
               let changes = filter ((Changed ==) . snd) $
@@ -148,6 +150,7 @@ simplifySystem = do
                     , ("orderings for ~vars (S_fresh-order)",             c9)
                     , ("simplification of SubtermStore",                  c10)
                     , ("equations and monotonicity from injective Facts", c11)
+                    , ("last-node equalities from injective facts",        c12)
                     ]
                   traceIfLooping
                     | n <= 10 || null changes = id
@@ -306,9 +309,14 @@ solveUniqueActions = do
 reduceFormulas :: Reduction ChangeIndicator
 reduceFormulas = do
     formulas <- getM sFormulas
+    goals <- getM sGoals
     applyChangeList $ do
         fm <- Stored.toList formulas
-        guard (reducibleFormula fm)
+        -- The initial formula bypasses insertFormula. A disjunction needs its
+        -- case-split goal even when none of its atoms can be simplified yet.
+        guard $ case fm of
+          GDisj disj -> DisjG disj `M.notMember` goals
+          _         -> reducibleFormula fm
         return $ do modM sFormulas $ Stored.delete fm
                     insertFormula fm
 
@@ -668,6 +676,27 @@ simpInjectiveFactEqMon = do
             i /= j,
             ((b, s),(_,t)) <- zip ss tt  -- the b and _ are automatically the same
             ]
+
+-- | An injective fact flowing from i to the last node k cannot also be used
+-- or produced strictly between those nodes. If j is after i and mentions the
+-- same injective identifier, it must therefore coincide with k. Add that
+-- equality rather than treating different node-variable names as a conflict.
+-- Normal substitution merges the rule instances, and existing equations and
+-- formulas decide whether the merger is possible.
+mergeLastInjectiveFactNodes :: Reduction ChangeIndicator
+mergeLastInjectiveFactNodes = do
+    se <- gets id
+    ctxt <- ask
+    let less = rawLessRel se
+        equalities =
+          [ Equal j k
+          | (_, j, k) <- injectiveInterferenceCandidates (isLast se) ctxt se ]
+        ordered (Equal j k) = k `S.member` D.reachableSet [j] less ||
+                              j `S.member` D.reachableSet [k] less
+    -- Merging ordered nodes would create a cycle. Reject it before unifying
+    -- their rule instances, which can be expensive for multiset counters.
+    contradictoryIf $ any ordered equalities
+    solveNodeIdEqs $ nub equalities
 
 -- | Compute all less relations implied by injective fact instances.
 --

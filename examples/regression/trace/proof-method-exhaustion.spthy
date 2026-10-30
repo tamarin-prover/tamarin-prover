@@ -1,0 +1,51 @@
+theory ProofMethodExhaustion
+begin
+
+functions: hidden/0 [private]
+
+rule A_Private: [ In(x) ] --[ Seen(hidden(),x) ]-> []
+rule B_Public:  [ In(x) ] --[ Seen('public',x) ]-> []
+rule A: [] --[ A() ]-> []
+
+// Negating this equality-only formula leaves an initial system with no open
+// goals. Neither simplification nor induction applies; that is not a trace.
+lemma exhausted: "Ex x. x='a' & x='b'"
+
+// The same terminal step must also be accepted when loading a saved proof.
+lemma saved_exhausted: "Ex x. x='a' & x='b'"
+by UNFINISHABLE
+
+// A_Private leaves an unresolved subterm, but B_Public has a public witness.
+// Search must still find B_Public after encountering an unfinishable branch.
+lemma sibling: exists-trace "Ex x y #i. Seen(x,y)@i & x << y"
+
+// This is unfinished work, not an exhausted system. It also supplies open
+// goals for the tests that intentionally stop search with a bound or tactic.
+lemma handwritten: exists-trace "Ex x y #i. Seen(x,y)@i"
+simplify
+by sorry
+
+#ifdef STOP
+// No printed goal is empty: --oracle-only deliberately stops this tactic.
+tactic: stop
+prio:
+  regex "^$"
+#endif
+
+#ifdef INVALID
+// Simplification closes this branch with no remaining cases. An empty case
+// map is a successful inference, not evidence that no inference applies.
+lemma simplifiable: "All x. x='a' ==> x='a'"
+by UNFINISHABLE
+
+// Simplification does not progress here, but induction remains applicable.
+lemma inductive: exists-trace "All #i. A()@i ==> F"
+by UNFINISHABLE
+
+// Open goals can still be solved, so UNFINISHABLE must also be rejected here.
+lemma open_goal: exists-trace "Ex x y #i. Seen(x,y)@i"
+simplify
+by UNFINISHABLE
+#endif
+
+end
