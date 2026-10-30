@@ -22,6 +22,7 @@ module Theory.Constraint.Solver.ProofMethod (
   , execProofMethod
   , execDiffProofMethod
   , isFinished
+  , isFinishedOrStuck
 
   -- ** Heuristics
   , rankProofMethods
@@ -198,8 +199,7 @@ data Result =
   -- ^ A contradiction could be derived, possibly with a reason. The single
   --    formula constraint in the system.
   | Unfinishable
-  -- ^ The proof cannot be finished (due to unresolved subterm constraints or
-  --   because a solution was found after weakening).
+  -- ^ Unresolved constraints prevent extracting a trace, or no proof method applies.
   deriving( Eq, Ord, Show, Generic, NFData, Binary )
 
 -- | Sound transformations of sequents.
@@ -254,6 +254,7 @@ instance HasFrees DiffProofMethod where
 checkAndExecProofMethod :: ProofContext -> ProofMethod -> System -> Maybe (M.Map CaseName System)
 checkAndExecProofMethod ctxt method sys = do
     case method of
+      Finished Unfinishable -> guard (isFinishedOrStuck ctxt sys == Just Unfinishable)
       Finished r -> isFinished ctxt sys >>= guard . equalReason r
       Induction -> Just ()
       SolveGoal goal -> guard (goal `M.member` L.get sGoals sys)
@@ -635,6 +636,18 @@ isFinished ctxt sys
     cs = contradictions ctxt sys
     ogs = openGoals ctxt sys
     stFinished = finishedSubterms ctxt sys
+
+-- | Also recognise states where no inference applies. Trying simplification
+-- can be expensive, so use this only after search exhausts its methods or
+-- when checking a saved UNFINISHABLE step, independently of any heuristic.
+isFinishedOrStuck :: ProofContext -> System -> Maybe Result
+isFinishedOrStuck ctxt sys = isFinished ctxt sys <|> do
+    -- Every open goal admits SolveGoal. Just an empty case map is still a
+    -- successful inference (it closes the branch); Nothing means unavailable.
+    guard (null $ openGoals ctxt sys)
+    guard (isNothing $ execProofMethod ctxt Simplify sys)
+    guard (not (isInitialSystem sys) || isNothing (execProofMethod ctxt Induction sys))
+    return Unfinishable
 
 -- | Use a 'GoalRanking' to generate the ranked, list of possible
 -- 'ProofMethod's and their corresponding results in this 'ProofContext' and
@@ -1298,7 +1311,7 @@ prettyProofMethod method = case method of
     Invalidated -> lineComment_ "proof may have been invalidated by editing a reuse lemma above. You should "
     Finished Solved -> keyword_ "SOLVED" <-> lineComment_ "trace found"
     Induction  -> keyword_ "induction"
-    Finished Unfinishable -> keyword_ "UNFINISHABLE" <-> lineComment_ "unresolved subterm constraints"
+    Finished Unfinishable -> keyword_ "UNFINISHABLE"
     Sorry reason ->
         fsep [keyword_ "sorry", maybe emptyDoc closedComment_ reason]
     SolveGoal goal -> keyword_ "solve(" <-> prettyGoal goal <-> keyword_ ")"

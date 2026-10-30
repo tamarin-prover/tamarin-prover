@@ -30,7 +30,7 @@ guarded formula characterizing all counter-examples:
 "∃ n x #i #j. (Secret( n ) @ #i) ∧ (Recv( x ) @ #j) ∧ n ⊏ x"
 */
 simplify
-by UNFINISHABLE // unresolved subterm constraints
+by UNFINISHABLE
 
 lemma hidden_subterm_exists:
   exists-trace
@@ -40,7 +40,7 @@ guarded formula characterizing all satisfying traces:
 "∃ n x #i #j. (Secret( n ) @ #i) ∧ (Recv( x ) @ #j) ∧ n ⊏ x"
 */
 simplify
-by UNFINISHABLE // unresolved subterm constraints
+by UNFINISHABLE
 
 lemma hidden_nested_subterm:
   exists-trace
@@ -52,7 +52,7 @@ guarded formula characterizing all satisfying traces:
 simplify
 solve( ~n ⊏ h(x) )
   case SubtermSplit1
-  by UNFINISHABLE // unresolved subterm constraints
+  by UNFINISHABLE
 next
   case SubtermSplit2
   by solve( !KU( ~n ) @ #vk )
@@ -101,8 +101,8 @@ SOLVED // trace found
 Generated from:
 Tamarin version 1.13.0
 Maude version 3.5.1
-Git revision: 5df53af2911dfd01204a9142e8237672e5d05dae (with uncommited changes), branch: msr-proof-correctness
-Compiled at: 2026-09-25 19:18:42.692960904 UTC
+Git revision: 89f08bcf72d7b238a86590956b988754d07ca6b0 (with uncommited changes), branch: msr-proof-correctness
+Compiled at: 2026-10-30 18:59:48.916688594 UTC
 */
 
 end
@@ -114,11 +114,11 @@ summary of summaries:
 analyzed: examples/regression/trace/soundness-subterm-witness.spthy
 
   output:          examples/regression/trace/soundness-subterm-witness.spthy.tmp
-  processing time: 0.11s
+  processing time: 0.09s
   
-  hidden_subterm (all-traces): analysis cannot be finished (unresolved subterm constraints) (2 steps)
-  hidden_subterm_exists (exists-trace): analysis cannot be finished (unresolved subterm constraints) (2 steps)
-  hidden_nested_subterm (exists-trace): analysis cannot be finished (unresolved subterm constraints) (4 steps)
+  hidden_subterm (all-traces): analysis cannot be finished (2 steps)
+  hidden_subterm_exists (exists-trace): analysis cannot be finished (2 steps)
+  hidden_nested_subterm (exists-trace): analysis cannot be finished (4 steps)
   public_subterm (exists-trace): verified (3 steps)
   opaque_subterm (exists-trace): verified (3 steps)
   absent_subterm (exists-trace): verified (2 steps)
