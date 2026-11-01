@@ -514,6 +514,15 @@ sequentSnippet :: HtmlDocument d
 sequentSnippet se path = refDotPath path $-$ preformatted Nothing (prettySystem se)
 -}
 
+-- | An empty ranked method list alone does not establish a terminal result.
+noProofMethodsSnippet :: HtmlDocument d => ProofContext -> System -> d
+noProofMethodsSnippet ctxt sys = withTag "h3" [] $ text $
+    case isFinishedOrStuck ctxt sys of
+      Just Solved            -> "Constraint System is Solved"
+      Just Unfinishable       -> "Constraint System is Unfinishable"
+      Just (Contradictory _)  -> "Constraint System is Contradictory"
+      Nothing                -> "No applicable proof methods"
+
 -- | A snippet that explains a sub-proof by displaying its proof state, the
 -- open-goals, and the new cases.
 subProofSnippet :: HtmlDocument d
@@ -544,8 +553,7 @@ subProofSnippet renderUrl renderImgUrl tidx ti lemma proofPath ctxt prf =
         subCases
   where
     prettyApplicableProofMethods sys = case proofMethods sys of
-        [] | finishedSubterms ctxt sys  -> [ withTag "h3" [] (text "Constraint System is Solved") ]
-        []                              -> [ withTag "h3" [] (text "Constraint System is Unfinishable") ]
+        [] -> [ noProofMethodsSnippet ctxt sys ]
         pms ->
           [ withTag "h3" [] (text "Applicable Proof Methods:" <->
                              comment_ (goalRankingName ranking))
@@ -646,8 +654,7 @@ subProofDiffSnippet renderUrl tidx ti s lemma proofPath ctxt prf =
         subCases
   where
     prettyApplicableProofMethods sys = case proofMethods sys of
-        [] | finishedSubterms ctxt sys  -> [ withTag "h3" [] (text "Constraint System is Solved") ]
-        []                              -> [ withTag "h3" [] (text "Constraint System is Unfinishable") ]
+        [] -> [ noProofMethodsSnippet ctxt sys ]
         pms ->
           [ withTag "h3" [] (text "Applicable Proof Methods:" <->
                              comment_ (goalRankingName ranking))
