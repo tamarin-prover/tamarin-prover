@@ -240,7 +240,7 @@ ifdef items thy = do
 -- blocks.
 skipBranch :: Parser Bool
 skipBranch = do
-    _ <- manyTill (lexeme anyChar) (try (symbol_ "#"))
+    _ <- manyTill skipItem (try (symbol_ "#"))
     asum [ True <$ symbol_ "else"
          , False <$ symbol_ "endif"
          , do symbol_ "ifdef"
@@ -253,6 +253,18 @@ skipBranch = do
 -- | Skip from an @#else@ to its @#endif@.
 skipElse :: Parser ()
 skipElse = skipBranch >>= (`when` unexpected "#else")
+
+-- | Skip a quoted literal, formal comment, word or single character, and any
+-- following whitespace and comments.
+skipItem :: Parser ()
+skipItem = lexeme $ asum [ try (void formalComment)
+                         , quoted '\''
+                         , quoted '"'
+                         , void (many1 letter)
+                         , void anyChar
+                         ]
+  where
+    quoted q = try $ void $ char q *> many (noneOf [q, '\n']) *> char q
 
 -- | Parse a theory.
 theory :: Maybe FilePath
