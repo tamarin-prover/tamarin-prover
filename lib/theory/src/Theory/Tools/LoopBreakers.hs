@@ -47,8 +47,10 @@ premSolvingRelAC ePrems eConcs eVariants rules = reader $ \hnd -> do
         -- NoSource Facts are already explicitly excluded from precomputation
         guard $ not (isNoSourcesFact premFa0)
         guard $ or $ do
+            concFa0 <- snd <$> eConcs ruFrom
+            guard (factTag concFa0 == factTag premFa0)
             premFa <- instances ruTo premFa0
-            concFa <- instances ruFrom =<< (snd <$> eConcs ruFrom)
+            concFa <- instances ruFrom concFa0
             let concFaFresh = rename concFa `evalFresh` avoid premFa
             return $ (`runReader` hnd) (unifiableLNFacts concFaFresh premFa)
         return (ruFrom, (ruTo, premIdx))
