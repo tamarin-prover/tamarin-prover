@@ -275,15 +275,10 @@ baseTransComb c an p tildex
                     [] -> def_state1 resultVars
                     (LetStage nextInput _ _, _) : _ ->
                       FLet (stagePos (i+1)) (fromMaybe nextInput reduct) nextVars
-                  failureFormula patternTerm =
-                    fold (hinted forAll)
-                      (Conn Imp (Ato (EqE (fmapTerm (fmap Free) patternTerm)
-                                         (fmapTerm (fmap Free) input))) (TF False))
-                      (freeset patternTerm `difference` vars)
                   successes = [([FLet (stagePos i) patternTerm vars], [], [destination reduct], [])
                               | (patternTerm, reduct) <- NE.toList alternatives]
                   failures = [([FLet (stagePos i) input vars], [], [def_state2 tildex],
-                               map (failureFormula . fst) $ NE.toList alternatives) | an.elseBranch]
+                               map (patternFailureFormula vars input . fst) $ NE.toList alternatives) | an.elseBranch]
               in successes ++ failures ++ emit (i+1) nextVars rest
             start = case stages of
               LetStage input _ _ : _ -> [([def_state], [], [FLet (stagePos 0) input tildex], [])]
@@ -320,6 +315,17 @@ baseTransComb c an p tildex
         def_state2 tx = State LState (p++[2]) tx
         freeset = fromList . frees
 
+
+-- | Require the input to match no instance of the pattern: forall x. pattern =
+-- input ==> false. Quantify only pattern variables not already bound at this
+-- stage; existing bindings stay fixed. A failure rule includes this restriction
+-- for every alternative, so it can run only when none of them matches.
+patternFailureFormula :: Set LVar -> LNTerm -> LNTerm -> SyntacticLNFormula
+patternFailureFormula bound input patternTerm =
+    fold (hinted forAll)
+      (Conn Imp (Ato (EqE (fmapTerm (fmap Free) patternTerm)
+                         (fmapTerm (fmap Free) input))) (TF False))
+      (fromList (frees patternTerm) `difference` bound)
 
 -- | @baseInit@ provides the initial rule that is used to create the first
 -- linear statefact. An additional restriction on InitEmpty makes sure it can
