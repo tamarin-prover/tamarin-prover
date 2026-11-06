@@ -29,10 +29,7 @@ solve( State_111( ~prog_, 'value', 'value', v ) ▶₀ #i )
       case case_1
       solve( State_111( ~prog_, a, b, v ) ▶₀ #t.1 )
         case letabunboxboxvv_3_11
-        solve( (#t2 < #t2.1)  ∥ (#t2 = #t2.1) )
-          case case_2
-          SOLVED // trace found
-        qed
+        SOLVED // trace found
       qed
     qed
   qed
@@ -275,8 +272,8 @@ restriction progressInit:
 Generated from:
 Tamarin version 1.13.0
 Maude version 3.5.1
-Git revision: 5a753a172c7984e9403bc650a37a8223367bc1c5, branch: sapic-destructors
-Compiled at: 2026-09-25 19:30:59.558380567 UTC
+Git revision: bca4824b93cdde009189461429942adc276f87ca (with uncommited changes), branch: sapic-destructors
+Compiled at: 2026-11-06 16:23:09.627024669 UTC
 */
 
 end
@@ -290,7 +287,7 @@ analyzed: examples/regression/trace/sapic-lookup-destructor-progress.spthy
   output:          examples/regression/trace/sapic-lookup-destructor-progress.spthy.tmp
   processing time: 0.17s
   
-  reachable (exists-trace): verified (7 steps)
+  reachable (exists-trace): verified (6 steps)
   value_preserved (all-traces): verified (6 steps)
 
 ==============================================================================

@@ -1484,14 +1484,7 @@ guarded formula characterizing all counter-examples:
  ∧
   ¬(#t1 < #t2)"
 */
-simplify
-solve( (#t1 = #t2)  ∥ (#t2 < #t1) )
-  case case_1
-  solve( !SharedKey( pid, k ) ▶₂ #t1 )
-    case BuyANewYubikey
-    by solve( LoginCounter( ~pid, otc2, (otc1++z++z.1) ) @ #t1 )
-  qed
-qed
+by simplify
 
 /* All wellformedness checks were successful. */
 
@@ -1499,8 +1492,8 @@ qed
 Generated from:
 Tamarin version 1.13.0
 Maude version 3.5.1
-Git revision: 41bc81379b23681e7057314a5cf66a25c45e1986, branch: canonicalise-subst
-Compiled at: 2026-07-27 16:11:34.947223 UTC
+Git revision: c827ceb2418a7d5390dac6671f01a07f7f0ac087 (with uncommited changes), branch: HEAD
+Compiled at: 2026-09-15 17:34:25.020280498 UTC
 */
 
 end
@@ -1512,14 +1505,14 @@ summary of summaries:
 analyzed: examples/related_work/YubiSecure_KS_STM12/Yubikey_multiset.spthy
 
   output:          examples/related_work/YubiSecure_KS_STM12/Yubikey_multiset.spthy.tmp
-  processing time: 5.53s
+  processing time: 8.50s
   
   transitivity (all-traces): verified (2 steps)
   Login_reachable (exists-trace): verified (8 steps)
   slightly_weaker_invariant (all-traces): verified (419 steps)
   no_replay (all-traces): verified (8 steps)
   injective_correspondance (all-traces): verified (7 steps)
-  Login_invalidates_smaller_counters (all-traces): verified (4 steps)
+  Login_invalidates_smaller_counters (all-traces): verified (1 steps)
 
 ==============================================================================
 */

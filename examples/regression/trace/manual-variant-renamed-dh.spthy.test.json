@@ -1,0 +1,27 @@
+{
+  "tests": [
+    {
+      "name": "renamed-verdicts",
+      "args": [
+        "--prove",
+        "--quit-on-warning"
+      ],
+      "contains": [
+        "witness (exists-trace): verified",
+        "false_safety (all-traces): falsified"
+      ]
+    },
+    {
+      "name": "renamed-added-product-rejection",
+      "args": [
+        "--prove",
+        "-DPRODUCT"
+      ],
+      "exit_code": 1,
+      "contains": [
+        "Unsupported actions added to variants",
+        "Unsupported rule semantics - aborting before proof search."
+      ]
+    }
+  ]
+}

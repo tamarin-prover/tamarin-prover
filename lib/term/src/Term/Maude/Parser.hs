@@ -376,10 +376,13 @@ parseTerm msig = choice
                        | ident == ppMaudeACSym Union      = fAppAC Union   args
                        | ident == ppMaudeACSym NatPlus    = fAppAC NatPlus args
                        | ident == ppMaudeACSym Xor        = fAppAC Xor   args
-                       | BC.isInfixOf "tamPDA" ident      = fAppACfct (parseFunACSym ident) args
-                       | BC.isInfixOf "tamPCA" ident      = fAppACfct (parseFunACSym ident) args
-                       | BC.isInfixOf "tamXDA" ident      = fAppACfct (parseFunACSym ident) args
-                       | BC.isInfixOf "tamXCA" ident      = fAppACfct (parseFunACSym ident) args
+                       -- User-defined AC symbols are encoded as
+                       -- funSymPrefix + privacy + constructability + "A" + ident,
+                       -- so only a prefix match identifies them.
+                       | BC.isPrefixOf "tamPDA" ident     = fAppACfct (parseFunACSym ident) args
+                       | BC.isPrefixOf "tamPCA" ident     = fAppACfct (parseFunACSym ident) args
+                       | BC.isPrefixOf "tamXDA" ident     = fAppACfct (parseFunACSym ident) args
+                       | BC.isPrefixOf "tamXCA" ident     = fAppACfct (parseFunACSym ident) args
                        | ident == ppMaudeCSym  EMap       = fAppC  EMap  args
         appIdent [arg] | ident == "list"                  = fAppList (flattenCons arg)
         appIdent args                                     = fAppNoEq op args

@@ -1,0 +1,5 @@
+// Regression for https://github.com/tamarin-prover/tamarin-prover/issues/908
+theory rseg
+begin
+restriction R1: "All y z. (<y, z> = y) ==> F"
+end

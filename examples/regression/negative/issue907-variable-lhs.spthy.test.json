@@ -1,0 +1,12 @@
+{
+  "tests": [
+    {
+      "name": "issue907-variable-lhs",
+      "exit_code": 1,
+      "contains": [
+        "Not a correct equation"
+      ],
+      "timeout": 60
+    }
+  ]
+}

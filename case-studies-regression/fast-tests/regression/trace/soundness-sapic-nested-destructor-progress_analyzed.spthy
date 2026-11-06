@@ -26,30 +26,12 @@ solve( State_11( ~prog_ ) ▶₀ #t.1 )
         case eventStartedfailure_0_1111
         solve( State_1111( ~prog_, ~prog_1111, x ) ▶₀ #i )
           case inx_0_111
-          solve( State_11( ~prog_ ) ▶₀ #t.4 )
-            case Init
-            solve( State_12( ~prog_ ) ▶₀ #t.4 )
-              case Init
-              solve( State_2( ~prog_ ) ▶₀ #t.4 )
-                case Init
-                solve( (∃ #t. (ProgressTo_1111111( ~prog_1111 ) @ #t))  ∥
-                       (∃ #t. (ProgressTo_1111121( ~prog_1111 ) @ #t)) )
-                  case case_2
-                  solve( State_111112( ~prog_.1, ~prog_1111, x.1 ) ▶₀ #t.4 )
-                    case letydxdbad_2_11111
-                    solve( State_11( ~prog_ ) ▶₀ #t.5 )
-                      case Init
-                      solve( State_12( ~prog_ ) ▶₀ #t.5 )
-                        case Init
-                        solve( State_2( ~prog_ ) ▶₀ #t.5 )
-                          case Init
-                          SOLVED // trace found
-                        qed
-                      qed
-                    qed
-                  qed
-                qed
-              qed
+          solve( (∃ #t. (ProgressTo_1111111( ~prog_1111 ) @ #t))  ∥
+                 (∃ #t. (ProgressTo_1111121( ~prog_1111 ) @ #t)) )
+            case case_2
+            solve( State_111112( ~prog_.1, ~prog_1111, x.1 ) ▶₀ #t.4 )
+              case letydxdbad_2_11111
+              SOLVED // trace found
             qed
           qed
         qed
@@ -81,22 +63,13 @@ solve( State_11( ~prog_ ) ▶₀ #t.1 )
         case eventStartedfailure_0_1111
         solve( State_1111( ~prog_, ~prog_1111, x ) ▶₀ #i )
           case inx_0_111
-          solve( State_11( ~prog_ ) ▶₀ #t.4 )
-            case Init
-            solve( State_12( ~prog_ ) ▶₀ #t.4 )
-              case Init
-              solve( State_2( ~prog_ ) ▶₀ #t.4 )
-                case Init
-                solve( (∃ #t. (ProgressTo_1111111( ~prog_1111 ) @ #t))  ∥
-                       (∃ #t. (ProgressTo_1111121( ~prog_1111 ) @ #t)) )
-                  case case_1
-                  by solve( State_111111( ~prog_.1, ~prog_1111, x.1, y ) ▶₀ #t.4 )
-                next
-                  case case_2
-                  by contradiction /* cyclic */
-                qed
-              qed
-            qed
+          solve( (∃ #t. (ProgressTo_1111111( ~prog_1111 ) @ #t))  ∥
+                 (∃ #t. (ProgressTo_1111121( ~prog_1111 ) @ #t)) )
+            case case_1
+            by solve( State_111111( ~prog_.1, ~prog_1111, x.1, y ) ▶₀ #t.4 )
+          next
+            case case_2
+            by contradiction /* cyclic */
           qed
         qed
       qed
@@ -121,30 +94,12 @@ solve( State_11( ~prog_ ) ▶₀ #t.1 )
         case eventStartedsuccess_0_1211
         solve( State_1211( ~prog_, ~prog_1211, x ) ▶₀ #i )
           case inx_0_121
-          solve( State_11( ~prog_ ) ▶₀ #t.4 )
-            case Init
-            solve( State_12( ~prog_ ) ▶₀ #t.4 )
-              case Init
-              solve( State_2( ~prog_ ) ▶₀ #t.4 )
-                case Init
-                solve( (∃ #t. (ProgressTo_1211111( ~prog_1211 ) @ #t))  ∥
-                       (∃ #t. (ProgressTo_1211121( ~prog_1211 ) @ #t)) )
-                  case case_1
-                  solve( State_121111( ~prog_.1, ~prog_1211, x.1, y ) ▶₀ #t.4 )
-                    case letydcxdcb_9_12111
-                    solve( State_11( ~prog_ ) ▶₀ #t.5 )
-                      case Init
-                      solve( State_12( ~prog_ ) ▶₀ #t.5 )
-                        case Init
-                        solve( State_2( ~prog_ ) ▶₀ #t.5 )
-                          case Init
-                          SOLVED // trace found
-                        qed
-                      qed
-                    qed
-                  qed
-                qed
-              qed
+          solve( (∃ #t. (ProgressTo_1211111( ~prog_1211 ) @ #t))  ∥
+                 (∃ #t. (ProgressTo_1211121( ~prog_1211 ) @ #t)) )
+            case case_1
+            solve( State_121111( ~prog_.1, ~prog_1211, x.1, y ) ▶₀ #t.4 )
+              case letydcxdcb_9_12111
+              SOLVED // trace found
             qed
           qed
         qed
@@ -176,22 +131,13 @@ solve( State_11( ~prog_ ) ▶₀ #t.1 )
         case eventStartedsuccess_0_1211
         solve( State_1211( ~prog_, ~prog_1211, x ) ▶₀ #i )
           case inx_0_121
-          solve( State_11( ~prog_ ) ▶₀ #t.4 )
-            case Init
-            solve( State_12( ~prog_ ) ▶₀ #t.4 )
-              case Init
-              solve( State_2( ~prog_ ) ▶₀ #t.4 )
-                case Init
-                solve( (∃ #t. (ProgressTo_1211111( ~prog_1211 ) @ #t))  ∥
-                       (∃ #t. (ProgressTo_1211121( ~prog_1211 ) @ #t)) )
-                  case case_1
-                  by contradiction /* cyclic */
-                next
-                  case case_2
-                  by solve( State_121112( ~prog_.1, ~prog_1211, x.1 ) ▶₀ #t.4 )
-                qed
-              qed
-            qed
+          solve( (∃ #t. (ProgressTo_1211111( ~prog_1211 ) @ #t))  ∥
+                 (∃ #t. (ProgressTo_1211121( ~prog_1211 ) @ #t)) )
+            case case_1
+            by contradiction /* cyclic */
+          next
+            case case_2
+            by solve( State_121112( ~prog_.1, ~prog_1211, x.1 ) ▶₀ #t.4 )
           qed
         qed
       qed
@@ -226,34 +172,16 @@ solve( State_211( ~prog_, ~prog_211, c('a') ) ▶₀ #i )
       case Init
       solve( State_2( ~prog_ ) ▶₀ #t.3 )
         case Init
-        solve( State_11( ~prog_ ) ▶₀ #t.3 )
-          case Init
-          solve( State_12( ~prog_ ) ▶₀ #t.3 )
-            case Init
-            solve( State_2( ~prog_ ) ▶₀ #t.3 )
-              case Init
-              solve( (∃ #t. (ProgressTo_211111( ~prog_211 ) @ #t))  ∥
-                     (∃ #t. (ProgressTo_21112( ~prog_211 ) @ #t)) )
-                case case_2
-                solve( ProgressTo_21112( ~prog_211 ) @ #t.3 )
-                  case letydxdbad_6_2111
-                  solve( Let_211102( 'bad', ~prog_.1, ~prog_211, x, destructor ) ▶₀ #t.3 )
-                    case letydxdbad_3_2111
-                    solve( State_11( ~prog_ ) ▶₀ #t.4 )
-                      case Init
-                      solve( State_12( ~prog_ ) ▶₀ #t.4 )
-                        case Init
-                        solve( State_2( ~prog_ ) ▶₀ #t.4 )
-                          case Init
-                          solve( !KU( c('a') ) @ #vk )
-                            case c_c
-                            SOLVED // trace found
-                          qed
-                        qed
-                      qed
-                    qed
-                  qed
-                qed
+        solve( (∃ #t. (ProgressTo_211111( ~prog_211 ) @ #t))  ∥
+               (∃ #t. (ProgressTo_21112( ~prog_211 ) @ #t)) )
+          case case_2
+          solve( ProgressTo_21112( ~prog_211 ) @ #t.3 )
+            case letydxdbad_6_2111
+            solve( Let_211102( 'bad', ~prog_.1, ~prog_211, x, destructor ) ▶₀ #t.3 )
+              case letydxdbad_3_2111
+              solve( !KU( c('a') ) @ #vk )
+                case c_c
+                SOLVED // trace found
               qed
             qed
           qed
@@ -1249,8 +1177,8 @@ restriction progressInit:
 Generated from:
 Tamarin version 1.13.0
 Maude version 3.5.1
-Git revision: 5a753a172c7984e9403bc650a37a8223367bc1c5, branch: sapic-destructors
-Compiled at: 2026-09-25 19:30:59.558380567 UTC
+Git revision: bca4824b93cdde009189461429942adc276f87ca (with uncommited changes), branch: sapic-destructors
+Compiled at: 2026-11-06 16:23:09.627024669 UTC
 */
 
 end
@@ -1262,14 +1190,14 @@ summary of summaries:
 analyzed: examples/regression/trace/soundness-sapic-nested-destructor-progress.spthy
 
   output:          examples/regression/trace/soundness-sapic-nested-destructor-progress.spthy.tmp
-  processing time: 0.80s
+  processing time: 0.63s
   
-  failure_reachable (exists-trace): verified (15 steps)
-  failure_progress (all-traces): verified (12 steps)
-  success_reachable (exists-trace): verified (15 steps)
-  success_progress (all-traces): verified (12 steps)
+  failure_reachable (exists-trace): verified (9 steps)
+  failure_progress (all-traces): verified (9 steps)
+  success_reachable (exists-trace): verified (9 steps)
+  success_progress (all-traces): verified (9 steps)
   result_preserved (all-traces): verified (3 steps)
-  omitted_reachable (exists-trace): verified (16 steps)
+  omitted_reachable (exists-trace): verified (10 steps)
   no_wrong (all-traces): verified (8 steps)
 
 ==============================================================================

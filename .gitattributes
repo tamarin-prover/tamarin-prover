@@ -1,0 +1,15 @@
+* text=auto
+
+*.sh        text eol=lf
+*.bashrc    text eol=lf
+*.py        text eol=lf
+*.oracle    text eol=lf
+oracle-*    text eol=lf
+Makefile    text eol=lf
+Dockerfile* text eol=lf
+
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.ico  binary
+*.xcf  binary

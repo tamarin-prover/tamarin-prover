@@ -240,9 +240,9 @@ theory inFile = do
         then do
             fileArgs <- stringLiteral <* symbol_ "begin"
             addItems inFile (set thyInFile (fromMaybe "" inFile) 
-              $ set thyName thyId (modify thyItems (++ [ConfigBlockItem fileArgs]) defThy)) <* symbol_ "end"
+              $ set thyName thyId (modify thyItems (++ [ConfigBlockItem fileArgs]) defThy)) <* reserved "end"
         else do
-            addItems inFile (set thyInFile (fromMaybe "" inFile) $ set thyName thyId defThy) <* symbol_ "end"
+            addItems inFile (set thyInFile (fromMaybe "" inFile) $ set thyName thyId defThy) <* reserved "end"
   where
     addItems :: Maybe FilePath -> OpenTheory -> Parser OpenTheory
     addItems inFile0 thy = asum
@@ -405,9 +405,9 @@ diffTheory inFile = do
     if block == "configuration"
         then do
             fileArgs <- stringLiteral <* symbol_ "begin"
-            addItems inFile (set diffThyInFile (fromMaybe "" inFile) $ set diffThyName thyId (modify diffThyItems (++ [DiffConfigBlockItem fileArgs]) (defaultOpenDiffTheory ("diff" `S.member` flags0)))) <* symbol_ "end"
+            addItems inFile (set diffThyInFile (fromMaybe "" inFile) $ set diffThyName thyId (modify diffThyItems (++ [DiffConfigBlockItem fileArgs]) (defaultOpenDiffTheory ("diff" `S.member` flags0)))) <* reserved "end"
         else do
-            addItems inFile (set diffThyInFile (fromMaybe "" inFile) $ set diffThyName thyId (defaultOpenDiffTheory ("diff" `S.member` flags0))) <* symbol "end"
+            addItems inFile (set diffThyInFile (fromMaybe "" inFile) $ set diffThyName thyId (defaultOpenDiffTheory ("diff" `S.member` flags0))) <* reserved "end"
   where
     addItems :: Maybe FilePath -> OpenDiffTheory -> Parser OpenDiffTheory
     addItems inFile0 thy = asum

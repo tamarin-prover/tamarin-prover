@@ -1,0 +1,42 @@
+{
+  "tests": [
+    {
+      "name": "default-rejection",
+      "args": [
+        "--diff",
+        "--prove"
+      ],
+      "exit_code": 1,
+      "contains": [
+        "Unsupported multiplication outside exponents",
+        "Rule LeftProduct has products outside exponents:",
+        "Rule RightProduct has products outside exponents:"
+      ]
+    },
+    {
+      "name": "strict-rejection",
+      "args": [
+        "--diff",
+        "--prove",
+        "--quit-on-warning"
+      ],
+      "exit_code": 1,
+      "contains": [
+        "Unsupported multiplication outside exponents",
+        "Rule LeftProduct has products outside exponents:",
+        "Rule RightProduct has products outside exponents:"
+      ]
+    },
+    {
+      "name": "exponents-supported",
+      "args": [
+        "--diff",
+        "-DEXPONENTS",
+        "--quit-on-warning"
+      ],
+      "contains": [
+        "All wellformedness checks were successful."
+      ]
+    }
+  ]
+}

@@ -1,0 +1,31 @@
+theory DiffSideProducts
+begin
+builtins: diffie-hellman, hashing
+
+// The parent rules contain no products. Validation must inspect both explicit
+// sides, after expanding their macros. Otherwise these false absence claims
+// verify because multiplication outside exponents does not cancel here.
+// The control uses exponent terms directly, which remain supported.
+macros: value(x,y) = x*y
+
+#ifdef EXPONENTS
+rule LeftProduct: [In(x),In(y)] --> []
+left rule LeftProduct: [In(x),In(y)] --[LeftValue('g'^(x*y))]-> []
+right rule LeftProduct: [In(x),In(y)] --> []
+
+rule RightProduct: [In(x),In(y)] --> []
+left rule RightProduct: [In(x),In(y)] --> []
+right rule RightProduct: [In(x),In(y)] --[RightValue(h('g'^(x*y)))]-> []
+#else
+rule LeftProduct: [In(x),In(y)] --> []
+left rule LeftProduct: [In(x),In(y)] --[LeftValue(value(x,y))]-> []
+right rule LeftProduct: [In(x),In(y)] --> []
+
+rule RightProduct: [In(x),In(y)] --> []
+left rule RightProduct: [In(x),In(y)] --> []
+right rule RightProduct: [In(x),In(y)] --[RightValue(h(value(x,y)))]-> []
+#endif
+
+lemma no_left_unit [left]: "not (Ex #i. LeftValue(1)@i)"
+lemma no_right_unit [right]: "not (Ex #i. RightValue(h(1))@i)"
+end

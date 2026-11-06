@@ -199,7 +199,20 @@ testsNorm hnd = TestLabel "Tests for normalization" $ TestList
 
 testsTerm :: Test
 testsTerm = TestLabel "Tests for Terms" $ TestList
-    [ uncurry (testEqual "Terms: propSubtermReplace") (propSubtermReplace bigTerm [1,0]) ]
+    [ uncurry (testEqual "Terms: propSubtermReplace") (propSubtermReplace bigTerm [1,0])
+    , testEqual "Freshness key retains sharing and sorts, discards hints"
+        (canonicalizeFreshnessNoAC [LVar "x" LSortMsg 8, LVar "y" LSortFresh 3,
+                                   LVar "x" LSortMsg 8])
+        [LVar "" LSortMsg 0, LVar "" LSortFresh 1, LVar "" LSortMsg 0]
+    , testTrue "Freshness equality ignores original hints and indices"
+        (eqModuloFreshnessNoAC [LVar "x" LSortMsg 8, LVar "x" LSortMsg 8]
+                              [LVar "z" LSortMsg 2, LVar "z" LSortMsg 2])
+    , testTrue "Freshness equality distinguishes sharing and sorts"
+        (not (eqModuloFreshnessNoAC [LVar "x" LSortMsg 8, LVar "x" LSortMsg 8]
+                                   [LVar "x" LSortMsg 8, LVar "y" LSortMsg 8]) &&
+         not (eqModuloFreshnessNoAC (LVar "x" LSortMsg 8)
+                                   (LVar "x" LSortFresh 8)))
+    ]
 
 propSubtermReplace :: Ord a => Term a -> Position -> (Term a, Term a)
 propSubtermReplace t p = (t,(t `replacePos` (t `atPos` p,p)))

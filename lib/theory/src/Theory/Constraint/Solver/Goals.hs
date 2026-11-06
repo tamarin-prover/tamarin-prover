@@ -40,6 +40,7 @@ import           Control.Monad.State                     (gets)
 
 import           Extension.Data.Label                    as L
 
+import qualified Theory.Constraint.System.StoredFormulas as Stored
 import           Theory.Constraint.Solver.AnnotatedGoals
 import           Theory.Constraint.Solver.Contradictions (substCreatesNonNormalTerms)
 import           Theory.Constraint.Solver.Reduction
@@ -119,7 +120,7 @@ openGoals ctxt sys = do
   where
     existingDeps = rawLessRel sys
     hasKUGuards  =
-        any ((KUFact `elem`) . guardFactTags) $ S.toList $ get sFormulas sys
+        any ((KUFact `elem`) . guardFactTags) $ Stored.toList $ get sFormulas sys
 
     checkTermLits :: (LSort -> Bool) -> LNTerm -> Bool
     checkTermLits p =

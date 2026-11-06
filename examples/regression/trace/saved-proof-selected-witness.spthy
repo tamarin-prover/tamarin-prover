@@ -1,0 +1,27 @@
+theory SavedProofSelectedWitness
+begin
+
+rule A:
+  [ ] --> [ !Choice('new') ]
+
+rule B:
+  [ ] --> [ !Choice('saved') ]
+
+rule Use:
+  [ !Choice(x) ] --[ Chosen(x) ]-> [ ]
+
+// The saved witness is in B, but completing A could find a different one.
+// --prove should retain B and omit A in single-trace modes.
+// --stop-on-trace=none should still complete both cases.
+lemma choose:
+  exists-trace "Ex x #i. Chosen(x)@i"
+simplify
+solve( !Choice( x ) ▶₀ #i )
+  case A
+  by sorry
+next
+  case B
+  SOLVED // trace found
+qed
+
+end

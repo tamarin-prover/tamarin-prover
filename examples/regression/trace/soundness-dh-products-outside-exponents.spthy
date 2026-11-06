@@ -1,0 +1,45 @@
+theory SoundnessDHProductsOutsideExponents
+begin
+
+builtins: diffie-hellman, hashing
+
+// The old compiler read products outside exponents modulo AC only, missing
+// the instances where x = 'a' and y = inv('a') make x*y equal to 1. Reject
+// these products in premises, actions and conclusions, even under other symbols.
+rule Product:
+  [ In(x), In(y) ] --[ Product(x*y) ]-> []
+
+rule NestedProduct:
+  [ In(x), In(y) ] --[ NestedProduct(h(x*y)) ]-> []
+
+rule StoreProduct:
+  [ In(x), In(y) ] --> [ Stored(x*y) ]
+
+rule UseUnit:
+  [ Stored(1) ] --[ UsedUnit() ]-> []
+
+// The same missing instances affect matching premises: x = y = 1 should
+// match either stored value. Inputs make both variables derivable, so these
+// false proofs used to pass even with --quit-on-warning.
+rule SeedUnit:
+  [] --> [ Unit(1), NestedUnit(h(1)) ]
+
+rule ProductPremise:
+  [ Unit(x*y), In(x), In(y) ] --[ MatchedUnit() ]-> []
+
+rule NestedProductPremise:
+  [ NestedUnit(h(x*y)), In(x), In(y) ] --[ MatchedNestedUnit() ]-> []
+
+// A product in an exponent is normalised by variant computation and is
+// supported; this rule must not be reported.
+rule Power:
+  [ In(x), In(y) ] --[ Power('g'^(x*y)) ]-> []
+
+lemma product_unit_never: "All #i. Product(1)@i ==> F"
+lemma nested_unit_never: "All #i. NestedProduct(h(1))@i ==> F"
+lemma stored_unit_never: "All #i. UsedUnit()@i ==> F"
+lemma matched_unit_never: "All #i. MatchedUnit()@i ==> F"
+lemma matched_nested_unit_never: "All #i. MatchedNestedUnit()@i ==> F"
+lemma power_neutral_exists: exists-trace "Ex #i. Power('g')@i"
+
+end

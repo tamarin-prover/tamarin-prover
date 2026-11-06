@@ -11619,90 +11619,6 @@ next
                 next
                   case Wrap_case_31
                   by contradiction /* from formulas */
-                next
-                  case Wrap_case_32
-                  by contradiction /* from formulas */
-                next
-                  case Wrap_case_33
-                  by contradiction /* from formulas */
-                next
-                  case Wrap_case_34
-                  by contradiction /* from formulas */
-                next
-                  case Wrap_case_35
-                  by contradiction /* from formulas */
-                next
-                  case Wrap_case_36
-                  by contradiction /* from formulas */
-                next
-                  case Wrap_case_37
-                  by contradiction /* from formulas */
-                next
-                  case Wrap_case_38
-                  by contradiction /* from formulas */
-                next
-                  case Wrap_case_39
-                  by contradiction /* from formulas */
-                next
-                  case Wrap_case_40
-                  by contradiction /* from formulas */
-                next
-                  case Wrap_case_41
-                  by contradiction /* from formulas */
-                next
-                  case Wrap_case_42
-                  by contradiction /* from formulas */
-                next
-                  case Wrap_case_43
-                  by contradiction /* from formulas */
-                next
-                  case Wrap_case_44
-                  by contradiction /* from formulas */
-                next
-                  case Wrap_case_45
-                  by contradiction /* from formulas */
-                next
-                  case Wrap_case_46
-                  by contradiction /* from formulas */
-                next
-                  case Wrap_case_47
-                  by contradiction /* from formulas */
-                next
-                  case Wrap_case_48
-                  by contradiction /* from formulas */
-                next
-                  case Wrap_case_49
-                  by contradiction /* from formulas */
-                next
-                  case Wrap_case_50
-                  by contradiction /* from formulas */
-                next
-                  case Wrap_case_51
-                  by contradiction /* from formulas */
-                next
-                  case Wrap_case_52
-                  by contradiction /* from formulas */
-                next
-                  case Wrap_case_53
-                  by contradiction /* from formulas */
-                next
-                  case Wrap_case_54
-                  by contradiction /* from formulas */
-                next
-                  case Wrap_case_55
-                  by contradiction /* from formulas */
-                next
-                  case Wrap_case_56
-                  by contradiction /* from formulas */
-                next
-                  case Wrap_case_57
-                  by contradiction /* from formulas */
-                next
-                  case Wrap_case_58
-                  by contradiction /* from formulas */
-                next
-                  case Wrap_case_59
-                  by contradiction /* from formulas */
                 qed
               qed
             qed
@@ -11807,90 +11723,6 @@ next
                   by contradiction /* from formulas */
                 next
                   case Wrap_case_31
-                  by contradiction /* from formulas */
-                next
-                  case Wrap_case_32
-                  by contradiction /* from formulas */
-                next
-                  case Wrap_case_33
-                  by contradiction /* from formulas */
-                next
-                  case Wrap_case_34
-                  by contradiction /* from formulas */
-                next
-                  case Wrap_case_35
-                  by contradiction /* from formulas */
-                next
-                  case Wrap_case_36
-                  by contradiction /* from formulas */
-                next
-                  case Wrap_case_37
-                  by contradiction /* from formulas */
-                next
-                  case Wrap_case_38
-                  by contradiction /* from formulas */
-                next
-                  case Wrap_case_39
-                  by contradiction /* from formulas */
-                next
-                  case Wrap_case_40
-                  by contradiction /* from formulas */
-                next
-                  case Wrap_case_41
-                  by contradiction /* from formulas */
-                next
-                  case Wrap_case_42
-                  by contradiction /* from formulas */
-                next
-                  case Wrap_case_43
-                  by contradiction /* from formulas */
-                next
-                  case Wrap_case_44
-                  by contradiction /* from formulas */
-                next
-                  case Wrap_case_45
-                  by contradiction /* from formulas */
-                next
-                  case Wrap_case_46
-                  by contradiction /* from formulas */
-                next
-                  case Wrap_case_47
-                  by contradiction /* from formulas */
-                next
-                  case Wrap_case_48
-                  by contradiction /* from formulas */
-                next
-                  case Wrap_case_49
-                  by contradiction /* from formulas */
-                next
-                  case Wrap_case_50
-                  by contradiction /* from formulas */
-                next
-                  case Wrap_case_51
-                  by contradiction /* from formulas */
-                next
-                  case Wrap_case_52
-                  by contradiction /* from formulas */
-                next
-                  case Wrap_case_53
-                  by contradiction /* from formulas */
-                next
-                  case Wrap_case_54
-                  by contradiction /* from formulas */
-                next
-                  case Wrap_case_55
-                  by contradiction /* from formulas */
-                next
-                  case Wrap_case_56
-                  by contradiction /* from formulas */
-                next
-                  case Wrap_case_57
-                  by contradiction /* from formulas */
-                next
-                  case Wrap_case_58
-                  by contradiction /* from formulas */
-                next
-                  case Wrap_case_59
                   by contradiction /* from formulas */
                 qed
               qed
@@ -13121,8 +12953,8 @@ qed
 Generated from:
 Tamarin version 1.13.0
 Maude version 3.5.1
-Git revision: 41bc81379b23681e7057314a5cf66a25c45e1986, branch: canonicalise-subst
-Compiled at: 2026-07-27 16:11:34.947223 UTC
+Git revision: a74473b29ed4a598fb06f7461c9c72e9e3c1c4d8, branch: 881-normalisation
+Compiled at: 2026-09-15 13:52:02.61164042 UTC
 */
 
 end
@@ -13134,13 +12966,13 @@ summary of summaries:
 analyzed: examples/csf19-wrapping/siv.spthy
 
   output:          examples/csf19-wrapping/siv.spthy.tmp
-  processing time: 38.77s
+  processing time: 67.94s
   
   origin (all-traces): verified (2086 steps)
   Counter_Monotonicity (all-traces): verified (888 steps)
   IV_Uniqueness (all-traces): verified (12 steps)
   Key_UsageImpliesInitialization (all-traces): verified (86 steps)
-  Key_IntegrityAndConfidentiality (all-traces): verified (607 steps)
+  Key_IntegrityAndConfidentiality (all-traces): verified (551 steps)
   Key_UniqueLevelandHandle (all-traces): verified (170 steps)
 
 ==============================================================================

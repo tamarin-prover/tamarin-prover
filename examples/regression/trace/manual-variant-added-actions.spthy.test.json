@@ -1,0 +1,17 @@
+{
+  "tests": [
+    {
+      "name": "default-rejection",
+      "args": [
+        "--prove"
+      ],
+      "exit_code": 1,
+      "contains": [
+        "Unsupported actions added to variants",
+        "Rule Dec___VARIANT_1 adds actions whose instances can leave normal form:",
+        "Rule Xor___VARIANT_1 adds actions whose instances can leave normal form:",
+        "Rule Exp___VARIANT_1 adds actions whose instances can leave normal form:"
+      ]
+    }
+  ]
+}

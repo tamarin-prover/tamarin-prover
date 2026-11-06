@@ -1,0 +1,27 @@
+theory ManualVariantRenamedDH begin
+builtins: diffie-hellman
+#ifdef PRODUCT
+macros: annotation(x,y) = x*y
+#else
+macros: annotation(x,y) = x
+#endif
+// The members rename the computed variables (y.8 and z.9). Products that the
+// computed variants introduce in the original action are supported; only a
+// product in an added annotation (with PRODUCT) is rejected.
+rule Power: [In(x)] --[Power(('g'^x)^'b')]-> []
+variants
+rule (modulo AC) Power___VARIANT_1:
+  [In(y.8)] --[Power('g'^('b'*y.8)), Annotated(), Unsupported(annotation(y.8,$extra))]-> [],
+rule (modulo AC) Power___VARIANT_2:
+  [In(inv('b'))] --[Power('g'), Annotated()]-> [],
+rule (modulo AC) Power___VARIANT_3:
+  [In(inv(('b'*y.8)))] --[Power('g'^inv(y.8)), Annotated()]-> [],
+rule (modulo AC) Power___VARIANT_4:
+  [In(1)] --[Power('g'^'b'), Annotated()]-> [],
+rule (modulo AC) Power___VARIANT_5:
+  [In(y.8*inv('b'))] --[Power('g'^y.8), Annotated()]-> [],
+rule (modulo AC) Power___VARIANT_6:
+  [In(y.8*inv(('b'*z.9)))] --[Power('g'^(y.8*inv(z.9))), Annotated()]-> []
+lemma witness: exists-trace "Ex x #i. Power(x)@i & Annotated()@i"
+lemma false_safety: "All x #i. Power(x)@i ==> F"
+end

@@ -1,0 +1,13 @@
+{
+  "tests": [
+    {
+      "name": "partial-evaluation",
+      "args": [
+        "--quit-on-warning"
+      ],
+      "checks": [
+        "partial-evaluation"
+      ]
+    }
+  ]
+}
