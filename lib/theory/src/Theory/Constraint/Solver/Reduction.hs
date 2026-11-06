@@ -48,6 +48,7 @@ module Theory.Constraint.Solver.Reduction (
   , reducibleFormula
 
   -- ** Goal management
+  , combineGoalStatus
   , markGoalAsSolved
   , removeSolvedSplitGoals
 

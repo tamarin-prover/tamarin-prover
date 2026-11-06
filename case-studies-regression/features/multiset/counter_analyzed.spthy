@@ -49,9 +49,6 @@ next
     solve( Counter( ~s, x ) ▶₀ #i )
       case Create
       solve( Counter( ~s, y ) ▶₀ #j )
-        case Create
-        by contradiction /* cyclic */
-      next
         case Inc
         by contradiction /* from formulas */
       qed
@@ -70,9 +67,6 @@ next
         next
           case case_3
           solve( Counter( ~s, y ) ▶₀ #j )
-            case Create
-            by contradiction /* from formulas */
-          next
             case Inc
             solve( (last(#i))  ∥ (∃ z. ((z++x.1) = ('1'++x)))  ∥
                    (∃ z. (('1'++x++z) = x.1))  ∥ (('1'++x) = x.1) )
@@ -80,16 +74,10 @@ next
               by contradiction /* from formulas */
             next
               case case_2_case_1
-              by contradiction /* non-injective facts (#vr.1,#i,#j) */
-            next
-              case case_2_case_2
-              by contradiction /* cyclic */
-            next
-              case case_2_case_3
               by contradiction /* from formulas */
             next
-              case case_2_case_4
-              by contradiction /* non-injective facts (#vr.1,#i,#j) */
+              case case_2_case_2
+              by contradiction /* from formulas */
             next
               case case_3
               by contradiction /* from formulas */
@@ -104,9 +92,6 @@ next
   next
     case case_2
     solve( Counter( ~s, x ) ▶₀ #i )
-      case Create
-      by contradiction /* non-injective facts (#vr,#j,#i) */
-    next
       case Inc
       solve( (last(#j))  ∥ (∃ z. ((x++z) = y))  ∥ (∃ z. ((y++z) = x))  ∥
              (y = x) )
@@ -114,7 +99,7 @@ next
         by contradiction /* from formulas */
       next
         case case_2
-        by contradiction /* non-injective facts (#vr,#j,#i) */
+        by contradiction /* from formulas */
       next
         case case_3
         by contradiction /* from formulas */
@@ -265,8 +250,8 @@ qed
 Generated from:
 Tamarin version 1.13.0
 Maude version 3.5.1
-Git revision: 41bc81379b23681e7057314a5cf66a25c45e1986, branch: canonicalise-subst
-Compiled at: 2026-07-27 16:11:34.947223 UTC
+Git revision: 5df53af2911dfd01204a9142e8237672e5d05dae (with uncommited changes), branch: msr-proof-correctness
+Compiled at: 2026-09-25 19:18:42.692960904 UTC
 */
 
 end
@@ -275,12 +260,12 @@ end
 ==============================================================================
 summary of summaries:
 
-analyzed: examples/features//multiset/counter.spthy
+analyzed: examples/features/multiset/counter.spthy
 
-  output:          examples/features//multiset/counter.spthy.tmp
-  processing time: 0.11s
+  output:          examples/features/multiset/counter.spthy.tmp
+  processing time: 0.72s
   
-  counters_linear_order (all-traces): verified (31 steps)
+  counters_linear_order (all-traces): verified (26 steps)
   counter_start (all-traces): verified (7 steps)
   counter_increases (all-traces): verified (5 steps)
   lesser_senc_secret (all-traces): verified (18 steps)

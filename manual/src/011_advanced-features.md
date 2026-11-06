@@ -770,6 +770,16 @@ In the following picture one can see the subterm with the reducible operator `fs
 ![Subterms](../images/YellowSubterms.png "Subterms"){width=100%}\
 
 
+A positive subterm constraint with an unresolved message variable on its right,
+such as `n << x`, can also leave a branch incomplete. Even if the adversary may
+choose `x`, the solver must establish that a derivable choice contains `n`.
+For example, if a fresh `n` is never sent, receiving an arbitrary `x` does not
+establish a trace satisfying `n << x`. Such a branch is not a witness and is
+reported as incomplete. Further constraints that determine `x` can still allow
+the subterm constraint to be solved normally. The solver can also finish an
+unconstrained message variable when a public containing witness can be built
+without violating other constraints or triggering additional restriction guards.
+
 #### Subterm Store
 
 Subterms are solved by recursively deconstructing the right side which basically boils down to replacing
