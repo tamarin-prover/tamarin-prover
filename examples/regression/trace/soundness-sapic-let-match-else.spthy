@@ -1,0 +1,10 @@
+theory SoundnessSapicLetMatchElse
+begin
+/* #939: =y refers to the input, including in the failure restriction. */
+process: in(y); in(m); let <x, =y> = m in event Then(x,y) else event Else(m,y)
+lemma different_pair_fails: exists-trace "Ex #i. Else(<'a','b'>,'c')@i"
+lemma matching_pair_succeeds: exists-trace "Ex #i. Then('a','b')@i"
+lemma nonpair_fails: exists-trace "Ex #i. Else('a','b')@i"
+lemma matching_pair_never_fails: "All a b #i. Else(<a,b>,b)@i ==> F"
+lemma else_never_pair: "All a b y #i. Else(<a,b>,y)@i ==> F"
+end

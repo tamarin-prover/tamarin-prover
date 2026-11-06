@@ -31,6 +31,8 @@ module Sapic.Basetranslation (
    , TransFComb
 ) where
 
+import qualified Data.List.NonEmpty as NE
+
 import Control.Exception
 import Control.Monad.Catch
 import Data.Set hiding (map, (\\))
@@ -249,32 +251,40 @@ baseTransComb c an p tildex
                      , tildex, Just tildex )
                 else
                     throw $ WFUnbound (vars_f `difference` tildex)
-    | Let t1' t2' _ <- c,  -- match vars are ignored in the translation, as they are bound in the def_state
-      elsBranch <- an.elseBranch
-      =
-        let t1or = toLNTerm t1' in
-        let (t1, t2, freevars) =
-              case an.destructorEquation of
-                Nothing -> (t1or, toLNTerm t2', freeset t1or)
-                Just (tl1,tl2) -> (tl1, tl2, freeset tl1 `difference` tildex)
-        in
-        let fa = Conn Imp (Ato (EqE (fmapTerm (fmap Free) t1) (fmapTerm (fmap Free) t2))) (TF False) in
-        let tildexl =  freeset t1or `union` tildex in
-        let faN = fold (hinted forAll) fa freevars in
-        let pos = p++[1] in
-        if elsBranch then
-          ([
-              ([def_state], [], [FLet pos t2 tildex], []),
-              ([FLet pos t1 tildex], [], [def_state1 tildexl], []),
-              ([FLet pos t2 tildex], [] , [def_state2 tildex], [faN])
-           ],
-            tildexl, Just tildex)
-        else
-          ([
-              ([def_state], [], [FLet pos t2 tildex], []),
-              ([FLet pos t1 tildex], [], [def_state1 tildexl], [])
-           ],
-            tildexl, Nothing)
+    | Let lhs rhs _ <- c =
+        let resultVars = freeset (toLNTerm lhs) `union` tildex
+            stages = case an.letPlan of
+              [] -> [LetStage (toLNTerm rhs) ((toLNTerm lhs, Nothing) NE.:| []) resultVars]
+              plan -> plan
+            stagePos = letStagePosition p
+            -- Backwards liveness removes only generated stage results. Caller
+            -- variables survive every boundary, including failure/progress.
+            -- Keep the current input live too: failure restrictions refer to it.
+            -- Pattern variables are bound here, already caller variables,
+            -- or equation locals that never enter the carried bindings.
+            liveBefore (LetStage input _ bound) liveAfter =
+              freeset input `union` (liveAfter `difference` bound)
+            liveSets = scanr liveBefore resultVars stages
+            liveStages = zip stages (tail liveSets)
+            emit _ _ [] = []
+            emit i vars ((LetStage input alternatives bound, liveAfter) : rest) =
+              let nextVars = tildex `union` ((vars `union` bound) `intersection` liveAfter)
+                  -- A reduct replaces the next stage's input. Its variables
+                  -- are bound by the alternative's pattern.
+                  destination reduct = case rest of
+                    [] -> def_state1 resultVars
+                    (LetStage nextInput _ _, _) : _ ->
+                      FLet (stagePos (i+1)) (fromMaybe nextInput reduct) nextVars
+                  successes = [([FLet (stagePos i) patternTerm vars], [], [destination reduct], [])
+                              | (patternTerm, reduct) <- NE.toList alternatives]
+                  failures = [([FLet (stagePos i) input vars], [], [def_state2 tildex],
+                               map (patternFailureFormula vars input . fst) $ NE.toList alternatives) | an.elseBranch]
+              in successes ++ failures ++ emit (i+1) nextVars rest
+            start = case stages of
+              LetStage input _ _ : _ -> [([def_state], [], [FLet (stagePos 0) input tildex], [])]
+              [] -> []
+        in (start ++ emit 0 tildex liveStages, resultVars,
+            if an.elseBranch then Just tildex else Nothing)
 
     -- Pure cell translation
     | Lookup t' v' <- c,  True <- an.pureState,  (Just (AnVar vs)) <- an.unlock,
@@ -306,11 +316,22 @@ baseTransComb c an p tildex
         freeset = fromList . frees
 
 
+-- | Require the input to match no instance of the pattern: forall x. pattern =
+-- input ==> false. Quantify only pattern variables not already bound at this
+-- stage; existing bindings stay fixed. A failure rule includes this restriction
+-- for every alternative, so it can run only when none of them matches.
+patternFailureFormula :: Set LVar -> LNTerm -> LNTerm -> SyntacticLNFormula
+patternFailureFormula bound input patternTerm =
+    fold (hinted forAll)
+      (Conn Imp (Ato (EqE (fmapTerm (fmap Free) patternTerm)
+                         (fmapTerm (fmap Free) input))) (TF False))
+      (fromList (frees patternTerm) `difference` bound)
+
 -- | @baseInit@ provides the initial rule that is used to create the first
 -- linear statefact. An additional restriction on InitEmpty makes sure it can
 -- only be used once.
 baseInit :: LProcess ann -> ([AnnotatedRule ann], Set a)
-baseInit anP = ([AnnotatedRule (Just "Init") anP (Right InitPosition) l a r [] 0],empty)
+baseInit anP = ([AnnotatedRule (Just "Init") anP (Right InitPosition) l a r [] False 0],empty)
   where
         l = []
         a = [InitEmpty ]
