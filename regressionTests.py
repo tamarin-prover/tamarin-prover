@@ -617,7 +617,7 @@ def getArguments():
 	
 
 	parser.add_argument("--command-tests-only", nargs="*", metavar="FILE", help="Run only command checks (all sidecars, or the specified .spthy.test.json files)")
-	parser.add_argument("--tamarin", default=os.environ.get("TAMARIN", "tamarin-prover"), help="Tamarin executable (default: TAMARIN environment variable or tamarin-prover)")
+	parser.add_argument("--tamarin", default=os.environ.get("TAMARIN"), help="Tamarin executable (default: TAMARIN environment variable or tamarin-prover in the directory reported by 'stack path --local-bin')")
 
 	## save the settings ##
 	global settings
@@ -650,6 +650,10 @@ def main():
 		output = subprocess.check_output("stack install", shell=True, stderr=subprocess.STDOUT).decode("utf-8")
 		logging.debug(output)
 
+	if settings.tamarin is None:
+		local_bin = subprocess.check_output(["stack", "path", "--local-bin"], text=True).strip()
+		executable = "tamarin-prover.exe" if os.name == "nt" else "tamarin-prover"
+		settings.tamarin = os.path.join(local_bin, executable)
 	settings.tamarin = shutil.which(settings.tamarin) or settings.tamarin
 	command_tests_only = settings.command_tests_only is not None
 
