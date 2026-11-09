@@ -49,6 +49,7 @@ data CtxtStRule = CtxtStRule LNTerm StRhs
 rRuleToCtxtStRule :: RRule LNTerm -> Maybe CtxtStRule
 rRuleToCtxtStRule (lhs `RRule` rhs)
   | Lit _ <- viewTerm lhs = Nothing  -- e.g. "x = c" is not a valid rewrite rule
+  | containsPrivate rhs   = Nothing  -- private function symbols are disallowed on the right hand side
   | frees rhs == []       = Just $ CtxtStRule lhs (StRhs (constantPositions lhs) rhs)
   | otherwise       = do
                          sbtms <- findAllSubterms lhs rhs
