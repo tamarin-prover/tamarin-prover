@@ -1,0 +1,23 @@
+{
+  "tests": [
+    {
+      "name": "induction-verdicts",
+      "args": ["--prove", "--quit-on-warning"],
+      "contains": [
+        "false_direct (all-traces): falsified - found trace",
+        "false_induction (all-traces): falsified - found trace",
+        "true_direct (all-traces): verified",
+        "true_induction (all-traces): verified",
+        "impossible (exists-trace): falsified - no trace found",
+        "possible (exists-trace): verified",
+        "action_conjunction (all-traces): verified",
+        "action_conjunction_induction (all-traces): verified"
+      ]
+    },
+    {
+      "name": "induction-proof-replay",
+      "args": ["--quit-on-warning"],
+      "checks": ["roundtrip"]
+    }
+  ]
+}

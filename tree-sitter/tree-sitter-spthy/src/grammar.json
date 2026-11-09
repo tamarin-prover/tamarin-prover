@@ -4516,6 +4516,10 @@
         {
           "type": "STRING",
           "value": "ATTACK"
+        },
+        {
+          "type": "STRING",
+          "value": "UNFINISHABLE"
         }
       ]
     },
