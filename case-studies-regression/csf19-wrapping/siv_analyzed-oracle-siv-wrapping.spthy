@@ -7924,9 +7924,6 @@ next
         next
           case Encrypt
           solve( DCtr( d, ctr.1 ) ▶₃ #later )
-            case Device
-            by contradiction /* cyclic */
-          next
             case Encrypt_case_1
             solve( (#vr = #before)  ∥ (#before < #vr)  ∥
                    (∃ z. (('1'++ctr) = ('1'++z++ctr.1))) )
@@ -7935,9 +7932,6 @@ next
             next
               case case_2
               by contradiction /* from formulas */
-            next
-              case case_3
-              by contradiction /* cyclic */
             qed
           next
             case Encrypt_case_2
@@ -7948,9 +7942,6 @@ next
             next
               case case_2
               by contradiction /* from formulas */
-            next
-              case case_3
-              by contradiction /* cyclic */
             qed
           next
             case Encrypt_case_3
@@ -7961,9 +7952,6 @@ next
             next
               case case_2
               by contradiction /* from formulas */
-            next
-              case case_3
-              by contradiction /* cyclic */
             qed
           next
             case Encrypt_case_4
@@ -7974,9 +7962,6 @@ next
             next
               case case_2
               by contradiction /* from formulas */
-            next
-              case case_3
-              by contradiction /* cyclic */
             qed
           next
             case Encrypt_case_5
@@ -7987,9 +7972,6 @@ next
             next
               case case_2
               by contradiction /* from formulas */
-            next
-              case case_3
-              by contradiction /* cyclic */
             qed
           next
             case Encrypt_case_6
@@ -8000,9 +7982,6 @@ next
             next
               case case_2
               by contradiction /* from formulas */
-            next
-              case case_3
-              by contradiction /* cyclic */
             qed
           next
             case Wrap_case_01
@@ -8268,9 +8247,6 @@ next
         next
           case Wrap
           solve( DCtr( d, ctr.1 ) ▶₃ #later )
-            case Device
-            by contradiction /* cyclic */
-          next
             case Encrypt_case_1
             simplify
             by contradiction /* from formulas */
@@ -8303,9 +8279,6 @@ next
             next
               case case_2
               by contradiction /* from formulas */
-            next
-              case case_3
-              by contradiction /* cyclic */
             qed
           next
             case Wrap_case_02
@@ -8316,9 +8289,6 @@ next
             next
               case case_2
               by contradiction /* from formulas */
-            next
-              case case_3
-              by contradiction /* cyclic */
             qed
           next
             case Wrap_case_03
@@ -8329,9 +8299,6 @@ next
             next
               case case_2
               by contradiction /* from formulas */
-            next
-              case case_3
-              by contradiction /* cyclic */
             qed
           next
             case Wrap_case_04
@@ -8342,9 +8309,6 @@ next
             next
               case case_2
               by contradiction /* from formulas */
-            next
-              case case_3
-              by contradiction /* cyclic */
             qed
           next
             case Wrap_case_05
@@ -8355,9 +8319,6 @@ next
             next
               case case_2
               by contradiction /* from formulas */
-            next
-              case case_3
-              by contradiction /* cyclic */
             qed
           next
             case Wrap_case_06
@@ -8368,9 +8329,6 @@ next
             next
               case case_2
               by contradiction /* from formulas */
-            next
-              case case_3
-              by contradiction /* cyclic */
             qed
           next
             case Wrap_case_07
@@ -8381,9 +8339,6 @@ next
             next
               case case_2
               by contradiction /* from formulas */
-            next
-              case case_3
-              by contradiction /* cyclic */
             qed
           next
             case Wrap_case_08
@@ -8394,9 +8349,6 @@ next
             next
               case case_2
               by contradiction /* from formulas */
-            next
-              case case_3
-              by contradiction /* cyclic */
             qed
           next
             case Wrap_case_09
@@ -8407,9 +8359,6 @@ next
             next
               case case_2
               by contradiction /* from formulas */
-            next
-              case case_3
-              by contradiction /* cyclic */
             qed
           next
             case Wrap_case_10
@@ -8420,9 +8369,6 @@ next
             next
               case case_2
               by contradiction /* from formulas */
-            next
-              case case_3
-              by contradiction /* cyclic */
             qed
           next
             case Wrap_case_11
@@ -8433,9 +8379,6 @@ next
             next
               case case_2
               by contradiction /* from formulas */
-            next
-              case case_3
-              by contradiction /* cyclic */
             qed
           next
             case Wrap_case_12
@@ -8446,9 +8389,6 @@ next
             next
               case case_2
               by contradiction /* from formulas */
-            next
-              case case_3
-              by contradiction /* cyclic */
             qed
           next
             case Wrap_case_13
@@ -8459,9 +8399,6 @@ next
             next
               case case_2
               by contradiction /* from formulas */
-            next
-              case case_3
-              by contradiction /* cyclic */
             qed
           next
             case Wrap_case_14
@@ -8472,9 +8409,6 @@ next
             next
               case case_2
               by contradiction /* from formulas */
-            next
-              case case_3
-              by contradiction /* cyclic */
             qed
           next
             case Wrap_case_15
@@ -8485,9 +8419,6 @@ next
             next
               case case_2
               by contradiction /* from formulas */
-            next
-              case case_3
-              by contradiction /* cyclic */
             qed
           next
             case Wrap_case_16
@@ -8498,9 +8429,6 @@ next
             next
               case case_2
               by contradiction /* from formulas */
-            next
-              case case_3
-              by contradiction /* cyclic */
             qed
           next
             case Wrap_case_17
@@ -8511,9 +8439,6 @@ next
             next
               case case_2
               by contradiction /* from formulas */
-            next
-              case case_3
-              by contradiction /* cyclic */
             qed
           next
             case Wrap_case_18
@@ -8524,9 +8449,6 @@ next
             next
               case case_2
               by contradiction /* from formulas */
-            next
-              case case_3
-              by contradiction /* cyclic */
             qed
           next
             case Wrap_case_19
@@ -8537,9 +8459,6 @@ next
             next
               case case_2
               by contradiction /* from formulas */
-            next
-              case case_3
-              by contradiction /* cyclic */
             qed
           next
             case Wrap_case_20
@@ -8550,9 +8469,6 @@ next
             next
               case case_2
               by contradiction /* from formulas */
-            next
-              case case_3
-              by contradiction /* cyclic */
             qed
           next
             case Wrap_case_21
@@ -8563,9 +8479,6 @@ next
             next
               case case_2
               by contradiction /* from formulas */
-            next
-              case case_3
-              by contradiction /* cyclic */
             qed
           next
             case Wrap_case_22
@@ -8576,9 +8489,6 @@ next
             next
               case case_2
               by contradiction /* from formulas */
-            next
-              case case_3
-              by contradiction /* cyclic */
             qed
           next
             case Wrap_case_23
@@ -8589,9 +8499,6 @@ next
             next
               case case_2
               by contradiction /* from formulas */
-            next
-              case case_3
-              by contradiction /* cyclic */
             qed
           next
             case Wrap_case_24
@@ -8602,9 +8509,6 @@ next
             next
               case case_2
               by contradiction /* from formulas */
-            next
-              case case_3
-              by contradiction /* cyclic */
             qed
           next
             case Wrap_case_25
@@ -8615,9 +8519,6 @@ next
             next
               case case_2
               by contradiction /* from formulas */
-            next
-              case case_3
-              by contradiction /* cyclic */
             qed
           next
             case Wrap_case_26
@@ -8628,9 +8529,6 @@ next
             next
               case case_2
               by contradiction /* from formulas */
-            next
-              case case_3
-              by contradiction /* cyclic */
             qed
           next
             case Wrap_case_27
@@ -8641,9 +8539,6 @@ next
             next
               case case_2
               by contradiction /* from formulas */
-            next
-              case case_3
-              by contradiction /* cyclic */
             qed
           next
             case Wrap_case_28
@@ -8654,9 +8549,6 @@ next
             next
               case case_2
               by contradiction /* from formulas */
-            next
-              case case_3
-              by contradiction /* cyclic */
             qed
           next
             case Wrap_case_29
@@ -8667,9 +8559,6 @@ next
             next
               case case_2
               by contradiction /* from formulas */
-            next
-              case case_3
-              by contradiction /* cyclic */
             qed
           next
             case Wrap_case_30
@@ -8680,9 +8569,6 @@ next
             next
               case case_2
               by contradiction /* from formulas */
-            next
-              case case_3
-              by contradiction /* cyclic */
             qed
           next
             case Wrap_case_31
@@ -8693,9 +8579,6 @@ next
             next
               case case_2
               by contradiction /* from formulas */
-            next
-              case case_3
-              by contradiction /* cyclic */
             qed
           next
             case Wrap_case_32
@@ -8706,9 +8589,6 @@ next
             next
               case case_2
               by contradiction /* from formulas */
-            next
-              case case_3
-              by contradiction /* cyclic */
             qed
           next
             case Wrap_case_33
@@ -8719,9 +8599,6 @@ next
             next
               case case_2
               by contradiction /* from formulas */
-            next
-              case case_3
-              by contradiction /* cyclic */
             qed
           next
             case Wrap_case_34
@@ -8732,9 +8609,6 @@ next
             next
               case case_2
               by contradiction /* from formulas */
-            next
-              case case_3
-              by contradiction /* cyclic */
             qed
           next
             case Wrap_case_35
@@ -8745,9 +8619,6 @@ next
             next
               case case_2
               by contradiction /* from formulas */
-            next
-              case case_3
-              by contradiction /* cyclic */
             qed
           next
             case Wrap_case_36
@@ -8758,9 +8629,6 @@ next
             next
               case case_2
               by contradiction /* from formulas */
-            next
-              case case_3
-              by contradiction /* cyclic */
             qed
           next
             case Wrap_case_37
@@ -8771,9 +8639,6 @@ next
             next
               case case_2
               by contradiction /* from formulas */
-            next
-              case case_3
-              by contradiction /* cyclic */
             qed
           next
             case Wrap_case_38
@@ -8784,9 +8649,6 @@ next
             next
               case case_2
               by contradiction /* from formulas */
-            next
-              case case_3
-              by contradiction /* cyclic */
             qed
           next
             case Wrap_case_39
@@ -8797,9 +8659,6 @@ next
             next
               case case_2
               by contradiction /* from formulas */
-            next
-              case case_3
-              by contradiction /* cyclic */
             qed
           next
             case Wrap_case_40
@@ -8810,9 +8669,6 @@ next
             next
               case case_2
               by contradiction /* from formulas */
-            next
-              case case_3
-              by contradiction /* cyclic */
             qed
           next
             case Wrap_case_41
@@ -8823,9 +8679,6 @@ next
             next
               case case_2
               by contradiction /* from formulas */
-            next
-              case case_3
-              by contradiction /* cyclic */
             qed
           next
             case Wrap_case_42
@@ -8836,9 +8689,6 @@ next
             next
               case case_2
               by contradiction /* from formulas */
-            next
-              case case_3
-              by contradiction /* cyclic */
             qed
           next
             case Wrap_case_43
@@ -8849,9 +8699,6 @@ next
             next
               case case_2
               by contradiction /* from formulas */
-            next
-              case case_3
-              by contradiction /* cyclic */
             qed
           next
             case Wrap_case_44
@@ -8862,9 +8709,6 @@ next
             next
               case case_2
               by contradiction /* from formulas */
-            next
-              case case_3
-              by contradiction /* cyclic */
             qed
           next
             case Wrap_case_45
@@ -8875,9 +8719,6 @@ next
             next
               case case_2
               by contradiction /* from formulas */
-            next
-              case case_3
-              by contradiction /* cyclic */
             qed
           next
             case Wrap_case_46
@@ -8888,9 +8729,6 @@ next
             next
               case case_2
               by contradiction /* from formulas */
-            next
-              case case_3
-              by contradiction /* cyclic */
             qed
           next
             case Wrap_case_47
@@ -8901,9 +8739,6 @@ next
             next
               case case_2
               by contradiction /* from formulas */
-            next
-              case case_3
-              by contradiction /* cyclic */
             qed
           next
             case Wrap_case_48
@@ -8914,9 +8749,6 @@ next
             next
               case case_2
               by contradiction /* from formulas */
-            next
-              case case_3
-              by contradiction /* cyclic */
             qed
           next
             case Wrap_case_49
@@ -8927,9 +8759,6 @@ next
             next
               case case_2
               by contradiction /* from formulas */
-            next
-              case case_3
-              by contradiction /* cyclic */
             qed
           next
             case Wrap_case_50
@@ -8940,9 +8769,6 @@ next
             next
               case case_2
               by contradiction /* from formulas */
-            next
-              case case_3
-              by contradiction /* cyclic */
             qed
           next
             case Wrap_case_51
@@ -8953,9 +8779,6 @@ next
             next
               case case_2
               by contradiction /* from formulas */
-            next
-              case case_3
-              by contradiction /* cyclic */
             qed
           next
             case Wrap_case_52
@@ -8966,9 +8789,6 @@ next
             next
               case case_2
               by contradiction /* from formulas */
-            next
-              case case_3
-              by contradiction /* cyclic */
             qed
           next
             case Wrap_case_53
@@ -8979,9 +8799,6 @@ next
             next
               case case_2
               by contradiction /* from formulas */
-            next
-              case case_3
-              by contradiction /* cyclic */
             qed
           next
             case Wrap_case_54
@@ -8992,9 +8809,6 @@ next
             next
               case case_2
               by contradiction /* from formulas */
-            next
-              case case_3
-              by contradiction /* cyclic */
             qed
           next
             case Wrap_case_55
@@ -9005,9 +8819,6 @@ next
             next
               case case_2
               by contradiction /* from formulas */
-            next
-              case case_3
-              by contradiction /* cyclic */
             qed
           next
             case Wrap_case_56
@@ -9018,9 +8829,6 @@ next
             next
               case case_2
               by contradiction /* from formulas */
-            next
-              case case_3
-              by contradiction /* cyclic */
             qed
           next
             case Wrap_case_57
@@ -9031,9 +8839,6 @@ next
             next
               case case_2
               by contradiction /* from formulas */
-            next
-              case case_3
-              by contradiction /* cyclic */
             qed
           next
             case Wrap_case_58
@@ -9044,9 +8849,6 @@ next
             next
               case case_2
               by contradiction /* from formulas */
-            next
-              case case_3
-              by contradiction /* cyclic */
             qed
           next
             case Wrap_case_59
@@ -9057,9 +8859,6 @@ next
             next
               case case_2
               by contradiction /* from formulas */
-            next
-              case case_3
-              by contradiction /* cyclic */
             qed
           next
             case Wrap_case_60
@@ -9070,9 +8869,6 @@ next
             next
               case case_2
               by contradiction /* from formulas */
-            next
-              case case_3
-              by contradiction /* cyclic */
             qed
           next
             case Wrap_case_61
@@ -9083,9 +8879,6 @@ next
             next
               case case_2
               by contradiction /* from formulas */
-            next
-              case case_3
-              by contradiction /* cyclic */
             qed
           next
             case Wrap_case_62
@@ -9096,9 +8889,6 @@ next
             next
               case case_2
               by contradiction /* from formulas */
-            next
-              case case_3
-              by contradiction /* cyclic */
             qed
           next
             case Wrap_case_63
@@ -9109,9 +8899,6 @@ next
             next
               case case_2
               by contradiction /* from formulas */
-            next
-              case case_3
-              by contradiction /* cyclic */
             qed
           next
             case Wrap_case_64
@@ -9122,9 +8909,6 @@ next
             next
               case case_2
               by contradiction /* from formulas */
-            next
-              case case_3
-              by contradiction /* cyclic */
             qed
           next
             case Wrap_case_65
@@ -9135,9 +8919,6 @@ next
             next
               case case_2
               by contradiction /* from formulas */
-            next
-              case case_3
-              by contradiction /* cyclic */
             qed
           qed
         qed
@@ -9179,9 +8960,6 @@ next
         next
           case Encrypt
           solve( DCtr( d, ctr.1 ) ▶₄ #later )
-            case Device
-            by contradiction /* cyclic */
-          next
             case Encrypt_case_1
             solve( (#vr = #before)  ∥ (#before < #vr)  ∥
                    (∃ z. (('1'++ctr) = ('1'++z++ctr.1))) )
@@ -9190,9 +8968,6 @@ next
             next
               case case_2
               by contradiction /* from formulas */
-            next
-              case case_3
-              by contradiction /* cyclic */
             qed
           next
             case Encrypt_case_2
@@ -9203,9 +8978,6 @@ next
             next
               case case_2
               by contradiction /* from formulas */
-            next
-              case case_3
-              by contradiction /* cyclic */
             qed
           next
             case Encrypt_case_3
@@ -9216,9 +8988,6 @@ next
             next
               case case_2
               by contradiction /* from formulas */
-            next
-              case case_3
-              by contradiction /* cyclic */
             qed
           next
             case Encrypt_case_4
@@ -9229,9 +8998,6 @@ next
             next
               case case_2
               by contradiction /* from formulas */
-            next
-              case case_3
-              by contradiction /* cyclic */
             qed
           next
             case Encrypt_case_5
@@ -9242,9 +9008,6 @@ next
             next
               case case_2
               by contradiction /* from formulas */
-            next
-              case case_3
-              by contradiction /* cyclic */
             qed
           next
             case Encrypt_case_6
@@ -9255,9 +9018,6 @@ next
             next
               case case_2
               by contradiction /* from formulas */
-            next
-              case case_3
-              by contradiction /* cyclic */
             qed
           next
             case Wrap_case_01
@@ -9523,9 +9283,6 @@ next
         next
           case Wrap
           solve( DCtr( d, ctr.1 ) ▶₄ #later )
-            case Device
-            by contradiction /* cyclic */
-          next
             case Encrypt_case_1
             simplify
             by contradiction /* from formulas */
@@ -9558,9 +9315,6 @@ next
             next
               case case_2
               by contradiction /* from formulas */
-            next
-              case case_3
-              by contradiction /* cyclic */
             qed
           next
             case Wrap_case_02
@@ -9571,9 +9325,6 @@ next
             next
               case case_2
               by contradiction /* from formulas */
-            next
-              case case_3
-              by contradiction /* cyclic */
             qed
           next
             case Wrap_case_03
@@ -9584,9 +9335,6 @@ next
             next
               case case_2
               by contradiction /* from formulas */
-            next
-              case case_3
-              by contradiction /* cyclic */
             qed
           next
             case Wrap_case_04
@@ -9597,9 +9345,6 @@ next
             next
               case case_2
               by contradiction /* from formulas */
-            next
-              case case_3
-              by contradiction /* cyclic */
             qed
           next
             case Wrap_case_05
@@ -9610,9 +9355,6 @@ next
             next
               case case_2
               by contradiction /* from formulas */
-            next
-              case case_3
-              by contradiction /* cyclic */
             qed
           next
             case Wrap_case_06
@@ -9623,9 +9365,6 @@ next
             next
               case case_2
               by contradiction /* from formulas */
-            next
-              case case_3
-              by contradiction /* cyclic */
             qed
           next
             case Wrap_case_07
@@ -9636,9 +9375,6 @@ next
             next
               case case_2
               by contradiction /* from formulas */
-            next
-              case case_3
-              by contradiction /* cyclic */
             qed
           next
             case Wrap_case_08
@@ -9649,9 +9385,6 @@ next
             next
               case case_2
               by contradiction /* from formulas */
-            next
-              case case_3
-              by contradiction /* cyclic */
             qed
           next
             case Wrap_case_09
@@ -9662,9 +9395,6 @@ next
             next
               case case_2
               by contradiction /* from formulas */
-            next
-              case case_3
-              by contradiction /* cyclic */
             qed
           next
             case Wrap_case_10
@@ -9675,9 +9405,6 @@ next
             next
               case case_2
               by contradiction /* from formulas */
-            next
-              case case_3
-              by contradiction /* cyclic */
             qed
           next
             case Wrap_case_11
@@ -9688,9 +9415,6 @@ next
             next
               case case_2
               by contradiction /* from formulas */
-            next
-              case case_3
-              by contradiction /* cyclic */
             qed
           next
             case Wrap_case_12
@@ -9701,9 +9425,6 @@ next
             next
               case case_2
               by contradiction /* from formulas */
-            next
-              case case_3
-              by contradiction /* cyclic */
             qed
           next
             case Wrap_case_13
@@ -9714,9 +9435,6 @@ next
             next
               case case_2
               by contradiction /* from formulas */
-            next
-              case case_3
-              by contradiction /* cyclic */
             qed
           next
             case Wrap_case_14
@@ -9727,9 +9445,6 @@ next
             next
               case case_2
               by contradiction /* from formulas */
-            next
-              case case_3
-              by contradiction /* cyclic */
             qed
           next
             case Wrap_case_15
@@ -9740,9 +9455,6 @@ next
             next
               case case_2
               by contradiction /* from formulas */
-            next
-              case case_3
-              by contradiction /* cyclic */
             qed
           next
             case Wrap_case_16
@@ -9753,9 +9465,6 @@ next
             next
               case case_2
               by contradiction /* from formulas */
-            next
-              case case_3
-              by contradiction /* cyclic */
             qed
           next
             case Wrap_case_17
@@ -9766,9 +9475,6 @@ next
             next
               case case_2
               by contradiction /* from formulas */
-            next
-              case case_3
-              by contradiction /* cyclic */
             qed
           next
             case Wrap_case_18
@@ -9779,9 +9485,6 @@ next
             next
               case case_2
               by contradiction /* from formulas */
-            next
-              case case_3
-              by contradiction /* cyclic */
             qed
           next
             case Wrap_case_19
@@ -9792,9 +9495,6 @@ next
             next
               case case_2
               by contradiction /* from formulas */
-            next
-              case case_3
-              by contradiction /* cyclic */
             qed
           next
             case Wrap_case_20
@@ -9805,9 +9505,6 @@ next
             next
               case case_2
               by contradiction /* from formulas */
-            next
-              case case_3
-              by contradiction /* cyclic */
             qed
           next
             case Wrap_case_21
@@ -9818,9 +9515,6 @@ next
             next
               case case_2
               by contradiction /* from formulas */
-            next
-              case case_3
-              by contradiction /* cyclic */
             qed
           next
             case Wrap_case_22
@@ -9831,9 +9525,6 @@ next
             next
               case case_2
               by contradiction /* from formulas */
-            next
-              case case_3
-              by contradiction /* cyclic */
             qed
           next
             case Wrap_case_23
@@ -9844,9 +9535,6 @@ next
             next
               case case_2
               by contradiction /* from formulas */
-            next
-              case case_3
-              by contradiction /* cyclic */
             qed
           next
             case Wrap_case_24
@@ -9857,9 +9545,6 @@ next
             next
               case case_2
               by contradiction /* from formulas */
-            next
-              case case_3
-              by contradiction /* cyclic */
             qed
           next
             case Wrap_case_25
@@ -9870,9 +9555,6 @@ next
             next
               case case_2
               by contradiction /* from formulas */
-            next
-              case case_3
-              by contradiction /* cyclic */
             qed
           next
             case Wrap_case_26
@@ -9883,9 +9565,6 @@ next
             next
               case case_2
               by contradiction /* from formulas */
-            next
-              case case_3
-              by contradiction /* cyclic */
             qed
           next
             case Wrap_case_27
@@ -9896,9 +9575,6 @@ next
             next
               case case_2
               by contradiction /* from formulas */
-            next
-              case case_3
-              by contradiction /* cyclic */
             qed
           next
             case Wrap_case_28
@@ -9909,9 +9585,6 @@ next
             next
               case case_2
               by contradiction /* from formulas */
-            next
-              case case_3
-              by contradiction /* cyclic */
             qed
           next
             case Wrap_case_29
@@ -9922,9 +9595,6 @@ next
             next
               case case_2
               by contradiction /* from formulas */
-            next
-              case case_3
-              by contradiction /* cyclic */
             qed
           next
             case Wrap_case_30
@@ -9935,9 +9605,6 @@ next
             next
               case case_2
               by contradiction /* from formulas */
-            next
-              case case_3
-              by contradiction /* cyclic */
             qed
           next
             case Wrap_case_31
@@ -9948,9 +9615,6 @@ next
             next
               case case_2
               by contradiction /* from formulas */
-            next
-              case case_3
-              by contradiction /* cyclic */
             qed
           next
             case Wrap_case_32
@@ -9961,9 +9625,6 @@ next
             next
               case case_2
               by contradiction /* from formulas */
-            next
-              case case_3
-              by contradiction /* cyclic */
             qed
           next
             case Wrap_case_33
@@ -9974,9 +9635,6 @@ next
             next
               case case_2
               by contradiction /* from formulas */
-            next
-              case case_3
-              by contradiction /* cyclic */
             qed
           next
             case Wrap_case_34
@@ -9987,9 +9645,6 @@ next
             next
               case case_2
               by contradiction /* from formulas */
-            next
-              case case_3
-              by contradiction /* cyclic */
             qed
           next
             case Wrap_case_35
@@ -10000,9 +9655,6 @@ next
             next
               case case_2
               by contradiction /* from formulas */
-            next
-              case case_3
-              by contradiction /* cyclic */
             qed
           next
             case Wrap_case_36
@@ -10013,9 +9665,6 @@ next
             next
               case case_2
               by contradiction /* from formulas */
-            next
-              case case_3
-              by contradiction /* cyclic */
             qed
           next
             case Wrap_case_37
@@ -10026,9 +9675,6 @@ next
             next
               case case_2
               by contradiction /* from formulas */
-            next
-              case case_3
-              by contradiction /* cyclic */
             qed
           next
             case Wrap_case_38
@@ -10039,9 +9685,6 @@ next
             next
               case case_2
               by contradiction /* from formulas */
-            next
-              case case_3
-              by contradiction /* cyclic */
             qed
           next
             case Wrap_case_39
@@ -10052,9 +9695,6 @@ next
             next
               case case_2
               by contradiction /* from formulas */
-            next
-              case case_3
-              by contradiction /* cyclic */
             qed
           next
             case Wrap_case_40
@@ -10065,9 +9705,6 @@ next
             next
               case case_2
               by contradiction /* from formulas */
-            next
-              case case_3
-              by contradiction /* cyclic */
             qed
           next
             case Wrap_case_41
@@ -10078,9 +9715,6 @@ next
             next
               case case_2
               by contradiction /* from formulas */
-            next
-              case case_3
-              by contradiction /* cyclic */
             qed
           next
             case Wrap_case_42
@@ -10091,9 +9725,6 @@ next
             next
               case case_2
               by contradiction /* from formulas */
-            next
-              case case_3
-              by contradiction /* cyclic */
             qed
           next
             case Wrap_case_43
@@ -10104,9 +9735,6 @@ next
             next
               case case_2
               by contradiction /* from formulas */
-            next
-              case case_3
-              by contradiction /* cyclic */
             qed
           next
             case Wrap_case_44
@@ -10117,9 +9745,6 @@ next
             next
               case case_2
               by contradiction /* from formulas */
-            next
-              case case_3
-              by contradiction /* cyclic */
             qed
           next
             case Wrap_case_45
@@ -10130,9 +9755,6 @@ next
             next
               case case_2
               by contradiction /* from formulas */
-            next
-              case case_3
-              by contradiction /* cyclic */
             qed
           next
             case Wrap_case_46
@@ -10143,9 +9765,6 @@ next
             next
               case case_2
               by contradiction /* from formulas */
-            next
-              case case_3
-              by contradiction /* cyclic */
             qed
           next
             case Wrap_case_47
@@ -10156,9 +9775,6 @@ next
             next
               case case_2
               by contradiction /* from formulas */
-            next
-              case case_3
-              by contradiction /* cyclic */
             qed
           next
             case Wrap_case_48
@@ -10169,9 +9785,6 @@ next
             next
               case case_2
               by contradiction /* from formulas */
-            next
-              case case_3
-              by contradiction /* cyclic */
             qed
           next
             case Wrap_case_49
@@ -10182,9 +9795,6 @@ next
             next
               case case_2
               by contradiction /* from formulas */
-            next
-              case case_3
-              by contradiction /* cyclic */
             qed
           next
             case Wrap_case_50
@@ -10195,9 +9805,6 @@ next
             next
               case case_2
               by contradiction /* from formulas */
-            next
-              case case_3
-              by contradiction /* cyclic */
             qed
           next
             case Wrap_case_51
@@ -10208,9 +9815,6 @@ next
             next
               case case_2
               by contradiction /* from formulas */
-            next
-              case case_3
-              by contradiction /* cyclic */
             qed
           next
             case Wrap_case_52
@@ -10221,9 +9825,6 @@ next
             next
               case case_2
               by contradiction /* from formulas */
-            next
-              case case_3
-              by contradiction /* cyclic */
             qed
           next
             case Wrap_case_53
@@ -10234,9 +9835,6 @@ next
             next
               case case_2
               by contradiction /* from formulas */
-            next
-              case case_3
-              by contradiction /* cyclic */
             qed
           next
             case Wrap_case_54
@@ -10247,9 +9845,6 @@ next
             next
               case case_2
               by contradiction /* from formulas */
-            next
-              case case_3
-              by contradiction /* cyclic */
             qed
           next
             case Wrap_case_55
@@ -10260,9 +9855,6 @@ next
             next
               case case_2
               by contradiction /* from formulas */
-            next
-              case case_3
-              by contradiction /* cyclic */
             qed
           next
             case Wrap_case_56
@@ -10273,9 +9865,6 @@ next
             next
               case case_2
               by contradiction /* from formulas */
-            next
-              case case_3
-              by contradiction /* cyclic */
             qed
           next
             case Wrap_case_57
@@ -10286,9 +9875,6 @@ next
             next
               case case_2
               by contradiction /* from formulas */
-            next
-              case case_3
-              by contradiction /* cyclic */
             qed
           next
             case Wrap_case_58
@@ -10299,9 +9885,6 @@ next
             next
               case case_2
               by contradiction /* from formulas */
-            next
-              case case_3
-              by contradiction /* cyclic */
             qed
           next
             case Wrap_case_59
@@ -10312,9 +9895,6 @@ next
             next
               case case_2
               by contradiction /* from formulas */
-            next
-              case case_3
-              by contradiction /* cyclic */
             qed
           next
             case Wrap_case_60
@@ -10325,9 +9905,6 @@ next
             next
               case case_2
               by contradiction /* from formulas */
-            next
-              case case_3
-              by contradiction /* cyclic */
             qed
           next
             case Wrap_case_61
@@ -10338,9 +9915,6 @@ next
             next
               case case_2
               by contradiction /* from formulas */
-            next
-              case case_3
-              by contradiction /* cyclic */
             qed
           next
             case Wrap_case_62
@@ -10351,9 +9925,6 @@ next
             next
               case case_2
               by contradiction /* from formulas */
-            next
-              case case_3
-              by contradiction /* cyclic */
             qed
           next
             case Wrap_case_63
@@ -10364,9 +9935,6 @@ next
             next
               case case_2
               by contradiction /* from formulas */
-            next
-              case case_3
-              by contradiction /* cyclic */
             qed
           next
             case Wrap_case_64
@@ -10377,9 +9945,6 @@ next
             next
               case case_2
               by contradiction /* from formulas */
-            next
-              case case_3
-              by contradiction /* cyclic */
             qed
           next
             case Wrap_case_65
@@ -10390,9 +9955,6 @@ next
             next
               case case_2
               by contradiction /* from formulas */
-            next
-              case case_3
-              by contradiction /* cyclic */
             qed
           qed
         qed
@@ -12953,8 +12515,8 @@ qed
 Generated from:
 Tamarin version 1.13.0
 Maude version 3.5.1
-Git revision: a74473b29ed4a598fb06f7461c9c72e9e3c1c4d8, branch: 881-normalisation
-Compiled at: 2026-09-15 13:52:02.61164042 UTC
+Git revision: 24d08b7ae378ddcef5287c20d4731bbd8b732ce7, branch: HEAD
+Compiled at: 2026-11-09 13:34:50.141740183 UTC
 */
 
 end
@@ -12966,10 +12528,10 @@ summary of summaries:
 analyzed: examples/csf19-wrapping/siv.spthy
 
   output:          examples/csf19-wrapping/siv.spthy.tmp
-  processing time: 67.94s
+  processing time: 240.45s
   
   origin (all-traces): verified (2086 steps)
-  Counter_Monotonicity (all-traces): verified (888 steps)
+  Counter_Monotonicity (all-traces): verified (742 steps)
   IV_Uniqueness (all-traces): verified (12 steps)
   Key_UsageImpliesInitialization (all-traces): verified (86 steps)
   Key_IntegrityAndConfidentiality (all-traces): verified (551 steps)
