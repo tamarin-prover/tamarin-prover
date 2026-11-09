@@ -1,0 +1,46 @@
+theory SoundnessSapicDestructorGeneratedBinders
+begin
+
+options: translation-state-optimisation
+functions: d/1 [destructor], e/1 [destructor]
+equations: d(<x,StateChannel>) = x, e(<x,lock>) = x
+
+// StateChannel and lock in the equations are wildcards. Both calls below
+// must return 'ok', regardless of the fresh identifiers used by translation.
+// Allocating one of those identifiers with the same name as a wildcard
+// instead requires 'tag' to equal a fresh name, making the call fail.
+process:
+  (new StateChannel;
+   insert StateChannel,'value';
+   let y = d(<'ok','tag'>) in
+     event Success('state',y)
+   else
+     event Fail('state'))
+  |
+  // The third lock identifier used to collide with the equation variable.
+  (lock 'a'; lock 'b'; lock 'c';
+   let z = e(<'ok','tag'>) in
+     event Success('lock',z)
+   else
+     event Fail('lock'))
+
+lemma state_success_reachable: exists-trace
+  "Ex #i. Success('state','ok')@i"
+
+lemma lock_success_reachable: exists-trace
+  "Ex #i. Success('lock','ok')@i"
+
+// Intentionally false: successful evaluations must not disappear.
+lemma no_state_success:
+  "All y #i. Success('state',y)@i ==> F"
+
+lemma no_lock_success:
+  "All z #i. Success('lock',z)@i ==> F"
+
+lemma state_failure_unreachable:
+  "All #i. Fail('state')@i ==> F"
+
+lemma lock_failure_unreachable:
+  "All #i. Fail('lock')@i ==> F"
+
+end

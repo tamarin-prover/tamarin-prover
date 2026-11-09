@@ -96,7 +96,8 @@ annotateLocks p = case run $ annotateLocks' p of
     Left e -> throwM e
     Right p' -> return p'
     where
-        run a = runExcept $ evalFreshT a 0
+        run a = runExcept $ evalFreshTAvoiding a
+          [v | v <- translationVars p, lvarName v == "lock"]
 
 -- | Check if each unlock in p is matched by a lock or if the annotation process returned a different wellformedness error.
 -- checkLocks :: GoodAnnotation a => Process a SapicLVarAnnotatedProcess -> Maybe WFerror

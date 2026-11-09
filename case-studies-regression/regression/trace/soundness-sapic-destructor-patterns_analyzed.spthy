@@ -1,0 +1,2159 @@
+theory SoundnessSapicDestructorPatterns
+
+begin
+
+// Function signature and definition of the equational theory E
+
+functions: absent/1 [destructor], alt/1, c/1, d/3 [destructor], fst/1,
+           guard/0, overlap/2 [destructor], pair/2, snd/1, unused/1 [destructor]
+equations:
+    d(alt(x), <guard, y, y>, x) = x,
+    d(c(x), <guard, y, y>, x) = x,
+    fst(<x.1, x.2>) = x.1,
+    overlap(c(x), y) = x,
+    overlap(c(x), guard) = x,
+    snd(<x.1, x.2>) = x.2,
+    unused(c(x)) = c(x)
+
+heuristic: p
+
+lemma first_reachable:
+  exists-trace "∃ #i. Result( 'First', 'ok' ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #i. (Result( 'First', 'ok' ) @ #i)"
+*/
+simplify
+solve( Result( 'First', 'ok' ) @ #i )
+  case eventResultFirstxbitstring_0_111111111111
+  solve( State_111111111111( 'ok' ) ▶₀ #i )
+    case lettagxbitstringdctagokguardaatagok_4_11111111111
+    SOLVED // trace found
+  qed
+qed
+
+lemma first_no_failure:
+  all-traces "∀ #i. (Failure( 'First' ) @ #i) ⇒ (⊥)"
+/*
+guarded formula characterizing all counter-examples:
+"∃ #i. (Failure( 'First' ) @ #i)"
+*/
+simplify
+solve( Failure( 'First' ) @ #i )
+  case eventFailureFirst_0_111111111112
+  by solve( State_111111111112( ) ▶₀ #i )
+qed
+
+lemma second_reachable:
+  exists-trace "∃ #i. Result( 'Second', 'ok' ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #i. (Result( 'Second', 'ok' ) @ #i)"
+*/
+simplify
+solve( Result( 'Second', 'ok' ) @ #i )
+  case eventResultSecondxbitstring_0_111111111211
+  solve( State_111111111211( 'ok' ) ▶₀ #i )
+    case lettagxbitstringdalttagokguardaatagok_4_11111111121
+    SOLVED // trace found
+  qed
+qed
+
+lemma second_no_failure:
+  all-traces "∀ #i. (Failure( 'Second' ) @ #i) ⇒ (⊥)"
+/*
+guarded formula characterizing all counter-examples:
+"∃ #i. (Failure( 'Second' ) @ #i)"
+*/
+simplify
+solve( Failure( 'Second' ) @ #i )
+  case eventFailureSecond_0_111111111212
+  by solve( State_111111111212( ) ▶₀ #i )
+qed
+
+lemma constant_reachable:
+  exists-trace "∃ #i. Failure( 'Constant' ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #i. (Failure( 'Constant' ) @ #i)"
+*/
+simplify
+solve( Failure( 'Constant' ) @ #i )
+  case eventFailureConstant_0_11111111212
+  solve( State_11111111212( ) ▶₀ #i )
+    case lettagxbitstringdctagokwrongaatagok_3_1111111121
+    SOLVED // trace found
+  qed
+qed
+
+lemma constant_no_result:
+  all-traces "∀ x #i. (Result( 'Constant', x ) @ #i) ⇒ (⊥)"
+/*
+guarded formula characterizing all counter-examples:
+"∃ x #i. (Result( 'Constant', x ) @ #i)"
+*/
+simplify
+solve( Result( 'Constant', x ) @ #i )
+  case eventResultConstantxbitstring_0_11111111211
+  by solve( State_11111111211( x ) ▶₀ #i )
+qed
+
+lemma auxiliary_reachable:
+  exists-trace "∃ #i. Failure( 'Auxiliary' ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #i. (Failure( 'Auxiliary' ) @ #i)"
+*/
+simplify
+solve( Failure( 'Auxiliary' ) @ #i )
+  case eventFailureAuxiliary_0_1111111212
+  solve( State_1111111212( ) ▶₀ #i )
+    case lettagxbitstringdctagokguardabtagok_3_111111121
+    SOLVED // trace found
+  qed
+qed
+
+lemma auxiliary_no_result:
+  all-traces "∀ x #i. (Result( 'Auxiliary', x ) @ #i) ⇒ (⊥)"
+/*
+guarded formula characterizing all counter-examples:
+"∃ x #i. (Result( 'Auxiliary', x ) @ #i)"
+*/
+simplify
+solve( Result( 'Auxiliary', x ) @ #i )
+  case eventResultAuxiliaryxbitstring_0_1111111211
+  by solve( State_1111111211( x ) ▶₀ #i )
+qed
+
+lemma output_reachable:
+  exists-trace "∃ #i. Failure( 'Output' ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #i. (Failure( 'Output' ) @ #i)"
+*/
+simplify
+solve( Failure( 'Output' ) @ #i )
+  case eventFailureOutput_0_111111212
+  solve( State_111111212( ) ▶₀ #i )
+    case lettagxbitstringdctagokguardaatagother_3_11111121
+    SOLVED // trace found
+  qed
+qed
+
+lemma output_no_result:
+  all-traces "∀ x #i. (Result( 'Output', x ) @ #i) ⇒ (⊥)"
+/*
+guarded formula characterizing all counter-examples:
+"∃ x #i. (Result( 'Output', x ) @ #i)"
+*/
+simplify
+solve( Result( 'Output', x ) @ #i )
+  case eventResultOutputxbitstring_0_111111211
+  by solve( State_111111211( x ) ▶₀ #i )
+qed
+
+lemma pattern_reachable:
+  exists-trace "∃ #i. Failure( 'Pattern' ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #i. (Failure( 'Pattern' ) @ #i)"
+*/
+simplify
+solve( Failure( 'Pattern' ) @ #i )
+  case eventFailurePattern_0_11111212
+  solve( State_11111212( ) ▶₀ #i )
+    case lettagxbitstringdcwrongokguardaawrongok_5_1111121
+    SOLVED // trace found
+  qed
+qed
+
+lemma pattern_no_result:
+  all-traces "∀ x #i. (Result( 'Pattern', x ) @ #i) ⇒ (⊥)"
+/*
+guarded formula characterizing all counter-examples:
+"∃ x #i. (Result( 'Pattern', x ) @ #i)"
+*/
+simplify
+solve( Result( 'Pattern', x ) @ #i )
+  case eventResultPatternxbitstring_0_11111211
+  by solve( State_11111211( x ) ▶₀ #i )
+qed
+
+lemma overlap_reachable:
+  exists-trace "∃ #i. Result( 'Overlap', 'ok' ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #i. (Result( 'Overlap', 'ok' ) @ #i)"
+*/
+simplify
+solve( Result( 'Overlap', 'ok' ) @ #i )
+  case eventResultOverlapxbitstring_0_1111211
+  solve( State_1111211( 'ok' ) ▶₀ #i )
+    case lettagxbitstringoverlapctagokguard_4_111121_case_1
+    SOLVED // trace found
+  qed
+qed
+
+lemma overlap_no_failure:
+  all-traces "∀ #i. (Failure( 'Overlap' ) @ #i) ⇒ (⊥)"
+/*
+guarded formula characterizing all counter-examples:
+"∃ #i. (Failure( 'Overlap' ) @ #i)"
+*/
+simplify
+solve( Failure( 'Overlap' ) @ #i )
+  case eventFailureOverlap_0_1111212
+  by solve( State_1111212( ) ▶₀ #i )
+qed
+
+lemma absent_reachable:
+  exists-trace "∃ #i. Failure( 'Absent' ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #i. (Failure( 'Absent' ) @ #i)"
+*/
+simplify
+solve( Failure( 'Absent' ) @ #i )
+  case eventFailureAbsent_0_11121
+  solve( State_11121( ) ▶₀ #i )
+    case Absent_0_1112
+    SOLVED // trace found
+  qed
+qed
+
+lemma absent_no_result:
+  all-traces "∀ x #i. (Result( 'Absent', x ) @ #i) ⇒ (⊥)"
+/*
+guarded formula characterizing all counter-examples:
+"∃ x #i. (Result( 'Absent', x ) @ #i)"
+*/
+simplify
+by solve( Result( 'Absent', x ) @ #i )
+
+lemma nested_reachable:
+  exists-trace "∃ #i. Failure( 'Nested' ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #i. (Failure( 'Nested' ) @ #i)"
+*/
+simplify
+solve( Failure( 'Nested' ) @ #i )
+  case eventFailureNested_0_1121
+  solve( State_1121( ) ▶₀ #i )
+    case Nested_0_112
+    SOLVED // trace found
+  qed
+qed
+
+lemma nested_no_result:
+  all-traces "∀ x #i. (Result( 'Nested', x ) @ #i) ⇒ (⊥)"
+/*
+guarded formula characterizing all counter-examples:
+"∃ x #i. (Result( 'Nested', x ) @ #i)"
+*/
+simplify
+by solve( Result( 'Nested', x ) @ #i )
+
+lemma correct_results:
+  all-traces "∀ label x #i. (Result( label, x ) @ #i) ⇒ (x = 'ok')"
+/*
+guarded formula characterizing all counter-examples:
+"∃ label x #i. (Result( label, x ) @ #i) ∧ ¬(x = 'ok')"
+*/
+simplify
+solve( Result( label, x ) @ #i )
+  case eventResultAuxiliaryxbitstring_0_1111111211
+  by solve( State_1111111211( x ) ▶₀ #i )
+next
+  case eventResultConstantxbitstring_0_11111111211
+  by solve( State_11111111211( x ) ▶₀ #i )
+next
+  case eventResultFirstxbitstring_0_111111111111
+  solve( State_111111111111( x ) ▶₀ #i )
+    case lettagxbitstringdctagokguardaatagok_4_11111111111
+    by contradiction /* from formulas */
+  qed
+next
+  case eventResultOutputxbitstring_0_111111211
+  by solve( State_111111211( x ) ▶₀ #i )
+next
+  case eventResultOverlapxbitstring_0_1111211
+  solve( State_1111211( x ) ▶₀ #i )
+    case lettagxbitstringoverlapctagokguard_4_111121_case_1
+    by contradiction /* from formulas */
+  next
+    case lettagxbitstringoverlapctagokguard_4_111121_case_2
+    by contradiction /* from formulas */
+  qed
+next
+  case eventResultPatternxbitstring_0_11111211
+  by solve( State_11111211( x ) ▶₀ #i )
+next
+  case eventResultSecondxbitstring_0_111111111211
+  solve( State_111111111211( x ) ▶₀ #i )
+    case lettagxbitstringdalttagokguardaatagok_4_11111111121
+    by contradiction /* from formulas */
+  qed
+qed
+
+lemma bound_reachable:
+  exists-trace "∃ x #i. Bound( x ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ x #i. (Bound( x ) @ #i)"
+*/
+simplify
+solve( State_12111( x ) ▶₀ #i )
+  case lettagxoverlapctagxguard_4_1211_case_1
+  SOLVED // trace found
+qed
+
+lemma bound_no_failure:
+  all-traces "∀ #i. (Failure( 'Bound' ) @ #i) ⇒ (⊥)"
+/*
+guarded formula characterizing all counter-examples:
+"∃ #i. (Failure( 'Bound' ) @ #i)"
+*/
+simplify
+solve( Failure( 'Bound' ) @ #i )
+  case eventFailureBound_0_12112
+  by solve( State_12112( x ) ▶₀ #i )
+qed
+
+lemma bound_failure_reachable:
+  exists-trace "∃ #i. Failure( 'BoundFail' ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #i. (Failure( 'BoundFail' ) @ #i)"
+*/
+simplify
+solve( Failure( 'BoundFail' ) @ #i )
+  case eventFailureBoundFail_0_2112
+  solve( State_2112( x ) ▶₀ #i )
+    case lettagxoverlapctagotherguard_5_211_case_1
+    SOLVED // trace found
+  qed
+qed
+
+lemma bound_no_success:
+  all-traces "∀ #i. (WrongBound( ) @ #i) ⇒ (⊥)"
+/*
+guarded formula characterizing all counter-examples:
+"∃ #i. (WrongBound( ) @ #i)"
+*/
+simplify
+by solve( State_2111( x ) ▶₀ #i )
+
+rule (modulo E) Init[color=#ffffff, process="|", issapicrule,
+                     role='Process']:
+   [ ] --[ Init( ) ]-> [ State_( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_0_[color=#ffffff, process="|", issapicrule,
+                     role='Process']:
+   [ State_( ) ] --> [ State_1( ), State_2( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_0_1[color=#ffffff, process="|", issapicrule,
+                      role='Process']:
+   [ State_1( ) ] --> [ State_11( ), State_12( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_0_11[color=#ffffff, process="|", issapicrule,
+                       role='Process']:
+   [ State_11( ) ] --> [ State_111( ), State_112( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_0_111[color=#ffffff, process="|", issapicrule,
+                        role='Process']:
+   [ State_111( ) ] --> [ State_1111( ), State_1112( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_0_1111[color=#ffffff, process="|", issapicrule,
+                         role='Process']:
+   [ State_1111( ) ] --> [ State_11111( ), State_11112( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_0_11111[color=#ffffff, process="|", issapicrule,
+                          role='Process']:
+   [ State_11111( ) ] --> [ State_111111( ), State_111112( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_0_111111[color=#ffffff, process="|", issapicrule,
+                           role='Process']:
+   [ State_111111( ) ] --> [ State_1111111( ), State_1111112( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_0_1111111[color=#ffffff, process="|", issapicrule,
+                            role='Process']:
+   [ State_1111111( ) ] --> [ State_11111111( ), State_11111112( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_0_11111111[color=#ffffff, process="|", issapicrule,
+                             role='Process']:
+   [ State_11111111( ) ] --> [ State_111111111( ), State_111111112( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_0_111111111[color=#ffffff, process="|", issapicrule,
+                              role='Process']:
+   [ State_111111111( ) ] --> [ State_1111111111( ), State_1111111112( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) First_0_1111111111[color=#ffffff, process="First();",
+                                   issapicrule, role='Process']:
+   [ State_1111111111( ) ] --> [ State_11111111111( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) lettagxbitstringdctagokguardaatagok_0_11111111111[color=#804073,
+                                                                  process="let <'tag', x.1:bitstring>=d(c(<'tag', 'ok'>), <guard, 'a', 'a'>, <'tag', 'ok'>)",
+                                                                  issapicrule, role='First']:
+   [ State_11111111111( ) ]
+  -->
+   [ Let_111111111111( <c(<'tag', 'ok'>), <guard, 'a', 'a'>, 'tag', 'ok'> )
+   ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) lettagxbitstringdctagokguardaatagok_1_11111111111[color=#804073,
+                                                                  process="let <'tag', x.1:bitstring>=d(c(<'tag', 'ok'>), <guard, 'a', 'a'>, <'tag', 'ok'>)",
+                                                                  no_derivcheck, issapicrule, role='First']:
+   [ Let_111111111111( <alt(x.12), <guard, y.12, y.12>, x.12> ) ]
+  -->
+   [ Let_1111111111101( x.12 ) ]
+
+  /*
+  rule (modulo AC) lettagxbitstringdctagokguardaatagok_1_11111111111[color=#804073,
+                                                                     process="let <'tag', x.1:bitstring>=d(c(<'tag', 'ok'>), <guard, 'a', 'a'>, <'tag', 'ok'>)",
+                                                                     no_derivcheck, issapicrule,
+                                                                     role='First']:
+     [ Let_111111111111( <alt(x), <guard, y, y>, x> ) ]
+    -->
+     [ Let_1111111111101( x ) ]
+  */
+
+rule (modulo E) lettagxbitstringdctagokguardaatagok_2_11111111111[color=#804073,
+                                                                  process="let <'tag', x.1:bitstring>=d(c(<'tag', 'ok'>), <guard, 'a', 'a'>, <'tag', 'ok'>)",
+                                                                  no_derivcheck, issapicrule, role='First']:
+   [ Let_111111111111( <c(x.12), <guard, y.12, y.12>, x.12> ) ]
+  -->
+   [ Let_1111111111101( x.12 ) ]
+
+  /*
+  rule (modulo AC) lettagxbitstringdctagokguardaatagok_2_11111111111[color=#804073,
+                                                                     process="let <'tag', x.1:bitstring>=d(c(<'tag', 'ok'>), <guard, 'a', 'a'>, <'tag', 'ok'>)",
+                                                                     no_derivcheck, issapicrule,
+                                                                     role='First']:
+     [ Let_111111111111( <c(x), <guard, y, y>, x> ) ]
+    -->
+     [ Let_1111111111101( x ) ]
+  */
+
+restriction Restr_lettagxbitstringdctagokguardaatagok_3_11111111111_1:
+  "∀ #NOW.
+    (Restr_lettagxbitstringdctagokguardaatagok_3_11111111111_1( ) @ #NOW) ⇒
+    (∀ x y.
+      (<alt(x), <guard, y, y>, x> =
+       <c(<'tag', 'ok'>), <guard, 'a', 'a'>, 'tag', 'ok'>) ⇒
+      (⊥))"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ #NOW.
+    (Restr_lettagxbitstringdctagokguardaatagok_3_11111111111_1( ) @ #NOW) ⇒
+    (∀ x y.
+      (<alt(x), <guard, y, y>, x> =
+       <c(<'tag', 'ok'>), <guard, 'a', 'a'>, 'tag', 'ok'>) ⇒
+      (⊥))"
+  */
+
+restriction Restr_lettagxbitstringdctagokguardaatagok_3_11111111111_2:
+  "∀ #NOW.
+    (Restr_lettagxbitstringdctagokguardaatagok_3_11111111111_2( ) @ #NOW) ⇒
+    (∀ x y.
+      (<c(x), <guard, y, y>, x> =
+       <c(<'tag', 'ok'>), <guard, 'a', 'a'>, 'tag', 'ok'>) ⇒
+      (⊥))"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ #NOW.
+    (Restr_lettagxbitstringdctagokguardaatagok_3_11111111111_2( ) @ #NOW) ⇒
+    (∀ x y.
+      (<c(x), <guard, y, y>, x> =
+       <c(<'tag', 'ok'>), <guard, 'a', 'a'>, 'tag', 'ok'>) ⇒
+      (⊥))"
+  */
+
+rule (modulo E) lettagxbitstringdctagokguardaatagok_3_11111111111[color=#804073,
+                                                                  process="let <'tag', x.1:bitstring>=d(c(<'tag', 'ok'>), <guard, 'a', 'a'>, <'tag', 'ok'>)",
+                                                                  issapicrule, role='First']:
+   [ Let_111111111111( <c(<'tag', 'ok'>), <guard, 'a', 'a'>, 'tag', 'ok'> )
+   ]
+  --[
+  Restr_lettagxbitstringdctagokguardaatagok_3_11111111111_1( ),
+  Restr_lettagxbitstringdctagokguardaatagok_3_11111111111_2( )
+  ]->
+   [ State_111111111112( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) lettagxbitstringdctagokguardaatagok_4_11111111111[color=#804073,
+                                                                  process="let <'tag', x.1:bitstring>=d(c(<'tag', 'ok'>), <guard, 'a', 'a'>, <'tag', 'ok'>)",
+                                                                  issapicrule, role='First']:
+   [ Let_1111111111101( <'tag', x.1> ) ] --> [ State_111111111111( x.1 ) ]
+
+  /*
+  rule (modulo AC) lettagxbitstringdctagokguardaatagok_4_11111111111[color=#804073,
+                                                                     process="let <'tag', x.1:bitstring>=d(c(<'tag', 'ok'>), <guard, 'a', 'a'>, <'tag', 'ok'>)",
+                                                                     issapicrule, role='First']:
+     [ Let_1111111111101( <'tag', x> ) ] --> [ State_111111111111( x ) ]
+  */
+
+restriction Restr_lettagxbitstringdctagokguardaatagok_5_11111111111_1:
+  "∀ x #NOW.
+    (Restr_lettagxbitstringdctagokguardaatagok_5_11111111111_1( x ) @ #NOW) ⇒
+    (∀ x.1. (<'tag', x.1> = x) ⇒ (⊥))"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ x #NOW.
+    (Restr_lettagxbitstringdctagokguardaatagok_5_11111111111_1( x ) @ #NOW) ⇒
+    (∀ x.1. (<'tag', x.1> = x) ⇒ (⊥))"
+  */
+
+rule (modulo E) lettagxbitstringdctagokguardaatagok_5_11111111111[color=#804073,
+                                                                  process="let <'tag', x.1:bitstring>=d(c(<'tag', 'ok'>), <guard, 'a', 'a'>, <'tag', 'ok'>)",
+                                                                  issapicrule, role='First']:
+   [ Let_1111111111101( destructor.14 ) ]
+  --[
+  Restr_lettagxbitstringdctagokguardaatagok_5_11111111111_1( destructor.14
+  )
+  ]->
+   [ State_111111111112( ) ]
+
+  /*
+  rule (modulo AC) lettagxbitstringdctagokguardaatagok_5_11111111111[color=#804073,
+                                                                     process="let <'tag', x.1:bitstring>=d(c(<'tag', 'ok'>), <guard, 'a', 'a'>, <'tag', 'ok'>)",
+                                                                     issapicrule, role='First']:
+     [ Let_1111111111101( destructor ) ]
+    --[
+    Restr_lettagxbitstringdctagokguardaatagok_5_11111111111_1( destructor )
+    ]->
+     [ State_111111111112( ) ]
+  */
+
+rule (modulo E) eventResultFirstxbitstring_0_111111111111[color=#804073,
+                                                          process="event Result( 'First', x.1:bitstring );",
+                                                          issapicrule, role='First']:
+   [ State_111111111111( x.1 ) ]
+  --[ Result( 'First', x.1 ) ]->
+   [ State_1111111111111( x.1 ) ]
+
+  /*
+  rule (modulo AC) eventResultFirstxbitstring_0_111111111111[color=#804073,
+                                                             process="event Result( 'First', x.1:bitstring );",
+                                                             issapicrule, role='First']:
+     [ State_111111111111( x ) ]
+    --[ Result( 'First', x ) ]->
+     [ State_1111111111111( x ) ]
+  */
+
+rule (modulo E) p_0_1111111111111[color=#804073, process="0",
+                                  issapicrule, role='First']:
+   [ State_1111111111111( x.1 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_1111111111111[color=#804073, process="0",
+                                     issapicrule, role='First']:
+     [ State_1111111111111( x ) ] --> [ ]
+  */
+
+rule (modulo E) eventFailureFirst_0_111111111112[color=#804073,
+                                                 process="event Failure( 'First' );", issapicrule,
+                                                 role='First']:
+   [ State_111111111112( ) ]
+  --[ Failure( 'First' ) ]->
+   [ State_1111111111121( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_0_1111111111121[color=#804073, process="0",
+                                  issapicrule, role='First']:
+   [ State_1111111111121( ) ] --> [ ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Second_0_1111111112[color=#ffffff, process="Second();",
+                                    issapicrule, role='Process']:
+   [ State_1111111112( ) ] --> [ State_11111111121( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) lettagxbitstringdalttagokguardaatagok_0_11111111121[color=#804140,
+                                                                    process="let <'tag', x.2:bitstring>=d(alt(<'tag', 'ok'>), <guard, 'a', 'a'>, <'tag', 'ok'>)",
+                                                                    issapicrule, role='Second']:
+   [ State_11111111121( ) ]
+  -->
+   [
+   Let_111111111211( <alt(<'tag', 'ok'>), <guard, 'a', 'a'>, 'tag', 'ok'> )
+   ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) lettagxbitstringdalttagokguardaatagok_1_11111111121[color=#804140,
+                                                                    process="let <'tag', x.2:bitstring>=d(alt(<'tag', 'ok'>), <guard, 'a', 'a'>, <'tag', 'ok'>)",
+                                                                    no_derivcheck, issapicrule,
+                                                                    role='Second']:
+   [ Let_111111111211( <alt(x.12), <guard, y.12, y.12>, x.12> ) ]
+  -->
+   [ Let_1111111112101( x.12 ) ]
+
+  /*
+  rule (modulo AC) lettagxbitstringdalttagokguardaatagok_1_11111111121[color=#804140,
+                                                                       process="let <'tag', x.2:bitstring>=d(alt(<'tag', 'ok'>), <guard, 'a', 'a'>, <'tag', 'ok'>)",
+                                                                       no_derivcheck, issapicrule,
+                                                                       role='Second']:
+     [ Let_111111111211( <alt(x), <guard, y, y>, x> ) ]
+    -->
+     [ Let_1111111112101( x ) ]
+  */
+
+rule (modulo E) lettagxbitstringdalttagokguardaatagok_2_11111111121[color=#804140,
+                                                                    process="let <'tag', x.2:bitstring>=d(alt(<'tag', 'ok'>), <guard, 'a', 'a'>, <'tag', 'ok'>)",
+                                                                    no_derivcheck, issapicrule,
+                                                                    role='Second']:
+   [ Let_111111111211( <c(x.12), <guard, y.12, y.12>, x.12> ) ]
+  -->
+   [ Let_1111111112101( x.12 ) ]
+
+  /*
+  rule (modulo AC) lettagxbitstringdalttagokguardaatagok_2_11111111121[color=#804140,
+                                                                       process="let <'tag', x.2:bitstring>=d(alt(<'tag', 'ok'>), <guard, 'a', 'a'>, <'tag', 'ok'>)",
+                                                                       no_derivcheck, issapicrule,
+                                                                       role='Second']:
+     [ Let_111111111211( <c(x), <guard, y, y>, x> ) ]
+    -->
+     [ Let_1111111112101( x ) ]
+  */
+
+restriction Restr_lettagxbitstringdalttagokguardaatagok_3_11111111121_1:
+  "∀ #NOW.
+    (Restr_lettagxbitstringdalttagokguardaatagok_3_11111111121_1( ) @ #NOW) ⇒
+    (∀ x y.
+      (<alt(x), <guard, y, y>, x> =
+       <alt(<'tag', 'ok'>), <guard, 'a', 'a'>, 'tag', 'ok'>) ⇒
+      (⊥))"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ #NOW.
+    (Restr_lettagxbitstringdalttagokguardaatagok_3_11111111121_1( ) @ #NOW) ⇒
+    (∀ x y.
+      (<alt(x), <guard, y, y>, x> =
+       <alt(<'tag', 'ok'>), <guard, 'a', 'a'>, 'tag', 'ok'>) ⇒
+      (⊥))"
+  */
+
+restriction Restr_lettagxbitstringdalttagokguardaatagok_3_11111111121_2:
+  "∀ #NOW.
+    (Restr_lettagxbitstringdalttagokguardaatagok_3_11111111121_2( ) @ #NOW) ⇒
+    (∀ x y.
+      (<c(x), <guard, y, y>, x> =
+       <alt(<'tag', 'ok'>), <guard, 'a', 'a'>, 'tag', 'ok'>) ⇒
+      (⊥))"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ #NOW.
+    (Restr_lettagxbitstringdalttagokguardaatagok_3_11111111121_2( ) @ #NOW) ⇒
+    (∀ x y.
+      (<c(x), <guard, y, y>, x> =
+       <alt(<'tag', 'ok'>), <guard, 'a', 'a'>, 'tag', 'ok'>) ⇒
+      (⊥))"
+  */
+
+rule (modulo E) lettagxbitstringdalttagokguardaatagok_3_11111111121[color=#804140,
+                                                                    process="let <'tag', x.2:bitstring>=d(alt(<'tag', 'ok'>), <guard, 'a', 'a'>, <'tag', 'ok'>)",
+                                                                    issapicrule, role='Second']:
+   [
+   Let_111111111211( <alt(<'tag', 'ok'>), <guard, 'a', 'a'>, 'tag', 'ok'> )
+   ]
+  --[
+  Restr_lettagxbitstringdalttagokguardaatagok_3_11111111121_1( ),
+  Restr_lettagxbitstringdalttagokguardaatagok_3_11111111121_2( )
+  ]->
+   [ State_111111111212( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) lettagxbitstringdalttagokguardaatagok_4_11111111121[color=#804140,
+                                                                    process="let <'tag', x.2:bitstring>=d(alt(<'tag', 'ok'>), <guard, 'a', 'a'>, <'tag', 'ok'>)",
+                                                                    issapicrule, role='Second']:
+   [ Let_1111111112101( <'tag', x.2> ) ] --> [ State_111111111211( x.2 ) ]
+
+  /*
+  rule (modulo AC) lettagxbitstringdalttagokguardaatagok_4_11111111121[color=#804140,
+                                                                       process="let <'tag', x.2:bitstring>=d(alt(<'tag', 'ok'>), <guard, 'a', 'a'>, <'tag', 'ok'>)",
+                                                                       issapicrule, role='Second']:
+     [ Let_1111111112101( <'tag', x> ) ] --> [ State_111111111211( x ) ]
+  */
+
+restriction Restr_lettagxbitstringdalttagokguardaatagok_5_11111111121_1:
+  "∀ x #NOW.
+    (Restr_lettagxbitstringdalttagokguardaatagok_5_11111111121_1( x
+     ) @ #NOW) ⇒
+    (∀ x.1. (<'tag', x.1> = x) ⇒ (⊥))"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ x #NOW.
+    (Restr_lettagxbitstringdalttagokguardaatagok_5_11111111121_1( x
+     ) @ #NOW) ⇒
+    (∀ x.1. (<'tag', x.1> = x) ⇒ (⊥))"
+  */
+
+rule (modulo E) lettagxbitstringdalttagokguardaatagok_5_11111111121[color=#804140,
+                                                                    process="let <'tag', x.2:bitstring>=d(alt(<'tag', 'ok'>), <guard, 'a', 'a'>, <'tag', 'ok'>)",
+                                                                    issapicrule, role='Second']:
+   [ Let_1111111112101( destructor.15 ) ]
+  --[
+  Restr_lettagxbitstringdalttagokguardaatagok_5_11111111121_1( destructor.15
+  )
+  ]->
+   [ State_111111111212( ) ]
+
+  /*
+  rule (modulo AC) lettagxbitstringdalttagokguardaatagok_5_11111111121[color=#804140,
+                                                                       process="let <'tag', x.2:bitstring>=d(alt(<'tag', 'ok'>), <guard, 'a', 'a'>, <'tag', 'ok'>)",
+                                                                       issapicrule, role='Second']:
+     [ Let_1111111112101( destructor ) ]
+    --[
+    Restr_lettagxbitstringdalttagokguardaatagok_5_11111111121_1( destructor )
+    ]->
+     [ State_111111111212( ) ]
+  */
+
+rule (modulo E) eventResultSecondxbitstring_0_111111111211[color=#804140,
+                                                           process="event Result( 'Second', x.2:bitstring );",
+                                                           issapicrule, role='Second']:
+   [ State_111111111211( x.2 ) ]
+  --[ Result( 'Second', x.2 ) ]->
+   [ State_1111111112111( x.2 ) ]
+
+  /*
+  rule (modulo AC) eventResultSecondxbitstring_0_111111111211[color=#804140,
+                                                              process="event Result( 'Second', x.2:bitstring );",
+                                                              issapicrule, role='Second']:
+     [ State_111111111211( x ) ]
+    --[ Result( 'Second', x ) ]->
+     [ State_1111111112111( x ) ]
+  */
+
+rule (modulo E) p_0_1111111112111[color=#804140, process="0",
+                                  issapicrule, role='Second']:
+   [ State_1111111112111( x.2 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_1111111112111[color=#804140, process="0",
+                                     issapicrule, role='Second']:
+     [ State_1111111112111( x ) ] --> [ ]
+  */
+
+rule (modulo E) eventFailureSecond_0_111111111212[color=#804140,
+                                                  process="event Failure( 'Second' );", issapicrule,
+                                                  role='Second']:
+   [ State_111111111212( ) ]
+  --[ Failure( 'Second' ) ]->
+   [ State_1111111112121( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_0_1111111112121[color=#804140, process="0",
+                                  issapicrule, role='Second']:
+   [ State_1111111112121( ) ] --> [ ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Constant_0_111111112[color=#ffffff,
+                                     process="Constant();", issapicrule, role='Process']:
+   [ State_111111112( ) ] --> [ State_1111111121( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) lettagxbitstringdctagokwrongaatagok_0_1111111121[color=#558040,
+                                                                 process="let <'tag', x.3:bitstring>=d(c(<'tag', 'ok'>), <'wrong', 'a', 'a'>, <'tag', 'ok'>)",
+                                                                 issapicrule, role='Constant']:
+   [ State_1111111121( ) ]
+  -->
+   [ Let_11111111211( <c(<'tag', 'ok'>), <'wrong', 'a', 'a'>, 'tag', 'ok'> )
+   ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) lettagxbitstringdctagokwrongaatagok_1_1111111121[color=#558040,
+                                                                 process="let <'tag', x.3:bitstring>=d(c(<'tag', 'ok'>), <'wrong', 'a', 'a'>, <'tag', 'ok'>)",
+                                                                 no_derivcheck, issapicrule, role='Constant']:
+   [ Let_11111111211( <alt(x.12), <guard, y.12, y.12>, x.12> ) ]
+  -->
+   [ Let_111111112101( x.12 ) ]
+
+  /*
+  rule (modulo AC) lettagxbitstringdctagokwrongaatagok_1_1111111121[color=#558040,
+                                                                    process="let <'tag', x.3:bitstring>=d(c(<'tag', 'ok'>), <'wrong', 'a', 'a'>, <'tag', 'ok'>)",
+                                                                    no_derivcheck, issapicrule,
+                                                                    role='Constant']:
+     [ Let_11111111211( <alt(x), <guard, y, y>, x> ) ]
+    -->
+     [ Let_111111112101( x ) ]
+  */
+
+rule (modulo E) lettagxbitstringdctagokwrongaatagok_2_1111111121[color=#558040,
+                                                                 process="let <'tag', x.3:bitstring>=d(c(<'tag', 'ok'>), <'wrong', 'a', 'a'>, <'tag', 'ok'>)",
+                                                                 no_derivcheck, issapicrule, role='Constant']:
+   [ Let_11111111211( <c(x.12), <guard, y.12, y.12>, x.12> ) ]
+  -->
+   [ Let_111111112101( x.12 ) ]
+
+  /*
+  rule (modulo AC) lettagxbitstringdctagokwrongaatagok_2_1111111121[color=#558040,
+                                                                    process="let <'tag', x.3:bitstring>=d(c(<'tag', 'ok'>), <'wrong', 'a', 'a'>, <'tag', 'ok'>)",
+                                                                    no_derivcheck, issapicrule,
+                                                                    role='Constant']:
+     [ Let_11111111211( <c(x), <guard, y, y>, x> ) ]
+    -->
+     [ Let_111111112101( x ) ]
+  */
+
+restriction Restr_lettagxbitstringdctagokwrongaatagok_3_1111111121_1:
+  "∀ #NOW.
+    (Restr_lettagxbitstringdctagokwrongaatagok_3_1111111121_1( ) @ #NOW) ⇒
+    (∀ x y.
+      (<alt(x), <guard, y, y>, x> =
+       <c(<'tag', 'ok'>), <'wrong', 'a', 'a'>, 'tag', 'ok'>) ⇒
+      (⊥))"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ #NOW.
+    (Restr_lettagxbitstringdctagokwrongaatagok_3_1111111121_1( ) @ #NOW) ⇒
+    (∀ x y.
+      (<alt(x), <guard, y, y>, x> =
+       <c(<'tag', 'ok'>), <'wrong', 'a', 'a'>, 'tag', 'ok'>) ⇒
+      (⊥))"
+  */
+
+restriction Restr_lettagxbitstringdctagokwrongaatagok_3_1111111121_2:
+  "∀ #NOW.
+    (Restr_lettagxbitstringdctagokwrongaatagok_3_1111111121_2( ) @ #NOW) ⇒
+    (∀ x y.
+      (<c(x), <guard, y, y>, x> =
+       <c(<'tag', 'ok'>), <'wrong', 'a', 'a'>, 'tag', 'ok'>) ⇒
+      (⊥))"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ #NOW.
+    (Restr_lettagxbitstringdctagokwrongaatagok_3_1111111121_2( ) @ #NOW) ⇒
+    (∀ x y.
+      (<c(x), <guard, y, y>, x> =
+       <c(<'tag', 'ok'>), <'wrong', 'a', 'a'>, 'tag', 'ok'>) ⇒
+      (⊥))"
+  */
+
+rule (modulo E) lettagxbitstringdctagokwrongaatagok_3_1111111121[color=#558040,
+                                                                 process="let <'tag', x.3:bitstring>=d(c(<'tag', 'ok'>), <'wrong', 'a', 'a'>, <'tag', 'ok'>)",
+                                                                 issapicrule, role='Constant']:
+   [ Let_11111111211( <c(<'tag', 'ok'>), <'wrong', 'a', 'a'>, 'tag', 'ok'> )
+   ]
+  --[
+  Restr_lettagxbitstringdctagokwrongaatagok_3_1111111121_1( ),
+  Restr_lettagxbitstringdctagokwrongaatagok_3_1111111121_2( )
+  ]->
+   [ State_11111111212( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) lettagxbitstringdctagokwrongaatagok_4_1111111121[color=#558040,
+                                                                 process="let <'tag', x.3:bitstring>=d(c(<'tag', 'ok'>), <'wrong', 'a', 'a'>, <'tag', 'ok'>)",
+                                                                 issapicrule, role='Constant']:
+   [ Let_111111112101( <'tag', x.3> ) ] --> [ State_11111111211( x.3 ) ]
+
+  /*
+  rule (modulo AC) lettagxbitstringdctagokwrongaatagok_4_1111111121[color=#558040,
+                                                                    process="let <'tag', x.3:bitstring>=d(c(<'tag', 'ok'>), <'wrong', 'a', 'a'>, <'tag', 'ok'>)",
+                                                                    issapicrule, role='Constant']:
+     [ Let_111111112101( <'tag', x> ) ] --> [ State_11111111211( x ) ]
+  */
+
+restriction Restr_lettagxbitstringdctagokwrongaatagok_5_1111111121_1:
+  "∀ x #NOW.
+    (Restr_lettagxbitstringdctagokwrongaatagok_5_1111111121_1( x ) @ #NOW) ⇒
+    (∀ x.1. (<'tag', x.1> = x) ⇒ (⊥))"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ x #NOW.
+    (Restr_lettagxbitstringdctagokwrongaatagok_5_1111111121_1( x ) @ #NOW) ⇒
+    (∀ x.1. (<'tag', x.1> = x) ⇒ (⊥))"
+  */
+
+rule (modulo E) lettagxbitstringdctagokwrongaatagok_5_1111111121[color=#558040,
+                                                                 process="let <'tag', x.3:bitstring>=d(c(<'tag', 'ok'>), <'wrong', 'a', 'a'>, <'tag', 'ok'>)",
+                                                                 issapicrule, role='Constant']:
+   [ Let_111111112101( destructor.16 ) ]
+  --[
+  Restr_lettagxbitstringdctagokwrongaatagok_5_1111111121_1( destructor.16 )
+  ]->
+   [ State_11111111212( ) ]
+
+  /*
+  rule (modulo AC) lettagxbitstringdctagokwrongaatagok_5_1111111121[color=#558040,
+                                                                    process="let <'tag', x.3:bitstring>=d(c(<'tag', 'ok'>), <'wrong', 'a', 'a'>, <'tag', 'ok'>)",
+                                                                    issapicrule, role='Constant']:
+     [ Let_111111112101( destructor ) ]
+    --[
+    Restr_lettagxbitstringdctagokwrongaatagok_5_1111111121_1( destructor )
+    ]->
+     [ State_11111111212( ) ]
+  */
+
+rule (modulo E) eventResultConstantxbitstring_0_11111111211[color=#558040,
+                                                            process="event Result( 'Constant', x.3:bitstring );",
+                                                            issapicrule, role='Constant']:
+   [ State_11111111211( x.3 ) ]
+  --[ Result( 'Constant', x.3 ) ]->
+   [ State_111111112111( x.3 ) ]
+
+  /*
+  rule (modulo AC) eventResultConstantxbitstring_0_11111111211[color=#558040,
+                                                               process="event Result( 'Constant', x.3:bitstring );",
+                                                               issapicrule, role='Constant']:
+     [ State_11111111211( x ) ]
+    --[ Result( 'Constant', x ) ]->
+     [ State_111111112111( x ) ]
+  */
+
+rule (modulo E) p_0_111111112111[color=#558040, process="0", issapicrule,
+                                 role='Constant']:
+   [ State_111111112111( x.3 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_111111112111[color=#558040, process="0",
+                                    issapicrule, role='Constant']:
+     [ State_111111112111( x ) ] --> [ ]
+  */
+
+rule (modulo E) eventFailureConstant_0_11111111212[color=#558040,
+                                                   process="event Failure( 'Constant' );", issapicrule,
+                                                   role='Constant']:
+   [ State_11111111212( ) ]
+  --[ Failure( 'Constant' ) ]->
+   [ State_111111112121( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_0_111111112121[color=#558040, process="0", issapicrule,
+                                 role='Constant']:
+   [ State_111111112121( ) ] --> [ ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Auxiliary_0_11111112[color=#ffffff,
+                                     process="Auxiliary();", issapicrule, role='Process']:
+   [ State_11111112( ) ] --> [ State_111111121( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) lettagxbitstringdctagokguardabtagok_0_111111121[color=#448040,
+                                                                process="let <'tag', x.4:bitstring>=d(c(<'tag', 'ok'>), <guard, 'a', 'b'>, <'tag', 'ok'>)",
+                                                                issapicrule, role='Auxiliary']:
+   [ State_111111121( ) ]
+  -->
+   [ Let_1111111211( <c(<'tag', 'ok'>), <guard, 'a', 'b'>, 'tag', 'ok'> ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) lettagxbitstringdctagokguardabtagok_1_111111121[color=#448040,
+                                                                process="let <'tag', x.4:bitstring>=d(c(<'tag', 'ok'>), <guard, 'a', 'b'>, <'tag', 'ok'>)",
+                                                                no_derivcheck, issapicrule, role='Auxiliary']:
+   [ Let_1111111211( <alt(x.12), <guard, y.12, y.12>, x.12> ) ]
+  -->
+   [ Let_11111112101( x.12 ) ]
+
+  /*
+  rule (modulo AC) lettagxbitstringdctagokguardabtagok_1_111111121[color=#448040,
+                                                                   process="let <'tag', x.4:bitstring>=d(c(<'tag', 'ok'>), <guard, 'a', 'b'>, <'tag', 'ok'>)",
+                                                                   no_derivcheck, issapicrule,
+                                                                   role='Auxiliary']:
+     [ Let_1111111211( <alt(x), <guard, y, y>, x> ) ]
+    -->
+     [ Let_11111112101( x ) ]
+  */
+
+rule (modulo E) lettagxbitstringdctagokguardabtagok_2_111111121[color=#448040,
+                                                                process="let <'tag', x.4:bitstring>=d(c(<'tag', 'ok'>), <guard, 'a', 'b'>, <'tag', 'ok'>)",
+                                                                no_derivcheck, issapicrule, role='Auxiliary']:
+   [ Let_1111111211( <c(x.12), <guard, y.12, y.12>, x.12> ) ]
+  -->
+   [ Let_11111112101( x.12 ) ]
+
+  /*
+  rule (modulo AC) lettagxbitstringdctagokguardabtagok_2_111111121[color=#448040,
+                                                                   process="let <'tag', x.4:bitstring>=d(c(<'tag', 'ok'>), <guard, 'a', 'b'>, <'tag', 'ok'>)",
+                                                                   no_derivcheck, issapicrule,
+                                                                   role='Auxiliary']:
+     [ Let_1111111211( <c(x), <guard, y, y>, x> ) ]
+    -->
+     [ Let_11111112101( x ) ]
+  */
+
+restriction Restr_lettagxbitstringdctagokguardabtagok_3_111111121_1:
+  "∀ #NOW.
+    (Restr_lettagxbitstringdctagokguardabtagok_3_111111121_1( ) @ #NOW) ⇒
+    (∀ x y.
+      (<alt(x), <guard, y, y>, x> =
+       <c(<'tag', 'ok'>), <guard, 'a', 'b'>, 'tag', 'ok'>) ⇒
+      (⊥))"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ #NOW.
+    (Restr_lettagxbitstringdctagokguardabtagok_3_111111121_1( ) @ #NOW) ⇒
+    (∀ x y.
+      (<alt(x), <guard, y, y>, x> =
+       <c(<'tag', 'ok'>), <guard, 'a', 'b'>, 'tag', 'ok'>) ⇒
+      (⊥))"
+  */
+
+restriction Restr_lettagxbitstringdctagokguardabtagok_3_111111121_2:
+  "∀ #NOW.
+    (Restr_lettagxbitstringdctagokguardabtagok_3_111111121_2( ) @ #NOW) ⇒
+    (∀ x y.
+      (<c(x), <guard, y, y>, x> =
+       <c(<'tag', 'ok'>), <guard, 'a', 'b'>, 'tag', 'ok'>) ⇒
+      (⊥))"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ #NOW.
+    (Restr_lettagxbitstringdctagokguardabtagok_3_111111121_2( ) @ #NOW) ⇒
+    (∀ x y.
+      (<c(x), <guard, y, y>, x> =
+       <c(<'tag', 'ok'>), <guard, 'a', 'b'>, 'tag', 'ok'>) ⇒
+      (⊥))"
+  */
+
+rule (modulo E) lettagxbitstringdctagokguardabtagok_3_111111121[color=#448040,
+                                                                process="let <'tag', x.4:bitstring>=d(c(<'tag', 'ok'>), <guard, 'a', 'b'>, <'tag', 'ok'>)",
+                                                                issapicrule, role='Auxiliary']:
+   [ Let_1111111211( <c(<'tag', 'ok'>), <guard, 'a', 'b'>, 'tag', 'ok'> ) ]
+  --[
+  Restr_lettagxbitstringdctagokguardabtagok_3_111111121_1( ),
+  Restr_lettagxbitstringdctagokguardabtagok_3_111111121_2( )
+  ]->
+   [ State_1111111212( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) lettagxbitstringdctagokguardabtagok_4_111111121[color=#448040,
+                                                                process="let <'tag', x.4:bitstring>=d(c(<'tag', 'ok'>), <guard, 'a', 'b'>, <'tag', 'ok'>)",
+                                                                issapicrule, role='Auxiliary']:
+   [ Let_11111112101( <'tag', x.4> ) ] --> [ State_1111111211( x.4 ) ]
+
+  /*
+  rule (modulo AC) lettagxbitstringdctagokguardabtagok_4_111111121[color=#448040,
+                                                                   process="let <'tag', x.4:bitstring>=d(c(<'tag', 'ok'>), <guard, 'a', 'b'>, <'tag', 'ok'>)",
+                                                                   issapicrule, role='Auxiliary']:
+     [ Let_11111112101( <'tag', x> ) ] --> [ State_1111111211( x ) ]
+  */
+
+restriction Restr_lettagxbitstringdctagokguardabtagok_5_111111121_1:
+  "∀ x #NOW.
+    (Restr_lettagxbitstringdctagokguardabtagok_5_111111121_1( x ) @ #NOW) ⇒
+    (∀ x.1. (<'tag', x.1> = x) ⇒ (⊥))"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ x #NOW.
+    (Restr_lettagxbitstringdctagokguardabtagok_5_111111121_1( x ) @ #NOW) ⇒
+    (∀ x.1. (<'tag', x.1> = x) ⇒ (⊥))"
+  */
+
+rule (modulo E) lettagxbitstringdctagokguardabtagok_5_111111121[color=#448040,
+                                                                process="let <'tag', x.4:bitstring>=d(c(<'tag', 'ok'>), <guard, 'a', 'b'>, <'tag', 'ok'>)",
+                                                                issapicrule, role='Auxiliary']:
+   [ Let_11111112101( destructor.17 ) ]
+  --[
+  Restr_lettagxbitstringdctagokguardabtagok_5_111111121_1( destructor.17 )
+  ]->
+   [ State_1111111212( ) ]
+
+  /*
+  rule (modulo AC) lettagxbitstringdctagokguardabtagok_5_111111121[color=#448040,
+                                                                   process="let <'tag', x.4:bitstring>=d(c(<'tag', 'ok'>), <guard, 'a', 'b'>, <'tag', 'ok'>)",
+                                                                   issapicrule, role='Auxiliary']:
+     [ Let_11111112101( destructor ) ]
+    --[ Restr_lettagxbitstringdctagokguardabtagok_5_111111121_1( destructor )
+    ]->
+     [ State_1111111212( ) ]
+  */
+
+rule (modulo E) eventResultAuxiliaryxbitstring_0_1111111211[color=#448040,
+                                                            process="event Result( 'Auxiliary', x.4:bitstring );",
+                                                            issapicrule, role='Auxiliary']:
+   [ State_1111111211( x.4 ) ]
+  --[ Result( 'Auxiliary', x.4 ) ]->
+   [ State_11111112111( x.4 ) ]
+
+  /*
+  rule (modulo AC) eventResultAuxiliaryxbitstring_0_1111111211[color=#448040,
+                                                               process="event Result( 'Auxiliary', x.4:bitstring );",
+                                                               issapicrule, role='Auxiliary']:
+     [ State_1111111211( x ) ]
+    --[ Result( 'Auxiliary', x ) ]->
+     [ State_11111112111( x ) ]
+  */
+
+rule (modulo E) p_0_11111112111[color=#448040, process="0", issapicrule,
+                                role='Auxiliary']:
+   [ State_11111112111( x.4 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_11111112111[color=#448040, process="0", issapicrule,
+                                   role='Auxiliary']:
+     [ State_11111112111( x ) ] --> [ ]
+  */
+
+rule (modulo E) eventFailureAuxiliary_0_1111111212[color=#448040,
+                                                   process="event Failure( 'Auxiliary' );", issapicrule,
+                                                   role='Auxiliary']:
+   [ State_1111111212( ) ]
+  --[ Failure( 'Auxiliary' ) ]->
+   [ State_11111112121( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_0_11111112121[color=#448040, process="0", issapicrule,
+                                role='Auxiliary']:
+   [ State_11111112121( ) ] --> [ ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Output_0_1111112[color=#ffffff, process="Output();",
+                                 issapicrule, role='Process']:
+   [ State_1111112( ) ] --> [ State_11111121( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) lettagxbitstringdctagokguardaatagother_0_11111121[color=#407e80,
+                                                                  process="let <'tag', x.5:bitstring>=d(c(<'tag', 'ok'>), <guard, 'a', 'a'>, <'tag', 'other'>)",
+                                                                  issapicrule, role='Output']:
+   [ State_11111121( ) ]
+  -->
+   [ Let_111111211( <c(<'tag', 'ok'>), <guard, 'a', 'a'>, 'tag', 'other'> )
+   ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) lettagxbitstringdctagokguardaatagother_1_11111121[color=#407e80,
+                                                                  process="let <'tag', x.5:bitstring>=d(c(<'tag', 'ok'>), <guard, 'a', 'a'>, <'tag', 'other'>)",
+                                                                  no_derivcheck, issapicrule, role='Output']:
+   [ Let_111111211( <alt(x.12), <guard, y.12, y.12>, x.12> ) ]
+  -->
+   [ Let_1111112101( x.12 ) ]
+
+  /*
+  rule (modulo AC) lettagxbitstringdctagokguardaatagother_1_11111121[color=#407e80,
+                                                                     process="let <'tag', x.5:bitstring>=d(c(<'tag', 'ok'>), <guard, 'a', 'a'>, <'tag', 'other'>)",
+                                                                     no_derivcheck, issapicrule,
+                                                                     role='Output']:
+     [ Let_111111211( <alt(x), <guard, y, y>, x> ) ]
+    -->
+     [ Let_1111112101( x ) ]
+  */
+
+rule (modulo E) lettagxbitstringdctagokguardaatagother_2_11111121[color=#407e80,
+                                                                  process="let <'tag', x.5:bitstring>=d(c(<'tag', 'ok'>), <guard, 'a', 'a'>, <'tag', 'other'>)",
+                                                                  no_derivcheck, issapicrule, role='Output']:
+   [ Let_111111211( <c(x.12), <guard, y.12, y.12>, x.12> ) ]
+  -->
+   [ Let_1111112101( x.12 ) ]
+
+  /*
+  rule (modulo AC) lettagxbitstringdctagokguardaatagother_2_11111121[color=#407e80,
+                                                                     process="let <'tag', x.5:bitstring>=d(c(<'tag', 'ok'>), <guard, 'a', 'a'>, <'tag', 'other'>)",
+                                                                     no_derivcheck, issapicrule,
+                                                                     role='Output']:
+     [ Let_111111211( <c(x), <guard, y, y>, x> ) ] --> [ Let_1111112101( x ) ]
+  */
+
+restriction Restr_lettagxbitstringdctagokguardaatagother_3_11111121_1:
+  "∀ #NOW.
+    (Restr_lettagxbitstringdctagokguardaatagother_3_11111121_1( ) @ #NOW) ⇒
+    (∀ x y.
+      (<alt(x), <guard, y, y>, x> =
+       <c(<'tag', 'ok'>), <guard, 'a', 'a'>, 'tag', 'other'>) ⇒
+      (⊥))"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ #NOW.
+    (Restr_lettagxbitstringdctagokguardaatagother_3_11111121_1( ) @ #NOW) ⇒
+    (∀ x y.
+      (<alt(x), <guard, y, y>, x> =
+       <c(<'tag', 'ok'>), <guard, 'a', 'a'>, 'tag', 'other'>) ⇒
+      (⊥))"
+  */
+
+restriction Restr_lettagxbitstringdctagokguardaatagother_3_11111121_2:
+  "∀ #NOW.
+    (Restr_lettagxbitstringdctagokguardaatagother_3_11111121_2( ) @ #NOW) ⇒
+    (∀ x y.
+      (<c(x), <guard, y, y>, x> =
+       <c(<'tag', 'ok'>), <guard, 'a', 'a'>, 'tag', 'other'>) ⇒
+      (⊥))"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ #NOW.
+    (Restr_lettagxbitstringdctagokguardaatagother_3_11111121_2( ) @ #NOW) ⇒
+    (∀ x y.
+      (<c(x), <guard, y, y>, x> =
+       <c(<'tag', 'ok'>), <guard, 'a', 'a'>, 'tag', 'other'>) ⇒
+      (⊥))"
+  */
+
+rule (modulo E) lettagxbitstringdctagokguardaatagother_3_11111121[color=#407e80,
+                                                                  process="let <'tag', x.5:bitstring>=d(c(<'tag', 'ok'>), <guard, 'a', 'a'>, <'tag', 'other'>)",
+                                                                  issapicrule, role='Output']:
+   [ Let_111111211( <c(<'tag', 'ok'>), <guard, 'a', 'a'>, 'tag', 'other'> )
+   ]
+  --[
+  Restr_lettagxbitstringdctagokguardaatagother_3_11111121_1( ),
+  Restr_lettagxbitstringdctagokguardaatagother_3_11111121_2( )
+  ]->
+   [ State_111111212( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) lettagxbitstringdctagokguardaatagother_4_11111121[color=#407e80,
+                                                                  process="let <'tag', x.5:bitstring>=d(c(<'tag', 'ok'>), <guard, 'a', 'a'>, <'tag', 'other'>)",
+                                                                  issapicrule, role='Output']:
+   [ Let_1111112101( <'tag', x.5> ) ] --> [ State_111111211( x.5 ) ]
+
+  /*
+  rule (modulo AC) lettagxbitstringdctagokguardaatagother_4_11111121[color=#407e80,
+                                                                     process="let <'tag', x.5:bitstring>=d(c(<'tag', 'ok'>), <guard, 'a', 'a'>, <'tag', 'other'>)",
+                                                                     issapicrule, role='Output']:
+     [ Let_1111112101( <'tag', x> ) ] --> [ State_111111211( x ) ]
+  */
+
+restriction Restr_lettagxbitstringdctagokguardaatagother_5_11111121_1:
+  "∀ x #NOW.
+    (Restr_lettagxbitstringdctagokguardaatagother_5_11111121_1( x ) @ #NOW) ⇒
+    (∀ x.1. (<'tag', x.1> = x) ⇒ (⊥))"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ x #NOW.
+    (Restr_lettagxbitstringdctagokguardaatagother_5_11111121_1( x ) @ #NOW) ⇒
+    (∀ x.1. (<'tag', x.1> = x) ⇒ (⊥))"
+  */
+
+rule (modulo E) lettagxbitstringdctagokguardaatagother_5_11111121[color=#407e80,
+                                                                  process="let <'tag', x.5:bitstring>=d(c(<'tag', 'ok'>), <guard, 'a', 'a'>, <'tag', 'other'>)",
+                                                                  issapicrule, role='Output']:
+   [ Let_1111112101( destructor.18 ) ]
+  --[
+  Restr_lettagxbitstringdctagokguardaatagother_5_11111121_1( destructor.18
+  )
+  ]->
+   [ State_111111212( ) ]
+
+  /*
+  rule (modulo AC) lettagxbitstringdctagokguardaatagother_5_11111121[color=#407e80,
+                                                                     process="let <'tag', x.5:bitstring>=d(c(<'tag', 'ok'>), <guard, 'a', 'a'>, <'tag', 'other'>)",
+                                                                     issapicrule, role='Output']:
+     [ Let_1111112101( destructor ) ]
+    --[
+    Restr_lettagxbitstringdctagokguardaatagother_5_11111121_1( destructor )
+    ]->
+     [ State_111111212( ) ]
+  */
+
+rule (modulo E) eventResultOutputxbitstring_0_111111211[color=#407e80,
+                                                        process="event Result( 'Output', x.5:bitstring );",
+                                                        issapicrule, role='Output']:
+   [ State_111111211( x.5 ) ]
+  --[ Result( 'Output', x.5 ) ]->
+   [ State_1111112111( x.5 ) ]
+
+  /*
+  rule (modulo AC) eventResultOutputxbitstring_0_111111211[color=#407e80,
+                                                           process="event Result( 'Output', x.5:bitstring );",
+                                                           issapicrule, role='Output']:
+     [ State_111111211( x ) ]
+    --[ Result( 'Output', x ) ]->
+     [ State_1111112111( x ) ]
+  */
+
+rule (modulo E) p_0_1111112111[color=#407e80, process="0", issapicrule,
+                               role='Output']:
+   [ State_1111112111( x.5 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_1111112111[color=#407e80, process="0", issapicrule,
+                                  role='Output']:
+     [ State_1111112111( x ) ] --> [ ]
+  */
+
+rule (modulo E) eventFailureOutput_0_111111212[color=#407e80,
+                                               process="event Failure( 'Output' );", issapicrule,
+                                               role='Output']:
+   [ State_111111212( ) ]
+  --[ Failure( 'Output' ) ]->
+   [ State_1111112121( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_0_1111112121[color=#407e80, process="0", issapicrule,
+                               role='Output']:
+   [ State_1111112121( ) ] --> [ ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Pattern_0_111112[color=#ffffff, process="Pattern();",
+                                 issapicrule, role='Process']:
+   [ State_111112( ) ] --> [ State_1111121( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) lettagxbitstringdcwrongokguardaawrongok_0_1111121[color=#805040,
+                                                                  process="let <'tag', x.6:bitstring>=d(c(<'wrong', 'ok'>), <guard, 'a', 'a'>, <'wrong', 'ok'>)",
+                                                                  issapicrule, role='Pattern']:
+   [ State_1111121( ) ]
+  -->
+   [ Let_11111211( <c(<'wrong', 'ok'>), <guard, 'a', 'a'>, 'wrong', 'ok'> )
+   ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) lettagxbitstringdcwrongokguardaawrongok_1_1111121[color=#805040,
+                                                                  process="let <'tag', x.6:bitstring>=d(c(<'wrong', 'ok'>), <guard, 'a', 'a'>, <'wrong', 'ok'>)",
+                                                                  no_derivcheck, issapicrule, role='Pattern']:
+   [ Let_11111211( <alt(x.12), <guard, y.12, y.12>, x.12> ) ]
+  -->
+   [ Let_111112101( x.12 ) ]
+
+  /*
+  rule (modulo AC) lettagxbitstringdcwrongokguardaawrongok_1_1111121[color=#805040,
+                                                                     process="let <'tag', x.6:bitstring>=d(c(<'wrong', 'ok'>), <guard, 'a', 'a'>, <'wrong', 'ok'>)",
+                                                                     no_derivcheck, issapicrule,
+                                                                     role='Pattern']:
+     [ Let_11111211( <alt(x), <guard, y, y>, x> ) ] --> [ Let_111112101( x ) ]
+  */
+
+rule (modulo E) lettagxbitstringdcwrongokguardaawrongok_2_1111121[color=#805040,
+                                                                  process="let <'tag', x.6:bitstring>=d(c(<'wrong', 'ok'>), <guard, 'a', 'a'>, <'wrong', 'ok'>)",
+                                                                  no_derivcheck, issapicrule, role='Pattern']:
+   [ Let_11111211( <c(x.12), <guard, y.12, y.12>, x.12> ) ]
+  -->
+   [ Let_111112101( x.12 ) ]
+
+  /*
+  rule (modulo AC) lettagxbitstringdcwrongokguardaawrongok_2_1111121[color=#805040,
+                                                                     process="let <'tag', x.6:bitstring>=d(c(<'wrong', 'ok'>), <guard, 'a', 'a'>, <'wrong', 'ok'>)",
+                                                                     no_derivcheck, issapicrule,
+                                                                     role='Pattern']:
+     [ Let_11111211( <c(x), <guard, y, y>, x> ) ] --> [ Let_111112101( x ) ]
+  */
+
+restriction Restr_lettagxbitstringdcwrongokguardaawrongok_3_1111121_1:
+  "∀ #NOW.
+    (Restr_lettagxbitstringdcwrongokguardaawrongok_3_1111121_1( ) @ #NOW) ⇒
+    (∀ x y.
+      (<alt(x), <guard, y, y>, x> =
+       <c(<'wrong', 'ok'>), <guard, 'a', 'a'>, 'wrong', 'ok'>) ⇒
+      (⊥))"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ #NOW.
+    (Restr_lettagxbitstringdcwrongokguardaawrongok_3_1111121_1( ) @ #NOW) ⇒
+    (∀ x y.
+      (<alt(x), <guard, y, y>, x> =
+       <c(<'wrong', 'ok'>), <guard, 'a', 'a'>, 'wrong', 'ok'>) ⇒
+      (⊥))"
+  */
+
+restriction Restr_lettagxbitstringdcwrongokguardaawrongok_3_1111121_2:
+  "∀ #NOW.
+    (Restr_lettagxbitstringdcwrongokguardaawrongok_3_1111121_2( ) @ #NOW) ⇒
+    (∀ x y.
+      (<c(x), <guard, y, y>, x> =
+       <c(<'wrong', 'ok'>), <guard, 'a', 'a'>, 'wrong', 'ok'>) ⇒
+      (⊥))"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ #NOW.
+    (Restr_lettagxbitstringdcwrongokguardaawrongok_3_1111121_2( ) @ #NOW) ⇒
+    (∀ x y.
+      (<c(x), <guard, y, y>, x> =
+       <c(<'wrong', 'ok'>), <guard, 'a', 'a'>, 'wrong', 'ok'>) ⇒
+      (⊥))"
+  */
+
+rule (modulo E) lettagxbitstringdcwrongokguardaawrongok_3_1111121[color=#805040,
+                                                                  process="let <'tag', x.6:bitstring>=d(c(<'wrong', 'ok'>), <guard, 'a', 'a'>, <'wrong', 'ok'>)",
+                                                                  issapicrule, role='Pattern']:
+   [ Let_11111211( <c(<'wrong', 'ok'>), <guard, 'a', 'a'>, 'wrong', 'ok'> )
+   ]
+  --[
+  Restr_lettagxbitstringdcwrongokguardaawrongok_3_1111121_1( ),
+  Restr_lettagxbitstringdcwrongokguardaawrongok_3_1111121_2( )
+  ]->
+   [ State_11111212( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) lettagxbitstringdcwrongokguardaawrongok_4_1111121[color=#805040,
+                                                                  process="let <'tag', x.6:bitstring>=d(c(<'wrong', 'ok'>), <guard, 'a', 'a'>, <'wrong', 'ok'>)",
+                                                                  issapicrule, role='Pattern']:
+   [ Let_111112101( <'tag', x.6> ) ] --> [ State_11111211( x.6 ) ]
+
+  /*
+  rule (modulo AC) lettagxbitstringdcwrongokguardaawrongok_4_1111121[color=#805040,
+                                                                     process="let <'tag', x.6:bitstring>=d(c(<'wrong', 'ok'>), <guard, 'a', 'a'>, <'wrong', 'ok'>)",
+                                                                     issapicrule, role='Pattern']:
+     [ Let_111112101( <'tag', x> ) ] --> [ State_11111211( x ) ]
+  */
+
+restriction Restr_lettagxbitstringdcwrongokguardaawrongok_5_1111121_1:
+  "∀ x #NOW.
+    (Restr_lettagxbitstringdcwrongokguardaawrongok_5_1111121_1( x ) @ #NOW) ⇒
+    (∀ x.1. (<'tag', x.1> = x) ⇒ (⊥))"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ x #NOW.
+    (Restr_lettagxbitstringdcwrongokguardaawrongok_5_1111121_1( x ) @ #NOW) ⇒
+    (∀ x.1. (<'tag', x.1> = x) ⇒ (⊥))"
+  */
+
+rule (modulo E) lettagxbitstringdcwrongokguardaawrongok_5_1111121[color=#805040,
+                                                                  process="let <'tag', x.6:bitstring>=d(c(<'wrong', 'ok'>), <guard, 'a', 'a'>, <'wrong', 'ok'>)",
+                                                                  issapicrule, role='Pattern']:
+   [ Let_111112101( destructor.19 ) ]
+  --[
+  Restr_lettagxbitstringdcwrongokguardaawrongok_5_1111121_1( destructor.19
+  )
+  ]->
+   [ State_11111212( ) ]
+
+  /*
+  rule (modulo AC) lettagxbitstringdcwrongokguardaawrongok_5_1111121[color=#805040,
+                                                                     process="let <'tag', x.6:bitstring>=d(c(<'wrong', 'ok'>), <guard, 'a', 'a'>, <'wrong', 'ok'>)",
+                                                                     issapicrule, role='Pattern']:
+     [ Let_111112101( destructor ) ]
+    --[
+    Restr_lettagxbitstringdcwrongokguardaawrongok_5_1111121_1( destructor )
+    ]->
+     [ State_11111212( ) ]
+  */
+
+rule (modulo E) eventResultPatternxbitstring_0_11111211[color=#805040,
+                                                        process="event Result( 'Pattern', x.6:bitstring );",
+                                                        issapicrule, role='Pattern']:
+   [ State_11111211( x.6 ) ]
+  --[ Result( 'Pattern', x.6 ) ]->
+   [ State_111112111( x.6 ) ]
+
+  /*
+  rule (modulo AC) eventResultPatternxbitstring_0_11111211[color=#805040,
+                                                           process="event Result( 'Pattern', x.6:bitstring );",
+                                                           issapicrule, role='Pattern']:
+     [ State_11111211( x ) ]
+    --[ Result( 'Pattern', x ) ]->
+     [ State_111112111( x ) ]
+  */
+
+rule (modulo E) p_0_111112111[color=#805040, process="0", issapicrule,
+                              role='Pattern']:
+   [ State_111112111( x.6 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_111112111[color=#805040, process="0", issapicrule,
+                                 role='Pattern']:
+     [ State_111112111( x ) ] --> [ ]
+  */
+
+rule (modulo E) eventFailurePattern_0_11111212[color=#805040,
+                                               process="event Failure( 'Pattern' );", issapicrule,
+                                               role='Pattern']:
+   [ State_11111212( ) ] --[ Failure( 'Pattern' ) ]-> [ State_111112121( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_0_111112121[color=#805040, process="0", issapicrule,
+                              role='Pattern']:
+   [ State_111112121( ) ] --> [ ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Overlap_0_11112[color=#ffffff, process="Overlap();",
+                                issapicrule, role='Process']:
+   [ State_11112( ) ] --> [ State_111121( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) lettagxbitstringoverlapctagokguard_0_111121[color=#40806e,
+                                                            process="let <'tag', x.7:bitstring>=overlap(c(<'tag', 'ok'>), guard)",
+                                                            issapicrule, role='Overlap']:
+   [ State_111121( ) ] --> [ Let_1111211( <c(<'tag', 'ok'>), guard> ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) lettagxbitstringoverlapctagokguard_1_111121[color=#40806e,
+                                                            process="let <'tag', x.7:bitstring>=overlap(c(<'tag', 'ok'>), guard)",
+                                                            no_derivcheck, issapicrule, role='Overlap']:
+   [ Let_1111211( <c(x.12), y.12> ) ] --> [ Let_11112101( x.12 ) ]
+
+  /*
+  rule (modulo AC) lettagxbitstringoverlapctagokguard_1_111121[color=#40806e,
+                                                               process="let <'tag', x.7:bitstring>=overlap(c(<'tag', 'ok'>), guard)",
+                                                               no_derivcheck, issapicrule, role='Overlap']:
+     [ Let_1111211( <c(x), y> ) ] --> [ Let_11112101( x ) ]
+  */
+
+rule (modulo E) lettagxbitstringoverlapctagokguard_2_111121[color=#40806e,
+                                                            process="let <'tag', x.7:bitstring>=overlap(c(<'tag', 'ok'>), guard)",
+                                                            no_derivcheck, issapicrule, role='Overlap']:
+   [ Let_1111211( <c(x.12), guard> ) ] --> [ Let_11112101( x.12 ) ]
+
+  /*
+  rule (modulo AC) lettagxbitstringoverlapctagokguard_2_111121[color=#40806e,
+                                                               process="let <'tag', x.7:bitstring>=overlap(c(<'tag', 'ok'>), guard)",
+                                                               no_derivcheck, issapicrule, role='Overlap']:
+     [ Let_1111211( <c(x), guard> ) ] --> [ Let_11112101( x ) ]
+  */
+
+restriction Restr_lettagxbitstringoverlapctagokguard_3_111121_1:
+  "∀ #NOW.
+    (Restr_lettagxbitstringoverlapctagokguard_3_111121_1( ) @ #NOW) ⇒
+    (∀ x y. (<c(x), y> = <c(<'tag', 'ok'>), guard>) ⇒ (⊥))"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ #NOW.
+    (Restr_lettagxbitstringoverlapctagokguard_3_111121_1( ) @ #NOW) ⇒
+    (∀ x y. (<c(x), y> = <c(<'tag', 'ok'>), guard>) ⇒ (⊥))"
+  */
+
+restriction Restr_lettagxbitstringoverlapctagokguard_3_111121_2:
+  "∀ #NOW.
+    (Restr_lettagxbitstringoverlapctagokguard_3_111121_2( ) @ #NOW) ⇒
+    (∀ x. (<c(x), guard> = <c(<'tag', 'ok'>), guard>) ⇒ (⊥))"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ #NOW.
+    (Restr_lettagxbitstringoverlapctagokguard_3_111121_2( ) @ #NOW) ⇒
+    (∀ x. (<c(x), guard> = <c(<'tag', 'ok'>), guard>) ⇒ (⊥))"
+  */
+
+rule (modulo E) lettagxbitstringoverlapctagokguard_3_111121[color=#40806e,
+                                                            process="let <'tag', x.7:bitstring>=overlap(c(<'tag', 'ok'>), guard)",
+                                                            issapicrule, role='Overlap']:
+   [ Let_1111211( <c(<'tag', 'ok'>), guard> ) ]
+  --[
+  Restr_lettagxbitstringoverlapctagokguard_3_111121_1( ),
+  Restr_lettagxbitstringoverlapctagokguard_3_111121_2( )
+  ]->
+   [ State_1111212( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) lettagxbitstringoverlapctagokguard_4_111121[color=#40806e,
+                                                            process="let <'tag', x.7:bitstring>=overlap(c(<'tag', 'ok'>), guard)",
+                                                            issapicrule, role='Overlap']:
+   [ Let_11112101( <'tag', x.7> ) ] --> [ State_1111211( x.7 ) ]
+
+  /*
+  rule (modulo AC) lettagxbitstringoverlapctagokguard_4_111121[color=#40806e,
+                                                               process="let <'tag', x.7:bitstring>=overlap(c(<'tag', 'ok'>), guard)",
+                                                               issapicrule, role='Overlap']:
+     [ Let_11112101( <'tag', x> ) ] --> [ State_1111211( x ) ]
+  */
+
+restriction Restr_lettagxbitstringoverlapctagokguard_5_111121_1:
+  "∀ x #NOW.
+    (Restr_lettagxbitstringoverlapctagokguard_5_111121_1( x ) @ #NOW) ⇒
+    (∀ x.1. (<'tag', x.1> = x) ⇒ (⊥))"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ x #NOW.
+    (Restr_lettagxbitstringoverlapctagokguard_5_111121_1( x ) @ #NOW) ⇒
+    (∀ x.1. (<'tag', x.1> = x) ⇒ (⊥))"
+  */
+
+rule (modulo E) lettagxbitstringoverlapctagokguard_5_111121[color=#40806e,
+                                                            process="let <'tag', x.7:bitstring>=overlap(c(<'tag', 'ok'>), guard)",
+                                                            issapicrule, role='Overlap']:
+   [ Let_11112101( destructor.20 ) ]
+  --[ Restr_lettagxbitstringoverlapctagokguard_5_111121_1( destructor.20 )
+  ]->
+   [ State_1111212( ) ]
+
+  /*
+  rule (modulo AC) lettagxbitstringoverlapctagokguard_5_111121[color=#40806e,
+                                                               process="let <'tag', x.7:bitstring>=overlap(c(<'tag', 'ok'>), guard)",
+                                                               issapicrule, role='Overlap']:
+     [ Let_11112101( destructor ) ]
+    --[ Restr_lettagxbitstringoverlapctagokguard_5_111121_1( destructor ) ]->
+     [ State_1111212( ) ]
+  */
+
+rule (modulo E) eventResultOverlapxbitstring_0_1111211[color=#40806e,
+                                                       process="event Result( 'Overlap', x.7:bitstring );",
+                                                       issapicrule, role='Overlap']:
+   [ State_1111211( x.7 ) ]
+  --[ Result( 'Overlap', x.7 ) ]->
+   [ State_11112111( x.7 ) ]
+
+  /*
+  rule (modulo AC) eventResultOverlapxbitstring_0_1111211[color=#40806e,
+                                                          process="event Result( 'Overlap', x.7:bitstring );",
+                                                          issapicrule, role='Overlap']:
+     [ State_1111211( x ) ]
+    --[ Result( 'Overlap', x ) ]->
+     [ State_11112111( x ) ]
+  */
+
+rule (modulo E) p_0_11112111[color=#40806e, process="0", issapicrule,
+                             role='Overlap']:
+   [ State_11112111( x.7 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_11112111[color=#40806e, process="0", issapicrule,
+                                role='Overlap']:
+     [ State_11112111( x ) ] --> [ ]
+  */
+
+rule (modulo E) eventFailureOverlap_0_1111212[color=#40806e,
+                                              process="event Failure( 'Overlap' );", issapicrule,
+                                              role='Overlap']:
+   [ State_1111212( ) ] --[ Failure( 'Overlap' ) ]-> [ State_11112121( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_0_11112121[color=#40806e, process="0", issapicrule,
+                             role='Overlap']:
+   [ State_11112121( ) ] --> [ ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Absent_0_1112[color=#ffffff, process="Absent();",
+                              issapicrule, role='Process']:
+   [ State_1112( ) ] --> [ State_11121( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) eventFailureAbsent_0_11121[color=#5b8040,
+                                           process="event Failure( 'Absent' );", issapicrule, role='Absent']:
+   [ State_11121( ) ] --[ Failure( 'Absent' ) ]-> [ State_111211( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_0_111211[color=#5b8040, process="0", issapicrule,
+                           role='Absent']:
+   [ State_111211( ) ] --> [ ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Nested_0_112[color=#ffffff, process="Nested();",
+                             issapicrule, role='Process']:
+   [ State_112( ) ] --> [ State_1121( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) eventFailureNested_0_1121[color=#7b4080,
+                                          process="event Failure( 'Nested' );", issapicrule, role='Nested']:
+   [ State_1121( ) ] --[ Failure( 'Nested' ) ]-> [ State_11211( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_0_11211[color=#7b4080, process="0", issapicrule,
+                          role='Nested']:
+   [ State_11211( ) ] --> [ ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Bound_0_12[color=#ffffff, process="Bound();",
+                           issapicrule, role='Process']:
+   [ State_12( ) ] --> [ State_121( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) newx_0_121[color=#408052, process="new x.10;",
+                           issapicrule, role='Bound']:
+   [ State_121( ), Fr( x.10 ) ] --> [ State_1211( x.10 ) ]
+
+  /*
+  rule (modulo AC) newx_0_121[color=#408052, process="new x.10;",
+                              issapicrule, role='Bound']:
+     [ State_121( ), Fr( x ) ] --> [ State_1211( x ) ]
+  */
+
+rule (modulo E) lettagxoverlapctagxguard_0_1211[color=#408052,
+                                                process="let <'tag', =x.10>=overlap(c(<'tag', x.10>), guard)",
+                                                issapicrule, role='Bound']:
+   [ State_1211( x.10 ) ]
+  -->
+   [ Let_12111( <c(<'tag', x.10>), guard>, x.10 ) ]
+
+  /*
+  rule (modulo AC) lettagxoverlapctagxguard_0_1211[color=#408052,
+                                                   process="let <'tag', =x.10>=overlap(c(<'tag', x.10>), guard)",
+                                                   issapicrule, role='Bound']:
+     [ State_1211( x ) ] --> [ Let_12111( <c(<'tag', x>), guard>, x ) ]
+  */
+
+rule (modulo E) lettagxoverlapctagxguard_1_1211[color=#408052,
+                                                process="let <'tag', =x.10>=overlap(c(<'tag', x.10>), guard)",
+                                                no_derivcheck, issapicrule, role='Bound']:
+   [ Let_12111( <c(x.12), y.12>, x.10 ) ] --> [ Let_121101( x.12, x.10 ) ]
+
+  /*
+  rule (modulo AC) lettagxoverlapctagxguard_1_1211[color=#408052,
+                                                   process="let <'tag', =x.10>=overlap(c(<'tag', x.10>), guard)",
+                                                   no_derivcheck, issapicrule, role='Bound']:
+     [ Let_12111( <c(x), y>, x.1 ) ] --> [ Let_121101( x, x.1 ) ]
+  */
+
+rule (modulo E) lettagxoverlapctagxguard_2_1211[color=#408052,
+                                                process="let <'tag', =x.10>=overlap(c(<'tag', x.10>), guard)",
+                                                no_derivcheck, issapicrule, role='Bound']:
+   [ Let_12111( <c(x.12), guard>, x.10 ) ] --> [ Let_121101( x.12, x.10 ) ]
+
+  /*
+  rule (modulo AC) lettagxoverlapctagxguard_2_1211[color=#408052,
+                                                   process="let <'tag', =x.10>=overlap(c(<'tag', x.10>), guard)",
+                                                   no_derivcheck, issapicrule, role='Bound']:
+     [ Let_12111( <c(x), guard>, x.1 ) ] --> [ Let_121101( x, x.1 ) ]
+  */
+
+restriction Restr_lettagxoverlapctagxguard_3_1211_1:
+  "∀ x #NOW.
+    (Restr_lettagxoverlapctagxguard_3_1211_1( x ) @ #NOW) ⇒
+    (∀ x.1 y. (<c(x.1), y> = x) ⇒ (⊥))"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ x #NOW.
+    (Restr_lettagxoverlapctagxguard_3_1211_1( x ) @ #NOW) ⇒
+    (∀ x.1 y. (<c(x.1), y> = x) ⇒ (⊥))"
+  */
+
+restriction Restr_lettagxoverlapctagxguard_3_1211_2:
+  "∀ x #NOW.
+    (Restr_lettagxoverlapctagxguard_3_1211_2( x ) @ #NOW) ⇒
+    (∀ x.1. (<c(x.1), guard> = x) ⇒ (⊥))"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ x #NOW.
+    (Restr_lettagxoverlapctagxguard_3_1211_2( x ) @ #NOW) ⇒
+    (∀ x.1. (<c(x.1), guard> = x) ⇒ (⊥))"
+  */
+
+rule (modulo E) lettagxoverlapctagxguard_3_1211[color=#408052,
+                                                process="let <'tag', =x.10>=overlap(c(<'tag', x.10>), guard)",
+                                                issapicrule, role='Bound']:
+   [ Let_12111( <c(<'tag', x.10>), guard>, x.10 ) ]
+  --[
+  Restr_lettagxoverlapctagxguard_3_1211_1( <c(<'tag', x.10>), guard> ),
+  Restr_lettagxoverlapctagxguard_3_1211_2( <c(<'tag', x.10>), guard> )
+  ]->
+   [ State_12112( x.10 ) ]
+
+  /*
+  rule (modulo AC) lettagxoverlapctagxguard_3_1211[color=#408052,
+                                                   process="let <'tag', =x.10>=overlap(c(<'tag', x.10>), guard)",
+                                                   issapicrule, role='Bound']:
+     [ Let_12111( <c(<'tag', x>), guard>, x ) ]
+    --[
+    Restr_lettagxoverlapctagxguard_3_1211_1( <c(<'tag', x>), guard> ),
+    Restr_lettagxoverlapctagxguard_3_1211_2( <c(<'tag', x>), guard> )
+    ]->
+     [ State_12112( x ) ]
+  */
+
+rule (modulo E) lettagxoverlapctagxguard_4_1211[color=#408052,
+                                                process="let <'tag', =x.10>=overlap(c(<'tag', x.10>), guard)",
+                                                issapicrule, role='Bound']:
+   [ Let_121101( <'tag', x.10>, x.10 ) ] --> [ State_12111( x.10 ) ]
+
+  /*
+  rule (modulo AC) lettagxoverlapctagxguard_4_1211[color=#408052,
+                                                   process="let <'tag', =x.10>=overlap(c(<'tag', x.10>), guard)",
+                                                   issapicrule, role='Bound']:
+     [ Let_121101( <'tag', x>, x ) ] --> [ State_12111( x ) ]
+  */
+
+restriction Restr_lettagxoverlapctagxguard_5_1211_1:
+  "∀ x #NOW x.1.
+    (Restr_lettagxoverlapctagxguard_5_1211_1( x, x.1 ) @ #NOW) ⇒
+    ((x = x.1) ⇒ (⊥))"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ x #NOW x.1.
+    (Restr_lettagxoverlapctagxguard_5_1211_1( x, x.1 ) @ #NOW) ⇒
+    ((x = x.1) ⇒ (⊥))"
+  */
+
+rule (modulo E) lettagxoverlapctagxguard_5_1211[color=#408052,
+                                                process="let <'tag', =x.10>=overlap(c(<'tag', x.10>), guard)",
+                                                issapicrule, role='Bound']:
+   [ Let_121101( destructor.22, x.10 ) ]
+  --[
+  Restr_lettagxoverlapctagxguard_5_1211_1( <'tag', x.10>, destructor.22 )
+  ]->
+   [ State_12112( x.10 ) ]
+
+  /*
+  rule (modulo AC) lettagxoverlapctagxguard_5_1211[color=#408052,
+                                                   process="let <'tag', =x.10>=overlap(c(<'tag', x.10>), guard)",
+                                                   issapicrule, role='Bound']:
+     [ Let_121101( destructor, x ) ]
+    --[ Restr_lettagxoverlapctagxguard_5_1211_1( <'tag', x>, destructor ) ]->
+     [ State_12112( x ) ]
+  */
+
+rule (modulo E) eventBoundx_0_12111[color=#408052,
+                                    process="event Bound( x.10 );", issapicrule, role='Bound']:
+   [ State_12111( x.10 ) ] --[ Bound( x.10 ) ]-> [ State_121111( x.10 ) ]
+
+  /*
+  rule (modulo AC) eventBoundx_0_12111[color=#408052,
+                                       process="event Bound( x.10 );", issapicrule, role='Bound']:
+     [ State_12111( x ) ] --[ Bound( x ) ]-> [ State_121111( x ) ]
+  */
+
+rule (modulo E) p_0_121111[color=#408052, process="0", issapicrule,
+                           role='Bound']:
+   [ State_121111( x.10 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_121111[color=#408052, process="0", issapicrule,
+                              role='Bound']:
+     [ State_121111( x ) ] --> [ ]
+  */
+
+rule (modulo E) eventFailureBound_0_12112[color=#408052,
+                                          process="event Failure( 'Bound' );", issapicrule, role='Bound']:
+   [ State_12112( x.10 ) ]
+  --[ Failure( 'Bound' ) ]->
+   [ State_121121( x.10 ) ]
+
+  /*
+  rule (modulo AC) eventFailureBound_0_12112[color=#408052,
+                                             process="event Failure( 'Bound' );", issapicrule, role='Bound']:
+     [ State_12112( x ) ] --[ Failure( 'Bound' ) ]-> [ State_121121( x ) ]
+  */
+
+rule (modulo E) p_0_121121[color=#408052, process="0", issapicrule,
+                           role='Bound']:
+   [ State_121121( x.10 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_121121[color=#408052, process="0", issapicrule,
+                              role='Bound']:
+     [ State_121121( x ) ] --> [ ]
+  */
+
+rule (modulo E) BoundFail_0_2[color=#ffffff, process="BoundFail();",
+                              issapicrule, role='Process']:
+   [ State_2( ) ] --> [ State_21( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) newx_0_21[color=#805e40, process="new x.11;",
+                          issapicrule, role='BoundFail']:
+   [ State_21( ), Fr( x.11 ) ] --> [ State_211( x.11 ) ]
+
+  /*
+  rule (modulo AC) newx_0_21[color=#805e40, process="new x.11;",
+                             issapicrule, role='BoundFail']:
+     [ State_21( ), Fr( x ) ] --> [ State_211( x ) ]
+  */
+
+rule (modulo E) lettagxoverlapctagotherguard_0_211[color=#805e40,
+                                                   process="let <'tag', =x.11>=overlap(c(<'tag', 'other'>), guard)",
+                                                   issapicrule, role='BoundFail']:
+   [ State_211( x.11 ) ]
+  -->
+   [ Let_2111( <c(<'tag', 'other'>), guard>, x.11 ) ]
+
+  /*
+  rule (modulo AC) lettagxoverlapctagotherguard_0_211[color=#805e40,
+                                                      process="let <'tag', =x.11>=overlap(c(<'tag', 'other'>), guard)",
+                                                      issapicrule, role='BoundFail']:
+     [ State_211( x ) ] --> [ Let_2111( <c(<'tag', 'other'>), guard>, x ) ]
+  */
+
+rule (modulo E) lettagxoverlapctagotherguard_1_211[color=#805e40,
+                                                   process="let <'tag', =x.11>=overlap(c(<'tag', 'other'>), guard)",
+                                                   no_derivcheck, issapicrule, role='BoundFail']:
+   [ Let_2111( <c(x.12), y.12>, x.11 ) ] --> [ Let_21101( x.12, x.11 ) ]
+
+  /*
+  rule (modulo AC) lettagxoverlapctagotherguard_1_211[color=#805e40,
+                                                      process="let <'tag', =x.11>=overlap(c(<'tag', 'other'>), guard)",
+                                                      no_derivcheck, issapicrule, role='BoundFail']:
+     [ Let_2111( <c(x), y>, x.1 ) ] --> [ Let_21101( x, x.1 ) ]
+  */
+
+rule (modulo E) lettagxoverlapctagotherguard_2_211[color=#805e40,
+                                                   process="let <'tag', =x.11>=overlap(c(<'tag', 'other'>), guard)",
+                                                   no_derivcheck, issapicrule, role='BoundFail']:
+   [ Let_2111( <c(x.12), guard>, x.11 ) ] --> [ Let_21101( x.12, x.11 ) ]
+
+  /*
+  rule (modulo AC) lettagxoverlapctagotherguard_2_211[color=#805e40,
+                                                      process="let <'tag', =x.11>=overlap(c(<'tag', 'other'>), guard)",
+                                                      no_derivcheck, issapicrule, role='BoundFail']:
+     [ Let_2111( <c(x), guard>, x.1 ) ] --> [ Let_21101( x, x.1 ) ]
+  */
+
+restriction Restr_lettagxoverlapctagotherguard_3_211_1:
+  "∀ #NOW.
+    (Restr_lettagxoverlapctagotherguard_3_211_1( ) @ #NOW) ⇒
+    (∀ x y. (<c(x), y> = <c(<'tag', 'other'>), guard>) ⇒ (⊥))"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ #NOW.
+    (Restr_lettagxoverlapctagotherguard_3_211_1( ) @ #NOW) ⇒
+    (∀ x y. (<c(x), y> = <c(<'tag', 'other'>), guard>) ⇒ (⊥))"
+  */
+
+restriction Restr_lettagxoverlapctagotherguard_3_211_2:
+  "∀ #NOW.
+    (Restr_lettagxoverlapctagotherguard_3_211_2( ) @ #NOW) ⇒
+    (∀ x. (<c(x), guard> = <c(<'tag', 'other'>), guard>) ⇒ (⊥))"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ #NOW.
+    (Restr_lettagxoverlapctagotherguard_3_211_2( ) @ #NOW) ⇒
+    (∀ x. (<c(x), guard> = <c(<'tag', 'other'>), guard>) ⇒ (⊥))"
+  */
+
+rule (modulo E) lettagxoverlapctagotherguard_3_211[color=#805e40,
+                                                   process="let <'tag', =x.11>=overlap(c(<'tag', 'other'>), guard)",
+                                                   issapicrule, role='BoundFail']:
+   [ Let_2111( <c(<'tag', 'other'>), guard>, x.11 ) ]
+  --[
+  Restr_lettagxoverlapctagotherguard_3_211_1( ),
+  Restr_lettagxoverlapctagotherguard_3_211_2( )
+  ]->
+   [ State_2112( x.11 ) ]
+
+  /*
+  rule (modulo AC) lettagxoverlapctagotherguard_3_211[color=#805e40,
+                                                      process="let <'tag', =x.11>=overlap(c(<'tag', 'other'>), guard)",
+                                                      issapicrule, role='BoundFail']:
+     [ Let_2111( <c(<'tag', 'other'>), guard>, x ) ]
+    --[
+    Restr_lettagxoverlapctagotherguard_3_211_1( ),
+    Restr_lettagxoverlapctagotherguard_3_211_2( )
+    ]->
+     [ State_2112( x ) ]
+  */
+
+rule (modulo E) lettagxoverlapctagotherguard_4_211[color=#805e40,
+                                                   process="let <'tag', =x.11>=overlap(c(<'tag', 'other'>), guard)",
+                                                   issapicrule, role='BoundFail']:
+   [ Let_21101( <'tag', x.11>, x.11 ) ] --> [ State_2111( x.11 ) ]
+
+  /*
+  rule (modulo AC) lettagxoverlapctagotherguard_4_211[color=#805e40,
+                                                      process="let <'tag', =x.11>=overlap(c(<'tag', 'other'>), guard)",
+                                                      issapicrule, role='BoundFail']:
+     [ Let_21101( <'tag', x>, x ) ] --> [ State_2111( x ) ]
+  */
+
+restriction Restr_lettagxoverlapctagotherguard_5_211_1:
+  "∀ x #NOW x.1.
+    (Restr_lettagxoverlapctagotherguard_5_211_1( x, x.1 ) @ #NOW) ⇒
+    ((x = x.1) ⇒ (⊥))"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ x #NOW x.1.
+    (Restr_lettagxoverlapctagotherguard_5_211_1( x, x.1 ) @ #NOW) ⇒
+    ((x = x.1) ⇒ (⊥))"
+  */
+
+rule (modulo E) lettagxoverlapctagotherguard_5_211[color=#805e40,
+                                                   process="let <'tag', =x.11>=overlap(c(<'tag', 'other'>), guard)",
+                                                   issapicrule, role='BoundFail']:
+   [ Let_21101( destructor.23, x.11 ) ]
+  --[
+  Restr_lettagxoverlapctagotherguard_5_211_1( <'tag', x.11>, destructor.23
+  )
+  ]->
+   [ State_2112( x.11 ) ]
+
+  /*
+  rule (modulo AC) lettagxoverlapctagotherguard_5_211[color=#805e40,
+                                                      process="let <'tag', =x.11>=overlap(c(<'tag', 'other'>), guard)",
+                                                      issapicrule, role='BoundFail']:
+     [ Let_21101( destructor, x ) ]
+    --[ Restr_lettagxoverlapctagotherguard_5_211_1( <'tag', x>, destructor )
+    ]->
+     [ State_2112( x ) ]
+  */
+
+rule (modulo E) eventWrongBound_0_2111[color=#805e40,
+                                       process="event WrongBound( );", issapicrule, role='BoundFail']:
+   [ State_2111( x.11 ) ] --[ WrongBound( ) ]-> [ State_21111( x.11 ) ]
+
+  /*
+  rule (modulo AC) eventWrongBound_0_2111[color=#805e40,
+                                          process="event WrongBound( );", issapicrule, role='BoundFail']:
+     [ State_2111( x ) ] --[ WrongBound( ) ]-> [ State_21111( x ) ]
+  */
+
+rule (modulo E) p_0_21111[color=#805e40, process="0", issapicrule,
+                          role='BoundFail']:
+   [ State_21111( x.11 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_21111[color=#805e40, process="0", issapicrule,
+                             role='BoundFail']:
+     [ State_21111( x ) ] --> [ ]
+  */
+
+rule (modulo E) eventFailureBoundFail_0_2112[color=#805e40,
+                                             process="event Failure( 'BoundFail' );", issapicrule,
+                                             role='BoundFail']:
+   [ State_2112( x.11 ) ]
+  --[ Failure( 'BoundFail' ) ]->
+   [ State_21121( x.11 ) ]
+
+  /*
+  rule (modulo AC) eventFailureBoundFail_0_2112[color=#805e40,
+                                                process="event Failure( 'BoundFail' );", issapicrule,
+                                                role='BoundFail']:
+     [ State_2112( x ) ] --[ Failure( 'BoundFail' ) ]-> [ State_21121( x ) ]
+  */
+
+rule (modulo E) p_0_21121[color=#805e40, process="0", issapicrule,
+                          role='BoundFail']:
+   [ State_21121( x.11 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_21121[color=#805e40, process="0", issapicrule,
+                             role='BoundFail']:
+     [ State_21121( x ) ] --> [ ]
+  */
+
+restriction single_session:
+  "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
+  */
+
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.13.0
+Maude version 3.5.1
+Git revision: 5a753a172c7984e9403bc650a37a8223367bc1c5, branch: sapic-destructors
+Compiled at: 2026-09-25 19:30:59.558380567 UTC
+*/
+
+end
+/* Output
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/regression/trace/soundness-sapic-destructor-patterns.spthy
+
+  output:          examples/regression/trace/soundness-sapic-destructor-patterns.spthy.tmp
+  processing time: 3.69s
+  
+  first_reachable (exists-trace): verified (4 steps)
+  first_no_failure (all-traces): verified (3 steps)
+  second_reachable (exists-trace): verified (4 steps)
+  second_no_failure (all-traces): verified (3 steps)
+  constant_reachable (exists-trace): verified (4 steps)
+  constant_no_result (all-traces): verified (3 steps)
+  auxiliary_reachable (exists-trace): verified (4 steps)
+  auxiliary_no_result (all-traces): verified (3 steps)
+  output_reachable (exists-trace): verified (4 steps)
+  output_no_result (all-traces): verified (3 steps)
+  pattern_reachable (exists-trace): verified (4 steps)
+  pattern_no_result (all-traces): verified (3 steps)
+  overlap_reachable (exists-trace): verified (4 steps)
+  overlap_no_failure (all-traces): verified (3 steps)
+  absent_reachable (exists-trace): verified (4 steps)
+  absent_no_result (all-traces): verified (2 steps)
+  nested_reachable (exists-trace): verified (4 steps)
+  nested_no_result (all-traces): verified (2 steps)
+  correct_results (all-traces): verified (13 steps)
+  bound_reachable (exists-trace): verified (3 steps)
+  bound_no_failure (all-traces): verified (3 steps)
+  bound_failure_reachable (exists-trace): verified (4 steps)
+  bound_no_success (all-traces): verified (2 steps)
+
+==============================================================================
+*/

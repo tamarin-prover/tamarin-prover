@@ -1,0 +1,582 @@
+theory SoundnessSapicDestructorAlternatives
+
+begin
+
+// Function signature and definition of the equational theory E
+
+functions: c1/1, c2/1, d/1 [destructor], fst/1, pair/2, snd/1
+equations:
+    d(c1(x)) = x,
+    d(c2(x)) = x,
+    fst(<x.1, x.2>) = x.1,
+    snd(<x.1, x.2>) = x.2
+
+heuristic: p
+
+lemma success1:
+  exists-trace "∃ x #i. Success1( x ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ x #i. (Success1( x ) @ #i)"
+*/
+simplify
+solve( State_11111( s, x ) ▶₀ #i )
+  case letxdcs_4_1111
+  SOLVED // trace found
+qed
+
+lemma success2:
+  exists-trace "∃ x #i. Success2( x ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ x #i. (Success2( x ) @ #i)"
+*/
+simplify
+solve( State_12111( x, s ) ▶₀ #i )
+  case letydcs_4_1211
+  SOLVED // trace found
+qed
+
+lemma invalid_fails:
+  exists-trace "∃ #i. InvalidFailure( ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #i. (InvalidFailure( ) @ #i)"
+*/
+simplify
+solve( State_212( ) ▶₀ #i )
+  case letzdinvalid_3_21
+  SOLVED // trace found
+qed
+
+lemma no_failure1:
+  all-traces "∀ #i. (Failure1( ) @ #i) ⇒ (⊥)"
+/*
+guarded formula characterizing all counter-examples:
+"∃ #i. (Failure1( ) @ #i)"
+*/
+simplify
+by solve( State_11112( s ) ▶₀ #i )
+
+lemma no_failure2:
+  all-traces "∀ #i. (Failure2( ) @ #i) ⇒ (⊥)"
+/*
+guarded formula characterizing all counter-examples:
+"∃ #i. (Failure2( ) @ #i)"
+*/
+simplify
+by solve( State_12112( s ) ▶₀ #i )
+
+lemma no_invalid_success:
+  all-traces "∀ x #i. (InvalidSuccess( x ) @ #i) ⇒ (⊥)"
+/*
+guarded formula characterizing all counter-examples:
+"∃ x #i. (InvalidSuccess( x ) @ #i)"
+*/
+simplify
+by solve( State_211( x ) ▶₀ #i )
+
+rule (modulo E) Init[color=#ffffff, process="|", issapicrule,
+                     role='Process']:
+   [ ] --[ Init( ) ]-> [ State_( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_0_[color=#ffffff, process="|", issapicrule,
+                     role='Process']:
+   [ State_( ) ] --> [ State_1( ), State_2( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_0_1[color=#ffffff, process="|", issapicrule,
+                      role='Process']:
+   [ State_1( ) ] --> [ State_11( ), State_12( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) P_0_11[color=#ffffff, process="P1();", issapicrule,
+                       role='Process']:
+   [ State_11( ) ] --> [ State_111( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) news_0_111[color=#484080, process="new s.1;",
+                           issapicrule, role='P1']:
+   [ State_111( ), Fr( s.1 ) ] --> [ State_1111( s.1 ) ]
+
+  /*
+  rule (modulo AC) news_0_111[color=#484080, process="new s.1;",
+                              issapicrule, role='P1']:
+     [ State_111( ), Fr( s ) ] --> [ State_1111( s ) ]
+  */
+
+rule (modulo E) letxdcs_0_1111[color=#484080,
+                               process="let x.1=d(c1(s.1))", issapicrule, role='P1']:
+   [ State_1111( s.1 ) ] --> [ Let_11111( c1(s.1), s.1 ) ]
+
+  /*
+  rule (modulo AC) letxdcs_0_1111[color=#484080,
+                                  process="let x.1=d(c1(s.1))", issapicrule, role='P1']:
+     [ State_1111( s ) ] --> [ Let_11111( c1(s), s ) ]
+  */
+
+rule (modulo E) letxdcs_1_1111[color=#484080,
+                               process="let x.1=d(c1(s.1))", no_derivcheck, issapicrule, role='P1']:
+   [ Let_11111( c1(x.3), s.1 ) ] --> [ Let_111101( x.3, s.1 ) ]
+
+  /*
+  rule (modulo AC) letxdcs_1_1111[color=#484080,
+                                  process="let x.1=d(c1(s.1))", no_derivcheck, issapicrule, role='P1']:
+     [ Let_11111( c1(x), s ) ] --> [ Let_111101( x, s ) ]
+  */
+
+rule (modulo E) letxdcs_2_1111[color=#484080,
+                               process="let x.1=d(c1(s.1))", no_derivcheck, issapicrule, role='P1']:
+   [ Let_11111( c2(x.3), s.1 ) ] --> [ Let_111101( x.3, s.1 ) ]
+
+  /*
+  rule (modulo AC) letxdcs_2_1111[color=#484080,
+                                  process="let x.1=d(c1(s.1))", no_derivcheck, issapicrule, role='P1']:
+     [ Let_11111( c2(x), s ) ] --> [ Let_111101( x, s ) ]
+  */
+
+restriction Restr_letxdcs_3_1111_1:
+  "∀ x #NOW.
+    (Restr_letxdcs_3_1111_1( x ) @ #NOW) ⇒ (∀ x.1. (c1(x.1) = x) ⇒ (⊥))"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ x #NOW.
+    (Restr_letxdcs_3_1111_1( x ) @ #NOW) ⇒ (∀ x.1. (c1(x.1) = x) ⇒ (⊥))"
+  */
+
+restriction Restr_letxdcs_3_1111_2:
+  "∀ x #NOW.
+    (Restr_letxdcs_3_1111_2( x ) @ #NOW) ⇒ (∀ x.1. (c2(x.1) = x) ⇒ (⊥))"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ x #NOW.
+    (Restr_letxdcs_3_1111_2( x ) @ #NOW) ⇒ (∀ x.1. (c2(x.1) = x) ⇒ (⊥))"
+  */
+
+rule (modulo E) letxdcs_3_1111[color=#484080,
+                               process="let x.1=d(c1(s.1))", issapicrule, role='P1']:
+   [ Let_11111( c1(s.1), s.1 ) ]
+  --[ Restr_letxdcs_3_1111_1( c1(s.1) ), Restr_letxdcs_3_1111_2( c1(s.1) )
+  ]->
+   [ State_11112( s.1 ) ]
+
+  /*
+  rule (modulo AC) letxdcs_3_1111[color=#484080,
+                                  process="let x.1=d(c1(s.1))", issapicrule, role='P1']:
+     [ Let_11111( c1(s), s ) ]
+    --[ Restr_letxdcs_3_1111_1( c1(s) ), Restr_letxdcs_3_1111_2( c1(s) ) ]->
+     [ State_11112( s ) ]
+  */
+
+rule (modulo E) letxdcs_4_1111[color=#484080,
+                               process="let x.1=d(c1(s.1))", issapicrule, role='P1']:
+   [ Let_111101( x.1, s.1 ) ] --> [ State_11111( s.1, x.1 ) ]
+
+  /*
+  rule (modulo AC) letxdcs_4_1111[color=#484080,
+                                  process="let x.1=d(c1(s.1))", issapicrule, role='P1']:
+     [ Let_111101( x, s ) ] --> [ State_11111( s, x ) ]
+  */
+
+restriction Restr_letxdcs_5_1111_1:
+  "∀ x #NOW.
+    (Restr_letxdcs_5_1111_1( x ) @ #NOW) ⇒ (∀ x.1. (x.1 = x) ⇒ (⊥))"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ x #NOW.
+    (Restr_letxdcs_5_1111_1( x ) @ #NOW) ⇒ (∀ x.1. (x.1 = x) ⇒ (⊥))"
+  */
+
+rule (modulo E) letxdcs_5_1111[color=#484080,
+                               process="let x.1=d(c1(s.1))", issapicrule, role='P1']:
+   [ Let_111101( destructor.5, s.1 ) ]
+  --[ Restr_letxdcs_5_1111_1( destructor.5 ) ]->
+   [ State_11112( s.1 ) ]
+
+  /*
+  rule (modulo AC) letxdcs_5_1111[color=#484080,
+                                  process="let x.1=d(c1(s.1))", issapicrule, role='P1']:
+     [ Let_111101( destructor, s ) ]
+    --[ Restr_letxdcs_5_1111_1( destructor ) ]->
+     [ State_11112( s ) ]
+  */
+
+rule (modulo E) eventSuccessx_0_11111[color=#484080,
+                                      process="event Success1( x.1 );", issapicrule, role='P1']:
+   [ State_11111( s.1, x.1 ) ]
+  --[ Success1( x.1 ) ]->
+   [ State_111111( s.1, x.1 ) ]
+
+  /*
+  rule (modulo AC) eventSuccessx_0_11111[color=#484080,
+                                         process="event Success1( x.1 );", issapicrule, role='P1']:
+     [ State_11111( s, x ) ] --[ Success1( x ) ]-> [ State_111111( s, x ) ]
+  */
+
+rule (modulo E) p_0_111111[color=#484080, process="0", issapicrule,
+                           role='P1']:
+   [ State_111111( s.1, x.1 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_111111[color=#484080, process="0", issapicrule,
+                              role='P1']:
+     [ State_111111( s, x ) ] --> [ ]
+  */
+
+rule (modulo E) eventFailure_0_11112[color=#484080,
+                                     process="event Failure1( );", issapicrule, role='P1']:
+   [ State_11112( s.1 ) ] --[ Failure1( ) ]-> [ State_111121( s.1 ) ]
+
+  /*
+  rule (modulo AC) eventFailure_0_11112[color=#484080,
+                                        process="event Failure1( );", issapicrule, role='P1']:
+     [ State_11112( s ) ] --[ Failure1( ) ]-> [ State_111121( s ) ]
+  */
+
+rule (modulo E) p_0_111121[color=#484080, process="0", issapicrule,
+                           role='P1']:
+   [ State_111121( s.1 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_111121[color=#484080, process="0", issapicrule,
+                              role='P1']:
+     [ State_111121( s ) ] --> [ ]
+  */
+
+rule (modulo E) P_0_12[color=#ffffff, process="P2();", issapicrule,
+                       role='Process']:
+   [ State_12( ) ] --> [ State_121( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) news_0_121[color=#805040, process="new s.2;",
+                           issapicrule, role='P2']:
+   [ State_121( ), Fr( s.2 ) ] --> [ State_1211( s.2 ) ]
+
+  /*
+  rule (modulo AC) news_0_121[color=#805040, process="new s.2;",
+                              issapicrule, role='P2']:
+     [ State_121( ), Fr( s ) ] --> [ State_1211( s ) ]
+  */
+
+rule (modulo E) letydcs_0_1211[color=#805040,
+                               process="let y.1=d(c2(s.2))", issapicrule, role='P2']:
+   [ State_1211( s.2 ) ] --> [ Let_12111( c2(s.2), s.2 ) ]
+
+  /*
+  rule (modulo AC) letydcs_0_1211[color=#805040,
+                                  process="let y.1=d(c2(s.2))", issapicrule, role='P2']:
+     [ State_1211( s ) ] --> [ Let_12111( c2(s), s ) ]
+  */
+
+rule (modulo E) letydcs_1_1211[color=#805040,
+                               process="let y.1=d(c2(s.2))", no_derivcheck, issapicrule, role='P2']:
+   [ Let_12111( c1(x.3), s.2 ) ] --> [ Let_121101( x.3, s.2 ) ]
+
+  /*
+  rule (modulo AC) letydcs_1_1211[color=#805040,
+                                  process="let y.1=d(c2(s.2))", no_derivcheck, issapicrule, role='P2']:
+     [ Let_12111( c1(x), s ) ] --> [ Let_121101( x, s ) ]
+  */
+
+rule (modulo E) letydcs_2_1211[color=#805040,
+                               process="let y.1=d(c2(s.2))", no_derivcheck, issapicrule, role='P2']:
+   [ Let_12111( c2(x.3), s.2 ) ] --> [ Let_121101( x.3, s.2 ) ]
+
+  /*
+  rule (modulo AC) letydcs_2_1211[color=#805040,
+                                  process="let y.1=d(c2(s.2))", no_derivcheck, issapicrule, role='P2']:
+     [ Let_12111( c2(x), s ) ] --> [ Let_121101( x, s ) ]
+  */
+
+restriction Restr_letydcs_3_1211_1:
+  "∀ x #NOW.
+    (Restr_letydcs_3_1211_1( x ) @ #NOW) ⇒ (∀ x.1. (c1(x.1) = x) ⇒ (⊥))"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ x #NOW.
+    (Restr_letydcs_3_1211_1( x ) @ #NOW) ⇒ (∀ x.1. (c1(x.1) = x) ⇒ (⊥))"
+  */
+
+restriction Restr_letydcs_3_1211_2:
+  "∀ x #NOW.
+    (Restr_letydcs_3_1211_2( x ) @ #NOW) ⇒ (∀ x.1. (c2(x.1) = x) ⇒ (⊥))"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ x #NOW.
+    (Restr_letydcs_3_1211_2( x ) @ #NOW) ⇒ (∀ x.1. (c2(x.1) = x) ⇒ (⊥))"
+  */
+
+rule (modulo E) letydcs_3_1211[color=#805040,
+                               process="let y.1=d(c2(s.2))", issapicrule, role='P2']:
+   [ Let_12111( c2(s.2), s.2 ) ]
+  --[ Restr_letydcs_3_1211_1( c2(s.2) ), Restr_letydcs_3_1211_2( c2(s.2) )
+  ]->
+   [ State_12112( s.2 ) ]
+
+  /*
+  rule (modulo AC) letydcs_3_1211[color=#805040,
+                                  process="let y.1=d(c2(s.2))", issapicrule, role='P2']:
+     [ Let_12111( c2(s), s ) ]
+    --[ Restr_letydcs_3_1211_1( c2(s) ), Restr_letydcs_3_1211_2( c2(s) ) ]->
+     [ State_12112( s ) ]
+  */
+
+rule (modulo E) letydcs_4_1211[color=#805040,
+                               process="let y.1=d(c2(s.2))", issapicrule, role='P2']:
+   [ Let_121101( y.1, s.2 ) ] --> [ State_12111( y.1, s.2 ) ]
+
+  /*
+  rule (modulo AC) letydcs_4_1211[color=#805040,
+                                  process="let y.1=d(c2(s.2))", issapicrule, role='P2']:
+     [ Let_121101( y, s ) ] --> [ State_12111( y, s ) ]
+  */
+
+restriction Restr_letydcs_5_1211_1:
+  "∀ x #NOW. (Restr_letydcs_5_1211_1( x ) @ #NOW) ⇒ (∀ y. (y = x) ⇒ (⊥))"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ x #NOW. (Restr_letydcs_5_1211_1( x ) @ #NOW) ⇒ (∀ y. (y = x) ⇒ (⊥))"
+  */
+
+rule (modulo E) letydcs_5_1211[color=#805040,
+                               process="let y.1=d(c2(s.2))", issapicrule, role='P2']:
+   [ Let_121101( destructor.6, s.2 ) ]
+  --[ Restr_letydcs_5_1211_1( destructor.6 ) ]->
+   [ State_12112( s.2 ) ]
+
+  /*
+  rule (modulo AC) letydcs_5_1211[color=#805040,
+                                  process="let y.1=d(c2(s.2))", issapicrule, role='P2']:
+     [ Let_121101( destructor, s ) ]
+    --[ Restr_letydcs_5_1211_1( destructor ) ]->
+     [ State_12112( s ) ]
+  */
+
+rule (modulo E) eventSuccessy_0_12111[color=#805040,
+                                      process="event Success2( y.1 );", issapicrule, role='P2']:
+   [ State_12111( y.1, s.2 ) ]
+  --[ Success2( y.1 ) ]->
+   [ State_121111( y.1, s.2 ) ]
+
+  /*
+  rule (modulo AC) eventSuccessy_0_12111[color=#805040,
+                                         process="event Success2( y.1 );", issapicrule, role='P2']:
+     [ State_12111( y, s ) ] --[ Success2( y ) ]-> [ State_121111( y, s ) ]
+  */
+
+rule (modulo E) p_0_121111[color=#805040, process="0", issapicrule,
+                           role='P2']:
+   [ State_121111( y.1, s.2 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_121111[color=#805040, process="0", issapicrule,
+                              role='P2']:
+     [ State_121111( y, s ) ] --> [ ]
+  */
+
+rule (modulo E) eventFailure_0_12112[color=#805040,
+                                     process="event Failure2( );", issapicrule, role='P2']:
+   [ State_12112( s.2 ) ] --[ Failure2( ) ]-> [ State_121121( s.2 ) ]
+
+  /*
+  rule (modulo AC) eventFailure_0_12112[color=#805040,
+                                        process="event Failure2( );", issapicrule, role='P2']:
+     [ State_12112( s ) ] --[ Failure2( ) ]-> [ State_121121( s ) ]
+  */
+
+rule (modulo E) p_0_121121[color=#805040, process="0", issapicrule,
+                           role='P2']:
+   [ State_121121( s.2 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_121121[color=#805040, process="0", issapicrule,
+                              role='P2']:
+     [ State_121121( s ) ] --> [ ]
+  */
+
+rule (modulo E) PI_0_2[color=#ffffff, process="PI();", issapicrule,
+                       role='Process']:
+   [ State_2( ) ] --> [ State_21( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) letzdinvalid_0_21[color=#804040,
+                                  process="let z.1=d('invalid')", issapicrule, role='PI']:
+   [ State_21( ) ] --> [ Let_211( 'invalid' ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) letzdinvalid_1_21[color=#804040,
+                                  process="let z.1=d('invalid')", no_derivcheck, issapicrule, role='PI']:
+   [ Let_211( c1(x.3) ) ] --> [ Let_2101( x.3 ) ]
+
+  /*
+  rule (modulo AC) letzdinvalid_1_21[color=#804040,
+                                     process="let z.1=d('invalid')", no_derivcheck, issapicrule, role='PI']:
+     [ Let_211( c1(x) ) ] --> [ Let_2101( x ) ]
+  */
+
+rule (modulo E) letzdinvalid_2_21[color=#804040,
+                                  process="let z.1=d('invalid')", no_derivcheck, issapicrule, role='PI']:
+   [ Let_211( c2(x.3) ) ] --> [ Let_2101( x.3 ) ]
+
+  /*
+  rule (modulo AC) letzdinvalid_2_21[color=#804040,
+                                     process="let z.1=d('invalid')", no_derivcheck, issapicrule, role='PI']:
+     [ Let_211( c2(x) ) ] --> [ Let_2101( x ) ]
+  */
+
+restriction Restr_letzdinvalid_3_21_1:
+  "∀ #NOW.
+    (Restr_letzdinvalid_3_21_1( ) @ #NOW) ⇒ (∀ x. (c1(x) = 'invalid') ⇒ (⊥))"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ #NOW.
+    (Restr_letzdinvalid_3_21_1( ) @ #NOW) ⇒ (∀ x. (c1(x) = 'invalid') ⇒ (⊥))"
+  */
+
+restriction Restr_letzdinvalid_3_21_2:
+  "∀ #NOW.
+    (Restr_letzdinvalid_3_21_2( ) @ #NOW) ⇒ (∀ x. (c2(x) = 'invalid') ⇒ (⊥))"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ #NOW.
+    (Restr_letzdinvalid_3_21_2( ) @ #NOW) ⇒ (∀ x. (c2(x) = 'invalid') ⇒ (⊥))"
+  */
+
+rule (modulo E) letzdinvalid_3_21[color=#804040,
+                                  process="let z.1=d('invalid')", issapicrule, role='PI']:
+   [ Let_211( 'invalid' ) ]
+  --[ Restr_letzdinvalid_3_21_1( ), Restr_letzdinvalid_3_21_2( ) ]->
+   [ State_212( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) letzdinvalid_4_21[color=#804040,
+                                  process="let z.1=d('invalid')", issapicrule, role='PI']:
+   [ Let_2101( z.1 ) ] --> [ State_211( z.1 ) ]
+
+  /*
+  rule (modulo AC) letzdinvalid_4_21[color=#804040,
+                                     process="let z.1=d('invalid')", issapicrule, role='PI']:
+     [ Let_2101( z ) ] --> [ State_211( z ) ]
+  */
+
+restriction Restr_letzdinvalid_5_21_1:
+  "∀ x #NOW.
+    (Restr_letzdinvalid_5_21_1( x ) @ #NOW) ⇒ (∀ z. (z = x) ⇒ (⊥))"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ x #NOW.
+    (Restr_letzdinvalid_5_21_1( x ) @ #NOW) ⇒ (∀ z. (z = x) ⇒ (⊥))"
+  */
+
+rule (modulo E) letzdinvalid_5_21[color=#804040,
+                                  process="let z.1=d('invalid')", issapicrule, role='PI']:
+   [ Let_2101( destructor.7 ) ]
+  --[ Restr_letzdinvalid_5_21_1( destructor.7 ) ]->
+   [ State_212( ) ]
+
+  /*
+  rule (modulo AC) letzdinvalid_5_21[color=#804040,
+                                     process="let z.1=d('invalid')", issapicrule, role='PI']:
+     [ Let_2101( destructor ) ]
+    --[ Restr_letzdinvalid_5_21_1( destructor ) ]->
+     [ State_212( ) ]
+  */
+
+rule (modulo E) eventInvalidSuccessz_0_211[color=#804040,
+                                           process="event InvalidSuccess( z.1 );", issapicrule, role='PI']:
+   [ State_211( z.1 ) ] --[ InvalidSuccess( z.1 ) ]-> [ State_2111( z.1 ) ]
+
+  /*
+  rule (modulo AC) eventInvalidSuccessz_0_211[color=#804040,
+                                              process="event InvalidSuccess( z.1 );", issapicrule, role='PI']:
+     [ State_211( z ) ] --[ InvalidSuccess( z ) ]-> [ State_2111( z ) ]
+  */
+
+rule (modulo E) p_0_2111[color=#804040, process="0", issapicrule,
+                         role='PI']:
+   [ State_2111( z.1 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_2111[color=#804040, process="0", issapicrule,
+                            role='PI']:
+     [ State_2111( z ) ] --> [ ]
+  */
+
+rule (modulo E) eventInvalidFailure_0_212[color=#804040,
+                                          process="event InvalidFailure( );", issapicrule, role='PI']:
+   [ State_212( ) ] --[ InvalidFailure( ) ]-> [ State_2121( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_0_2121[color=#804040, process="0", issapicrule,
+                         role='PI']:
+   [ State_2121( ) ] --> [ ]
+
+  /* has exactly the trivial AC variant */
+
+restriction single_session:
+  "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
+  */
+
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.13.0
+Maude version 3.5.1
+Git revision: 5a753a172c7984e9403bc650a37a8223367bc1c5, branch: sapic-destructors
+Compiled at: 2026-09-25 19:30:59.558380567 UTC
+*/
+
+end
+/* Output
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/regression/trace/soundness-sapic-destructor-alternatives.spthy
+
+  output:          examples/regression/trace/soundness-sapic-destructor-alternatives.spthy.tmp
+  processing time: 0.40s
+  
+  success1 (exists-trace): verified (3 steps)
+  success2 (exists-trace): verified (3 steps)
+  invalid_fails (exists-trace): verified (3 steps)
+  no_failure1 (all-traces): verified (2 steps)
+  no_failure2 (all-traces): verified (2 steps)
+  no_invalid_success (all-traces): verified (2 steps)
+
+==============================================================================
+*/
