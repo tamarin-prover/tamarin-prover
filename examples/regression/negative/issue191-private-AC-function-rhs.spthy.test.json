@@ -1,0 +1,31 @@
+{
+  "tests": [
+    {
+      "name": "diff-rejection",
+      "args": [
+        "--diff"
+      ],
+      "exit_code": 1,
+      "contains": [
+        "Not a correct equation"
+      ]
+    },
+    {
+      "name": "prove-rejection",
+      "args": [
+        "--prove"
+      ],
+      "exit_code": 1,
+      "contains": [
+        "Not a correct equation"
+      ]
+    },
+    {
+      "name": "default-rejection",
+      "exit_code": 1,
+      "contains": [
+        "Not a correct equation"
+      ]
+    }
+  ]
+}

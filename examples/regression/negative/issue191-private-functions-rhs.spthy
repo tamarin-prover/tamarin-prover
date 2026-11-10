@@ -1,4 +1,4 @@
-theory Test
+theory Test191
 begin
 
 functions: s/0 [private], k/0 [private], m/1
