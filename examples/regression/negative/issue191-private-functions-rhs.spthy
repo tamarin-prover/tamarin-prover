@@ -1,0 +1,19 @@
+theory Test191
+begin
+
+functions: s/0 [private], k/0 [private], m/1
+equations: m(k) = s
+
+rule OutK:
+    [  ]
+  --[  ]->
+    [ Out( k ) ]
+
+lemma secretK:
+   "All #i. K(k) @ #i ==> F"
+
+lemma secretS:
+   "All #i. K(s) @ #i ==> F"
+
+end
+

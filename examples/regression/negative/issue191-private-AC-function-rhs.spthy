@@ -1,0 +1,19 @@
+theory Test191AC
+begin
+
+functions: f/1, a/0, b/0 [private], p/2 [AC, private]
+equations: f(b) = p(a,a)
+
+rule OutK:
+    [  ]
+  --[  ]->
+    [ Out( b ) ]
+
+lemma secretB:
+   "All #i. K(b) @ #i ==> F"
+
+lemma secretP:
+   "All #i. K(p(a,a)) @ #i ==> F"
+
+end
+
