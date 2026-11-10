@@ -166,14 +166,14 @@ privateConstructorEquations rs = case rs of
     (CtxtStRule lhs (StRhs _ (viewTerm -> FApp fun@(NoEq (vname,(0,Private,_,_))) _))):xs
           -> (lhs, fun):(privateConstructorEquations xs)
     _:xs  -> privateConstructorEquations xs
-    
+
 -- given equations with private constructors on the RHS and a list of private function names x,
 -- returns the list of all such constructors such that the LHS only contains public functions or functions in x
 derivablePrivateConstants :: [(LNTerm, FunSym)] -> [FunSym] -> [FunSym]
 derivablePrivateConstants eqs except =
     if any (containsNoPrivateExcept except . fst) eqs
         then
-            derivablePrivateConstants (filter (\(l, _) -> not $ containsNoPrivateExcept except l) eqs) (except ++ map snd (filter (\(l,  _) -> containsNoPrivateExcept except l) eqs)) 
+            derivablePrivateConstants (filter (\(l, _) -> not $ containsNoPrivateExcept except l) eqs) (except ++ map snd (filter (\(l,  _) -> containsNoPrivateExcept except l) eqs))
         else
             except
 
@@ -240,14 +240,13 @@ destructionRulesAC diff fSig = reader $ \hnd -> minimizeIntruderRules diff hnd $
     variantsIntruderAux hnd fun b d (f,r) = (f,variantsIntruder hnd fun b d r)
 
 decomposeNotSubterm :: Bool -> (FunSym,[IntrRuleAC]) -> [IntrRuleAC]
-decomposeNotSubterm bool (f,((Rule (DestrRule _ _ _ _ _) ((Fact KDFact _ (lhs:_)):other_prems) [(Fact KDFact _ [tc])] _ _):rq)) =
+decomposeNotSubterm bool (f,(Rule (DestrRule {}) ((Fact KDFact _ (lhs:_)):other_prems) [Fact KDFact _ [tc]] _ _):rq) =
   case contextR of
-    Just context -> destructionRules bool context ++ decomposeNotSubterm bool (f,rq)
-    Nothing -> decomposeNotSubterm bool (f,rq)
-
+    Left context -> destructionRules bool context ++ decomposeNotSubterm bool (f,rq)
+    Right _ -> decomposeNotSubterm bool (f,rq)
   where
     contextR = rRuleToCtxtStRule (flhs `RRule` tc)
-    flhs = FAPP f (lhs:(foldMap getFactTerms other_prems))
+    flhs = FAPP f (lhs:foldMap getFactTerms other_prems)
 decomposeNotSubterm _ (_,[]) = []
 
 -- | @destructionRulesNoEq diff fSig@ returns the destruction rules for the given
@@ -453,11 +452,9 @@ bpIntruderRules diff = reader $ \hnd -> minimizeIntruderRules diff hnd $
     ]
     ++ -- pmult is similar to exp
     (variantsIntruder hnd id True diff $ pmultRule (DestrRule (append (pack "_") pmultSymString) 0 True False [NoEq pmultSym]) kdFact (const []))
-    ++ -- emap is different 
+    ++ -- emap is different
     (bpVariantsIntruder diff hnd $ emapRule (DestrRule (append (pack "_") emapSymString) 0 True False [C EMap]) kdFact (const []))
-
   where
-
     x_var_0 = varTerm (LVar "x" LSortMsg 0)
     x_var_1 = varTerm (LVar "x" LSortMsg 1)
 
@@ -492,7 +489,6 @@ bpVariantsIntruder diff hnd ru = do
       Rule i [yfact, Fact KDFact an args@[viewTerm -> Lit (Var _)]] concs actions nvs ->
         return $ Rule i [yfact, Fact KUFact an args] concs actions nvs
       _ -> return ruvariant
-
   where
     minimizeVariants = nub . map canonize
     canonize subst = canonizeSubst . substFromListVFresh $ zip doms (sort rngs)
