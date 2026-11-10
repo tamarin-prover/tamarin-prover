@@ -65,7 +65,6 @@ module Term.LTerm (
   , flattenedACTerms
   , containsPrivate
   , containsOnlyNoEq
-  , containsNoPrivateExcept
   , neverContainsFreshPriv
 
   -- ** Destructors
@@ -384,15 +383,6 @@ containsOnlyNoEq t = case viewTerm t of
     Lit _            -> True
     FApp (NoEq _) as -> foldr (\x -> (&& containsOnlyNoEq x)) True as
     FApp _ _         -> False
-
--- | containsNoPrivateExcept t t2@ returns @True@ if @t2@ contains private function symbols other than @t@.
-containsNoPrivateExcept :: [FunSym] -> Term t -> Bool
-containsNoPrivateExcept funs t = case viewTerm t of
-    Lit _                                    -> True
-    FApp f@(NoEq (_,(_,Private,_,_)))     as -> elem f funs && all (containsNoPrivateExcept funs) as
-    FApp f@(AC (ACfct (_,(Private,_,_)))) as -> elem f funs && all (containsNoPrivateExcept funs) as
-    FApp _                                as -> all (containsNoPrivateExcept funs) as
-
 
 -- | A term is *simple* iff there is an instance of this term that can be
 -- constructed from public names only. i.e., the term does not contain any
