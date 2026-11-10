@@ -7,7 +7,8 @@
       ],
       "exit_code": 1,
       "contains": [
-        "Not a correct equation"
+        "Not a correct equation",
+        "Private function symbols are disallowed on the right hand side"
       ]
     },
     {
@@ -17,14 +18,16 @@
       ],
       "exit_code": 1,
       "contains": [
-        "Not a correct equation"
+        "Not a correct equation",
+        "Private function symbols are disallowed on the right hand side"
       ]
     },
     {
       "name": "default-rejection",
       "exit_code": 1,
       "contains": [
-        "Not a correct equation"
+        "Not a correct equation",
+        "Private function symbols are disallowed on the right hand side"
       ]
     }
   ]
