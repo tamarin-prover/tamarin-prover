@@ -215,8 +215,8 @@ destructionRulesAC diff fSig = reader $ \hnd -> minimizeIntruderRules diff hnd $
 decomposeNotSubterm :: Bool -> (FunSym,[IntrRuleAC]) -> [IntrRuleAC]
 decomposeNotSubterm bool (f,(Rule (DestrRule {}) ((Fact KDFact _ (lhs:_)):other_prems) [Fact KDFact _ [tc]] _ _):rq) =
   case contextR of
-    Left context -> destructionRules bool context ++ decomposeNotSubterm bool (f,rq)
-    Right _ -> decomposeNotSubterm bool (f,rq)
+    Right context -> destructionRules bool context ++ decomposeNotSubterm bool (f,rq)
+    Left _ -> decomposeNotSubterm bool (f,rq)
   where
     contextR = rRuleToCtxtStRule (flhs `RRule` tc)
     flhs = FAPP f (lhs:foldMap getFactTerms other_prems)

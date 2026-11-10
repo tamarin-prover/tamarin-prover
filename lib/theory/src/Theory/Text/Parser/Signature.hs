@@ -245,8 +245,8 @@ equations = do
     equation = do
         rrule <- RRule <$> acterm True llitNoPub <*> (equalSign *> acterm True llitNoPub)
         case rRuleToCtxtStRule rrule of
-          Left str -> return str
-          Right err -> fail $ "Not a correct equation: " ++ err ++ "\n" ++ showRule rrule
+          Right str -> return str
+          Left err -> fail $ "Not a correct equation: " ++ err ++ "\n" ++ showRule rrule
             where
               showRule (RRule l r) = show l ++ " = " ++ show r
 

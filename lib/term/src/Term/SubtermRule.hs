@@ -46,16 +46,16 @@ data CtxtStRule = CtxtStRule LNTerm StRhs
     deriving (Show,Ord,Eq, Generic, NFData, Binary)
 
 -- | Convert a rewrite rule to a context subterm rewrite rule if possible.
-rRuleToCtxtStRule :: RRule LNTerm -> Either CtxtStRule String
+rRuleToCtxtStRule :: RRule LNTerm -> Either String CtxtStRule
 rRuleToCtxtStRule (lhs `RRule` rhs)
-  | Lit _ <- viewTerm lhs = Right "Left hand side must not be a literal"  -- e.g. "x = c" is not a valid rewrite rule
-  | containsPrivate rhs   = Right "Private function symbols are disallowed on the right hand side"  -- private function symbols are disallowed on the right hand side
-  | null (frees rhs)      = Left $ CtxtStRule lhs (StRhs (constantPositions lhs) rhs)
+  | Lit _ <- viewTerm lhs = Left "Left hand side must not be a literal"  -- e.g. "x = c" is not a valid rewrite rule
+  | containsPrivate rhs   = Left "Private function symbols are disallowed on the right hand side"  -- private function symbols are disallowed on the right hand side
+  | null (frees rhs)      = Right $ CtxtStRule lhs (StRhs (constantPositions lhs) rhs)
   | otherwise       = case findAllSubterms lhs rhs of
-                        Nothing       -> Right "No subterms found"
-                        Just ([]:_)   -> Right "Proper subterm required"  -- proper subterm required
-                        Just []       -> Right "No subterms found"
-                        Just pos      -> Left $ CtxtStRule lhs (StRhs pos rhs)
+                        Nothing       -> Left "Variables on the right hand side must also occur on the left hand side"
+                        Just ([]:_)   -> Left "Proper subterm required"  -- proper subterm required
+                        Just []       -> Left "No subterms found"
+                        Just pos      -> Right $ CtxtStRule lhs (StRhs pos rhs)
   where
     subterms :: [LNTerm] -> [LNTerm] -> Int -> [Position]
     subterms []     _    _ = []
@@ -85,13 +85,13 @@ findSubterm lst r = findSubtermPrime lst r []
 -- Returns Nothing if some variable in r does never appear in l.
 findAllSubterms :: LNTerm -> LNTerm -> Maybe [Position]
 findAllSubterms l r@(viewTerm -> FApp _ args)
-    | fSt == [] = do
+    | null fSt = do
         stms <- mapM (\rst -> findAllSubterms l rst) args
         return $ concat stms
     | otherwise = Just $ fSt
         where fSt = findSubterm l r
 findAllSubterms l r@(viewTerm -> Lit (Var _))
-    | fSt == [] = Nothing
+    | null fSt  = Nothing
     | otherwise = Just fSt
         where fSt = findSubterm l r
 -- There should not be constants on the right hand side (enforced by the parser).
