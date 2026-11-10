@@ -201,6 +201,8 @@ constructionRules fSig =
     concfactNoEQ f k = kuFact (m f k)
     concfactAC f = kuFact (mAC f)
 
+-- | @destructionRulesAC diff fSig@ returns the destruction rules for the given
+-- function signature @fSig@ (AC symbols)
 destructionRulesAC :: Bool -> ACfctFunSig -> WithMaude [IntrRuleAC]
 destructionRulesAC diff fSig = reader $ \hnd -> minimizeIntruderRules diff hnd $
     concatMap (decomposeNotSubterm diff . variantsIntruderAux hnd id True diff) [ (AC (ACfct f),createRule s f) | f@(s,(Public,_,_)) <- S.toList fSig, s `notElem` builtInDestrRule ]
@@ -212,11 +214,12 @@ destructionRulesAC diff fSig = reader $ \hnd -> minimizeIntruderRules diff hnd $
 
     variantsIntruderAux hnd fun b d (f,r) = (f,variantsIntruder hnd fun b d r)
 
+-- | @decomposeNotSubterm diff (f,r)@ decomposes the variants computed for a function f into (potentially) multiple rules using destructionRules
 decomposeNotSubterm :: Bool -> (FunSym,[IntrRuleAC]) -> [IntrRuleAC]
 decomposeNotSubterm bool (f,(Rule (DestrRule {}) ((Fact KDFact _ (lhs:_)):other_prems) [Fact KDFact _ [tc]] _ _):rq) =
   case contextR of
     Right context -> destructionRules bool context ++ decomposeNotSubterm bool (f,rq)
-    Left _ -> decomposeNotSubterm bool (f,rq)
+    Left err      -> error $ "A computed variant for function " ++ show f ++ " is not a subterm rule: " ++ err ++ " " ++ show lhs ++ " = " ++ show tc
   where
     contextR = rRuleToCtxtStRule (flhs `RRule` tc)
     flhs = FAPP f (lhs:foldMap getFactTerms other_prems)
