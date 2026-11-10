@@ -1,0 +1,1278 @@
+theory SoundnessSapicNestedDestructorFailureChain
+
+begin
+
+// Function signature and definition of the equational theory E
+
+functions: c/1, d/1 [destructor], fst/1, pair/2, snd/1
+equations: d(c(x)) = x, fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
+
+heuristic: p
+
+lemma finished:
+  exists-trace "∃ #i. Finished( ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #i. (Finished( ) @ #i)"
+*/
+simplify
+solve( State_22222222( ) ▶₀ #i )
+  case lettagxtagdbad_2_2222222
+  SOLVED // trace found
+qed
+
+lemma no_success:
+  all-traces "∀ #i. (Success( ) @ #i) ⇒ (⊥)"
+/*
+guarded formula characterizing all counter-examples:
+"∃ #i. (Success( ) @ #i)"
+*/
+simplify
+solve( Success( ) @ #i )
+  case eventSuccess_0_1
+  by solve( State_1( x7 ) ▶₀ #i )
+next
+  case eventSuccess_0_21
+  by solve( State_21( x6 ) ▶₀ #i )
+next
+  case eventSuccess_0_221
+  by solve( State_221( x5 ) ▶₀ #i )
+next
+  case eventSuccess_0_2221
+  by solve( State_2221( x4 ) ▶₀ #i )
+next
+  case eventSuccess_0_22221
+  by solve( State_22221( x3 ) ▶₀ #i )
+next
+  case eventSuccess_0_222221
+  by solve( State_222221( x2 ) ▶₀ #i )
+next
+  case eventSuccess_0_2222221
+  by solve( State_2222221( x1 ) ▶₀ #i )
+next
+  case eventSuccess_0_22222221
+  by solve( State_22222221( x0 ) ▶₀ #i )
+qed
+
+rule (modulo E) Init[color=#ffffff,
+                     process="let <'tag', x7.1>=<'tag', d('bad')>", issapicrule,
+                     role='Process']:
+   [ ] --[ Init( ) ]-> [ State_( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) lettagxtagdbad_0_[color=#ffffff,
+                                  process="let <'tag', x7.1>=<'tag', d('bad')>", issapicrule,
+                                  role='Process']:
+   [ State_( ) ] --> [ Let_1( 'bad' ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) lettagxtagdbad_1_[color=#ffffff,
+                                  process="let <'tag', x7.1>=<'tag', d('bad')>", no_derivcheck,
+                                  issapicrule, role='Process']:
+   [ Let_1( c(x.2) ) ] --> [ Let_01( x.2 ) ]
+
+  /*
+  rule (modulo AC) lettagxtagdbad_1_[color=#ffffff,
+                                     process="let <'tag', x7.1>=<'tag', d('bad')>", no_derivcheck,
+                                     issapicrule, role='Process']:
+     [ Let_1( c(x) ) ] --> [ Let_01( x ) ]
+  */
+
+restriction Restr_lettagxtagdbad_2__1:
+  "∀ #NOW.
+    (Restr_lettagxtagdbad_2__1( ) @ #NOW) ⇒ (∀ x. (c(x) = 'bad') ⇒ (⊥))"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ #NOW.
+    (Restr_lettagxtagdbad_2__1( ) @ #NOW) ⇒ (∀ x. (c(x) = 'bad') ⇒ (⊥))"
+  */
+
+rule (modulo E) lettagxtagdbad_2_[color=#ffffff,
+                                  process="let <'tag', x7.1>=<'tag', d('bad')>", issapicrule,
+                                  role='Process']:
+   [ Let_1( 'bad' ) ] --[ Restr_lettagxtagdbad_2__1( ) ]-> [ State_2( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) lettagxtagdbad_3_[color=#ffffff,
+                                  process="let <'tag', x7.1>=<'tag', d('bad')>", issapicrule,
+                                  role='Process']:
+   [ Let_01( destructor.4 ) ]
+  -->
+   [ Let_02( <'tag', destructor.4>, destructor.4 ) ]
+
+  /*
+  rule (modulo AC) lettagxtagdbad_3_[color=#ffffff,
+                                     process="let <'tag', x7.1>=<'tag', d('bad')>", issapicrule,
+                                     role='Process']:
+     [ Let_01( destructor ) ]
+    -->
+     [ Let_02( <'tag', destructor>, destructor ) ]
+  */
+
+restriction Restr_lettagxtagdbad_4__1:
+  "∀ x #NOW.
+    (Restr_lettagxtagdbad_4__1( x ) @ #NOW) ⇒
+    (∀ destructor. (destructor = x) ⇒ (⊥))"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ x #NOW.
+    (Restr_lettagxtagdbad_4__1( x ) @ #NOW) ⇒
+    (∀ destructor. (destructor = x) ⇒ (⊥))"
+  */
+
+rule (modulo E) lettagxtagdbad_4_[color=#ffffff,
+                                  process="let <'tag', x7.1>=<'tag', d('bad')>", issapicrule,
+                                  role='Process']:
+   [ Let_01( destructor.5 ) ]
+  --[ Restr_lettagxtagdbad_4__1( destructor.5 ) ]->
+   [ State_2( ) ]
+
+  /*
+  rule (modulo AC) lettagxtagdbad_4_[color=#ffffff,
+                                     process="let <'tag', x7.1>=<'tag', d('bad')>", issapicrule,
+                                     role='Process']:
+     [ Let_01( destructor ) ]
+    --[ Restr_lettagxtagdbad_4__1( destructor ) ]->
+     [ State_2( ) ]
+  */
+
+rule (modulo E) lettagxtagdbad_5_[color=#ffffff,
+                                  process="let <'tag', x7.1>=<'tag', d('bad')>", issapicrule,
+                                  role='Process']:
+   [ Let_02( <'tag', x7.1>, destructor.4 ) ] --> [ State_1( x7.1 ) ]
+
+  /*
+  rule (modulo AC) lettagxtagdbad_5_[color=#ffffff,
+                                     process="let <'tag', x7.1>=<'tag', d('bad')>", issapicrule,
+                                     role='Process']:
+     [ Let_02( <'tag', x7>, destructor ) ] --> [ State_1( x7 ) ]
+  */
+
+restriction Restr_lettagxtagdbad_6__1:
+  "∀ x #NOW.
+    (Restr_lettagxtagdbad_6__1( x ) @ #NOW) ⇒
+    (∀ x7. (<'tag', x7> = x) ⇒ (⊥))"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ x #NOW.
+    (Restr_lettagxtagdbad_6__1( x ) @ #NOW) ⇒
+    (∀ x7. (<'tag', x7> = x) ⇒ (⊥))"
+  */
+
+rule (modulo E) lettagxtagdbad_6_[color=#ffffff,
+                                  process="let <'tag', x7.1>=<'tag', d('bad')>", issapicrule,
+                                  role='Process']:
+   [ Let_02( <'tag', destructor.4>, destructor.4 ) ]
+  --[ Restr_lettagxtagdbad_6__1( <'tag', destructor.4> ) ]->
+   [ State_2( ) ]
+
+  /*
+  rule (modulo AC) lettagxtagdbad_6_[color=#ffffff,
+                                     process="let <'tag', x7.1>=<'tag', d('bad')>", issapicrule,
+                                     role='Process']:
+     [ Let_02( <'tag', destructor>, destructor ) ]
+    --[ Restr_lettagxtagdbad_6__1( <'tag', destructor> ) ]->
+     [ State_2( ) ]
+  */
+
+rule (modulo E) eventSuccess_0_1[color=#ffffff,
+                                 process="event Success( );", issapicrule, role='Process']:
+   [ State_1( x7.1 ) ] --[ Success( ) ]-> [ State_11( x7.1 ) ]
+
+  /*
+  rule (modulo AC) eventSuccess_0_1[color=#ffffff,
+                                    process="event Success( );", issapicrule, role='Process']:
+     [ State_1( x7 ) ] --[ Success( ) ]-> [ State_11( x7 ) ]
+  */
+
+rule (modulo E) p_0_11[color=#ffffff, process="0", issapicrule,
+                       role='Process']:
+   [ State_11( x7.1 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_11[color=#ffffff, process="0", issapicrule,
+                          role='Process']:
+     [ State_11( x7 ) ] --> [ ]
+  */
+
+rule (modulo E) lettagxtagdbad_0_2[color=#ffffff,
+                                   process="let <'tag', x6.1>=<'tag', d('bad')>", issapicrule,
+                                   role='Process']:
+   [ State_2( ) ] --> [ Let_21( 'bad' ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) lettagxtagdbad_1_2[color=#ffffff,
+                                   process="let <'tag', x6.1>=<'tag', d('bad')>", no_derivcheck,
+                                   issapicrule, role='Process']:
+   [ Let_21( c(x.2) ) ] --> [ Let_201( x.2 ) ]
+
+  /*
+  rule (modulo AC) lettagxtagdbad_1_2[color=#ffffff,
+                                      process="let <'tag', x6.1>=<'tag', d('bad')>", no_derivcheck,
+                                      issapicrule, role='Process']:
+     [ Let_21( c(x) ) ] --> [ Let_201( x ) ]
+  */
+
+restriction Restr_lettagxtagdbad_2_2_1:
+  "∀ #NOW.
+    (Restr_lettagxtagdbad_2_2_1( ) @ #NOW) ⇒ (∀ x. (c(x) = 'bad') ⇒ (⊥))"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ #NOW.
+    (Restr_lettagxtagdbad_2_2_1( ) @ #NOW) ⇒ (∀ x. (c(x) = 'bad') ⇒ (⊥))"
+  */
+
+rule (modulo E) lettagxtagdbad_2_2[color=#ffffff,
+                                   process="let <'tag', x6.1>=<'tag', d('bad')>", issapicrule,
+                                   role='Process']:
+   [ Let_21( 'bad' ) ] --[ Restr_lettagxtagdbad_2_2_1( ) ]-> [ State_22( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) lettagxtagdbad_3_2[color=#ffffff,
+                                   process="let <'tag', x6.1>=<'tag', d('bad')>", issapicrule,
+                                   role='Process']:
+   [ Let_201( destructor.6 ) ]
+  -->
+   [ Let_202( <'tag', destructor.6>, destructor.6 ) ]
+
+  /*
+  rule (modulo AC) lettagxtagdbad_3_2[color=#ffffff,
+                                      process="let <'tag', x6.1>=<'tag', d('bad')>", issapicrule,
+                                      role='Process']:
+     [ Let_201( destructor ) ]
+    -->
+     [ Let_202( <'tag', destructor>, destructor ) ]
+  */
+
+restriction Restr_lettagxtagdbad_4_2_1:
+  "∀ x #NOW.
+    (Restr_lettagxtagdbad_4_2_1( x ) @ #NOW) ⇒
+    (∀ destructor. (destructor = x) ⇒ (⊥))"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ x #NOW.
+    (Restr_lettagxtagdbad_4_2_1( x ) @ #NOW) ⇒
+    (∀ destructor. (destructor = x) ⇒ (⊥))"
+  */
+
+rule (modulo E) lettagxtagdbad_4_2[color=#ffffff,
+                                   process="let <'tag', x6.1>=<'tag', d('bad')>", issapicrule,
+                                   role='Process']:
+   [ Let_201( destructor.7 ) ]
+  --[ Restr_lettagxtagdbad_4_2_1( destructor.7 ) ]->
+   [ State_22( ) ]
+
+  /*
+  rule (modulo AC) lettagxtagdbad_4_2[color=#ffffff,
+                                      process="let <'tag', x6.1>=<'tag', d('bad')>", issapicrule,
+                                      role='Process']:
+     [ Let_201( destructor ) ]
+    --[ Restr_lettagxtagdbad_4_2_1( destructor ) ]->
+     [ State_22( ) ]
+  */
+
+rule (modulo E) lettagxtagdbad_5_2[color=#ffffff,
+                                   process="let <'tag', x6.1>=<'tag', d('bad')>", issapicrule,
+                                   role='Process']:
+   [ Let_202( <'tag', x6.1>, destructor.6 ) ] --> [ State_21( x6.1 ) ]
+
+  /*
+  rule (modulo AC) lettagxtagdbad_5_2[color=#ffffff,
+                                      process="let <'tag', x6.1>=<'tag', d('bad')>", issapicrule,
+                                      role='Process']:
+     [ Let_202( <'tag', x6>, destructor ) ] --> [ State_21( x6 ) ]
+  */
+
+restriction Restr_lettagxtagdbad_6_2_1:
+  "∀ x #NOW.
+    (Restr_lettagxtagdbad_6_2_1( x ) @ #NOW) ⇒
+    (∀ x6. (<'tag', x6> = x) ⇒ (⊥))"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ x #NOW.
+    (Restr_lettagxtagdbad_6_2_1( x ) @ #NOW) ⇒
+    (∀ x6. (<'tag', x6> = x) ⇒ (⊥))"
+  */
+
+rule (modulo E) lettagxtagdbad_6_2[color=#ffffff,
+                                   process="let <'tag', x6.1>=<'tag', d('bad')>", issapicrule,
+                                   role='Process']:
+   [ Let_202( <'tag', destructor.6>, destructor.6 ) ]
+  --[ Restr_lettagxtagdbad_6_2_1( <'tag', destructor.6> ) ]->
+   [ State_22( ) ]
+
+  /*
+  rule (modulo AC) lettagxtagdbad_6_2[color=#ffffff,
+                                      process="let <'tag', x6.1>=<'tag', d('bad')>", issapicrule,
+                                      role='Process']:
+     [ Let_202( <'tag', destructor>, destructor ) ]
+    --[ Restr_lettagxtagdbad_6_2_1( <'tag', destructor> ) ]->
+     [ State_22( ) ]
+  */
+
+rule (modulo E) eventSuccess_0_21[color=#ffffff,
+                                  process="event Success( );", issapicrule, role='Process']:
+   [ State_21( x6.1 ) ] --[ Success( ) ]-> [ State_211( x6.1 ) ]
+
+  /*
+  rule (modulo AC) eventSuccess_0_21[color=#ffffff,
+                                     process="event Success( );", issapicrule, role='Process']:
+     [ State_21( x6 ) ] --[ Success( ) ]-> [ State_211( x6 ) ]
+  */
+
+rule (modulo E) p_0_211[color=#ffffff, process="0", issapicrule,
+                        role='Process']:
+   [ State_211( x6.1 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_211[color=#ffffff, process="0", issapicrule,
+                           role='Process']:
+     [ State_211( x6 ) ] --> [ ]
+  */
+
+rule (modulo E) lettagxtagdbad_0_22[color=#ffffff,
+                                    process="let <'tag', x5.1>=<'tag', d('bad')>", issapicrule,
+                                    role='Process']:
+   [ State_22( ) ] --> [ Let_221( 'bad' ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) lettagxtagdbad_1_22[color=#ffffff,
+                                    process="let <'tag', x5.1>=<'tag', d('bad')>", no_derivcheck,
+                                    issapicrule, role='Process']:
+   [ Let_221( c(x.2) ) ] --> [ Let_2201( x.2 ) ]
+
+  /*
+  rule (modulo AC) lettagxtagdbad_1_22[color=#ffffff,
+                                       process="let <'tag', x5.1>=<'tag', d('bad')>", no_derivcheck,
+                                       issapicrule, role='Process']:
+     [ Let_221( c(x) ) ] --> [ Let_2201( x ) ]
+  */
+
+restriction Restr_lettagxtagdbad_2_22_1:
+  "∀ #NOW.
+    (Restr_lettagxtagdbad_2_22_1( ) @ #NOW) ⇒ (∀ x. (c(x) = 'bad') ⇒ (⊥))"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ #NOW.
+    (Restr_lettagxtagdbad_2_22_1( ) @ #NOW) ⇒ (∀ x. (c(x) = 'bad') ⇒ (⊥))"
+  */
+
+rule (modulo E) lettagxtagdbad_2_22[color=#ffffff,
+                                    process="let <'tag', x5.1>=<'tag', d('bad')>", issapicrule,
+                                    role='Process']:
+   [ Let_221( 'bad' ) ]
+  --[ Restr_lettagxtagdbad_2_22_1( ) ]->
+   [ State_222( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) lettagxtagdbad_3_22[color=#ffffff,
+                                    process="let <'tag', x5.1>=<'tag', d('bad')>", issapicrule,
+                                    role='Process']:
+   [ Let_2201( destructor.8 ) ]
+  -->
+   [ Let_2202( <'tag', destructor.8>, destructor.8 ) ]
+
+  /*
+  rule (modulo AC) lettagxtagdbad_3_22[color=#ffffff,
+                                       process="let <'tag', x5.1>=<'tag', d('bad')>", issapicrule,
+                                       role='Process']:
+     [ Let_2201( destructor ) ]
+    -->
+     [ Let_2202( <'tag', destructor>, destructor ) ]
+  */
+
+restriction Restr_lettagxtagdbad_4_22_1:
+  "∀ x #NOW.
+    (Restr_lettagxtagdbad_4_22_1( x ) @ #NOW) ⇒
+    (∀ destructor. (destructor = x) ⇒ (⊥))"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ x #NOW.
+    (Restr_lettagxtagdbad_4_22_1( x ) @ #NOW) ⇒
+    (∀ destructor. (destructor = x) ⇒ (⊥))"
+  */
+
+rule (modulo E) lettagxtagdbad_4_22[color=#ffffff,
+                                    process="let <'tag', x5.1>=<'tag', d('bad')>", issapicrule,
+                                    role='Process']:
+   [ Let_2201( destructor.9 ) ]
+  --[ Restr_lettagxtagdbad_4_22_1( destructor.9 ) ]->
+   [ State_222( ) ]
+
+  /*
+  rule (modulo AC) lettagxtagdbad_4_22[color=#ffffff,
+                                       process="let <'tag', x5.1>=<'tag', d('bad')>", issapicrule,
+                                       role='Process']:
+     [ Let_2201( destructor ) ]
+    --[ Restr_lettagxtagdbad_4_22_1( destructor ) ]->
+     [ State_222( ) ]
+  */
+
+rule (modulo E) lettagxtagdbad_5_22[color=#ffffff,
+                                    process="let <'tag', x5.1>=<'tag', d('bad')>", issapicrule,
+                                    role='Process']:
+   [ Let_2202( <'tag', x5.1>, destructor.8 ) ] --> [ State_221( x5.1 ) ]
+
+  /*
+  rule (modulo AC) lettagxtagdbad_5_22[color=#ffffff,
+                                       process="let <'tag', x5.1>=<'tag', d('bad')>", issapicrule,
+                                       role='Process']:
+     [ Let_2202( <'tag', x5>, destructor ) ] --> [ State_221( x5 ) ]
+  */
+
+restriction Restr_lettagxtagdbad_6_22_1:
+  "∀ x #NOW.
+    (Restr_lettagxtagdbad_6_22_1( x ) @ #NOW) ⇒
+    (∀ x5. (<'tag', x5> = x) ⇒ (⊥))"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ x #NOW.
+    (Restr_lettagxtagdbad_6_22_1( x ) @ #NOW) ⇒
+    (∀ x5. (<'tag', x5> = x) ⇒ (⊥))"
+  */
+
+rule (modulo E) lettagxtagdbad_6_22[color=#ffffff,
+                                    process="let <'tag', x5.1>=<'tag', d('bad')>", issapicrule,
+                                    role='Process']:
+   [ Let_2202( <'tag', destructor.8>, destructor.8 ) ]
+  --[ Restr_lettagxtagdbad_6_22_1( <'tag', destructor.8> ) ]->
+   [ State_222( ) ]
+
+  /*
+  rule (modulo AC) lettagxtagdbad_6_22[color=#ffffff,
+                                       process="let <'tag', x5.1>=<'tag', d('bad')>", issapicrule,
+                                       role='Process']:
+     [ Let_2202( <'tag', destructor>, destructor ) ]
+    --[ Restr_lettagxtagdbad_6_22_1( <'tag', destructor> ) ]->
+     [ State_222( ) ]
+  */
+
+rule (modulo E) eventSuccess_0_221[color=#ffffff,
+                                   process="event Success( );", issapicrule, role='Process']:
+   [ State_221( x5.1 ) ] --[ Success( ) ]-> [ State_2211( x5.1 ) ]
+
+  /*
+  rule (modulo AC) eventSuccess_0_221[color=#ffffff,
+                                      process="event Success( );", issapicrule, role='Process']:
+     [ State_221( x5 ) ] --[ Success( ) ]-> [ State_2211( x5 ) ]
+  */
+
+rule (modulo E) p_0_2211[color=#ffffff, process="0", issapicrule,
+                         role='Process']:
+   [ State_2211( x5.1 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_2211[color=#ffffff, process="0", issapicrule,
+                            role='Process']:
+     [ State_2211( x5 ) ] --> [ ]
+  */
+
+rule (modulo E) lettagxtagdbad_0_222[color=#ffffff,
+                                     process="let <'tag', x4.1>=<'tag', d('bad')>", issapicrule,
+                                     role='Process']:
+   [ State_222( ) ] --> [ Let_2221( 'bad' ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) lettagxtagdbad_1_222[color=#ffffff,
+                                     process="let <'tag', x4.1>=<'tag', d('bad')>", no_derivcheck,
+                                     issapicrule, role='Process']:
+   [ Let_2221( c(x.2) ) ] --> [ Let_22201( x.2 ) ]
+
+  /*
+  rule (modulo AC) lettagxtagdbad_1_222[color=#ffffff,
+                                        process="let <'tag', x4.1>=<'tag', d('bad')>", no_derivcheck,
+                                        issapicrule, role='Process']:
+     [ Let_2221( c(x) ) ] --> [ Let_22201( x ) ]
+  */
+
+restriction Restr_lettagxtagdbad_2_222_1:
+  "∀ #NOW.
+    (Restr_lettagxtagdbad_2_222_1( ) @ #NOW) ⇒ (∀ x. (c(x) = 'bad') ⇒ (⊥))"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ #NOW.
+    (Restr_lettagxtagdbad_2_222_1( ) @ #NOW) ⇒ (∀ x. (c(x) = 'bad') ⇒ (⊥))"
+  */
+
+rule (modulo E) lettagxtagdbad_2_222[color=#ffffff,
+                                     process="let <'tag', x4.1>=<'tag', d('bad')>", issapicrule,
+                                     role='Process']:
+   [ Let_2221( 'bad' ) ]
+  --[ Restr_lettagxtagdbad_2_222_1( ) ]->
+   [ State_2222( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) lettagxtagdbad_3_222[color=#ffffff,
+                                     process="let <'tag', x4.1>=<'tag', d('bad')>", issapicrule,
+                                     role='Process']:
+   [ Let_22201( destructor.10 ) ]
+  -->
+   [ Let_22202( <'tag', destructor.10>, destructor.10 ) ]
+
+  /*
+  rule (modulo AC) lettagxtagdbad_3_222[color=#ffffff,
+                                        process="let <'tag', x4.1>=<'tag', d('bad')>", issapicrule,
+                                        role='Process']:
+     [ Let_22201( destructor ) ]
+    -->
+     [ Let_22202( <'tag', destructor>, destructor ) ]
+  */
+
+restriction Restr_lettagxtagdbad_4_222_1:
+  "∀ x #NOW.
+    (Restr_lettagxtagdbad_4_222_1( x ) @ #NOW) ⇒
+    (∀ destructor. (destructor = x) ⇒ (⊥))"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ x #NOW.
+    (Restr_lettagxtagdbad_4_222_1( x ) @ #NOW) ⇒
+    (∀ destructor. (destructor = x) ⇒ (⊥))"
+  */
+
+rule (modulo E) lettagxtagdbad_4_222[color=#ffffff,
+                                     process="let <'tag', x4.1>=<'tag', d('bad')>", issapicrule,
+                                     role='Process']:
+   [ Let_22201( destructor.11 ) ]
+  --[ Restr_lettagxtagdbad_4_222_1( destructor.11 ) ]->
+   [ State_2222( ) ]
+
+  /*
+  rule (modulo AC) lettagxtagdbad_4_222[color=#ffffff,
+                                        process="let <'tag', x4.1>=<'tag', d('bad')>", issapicrule,
+                                        role='Process']:
+     [ Let_22201( destructor ) ]
+    --[ Restr_lettagxtagdbad_4_222_1( destructor ) ]->
+     [ State_2222( ) ]
+  */
+
+rule (modulo E) lettagxtagdbad_5_222[color=#ffffff,
+                                     process="let <'tag', x4.1>=<'tag', d('bad')>", issapicrule,
+                                     role='Process']:
+   [ Let_22202( <'tag', x4.1>, destructor.10 ) ] --> [ State_2221( x4.1 ) ]
+
+  /*
+  rule (modulo AC) lettagxtagdbad_5_222[color=#ffffff,
+                                        process="let <'tag', x4.1>=<'tag', d('bad')>", issapicrule,
+                                        role='Process']:
+     [ Let_22202( <'tag', x4>, destructor ) ] --> [ State_2221( x4 ) ]
+  */
+
+restriction Restr_lettagxtagdbad_6_222_1:
+  "∀ x #NOW.
+    (Restr_lettagxtagdbad_6_222_1( x ) @ #NOW) ⇒
+    (∀ x4. (<'tag', x4> = x) ⇒ (⊥))"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ x #NOW.
+    (Restr_lettagxtagdbad_6_222_1( x ) @ #NOW) ⇒
+    (∀ x4. (<'tag', x4> = x) ⇒ (⊥))"
+  */
+
+rule (modulo E) lettagxtagdbad_6_222[color=#ffffff,
+                                     process="let <'tag', x4.1>=<'tag', d('bad')>", issapicrule,
+                                     role='Process']:
+   [ Let_22202( <'tag', destructor.10>, destructor.10 ) ]
+  --[ Restr_lettagxtagdbad_6_222_1( <'tag', destructor.10> ) ]->
+   [ State_2222( ) ]
+
+  /*
+  rule (modulo AC) lettagxtagdbad_6_222[color=#ffffff,
+                                        process="let <'tag', x4.1>=<'tag', d('bad')>", issapicrule,
+                                        role='Process']:
+     [ Let_22202( <'tag', destructor>, destructor ) ]
+    --[ Restr_lettagxtagdbad_6_222_1( <'tag', destructor> ) ]->
+     [ State_2222( ) ]
+  */
+
+rule (modulo E) eventSuccess_0_2221[color=#ffffff,
+                                    process="event Success( );", issapicrule, role='Process']:
+   [ State_2221( x4.1 ) ] --[ Success( ) ]-> [ State_22211( x4.1 ) ]
+
+  /*
+  rule (modulo AC) eventSuccess_0_2221[color=#ffffff,
+                                       process="event Success( );", issapicrule, role='Process']:
+     [ State_2221( x4 ) ] --[ Success( ) ]-> [ State_22211( x4 ) ]
+  */
+
+rule (modulo E) p_0_22211[color=#ffffff, process="0", issapicrule,
+                          role='Process']:
+   [ State_22211( x4.1 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_22211[color=#ffffff, process="0", issapicrule,
+                             role='Process']:
+     [ State_22211( x4 ) ] --> [ ]
+  */
+
+rule (modulo E) lettagxtagdbad_0_2222[color=#ffffff,
+                                      process="let <'tag', x3.1>=<'tag', d('bad')>", issapicrule,
+                                      role='Process']:
+   [ State_2222( ) ] --> [ Let_22221( 'bad' ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) lettagxtagdbad_1_2222[color=#ffffff,
+                                      process="let <'tag', x3.1>=<'tag', d('bad')>", no_derivcheck,
+                                      issapicrule, role='Process']:
+   [ Let_22221( c(x.2) ) ] --> [ Let_222201( x.2 ) ]
+
+  /*
+  rule (modulo AC) lettagxtagdbad_1_2222[color=#ffffff,
+                                         process="let <'tag', x3.1>=<'tag', d('bad')>", no_derivcheck,
+                                         issapicrule, role='Process']:
+     [ Let_22221( c(x) ) ] --> [ Let_222201( x ) ]
+  */
+
+restriction Restr_lettagxtagdbad_2_2222_1:
+  "∀ #NOW.
+    (Restr_lettagxtagdbad_2_2222_1( ) @ #NOW) ⇒ (∀ x. (c(x) = 'bad') ⇒ (⊥))"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ #NOW.
+    (Restr_lettagxtagdbad_2_2222_1( ) @ #NOW) ⇒ (∀ x. (c(x) = 'bad') ⇒ (⊥))"
+  */
+
+rule (modulo E) lettagxtagdbad_2_2222[color=#ffffff,
+                                      process="let <'tag', x3.1>=<'tag', d('bad')>", issapicrule,
+                                      role='Process']:
+   [ Let_22221( 'bad' ) ]
+  --[ Restr_lettagxtagdbad_2_2222_1( ) ]->
+   [ State_22222( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) lettagxtagdbad_3_2222[color=#ffffff,
+                                      process="let <'tag', x3.1>=<'tag', d('bad')>", issapicrule,
+                                      role='Process']:
+   [ Let_222201( destructor.12 ) ]
+  -->
+   [ Let_222202( <'tag', destructor.12>, destructor.12 ) ]
+
+  /*
+  rule (modulo AC) lettagxtagdbad_3_2222[color=#ffffff,
+                                         process="let <'tag', x3.1>=<'tag', d('bad')>", issapicrule,
+                                         role='Process']:
+     [ Let_222201( destructor ) ]
+    -->
+     [ Let_222202( <'tag', destructor>, destructor ) ]
+  */
+
+restriction Restr_lettagxtagdbad_4_2222_1:
+  "∀ x #NOW.
+    (Restr_lettagxtagdbad_4_2222_1( x ) @ #NOW) ⇒
+    (∀ destructor. (destructor = x) ⇒ (⊥))"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ x #NOW.
+    (Restr_lettagxtagdbad_4_2222_1( x ) @ #NOW) ⇒
+    (∀ destructor. (destructor = x) ⇒ (⊥))"
+  */
+
+rule (modulo E) lettagxtagdbad_4_2222[color=#ffffff,
+                                      process="let <'tag', x3.1>=<'tag', d('bad')>", issapicrule,
+                                      role='Process']:
+   [ Let_222201( destructor.13 ) ]
+  --[ Restr_lettagxtagdbad_4_2222_1( destructor.13 ) ]->
+   [ State_22222( ) ]
+
+  /*
+  rule (modulo AC) lettagxtagdbad_4_2222[color=#ffffff,
+                                         process="let <'tag', x3.1>=<'tag', d('bad')>", issapicrule,
+                                         role='Process']:
+     [ Let_222201( destructor ) ]
+    --[ Restr_lettagxtagdbad_4_2222_1( destructor ) ]->
+     [ State_22222( ) ]
+  */
+
+rule (modulo E) lettagxtagdbad_5_2222[color=#ffffff,
+                                      process="let <'tag', x3.1>=<'tag', d('bad')>", issapicrule,
+                                      role='Process']:
+   [ Let_222202( <'tag', x3.1>, destructor.12 ) ]
+  -->
+   [ State_22221( x3.1 ) ]
+
+  /*
+  rule (modulo AC) lettagxtagdbad_5_2222[color=#ffffff,
+                                         process="let <'tag', x3.1>=<'tag', d('bad')>", issapicrule,
+                                         role='Process']:
+     [ Let_222202( <'tag', x3>, destructor ) ] --> [ State_22221( x3 ) ]
+  */
+
+restriction Restr_lettagxtagdbad_6_2222_1:
+  "∀ x #NOW.
+    (Restr_lettagxtagdbad_6_2222_1( x ) @ #NOW) ⇒
+    (∀ x3. (<'tag', x3> = x) ⇒ (⊥))"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ x #NOW.
+    (Restr_lettagxtagdbad_6_2222_1( x ) @ #NOW) ⇒
+    (∀ x3. (<'tag', x3> = x) ⇒ (⊥))"
+  */
+
+rule (modulo E) lettagxtagdbad_6_2222[color=#ffffff,
+                                      process="let <'tag', x3.1>=<'tag', d('bad')>", issapicrule,
+                                      role='Process']:
+   [ Let_222202( <'tag', destructor.12>, destructor.12 ) ]
+  --[ Restr_lettagxtagdbad_6_2222_1( <'tag', destructor.12> ) ]->
+   [ State_22222( ) ]
+
+  /*
+  rule (modulo AC) lettagxtagdbad_6_2222[color=#ffffff,
+                                         process="let <'tag', x3.1>=<'tag', d('bad')>", issapicrule,
+                                         role='Process']:
+     [ Let_222202( <'tag', destructor>, destructor ) ]
+    --[ Restr_lettagxtagdbad_6_2222_1( <'tag', destructor> ) ]->
+     [ State_22222( ) ]
+  */
+
+rule (modulo E) eventSuccess_0_22221[color=#ffffff,
+                                     process="event Success( );", issapicrule, role='Process']:
+   [ State_22221( x3.1 ) ] --[ Success( ) ]-> [ State_222211( x3.1 ) ]
+
+  /*
+  rule (modulo AC) eventSuccess_0_22221[color=#ffffff,
+                                        process="event Success( );", issapicrule, role='Process']:
+     [ State_22221( x3 ) ] --[ Success( ) ]-> [ State_222211( x3 ) ]
+  */
+
+rule (modulo E) p_0_222211[color=#ffffff, process="0", issapicrule,
+                           role='Process']:
+   [ State_222211( x3.1 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_222211[color=#ffffff, process="0", issapicrule,
+                              role='Process']:
+     [ State_222211( x3 ) ] --> [ ]
+  */
+
+rule (modulo E) lettagxtagdbad_0_22222[color=#ffffff,
+                                       process="let <'tag', x2.1>=<'tag', d('bad')>", issapicrule,
+                                       role='Process']:
+   [ State_22222( ) ] --> [ Let_222221( 'bad' ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) lettagxtagdbad_1_22222[color=#ffffff,
+                                       process="let <'tag', x2.1>=<'tag', d('bad')>", no_derivcheck,
+                                       issapicrule, role='Process']:
+   [ Let_222221( c(x.2) ) ] --> [ Let_2222201( x.2 ) ]
+
+  /*
+  rule (modulo AC) lettagxtagdbad_1_22222[color=#ffffff,
+                                          process="let <'tag', x2.1>=<'tag', d('bad')>", no_derivcheck,
+                                          issapicrule, role='Process']:
+     [ Let_222221( c(x) ) ] --> [ Let_2222201( x ) ]
+  */
+
+restriction Restr_lettagxtagdbad_2_22222_1:
+  "∀ #NOW.
+    (Restr_lettagxtagdbad_2_22222_1( ) @ #NOW) ⇒ (∀ x. (c(x) = 'bad') ⇒ (⊥))"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ #NOW.
+    (Restr_lettagxtagdbad_2_22222_1( ) @ #NOW) ⇒ (∀ x. (c(x) = 'bad') ⇒ (⊥))"
+  */
+
+rule (modulo E) lettagxtagdbad_2_22222[color=#ffffff,
+                                       process="let <'tag', x2.1>=<'tag', d('bad')>", issapicrule,
+                                       role='Process']:
+   [ Let_222221( 'bad' ) ]
+  --[ Restr_lettagxtagdbad_2_22222_1( ) ]->
+   [ State_222222( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) lettagxtagdbad_3_22222[color=#ffffff,
+                                       process="let <'tag', x2.1>=<'tag', d('bad')>", issapicrule,
+                                       role='Process']:
+   [ Let_2222201( destructor.14 ) ]
+  -->
+   [ Let_2222202( <'tag', destructor.14>, destructor.14 ) ]
+
+  /*
+  rule (modulo AC) lettagxtagdbad_3_22222[color=#ffffff,
+                                          process="let <'tag', x2.1>=<'tag', d('bad')>", issapicrule,
+                                          role='Process']:
+     [ Let_2222201( destructor ) ]
+    -->
+     [ Let_2222202( <'tag', destructor>, destructor ) ]
+  */
+
+restriction Restr_lettagxtagdbad_4_22222_1:
+  "∀ x #NOW.
+    (Restr_lettagxtagdbad_4_22222_1( x ) @ #NOW) ⇒
+    (∀ destructor. (destructor = x) ⇒ (⊥))"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ x #NOW.
+    (Restr_lettagxtagdbad_4_22222_1( x ) @ #NOW) ⇒
+    (∀ destructor. (destructor = x) ⇒ (⊥))"
+  */
+
+rule (modulo E) lettagxtagdbad_4_22222[color=#ffffff,
+                                       process="let <'tag', x2.1>=<'tag', d('bad')>", issapicrule,
+                                       role='Process']:
+   [ Let_2222201( destructor.15 ) ]
+  --[ Restr_lettagxtagdbad_4_22222_1( destructor.15 ) ]->
+   [ State_222222( ) ]
+
+  /*
+  rule (modulo AC) lettagxtagdbad_4_22222[color=#ffffff,
+                                          process="let <'tag', x2.1>=<'tag', d('bad')>", issapicrule,
+                                          role='Process']:
+     [ Let_2222201( destructor ) ]
+    --[ Restr_lettagxtagdbad_4_22222_1( destructor ) ]->
+     [ State_222222( ) ]
+  */
+
+rule (modulo E) lettagxtagdbad_5_22222[color=#ffffff,
+                                       process="let <'tag', x2.1>=<'tag', d('bad')>", issapicrule,
+                                       role='Process']:
+   [ Let_2222202( <'tag', x2.1>, destructor.14 ) ]
+  -->
+   [ State_222221( x2.1 ) ]
+
+  /*
+  rule (modulo AC) lettagxtagdbad_5_22222[color=#ffffff,
+                                          process="let <'tag', x2.1>=<'tag', d('bad')>", issapicrule,
+                                          role='Process']:
+     [ Let_2222202( <'tag', x2>, destructor ) ] --> [ State_222221( x2 ) ]
+  */
+
+restriction Restr_lettagxtagdbad_6_22222_1:
+  "∀ x #NOW.
+    (Restr_lettagxtagdbad_6_22222_1( x ) @ #NOW) ⇒
+    (∀ x2. (<'tag', x2> = x) ⇒ (⊥))"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ x #NOW.
+    (Restr_lettagxtagdbad_6_22222_1( x ) @ #NOW) ⇒
+    (∀ x2. (<'tag', x2> = x) ⇒ (⊥))"
+  */
+
+rule (modulo E) lettagxtagdbad_6_22222[color=#ffffff,
+                                       process="let <'tag', x2.1>=<'tag', d('bad')>", issapicrule,
+                                       role='Process']:
+   [ Let_2222202( <'tag', destructor.14>, destructor.14 ) ]
+  --[ Restr_lettagxtagdbad_6_22222_1( <'tag', destructor.14> ) ]->
+   [ State_222222( ) ]
+
+  /*
+  rule (modulo AC) lettagxtagdbad_6_22222[color=#ffffff,
+                                          process="let <'tag', x2.1>=<'tag', d('bad')>", issapicrule,
+                                          role='Process']:
+     [ Let_2222202( <'tag', destructor>, destructor ) ]
+    --[ Restr_lettagxtagdbad_6_22222_1( <'tag', destructor> ) ]->
+     [ State_222222( ) ]
+  */
+
+rule (modulo E) eventSuccess_0_222221[color=#ffffff,
+                                      process="event Success( );", issapicrule, role='Process']:
+   [ State_222221( x2.1 ) ] --[ Success( ) ]-> [ State_2222211( x2.1 ) ]
+
+  /*
+  rule (modulo AC) eventSuccess_0_222221[color=#ffffff,
+                                         process="event Success( );", issapicrule, role='Process']:
+     [ State_222221( x2 ) ] --[ Success( ) ]-> [ State_2222211( x2 ) ]
+  */
+
+rule (modulo E) p_0_2222211[color=#ffffff, process="0", issapicrule,
+                            role='Process']:
+   [ State_2222211( x2.1 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_2222211[color=#ffffff, process="0", issapicrule,
+                               role='Process']:
+     [ State_2222211( x2 ) ] --> [ ]
+  */
+
+rule (modulo E) lettagxtagdbad_0_222222[color=#ffffff,
+                                        process="let <'tag', x1.1>=<'tag', d('bad')>", issapicrule,
+                                        role='Process']:
+   [ State_222222( ) ] --> [ Let_2222221( 'bad' ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) lettagxtagdbad_1_222222[color=#ffffff,
+                                        process="let <'tag', x1.1>=<'tag', d('bad')>", no_derivcheck,
+                                        issapicrule, role='Process']:
+   [ Let_2222221( c(x.2) ) ] --> [ Let_22222201( x.2 ) ]
+
+  /*
+  rule (modulo AC) lettagxtagdbad_1_222222[color=#ffffff,
+                                           process="let <'tag', x1.1>=<'tag', d('bad')>", no_derivcheck,
+                                           issapicrule, role='Process']:
+     [ Let_2222221( c(x) ) ] --> [ Let_22222201( x ) ]
+  */
+
+restriction Restr_lettagxtagdbad_2_222222_1:
+  "∀ #NOW.
+    (Restr_lettagxtagdbad_2_222222_1( ) @ #NOW) ⇒
+    (∀ x. (c(x) = 'bad') ⇒ (⊥))"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ #NOW.
+    (Restr_lettagxtagdbad_2_222222_1( ) @ #NOW) ⇒
+    (∀ x. (c(x) = 'bad') ⇒ (⊥))"
+  */
+
+rule (modulo E) lettagxtagdbad_2_222222[color=#ffffff,
+                                        process="let <'tag', x1.1>=<'tag', d('bad')>", issapicrule,
+                                        role='Process']:
+   [ Let_2222221( 'bad' ) ]
+  --[ Restr_lettagxtagdbad_2_222222_1( ) ]->
+   [ State_2222222( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) lettagxtagdbad_3_222222[color=#ffffff,
+                                        process="let <'tag', x1.1>=<'tag', d('bad')>", issapicrule,
+                                        role='Process']:
+   [ Let_22222201( destructor.16 ) ]
+  -->
+   [ Let_22222202( <'tag', destructor.16>, destructor.16 ) ]
+
+  /*
+  rule (modulo AC) lettagxtagdbad_3_222222[color=#ffffff,
+                                           process="let <'tag', x1.1>=<'tag', d('bad')>", issapicrule,
+                                           role='Process']:
+     [ Let_22222201( destructor ) ]
+    -->
+     [ Let_22222202( <'tag', destructor>, destructor ) ]
+  */
+
+restriction Restr_lettagxtagdbad_4_222222_1:
+  "∀ x #NOW.
+    (Restr_lettagxtagdbad_4_222222_1( x ) @ #NOW) ⇒
+    (∀ destructor. (destructor = x) ⇒ (⊥))"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ x #NOW.
+    (Restr_lettagxtagdbad_4_222222_1( x ) @ #NOW) ⇒
+    (∀ destructor. (destructor = x) ⇒ (⊥))"
+  */
+
+rule (modulo E) lettagxtagdbad_4_222222[color=#ffffff,
+                                        process="let <'tag', x1.1>=<'tag', d('bad')>", issapicrule,
+                                        role='Process']:
+   [ Let_22222201( destructor.17 ) ]
+  --[ Restr_lettagxtagdbad_4_222222_1( destructor.17 ) ]->
+   [ State_2222222( ) ]
+
+  /*
+  rule (modulo AC) lettagxtagdbad_4_222222[color=#ffffff,
+                                           process="let <'tag', x1.1>=<'tag', d('bad')>", issapicrule,
+                                           role='Process']:
+     [ Let_22222201( destructor ) ]
+    --[ Restr_lettagxtagdbad_4_222222_1( destructor ) ]->
+     [ State_2222222( ) ]
+  */
+
+rule (modulo E) lettagxtagdbad_5_222222[color=#ffffff,
+                                        process="let <'tag', x1.1>=<'tag', d('bad')>", issapicrule,
+                                        role='Process']:
+   [ Let_22222202( <'tag', x1.1>, destructor.16 ) ]
+  -->
+   [ State_2222221( x1.1 ) ]
+
+  /*
+  rule (modulo AC) lettagxtagdbad_5_222222[color=#ffffff,
+                                           process="let <'tag', x1.1>=<'tag', d('bad')>", issapicrule,
+                                           role='Process']:
+     [ Let_22222202( <'tag', x1>, destructor ) ] --> [ State_2222221( x1 ) ]
+  */
+
+restriction Restr_lettagxtagdbad_6_222222_1:
+  "∀ x #NOW.
+    (Restr_lettagxtagdbad_6_222222_1( x ) @ #NOW) ⇒
+    (∀ x1. (<'tag', x1> = x) ⇒ (⊥))"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ x #NOW.
+    (Restr_lettagxtagdbad_6_222222_1( x ) @ #NOW) ⇒
+    (∀ x1. (<'tag', x1> = x) ⇒ (⊥))"
+  */
+
+rule (modulo E) lettagxtagdbad_6_222222[color=#ffffff,
+                                        process="let <'tag', x1.1>=<'tag', d('bad')>", issapicrule,
+                                        role='Process']:
+   [ Let_22222202( <'tag', destructor.16>, destructor.16 ) ]
+  --[ Restr_lettagxtagdbad_6_222222_1( <'tag', destructor.16> ) ]->
+   [ State_2222222( ) ]
+
+  /*
+  rule (modulo AC) lettagxtagdbad_6_222222[color=#ffffff,
+                                           process="let <'tag', x1.1>=<'tag', d('bad')>", issapicrule,
+                                           role='Process']:
+     [ Let_22222202( <'tag', destructor>, destructor ) ]
+    --[ Restr_lettagxtagdbad_6_222222_1( <'tag', destructor> ) ]->
+     [ State_2222222( ) ]
+  */
+
+rule (modulo E) eventSuccess_0_2222221[color=#ffffff,
+                                       process="event Success( );", issapicrule, role='Process']:
+   [ State_2222221( x1.1 ) ] --[ Success( ) ]-> [ State_22222211( x1.1 ) ]
+
+  /*
+  rule (modulo AC) eventSuccess_0_2222221[color=#ffffff,
+                                          process="event Success( );", issapicrule, role='Process']:
+     [ State_2222221( x1 ) ] --[ Success( ) ]-> [ State_22222211( x1 ) ]
+  */
+
+rule (modulo E) p_0_22222211[color=#ffffff, process="0", issapicrule,
+                             role='Process']:
+   [ State_22222211( x1.1 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_22222211[color=#ffffff, process="0", issapicrule,
+                                role='Process']:
+     [ State_22222211( x1 ) ] --> [ ]
+  */
+
+rule (modulo E) lettagxtagdbad_0_2222222[color=#ffffff,
+                                         process="let <'tag', x0.1>=<'tag', d('bad')>", issapicrule,
+                                         role='Process']:
+   [ State_2222222( ) ] --> [ Let_22222221( 'bad' ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) lettagxtagdbad_1_2222222[color=#ffffff,
+                                         process="let <'tag', x0.1>=<'tag', d('bad')>", no_derivcheck,
+                                         issapicrule, role='Process']:
+   [ Let_22222221( c(x.2) ) ] --> [ Let_222222201( x.2 ) ]
+
+  /*
+  rule (modulo AC) lettagxtagdbad_1_2222222[color=#ffffff,
+                                            process="let <'tag', x0.1>=<'tag', d('bad')>", no_derivcheck,
+                                            issapicrule, role='Process']:
+     [ Let_22222221( c(x) ) ] --> [ Let_222222201( x ) ]
+  */
+
+restriction Restr_lettagxtagdbad_2_2222222_1:
+  "∀ #NOW.
+    (Restr_lettagxtagdbad_2_2222222_1( ) @ #NOW) ⇒
+    (∀ x. (c(x) = 'bad') ⇒ (⊥))"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ #NOW.
+    (Restr_lettagxtagdbad_2_2222222_1( ) @ #NOW) ⇒
+    (∀ x. (c(x) = 'bad') ⇒ (⊥))"
+  */
+
+rule (modulo E) lettagxtagdbad_2_2222222[color=#ffffff,
+                                         process="let <'tag', x0.1>=<'tag', d('bad')>", issapicrule,
+                                         role='Process']:
+   [ Let_22222221( 'bad' ) ]
+  --[ Restr_lettagxtagdbad_2_2222222_1( ) ]->
+   [ State_22222222( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) lettagxtagdbad_3_2222222[color=#ffffff,
+                                         process="let <'tag', x0.1>=<'tag', d('bad')>", issapicrule,
+                                         role='Process']:
+   [ Let_222222201( destructor.18 ) ]
+  -->
+   [ Let_222222202( <'tag', destructor.18>, destructor.18 ) ]
+
+  /*
+  rule (modulo AC) lettagxtagdbad_3_2222222[color=#ffffff,
+                                            process="let <'tag', x0.1>=<'tag', d('bad')>", issapicrule,
+                                            role='Process']:
+     [ Let_222222201( destructor ) ]
+    -->
+     [ Let_222222202( <'tag', destructor>, destructor ) ]
+  */
+
+restriction Restr_lettagxtagdbad_4_2222222_1:
+  "∀ x #NOW.
+    (Restr_lettagxtagdbad_4_2222222_1( x ) @ #NOW) ⇒
+    (∀ destructor. (destructor = x) ⇒ (⊥))"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ x #NOW.
+    (Restr_lettagxtagdbad_4_2222222_1( x ) @ #NOW) ⇒
+    (∀ destructor. (destructor = x) ⇒ (⊥))"
+  */
+
+rule (modulo E) lettagxtagdbad_4_2222222[color=#ffffff,
+                                         process="let <'tag', x0.1>=<'tag', d('bad')>", issapicrule,
+                                         role='Process']:
+   [ Let_222222201( destructor.19 ) ]
+  --[ Restr_lettagxtagdbad_4_2222222_1( destructor.19 ) ]->
+   [ State_22222222( ) ]
+
+  /*
+  rule (modulo AC) lettagxtagdbad_4_2222222[color=#ffffff,
+                                            process="let <'tag', x0.1>=<'tag', d('bad')>", issapicrule,
+                                            role='Process']:
+     [ Let_222222201( destructor ) ]
+    --[ Restr_lettagxtagdbad_4_2222222_1( destructor ) ]->
+     [ State_22222222( ) ]
+  */
+
+rule (modulo E) lettagxtagdbad_5_2222222[color=#ffffff,
+                                         process="let <'tag', x0.1>=<'tag', d('bad')>", issapicrule,
+                                         role='Process']:
+   [ Let_222222202( <'tag', x0.1>, destructor.18 ) ]
+  -->
+   [ State_22222221( x0.1 ) ]
+
+  /*
+  rule (modulo AC) lettagxtagdbad_5_2222222[color=#ffffff,
+                                            process="let <'tag', x0.1>=<'tag', d('bad')>", issapicrule,
+                                            role='Process']:
+     [ Let_222222202( <'tag', x0>, destructor ) ] --> [ State_22222221( x0 ) ]
+  */
+
+restriction Restr_lettagxtagdbad_6_2222222_1:
+  "∀ x #NOW.
+    (Restr_lettagxtagdbad_6_2222222_1( x ) @ #NOW) ⇒
+    (∀ x0. (<'tag', x0> = x) ⇒ (⊥))"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ x #NOW.
+    (Restr_lettagxtagdbad_6_2222222_1( x ) @ #NOW) ⇒
+    (∀ x0. (<'tag', x0> = x) ⇒ (⊥))"
+  */
+
+rule (modulo E) lettagxtagdbad_6_2222222[color=#ffffff,
+                                         process="let <'tag', x0.1>=<'tag', d('bad')>", issapicrule,
+                                         role='Process']:
+   [ Let_222222202( <'tag', destructor.18>, destructor.18 ) ]
+  --[ Restr_lettagxtagdbad_6_2222222_1( <'tag', destructor.18> ) ]->
+   [ State_22222222( ) ]
+
+  /*
+  rule (modulo AC) lettagxtagdbad_6_2222222[color=#ffffff,
+                                            process="let <'tag', x0.1>=<'tag', d('bad')>", issapicrule,
+                                            role='Process']:
+     [ Let_222222202( <'tag', destructor>, destructor ) ]
+    --[ Restr_lettagxtagdbad_6_2222222_1( <'tag', destructor> ) ]->
+     [ State_22222222( ) ]
+  */
+
+rule (modulo E) eventSuccess_0_22222221[color=#ffffff,
+                                        process="event Success( );", issapicrule, role='Process']:
+   [ State_22222221( x0.1 ) ] --[ Success( ) ]-> [ State_222222211( x0.1 ) ]
+
+  /*
+  rule (modulo AC) eventSuccess_0_22222221[color=#ffffff,
+                                           process="event Success( );", issapicrule, role='Process']:
+     [ State_22222221( x0 ) ] --[ Success( ) ]-> [ State_222222211( x0 ) ]
+  */
+
+rule (modulo E) p_0_222222211[color=#ffffff, process="0", issapicrule,
+                              role='Process']:
+   [ State_222222211( x0.1 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_222222211[color=#ffffff, process="0", issapicrule,
+                                 role='Process']:
+     [ State_222222211( x0 ) ] --> [ ]
+  */
+
+rule (modulo E) eventFinished_0_22222222[color=#ffffff,
+                                         process="event Finished( );", issapicrule, role='Process']:
+   [ State_22222222( ) ] --[ Finished( ) ]-> [ State_222222221( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_0_222222221[color=#ffffff, process="0", issapicrule,
+                              role='Process']:
+   [ State_222222221( ) ] --> [ ]
+
+  /* has exactly the trivial AC variant */
+
+restriction single_session:
+  "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
+  */
+
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.13.0
+Maude version 3.5.1
+Git revision: 5a753a172c7984e9403bc650a37a8223367bc1c5, branch: sapic-destructors
+Compiled at: 2026-09-25 19:30:59.558380567 UTC
+*/
+
+end
+/* Output
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/regression/trace/soundness-sapic-nested-destructor-failure-chain.spthy
+
+  output:          examples/regression/trace/soundness-sapic-nested-destructor-failure-chain.spthy.tmp
+  processing time: 1.05s
+  
+  finished (exists-trace): verified (3 steps)
+  no_success (all-traces): verified (10 steps)
+
+==============================================================================
+*/

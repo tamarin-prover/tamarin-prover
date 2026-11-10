@@ -46,13 +46,7 @@ next
   case non_empty_trace
   solve( Inj( ~i.1 ) ▶₀ #j )
     case Copy
-    solve( Inj( ~i.1 ) ▶₀ #k )
-      case Copy
-      by contradiction /* cyclic */
-    next
-      case Init
-      by contradiction /* cyclic */
-    qed
+    by solve( Inj( ~i.1 ) ▶₀ #k )
   next
     case Init
     solve( Inj( ~i.1 ) ▶₀ #k )
@@ -68,8 +62,8 @@ qed
 Generated from:
 Tamarin version 1.13.0
 Maude version 3.5.1
-Git revision: 41bc81379b23681e7057314a5cf66a25c45e1986, branch: canonicalise-subst
-Compiled at: 2026-07-27 16:11:34.947223 UTC
+Git revision: 5df53af2911dfd01204a9142e8237672e5d05dae (with uncommited changes), branch: msr-proof-correctness
+Compiled at: 2026-09-25 19:18:42.692960904 UTC
 */
 
 end
@@ -81,9 +75,9 @@ summary of summaries:
 analyzed: examples/features//injectivity/injectivity.spthy
 
   output:          examples/features//injectivity/injectivity.spthy.tmp
-  processing time: 0.03s
+  processing time: 0.13s
   
-  injectivity_check (all-traces): verified (8 steps)
+  injectivity_check (all-traces): verified (6 steps)
 
 ==============================================================================
 */

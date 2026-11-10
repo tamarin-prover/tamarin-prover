@@ -1,0 +1,26 @@
+theory SoundnessSapicDestructorFailureChain
+begin
+functions: d/1 [destructor], c/1
+equations: d(c(x)) = x
+// The eight source lets must generate a linear number of matching rules.
+// Separating root evaluation from pattern matching duplicated each suffix.
+process: in(z);
+let <'tag',a0> = d(z) in 0 else (
+let <'tag',a1> = d(z) in 0 else (
+let <'tag',a2> = d(z) in 0 else (
+let <'tag',a3> = d(z) in 0 else (
+let <'tag',a4> = d(z) in 0 else (
+let <'tag',a5> = d(z) in 0 else (
+let <'tag',a6> = d(z) in 0 else (
+let <'tag',a7> = d(z) in 0 else (
+event Done()
+)
+)
+)
+)
+)
+)
+)
+)
+lemma final_failure_reachable: exists-trace "Ex #i. Done()@i"
+end

@@ -44,6 +44,8 @@ import           Safe                           (headMay)
 import           Extension.Data.Label               hiding (modify)
 import           Extension.Prelude
 
+import qualified Theory.Constraint.System.StoredFormulas as Stored
+import           Theory.Constraint.Solver.Contradictions (injectiveInterferenceCandidates)
 import           Theory.Constraint.Solver.Goals
 import           Theory.Constraint.Solver.Reduction
 import           Theory.Constraint.System
@@ -81,6 +83,9 @@ simplifySystem = do
           -- changes as 'substSystem' is idempotent.
           void substSystem
           -- Perform one simplification pass.
+          -- Delay implications containing existentials until the other
+          -- reductions stabilize, so temporary duplicate nodes cannot keep
+          -- creating fresh witnesses for an already solved obligation.
           isdiff <- getM sDiffSystem
           -- In the diff case, we cannot enfore N4-N6.
           if isdiff
@@ -90,10 +95,10 @@ simplifySystem = do
               c5 <- solveUniqueActions
               c6 <- reduceFormulas
               c7 <- evalFormulaAtoms
-              c8 <- insertImpliedFormulas
               c9 <- freshOrdering
               c10 <- simpSubterms
               c11 <- simpInjectiveFactEqMon
+              c8 <- insertImpliedFormulas $ mconcat [c1,c3,c4,c5,c6,c7,c9,c10,c11] == Unchanged
 
               -- Report on looping behaviour if necessary
               let changes = filter ((Changed ==) . snd) $
@@ -110,7 +115,7 @@ simplifySystem = do
                     , ("equations and monotonicity from injective Facts", c11)
                     ]
                   traceIfLooping
-                    | n <= 10   = id
+                    | n <= 10 || null changes = id
                     | otherwise = trace $ render $ vsep
                         [ text "Simplifier iteration" <-> int n <> colon
                         , fsep $ text "The reduction-rules for" :
@@ -126,10 +131,11 @@ simplifySystem = do
               c5 <- solveUniqueActions
               c6 <- reduceFormulas
               c7 <- evalFormulaAtoms
-              c8 <- insertImpliedFormulas
               c9 <- freshOrdering
               c10 <- simpSubterms
               c11 <- simpInjectiveFactEqMon
+              c12 <- mergeLastInjectiveFactNodes
+              c8 <- insertImpliedFormulas $ mconcat [c1,c2,c3,c4,c5,c6,c7,c9,c10,c11,c12] == Unchanged
 
               -- Report on looping behaviour if necessary
               let changes = filter ((Changed ==) . snd) $
@@ -144,9 +150,10 @@ simplifySystem = do
                     , ("orderings for ~vars (S_fresh-order)",             c9)
                     , ("simplification of SubtermStore",                  c10)
                     , ("equations and monotonicity from injective Facts", c11)
+                    , ("last-node equalities from injective facts",        c12)
                     ]
                   traceIfLooping
-                    | n <= 10   = id
+                    | n <= 10 || null changes = id
                     | otherwise = trace $ render $ vsep
                         [ text "Simplifier iteration" <-> int n <> colon
                         , fsep $ text "The reduction-rules for" :
@@ -302,10 +309,15 @@ solveUniqueActions = do
 reduceFormulas :: Reduction ChangeIndicator
 reduceFormulas = do
     formulas <- getM sFormulas
+    goals <- getM sGoals
     applyChangeList $ do
-        fm <- S.toList formulas
-        guard (reducibleFormula fm)
-        return $ do modM sFormulas $ S.delete fm
+        fm <- Stored.toList formulas
+        -- The initial formula bypasses insertFormula. A disjunction needs its
+        -- case-split goal even when none of its atoms can be simplified yet.
+        guard $ case fm of
+          GDisj disj -> DisjG disj `M.notMember` goals
+          _         -> reducibleFormula fm
+        return $ do modM sFormulas $ Stored.delete fm
                     insertFormula fm
 
 -- | Try to simplify the atoms contained in the formulas. See
@@ -318,14 +330,14 @@ evalFormulaAtoms = do
     valuation <- gets (partialAtomValuation ctxt)
     formulas  <- getM sFormulas
     applyChangeList $ do
-        fm <- S.toList formulas
+        fm <- Stored.toList formulas
         case simplifyGuarded valuation fm verbose of
           Just fm' -> return $ do
               case fm of
                 GDisj disj -> markGoalAsSolved "simplified" (DisjG disj)
-                _          -> return ()
-              modM sFormulas       $ S.delete fm
-              modM sSolvedFormulas $ S.insert fm
+                _          -> do
+                    modM sFormulas       $ Stored.delete fm
+                    modM sSolvedFormulas $ Stored.insert fm
               insertFormula fm'
           Nothing  -> []
 
@@ -404,18 +416,26 @@ partialAtomValuation ctxt sys =
 
 
 -- | CR-rule *S_∀*: insert all newly implied formulas.
-insertImpliedFormulas :: Reduction ChangeIndicator
-insertImpliedFormulas = do
+-- Implications without existentials cannot create fresh witnesses and need
+-- not wait for node merging to settle.
+insertImpliedFormulas :: Bool -> Reduction ChangeIndicator
+insertImpliedFormulas stable = do
     sys <- gets id
     hnd <- getMaudeHandle
     applyChangeList $ do
-        clause  <- (S.toList $ get sFormulas sys) ++
-                   (S.toList $ get sLemmas sys)
-        implied <- impliedFormulas hnd sys clause
-        if ( implied `S.notMember` get sFormulas sys &&
-             implied `S.notMember` get sSolvedFormulas sys )
+        clause  <- (Stored.toList $ get sFormulas sys) ++
+                   (Stored.toList $ get sLemmas sys)
+        guard (stable || not (hasExistential clause))
+        implied <- map normaliseStoredFormula (impliedFormulas hnd sys clause)
+        if ( implied `Stored.notMember` get sFormulas sys &&
+             implied `Stored.notMember` get sSolvedFormulas sys )
           then return (insertFormula implied)
           else []
+  where
+    hasExistential (GAto _) = False
+    hasExistential (GGuarded q _ _ body) = q == Ex || hasExistential body
+    hasExistential (GDisj disj) = any hasExistential $ getDisj disj
+    hasExistential (GConj conj) = any hasExistential $ getConj conj
 
 -- | CR-rule *S_fresh-order*:
 --
@@ -518,9 +538,9 @@ simpSubterms = do
       return ((length goalsToAdd + length goalsToRemove) > 0)
 
     -- insert formulas
-    allFormulas <- S.union <$> getM sSolvedFormulas <*> getM sFormulas
+    allFormulas <- Stored.union <$> getM sSolvedFormulas <*> getM sFormulas
     forM_ formulas insertFormula
-    let changedFormulas = not $ all (`S.member` allFormulas) formulas
+    let changedFormulas = not $ all (`Stored.member` allFormulas) formulas
     return $ if changedStore || changedGoals || changedFormulas then Changed else Unchanged
     -- TODO take care acFormulas are not inserted twice with different newVar's (didn't happen so far)
     --          if z ⊏ x+y is substituted to z ⊏ x+y'+y'' then
@@ -555,11 +575,11 @@ simpInjectiveFactEqMon = do
   let triviallySmaller small big = Just True == isTrueFalse reducible (Just sst) (small, big)
   let triviallyNotSmaller small big = Just False == isTrueFalse reducible (Just sst) (small, big)
 
-  oldFormulas <- S.union <$> getM sFormulas <*> getM sSolvedFormulas
+  oldFormulas <- Stored.union <$> getM sFormulas <*> getM sSolvedFormulas
   let inequalities = S.fromList $ concatMap (\case
                     GGuarded All [] [EqE (bTermToLTerm->s) (bTermToLTerm->t)] gf | gf == gfalse -> [(s, t), (t, s)]
                     _                                                                           -> [])
-                      $ S.toList oldFormulas
+                      $ Stored.toList oldFormulas
   let notIneq s t = (s,t) `S.notMember` inequalities
   let ineq s t = (s,t) `S.member` inequalities
 
@@ -590,7 +610,7 @@ simpInjectiveFactEqMon = do
                               newLesses
 
   -- check if anything changed
-  updatedFormulas <- S.union <$> getM sFormulas <*> getM sSolvedFormulas
+  updatedFormulas <- Stored.union <$> getM sFormulas <*> getM sSolvedFormulas
   return $ if
       updatedFormulas == oldFormulas &&
       null newLesses
@@ -656,6 +676,27 @@ simpInjectiveFactEqMon = do
             i /= j,
             ((b, s),(_,t)) <- zip ss tt  -- the b and _ are automatically the same
             ]
+
+-- | An injective fact flowing from i to the last node k cannot also be used
+-- or produced strictly between those nodes. If j is after i and mentions the
+-- same injective identifier, it must therefore coincide with k. Add that
+-- equality rather than treating different node-variable names as a conflict.
+-- Normal substitution merges the rule instances, and existing equations and
+-- formulas decide whether the merger is possible.
+mergeLastInjectiveFactNodes :: Reduction ChangeIndicator
+mergeLastInjectiveFactNodes = do
+    se <- gets id
+    ctxt <- ask
+    let less = rawLessRel se
+        equalities =
+          [ Equal j k
+          | (_, j, k) <- injectiveInterferenceCandidates (isLast se) ctxt se ]
+        ordered (Equal j k) = k `S.member` D.reachableSet [j] less ||
+                              j `S.member` D.reachableSet [k] less
+    -- Merging ordered nodes would create a cycle. Reject it before unifying
+    -- their rule instances, which can be expensive for multiset counters.
+    contradictoryIf $ any ordered equalities
+    solveNodeIdEqs $ nub equalities
 
 -- | Compute all less relations implied by injective fact instances.
 --

@@ -1,0 +1,11 @@
+theory SapicUnaryStageDepth10
+begin
+
+functions: d/1 [destructor], c/1
+equations: d(c(x)) = x
+
+// Each stage needs only the current intermediate result. Retaining earlier
+// results makes total fact payload quadratic even when rule growth stays linear.
+process: let x = d(c(d(c(d(c(d(c(d(c(d(c(d(c(d(c(d(c(d(c('ok')))))))))))))))))))) in event Done(x) else event Fail()
+
+end

@@ -1,0 +1,18 @@
+{
+  "tests": [
+    {
+      "name": "continuation-growth",
+      "args": [
+        "--quit-on-warning"
+      ],
+      "matches": [
+        {
+          "regex": "^rule ",
+          "min": 8,
+          "max": 80,
+          "theory_only": true
+        }
+      ]
+    }
+  ]
+}

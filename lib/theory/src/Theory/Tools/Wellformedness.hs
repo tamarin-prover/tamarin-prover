@@ -1020,7 +1020,9 @@ lemmaAttributeReportDiff thy = do
            )
 
 
--- check that only message and node variables are used
+-- Ordinary formulas quantify messages, nodes and naturals. Pattern exclusion
+-- also needs the pattern's name sorts: widening a fresh/public variable to a
+-- message variable would rule out inputs which cannot match that pattern.
 checkQuantifiers :: Document b => Show a => String -> ProtoFormula syn (a, LSort) c v -> [b]
 checkQuantifiers header fm
   | null disallowed = []
@@ -1028,8 +1030,17 @@ checkQuantifiers header fm
       (text $ header ++ " uses quantifiers with wrong sort:") :
       (punctuate comma $ map (nest 2 . text . show) disallowed)
   where
-    binders    = foldFormula (const mempty) (const mempty) id (const mappend)
-                      (\_ binder rest -> binder : rest) fm
+    binders = ordinaryBinders fm
+    ordinaryBinders f | patternExclusion f = []
+    ordinaryBinders (Qua _ binder rest) = binder : ordinaryBinders rest
+    ordinaryBinders (Not f) = ordinaryBinders f
+    ordinaryBinders (Conn _ f g) = ordinaryBinders f ++ ordinaryBinders g
+    ordinaryBinders _ = []
+    -- These variables are introduced only for matching an equality guard;
+    -- guardedness checking still requires every binder to be determined.
+    patternExclusion (Qua All _ f) = patternExclusion f
+    patternExclusion (Conn Imp (Ato EqE{}) (TF False)) = True
+    patternExclusion _ = False
     disallowed = filter (not . (`elem` [LSortMsg, LSortNode, LSortNat]) . snd) binders
 
 -- check that only bound variables and public names are used
@@ -1068,6 +1079,11 @@ checkGuarded header fm = case formulaToGuarded fm of
         nest 2 err
     Right _  -> []
 
+checkNoLast :: HighlightDocument a => String -> LNFormula -> [a]
+checkNoLast header fm
+  | foldFormula isLastAtom (const False) id (const (||)) (\_ _ -> id) fm = return $ text (header ++ " contains last atom")
+  | otherwise = []
+
 -- | Check for mistakes in lemmas.
 --
 -- TODO: Perhaps a lot of errors would be captured when making the signature
@@ -1075,9 +1091,10 @@ checkGuarded header fm = case formulaToGuarded fm of
 formulaReports :: OpenTranslatedTheory -> WfErrorReport
 formulaReports thy = do
     (header, fm) <- annFormulas
-    msum [ ((,) (underlineTopic "Quantifier sorts")) <$> checkQuantifiers header fm
-         , ((,) (underlineTopic "Formula terms"))    <$> checkTerms header (get (sigpMaudeSig . thySignature) thy) fm
-         , ((,) (underlineTopic " Formula guardedness"))      <$> checkGuarded header fm
+    msum [ (,) (underlineTopic "Quantifier sorts")    <$> checkQuantifiers header fm
+         , (,) (underlineTopic "Formula terms")       <$> checkTerms header (get (sigpMaudeSig . thySignature) thy) fm
+         , (,) (underlineTopic "Formula guardedness") <$> checkGuarded header fm
+         , (,) (underlineTopic "Last atom usage")     <$> checkNoLast header fm
          ]
   where
     annFormulas = do LemmaItem l <- get thyItems thy
@@ -1098,9 +1115,10 @@ formulaReports thy = do
 formulaReportsDiff :: OpenDiffTheory -> WfErrorReport
 formulaReportsDiff thy = do
     (header, fm) <- annFormulas
-    msum [ ((,) (underlineTopic "Quantifier sorts")) <$> checkQuantifiers header fm
-         , ((,) (underlineTopic "Formula terms"))    <$> checkTerms header ( get (sigpMaudeSig . diffThySignature) thy) fm
-         , ((,) (underlineTopic "Formula guardedness"))      <$> checkGuarded header fm
+    msum [ (,) (underlineTopic "Quantifier sorts")    <$> checkQuantifiers header fm
+         , (,) (underlineTopic "Formula terms")       <$> checkTerms header ( get (sigpMaudeSig . diffThySignature) thy) fm
+         , (,) (underlineTopic "Formula guardedness") <$> checkGuarded header fm
+         , (,) (underlineTopic "Last atom usage")     <$> checkNoLast header fm
          ]
   where
     annFormulas = do EitherLemmaItem (s, l) <- get diffThyItems thy

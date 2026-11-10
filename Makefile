@@ -282,7 +282,7 @@ ccs15-case-studies:	$(CCS15_TARGETS)
 	grep "verified\|falsified\|processing time" case-studies$(SUBDIR)ccs15/*.spthy
 
 
-REGRESSION_OBSEQ_CASE_STUDIES=issue223.spthy issue198-1.spthy issue198-2.spthy issue324.spthy issue331.spthy
+REGRESSION_OBSEQ_CASE_STUDIES=issue223.spthy issue198-1.spthy issue198-2.spthy issue324.spthy issue331.spthy last.spthy
 REGRESSION_OBSEQ_TARGETS=$(subst .spthy,_analyzed-diff.spthy,$(addprefix case-studies$(SUBDIR)regression/diff/,$(REGRESSION_OBSEQ_CASE_STUDIES)))
 
 TESTOBSEQ_CASE_STUDIES=AxiomDiffTest1.spthy AxiomDiffTest2.spthy AxiomDiffTest3.spthy AxiomDiffTest4.spthy N5N6DiffTest.spthy MacroDiffprobEnc.spthy
@@ -492,14 +492,21 @@ accountability-case-studies:	$(ACCOUNTABILITY_CS_TARGETS)
 ## Regression (old issues)
 ##########################
 
-FAST_REGRESSION_CASE_STUDIES=issue446-1.spthy issue446-2.spthy issue753-4.spthy issue753-5.spthy issue753-6.spthy issue834.spthy issue777.spthy issue770.spthy issue914.spthy issue904.spthy issue905.spthy negated-equivalence.spthy
-COMMON_REGRESSION_CASE_STUDIES=soundness-manual-variants-complete.spthy soundness-partial-evaluation-variants.spthy partial-evaluation-export.spthy partial-evaluation-collision.spthy
+FAST_REGRESSION_CASE_STUDIES=issue446-1.spthy issue446-2.spthy issue753-4.spthy issue753-5.spthy issue753-6.spthy issue834.spthy issue777.spthy issue770.spthy issue914.spthy issue904.spthy issue905.spthy negated-equivalence.spthy last.spthy guarded-connectives.spthy existential-restriction.spthy negated-equivalence.spthy
+COMMON_REGRESSION_CASE_STUDIES=msr-macro-injectivity.spthy msr-injective-last.spthy msr-source-premise-index.spthy nat-subterm-sorts.spthy soundness-subterm-witness.spthy soundness-manual-variants-complete.spthy soundness-safety-false.spthy soundness-partial-evaluation-variants.spthy partial-evaluation-export.spthy partial-evaluation-collision.spthy soundness-induction-empty-equality.spthy
+COMMON_REGRESSION_CASE_STUDIES+=proof-method-exhaustion.spthy
 COMMON_REGRESSION_CASE_STUDIES+=manual-variant-auto-sources-roundtrip.spthy
 case-studies$(SUBDIR)regression/trace/manual-variant-auto-sources-roundtrip_analyzed.spthy: TRACE_EXTRA_ARGS=--auto-sources
 COMMON_REGRESSION_CASE_STUDIES+=covered-product-export.spthy
 COMMON_REGRESSION_CASE_STUDIES+=manual-variant-export-name-collision.spthy
 COMMON_REGRESSION_CASE_STUDIES+=auto-sources-rule-name-collision.spthy
 case-studies$(SUBDIR)regression/trace/auto-sources-rule-name-collision_analyzed.spthy: TRACE_EXTRA_ARGS=--auto-sources
+# SAPIC let and destructor evaluation
+COMMON_REGRESSION_CASE_STUDIES+=sapic-destructor-nullary.spthy sapic-destructor-sorted-patterns.spthy
+COMMON_REGRESSION_CASE_STUDIES+=soundness-sapic-destructor-failure-chain.spthy soundness-sapic-destructor-variable-clash.spthy soundness-sapic-destructor-alternatives.spthy soundness-sapic-let-match-else.spthy soundness-sapic-destructor-patterns.spthy soundness-sapic-nested-destructors.spthy soundness-sapic-nested-destructor-failure-chain.spthy soundness-sapic-destructor-generated-binders.spthy soundness-sapic-destructor-nonvariable-result.spthy
+# SAPIC progress translation of lets
+COMMON_REGRESSION_CASE_STUDIES+=soundness-sapic-progress-let.spthy soundness-sapic-nested-destructor-progress.spthy
+COMMON_REGRESSION_CASE_STUDIES+=sapic-lookup-destructor-progress.spthy
 FAST_REGRESSION_CASE_STUDIES+=$(COMMON_REGRESSION_CASE_STUDIES)
 FAST_REGRESSION_TARGETS=$(subst .spthy,_analyzed.spthy,$(addprefix case-studies$(SUBDIR)regression/trace/,$(FAST_REGRESSION_CASE_STUDIES)))
 

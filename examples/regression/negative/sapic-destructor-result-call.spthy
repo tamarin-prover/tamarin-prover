@@ -1,0 +1,13 @@
+theory SapicDestructorResultCall
+begin
+functions: c/1, bad/0, d/1 [destructor], e/1 [destructor]
+// Equation results are passed on as messages. A destructor call here used to
+// reach Success even though evaluating e(bad) directly reaches Failure.
+#ifdef NESTED
+equations: d(c(x)) = c(e(bad))
+#else
+equations: d(c(x)) = e(bad)
+#endif
+process: let y = d(c('ok')) in event Success() else event Failure()
+lemma success: exists-trace "Ex #i. Success()@i"
+end
