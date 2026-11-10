@@ -167,25 +167,6 @@ privateConstructorEquations rs = case rs of
           -> (lhs, fun):(privateConstructorEquations xs)
     _:xs  -> privateConstructorEquations xs
 
--- given equations with private constructors on the RHS and a list of private function names x,
--- returns the list of all such constructors such that the LHS only contains public functions or functions in x
-derivablePrivateConstants :: [(LNTerm, FunSym)] -> [FunSym] -> [FunSym]
-derivablePrivateConstants eqs except =
-    if any (containsNoPrivateExcept except . fst) eqs
-        then
-            derivablePrivateConstants (filter (\(l, _) -> not $ containsNoPrivateExcept except l) eqs) (except ++ map snd (filter (\(l,  _) -> containsNoPrivateExcept except l) eqs))
-        else
-            except
-
--- | @privateConstructorRules st@ returns the constructor rules for private constants that are consequences of rewrite rules in @st@
-privateConstructorRules :: [CtxtStRule] -> [IntrRuleAC]
-privateConstructorRules rules = map createRule $ derivablePrivateConstants (privateConstructorEquations rules) []
-  where
-    -- creates a constructor rule for constant s
-    createRule f@(NoEq (s, _)) = Rule (ConstrRule (append (pack "_") s) f) [] [concfact] [concfact] []
-      where m         = fApp f []
-            concfact  = kuFact m
-
 -- | Simple removal of subsumed rules for auto-generated subterm intruder rules.
 minimizeIntruderRules :: Bool -> MaudeHandle -> [IntrRuleAC] -> [IntrRuleAC]
 minimizeIntruderRules diff hnd rules =
@@ -211,7 +192,7 @@ minimizeIntruderRules diff hnd rules =
 --   the subterm (not Xor, DH, and MSet) part of the given signature.
 subtermConstructorRules :: Bool -> MaudeHandle -> MaudeSig -> [IntrRuleAC]
 subtermConstructorRules diff hnd maudeSig =
-    minimizeIntruderRules diff hnd (constructionRules (userDefinedSTFunSyms maudeSig) ++ privateConstructorRules (S.toList $ stRules maudeSig))
+    minimizeIntruderRules diff hnd (constructionRules (userDefinedSTFunSyms maudeSig))
 
 -- | @constructionRules fSig@ returns the construction rules for the given
 -- function signature @fSig@
