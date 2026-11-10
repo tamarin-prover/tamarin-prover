@@ -128,7 +128,7 @@ natIntruderRules =
 -- | @destuctionRules diff st@ returns the destruction rules for the given
 -- context subterm rule @st@
 destructionRules :: Bool -> CtxtStRule -> [IntrRuleAC]
-destructionRules bool (CtxtStRule lhs@(viewTerm -> FApp _ _) (StRhs (pos:[]) rhs)) | bool || (frees rhs /= []) || containsPrivate rhs =
+destructionRules diff (CtxtStRule lhs@(viewTerm -> FApp _ _) (StRhs (pos:[]) rhs)) | diff || (frees rhs /= []) || containsPrivate rhs =
     go [] lhs pos [] []
   where
     go _      _                       []     _ _                     = []
@@ -153,10 +153,10 @@ destructionRules bool (CtxtStRule lhs@(viewTerm -> FApp _ _) (StRhs (pos:[]) rhs
                           [kdFact rhs] [] [] ]
               else []
 
-destructionRules bool (CtxtStRule lhs (StRhs (pos:posit) rhs))
-    | bool || (frees rhs /= []) || containsPrivate rhs =
-      destructionRules bool (CtxtStRule lhs (StRhs [pos] rhs))
-           ++ destructionRules bool (CtxtStRule lhs (StRhs posit rhs))
+destructionRules diff (CtxtStRule lhs (StRhs (pos:posit) rhs))
+    | diff || (frees rhs /= []) || containsPrivate rhs =
+      destructionRules diff (CtxtStRule lhs (StRhs [pos] rhs))
+           ++ destructionRules diff (CtxtStRule lhs (StRhs posit rhs))
 destructionRules _ _ = []
 
 -- | Simple removal of subsumed rules for auto-generated subterm intruder rules.
@@ -216,9 +216,9 @@ destructionRulesAC diff fSig = reader $ \hnd -> minimizeIntruderRules diff hnd $
 
 -- | @decomposeNotSubterm diff (f,r)@ decomposes the variants computed for a function f into (potentially) multiple rules using destructionRules
 decomposeNotSubterm :: Bool -> (FunSym,[IntrRuleAC]) -> [IntrRuleAC]
-decomposeNotSubterm bool (f,(Rule (DestrRule {}) ((Fact KDFact _ (lhs:_)):other_prems) [Fact KDFact _ [tc]] _ _):rq) =
+decomposeNotSubterm diff (f,(Rule (DestrRule {}) ((Fact KDFact _ (lhs:_)):other_prems) [Fact KDFact _ [tc]] _ _):rq) =
   case contextR of
-    Right context -> destructionRules bool context ++ decomposeNotSubterm bool (f,rq)
+    Right context -> destructionRules diff context ++ decomposeNotSubterm diff (f,rq)
     Left err      -> error $ "A computed variant for function " ++ show f ++ " is not a subterm rule: " ++ err ++ " " ++ show lhs ++ " = " ++ show tc
   where
     contextR = rRuleToCtxtStRule (flhs `RRule` tc)
