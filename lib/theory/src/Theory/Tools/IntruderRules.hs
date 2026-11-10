@@ -159,14 +159,6 @@ destructionRules bool (CtxtStRule lhs (StRhs (pos:posit) rhs))
            ++ destructionRules bool (CtxtStRule lhs (StRhs posit rhs))
 destructionRules _ _ = []
 
--- returns all equations with private constructors on the RHS
-privateConstructorEquations :: [CtxtStRule] -> [(LNTerm, FunSym)]
-privateConstructorEquations rs = case rs of
-    []    -> []
-    (CtxtStRule lhs (StRhs _ (viewTerm -> FApp fun@(NoEq (vname,(0,Private,_,_))) _))):xs
-          -> (lhs, fun):(privateConstructorEquations xs)
-    _:xs  -> privateConstructorEquations xs
-
 -- | Simple removal of subsumed rules for auto-generated subterm intruder rules.
 minimizeIntruderRules :: Bool -> MaudeHandle -> [IntrRuleAC] -> [IntrRuleAC]
 minimizeIntruderRules diff hnd rules =
