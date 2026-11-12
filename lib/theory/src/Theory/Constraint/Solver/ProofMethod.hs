@@ -23,6 +23,7 @@ module Theory.Constraint.Solver.ProofMethod (
   , execDiffProofMethod
   , isFinished
   , isFinishedOrStuck
+  , restrictionPreservationReason
 
   -- ** Heuristics
   , rankProofMethods
@@ -347,6 +348,15 @@ execDiffProofMethod :: DiffProofContext
                 -> DiffProofMethod -> DiffSystem -> Maybe (M.Map CaseName DiffSystem)
 execDiffProofMethod ctxt method sys =
   case method of
+    DiffSorry (Just reason) | reason == restrictionPreservationReason -> do
+      -- Closing this case as MIRRORED is unjustified when an opposite
+      -- restriction is neither local nor preserved. Stop here with
+      -- a reason: the compositional check cannot establish this restriction
+      -- for every mirrored trace from this dependency graph.
+      side <- mside
+      guard $ not $ null $ unsupportedDiffRestrictions ctxt (opposite side)
+      mirroredOnGraph
+      return M.empty
     DiffSorry _ -> return M.empty
     DiffBackwardSearch -> do
       guard (L.get dsProofType sys == Just RuleEquivalence)
@@ -361,29 +371,31 @@ execDiffProofMethod ctxt method sys =
       s <- L.get dsSide sys
       applyStep meth s =<< sequent
     DiffMirrored -> do
-      guard (L.get dsProofType sys == Just RuleEquivalence)
-      guard (isJust $ L.get dsCurrentRule sys)
-      msys' >>= guard . trivial
-      mallSubtermsFinished >>= guard
-      mirrorSyss <- mmirrorSyss
-      solved <- isSolved <$> mside <*> msys'
-      guard (fst (evaluateRestrictions ctxt sys mirrorSyss solved) == TTrue)
+      -- The mirrors are checked on this graph only. That establishes an
+      -- opposite restriction on the mirrored trace only if it is local, or
+      -- shared with all its actions preserved.
+      side <- mside
+      guard $ null $ unsupportedDiffRestrictions ctxt (opposite side)
+      mirroredOnGraph
       return M.empty
     DiffAttack -> do
       guard (L.get dsProofType sys == Just RuleEquivalence)
       guard (isJust $ L.get dsCurrentRule sys)
-      s <- L.get dsSide sys
-      solved <- isSolved <$> mside <*> msys'
-      sys' <- L.get dsSystem sys
-      notContradictory <- not . contradictorySystem (eitherProofContext ctxt s) <$> sequent
-      -- In the second case, the system is trivial, has no mirror and restrictions do not get in the way.
-      -- If we solve arbitrarily the last remaining trivial goals,
-      -- then there will be an attack.
-      guard (solved || (trivial sys' && notContradictory))
+      side <- mside
+      original <- msys'
+      let solved = isSolved side original
+      -- An attack requires a completed original trace. Even independent
+      -- trivial goals can have only producers that violate a restriction, so
+      -- their syntactic shape alone does not establish reachability. Open
+      -- attacker inputs are the exception: fresh public names complete them,
+      -- and the evaluator checks that completed instance.
+      guard (solved || openGoalsAreAttackerInputs original)
       allSubtermsFinished <- mallSubtermsFinished
       guard allSubtermsFinished
       mirrorSyss <- mmirrorSyss
-      guard (fst (evaluateRestrictions ctxt sys mirrorSyss solved) == TFalse)
+      -- The solved original already supplies an admitted witness. With no
+      -- mirrors, do not ask the partial evaluator to reprove its restrictions.
+      guard ((solved && null mirrorSyss) || fst (evaluateRestrictionsFor MirrorAttack (certifyOn side) ctxt sys mirrorSyss solved) == TFalse)
       return M.empty
     DiffRuleEquivalence -> do
       guard (isNothing $ L.get dsProofType sys)
@@ -397,6 +409,38 @@ execDiffProofMethod ctxt method sys =
       guard (not allSubtermsFinished)
       return M.empty
   where
+    -- The mirrors of this trivial graph satisfy the opposite restrictions.
+    mirroredOnGraph = do
+      guard (L.get dsProofType sys == Just RuleEquivalence)
+      guard (isJust $ L.get dsCurrentRule sys)
+      msys' >>= guard . trivial
+      mallSubtermsFinished >>= guard
+      side <- mside
+      mirrorSyss <- mmirrorSyss
+      solved <- isSolved side <$> msys'
+      -- A shared non-local conjunct whose actions are preserved holds on
+      -- the full mirror. Its witness need not occur in this dependency graph.
+      -- Keep unsupported conjuncts here (the diagnostic path uses this check
+      -- too), and keep every original restriction for admission checks.
+      let needsChecking f = classifyDiffRestriction ctxt (opposite side) f /= DiffPreserved
+          mirrorCtxt = L.modify dpcRestrictions
+            (map (\(s, fs) -> (s, if s == opposite side
+                then filter needsChecking (concatMap guardedConjuncts fs) else fs))) ctxt
+      guard (fst (evaluateRestrictionsFor MirrorCoverage (certifyOn side) mirrorCtxt sys mirrorSyss solved) == TTrue)
+
+    -- Specialization can activate reusable assumptions whose guards did not
+    -- match before. Ordinary simplification applies their consequences and
+    -- may split or reject the candidate. Unchanged is not rejection, and new
+    -- open obligations do not yet describe a completed attack witness.
+    certifyOn s original = map admission candidates
+      where
+        originalCtxt = eitherProofContext ctxt s
+        candidates = maybe [original] M.elems $
+          execProofMethod originalCtxt Simplify original
+        admission candidate = case isFinished originalCtxt candidate of
+          Just (Contradictory _) -> MirrorRejected
+          Just Solved           -> MirrorAdmitted candidate
+          _                     -> MirrorUnresolved
     sequent              = L.get dsSystem sys
     mside                = L.get dsSide sys
     msys'                = L.get dsSystem sys
@@ -437,9 +481,9 @@ execDiffProofMethod ctxt method sys =
 
     -- Not checking construction rules is sound, as they are 'trivial' !
     -- Note that we use the protoRulesAC, as we also want to include the ISEND rule as it is labelled with an action that might show up in restrictions.
-    -- LHS or RHS is not important in this case as we only need the names of the rules.
+    -- Include both sides: compilation can remove every member of one family.
     ruleEquivalence :: M.Map CaseName DiffSystem
-    ruleEquivalence = foldl ruleEquivalenceCase (foldl ruleEquivalenceCase {-(foldl ruleEquivalenceCase-} M.empty {-constrRules)-} destrRules) (protoRulesAC LHS)
+    ruleEquivalence = foldl ruleEquivalenceCase (foldl ruleEquivalenceCase {-(foldl ruleEquivalenceCase-} M.empty {-constrRules)-} destrRules) (protoRulesAC LHS ++ protoRulesAC RHS)
 
     trivial :: System -> Bool
     trivial sys' = (dgIsNotEmpty sys') && (allOpenGoalsAreSimpleFacts ctxt sys') && (allOpenFactGoalsAreIndependent sys')
@@ -461,6 +505,11 @@ execDiffProofMethod ctxt method sys =
     applyStep m s dsSys = do
       cases <- checkAndExecProofMethod (eitherProofContext ctxt s) m dsSys
       return $ M.map (\x -> L.set dsSystem (Just x) sys) cases
+
+-- | The reason recorded when a rule-equivalence case would be closed as
+-- MIRRORED but an opposite restriction is neither local nor preserved.
+restrictionPreservationReason :: String
+restrictionPreservationReason = "restriction preservation not established"
 
 -- | Whether the remaining subterm constraints permit extracting a trace.
 finishedSubterms :: ProofContext -> System -> Bool
@@ -693,6 +742,7 @@ rankDiffProofMethods ranking tactics ctxt sys = do
             [ (DiffRuleEquivalence, "Prove equivalence using rule equivalence")
             , (DiffMirrored, "Backward search completed")
             , (DiffAttack, "Found attack")
+            , (DiffSorry (Just restrictionPreservationReason), "Restriction preservation not established")
             , (DiffUnfinishable, "Proof cannot be finished")
             , (DiffBackwardSearch, "Do backward search from rule")]
         ++  maybe []

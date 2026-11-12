@@ -1,0 +1,694 @@
+theory DiffAutoSourceVariableAlignment
+
+begin
+
+// Function signature and definition of the equational theory E
+
+functions: adec/2, aenc/2, fst/1, pair/2, pk/1, snd/1
+equations:
+    adec(aenc(x.1, pk(x.2)), x.2) = x.1,
+    fst(<x.1, x.2>) = x.1,
+    snd(<x.1, x.2>) = x.2
+
+rule (modulo E) Keys:
+   [ Fr( ~k ) ] --> [ !Key( $A, ~k ), !Pub( $A, pk(~k) ), Out( pk(~k) ) ]
+
+rule (modulo E) Send:
+   [ Fr( ~n ), !Pub( $B, p ) ]
+  -->
+   [ Out( aenc(<~n, 'tag'>, p) ), Out( diff($x, <$x, $y>) ) ]
+ left
+  rule (modulo E) Send:
+     [ Fr( ~n ), !Pub( $B, p ) ]
+    -->
+     [ Out( aenc(<~n, 'tag'>, p) ), Out( $x ) ]
+   variants
+    rule (modulo AC) Send:
+       [ Fr( ~n ), !Pub( $B, p ) ]
+      --[
+      AUTO_OUT_TERM_2_0_0_0__Forward___AUTO_MEMBER_1( aenc(<~n, 'tag'>, p) )
+      ]->
+       [ Out( aenc(<~n, 'tag'>, p) ), Out( $x ) ]
+ right
+  rule (modulo E) Send:
+     [ Fr( ~n ), !Pub( $B, p ) ]
+    -->
+     [ Out( aenc(<~n, 'tag'>, p) ), Out( <$x, $y> ) ]
+   variants
+    rule (modulo AC) Send:
+       [ Fr( ~n ), !Pub( $B, p ) ]
+      --[
+      AUTO_OUT_TERM_2_0_0_0__Forward___AUTO_MEMBER_2( aenc(<~n, 'tag'>, p) )
+      ]->
+       [ Out( aenc(<~n, 'tag'>, p) ), Out( <$x, $y> ) ]
+
+rule (modulo E) Forward:
+   [ !Key( $A, k ), !Pub( $B, p ), In( aenc(<x, 'tag'>, pk(k)) ) ]
+  --[ Seen( x ) ]->
+   [ Out( aenc(x, p) ) ]
+ left
+  rule (modulo E) Forward:
+     [ !Key( $A, k ), !Pub( $B, p ), In( aenc(<x, 'tag'>, pk(k)) ) ]
+    --[ Seen( x ) ]->
+     [ Out( aenc(x, p) ) ]
+   variants
+    rule (modulo AC) Forward:
+       [ !Key( $A, k ), !Pub( $B, p ), In( aenc(<x, 'tag'>, pk(k)) ) ]
+      --[
+      AUTO_IN_TERM_2_0_0_0__Forward___AUTO_MEMBER_1( aenc(<x, 'tag'>, pk(k)), x
+      ),
+      Seen( x )
+      ]->
+       [ Out( aenc(x, p) ) ]
+ right
+  rule (modulo E) Forward:
+     [ !Key( $A, k ), !Pub( $B, p ), In( aenc(<x, 'tag'>, pk(k)) ) ]
+    --[ Seen( x ) ]->
+     [ Out( aenc(x, p) ) ]
+   variants
+    rule (modulo AC) Forward:
+       [ !Key( $A, k ), !Pub( $B, p ), In( aenc(<x, 'tag'>, pk(k)) ) ]
+      --[
+      AUTO_IN_TERM_2_0_0_0__Forward___AUTO_MEMBER_2( aenc(<x, 'tag'>, pk(k)), x
+      ),
+      Seen( x )
+      ]->
+       [ Out( aenc(x, p) ) ]
+
+diffLemma Observational_equivalence:
+rule-equivalence
+  case Rule_Destrd_0_adec
+  backward-search
+    case LHS
+    step( simplify )
+    step( solve( !KD( aenc(x, pk(x.1)) ) ▶₀ #i ) )
+      case Forward
+      step( solve( (#vl, 0) ~~> (#i, 0) ) )
+        case aenc
+        step( solve( !Key( $A, k ) ▶₀ #vr ) )
+          case Keys
+          by sorry // bound 6 hit
+        qed
+      next
+        case d_0_adec
+        step( solve( !Key( $A, k ) ▶₀ #vr ) )
+          case Keys
+          by sorry // bound 6 hit
+        qed
+      qed
+    next
+      case Keys
+      by step( contradiction /* impossible chain */ )
+    next
+      case Send_case_1
+      step( solve( (#vl, 0) ~~> (#i, 0) ) )
+        case aenc
+        step( solve( !Pub( $B, pk(x) ) ▶₁ #vr ) )
+          case Keys
+          by sorry // bound 6 hit
+        qed
+      next
+        case d_0_adec
+        by step( contradiction /* impossible chain */ )
+      qed
+    next
+      case Send_case_2
+      by step( contradiction /* impossible chain */ )
+    qed
+  next
+    case RHS
+    step( simplify )
+    step( solve( !KD( aenc(x, pk(x.1)) ) ▶₀ #i ) )
+      case Forward
+      step( solve( (#vl, 0) ~~> (#i, 0) ) )
+        case aenc
+        step( solve( !Key( $A, k ) ▶₀ #vr ) )
+          case Keys
+          by sorry // bound 6 hit
+        qed
+      next
+        case d_0_adec
+        step( solve( !Key( $A, k ) ▶₀ #vr ) )
+          case Keys
+          by sorry // bound 6 hit
+        qed
+      qed
+    next
+      case Keys
+      by step( contradiction /* impossible chain */ )
+    next
+      case Send_case_1
+      step( solve( (#vl, 0) ~~> (#i, 0) ) )
+        case aenc
+        step( solve( !Pub( $B, pk(x) ) ▶₁ #vr ) )
+          case Keys
+          by sorry // bound 6 hit
+        qed
+      next
+        case d_0_adec
+        by step( contradiction /* impossible chain */ )
+      qed
+    next
+      case Send_case_2
+      by step( contradiction /* impossible chain */ )
+    qed
+  qed
+next
+  case Rule_Destrd_0_fst
+  backward-search
+    case LHS
+    step( simplify )
+    step( solve( !KD( <x, x.1> ) ▶₀ #i ) )
+      case Forward
+      step( solve( (#vl, 0) ~~> (#i, 0) ) )
+        case d_0_adec
+        step( solve( !Key( $A, k ) ▶₀ #vr ) )
+          case Keys
+          by sorry // bound 6 hit
+        qed
+      qed
+    next
+      case Keys
+      by step( contradiction /* impossible chain */ )
+    next
+      case Send_case_1
+      step( solve( (#vl, 0) ~~> (#i, 0) ) )
+        case d_0_adec
+        step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+          case d_0_fst
+          by sorry // bound 6 hit
+        next
+          case d_0_snd
+          by sorry // bound 6 hit
+        next
+          case pair
+          by sorry // bound 6 hit
+        qed
+      qed
+    next
+      case Send_case_2
+      by step( contradiction /* impossible chain */ )
+    qed
+  next
+    case RHS
+    step( simplify )
+    step( solve( !KD( <x, x.1> ) ▶₀ #i ) )
+      case Forward
+      step( solve( (#vl, 0) ~~> (#i, 0) ) )
+        case d_0_adec
+        step( solve( !Key( $A, k ) ▶₀ #vr ) )
+          case Keys
+          by sorry // bound 6 hit
+        qed
+      qed
+    next
+      case Keys
+      by step( contradiction /* impossible chain */ )
+    next
+      case Send_case_1
+      step( solve( (#vl, 0) ~~> (#i, 0) ) )
+        case d_0_adec
+        step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+          case d_0_fst
+          by sorry // bound 6 hit
+        next
+          case d_0_snd
+          by sorry // bound 6 hit
+        next
+          case pair
+          by sorry // bound 6 hit
+        qed
+      qed
+    next
+      case Send_case_2
+      by step( contradiction /* impossible chain */ )
+    qed
+  qed
+next
+  case Rule_Destrd_0_snd
+  backward-search
+    case LHS
+    step( simplify )
+    step( solve( !KD( <x, x.1> ) ▶₀ #i ) )
+      case Forward
+      step( solve( (#vl, 0) ~~> (#i, 0) ) )
+        case d_0_adec
+        step( solve( !Key( $A, k ) ▶₀ #vr ) )
+          case Keys
+          by sorry // bound 6 hit
+        qed
+      qed
+    next
+      case Keys
+      by step( contradiction /* impossible chain */ )
+    next
+      case Send_case_1
+      step( solve( (#vl, 0) ~~> (#i, 0) ) )
+        case d_0_adec
+        step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+          case d_0_fst
+          by sorry // bound 6 hit
+        next
+          case d_0_snd
+          by sorry // bound 6 hit
+        next
+          case pair
+          by sorry // bound 6 hit
+        qed
+      qed
+    next
+      case Send_case_2
+      by step( contradiction /* impossible chain */ )
+    qed
+  next
+    case RHS
+    step( simplify )
+    step( solve( !KD( <x, x.1> ) ▶₀ #i ) )
+      case Forward
+      step( solve( (#vl, 0) ~~> (#i, 0) ) )
+        case d_0_adec
+        step( solve( !Key( $A, k ) ▶₀ #vr ) )
+          case Keys
+          by sorry // bound 6 hit
+        qed
+      qed
+    next
+      case Keys
+      by step( contradiction /* impossible chain */ )
+    next
+      case Send_case_1
+      step( solve( (#vl, 0) ~~> (#i, 0) ) )
+        case d_0_adec
+        step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+          case d_0_fst
+          by sorry // bound 6 hit
+        next
+          case d_0_snd
+          by sorry // bound 6 hit
+        next
+          case pair
+          by sorry // bound 6 hit
+        qed
+      qed
+    next
+      case Send_case_2
+      by step( contradiction /* impossible chain */ )
+    qed
+  qed
+next
+  case Rule_Equality
+  backward-search
+    case LHS
+    step( simplify )
+    step( solve( !KD( x ) ▶₁ #i ) )
+      case Forward
+      step( solve( (#vl, 0) ~~> (#i, 1) ) )
+        case aenc
+        step( solve( !Key( $A, k ) ▶₀ #vr ) )
+          case Keys
+          by sorry // bound 6 hit
+        qed
+      next
+        case d_0_adec
+        step( solve( !Key( $A, k ) ▶₀ #vr ) )
+          case Keys
+          by sorry // bound 6 hit
+        qed
+      qed
+    next
+      case Keys
+      step( solve( (#vl, 0) ~~> (#i, 1) ) )
+        case pk
+        step( solve( !KU( pk(~k) ) @ #vk ) )
+          case Keys
+          by sorry // bound 6 hit
+        next
+          case c_pk
+          by sorry // bound 6 hit
+        qed
+      qed
+    next
+      case Send_case_1
+      step( solve( (#vl, 0) ~~> (#i, 1) ) )
+        case aenc
+        step( solve( !Pub( $B, p ) ▶₁ #vr ) )
+          case Keys
+          by sorry // bound 6 hit
+        qed
+      next
+        case d_0_adec
+        step( solve( (#vr.1, 0) ~~> (#i, 1) ) )
+          case d_0_fst
+          by sorry // bound 6 hit
+        next
+          case d_0_snd
+          by sorry // bound 6 hit
+        next
+          case pair
+          by sorry // bound 6 hit
+        qed
+      qed
+    next
+      case Send_case_2
+      step( solve( (#vl, 0) ~~> (#i, 1) ) )
+        case Var_pub_1_x
+        step( solve( !Pub( $B, p ) ▶₁ #vr ) )
+          case Keys
+          by sorry // bound 6 hit
+        qed
+      qed
+    qed
+  next
+    case RHS
+    step( simplify )
+    step( solve( !KD( x ) ▶₁ #i ) )
+      case Forward
+      step( solve( (#vl, 0) ~~> (#i, 1) ) )
+        case aenc
+        step( solve( !Key( $A, k ) ▶₀ #vr ) )
+          case Keys
+          by sorry // bound 6 hit
+        qed
+      next
+        case d_0_adec
+        step( solve( !Key( $A, k ) ▶₀ #vr ) )
+          case Keys
+          by sorry // bound 6 hit
+        qed
+      qed
+    next
+      case Keys
+      step( solve( (#vl, 0) ~~> (#i, 1) ) )
+        case pk
+        step( solve( !KU( pk(~k) ) @ #vk ) )
+          case Keys
+          by sorry // bound 6 hit
+        next
+          case c_pk
+          by sorry // bound 6 hit
+        qed
+      qed
+    next
+      case Send_case_1
+      step( solve( (#vl, 0) ~~> (#i, 1) ) )
+        case aenc
+        step( solve( !Pub( $B, p ) ▶₁ #vr ) )
+          case Keys
+          by sorry // bound 6 hit
+        qed
+      next
+        case d_0_adec
+        step( solve( (#vr.1, 0) ~~> (#i, 1) ) )
+          case d_0_fst
+          by sorry // bound 6 hit
+        next
+          case d_0_snd
+          by sorry // bound 6 hit
+        next
+          case pair
+          by sorry // bound 6 hit
+        qed
+      qed
+    next
+      case Send_case_2
+      step( solve( (#vl, 0) ~~> (#i, 1) ) )
+        case d_0_fst
+        step( solve( (#vr.1, 0) ~~> (#i, 1) ) )
+          case Var_pub_1_x
+          by sorry // bound 6 hit
+        qed
+      next
+        case d_0_snd
+        step( solve( (#vr.1, 0) ~~> (#i, 1) ) )
+          case Var_pub_y
+          by sorry // bound 6 hit
+        qed
+      next
+        case pair
+        step( solve( !Pub( $B, p ) ▶₁ #vr ) )
+          case Keys
+          by sorry // bound 6 hit
+        qed
+      qed
+    qed
+  qed
+next
+  case Rule_Forward
+  backward-search
+    case LHS
+    step( simplify )
+    step( solve( !Key( $A, k ) ▶₀ #i ) )
+      case Keys
+      step( solve( !Pub( $B, p ) ▶₁ #i ) )
+        case Keys
+        step( solve( !KU( aenc(<x, 'tag'>, pk(~k)) ) @ #vk ) )
+          case Forward
+          by sorry // bound 6 hit
+        next
+          case Send
+          by sorry // bound 6 hit
+        next
+          case c_aenc
+          by sorry // bound 6 hit
+        qed
+      qed
+    qed
+  next
+    case RHS
+    step( simplify )
+    step( solve( !Key( $A, k ) ▶₀ #i ) )
+      case Keys
+      step( solve( !Pub( $B, p ) ▶₁ #i ) )
+        case Keys
+        step( solve( !KU( aenc(<x, 'tag'>, pk(~k)) ) @ #vk ) )
+          case Forward
+          by sorry // bound 6 hit
+        next
+          case Send
+          by sorry // bound 6 hit
+        next
+          case c_aenc
+          by sorry // bound 6 hit
+        qed
+      qed
+    qed
+  qed
+next
+  case Rule_Keys
+  backward-search
+    case LHS
+    step( simplify )
+    MIRRORED
+  next
+    case RHS
+    step( simplify )
+    MIRRORED
+  qed
+next
+  case Rule_Send
+  backward-search
+    case LHS
+    step( simplify )
+    step( solve( !Pub( $B, p ) ▶₁ #i ) )
+      case Keys
+      MIRRORED
+    qed
+  next
+    case RHS
+    step( simplify )
+    step( solve( !Pub( $B, p ) ▶₁ #i ) )
+      case Keys
+      MIRRORED
+    qed
+  qed
+qed
+
+lemma AUTO_typing_LHS [left, sources]:
+  all-traces
+  "(⊤) ∧
+   (∀ x m #i.
+     (AUTO_IN_TERM_2_0_0_0__Forward___AUTO_MEMBER_1( m, x ) @ #i) ⇒
+     ((∃ #j. (!KU( x ) @ #j) ∧ (#j < #i)) ∨
+      (∃ #j.
+        (AUTO_OUT_TERM_2_0_0_0__Forward___AUTO_MEMBER_1( m ) @ #j) ∧
+        (#j < #i))))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ x m #i.
+  (AUTO_IN_TERM_2_0_0_0__Forward___AUTO_MEMBER_1( m, x ) @ #i)
+ ∧
+  (∀ #j. (!KU( x ) @ #j) ⇒ ¬(#j < #i)) ∧
+  (∀ #j.
+    (AUTO_OUT_TERM_2_0_0_0__Forward___AUTO_MEMBER_1( m ) @ #j) ⇒ ¬(#j < #i))"
+*/
+induction
+  case empty_trace
+  by contradiction /* from formulas */
+next
+  case non_empty_trace
+  solve( (last(#i))  ∥
+         (∃ #j. (!KU( x ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #i))  ∥
+         (∃ #j.
+           (AUTO_OUT_TERM_2_0_0_0__Forward___AUTO_MEMBER_1( aenc(<x, 'tag'>, pk(k))
+            ) @ #j)
+          ∧
+           (¬(last(#j))) ∧ (#j < #i)) )
+    case case_1
+    solve( !Key( $A, k ) ▶₀ #i )
+      case Keys
+      solve( !Pub( $B, p ) ▶₁ #i )
+        case Keys
+        solve( !KU( aenc(<x, 'tag'>, pk(~k)) ) @ #vk )
+          case Forward_case_1
+          solve( (∃ #j. (!KU( <x, 'tag'> ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.2))  ∥
+                 (∃ #j.
+                   (AUTO_OUT_TERM_2_0_0_0__Forward___AUTO_MEMBER_1( aenc(<<x, 'tag'>, 'tag'
+                                                                         >,
+                                                                         pk(~k.2))
+                    ) @ #j)
+                  ∧
+                   (¬(last(#j))) ∧ (#j < #vr.2)) )
+            case case_1
+            by sorry /* bound 6 hit */
+          qed
+        next
+          case Forward_case_2
+          solve( (∃ #j. (!KU( x.1 ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.2))  ∥
+                 (∃ #j.
+                   (AUTO_OUT_TERM_2_0_0_0__Forward___AUTO_MEMBER_1( aenc(<x.1, 'tag'>,
+                                                                         pk(~k.3))
+                    ) @ #j)
+                  ∧
+                   (¬(last(#j))) ∧ (#j < #vr.2)) )
+            case case_1
+            by sorry /* bound 6 hit */
+          next
+            case case_2
+            by sorry /* bound 6 hit */
+          qed
+        next
+          case Send
+          by contradiction /* from formulas */
+        next
+          case c_aenc
+          by contradiction /* from formulas */
+        qed
+      qed
+    qed
+  next
+    case case_2
+    by contradiction /* from formulas */
+  next
+    case case_3
+    by contradiction /* from formulas */
+  qed
+qed
+
+lemma AUTO_typing_RHS [right, sources]:
+  all-traces
+  "(⊤) ∧
+   (∀ x m #i.
+     (AUTO_IN_TERM_2_0_0_0__Forward___AUTO_MEMBER_2( m, x ) @ #i) ⇒
+     ((∃ #j. (!KU( x ) @ #j) ∧ (#j < #i)) ∨
+      (∃ #j.
+        (AUTO_OUT_TERM_2_0_0_0__Forward___AUTO_MEMBER_2( m ) @ #j) ∧
+        (#j < #i))))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ x m #i.
+  (AUTO_IN_TERM_2_0_0_0__Forward___AUTO_MEMBER_2( m, x ) @ #i)
+ ∧
+  (∀ #j. (!KU( x ) @ #j) ⇒ ¬(#j < #i)) ∧
+  (∀ #j.
+    (AUTO_OUT_TERM_2_0_0_0__Forward___AUTO_MEMBER_2( m ) @ #j) ⇒ ¬(#j < #i))"
+*/
+induction
+  case empty_trace
+  by contradiction /* from formulas */
+next
+  case non_empty_trace
+  solve( (last(#i))  ∥
+         (∃ #j. (!KU( x ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #i))  ∥
+         (∃ #j.
+           (AUTO_OUT_TERM_2_0_0_0__Forward___AUTO_MEMBER_2( aenc(<x, 'tag'>, pk(k))
+            ) @ #j)
+          ∧
+           (¬(last(#j))) ∧ (#j < #i)) )
+    case case_1
+    solve( !Key( $A, k ) ▶₀ #i )
+      case Keys
+      solve( !Pub( $B, p ) ▶₁ #i )
+        case Keys
+        solve( !KU( aenc(<x, 'tag'>, pk(~k)) ) @ #vk )
+          case Forward_case_1
+          solve( (∃ #j. (!KU( <x, 'tag'> ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.2))  ∥
+                 (∃ #j.
+                   (AUTO_OUT_TERM_2_0_0_0__Forward___AUTO_MEMBER_2( aenc(<<x, 'tag'>, 'tag'
+                                                                         >,
+                                                                         pk(~k.2))
+                    ) @ #j)
+                  ∧
+                   (¬(last(#j))) ∧ (#j < #vr.2)) )
+            case case_1
+            by sorry /* bound 6 hit */
+          qed
+        next
+          case Forward_case_2
+          solve( (∃ #j. (!KU( x.1 ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #vr.2))  ∥
+                 (∃ #j.
+                   (AUTO_OUT_TERM_2_0_0_0__Forward___AUTO_MEMBER_2( aenc(<x.1, 'tag'>,
+                                                                         pk(~k.3))
+                    ) @ #j)
+                  ∧
+                   (¬(last(#j))) ∧ (#j < #vr.2)) )
+            case case_1
+            by sorry /* bound 6 hit */
+          next
+            case case_2
+            by sorry /* bound 6 hit */
+          qed
+        next
+          case Send
+          by contradiction /* from formulas */
+        next
+          case c_aenc
+          by contradiction /* from formulas */
+        qed
+      qed
+    qed
+  next
+    case case_2
+    by contradiction /* from formulas */
+  next
+    case case_3
+    by contradiction /* from formulas */
+  qed
+qed
+
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.13.0
+Maude version 3.5.1
+Git revision: c4572aa2bab99bb68de09813420a8c2172b99182 (with uncommited changes), branch: diff-rule-families
+Compiled at: 2026-09-25 20:20:40.787603735 UTC
+*/
+
+end
+/* Output
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/regression/trace/diff-auto-source-variable-alignment.spthy
+
+  output:          examples/regression/trace/diff-auto-source-variable-alignment.spthy.tmp
+  processing time: 0.36s
+  
+  LHS :  AUTO_typing_LHS (all-traces): analysis incomplete (15 steps)
+  RHS :  AUTO_typing_RHS (all-traces): analysis incomplete (15 steps)
+  DiffLemma:  Observational_equivalence : analysis incomplete (152 steps)
+
+==============================================================================
+*/

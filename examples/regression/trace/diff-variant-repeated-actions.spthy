@@ -1,0 +1,8 @@
+// Repeated annotations offer many identical subsequences, but only one variable map.
+theory DiffVariantRepeatedActions begin
+builtins: symmetric-encryption
+rule R: [In(x), In(k)] --[A(x), A(x), A(x), A(x), A(x), A(x), A(x), A(x), A(x), A(x), A(x), A(x), A(x), A(x)]-> [Out(sdec(senc(x,k),k))]
+left rule R: [In(x), In(k)] --[A(x), A(x), A(x), A(x), A(x), A(x), A(x), A(x), A(x), A(x), A(x), A(x), A(x), A(x)]-> [Out(sdec(senc(x,k),k))]
+ variants rule (modulo AC) R___VARIANT_1: [In(y), In(k)] --[A(y), A(y), A(y), A(y), A(y), A(y), A(y), A(y), A(y), A(y), A(y), A(y), A(y), A(y), A(y), A(y), A(y), A(y), A(y), A(y), A(y), A(y), A(y), A(y), A(y), A(y), A(y), A(y)]-> [Out(y)]
+right rule R: [In(x), In(k)] --[A(x), A(x), A(x), A(x), A(x), A(x), A(x), A(x), A(x), A(x), A(x), A(x), A(x), A(x)]-> [Out(sdec(senc(x,k),k))]
+end

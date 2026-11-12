@@ -467,7 +467,13 @@ closeRuleCache parameters restrictions typAsms forcedInjFacts sig protoRules int
 
     -- classifying the rules
     rulesAC = (fmap IntrInfo                    <$> intrRules) <|>
-              (fmap ProtoInfo . L.get cprRuleAC <$> protoRules)
+              (fmap ProtoInfo . cacheProtoRule <$> protoRules)
+
+    -- Only diff-cache copies use the parent name. Side proofs and export
+    -- retain the names of the supplied members.
+    cacheProtoRule (ClosedProtoRule ruE ruAC)
+      | isdiff = L.set (pracName . rInfo) (L.get (preName . rInfo) ruE) ruAC
+      | otherwise = ruAC
 
     anyOf ps = partition (\x -> any ($ x) ps)
 

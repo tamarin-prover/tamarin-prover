@@ -1,0 +1,11 @@
+theory SoundnessDiffPartialEvaluationVariants
+begin
+builtins: symmetric-encryption
+
+// Run with --diff --partial-evaluation=summary. The two sides have different
+// variant families; a left-side variant number is not a right-side rule name.
+rule Dec:
+  [ In(x), In(k) ] --> [ Out(diff(sdec(x,k),x)) ]
+
+diffLemma Observational_equivalence:
+end

@@ -1,0 +1,286 @@
+theory DiffVariantFamilyRoundtrip
+
+begin
+
+// Function signature and definition of the equational theory E
+
+functions: fst/1, pair/2, sdec/2, senc/2, snd/1
+equations:
+    fst(<x.1, x.2>) = x.1,
+    sdec(senc(x.1, x.2), x.2) = x.1,
+    snd(<x.1, x.2>) = x.2
+
+rule (modulo E) Init:
+   [ ] --> [ State( 's' ) ]
+
+rule (modulo E) Impossible:
+   [ Fr( ~n ), In( ~n ) ] --[ Impossible( ~n ) ]-> [ ]
+
+rule (modulo E) Loop:
+   [ State( x ) ] --[ Tick( x ) ]-> [ State( x ) ]
+
+rule (modulo E) Reduced:
+   [ ] --[ Reduced( ) ]-> [ Out( sdec(senc('a', 'k'), 'k') ) ]
+ left
+  rule (modulo E) Reduced:
+     [ ] --[ Reduced( ) ]-> [ Out( sdec(senc('a', 'k'), 'k') ) ]
+   variants
+    rule (modulo AC) Reduced___VARIANT_1:
+       [ ] --[ Reduced( ), DiffProtoReduced___VARIANT_1( ) ]-> [ Out( 'a' ) ]
+ right
+  rule (modulo E) Reduced:
+     [ ] --[ Reduced( ) ]-> [ Out( sdec(senc('a', 'k'), 'k') ) ]
+   variants
+    rule (modulo AC) Reduced___VARIANT_1:
+       [ ] --[ Reduced( ), DiffProtoReduced___VARIANT_1( ) ]-> [ Out( 'a' ) ]
+
+lemma loop_reachable [right]:
+  exists-trace "∃ #i. Tick( 's' ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #i. (Tick( 's' ) @ #i)"
+*/
+simplify
+solve( State( 's' ) ▶₀ #i )
+  case Init
+  SOLVED // trace found
+qed
+
+lemma loop_reachable [left]:
+  exists-trace "∃ #i. Tick( 's' ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #i. (Tick( 's' ) @ #i)"
+*/
+simplify
+solve( State( 's' ) ▶₀ #i )
+  case Init
+  SOLVED // trace found
+qed
+
+lemma impossible_unreachable [right]:
+  all-traces "∀ n #i. (Impossible( n ) @ #i) ⇒ (⊥)"
+/*
+guarded formula characterizing all counter-examples:
+"∃ n #i. (Impossible( n ) @ #i)"
+*/
+simplify
+by solve( Impossible( n ) @ #i )
+
+lemma impossible_unreachable [left]:
+  all-traces "∀ n #i. (Impossible( n ) @ #i) ⇒ (⊥)"
+/*
+guarded formula characterizing all counter-examples:
+"∃ n #i. (Impossible( n ) @ #i)"
+*/
+simplify
+by solve( Impossible( n ) @ #i )
+
+lemma reduced_reachable [right]:
+  exists-trace "∃ #i. Reduced( ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #i. (Reduced( ) @ #i)"
+*/
+simplify
+SOLVED // trace found
+
+lemma reduced_reachable [left]:
+  exists-trace "∃ #i. Reduced( ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #i. (Reduced( ) @ #i)"
+*/
+simplify
+SOLVED // trace found
+
+lemma variant_action_reachable [right]:
+  exists-trace "∃ #i. DiffProtoReduced___VARIANT_1( ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #i. (DiffProtoReduced___VARIANT_1( ) @ #i)"
+*/
+simplify
+SOLVED // trace found
+
+lemma variant_action_reachable [left]:
+  exists-trace "∃ #i. DiffProtoReduced___VARIANT_1( ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #i. (DiffProtoReduced___VARIANT_1( ) @ #i)"
+*/
+simplify
+SOLVED // trace found
+
+diffLemma Observational_equivalence:
+rule-equivalence
+  case Rule_Destrd_0_fst
+  backward-search
+    case LHS
+    step( simplify )
+    step( solve( !KD( <x, x.1> ) ▶₀ #i ) )
+      case Reduced
+      by step( contradiction /* impossible chain */ )
+    qed
+  next
+    case RHS
+    step( simplify )
+    step( solve( !KD( <x, x.1> ) ▶₀ #i ) )
+      case Reduced
+      by step( contradiction /* impossible chain */ )
+    qed
+  qed
+next
+  case Rule_Destrd_0_sdec
+  backward-search
+    case LHS
+    step( simplify )
+    step( solve( !KD( senc(x, x.1) ) ▶₀ #i ) )
+      case Reduced
+      by step( contradiction /* impossible chain */ )
+    qed
+  next
+    case RHS
+    step( simplify )
+    step( solve( !KD( senc(x, x.1) ) ▶₀ #i ) )
+      case Reduced
+      by step( contradiction /* impossible chain */ )
+    qed
+  qed
+next
+  case Rule_Destrd_0_snd
+  backward-search
+    case LHS
+    step( simplify )
+    step( solve( !KD( <x, x.1> ) ▶₀ #i ) )
+      case Reduced
+      by step( contradiction /* impossible chain */ )
+    qed
+  next
+    case RHS
+    step( simplify )
+    step( solve( !KD( <x, x.1> ) ▶₀ #i ) )
+      case Reduced
+      by step( contradiction /* impossible chain */ )
+    qed
+  qed
+next
+  case Rule_Equality
+  backward-search
+    case LHS
+    step( simplify )
+    step( solve( !KD( x ) ▶₁ #i ) )
+      case Reduced
+      step( solve( (#vl, 0) ~~> (#i, 1) ) )
+        case Const_pub_a
+        step( solve( !KU( 'a' ) @ #vk ) )
+          case coerce
+          step( solve( !KD( 'a' ) ▶₀ #vk ) )
+            case Reduced
+            by step( contradiction /* impossible chain */ )
+          qed
+        next
+          case pub
+          MIRRORED
+        qed
+      qed
+    qed
+  next
+    case RHS
+    step( simplify )
+    step( solve( !KD( x ) ▶₁ #i ) )
+      case Reduced
+      step( solve( (#vl, 0) ~~> (#i, 1) ) )
+        case Const_pub_a
+        step( solve( !KU( 'a' ) @ #vk ) )
+          case coerce
+          step( solve( !KD( 'a' ) ▶₀ #vk ) )
+            case Reduced
+            by step( contradiction /* impossible chain */ )
+          qed
+        next
+          case pub
+          MIRRORED
+        qed
+      qed
+    qed
+  qed
+next
+  case Rule_Init
+  backward-search
+    case LHS
+    step( simplify )
+    MIRRORED
+  next
+    case RHS
+    step( simplify )
+    MIRRORED
+  qed
+next
+  case Rule_Loop
+  backward-search
+    case LHS
+    step( simplify )
+    MIRRORED
+  next
+    case RHS
+    step( simplify )
+    MIRRORED
+  qed
+next
+  case Rule_Reduced
+  backward-search
+    case LHS
+    step( simplify )
+    MIRRORED
+  next
+    case RHS
+    step( simplify )
+    MIRRORED
+  qed
+next
+  case Rule_Send
+  backward-search
+    case LHS
+    step( simplify )
+    MIRRORED
+  next
+    case RHS
+    step( simplify )
+    MIRRORED
+  qed
+qed
+
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.13.0
+Maude version 3.5.1
+Git revision: c4572aa2bab99bb68de09813420a8c2172b99182 (with uncommited changes), branch: diff-rule-families
+Compiled at: 2026-09-25 20:20:40.787603735 UTC
+*/
+
+end
+/* Output
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/regression/trace/diff-variant-family-roundtrip.spthy
+
+  output:          examples/regression/trace/diff-variant-family-roundtrip.spthy.tmp
+  processing time: 0.13s
+  
+  RHS :  loop_reachable (exists-trace): verified (3 steps)
+  LHS :  loop_reachable (exists-trace): verified (3 steps)
+  RHS :  impossible_unreachable (all-traces): verified (2 steps)
+  LHS :  impossible_unreachable (all-traces): verified (2 steps)
+  RHS :  reduced_reachable (exists-trace): verified (2 steps)
+  LHS :  reduced_reachable (exists-trace): verified (2 steps)
+  RHS :  variant_action_reachable (exists-trace): verified (2 steps)
+  LHS :  variant_action_reachable (exists-trace): verified (2 steps)
+  DiffLemma:  Observational_equivalence : verified (57 steps)
+
+==============================================================================
+*/
