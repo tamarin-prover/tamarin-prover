@@ -1,0 +1,10 @@
+theory SoundnessSapicStateOverwrite
+begin
+options: translation-state-optimisation
+/* #942: only the last insert is visible, even without a preceding lookup. */
+process: new s; insert s, '0'; insert s, '1'; lock s;
+  lookup s as v in event B(v); insert s, v; unlock s
+lemma latest_value: "All v #i. B(v)@i ==> v = '1'"
+lemma read_reachable: exists-trace "Ex #i. B('1')@i"
+lemma stale_unreachable: "All #i. B('0')@i ==> F"
+end

@@ -1,0 +1,10 @@
+theory SoundnessSapicStateRepeatedInsert
+begin
+options: translation-state-optimisation
+/* #942: repeated unlocked writes use the ordinary state translation.
+   Both values remain readable in successive locked sections. */
+process: new s; (!(in(x); insert s,x) |
+  !(lock s; lookup s as v in event B(v); insert s,v; unlock s))
+lemma successive_values: exists-trace
+  "Ex #i #j. B('a')@i & B('b')@j & i < j"
+end

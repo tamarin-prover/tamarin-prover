@@ -1,0 +1,331 @@
+theory SoundnessSapicStateAlias
+
+begin
+
+// Function signature and definition of the equational theory E
+
+functions: fst/1, pair/2, snd/1
+equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
+
+heuristic: p
+
+/* looping facts with injective instances: L_CellLocked/2, L_PureState/2
+*/
+
+lemma alias_read:
+  exists-trace "∃ #i. B( '0' ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #i. (B( '0' ) @ #i)"
+*/
+simplify
+solve( State_1111111( StateChannel, lock, s, t, '0' ) ▶₀ #i )
+  case lookuptasv_0_111111
+  solve( Insert( t, '0' ) @ #t2 )
+    case inserts_0_11
+    solve( State_11( StateChannel, t ) ▶₀ #t2 )
+      case newStateChannelchannel_0_1
+      solve( !KU( ~n.2 ) @ #vk )
+        case outs_0_111
+        SOLVED // trace found
+      qed
+    qed
+  qed
+qed
+
+lemma stored_value:
+  all-traces "∀ v #i. (B( v ) @ #i) ⇒ (v = '0')"
+/*
+guarded formula characterizing all counter-examples:
+"∃ v #i. (B( v ) @ #i) ∧ ¬(v = '0')"
+*/
+simplify
+solve( State_1111111( StateChannel, lock, s, t, v ) ▶₀ #i )
+  case lookuptasv_0_111111
+  solve( Insert( t, v ) @ #t2 )
+    case inserts_0_11
+    by contradiction /* from formulas */
+  next
+    case inserttv_0_11111111
+    solve( State_11111111( StateChannel, lock, s, t, v ) ▶₀ #t2 )
+      case eventBv_0_1111111
+      by contradiction /* cyclic */
+    qed
+  qed
+qed
+
+rule (modulo E) Init[color=#ffffff, process="new s.1;", issapicrule,
+                     role='Process']:
+   [ ] --[ Init( ) ]-> [ State_( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) news_0_[color=#ffffff, process="new s.1;", issapicrule,
+                        role='Process']:
+   [ State_( ), Fr( s.1 ) ] --> [ State_1( s.1 ) ]
+
+  /*
+  rule (modulo AC) news_0_[color=#ffffff, process="new s.1;", issapicrule,
+                           role='Process']:
+     [ State_( ), Fr( s ) ] --> [ State_1( s ) ]
+  */
+
+rule (modulo E) newStateChannelchannel_0_1[color=#ffffff,
+                                           process="new StateChannel:channel;", issapicrule, role='Process']:
+   [ State_1( s.1 ), Fr( StateChannel ) ]
+  -->
+   [ State_11( StateChannel, s.1 ) ]
+
+  /*
+  rule (modulo AC) newStateChannelchannel_0_1[color=#ffffff,
+                                              process="new StateChannel:channel;", issapicrule,
+                                              role='Process']:
+     [ State_1( s ), Fr( StateChannel ) ] --> [ State_11( StateChannel, s ) ]
+  */
+
+rule (modulo E) inserts_0_11[color=#ffffff, process="insert s.1,'0';",
+                             issapicrule, role='Process']:
+   [ State_11( StateChannel, s.1 ) ]
+  --[ Insert( s.1, '0' ) ]->
+   [ State_111( StateChannel, s.1 ) ]
+
+  /*
+  rule (modulo AC) inserts_0_11[color=#ffffff, process="insert s.1,'0';",
+                                issapicrule, role='Process']:
+     [ State_11( StateChannel, s ) ]
+    --[ Insert( s, '0' ) ]->
+     [ State_111( StateChannel, s ) ]
+  */
+
+rule (modulo E) outs_0_111[color=#ffffff, process="out(s.1);",
+                           issapicrule, role='Process']:
+   [ State_111( StateChannel, s.1 ) ]
+  -->
+   [ State_1111( StateChannel, s.1 ), Out( s.1 ) ]
+
+  /*
+  rule (modulo AC) outs_0_111[color=#ffffff, process="out(s.1);",
+                              issapicrule, role='Process']:
+     [ State_111( StateChannel, s ) ]
+    -->
+     [ State_1111( StateChannel, s ), Out( s ) ]
+  */
+
+rule (modulo E) int_0_1111[color=#ffffff, process="in(t.1);",
+                           issapicrule, role='Process']:
+   [ State_1111( StateChannel, s.1 ), In( t.1 ) ]
+  -->
+   [ State_11111( StateChannel, s.1, t.1 ) ]
+
+  /*
+  rule (modulo AC) int_0_1111[color=#ffffff, process="in(t.1);",
+                              issapicrule, role='Process']:
+     [ State_1111( StateChannel, s ), In( t ) ]
+    -->
+     [ State_11111( StateChannel, s, t ) ]
+  */
+
+rule (modulo E) lockt_0_11111[color=#ffffff, process="lock t.1;",
+                              issapicrule, role='Process']:
+   [ State_11111( StateChannel, s.1, t.1 ), Fr( lock ) ]
+  --[ Lock_0( '0', lock, t.1 ), Lock( '0', lock, t.1 ) ]->
+   [ State_111111( StateChannel, lock, s.1, t.1 ) ]
+
+  /*
+  rule (modulo AC) lockt_0_11111[color=#ffffff, process="lock t.1;",
+                                 issapicrule, role='Process']:
+     [ State_11111( StateChannel, s, t ), Fr( lock ) ]
+    --[ Lock_0( '0', lock, t ), Lock( '0', lock, t ) ]->
+     [ State_111111( StateChannel, lock, s, t ) ]
+  */
+
+rule (modulo E) lookuptasv_0_111111[color=#ffffff,
+                                    process="lookup t.1 as v.1", no_derivcheck, issapicrule, role='Process']:
+   [ State_111111( StateChannel, lock, s.1, t.1 ) ]
+  --[ IsIn( t.1, v.1 ) ]->
+   [ State_1111111( StateChannel, lock, s.1, t.1, v.1 ) ]
+
+  /*
+  rule (modulo AC) lookuptasv_0_111111[color=#ffffff,
+                                       process="lookup t.1 as v.1", no_derivcheck, issapicrule,
+                                       role='Process']:
+     [ State_111111( StateChannel, lock, s, t ) ]
+    --[ IsIn( t, v ) ]->
+     [ State_1111111( StateChannel, lock, s, t, v ) ]
+  */
+
+rule (modulo E) lookuptasv_1_111111[color=#ffffff,
+                                    process="lookup t.1 as v.1", no_derivcheck, issapicrule, role='Process']:
+   [ State_111111( StateChannel, lock, s.1, t.1 ) ]
+  --[ IsNotSet( t.1 ) ]->
+   [ State_1111112( StateChannel, lock, s.1, t.1 ) ]
+
+  /*
+  rule (modulo AC) lookuptasv_1_111111[color=#ffffff,
+                                       process="lookup t.1 as v.1", no_derivcheck, issapicrule,
+                                       role='Process']:
+     [ State_111111( StateChannel, lock, s, t ) ]
+    --[ IsNotSet( t ) ]->
+     [ State_1111112( StateChannel, lock, s, t ) ]
+  */
+
+rule (modulo E) eventBv_0_1111111[color=#ffffff,
+                                  process="event B( v.1 );", issapicrule, role='Process']:
+   [ State_1111111( StateChannel, lock, s.1, t.1, v.1 ) ]
+  --[ B( v.1 ) ]->
+   [ State_11111111( StateChannel, lock, s.1, t.1, v.1 ) ]
+
+  /*
+  rule (modulo AC) eventBv_0_1111111[color=#ffffff,
+                                     process="event B( v.1 );", issapicrule, role='Process']:
+     [ State_1111111( StateChannel, lock, s, t, v ) ]
+    --[ B( v ) ]->
+     [ State_11111111( StateChannel, lock, s, t, v ) ]
+  */
+
+rule (modulo E) inserttv_0_11111111[color=#ffffff,
+                                    process="insert t.1,v.1;", issapicrule, role='Process']:
+   [ State_11111111( StateChannel, lock, s.1, t.1, v.1 ) ]
+  --[ Insert( t.1, v.1 ) ]->
+   [ State_111111111( StateChannel, lock, s.1, t.1, v.1 ) ]
+
+  /*
+  rule (modulo AC) inserttv_0_11111111[color=#ffffff,
+                                       process="insert t.1,v.1;", issapicrule, role='Process']:
+     [ State_11111111( StateChannel, lock, s, t, v ) ]
+    --[ Insert( t, v ) ]->
+     [ State_111111111( StateChannel, lock, s, t, v ) ]
+  */
+
+rule (modulo E) unlockt_0_111111111[color=#ffffff, process="unlock t.1;",
+                                    issapicrule, role='Process']:
+   [ State_111111111( StateChannel, lock, s.1, t.1, v.1 ) ]
+  --[ Unlock_0( '0', lock, t.1 ), Unlock( '0', lock, t.1 ) ]->
+   [ State_1111111111( StateChannel, lock, s.1, t.1, v.1 ) ]
+
+  /*
+  rule (modulo AC) unlockt_0_111111111[color=#ffffff,
+                                       process="unlock t.1;", issapicrule, role='Process']:
+     [ State_111111111( StateChannel, lock, s, t, v ) ]
+    --[ Unlock_0( '0', lock, t ), Unlock( '0', lock, t ) ]->
+     [ State_1111111111( StateChannel, lock, s, t, v ) ]
+  */
+
+rule (modulo E) p_0_1111111111[color=#ffffff, process="0", issapicrule,
+                               role='Process']:
+   [ State_1111111111( StateChannel, lock, s.1, t.1, v.1 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_1111111111[color=#ffffff, process="0", issapicrule,
+                                  role='Process']:
+     [ State_1111111111( StateChannel, lock, s, t, v ) ] --> [ ]
+  */
+
+rule (modulo E) p_0_1111112[color=#ffffff, process="0", issapicrule,
+                            role='Process']:
+   [ State_1111112( StateChannel, lock, s.1, t.1 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_1111112[color=#ffffff, process="0", issapicrule,
+                               role='Process']:
+     [ State_1111112( StateChannel, lock, s, t ) ] --> [ ]
+  */
+
+restriction set_in:
+  "∀ x y #t3.
+    (IsIn( x, y ) @ #t3) ⇒
+    (∃ #t2.
+      ((Insert( x, y ) @ #t2) ∧ (#t2 < #t3)) ∧
+      (∀ #t1 yp.
+        (Insert( x, yp ) @ #t1) ⇒ (((#t1 < #t2) ∨ (#t1 = #t2)) ∨ (#t3 < #t1))))"
+
+  /*
+  expanded formula:
+  "∀ x y #t3.
+    (IsIn( x, y ) @ #t3) ⇒
+    (∃ #t2.
+      ((Insert( x, y ) @ #t2) ∧ (#t2 < #t3)) ∧
+      (∀ #t1 yp.
+        (Insert( x, yp ) @ #t1) ⇒ (((#t1 < #t2) ∨ (#t1 = #t2)) ∨ (#t3 < #t1))))"
+  */
+
+restriction set_notin:
+  "∀ x #t3.
+    (IsNotSet( x ) @ #t3) ⇒ (∀ #t1 y. (Insert( x, y ) @ #t1) ⇒ (#t3 < #t1))"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ x #t3.
+    (IsNotSet( x ) @ #t3) ⇒ (∀ #t1 y. (Insert( x, y ) @ #t1) ⇒ (#t3 < #t1))"
+  */
+
+restriction single_session:
+  "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
+  */
+
+restriction locking_0:
+  "∀ p pp l x lp #t1 #t3.
+    ((Lock_0( p, l, x ) @ #t1) ∧ (Lock( pp, lp, x ) @ #t3)) ⇒
+    ((((#t1 < #t3) ∧
+       (∃ #t2.
+         (((((Unlock_0( p, l, x ) @ #t2) ∧ (#t1 < #t2)) ∧ (#t2 < #t3)) ∧
+           (∀ #t0 pp.1. (Unlock( pp.1, l, x ) @ #t0) ⇒ (#t0 = #t2))) ∧
+          (∀ pp.1 lpp #t0.
+            (Lock( pp.1, lpp, x ) @ #t0) ⇒
+            (((#t0 < #t1) ∨ (#t0 = #t1)) ∨ (#t2 < #t0)))) ∧
+         (∀ pp.1 lpp #t0.
+           (Unlock( pp.1, lpp, x ) @ #t0) ⇒
+           (((#t0 < #t1) ∨ (#t2 < #t0)) ∨ (#t2 = #t0))))) ∨
+      (#t3 < #t1)) ∨
+     (#t1 = #t3))"
+
+  /*
+  expanded formula:
+  "∀ p pp l x lp #t1 #t3.
+    ((Lock_0( p, l, x ) @ #t1) ∧ (Lock( pp, lp, x ) @ #t3)) ⇒
+    ((((#t1 < #t3) ∧
+       (∃ #t2.
+         (((((Unlock_0( p, l, x ) @ #t2) ∧ (#t1 < #t2)) ∧ (#t2 < #t3)) ∧
+           (∀ #t0 pp.1. (Unlock( pp.1, l, x ) @ #t0) ⇒ (#t0 = #t2))) ∧
+          (∀ pp.1 lpp #t0.
+            (Lock( pp.1, lpp, x ) @ #t0) ⇒
+            (((#t0 < #t1) ∨ (#t0 = #t1)) ∨ (#t2 < #t0)))) ∧
+         (∀ pp.1 lpp #t0.
+           (Unlock( pp.1, lpp, x ) @ #t0) ⇒
+           (((#t0 < #t1) ∨ (#t2 < #t0)) ∨ (#t2 = #t0))))) ∨
+      (#t3 < #t1)) ∨
+     (#t1 = #t3))"
+  */
+
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.13.0
+Maude version 3.5.1
+Git revision: 75789dd37ec597af4859aa78d928136f33a697f6 (with uncommited changes), branch: sapic-optimisations
+Compiled at: 2026-09-25 19:56:56.873336963 UTC
+*/
+
+end
+/* Output
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/regression/trace/soundness-sapic-state-alias.spthy
+
+  output:          examples/regression/trace/soundness-sapic-state-alias.spthy.tmp
+  processing time: 0.31s
+  
+  alias_read (exists-trace): verified (6 steps)
+  stored_value (all-traces): verified (6 steps)
+
+==============================================================================
+*/
