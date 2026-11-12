@@ -1,0 +1,11 @@
+theory SapicExportFormulaNames
+begin
+
+// Each name appears only in its formula, with no MSR rules to supply headers.
+predicates: IsA(x) <=> x = 'condition-only'
+process: in(x); if IsA(x) then event E(x)
+lemma query_name: "All x #i. E(x)@i ==> x = 'query-only'"
+lemma axiom_name [reuse]: "All x #i. E(x)@i ==> x = 'axiom-only'"
+restriction restriction_name: "All x #i. E(x)@i ==> x = 'restriction-only'"
+
+end

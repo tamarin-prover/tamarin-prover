@@ -1,0 +1,867 @@
+theory SoundnessSapicStatePhases
+
+begin
+
+// Function signature and definition of the equational theory E
+
+functions: fst/1, pair/2, snd/1
+equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
+
+heuristic: p
+
+/* looping facts with injective instances: L_CellLocked/2, L_PureState/2
+*/
+
+lemma left_branch:
+  exists-trace "∃ #i. Branch( 'left', 'left' ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #i. (Branch( 'left', 'left' ) @ #i)"
+*/
+simplify
+solve( Branch( 'left', 'left' ) @ #i )
+  case eventBranchleftv_0_1111111111
+  solve( State_1111111111( StateChannel, lock, choice, s, 'left' ) ▶₀ #i )
+    case lookupsasv_0_111111111
+    SOLVED // trace found
+  qed
+qed
+
+lemma right_branch:
+  exists-trace "∃ #i. Branch( 'right', 'right' ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #i. (Branch( 'right', 'right' ) @ #i)"
+*/
+simplify
+solve( Branch( 'right', 'right' ) @ #i )
+  case eventBranchrightv_0_1111112111
+  solve( State_1111112111( StateChannel, choice, lock, s, 'right' ) ▶₀ #i )
+    case lookupsasv_0_111111211
+    SOLVED // trace found
+  qed
+qed
+
+lemma branch_value:
+  all-traces "∀ label v #i. (Branch( label, v ) @ #i) ⇒ (label = v)"
+/*
+guarded formula characterizing all counter-examples:
+"∃ label v #i. (Branch( label, v ) @ #i) ∧ ¬(label = v)"
+*/
+simplify
+solve( Branch( label, v ) @ #i )
+  case eventBranchleftv_0_1111111111
+  solve( State_1111111111( StateChannel, lock, choice, s, v ) ▶₀ #i )
+    case lookupsasv_0_111111111
+    by contradiction /* from formulas */
+  qed
+next
+  case eventBranchrightv_0_1111112111
+  solve( State_1111112111( StateChannel, choice, lock, s, v ) ▶₀ #i )
+    case lookupsasv_0_111111211
+    by contradiction /* from formulas */
+  qed
+qed
+
+lemma parallel_completed:
+  exists-trace
+  "∃ #i #j.
+    (Parallel( 'left', 'value' ) @ #i) ∧ (Parallel( 'right', 'value' ) @ #j)"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #i #j.
+  (Parallel( 'left', 'value' ) @ #i) ∧ (Parallel( 'right', 'value' ) @ #j)"
+*/
+simplify
+solve( Parallel( 'left', 'value' ) @ #i )
+  case eventParallelleftv_0_121111111
+  solve( State_121111111( StateChannel, lock, s, 'value' ) ▶₀ #i )
+    case lookupsasv_0_12111111
+    solve( Parallel( 'right', 'value' ) @ #j )
+      case eventParallelrightv_0_121111211
+      solve( State_121111211( StateChannel, s, lock, 'value' ) ▶₀ #j )
+        case lookupsasv_0_12111121
+        solve( L_PureState( ~n.2, 'value' ) ▶₁ #vr )
+          case insertsv_0_1211112111
+          solve( L_PureState( ~n.2, 'value' ) ▶₁ #vr.10 )
+            case insertsvalue_0_12111
+            solve( L_CellLocked( ~n.2, ~n.3 ) ▶₁ #vr.12 )
+              case lookupsasv_0_12111121
+              SOLVED // trace found
+            qed
+          qed
+        qed
+      qed
+    qed
+  qed
+qed
+
+lemma parallel_value:
+  all-traces "∀ label v #i. (Parallel( label, v ) @ #i) ⇒ (v = 'value')"
+/*
+guarded formula characterizing all counter-examples:
+"∃ label v #i. (Parallel( label, v ) @ #i) ∧ ¬(v = 'value')"
+*/
+simplify
+solve( Parallel( label, v ) @ #i )
+  case eventParallelleftv_0_121111111
+  solve( State_121111111( StateChannel, lock, s, v ) ▶₀ #i )
+    case lookupsasv_0_12111111
+    solve( L_PureState( ~n.2, v ) ▶₁ #vr )
+      case insertsv_0_1211111111
+      by contradiction /* cyclic */
+    next
+      case insertsv_0_1211112111
+      solve( L_CellLocked( ~n.2, ~n.3 ) ▶₁ #vr.10 )
+        case lookupsasv_0_12111121
+        solve( L_PureState( ~n.2, v ) ▶₁ #vr.12 )
+          case insertsv_0_1211111111
+          by contradiction /* cyclic */
+        next
+          case insertsvalue_0_12111
+          by contradiction /* from formulas */
+        qed
+      qed
+    next
+      case insertsvalue_0_12111
+      by contradiction /* from formulas */
+    qed
+  qed
+next
+  case eventParallelrightv_0_121111211
+  solve( State_121111211( StateChannel, s, lock, v ) ▶₀ #i )
+    case lookupsasv_0_12111121
+    solve( L_PureState( ~n.1, v ) ▶₁ #vr )
+      case insertsv_0_1211111111
+      solve( L_CellLocked( ~n.1, ~n.3 ) ▶₁ #vr.10 )
+        case lookupsasv_0_12111111
+        solve( L_PureState( ~n.1, v ) ▶₁ #vr.12 )
+          case insertsv_0_1211112111
+          by contradiction /* cyclic */
+        next
+          case insertsvalue_0_12111
+          by contradiction /* from formulas */
+        qed
+      qed
+    next
+      case insertsv_0_1211112111
+      by contradiction /* cyclic */
+    next
+      case insertsvalue_0_12111
+      by contradiction /* from formulas */
+    qed
+  qed
+qed
+
+lemma stopped_reachable:
+  exists-trace "∃ #i. Stopped( 'value' ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #i. (Stopped( 'value' ) @ #i)"
+*/
+simplify
+solve( State_2111111( StateChannel, s, lock, 'value' ) ▶₀ #i )
+  case lookupsasv_0_211111
+  SOLVED // trace found
+qed
+
+lemma stopped_value:
+  all-traces "∀ v #i. (Stopped( v ) @ #i) ⇒ (v = 'value')"
+/*
+guarded formula characterizing all counter-examples:
+"∃ v #i. (Stopped( v ) @ #i) ∧ ¬(v = 'value')"
+*/
+simplify
+solve( State_2111111( StateChannel, s, lock, v ) ▶₀ #i )
+  case lookupsasv_0_211111
+  by contradiction /* from formulas */
+qed
+
+rule (modulo E) Init[color=#ffffff, process="|", issapicrule,
+                     role='Process']:
+   [ ] --[ Init( ) ]-> [ State_( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_0_[color=#ffffff, process="|", issapicrule,
+                     role='Process']:
+   [ State_( ) ] --> [ State_1( ), State_2( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_0_1[color=#ffffff, process="|", issapicrule,
+                      role='Process']:
+   [ State_1( ) ] --> [ State_11( ), State_12( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Branch_0_11[color=#ffffff, process="Branch();",
+                            issapicrule, role='Process']:
+   [ State_11( ) ] --> [ State_111( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) news_0_111[color=#404d80, process="new s.1;",
+                           issapicrule, role='Branch']:
+   [ State_111( ), Fr( s.1 ) ] --> [ State_1111( s.1 ) ]
+
+  /*
+  rule (modulo AC) news_0_111[color=#404d80, process="new s.1;",
+                              issapicrule, role='Branch']:
+     [ State_111( ), Fr( s ) ] --> [ State_1111( s ) ]
+  */
+
+rule (modulo E) newStateChannelchannel_0_1111[color=#ffffff,
+                                              process="new StateChannel:channel;", issapicrule,
+                                              role='Process']:
+   [ State_1111( s.1 ), Fr( StateChannel ) ]
+  -->
+   [ State_11111( StateChannel, s.1 ) ]
+
+  /*
+  rule (modulo AC) newStateChannelchannel_0_1111[color=#ffffff,
+                                                 process="new StateChannel:channel;", issapicrule,
+                                                 role='Process']:
+     [ State_1111( s ), Fr( StateChannel ) ]
+    -->
+     [ State_11111( StateChannel, s ) ]
+  */
+
+rule (modulo E) inchoice_0_11111[color=#404d80, process="in(choice.1);",
+                                 issapicrule, role='Branch']:
+   [ State_11111( StateChannel, s.1 ), In( choice.1 ) ]
+  -->
+   [ State_111111( StateChannel, choice.1, s.1 ) ]
+
+  /*
+  rule (modulo AC) inchoice_0_11111[color=#404d80, process="in(choice.1);",
+                                    issapicrule, role='Branch']:
+     [ State_11111( StateChannel, s ), In( choice ) ]
+    -->
+     [ State_111111( StateChannel, choice, s ) ]
+  */
+
+rule (modulo E) ifchoiceleft_0_111111[color=#404d80,
+                                      process="if choice.1='left'", issapicrule, role='Branch']:
+   [ State_111111( StateChannel, choice.1, s.1 ) ]
+  --[ Pred_Eq( choice.1, 'left' ) ]->
+   [ State_1111111( StateChannel, choice.1, s.1 ) ]
+
+  /*
+  rule (modulo AC) ifchoiceleft_0_111111[color=#404d80,
+                                         process="if choice.1='left'", issapicrule, role='Branch']:
+     [ State_111111( StateChannel, choice, s ) ]
+    --[ Pred_Eq( choice, 'left' ) ]->
+     [ State_1111111( StateChannel, choice, s ) ]
+  */
+
+rule (modulo E) ifchoiceleft_1_111111[color=#404d80,
+                                      process="if choice.1='left'", issapicrule, role='Branch']:
+   [ State_111111( StateChannel, choice.1, s.1 ) ]
+  --[ Pred_Not_Eq( choice.1, 'left' ) ]->
+   [ State_1111112( StateChannel, choice.1, s.1 ) ]
+
+  /*
+  rule (modulo AC) ifchoiceleft_1_111111[color=#404d80,
+                                         process="if choice.1='left'", issapicrule, role='Branch']:
+     [ State_111111( StateChannel, choice, s ) ]
+    --[ Pred_Not_Eq( choice, 'left' ) ]->
+     [ State_1111112( StateChannel, choice, s ) ]
+  */
+
+rule (modulo E) insertsleft_0_1111111[color=#404d80,
+                                      process="insert s.1,'left';", issapicrule, role='Branch']:
+   [ State_1111111( StateChannel, choice.1, s.1 ) ]
+  -->
+   [
+   State_11111111( StateChannel, choice.1, s.1 ), L_PureState( s.1, 'left' )
+   ]
+
+  /*
+  rule (modulo AC) insertsleft_0_1111111[color=#404d80,
+                                         process="insert s.1,'left';", issapicrule, role='Branch']:
+     [ State_1111111( StateChannel, choice, s ) ]
+    -->
+     [ State_11111111( StateChannel, choice, s ), L_PureState( s, 'left' ) ]
+  */
+
+rule (modulo E) locks_0_11111111[color=#404d80, process="lock s.1;",
+                                 issapicrule, role='Branch']:
+   [ State_11111111( StateChannel, choice.1, s.1 ) ]
+  -->
+   [ State_111111111( StateChannel, choice.1, s.1 ) ]
+
+  /*
+  rule (modulo AC) locks_0_11111111[color=#404d80, process="lock s.1;",
+                                    issapicrule, role='Branch']:
+     [ State_11111111( StateChannel, choice, s ) ]
+    -->
+     [ State_111111111( StateChannel, choice, s ) ]
+  */
+
+rule (modulo E) lookupsasv_0_111111111[color=#404d80,
+                                       process="lookup s.1 as v.1", no_derivcheck, issapicrule,
+                                       role='Branch']:
+   [
+   State_111111111( StateChannel, choice.1, s.1 ), L_PureState( s.1, v.1 ),
+   Fr( lock )
+   ]
+  -->
+   [
+   State_1111111111( StateChannel, lock, choice.1, s.1, v.1 ),
+   L_CellLocked( s.1, lock )
+   ]
+
+  /*
+  rule (modulo AC) lookupsasv_0_111111111[color=#404d80,
+                                          process="lookup s.1 as v.1", no_derivcheck, issapicrule,
+                                          role='Branch']:
+     [
+     State_111111111( StateChannel, choice, s ), L_PureState( s, v ),
+     Fr( lock )
+     ]
+    -->
+     [
+     State_1111111111( StateChannel, lock, choice, s, v ),
+     L_CellLocked( s, lock )
+     ]
+  */
+
+rule (modulo E) eventBranchleftv_0_1111111111[color=#404d80,
+                                              process="event Branch( 'left', v.1 );", issapicrule,
+                                              role='Branch']:
+   [ State_1111111111( StateChannel, lock, choice.1, s.1, v.1 ) ]
+  --[ Branch( 'left', v.1 ) ]->
+   [ State_11111111111( StateChannel, lock, choice.1, s.1, v.1 ) ]
+
+  /*
+  rule (modulo AC) eventBranchleftv_0_1111111111[color=#404d80,
+                                                 process="event Branch( 'left', v.1 );", issapicrule,
+                                                 role='Branch']:
+     [ State_1111111111( StateChannel, lock, choice, s, v ) ]
+    --[ Branch( 'left', v ) ]->
+     [ State_11111111111( StateChannel, lock, choice, s, v ) ]
+  */
+
+rule (modulo E) p_0_11111111111[color=#404d80, process="0", issapicrule,
+                                role='Branch']:
+   [ State_11111111111( StateChannel, lock, choice.1, s.1, v.1 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_11111111111[color=#404d80, process="0", issapicrule,
+                                   role='Branch']:
+     [ State_11111111111( StateChannel, lock, choice, s, v ) ] --> [ ]
+  */
+
+rule (modulo E) insertsright_0_1111112[color=#404d80,
+                                       process="insert s.1,'right';", issapicrule, role='Branch']:
+   [ State_1111112( StateChannel, choice.1, s.1 ) ]
+  -->
+   [
+   State_11111121( StateChannel, choice.1, s.1 ),
+   L_PureState( s.1, 'right' )
+   ]
+
+  /*
+  rule (modulo AC) insertsright_0_1111112[color=#404d80,
+                                          process="insert s.1,'right';", issapicrule, role='Branch']:
+     [ State_1111112( StateChannel, choice, s ) ]
+    -->
+     [ State_11111121( StateChannel, choice, s ), L_PureState( s, 'right' ) ]
+  */
+
+rule (modulo E) locks_0_11111121[color=#404d80, process="lock s.1;",
+                                 issapicrule, role='Branch']:
+   [ State_11111121( StateChannel, choice.1, s.1 ) ]
+  -->
+   [ State_111111211( StateChannel, choice.1, s.1 ) ]
+
+  /*
+  rule (modulo AC) locks_0_11111121[color=#404d80, process="lock s.1;",
+                                    issapicrule, role='Branch']:
+     [ State_11111121( StateChannel, choice, s ) ]
+    -->
+     [ State_111111211( StateChannel, choice, s ) ]
+  */
+
+rule (modulo E) lookupsasv_0_111111211[color=#404d80,
+                                       process="lookup s.1 as v.2", no_derivcheck, issapicrule,
+                                       role='Branch']:
+   [
+   State_111111211( StateChannel, choice.1, s.1 ), L_PureState( s.1, v.2 ),
+   Fr( lock.1 )
+   ]
+  -->
+   [
+   State_1111112111( StateChannel, choice.1, lock.1, s.1, v.2 ),
+   L_CellLocked( s.1, lock.1 )
+   ]
+
+  /*
+  rule (modulo AC) lookupsasv_0_111111211[color=#404d80,
+                                          process="lookup s.1 as v.2", no_derivcheck, issapicrule,
+                                          role='Branch']:
+     [
+     State_111111211( StateChannel, choice, s ), L_PureState( s, v ),
+     Fr( lock )
+     ]
+    -->
+     [
+     State_1111112111( StateChannel, choice, lock, s, v ),
+     L_CellLocked( s, lock )
+     ]
+  */
+
+rule (modulo E) eventBranchrightv_0_1111112111[color=#404d80,
+                                               process="event Branch( 'right', v.2 );", issapicrule,
+                                               role='Branch']:
+   [ State_1111112111( StateChannel, choice.1, lock.1, s.1, v.2 ) ]
+  --[ Branch( 'right', v.2 ) ]->
+   [ State_11111121111( StateChannel, choice.1, lock.1, s.1, v.2 ) ]
+
+  /*
+  rule (modulo AC) eventBranchrightv_0_1111112111[color=#404d80,
+                                                  process="event Branch( 'right', v.2 );", issapicrule,
+                                                  role='Branch']:
+     [ State_1111112111( StateChannel, choice, lock, s, v ) ]
+    --[ Branch( 'right', v ) ]->
+     [ State_11111121111( StateChannel, choice, lock, s, v ) ]
+  */
+
+rule (modulo E) p_0_11111121111[color=#404d80, process="0", issapicrule,
+                                role='Branch']:
+   [ State_11111121111( StateChannel, choice.1, lock.1, s.1, v.2 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_11111121111[color=#404d80, process="0", issapicrule,
+                                   role='Branch']:
+     [ State_11111121111( StateChannel, choice, lock, s, v ) ] --> [ ]
+  */
+
+rule (modulo E) Parallel_0_12[color=#ffffff, process="Parallel();",
+                              issapicrule, role='Process']:
+   [ State_12( ) ] --> [ State_121( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) news_0_121[color=#807940, process="new s.2;",
+                           issapicrule, role='Parallel']:
+   [ State_121( ), Fr( s.2 ) ] --> [ State_1211( s.2 ) ]
+
+  /*
+  rule (modulo AC) news_0_121[color=#807940, process="new s.2;",
+                              issapicrule, role='Parallel']:
+     [ State_121( ), Fr( s ) ] --> [ State_1211( s ) ]
+  */
+
+rule (modulo E) newStateChannelchannel_0_1211[color=#ffffff,
+                                              process="new StateChannel.1:channel;", issapicrule,
+                                              role='Process']:
+   [ State_1211( s.2 ), Fr( StateChannel.1 ) ]
+  -->
+   [ State_12111( StateChannel.1, s.2 ) ]
+
+  /*
+  rule (modulo AC) newStateChannelchannel_0_1211[color=#ffffff,
+                                                 process="new StateChannel.1:channel;", issapicrule,
+                                                 role='Process']:
+     [ State_1211( s ), Fr( StateChannel ) ]
+    -->
+     [ State_12111( StateChannel, s ) ]
+  */
+
+rule (modulo E) insertsvalue_0_12111[color=#807940,
+                                     process="insert s.2,'value';", issapicrule, role='Parallel']:
+   [ State_12111( StateChannel.1, s.2 ) ]
+  -->
+   [ State_121111( StateChannel.1, s.2 ), L_PureState( s.2, 'value' ) ]
+
+  /*
+  rule (modulo AC) insertsvalue_0_12111[color=#807940,
+                                        process="insert s.2,'value';", issapicrule, role='Parallel']:
+     [ State_12111( StateChannel, s ) ]
+    -->
+     [ State_121111( StateChannel, s ), L_PureState( s, 'value' ) ]
+  */
+
+rule (modulo E) p_0_121111[color=#807940, process="|", issapicrule,
+                           role='Parallel']:
+   [ State_121111( StateChannel.1, s.2 ) ]
+  -->
+   [
+   State_1211111( StateChannel.1, s.2 ),
+   State_1211112( StateChannel.1, s.2 )
+   ]
+
+  /*
+  rule (modulo AC) p_0_121111[color=#807940, process="|", issapicrule,
+                              role='Parallel']:
+     [ State_121111( StateChannel, s ) ]
+    -->
+     [ State_1211111( StateChannel, s ), State_1211112( StateChannel, s ) ]
+  */
+
+rule (modulo E) locks_0_1211111[color=#807940, process="lock s.2;",
+                                issapicrule, role='Parallel']:
+   [ State_1211111( StateChannel.1, s.2 ) ]
+  -->
+   [ State_12111111( StateChannel.1, s.2 ) ]
+
+  /*
+  rule (modulo AC) locks_0_1211111[color=#807940, process="lock s.2;",
+                                   issapicrule, role='Parallel']:
+     [ State_1211111( StateChannel, s ) ]
+    -->
+     [ State_12111111( StateChannel, s ) ]
+  */
+
+rule (modulo E) lookupsasv_0_12111111[color=#807940,
+                                      process="lookup s.2 as v.3", no_derivcheck, issapicrule,
+                                      role='Parallel']:
+   [
+   State_12111111( StateChannel.1, s.2 ), L_PureState( s.2, v.3 ),
+   Fr( lock.2 )
+   ]
+  -->
+   [
+   State_121111111( StateChannel.1, lock.2, s.2, v.3 ),
+   L_CellLocked( s.2, lock.2 )
+   ]
+
+  // loop breaker: [1]
+  /*
+  rule (modulo AC) lookupsasv_0_12111111[color=#807940,
+                                         process="lookup s.2 as v.3", no_derivcheck, issapicrule,
+                                         role='Parallel']:
+     [ State_12111111( StateChannel, s ), L_PureState( s, v ), Fr( lock ) ]
+    -->
+     [ State_121111111( StateChannel, lock, s, v ), L_CellLocked( s, lock ) ]
+    // loop breaker: [1]
+  */
+
+rule (modulo E) eventParallelleftv_0_121111111[color=#807940,
+                                               process="event Parallel( 'left', v.3 );", issapicrule,
+                                               role='Parallel']:
+   [ State_121111111( StateChannel.1, lock.2, s.2, v.3 ) ]
+  --[ Parallel( 'left', v.3 ) ]->
+   [ State_1211111111( StateChannel.1, lock.2, s.2, v.3 ) ]
+
+  /*
+  rule (modulo AC) eventParallelleftv_0_121111111[color=#807940,
+                                                  process="event Parallel( 'left', v.3 );", issapicrule,
+                                                  role='Parallel']:
+     [ State_121111111( StateChannel, lock, s, v ) ]
+    --[ Parallel( 'left', v ) ]->
+     [ State_1211111111( StateChannel, lock, s, v ) ]
+  */
+
+rule (modulo E) insertsv_0_1211111111[color=#807940,
+                                      process="insert s.2,v.3;", issapicrule, role='Parallel']:
+   [
+   State_1211111111( StateChannel.1, lock.2, s.2, v.3 ),
+   L_CellLocked( s.2, lock.2 )
+   ]
+  -->
+   [
+   State_12111111111( StateChannel.1, lock.2, s.2, v.3 ),
+   L_PureState( s.2, v.3 )
+   ]
+
+  // loop breaker: [1]
+  /*
+  rule (modulo AC) insertsv_0_1211111111[color=#807940,
+                                         process="insert s.2,v.3;", issapicrule, role='Parallel']:
+     [ State_1211111111( StateChannel, lock, s, v ), L_CellLocked( s, lock ) ]
+    -->
+     [ State_12111111111( StateChannel, lock, s, v ), L_PureState( s, v ) ]
+    // loop breaker: [1]
+  */
+
+rule (modulo E) unlocks_0_12111111111[color=#807940,
+                                      process="unlock s.2;", issapicrule, role='Parallel']:
+   [ State_12111111111( StateChannel.1, lock.2, s.2, v.3 ) ]
+  -->
+   [ State_121111111111( StateChannel.1, lock.2, s.2, v.3 ) ]
+
+  /*
+  rule (modulo AC) unlocks_0_12111111111[color=#807940,
+                                         process="unlock s.2;", issapicrule, role='Parallel']:
+     [ State_12111111111( StateChannel, lock, s, v ) ]
+    -->
+     [ State_121111111111( StateChannel, lock, s, v ) ]
+  */
+
+rule (modulo E) p_0_121111111111[color=#807940, process="0", issapicrule,
+                                 role='Parallel']:
+   [ State_121111111111( StateChannel.1, lock.2, s.2, v.3 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_121111111111[color=#807940, process="0",
+                                    issapicrule, role='Parallel']:
+     [ State_121111111111( StateChannel, lock, s, v ) ] --> [ ]
+  */
+
+rule (modulo E) locks_0_1211112[color=#807940, process="lock s.2;",
+                                issapicrule, role='Parallel']:
+   [ State_1211112( StateChannel.1, s.2 ) ]
+  -->
+   [ State_12111121( StateChannel.1, s.2 ) ]
+
+  /*
+  rule (modulo AC) locks_0_1211112[color=#807940, process="lock s.2;",
+                                   issapicrule, role='Parallel']:
+     [ State_1211112( StateChannel, s ) ]
+    -->
+     [ State_12111121( StateChannel, s ) ]
+  */
+
+rule (modulo E) lookupsasv_0_12111121[color=#807940,
+                                      process="lookup s.2 as v.4", no_derivcheck, issapicrule,
+                                      role='Parallel']:
+   [
+   State_12111121( StateChannel.1, s.2 ), L_PureState( s.2, v.4 ),
+   Fr( lock.3 )
+   ]
+  -->
+   [
+   State_121111211( StateChannel.1, s.2, lock.3, v.4 ),
+   L_CellLocked( s.2, lock.3 )
+   ]
+
+  // loop breaker: [1]
+  /*
+  rule (modulo AC) lookupsasv_0_12111121[color=#807940,
+                                         process="lookup s.2 as v.4", no_derivcheck, issapicrule,
+                                         role='Parallel']:
+     [ State_12111121( StateChannel, s ), L_PureState( s, v ), Fr( lock ) ]
+    -->
+     [ State_121111211( StateChannel, s, lock, v ), L_CellLocked( s, lock ) ]
+    // loop breaker: [1]
+  */
+
+rule (modulo E) eventParallelrightv_0_121111211[color=#807940,
+                                                process="event Parallel( 'right', v.4 );", issapicrule,
+                                                role='Parallel']:
+   [ State_121111211( StateChannel.1, s.2, lock.3, v.4 ) ]
+  --[ Parallel( 'right', v.4 ) ]->
+   [ State_1211112111( StateChannel.1, s.2, lock.3, v.4 ) ]
+
+  /*
+  rule (modulo AC) eventParallelrightv_0_121111211[color=#807940,
+                                                   process="event Parallel( 'right', v.4 );", issapicrule,
+                                                   role='Parallel']:
+     [ State_121111211( StateChannel, s, lock, v ) ]
+    --[ Parallel( 'right', v ) ]->
+     [ State_1211112111( StateChannel, s, lock, v ) ]
+  */
+
+rule (modulo E) insertsv_0_1211112111[color=#807940,
+                                      process="insert s.2,v.4;", issapicrule, role='Parallel']:
+   [
+   State_1211112111( StateChannel.1, s.2, lock.3, v.4 ),
+   L_CellLocked( s.2, lock.3 )
+   ]
+  -->
+   [
+   State_12111121111( StateChannel.1, s.2, lock.3, v.4 ),
+   L_PureState( s.2, v.4 )
+   ]
+
+  // loop breaker: [1]
+  /*
+  rule (modulo AC) insertsv_0_1211112111[color=#807940,
+                                         process="insert s.2,v.4;", issapicrule, role='Parallel']:
+     [ State_1211112111( StateChannel, s, lock, v ), L_CellLocked( s, lock ) ]
+    -->
+     [ State_12111121111( StateChannel, s, lock, v ), L_PureState( s, v ) ]
+    // loop breaker: [1]
+  */
+
+rule (modulo E) unlocks_0_12111121111[color=#807940,
+                                      process="unlock s.2;", issapicrule, role='Parallel']:
+   [ State_12111121111( StateChannel.1, s.2, lock.3, v.4 ) ]
+  -->
+   [ State_121111211111( StateChannel.1, s.2, lock.3, v.4 ) ]
+
+  /*
+  rule (modulo AC) unlocks_0_12111121111[color=#807940,
+                                         process="unlock s.2;", issapicrule, role='Parallel']:
+     [ State_12111121111( StateChannel, s, lock, v ) ]
+    -->
+     [ State_121111211111( StateChannel, s, lock, v ) ]
+  */
+
+rule (modulo E) p_0_121111211111[color=#807940, process="0", issapicrule,
+                                 role='Parallel']:
+   [ State_121111211111( StateChannel.1, s.2, lock.3, v.4 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_121111211111[color=#807940, process="0",
+                                    issapicrule, role='Parallel']:
+     [ State_121111211111( StateChannel, s, lock, v ) ] --> [ ]
+  */
+
+rule (modulo E) StopLocked_0_2[color=#ffffff, process="StopLocked();",
+                               issapicrule, role='Process']:
+   [ State_2( ) ] --> [ State_21( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) news_0_21[color=#578040, process="new s.3;", issapicrule,
+                          role='StopLocked']:
+   [ State_21( ), Fr( s.3 ) ] --> [ State_211( s.3 ) ]
+
+  /*
+  rule (modulo AC) news_0_21[color=#578040, process="new s.3;",
+                             issapicrule, role='StopLocked']:
+     [ State_21( ), Fr( s ) ] --> [ State_211( s ) ]
+  */
+
+rule (modulo E) newStateChannelchannel_0_211[color=#ffffff,
+                                             process="new StateChannel.2:channel;", issapicrule,
+                                             role='Process']:
+   [ State_211( s.3 ), Fr( StateChannel.2 ) ]
+  -->
+   [ State_2111( StateChannel.2, s.3 ) ]
+
+  /*
+  rule (modulo AC) newStateChannelchannel_0_211[color=#ffffff,
+                                                process="new StateChannel.2:channel;", issapicrule,
+                                                role='Process']:
+     [ State_211( s ), Fr( StateChannel ) ]
+    -->
+     [ State_2111( StateChannel, s ) ]
+  */
+
+rule (modulo E) insertsvalue_0_2111[color=#578040,
+                                    process="insert s.3,'value';", issapicrule, role='StopLocked']:
+   [ State_2111( StateChannel.2, s.3 ) ]
+  -->
+   [ State_21111( StateChannel.2, s.3 ), L_PureState( s.3, 'value' ) ]
+
+  /*
+  rule (modulo AC) insertsvalue_0_2111[color=#578040,
+                                       process="insert s.3,'value';", issapicrule, role='StopLocked']:
+     [ State_2111( StateChannel, s ) ]
+    -->
+     [ State_21111( StateChannel, s ), L_PureState( s, 'value' ) ]
+  */
+
+rule (modulo E) locks_0_21111[color=#578040, process="lock s.3;",
+                              issapicrule, role='StopLocked']:
+   [ State_21111( StateChannel.2, s.3 ) ]
+  -->
+   [ State_211111( StateChannel.2, s.3 ) ]
+
+  /*
+  rule (modulo AC) locks_0_21111[color=#578040, process="lock s.3;",
+                                 issapicrule, role='StopLocked']:
+     [ State_21111( StateChannel, s ) ]
+    -->
+     [ State_211111( StateChannel, s ) ]
+  */
+
+rule (modulo E) lookupsasv_0_211111[color=#578040,
+                                    process="lookup s.3 as v.5", no_derivcheck, issapicrule,
+                                    role='StopLocked']:
+   [
+   State_211111( StateChannel.2, s.3 ), L_PureState( s.3, v.5 ),
+   Fr( lock.4 )
+   ]
+  -->
+   [
+   State_2111111( StateChannel.2, s.3, lock.4, v.5 ),
+   L_CellLocked( s.3, lock.4 )
+   ]
+
+  /*
+  rule (modulo AC) lookupsasv_0_211111[color=#578040,
+                                       process="lookup s.3 as v.5", no_derivcheck, issapicrule,
+                                       role='StopLocked']:
+     [ State_211111( StateChannel, s ), L_PureState( s, v ), Fr( lock ) ]
+    -->
+     [ State_2111111( StateChannel, s, lock, v ), L_CellLocked( s, lock ) ]
+  */
+
+rule (modulo E) eventStoppedv_0_2111111[color=#578040,
+                                        process="event Stopped( v.5 );", issapicrule, role='StopLocked']:
+   [ State_2111111( StateChannel.2, s.3, lock.4, v.5 ) ]
+  --[ Stopped( v.5 ) ]->
+   [ State_21111111( StateChannel.2, s.3, lock.4, v.5 ) ]
+
+  /*
+  rule (modulo AC) eventStoppedv_0_2111111[color=#578040,
+                                           process="event Stopped( v.5 );", issapicrule, role='StopLocked']:
+     [ State_2111111( StateChannel, s, lock, v ) ]
+    --[ Stopped( v ) ]->
+     [ State_21111111( StateChannel, s, lock, v ) ]
+  */
+
+rule (modulo E) p_0_21111111[color=#578040, process="0", issapicrule,
+                             role='StopLocked']:
+   [ State_21111111( StateChannel.2, s.3, lock.4, v.5 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_21111111[color=#578040, process="0", issapicrule,
+                                role='StopLocked']:
+     [ State_21111111( StateChannel, s, lock, v ) ] --> [ ]
+  */
+
+restriction predicate_eq:
+  "∀ #i a b. (Pred_Eq( a, b ) @ #i) ⇒ (a = b)"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ #i a b. (Pred_Eq( a, b ) @ #i) ⇒ (a = b)"
+  */
+
+restriction predicate_not_eq:
+  "∀ #i a b. (Pred_Not_Eq( a, b ) @ #i) ⇒ (¬(a = b))"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ #i a b. (Pred_Not_Eq( a, b ) @ #i) ⇒ (¬(a = b))"
+  */
+
+restriction single_session:
+  "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
+  */
+
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.13.0
+Maude version 3.5.1
+Git revision: 75789dd37ec597af4859aa78d928136f33a697f6 (with uncommited changes), branch: sapic-optimisations
+Compiled at: 2026-09-25 19:56:56.873336963 UTC
+*/
+
+end
+/* Output
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/regression/trace/soundness-sapic-state-phases.spthy
+
+  output:          examples/regression/trace/soundness-sapic-state-phases.spthy.tmp
+  processing time: 3.39s
+  
+  left_branch (exists-trace): verified (4 steps)
+  right_branch (exists-trace): verified (4 steps)
+  branch_value (all-traces): verified (6 steps)
+  parallel_completed (exists-trace): verified (9 steps)
+  parallel_value (all-traces): verified (18 steps)
+  stopped_reachable (exists-trace): verified (3 steps)
+  stopped_value (all-traces): verified (3 steps)
+
+==============================================================================
+*/

@@ -1,0 +1,10 @@
+theory SapicNestedCallBindingReuse
+begin
+
+// Both inputs are user-written binders of y, even though Read(y) freshens
+// them during expansion. The generated-name collision fix must not hide this
+// duplicate: --quit-on-warning must still reject it.
+let Read(x) = in(y); in(y:bitstring); event Local(x,y)
+let Nested(y) = Read(y)
+process: in(a); in(y.1); Nested(a)
+end

@@ -1,0 +1,245 @@
+theory SapicInlineExportLocations
+
+begin
+
+// Function signature and definition of the equational theory E
+
+functions: check_rep/2 [destructor], fst/1, get_rep/1 [destructor],
+           pair/2, rep/2 [private,constructor], report/1, snd/1
+equations:
+    check_rep(rep(x.1, x.2), x.2) = x.1,
+    fst(<x.1, x.2>) = x.1,
+    get_rep(rep(x.1, x.2)) = x.1,
+    snd(<x.1, x.2>) = x.2
+
+heuristic: p
+
+predicate: Report( x, l )<=>⊤
+
+lemma pattern_location:
+  exists-trace "∃ #i. Pattern( rep('a', 'outer') ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #i. (Pattern( rep('a', 'outer') ) @ #i)"
+*/
+simplify
+solve( State_1111( ) ▶₀ #i )
+  case ina_0_111
+  SOLVED // trace found
+qed
+
+lemma caller_location:
+  exists-trace "∃ x #i. Caller( rep(x, x) ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ x #i. (Caller( rep(x, x) ) @ #i)"
+*/
+simplify
+solve( State_1211( x ) ▶₀ #i )
+  case Open_0_121
+  SOLVED // trace found
+qed
+
+lemma inner_location:
+  exists-trace "∃ x #i. Inner( rep(x, 'inner') ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ x #i. (Inner( rep(x, 'inner') ) @ #i)"
+*/
+simplify
+solve( State_211( x ) ▶₀ #i )
+  case Inner_0_21
+  SOLVED // trace found
+qed
+
+lemma inner_overrides_caller:
+  all-traces "∀ x l #i. (Inner( rep(x, l) ) @ #i) ⇒ (l = 'inner')"
+/*
+guarded formula characterizing all counter-examples:
+"∃ x l #i. (Inner( rep(x, l) ) @ #i) ∧ ¬(l = 'inner')"
+*/
+simplify
+by contradiction /* from formulas */
+
+restriction Restr_ReportRule_1:
+  "∀ #NOW. (Restr_ReportRule_1( ) @ #NOW) ⇒ (⊤)"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ #NOW. (Restr_ReportRule_1( ) @ #NOW) ⇒ (⊤)"
+  */
+
+rule (modulo E) ReportRule[color=#ffffff, process="|", issapicrule,
+                           role='Process']:
+   [ In( <x, loc> ) ] --[ Restr_ReportRule_1( ) ]-> [ Out( rep(x, loc) ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Init[color=#ffffff, process="|", issapicrule,
+                     role='Process']:
+   [ ] --[ Init( ) ]-> [ State_( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_0_[color=#ffffff, process="|", issapicrule,
+                     role='Process']:
+   [ State_( ) ] --> [ State_1( ), State_2( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_0_1[color=#ffffff, process="|", issapicrule,
+                      role='Process']:
+   [ State_1( ) ] --> [ State_11( ), State_12( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Patterna_0_11[color=#ffffff, process="Pattern('a');",
+                              issapicrule, role='Process']:
+   [ State_11( ) ] --> [ State_111( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) ina_0_111[color=#805040, process="in('a');", issapicrule,
+                          role='Pattern']:
+   [ State_111( ), In( 'a' ) ] --> [ State_1111( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) eventPatternrepaouter_0_1111[color=#805040,
+                                             process="event Pattern( rep('a', 'outer') );", issapicrule,
+                                             role='Pattern']:
+   [ State_1111( ) ] --[ Pattern( rep('a', 'outer') ) ]-> [ State_11111( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_0_11111[color=#805040, process="0", issapicrule,
+                          role='Pattern']:
+   [ State_11111( ) ] --> [ ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) newx_0_12[color=#ffffff, process="new x.1;", issapicrule,
+                          role='Process']:
+   [ State_12( ), Fr( x.1 ) ] --> [ State_121( x.1 ) ]
+
+  /*
+  rule (modulo AC) newx_0_12[color=#ffffff, process="new x.1;",
+                             issapicrule, role='Process']:
+     [ State_12( ), Fr( x ) ] --> [ State_121( x ) ]
+  */
+
+rule (modulo E) Open_0_121[color=#ffffff, process="Open();", issapicrule,
+                           role='Process']:
+   [ State_121( x.1 ) ] --> [ State_1211( x.1 ) ]
+
+  /*
+  rule (modulo AC) Open_0_121[color=#ffffff, process="Open();",
+                              issapicrule, role='Process']:
+     [ State_121( x ) ] --> [ State_1211( x ) ]
+  */
+
+rule (modulo E) eventCallerrepxx_0_1211[color=#5d8040,
+                                        process="event Caller( rep(x.1, x.1) );", issapicrule, role='Open']:
+   [ State_1211( x.1 ) ]
+  --[ Caller( rep(x.1, x.1) ) ]->
+   [ State_12111( x.1 ) ]
+
+  /*
+  rule (modulo AC) eventCallerrepxx_0_1211[color=#5d8040,
+                                           process="event Caller( rep(x.1, x.1) );", issapicrule,
+                                           role='Open']:
+     [ State_1211( x ) ] --[ Caller( rep(x, x) ) ]-> [ State_12111( x ) ]
+  */
+
+rule (modulo E) p_0_12111[color=#5d8040, process="0", issapicrule,
+                          role='Open']:
+   [ State_12111( x.1 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_12111[color=#5d8040, process="0", issapicrule,
+                             role='Open']:
+     [ State_12111( x ) ] --> [ ]
+  */
+
+rule (modulo E) newx_0_2[color=#ffffff, process="new x.2;", issapicrule,
+                         role='Process']:
+   [ State_2( ), Fr( x.2 ) ] --> [ State_21( x.2 ) ]
+
+  /*
+  rule (modulo AC) newx_0_2[color=#ffffff, process="new x.2;", issapicrule,
+                            role='Process']:
+     [ State_2( ), Fr( x ) ] --> [ State_21( x ) ]
+  */
+
+rule (modulo E) Inner_0_21[color=#ffffff, process="Inner();",
+                           issapicrule, role='Process']:
+   [ State_21( x.2 ) ] --> [ State_211( x.2 ) ]
+
+  /*
+  rule (modulo AC) Inner_0_21[color=#ffffff, process="Inner();",
+                              issapicrule, role='Process']:
+     [ State_21( x ) ] --> [ State_211( x ) ]
+  */
+
+rule (modulo E) eventInnerrepxinner_0_211[color=#406e80,
+                                          process="event Inner( rep(x.2, 'inner') );", issapicrule,
+                                          role='Inner']:
+   [ State_211( x.2 ) ]
+  --[ Inner( rep(x.2, 'inner') ) ]->
+   [ State_2111( x.2 ) ]
+
+  /*
+  rule (modulo AC) eventInnerrepxinner_0_211[color=#406e80,
+                                             process="event Inner( rep(x.2, 'inner') );", issapicrule,
+                                             role='Inner']:
+     [ State_211( x ) ] --[ Inner( rep(x, 'inner') ) ]-> [ State_2111( x ) ]
+  */
+
+rule (modulo E) p_0_2111[color=#406e80, process="0", issapicrule,
+                         role='Inner']:
+   [ State_2111( x.2 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_2111[color=#406e80, process="0", issapicrule,
+                            role='Inner']:
+     [ State_2111( x ) ] --> [ ]
+  */
+
+restriction single_session:
+  "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
+  */
+
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.13.0
+Maude version 3.5.1
+Git revision: bf885ca9abf478867fbdbbf3ad80e4da85370e01 (with uncommited changes), branch: HEAD
+Compiled at: 2026-10-04 11:58:25.282416529 UTC
+*/
+
+end
+/* Output
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/regression/trace/sapic-inline-export-locations.spthy
+
+  output:          examples/regression/trace/sapic-inline-export-locations.spthy.tmp
+  processing time: 0.18s
+  
+  pattern_location (exists-trace): verified (3 steps)
+  caller_location (exists-trace): verified (3 steps)
+  inner_location (exists-trace): verified (3 steps)
+  inner_overrides_caller (all-traces): verified (2 steps)
+
+==============================================================================
+*/

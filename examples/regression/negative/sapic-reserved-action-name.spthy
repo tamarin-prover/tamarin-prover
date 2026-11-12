@@ -1,0 +1,11 @@
+theory SapicReservedActionName
+begin
+// The translation records a store update as the action Insert and enforces
+// lookups through restrictions on it. This user event was treated as a second
+// update, so the lookup could only read 'y': got_x was falsified and only_y
+// verified without any warning. Such an event must be rejected.
+process:
+  insert 'a','x'; event Insert('a','y'); lookup 'a' as v in event Got(v)
+lemma got_x: exists-trace "Ex #i. Got('x')@i"
+lemma only_y: "All v #i. Got(v)@i ==> v = 'y'"
+end

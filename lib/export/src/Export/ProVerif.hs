@@ -447,6 +447,7 @@ loadLemmas preparedQueryPlans preparedAxiomPlans sharedEventTags hasSpecificLemm
              preparedFormulaPlan <- NE.toList prepared.preparedAxiomFormulas
            ]
     headers = makeEventHeaders sharedEventTags allFacts
+      `S.union` foldMap headersOfFormula preparedFormulas
 
 -- | Classify how a lemma should be translated based on selector and attributes
 classifyLemma ::
@@ -509,12 +510,12 @@ loadRestrictions sharedEventTags te preparedRestrictionPlans thy =
             (planOutcome restriction._rstrName preparedRestrictionPlans)
         | restriction <- rs
         ]
-      allFacts =
-        [ fact
+      preparedFormulas =
+        [ preparedFormulaPlan.preparedFormula
         | (_, PropertyEmitted prepared) <- preparedRestrictionPlans,
-          preparedFormulaPlan <- NE.toList prepared.preparedRestrictionFormulas,
-          fact <- formulaFacts preparedFormulaPlan.preparedFormula
+          preparedFormulaPlan <- NE.toList prepared.preparedRestrictionFormulas
         ]
+      allFacts = concatMap formulaFacts preparedFormulas
       validFacts =
         [ f
         | f@(Fact tag _ _) <- allFacts,
@@ -522,4 +523,5 @@ loadRestrictions sharedEventTags te preparedRestrictionPlans thy =
           factTagName tag `notElem` ["OnlyOnce", "DistinctFact"]
         ]
       headers = makeEventHeaders sharedEventTags validFacts
+        `S.union` foldMap headersOfFormula preparedFormulas
    in (docs, headers)

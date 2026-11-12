@@ -1,0 +1,20 @@
+theory SapicNestedParameterCapture
+begin
+
+// Callee-local x must remain independent of the enclosing parameter x.
+// Without freshening, P('d') silently removes both traces despite passing
+// --quit-on-warning. Keep the single-input/caller-binding controls in
+// sapic-nested-call-parameter-scope.spthy separate from this silent failure.
+let RLet(a) = let <x,y> = <'k','m'> in event ELet(a,x)
+let RIn(a) = in(<x,y>); event EIn(a,x)
+let P(x) = event F(x); (RLet('c') | RIn('c'))
+
+process: P('d')
+
+lemma let_binder:
+  exists-trace "Ex #i. ELet('c','k') @ i"
+
+lemma input_binder:
+  exists-trace "Ex #i. EIn('c','other') @ i"
+
+end

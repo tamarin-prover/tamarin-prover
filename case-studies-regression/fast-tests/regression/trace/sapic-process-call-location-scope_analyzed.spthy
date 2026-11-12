@@ -1,0 +1,350 @@
+theory SapicProcessCallLocationScope
+
+begin
+
+// Function signature and definition of the equational theory E
+
+functions: check_rep/2 [destructor], fst/1, get_rep/1 [destructor],
+           pair/2, rep/2 [private,constructor], report/1, snd/1
+equations:
+    check_rep(rep(x.1, x.2), x.2) = x.1,
+    fst(<x.1, x.2>) = x.1,
+    get_rep(rep(x.1, x.2)) = x.1,
+    snd(<x.1, x.2>) = x.2
+
+heuristic: p
+
+predicate: Report( x, l )<=>⊤
+
+lemma direct_location:
+  exists-trace
+  "∃ #i. Local( 'direct', 'caller', 'local', rep('local', 'local') ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #i.
+  (Local( 'direct', 'caller', 'local', rep('local', 'local') ) @ #i)"
+*/
+simplify
+solve( Local( 'direct', 'caller', 'local', rep('local', 'local') ) @ #i )
+  case eventLocaldirectyyrepyy_0_11111
+  solve( State_11111( 'caller', 'local' ) ▶₀ #i )
+    case iny_0_1111
+    SOLVED // trace found
+  qed
+qed
+
+lemma nested_location:
+  exists-trace
+  "∃ #i. Local( 'nested', 'caller', 'local', rep('local', 'local') ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #i.
+  (Local( 'nested', 'caller', 'local', rep('local', 'local') ) @ #i)"
+*/
+simplify
+solve( Local( 'nested', 'caller', 'local', rep('local', 'local') ) @ #i )
+  case eventLocalnestedyyrepyy_0_21111
+  solve( State_21111( 'caller', 'local' ) ▶₀ #i )
+    case iny_0_2111
+    SOLVED // trace found
+  qed
+qed
+
+lemma caller_location:
+  exists-trace
+  "∃ #i. Caller( 'caller', 'local', rep('local', 'caller') ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #i. (Caller( 'caller', 'local', rep('local', 'caller') ) @ #i)"
+*/
+simplify
+solve( State_12111( 'caller', 'local' ) ▶₀ #i )
+  case iny_0_1211
+  SOLVED // trace found
+qed
+
+lemma direct_location_preserved:
+  all-traces
+  "∀ x y r #i. (Local( 'direct', x, y, r ) @ #i) ⇒ (r = rep(y, y))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ x y r #i. (Local( 'direct', x, y, r ) @ #i) ∧ ¬(r = rep(y, y))"
+*/
+simplify
+solve( Local( 'direct', x, y, r ) @ #i )
+  case eventLocaldirectyyrepyy_0_11111
+  by contradiction /* from formulas */
+qed
+
+lemma nested_location_preserved:
+  all-traces
+  "∀ x y r #i. (Local( 'nested', x, y, r ) @ #i) ⇒ (r = rep(y, y))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ x y r #i. (Local( 'nested', x, y, r ) @ #i) ∧ ¬(r = rep(y, y))"
+*/
+simplify
+solve( Local( 'nested', x, y, r ) @ #i )
+  case eventLocalnestedyyrepyy_0_21111
+  by contradiction /* from formulas */
+qed
+
+lemma caller_location_preserved:
+  all-traces "∀ x y r #i. (Caller( x, y, r ) @ #i) ⇒ (r = rep(y, x))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ x y r #i. (Caller( x, y, r ) @ #i) ∧ ¬(r = rep(y, x))"
+*/
+simplify
+by contradiction /* from formulas */
+
+restriction Restr_ReportRule_1:
+  "∀ #NOW. (Restr_ReportRule_1( ) @ #NOW) ⇒ (⊤)"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ #NOW. (Restr_ReportRule_1( ) @ #NOW) ⇒ (⊤)"
+  */
+
+rule (modulo E) ReportRule[color=#ffffff, process="|", issapicrule,
+                           role='Process']:
+   [ In( <x, loc> ) ] --[ Restr_ReportRule_1( ) ]-> [ Out( rep(x, loc) ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Init[color=#ffffff, process="|", issapicrule,
+                     role='Process']:
+   [ ] --[ Init( ) ]-> [ State_( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_0_[color=#ffffff, process="|", issapicrule,
+                     role='Process']:
+   [ State_( ) ] --> [ State_1( ), State_2( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_0_1[color=#ffffff, process="|", issapicrule,
+                      role='Process']:
+   [ State_1( ) ] --> [ State_11( ), State_12( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) iny_0_11[color=#ffffff, process="in(y.2);", issapicrule,
+                         role='Process']:
+   [ State_11( ), In( y.2 ) ] --> [ State_111( y.2 ) ]
+
+  /*
+  rule (modulo AC) iny_0_11[color=#ffffff, process="in(y.2);", issapicrule,
+                            role='Process']:
+     [ State_11( ), In( y ) ] --> [ State_111( y ) ]
+  */
+
+rule (modulo E) Localdirecty_0_111[color=#ffffff,
+                                   process="Local('direct', y.2);", issapicrule, role='Process']:
+   [ State_111( y.2 ) ] --> [ State_1111( y.2 ) ]
+
+  /*
+  rule (modulo AC) Localdirecty_0_111[color=#ffffff,
+                                      process="Local('direct', y.2);", issapicrule, role='Process']:
+     [ State_111( y ) ] --> [ State_1111( y ) ]
+  */
+
+rule (modulo E) iny_0_1111[color=#407180, process="in(y.3);",
+                           issapicrule, role='Local']:
+   [ State_1111( y.2 ), In( y.3 ) ] --> [ State_11111( y.2, y.3 ) ]
+
+  /*
+  rule (modulo AC) iny_0_1111[color=#407180, process="in(y.3);",
+                              issapicrule, role='Local']:
+     [ State_1111( y ), In( y.1 ) ] --> [ State_11111( y, y.1 ) ]
+  */
+
+rule (modulo E) eventLocaldirectyyrepyy_0_11111[color=#407180,
+                                                process="event Local( 'direct', y.2, y.3, rep(y.3, y.3) );",
+                                                issapicrule, role='Local']:
+   [ State_11111( y.2, y.3 ) ]
+  --[ Local( 'direct', y.2, y.3, rep(y.3, y.3) ) ]->
+   [ State_111111( y.2, y.3 ) ]
+
+  /*
+  rule (modulo AC) eventLocaldirectyyrepyy_0_11111[color=#407180,
+                                                   process="event Local( 'direct', y.2, y.3, rep(y.3, y.3) );",
+                                                   issapicrule, role='Local']:
+     [ State_11111( y, y.1 ) ]
+    --[ Local( 'direct', y, y.1, rep(y.1, y.1) ) ]->
+     [ State_111111( y, y.1 ) ]
+  */
+
+rule (modulo E) p_0_111111[color=#407180, process="0", issapicrule,
+                           role='Local']:
+   [ State_111111( y.2, y.3 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_111111[color=#407180, process="0", issapicrule,
+                              role='Local']:
+     [ State_111111( y, y.1 ) ] --> [ ]
+  */
+
+rule (modulo E) iny_0_12[color=#ffffff, process="in(y.4);", issapicrule,
+                         role='Process']:
+   [ State_12( ), In( y.4 ) ] --> [ State_121( y.4 ) ]
+
+  /*
+  rule (modulo AC) iny_0_12[color=#ffffff, process="in(y.4);", issapicrule,
+                            role='Process']:
+     [ State_12( ), In( y ) ] --> [ State_121( y ) ]
+  */
+
+rule (modulo E) Callery_0_121[color=#ffffff, process="Caller(y.4);",
+                              issapicrule, role='Process']:
+   [ State_121( y.4 ) ] --> [ State_1211( y.4 ) ]
+
+  /*
+  rule (modulo AC) Callery_0_121[color=#ffffff, process="Caller(y.4);",
+                                 issapicrule, role='Process']:
+     [ State_121( y ) ] --> [ State_1211( y ) ]
+  */
+
+rule (modulo E) iny_0_1211[color=#40805a, process="in(y.5);",
+                           issapicrule, role='Caller']:
+   [ State_1211( y.4 ), In( y.5 ) ] --> [ State_12111( y.4, y.5 ) ]
+
+  /*
+  rule (modulo AC) iny_0_1211[color=#40805a, process="in(y.5);",
+                              issapicrule, role='Caller']:
+     [ State_1211( y ), In( y.1 ) ] --> [ State_12111( y, y.1 ) ]
+  */
+
+rule (modulo E) eventCalleryyrepyy_0_12111[color=#40805a,
+                                           process="event Caller( y.4, y.5, rep(y.5, y.4) );", issapicrule,
+                                           role='Caller']:
+   [ State_12111( y.4, y.5 ) ]
+  --[ Caller( y.4, y.5, rep(y.5, y.4) ) ]->
+   [ State_121111( y.4, y.5 ) ]
+
+  /*
+  rule (modulo AC) eventCalleryyrepyy_0_12111[color=#40805a,
+                                              process="event Caller( y.4, y.5, rep(y.5, y.4) );", issapicrule,
+                                              role='Caller']:
+     [ State_12111( y, y.1 ) ]
+    --[ Caller( y, y.1, rep(y.1, y) ) ]->
+     [ State_121111( y, y.1 ) ]
+  */
+
+rule (modulo E) p_0_121111[color=#40805a, process="0", issapicrule,
+                           role='Caller']:
+   [ State_121111( y.4, y.5 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_121111[color=#40805a, process="0", issapicrule,
+                              role='Caller']:
+     [ State_121111( y, y.1 ) ] --> [ ]
+  */
+
+rule (modulo E) iny_0_2[color=#ffffff, process="in(y.6);", issapicrule,
+                        role='Process']:
+   [ State_2( ), In( y.6 ) ] --> [ State_21( y.6 ) ]
+
+  /*
+  rule (modulo AC) iny_0_2[color=#ffffff, process="in(y.6);", issapicrule,
+                           role='Process']:
+     [ State_2( ), In( y ) ] --> [ State_21( y ) ]
+  */
+
+rule (modulo E) Nestedy_0_21[color=#ffffff, process="Nested(y.6);",
+                             issapicrule, role='Process']:
+   [ State_21( y.6 ) ] --> [ State_211( y.6 ) ]
+
+  /*
+  rule (modulo AC) Nestedy_0_21[color=#ffffff, process="Nested(y.6);",
+                                issapicrule, role='Process']:
+     [ State_21( y ) ] --> [ State_211( y ) ]
+  */
+
+rule (modulo E) Localnestedy_0_211[color=#7b4080,
+                                   process="Local('nested', y.6);", issapicrule, role='Nested']:
+   [ State_211( y.6 ) ] --> [ State_2111( y.6 ) ]
+
+  /*
+  rule (modulo AC) Localnestedy_0_211[color=#7b4080,
+                                      process="Local('nested', y.6);", issapicrule, role='Nested']:
+     [ State_211( y ) ] --> [ State_2111( y ) ]
+  */
+
+rule (modulo E) iny_0_2111[color=#407180, process="in(y.7);",
+                           issapicrule, role='Nested_Local']:
+   [ State_2111( y.6 ), In( y.7 ) ] --> [ State_21111( y.6, y.7 ) ]
+
+  /*
+  rule (modulo AC) iny_0_2111[color=#407180, process="in(y.7);",
+                              issapicrule, role='Nested_Local']:
+     [ State_2111( y ), In( y.1 ) ] --> [ State_21111( y, y.1 ) ]
+  */
+
+rule (modulo E) eventLocalnestedyyrepyy_0_21111[color=#407180,
+                                                process="event Local( 'nested', y.6, y.7, rep(y.7, y.7) );",
+                                                issapicrule, role='Nested_Local']:
+   [ State_21111( y.6, y.7 ) ]
+  --[ Local( 'nested', y.6, y.7, rep(y.7, y.7) ) ]->
+   [ State_211111( y.6, y.7 ) ]
+
+  /*
+  rule (modulo AC) eventLocalnestedyyrepyy_0_21111[color=#407180,
+                                                   process="event Local( 'nested', y.6, y.7, rep(y.7, y.7) );",
+                                                   issapicrule, role='Nested_Local']:
+     [ State_21111( y, y.1 ) ]
+    --[ Local( 'nested', y, y.1, rep(y.1, y.1) ) ]->
+     [ State_211111( y, y.1 ) ]
+  */
+
+rule (modulo E) p_0_211111[color=#407180, process="0", issapicrule,
+                           role='Nested_Local']:
+   [ State_211111( y.6, y.7 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_211111[color=#407180, process="0", issapicrule,
+                              role='Nested_Local']:
+     [ State_211111( y, y.1 ) ] --> [ ]
+  */
+
+restriction single_session:
+  "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
+  */
+
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.13.0
+Maude version 3.5.1
+Git revision: bf885ca9abf478867fbdbbf3ad80e4da85370e01 (with uncommited changes), branch: HEAD
+Compiled at: 2026-10-04 11:58:25.282416529 UTC
+*/
+
+end
+/* Output
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/regression/trace/sapic-process-call-location-scope.spthy
+
+  output:          examples/regression/trace/sapic-process-call-location-scope.spthy.tmp
+  processing time: 0.32s
+  
+  direct_location (exists-trace): verified (4 steps)
+  nested_location (exists-trace): verified (4 steps)
+  caller_location (exists-trace): verified (3 steps)
+  direct_location_preserved (all-traces): verified (3 steps)
+  nested_location_preserved (all-traces): verified (3 steps)
+  caller_location_preserved (all-traces): verified (2 steps)
+
+==============================================================================
+*/

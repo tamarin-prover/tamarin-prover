@@ -1,0 +1,18 @@
+theory SoundnessSapicStateParallelBoundaries
+begin
+options: translation-state-optimisation
+functions: value/0
+// Initialization and access in distinct parallel branches still use the
+// ordinary translation. The read may precede initialization and take else 0.
+let Shared = new s;
+  ((insert s,value) |
+   (lock s; lookup s as v in event Shared(v); insert s,v; unlock s))
+// One syntactic initializer under replication can execute repeatedly for the
+// same fresh state identifier, even when only one outer parallel branch uses it.
+let Repeated = new s;
+  ((!(insert s,value; lock s; lookup s as v in
+      event Repeated(v); insert s,v; unlock s)) | event Independent())
+process: Shared | Repeated
+lemma shared_reachable: exists-trace "Ex #i. Shared(value)@i"
+lemma repeated_reachable: exists-trace "Ex #i. Repeated(value)@i"
+end

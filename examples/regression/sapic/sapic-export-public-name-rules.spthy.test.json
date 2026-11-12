@@ -1,0 +1,35 @@
+{
+  "tests": [
+    {
+      "name": "shared-public-name",
+      "args": [
+        "--output-module=proverif",
+        "--quit-on-warning"
+      ],
+      "contains": [
+        "out(att,v'a_2e_b)",
+        "event eSeen(v'a_2e_b)",
+        "free v'a_5f_b:bitstring.",
+        "in(publicChannel, =v'a_5f_b)",
+        "out(publicChannel, va_5f_b)",
+        "va_5f_b = v'a_5f_b."
+      ],
+      "matches": [
+        {
+          "regex": "free v'a_2e_b:bitstring\\.",
+          "min": 1,
+          "max": 1
+        },
+        {
+          "regex": "query[^.]*attacker\\(\\s*v'a_2e_b\\s*\\)",
+          "min": 1,
+          "max": 1
+        },
+        {
+          "regex": "\\b(?:va_b|sa\\.b)\\b",
+          "max": 0
+        }
+      ]
+    }
+  ]
+}
