@@ -1,0 +1,37 @@
+{
+  "tests": [
+    {
+      "name": "renamed",
+      "args": [
+        "--diff",
+        "--prove",
+        "--quit-on-warning"
+      ],
+      "contains": [
+        "DiffLemma:  D : verified"
+      ]
+    },
+    {
+      "name": "different",
+      "args": [
+        "--diff",
+        "--prove",
+        "--quit-on-warning",
+        "-DDIFFERENT"
+      ],
+      "contains": [
+        "DiffLemma:  D : falsified"
+      ]
+    },
+    {
+      "name": "roundtrip",
+      "args": [
+        "--diff",
+        "--quit-on-warning"
+      ],
+      "checks": [
+        "roundtrip"
+      ]
+    }
+  ]
+}

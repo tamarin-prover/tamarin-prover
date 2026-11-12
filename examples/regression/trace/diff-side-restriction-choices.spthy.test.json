@@ -1,0 +1,87 @@
+{
+  "tests": [
+    {
+      "name": "left-local-choice",
+      "args": [
+        "--diff",
+        "--prove",
+        "--quit-on-warning"
+      ],
+      "contains": [
+        "LHS :  reachable (exists-trace): verified",
+        "RHS :  reachable (exists-trace): verified",
+        "DiffLemma:  D : analysis incomplete"
+      ]
+    },
+    {
+      "name": "right-local-choice",
+      "args": [
+        "--diff",
+        "--prove",
+        "--quit-on-warning",
+        "-DREVERSE"
+      ],
+      "contains": [
+        "LHS :  reachable (exists-trace): verified",
+        "RHS :  reachable (exists-trace): verified",
+        "DiffLemma:  D : analysis incomplete"
+      ]
+    },
+    {
+      "name": "shared-and-local-choices",
+      "args": [
+        "--diff",
+        "--prove",
+        "--quit-on-warning",
+        "-DSHARED"
+      ],
+      "contains": [
+        "LHS :  reachable (exists-trace): verified",
+        "RHS :  reachable (exists-trace): verified",
+        "DiffLemma:  D : analysis incomplete"
+      ]
+    },
+    {
+      "name": "parent-choice-control",
+      "args": [
+        "--diff",
+        "--prove",
+        "--quit-on-warning",
+        "-DCONTROL"
+      ],
+      "contains": [
+        "LHS :  reachable (exists-trace): verified",
+        "RHS :  reachable (exists-trace): verified",
+        "DiffLemma:  D : verified"
+      ]
+    },
+    {
+      "name": "contradictory-local-choice",
+      "args": [
+        "--diff",
+        "--prove",
+        "--quit-on-warning",
+        "-DBLOCKED"
+      ],
+      "contains": [
+        "LHS :  reachable (exists-trace): falsified",
+        "RHS :  reachable (exists-trace): verified",
+        "DiffLemma:  D : analysis incomplete"
+      ]
+    },
+    {
+      "name": "erased-parent-choice",
+      "args": [
+        "--diff",
+        "--prove",
+        "--quit-on-warning",
+        "-DERASED"
+      ],
+      "contains": [
+        "LHS :  reachable (exists-trace): verified",
+        "RHS :  reachable (exists-trace): verified",
+        "DiffLemma:  D : analysis incomplete"
+      ]
+    }
+  ]
+}

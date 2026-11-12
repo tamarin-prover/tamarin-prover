@@ -94,6 +94,7 @@ addAutoSourcesLemmaDiff hnd lemmaName crcLeft crcRight items =
       where
         f (DiffRuleItem r) = Just (DiffRuleItem r)
         f (DiffLemmaItem l) = Just (DiffLemmaItem l)
+        f (DiffMacroItem m) = Just (DiffMacroItem m)
         f (DiffTextItem t) = Just (DiffTextItem t)
         f (DiffConfigBlockItem b) = Just (DiffConfigBlockItem b)
         f _ = Nothing

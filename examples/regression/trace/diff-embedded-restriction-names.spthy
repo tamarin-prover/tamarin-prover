@@ -1,0 +1,11 @@
+theory DiffEmbeddedRestrictionNames
+begin
+// The restriction belongs to P. Q's ordinary action happens to have the name
+// the translator used to generate for it; this must not prevent Q from firing.
+// The first fallback name is used too.
+rule P: [] --[A(), _restrict(F)]-> []
+rule Q: [] --[Restr_P_1(), B()]-> []
+rule UserFallback: [] --[Restr_P_1_1()]-> []
+lemma possible: exists-trace "Ex #i. B()@i"
+lemma impossible: "All #i. B()@i ==> F"
+end

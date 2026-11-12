@@ -1,0 +1,16 @@
+theory DiffEmbeddedRestrictions
+begin
+
+// Issue #892: diff mode discarded _restrict, so always_a was falsified on
+// both sides. The equality must constrain each occurrence of this rule.
+rule test:
+  [ In(x) ] --[ _restrict(x = 'a'), A(x) ]-> []
+
+lemma always_a:
+  "All x #i. A(x)@i ==> x = 'a'"
+
+// Check that enforcing the annotation still permits the intended execution.
+lemma a_reachable:
+  exists-trace "Ex #i. A('a')@i"
+
+end

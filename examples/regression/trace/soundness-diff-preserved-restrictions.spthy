@@ -1,0 +1,31 @@
+theory SoundnessDiffPreservedRestrictions
+begin
+
+builtins: hashing
+
+rule Start:
+  [ Fr(~k), Fr(~m) ]
+  --[ Setup(), Started(~k) ]->
+  [ State(~k), Out(h(diff(~k,~m))) ]
+
+rule Finish:
+  [ State(k) ] --[ Finished(k) ]-> [ State(k), Out('ok') ]
+
+// These restrictions span multiple events. Their interpretation is preserved:
+// corresponding rules emit the same markers, fresh inputs are fixed, and the
+// State premise carries the same identifier through every loop iteration.
+restriction OneSetup:
+  "All #i #j. Setup()@i & Setup()@j ==> #i=#j"
+
+restriction OneFinishPerSession:
+  "All k #i #j. Finished(k)@i & Finished(k)@j ==> #i=#j"
+
+restriction FinishAfterStart:
+  "All k #i. Finished(k)@i ==> Ex #j. Started(k)@j & #j<#i"
+
+lemma completed: exists-trace
+  "Ex k #i #j. Started(k)@i & Finished(k)@j & #i<#j"
+
+diffLemma Observational_equivalence:
+
+end

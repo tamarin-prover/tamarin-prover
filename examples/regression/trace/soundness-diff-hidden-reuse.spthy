@@ -1,0 +1,32 @@
+theory SoundnessDiffHiddenReuse
+begin
+
+rule Emit:
+ [] --[ A() ]-> [ Out(diff('a','b')) ]
+
+// Deliberately false assumptions distinguish permitted conditional reuse from
+// a hidden dependency. Both sides use the same name to exercise side identity.
+lemma assumed [left,reuse,diff_reuse]:
+ "All #i. A()@i ==> F"
+lemma assumed [right,reuse,diff_reuse]:
+ "All #i. A()@i ==> F"
+
+lemma hidden [left,hide_lemma=assumed]:
+ "All #i. A()@i ==> F"
+lemma hidden [right,hide_lemma=assumed]:
+ "All #i. A()@i ==> F"
+lemma hidden_all [left,hide_lemma=ALL]: exists-trace
+ "Ex #i. A()@i"
+lemma hidden_all [right,hide_lemma=ALL]: exists-trace
+ "Ex #i. A()@i"
+
+// Reuse remains intentionally conditional when the assumption is visible.
+lemma visible [left]:
+ "All #i. A()@i ==> F"
+lemma visible [right]:
+ "All #i. A()@i ==> F"
+
+diffLemma Hidden [hide_lemma=assumed]:
+diffLemma HiddenAll [hide_lemma=ALL]:
+diffLemma Visible:
+end
