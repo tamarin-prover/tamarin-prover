@@ -12,6 +12,7 @@ author:             Benedikt Schmidt,
                     Ralf Sasse <ralf.sasse@gmail.com>
 maintainer:         Cas Cremers <cremers@cispa.de>,
                     Jannik Dreier <research@jannikdreier.net>,
+                    Kevin Milner <kamilner@kamilner.ca>,
                     Ralf Sasse <ralf.sasse@gmail.com>
 copyright:          Benedikt Schmidt, Simon Meier, Cas Cremers, Jannik Dreier, Ralf Sasse, 2010-2023
 synopsis:           The Tamarin prover for security protocol analysis.
@@ -31,7 +32,7 @@ description:
     operators.
     .
     The paper describing the theory underlying the Tamarin prover was
-    accepted at CSF 2012. Its extended version is available from
+    published at CSF 2012. Its extended version is available from
     <https://tamarin-prover.com>.
     .
     The Tamarin prover supports both a batch analysis mode and the
