@@ -150,7 +150,7 @@ rules:
   cases  ::=  case ('next' case)* 'qed'
   case  ::=  'case' (ident: case_identifier) (_proof_skeleton: proof_skeleton)
   _proof_methods  ::=  >(proof_method | step+)
-  proof_method  ::=  'sorry' | 'simplify' | ('solve' '(' constraint ')') | 'contradiction' | 'induction' | 'rule-equivalence' | 'backward-search' | 'ATTACK'
+  proof_method  ::=  'sorry' | 'simplify' | ('solve' '(' constraint ')') | 'contradiction' | 'induction' | 'rule-equivalence' | 'backward-search' | 'ATTACK' | 'UNFINISHABLE'
   step  ::=  'step' '(' proof_method ')'
   constraint  ::=  premise_constraint | action_constraint | chain_constraint | disjunction_split_constraint | eq_split_constraint
   premise_constraint  ::=  _fact '▶' natural_subscript temporal_var
