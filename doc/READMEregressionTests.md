@@ -85,7 +85,7 @@ options:
                         Disable SAPIC/accountability output parse tests
   --command-tests-only [FILE ...]
                         Run only command checks (all sidecars, or the specified .spthy.test.json files)
-  --tamarin TAMARIN     Tamarin executable (default: TAMARIN environment variable or tamarin-prover in the directory reported by 'stack path --local-bin')
+  --tamarin TAMARIN     Tamarin executable. Defaults to either Stack's binary or TAMARIN environment variable whenever -noi is provided.
 ```
 
 
@@ -155,10 +155,9 @@ companion files under `examples/`. Diagnostic labels and artifact subdirectories
 use the path relative to `examples/`.
 
 `--tamarin` selects the executable for command checks, case-study generation,
-and existing output-parsing checks. It defaults to the `TAMARIN` environment
-variable, or if that is undefined to `tamarin-prover` at the `stack install`
-path. Use `-noi` with an already built executable; otherwise the usual `stack
-install` runs first.
+and existing output-parsing checks. It defaults to `tamarin-prover` at the
+`stack install` path. When `-noi` is provided, it defaults to the the `TAMARIN`
+environment variable.
 
 ### Negative tests
 
