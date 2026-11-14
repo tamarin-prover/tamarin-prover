@@ -589,7 +589,32 @@ def compare():
 		logging.warning("The warnings did not change")
 	return True
 
+def stackTamarin():
+	try:
+		localBin = subprocess.check_output(["stack", "path", "--local-bin"], text=True, stderr=subprocess.PIPE).strip()
+	except (OSError, subprocess.CalledProcessError) as error:
+		raise ValueError(f"'stack path --local-bin' failed: {error}") from error
+	if not localBin:
+		raise ValueError("'stack path --local-bin' returned an empty path")
+	executable = "tamarin-prover.exe" if os.name == "nt" else "tamarin-prover"
+	return os.path.join(os.path.abspath(localBin), executable)
 
+def environmentTamarin():
+	executable = os.environ.get("TAMARIN")
+	if not executable:
+		raise ValueError("TAMARIN is unset or empty")
+	return executable
+
+def selectTamarin():
+	sources = [("stack installed Tamarin", stackTamarin), ("TAMARIN environment variable", environmentTamarin)]
+	if settings.no_install:
+		sources.reverse()
+	(primaryName, primary), (fallbackName, fallback) = sources
+	try:
+		return primary()
+	except ValueError as primaryError:
+		logging.warning("--tamarin and %s (%s) undefined. Falling back to %s.", primaryName, primaryError, fallbackName)
+		return fallback()
 
 def getArguments():
 
@@ -617,7 +642,7 @@ def getArguments():
 	
 
 	parser.add_argument("--command-tests-only", nargs="*", metavar="FILE", help="Run only command checks (all sidecars, or the specified .spthy.test.json files)")
-	parser.add_argument("--tamarin", default=os.environ.get("TAMARIN", "tamarin-prover"), help="Tamarin executable (default: TAMARIN environment variable or tamarin-prover)")
+	parser.add_argument("--tamarin", help="Tamarin executable. Defaults to either Stack's binary or TAMARIN environment variable whenever -noi is provided.")
 
 	## save the settings ##
 	global settings
@@ -650,6 +675,12 @@ def main():
 		output = subprocess.check_output("stack install", shell=True, stderr=subprocess.STDOUT).decode("utf-8")
 		logging.debug(output)
 
+	if settings.tamarin is None:
+		try:
+			settings.tamarin = selectTamarin()
+		except ValueError as error:
+			logging.error("Could not select Tamarin: %s", error)
+			exit(1)
 	settings.tamarin = shutil.which(settings.tamarin) or settings.tamarin
 	command_tests_only = settings.command_tests_only is not None
 
