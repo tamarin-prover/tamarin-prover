@@ -1,0 +1,993 @@
+theory SoundnessSapicDestructorGeneratedBinders
+
+begin
+
+// Function signature and definition of the equational theory E
+
+functions: d/1 [destructor], e/1 [destructor], fst/1, pair/2, snd/1
+equations:
+    d(<x, StateChannel>) = x,
+    e(<x, lock>) = x,
+    fst(<x.1, x.2>) = x.1,
+    snd(<x.1, x.2>) = x.2
+
+heuristic: p
+
+/* looping facts with injective instances: L_CellLocked/2, L_PureState/2
+*/
+
+lemma state_success_reachable:
+  exists-trace "∃ #i. Success( 'state', 'ok' ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #i. (Success( 'state', 'ok' ) @ #i)"
+*/
+simplify
+solve( Success( 'state', 'ok' ) @ #i )
+  case eventSuccessstatey_0_11111111
+  solve( State_11111111( StateChannel, 'ok', StateChannel.1,
+                         StateChannel.2, StateChannel.3, StateChannel.4
+         ) ▶₀ #i )
+    case letydoktag_3_1111111
+    SOLVED // trace found
+  qed
+qed
+
+lemma lock_success_reachable:
+  exists-trace "∃ #i. Success( 'lock', 'ok' ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #i. (Success( 'lock', 'ok' ) @ #i)"
+*/
+simplify
+solve( Success( 'lock', 'ok' ) @ #i )
+  case eventSuccesslockz_0_11121111
+  solve( State_11121111( 'ok', StateChannel, StateChannel.1,
+                         StateChannel.2, lock, lock.1, lock.2
+         ) ▶₀ #i )
+    case letzeoktag_3_1112111
+    SOLVED // trace found
+  qed
+qed
+
+lemma no_state_success:
+  all-traces "∀ y #i. (Success( 'state', y ) @ #i) ⇒ (⊥)"
+/*
+guarded formula characterizing all counter-examples:
+"∃ y #i. (Success( 'state', y ) @ #i)"
+*/
+simplify
+solve( Success( 'state', y ) @ #i )
+  case eventSuccessstatey_0_11111111
+  solve( State_11111111( StateChannel, y, StateChannel.1, StateChannel.2,
+                         StateChannel.3, StateChannel.4
+         ) ▶₀ #i )
+    case letydoktag_3_1111111
+    SOLVED // trace found
+  qed
+qed
+
+lemma no_lock_success:
+  all-traces "∀ z #i. (Success( 'lock', z ) @ #i) ⇒ (⊥)"
+/*
+guarded formula characterizing all counter-examples:
+"∃ z #i. (Success( 'lock', z ) @ #i)"
+*/
+simplify
+solve( Success( 'lock', z ) @ #i )
+  case eventSuccesslockz_0_11121111
+  solve( State_11121111( z, StateChannel, StateChannel.1, StateChannel.2,
+                         lock, lock.1, lock.2
+         ) ▶₀ #i )
+    case letzeoktag_3_1112111
+    SOLVED // trace found
+  qed
+qed
+
+lemma state_failure_unreachable:
+  all-traces "∀ #i. (Fail( 'state' ) @ #i) ⇒ (⊥)"
+/*
+guarded formula characterizing all counter-examples:
+"∃ #i. (Fail( 'state' ) @ #i)"
+*/
+simplify
+solve( Fail( 'state' ) @ #i )
+  case eventFailstate_0_11111112
+  by solve( State_11111112( StateChannel, StateChannel.1, StateChannel.2,
+                            StateChannel.3, StateChannel.4
+            ) ▶₀ #i )
+qed
+
+lemma lock_failure_unreachable:
+  all-traces "∀ #i. (Fail( 'lock' ) @ #i) ⇒ (⊥)"
+/*
+guarded formula characterizing all counter-examples:
+"∃ #i. (Fail( 'lock' ) @ #i)"
+*/
+simplify
+solve( Fail( 'lock' ) @ #i )
+  case eventFaillock_0_11121112
+  by solve( State_11121112( StateChannel, StateChannel.1, StateChannel.2,
+                            lock, lock.1, lock.2
+            ) ▶₀ #i )
+qed
+
+rule (modulo E) Init[color=#ffffff,
+                     process="new StateChannel.4:channel;", issapicrule, role='Process']:
+   [ ] --[ Init( ) ]-> [ State_( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) newStateChannelchannel_0_[color=#ffffff,
+                                          process="new StateChannel.4:channel;", issapicrule, role='Process']:
+   [ State_( ), Fr( StateChannel.4 ) ] --> [ State_1( StateChannel.4 ) ]
+
+  /*
+  rule (modulo AC) newStateChannelchannel_0_[color=#ffffff,
+                                             process="new StateChannel.4:channel;", issapicrule,
+                                             role='Process']:
+     [ State_( ), Fr( StateChannel ) ] --> [ State_1( StateChannel ) ]
+  */
+
+rule (modulo E) newStateChannelchannel_0_1[color=#ffffff,
+                                           process="new StateChannel.3:channel;", issapicrule,
+                                           role='Process']:
+   [ State_1( StateChannel.4 ), Fr( StateChannel.3 ) ]
+  -->
+   [ State_11( StateChannel.3, StateChannel.4 ) ]
+
+  /*
+  rule (modulo AC) newStateChannelchannel_0_1[color=#ffffff,
+                                              process="new StateChannel.3:channel;", issapicrule,
+                                              role='Process']:
+     [ State_1( StateChannel ), Fr( StateChannel.1 ) ]
+    -->
+     [ State_11( StateChannel.1, StateChannel ) ]
+  */
+
+rule (modulo E) newStateChannelchannel_0_11[color=#ffffff,
+                                            process="new StateChannel.2:channel;", issapicrule,
+                                            role='Process']:
+   [ State_11( StateChannel.3, StateChannel.4 ), Fr( StateChannel.2 ) ]
+  -->
+   [ State_111( StateChannel.2, StateChannel.3, StateChannel.4 ) ]
+
+  /*
+  rule (modulo AC) newStateChannelchannel_0_11[color=#ffffff,
+                                               process="new StateChannel.2:channel;", issapicrule,
+                                               role='Process']:
+     [ State_11( StateChannel, StateChannel.1 ), Fr( StateChannel.2 ) ]
+    -->
+     [ State_111( StateChannel.2, StateChannel, StateChannel.1 ) ]
+  */
+
+rule (modulo E) p_0_111[color=#ffffff, process="|", issapicrule,
+                        role='Process']:
+   [ State_111( StateChannel.2, StateChannel.3, StateChannel.4 ) ]
+  -->
+   [
+   State_1111( StateChannel.2, StateChannel.3, StateChannel.4 ),
+   State_1112( StateChannel.2, StateChannel.3, StateChannel.4 )
+   ]
+
+  /*
+  rule (modulo AC) p_0_111[color=#ffffff, process="|", issapicrule,
+                           role='Process']:
+     [ State_111( StateChannel, StateChannel.1, StateChannel.2 ) ]
+    -->
+     [
+     State_1111( StateChannel, StateChannel.1, StateChannel.2 ),
+     State_1112( StateChannel, StateChannel.1, StateChannel.2 )
+     ]
+  */
+
+rule (modulo E) newStateChannel_0_1111[color=#ffffff,
+                                       process="new StateChannel.1;", issapicrule, role='Process']:
+   [
+   State_1111( StateChannel.2, StateChannel.3, StateChannel.4 ),
+   Fr( StateChannel.1 )
+   ]
+  -->
+   [
+   State_11111( StateChannel.1, StateChannel.2, StateChannel.3,
+                StateChannel.4
+   )
+   ]
+
+  /*
+  rule (modulo AC) newStateChannel_0_1111[color=#ffffff,
+                                          process="new StateChannel.1;", issapicrule, role='Process']:
+     [
+     State_1111( StateChannel, StateChannel.1, StateChannel.2 ),
+     Fr( StateChannel.3 )
+     ]
+    -->
+     [
+     State_11111( StateChannel.3, StateChannel, StateChannel.1, StateChannel.2
+     )
+     ]
+  */
+
+rule (modulo E) newStateChannelchannel_0_11111[color=#ffffff,
+                                               process="new StateChannel.5:channel;", issapicrule,
+                                               role='Process']:
+   [
+   State_11111( StateChannel.1, StateChannel.2, StateChannel.3,
+                StateChannel.4
+   ),
+   Fr( StateChannel.5 )
+   ]
+  -->
+   [
+   State_111111( StateChannel.1, StateChannel.2, StateChannel.3,
+                 StateChannel.4, StateChannel.5
+   )
+   ]
+
+  /*
+  rule (modulo AC) newStateChannelchannel_0_11111[color=#ffffff,
+                                                  process="new StateChannel.5:channel;", issapicrule,
+                                                  role='Process']:
+     [
+     State_11111( StateChannel, StateChannel.1, StateChannel.2, StateChannel.3
+     ),
+     Fr( StateChannel.4 )
+     ]
+    -->
+     [
+     State_111111( StateChannel, StateChannel.1, StateChannel.2,
+                   StateChannel.3, StateChannel.4
+     )
+     ]
+  */
+
+rule (modulo E) insertStateChannelvalue_0_111111[color=#ffffff,
+                                                 process="insert StateChannel.1,'value';", issapicrule,
+                                                 role='Process']:
+   [
+   State_111111( StateChannel.1, StateChannel.2, StateChannel.3,
+                 StateChannel.4, StateChannel.5
+   )
+   ]
+  --[ Insert( StateChannel.1, 'value' ) ]->
+   [
+   State_1111111( StateChannel.1, StateChannel.2, StateChannel.3,
+                  StateChannel.4, StateChannel.5
+   )
+   ]
+
+  /*
+  rule (modulo AC) insertStateChannelvalue_0_111111[color=#ffffff,
+                                                    process="insert StateChannel.1,'value';", issapicrule,
+                                                    role='Process']:
+     [
+     State_111111( StateChannel, StateChannel.1, StateChannel.2,
+                   StateChannel.3, StateChannel.4
+     )
+     ]
+    --[ Insert( StateChannel, 'value' ) ]->
+     [
+     State_1111111( StateChannel, StateChannel.1, StateChannel.2,
+                    StateChannel.3, StateChannel.4
+     )
+     ]
+  */
+
+rule (modulo E) letydoktag_0_1111111[color=#ffffff,
+                                     process="let y.1=d(<'ok', 'tag'>)", issapicrule, role='Process']:
+   [
+   State_1111111( StateChannel.1, StateChannel.2, StateChannel.3,
+                  StateChannel.4, StateChannel.5
+   )
+   ]
+  -->
+   [
+   Let_11111111( <'ok', 'tag'>, StateChannel.1, StateChannel.2,
+                 StateChannel.3, StateChannel.4, StateChannel.5
+   )
+   ]
+
+  /*
+  rule (modulo AC) letydoktag_0_1111111[color=#ffffff,
+                                        process="let y.1=d(<'ok', 'tag'>)", issapicrule, role='Process']:
+     [
+     State_1111111( StateChannel, StateChannel.1, StateChannel.2,
+                    StateChannel.3, StateChannel.4
+     )
+     ]
+    -->
+     [
+     Let_11111111( <'ok', 'tag'>, StateChannel, StateChannel.1,
+                   StateChannel.2, StateChannel.3, StateChannel.4
+     )
+     ]
+  */
+
+rule (modulo E) letydoktag_1_1111111[color=#ffffff,
+                                     process="let y.1=d(<'ok', 'tag'>)", no_derivcheck, issapicrule,
+                                     role='Process']:
+   [
+   Let_11111111( <x.6, StateChannel.6>, StateChannel.1, StateChannel.2,
+                 StateChannel.3, StateChannel.4, StateChannel.5
+   )
+   ]
+  -->
+   [
+   Let_111111101( x.6, StateChannel.1, StateChannel.2, StateChannel.3,
+                  StateChannel.4, StateChannel.5
+   )
+   ]
+
+  /*
+  rule (modulo AC) letydoktag_1_1111111[color=#ffffff,
+                                        process="let y.1=d(<'ok', 'tag'>)", no_derivcheck, issapicrule,
+                                        role='Process']:
+     [
+     Let_11111111( <x, StateChannel>, StateChannel.1, StateChannel.2,
+                   StateChannel.3, StateChannel.4, StateChannel.5
+     )
+     ]
+    -->
+     [
+     Let_111111101( x, StateChannel.1, StateChannel.2, StateChannel.3,
+                    StateChannel.4, StateChannel.5
+     )
+     ]
+  */
+
+restriction Restr_letydoktag_2_1111111_1:
+  "∀ #NOW.
+    (Restr_letydoktag_2_1111111_1( ) @ #NOW) ⇒
+    (∀ StateChannel x. (<x, StateChannel> = <'ok', 'tag'>) ⇒ (⊥))"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ #NOW.
+    (Restr_letydoktag_2_1111111_1( ) @ #NOW) ⇒
+    (∀ StateChannel x. (<x, StateChannel> = <'ok', 'tag'>) ⇒ (⊥))"
+  */
+
+rule (modulo E) letydoktag_2_1111111[color=#ffffff,
+                                     process="let y.1=d(<'ok', 'tag'>)", issapicrule, role='Process']:
+   [
+   Let_11111111( <'ok', 'tag'>, StateChannel.1, StateChannel.2,
+                 StateChannel.3, StateChannel.4, StateChannel.5
+   )
+   ]
+  --[ Restr_letydoktag_2_1111111_1( ) ]->
+   [
+   State_11111112( StateChannel.1, StateChannel.2, StateChannel.3,
+                   StateChannel.4, StateChannel.5
+   )
+   ]
+
+  /*
+  rule (modulo AC) letydoktag_2_1111111[color=#ffffff,
+                                        process="let y.1=d(<'ok', 'tag'>)", issapicrule, role='Process']:
+     [
+     Let_11111111( <'ok', 'tag'>, StateChannel, StateChannel.1,
+                   StateChannel.2, StateChannel.3, StateChannel.4
+     )
+     ]
+    --[ Restr_letydoktag_2_1111111_1( ) ]->
+     [
+     State_11111112( StateChannel, StateChannel.1, StateChannel.2,
+                     StateChannel.3, StateChannel.4
+     )
+     ]
+  */
+
+rule (modulo E) letydoktag_3_1111111[color=#ffffff,
+                                     process="let y.1=d(<'ok', 'tag'>)", issapicrule, role='Process']:
+   [
+   Let_111111101( y.1, StateChannel.1, StateChannel.2, StateChannel.3,
+                  StateChannel.4, StateChannel.5
+   )
+   ]
+  -->
+   [
+   State_11111111( StateChannel.1, y.1, StateChannel.2, StateChannel.3,
+                   StateChannel.4, StateChannel.5
+   )
+   ]
+
+  /*
+  rule (modulo AC) letydoktag_3_1111111[color=#ffffff,
+                                        process="let y.1=d(<'ok', 'tag'>)", issapicrule, role='Process']:
+     [
+     Let_111111101( y, StateChannel, StateChannel.1, StateChannel.2,
+                    StateChannel.3, StateChannel.4
+     )
+     ]
+    -->
+     [
+     State_11111111( StateChannel, y, StateChannel.1, StateChannel.2,
+                     StateChannel.3, StateChannel.4
+     )
+     ]
+  */
+
+restriction Restr_letydoktag_4_1111111_1:
+  "∀ x #NOW.
+    (Restr_letydoktag_4_1111111_1( x ) @ #NOW) ⇒ (∀ y. (y = x) ⇒ (⊥))"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ x #NOW.
+    (Restr_letydoktag_4_1111111_1( x ) @ #NOW) ⇒ (∀ y. (y = x) ⇒ (⊥))"
+  */
+
+rule (modulo E) letydoktag_4_1111111[color=#ffffff,
+                                     process="let y.1=d(<'ok', 'tag'>)", issapicrule, role='Process']:
+   [
+   Let_111111101( destructor.8, StateChannel.1, StateChannel.2,
+                  StateChannel.3, StateChannel.4, StateChannel.5
+   )
+   ]
+  --[ Restr_letydoktag_4_1111111_1( destructor.8 ) ]->
+   [
+   State_11111112( StateChannel.1, StateChannel.2, StateChannel.3,
+                   StateChannel.4, StateChannel.5
+   )
+   ]
+
+  /*
+  rule (modulo AC) letydoktag_4_1111111[color=#ffffff,
+                                        process="let y.1=d(<'ok', 'tag'>)", issapicrule, role='Process']:
+     [
+     Let_111111101( destructor, StateChannel, StateChannel.1, StateChannel.2,
+                    StateChannel.3, StateChannel.4
+     )
+     ]
+    --[ Restr_letydoktag_4_1111111_1( destructor ) ]->
+     [
+     State_11111112( StateChannel, StateChannel.1, StateChannel.2,
+                     StateChannel.3, StateChannel.4
+     )
+     ]
+  */
+
+rule (modulo E) eventSuccessstatey_0_11111111[color=#ffffff,
+                                              process="event Success( 'state', y.1 );", issapicrule,
+                                              role='Process']:
+   [
+   State_11111111( StateChannel.1, y.1, StateChannel.2, StateChannel.3,
+                   StateChannel.4, StateChannel.5
+   )
+   ]
+  --[ Success( 'state', y.1 ) ]->
+   [
+   State_111111111( StateChannel.1, y.1, StateChannel.2, StateChannel.3,
+                    StateChannel.4, StateChannel.5
+   )
+   ]
+
+  /*
+  rule (modulo AC) eventSuccessstatey_0_11111111[color=#ffffff,
+                                                 process="event Success( 'state', y.1 );", issapicrule,
+                                                 role='Process']:
+     [
+     State_11111111( StateChannel, y, StateChannel.1, StateChannel.2,
+                     StateChannel.3, StateChannel.4
+     )
+     ]
+    --[ Success( 'state', y ) ]->
+     [
+     State_111111111( StateChannel, y, StateChannel.1, StateChannel.2,
+                      StateChannel.3, StateChannel.4
+     )
+     ]
+  */
+
+rule (modulo E) p_0_111111111[color=#ffffff, process="0", issapicrule,
+                              role='Process']:
+   [
+   State_111111111( StateChannel.1, y.1, StateChannel.2, StateChannel.3,
+                    StateChannel.4, StateChannel.5
+   )
+   ]
+  -->
+   [ ]
+
+  /*
+  rule (modulo AC) p_0_111111111[color=#ffffff, process="0", issapicrule,
+                                 role='Process']:
+     [
+     State_111111111( StateChannel, y, StateChannel.1, StateChannel.2,
+                      StateChannel.3, StateChannel.4
+     )
+     ]
+    -->
+     [ ]
+  */
+
+rule (modulo E) eventFailstate_0_11111112[color=#ffffff,
+                                          process="event Fail( 'state' );", issapicrule, role='Process']:
+   [
+   State_11111112( StateChannel.1, StateChannel.2, StateChannel.3,
+                   StateChannel.4, StateChannel.5
+   )
+   ]
+  --[ Fail( 'state' ) ]->
+   [
+   State_111111121( StateChannel.1, StateChannel.2, StateChannel.3,
+                    StateChannel.4, StateChannel.5
+   )
+   ]
+
+  /*
+  rule (modulo AC) eventFailstate_0_11111112[color=#ffffff,
+                                             process="event Fail( 'state' );", issapicrule, role='Process']:
+     [
+     State_11111112( StateChannel, StateChannel.1, StateChannel.2,
+                     StateChannel.3, StateChannel.4
+     )
+     ]
+    --[ Fail( 'state' ) ]->
+     [
+     State_111111121( StateChannel, StateChannel.1, StateChannel.2,
+                      StateChannel.3, StateChannel.4
+     )
+     ]
+  */
+
+rule (modulo E) p_0_111111121[color=#ffffff, process="0", issapicrule,
+                              role='Process']:
+   [
+   State_111111121( StateChannel.1, StateChannel.2, StateChannel.3,
+                    StateChannel.4, StateChannel.5
+   )
+   ]
+  -->
+   [ ]
+
+  /*
+  rule (modulo AC) p_0_111111121[color=#ffffff, process="0", issapicrule,
+                                 role='Process']:
+     [
+     State_111111121( StateChannel, StateChannel.1, StateChannel.2,
+                      StateChannel.3, StateChannel.4
+     )
+     ]
+    -->
+     [ ]
+  */
+
+rule (modulo E) locka_0_1112[color=#ffffff, process="lock 'a';",
+                             issapicrule, role='Process']:
+   [
+   State_1112( StateChannel.2, StateChannel.3, StateChannel.4 ),
+   Fr( lock.7 )
+   ]
+  --[ Lock_7( '7', lock.7, 'a' ), Lock( '7', lock.7, 'a' ) ]->
+   [ State_11121( StateChannel.2, StateChannel.3, StateChannel.4, lock.7 ) ]
+
+  /*
+  rule (modulo AC) locka_0_1112[color=#ffffff, process="lock 'a';",
+                                issapicrule, role='Process']:
+     [ State_1112( StateChannel, StateChannel.1, StateChannel.2 ), Fr( lock )
+     ]
+    --[ Lock_7( '7', lock, 'a' ), Lock( '7', lock, 'a' ) ]->
+     [ State_11121( StateChannel, StateChannel.1, StateChannel.2, lock ) ]
+  */
+
+rule (modulo E) lockb_0_11121[color=#ffffff, process="lock 'b';",
+                              issapicrule, role='Process']:
+   [
+   State_11121( StateChannel.2, StateChannel.3, StateChannel.4, lock.7 ),
+   Fr( lock.8 )
+   ]
+  --[ Lock_8( '8', lock.8, 'b' ), Lock( '8', lock.8, 'b' ) ]->
+   [
+   State_111211( StateChannel.2, StateChannel.3, StateChannel.4, lock.7,
+                 lock.8
+   )
+   ]
+
+  /*
+  rule (modulo AC) lockb_0_11121[color=#ffffff, process="lock 'b';",
+                                 issapicrule, role='Process']:
+     [
+     State_11121( StateChannel, StateChannel.1, StateChannel.2, lock ),
+     Fr( lock.1 )
+     ]
+    --[ Lock_8( '8', lock.1, 'b' ), Lock( '8', lock.1, 'b' ) ]->
+     [
+     State_111211( StateChannel, StateChannel.1, StateChannel.2, lock, lock.1
+     )
+     ]
+  */
+
+rule (modulo E) lockc_0_111211[color=#ffffff, process="lock 'c';",
+                               issapicrule, role='Process']:
+   [
+   State_111211( StateChannel.2, StateChannel.3, StateChannel.4, lock.7,
+                 lock.8
+   ),
+   Fr( lock.9 )
+   ]
+  --[ Lock_9( '9', lock.9, 'c' ), Lock( '9', lock.9, 'c' ) ]->
+   [
+   State_1112111( StateChannel.2, StateChannel.3, StateChannel.4, lock.7,
+                  lock.8, lock.9
+   )
+   ]
+
+  /*
+  rule (modulo AC) lockc_0_111211[color=#ffffff, process="lock 'c';",
+                                  issapicrule, role='Process']:
+     [
+     State_111211( StateChannel, StateChannel.1, StateChannel.2, lock, lock.1
+     ),
+     Fr( lock.2 )
+     ]
+    --[ Lock_9( '9', lock.2, 'c' ), Lock( '9', lock.2, 'c' ) ]->
+     [
+     State_1112111( StateChannel, StateChannel.1, StateChannel.2, lock,
+                    lock.1, lock.2
+     )
+     ]
+  */
+
+rule (modulo E) letzeoktag_0_1112111[color=#ffffff,
+                                     process="let z.1=e(<'ok', 'tag'>)", issapicrule, role='Process']:
+   [
+   State_1112111( StateChannel.2, StateChannel.3, StateChannel.4, lock.7,
+                  lock.8, lock.9
+   )
+   ]
+  -->
+   [
+   Let_11121111( <'ok', 'tag'>, StateChannel.2, StateChannel.3,
+                 StateChannel.4, lock.7, lock.8, lock.9
+   )
+   ]
+
+  /*
+  rule (modulo AC) letzeoktag_0_1112111[color=#ffffff,
+                                        process="let z.1=e(<'ok', 'tag'>)", issapicrule, role='Process']:
+     [
+     State_1112111( StateChannel, StateChannel.1, StateChannel.2, lock,
+                    lock.1, lock.2
+     )
+     ]
+    -->
+     [
+     Let_11121111( <'ok', 'tag'>, StateChannel, StateChannel.1,
+                   StateChannel.2, lock, lock.1, lock.2
+     )
+     ]
+  */
+
+rule (modulo E) letzeoktag_1_1112111[color=#ffffff,
+                                     process="let z.1=e(<'ok', 'tag'>)", no_derivcheck, issapicrule,
+                                     role='Process']:
+   [
+   Let_11121111( <x.6, lock.6>, StateChannel.2, StateChannel.3,
+                 StateChannel.4, lock.7, lock.8, lock.9
+   )
+   ]
+  -->
+   [
+   Let_111211101( x.6, StateChannel.2, StateChannel.3, StateChannel.4,
+                  lock.7, lock.8, lock.9
+   )
+   ]
+
+  /*
+  rule (modulo AC) letzeoktag_1_1112111[color=#ffffff,
+                                        process="let z.1=e(<'ok', 'tag'>)", no_derivcheck, issapicrule,
+                                        role='Process']:
+     [
+     Let_11121111( <x, lock>, StateChannel, StateChannel.1, StateChannel.2,
+                   lock.1, lock.2, lock.3
+     )
+     ]
+    -->
+     [
+     Let_111211101( x, StateChannel, StateChannel.1, StateChannel.2, lock.1,
+                    lock.2, lock.3
+     )
+     ]
+  */
+
+restriction Restr_letzeoktag_2_1112111_1:
+  "∀ #NOW.
+    (Restr_letzeoktag_2_1112111_1( ) @ #NOW) ⇒
+    (∀ lock x. (<x, lock> = <'ok', 'tag'>) ⇒ (⊥))"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ #NOW.
+    (Restr_letzeoktag_2_1112111_1( ) @ #NOW) ⇒
+    (∀ lock x. (<x, lock> = <'ok', 'tag'>) ⇒ (⊥))"
+  */
+
+rule (modulo E) letzeoktag_2_1112111[color=#ffffff,
+                                     process="let z.1=e(<'ok', 'tag'>)", issapicrule, role='Process']:
+   [
+   Let_11121111( <'ok', 'tag'>, StateChannel.2, StateChannel.3,
+                 StateChannel.4, lock.7, lock.8, lock.9
+   )
+   ]
+  --[ Restr_letzeoktag_2_1112111_1( ) ]->
+   [
+   State_11121112( StateChannel.2, StateChannel.3, StateChannel.4, lock.7,
+                   lock.8, lock.9
+   )
+   ]
+
+  /*
+  rule (modulo AC) letzeoktag_2_1112111[color=#ffffff,
+                                        process="let z.1=e(<'ok', 'tag'>)", issapicrule, role='Process']:
+     [
+     Let_11121111( <'ok', 'tag'>, StateChannel, StateChannel.1,
+                   StateChannel.2, lock, lock.1, lock.2
+     )
+     ]
+    --[ Restr_letzeoktag_2_1112111_1( ) ]->
+     [
+     State_11121112( StateChannel, StateChannel.1, StateChannel.2, lock,
+                     lock.1, lock.2
+     )
+     ]
+  */
+
+rule (modulo E) letzeoktag_3_1112111[color=#ffffff,
+                                     process="let z.1=e(<'ok', 'tag'>)", issapicrule, role='Process']:
+   [
+   Let_111211101( z.1, StateChannel.2, StateChannel.3, StateChannel.4,
+                  lock.7, lock.8, lock.9
+   )
+   ]
+  -->
+   [
+   State_11121111( z.1, StateChannel.2, StateChannel.3, StateChannel.4,
+                   lock.7, lock.8, lock.9
+   )
+   ]
+
+  /*
+  rule (modulo AC) letzeoktag_3_1112111[color=#ffffff,
+                                        process="let z.1=e(<'ok', 'tag'>)", issapicrule, role='Process']:
+     [
+     Let_111211101( z, StateChannel, StateChannel.1, StateChannel.2, lock,
+                    lock.1, lock.2
+     )
+     ]
+    -->
+     [
+     State_11121111( z, StateChannel, StateChannel.1, StateChannel.2, lock,
+                     lock.1, lock.2
+     )
+     ]
+  */
+
+restriction Restr_letzeoktag_4_1112111_1:
+  "∀ x #NOW.
+    (Restr_letzeoktag_4_1112111_1( x ) @ #NOW) ⇒ (∀ z. (z = x) ⇒ (⊥))"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ x #NOW.
+    (Restr_letzeoktag_4_1112111_1( x ) @ #NOW) ⇒ (∀ z. (z = x) ⇒ (⊥))"
+  */
+
+rule (modulo E) letzeoktag_4_1112111[color=#ffffff,
+                                     process="let z.1=e(<'ok', 'tag'>)", issapicrule, role='Process']:
+   [
+   Let_111211101( destructor.9, StateChannel.2, StateChannel.3,
+                  StateChannel.4, lock.7, lock.8, lock.9
+   )
+   ]
+  --[ Restr_letzeoktag_4_1112111_1( destructor.9 ) ]->
+   [
+   State_11121112( StateChannel.2, StateChannel.3, StateChannel.4, lock.7,
+                   lock.8, lock.9
+   )
+   ]
+
+  /*
+  rule (modulo AC) letzeoktag_4_1112111[color=#ffffff,
+                                        process="let z.1=e(<'ok', 'tag'>)", issapicrule, role='Process']:
+     [
+     Let_111211101( destructor, StateChannel, StateChannel.1, StateChannel.2,
+                    lock, lock.1, lock.2
+     )
+     ]
+    --[ Restr_letzeoktag_4_1112111_1( destructor ) ]->
+     [
+     State_11121112( StateChannel, StateChannel.1, StateChannel.2, lock,
+                     lock.1, lock.2
+     )
+     ]
+  */
+
+rule (modulo E) eventSuccesslockz_0_11121111[color=#ffffff,
+                                             process="event Success( 'lock', z.1 );", issapicrule,
+                                             role='Process']:
+   [
+   State_11121111( z.1, StateChannel.2, StateChannel.3, StateChannel.4,
+                   lock.7, lock.8, lock.9
+   )
+   ]
+  --[ Success( 'lock', z.1 ) ]->
+   [
+   State_111211111( z.1, StateChannel.2, StateChannel.3, StateChannel.4,
+                    lock.7, lock.8, lock.9
+   )
+   ]
+
+  /*
+  rule (modulo AC) eventSuccesslockz_0_11121111[color=#ffffff,
+                                                process="event Success( 'lock', z.1 );", issapicrule,
+                                                role='Process']:
+     [
+     State_11121111( z, StateChannel, StateChannel.1, StateChannel.2, lock,
+                     lock.1, lock.2
+     )
+     ]
+    --[ Success( 'lock', z ) ]->
+     [
+     State_111211111( z, StateChannel, StateChannel.1, StateChannel.2, lock,
+                      lock.1, lock.2
+     )
+     ]
+  */
+
+rule (modulo E) p_0_111211111[color=#ffffff, process="0", issapicrule,
+                              role='Process']:
+   [
+   State_111211111( z.1, StateChannel.2, StateChannel.3, StateChannel.4,
+                    lock.7, lock.8, lock.9
+   )
+   ]
+  -->
+   [ ]
+
+  /*
+  rule (modulo AC) p_0_111211111[color=#ffffff, process="0", issapicrule,
+                                 role='Process']:
+     [
+     State_111211111( z, StateChannel, StateChannel.1, StateChannel.2, lock,
+                      lock.1, lock.2
+     )
+     ]
+    -->
+     [ ]
+  */
+
+rule (modulo E) eventFaillock_0_11121112[color=#ffffff,
+                                         process="event Fail( 'lock' );", issapicrule, role='Process']:
+   [
+   State_11121112( StateChannel.2, StateChannel.3, StateChannel.4, lock.7,
+                   lock.8, lock.9
+   )
+   ]
+  --[ Fail( 'lock' ) ]->
+   [
+   State_111211121( StateChannel.2, StateChannel.3, StateChannel.4, lock.7,
+                    lock.8, lock.9
+   )
+   ]
+
+  /*
+  rule (modulo AC) eventFaillock_0_11121112[color=#ffffff,
+                                            process="event Fail( 'lock' );", issapicrule, role='Process']:
+     [
+     State_11121112( StateChannel, StateChannel.1, StateChannel.2, lock,
+                     lock.1, lock.2
+     )
+     ]
+    --[ Fail( 'lock' ) ]->
+     [
+     State_111211121( StateChannel, StateChannel.1, StateChannel.2, lock,
+                      lock.1, lock.2
+     )
+     ]
+  */
+
+rule (modulo E) p_0_111211121[color=#ffffff, process="0", issapicrule,
+                              role='Process']:
+   [
+   State_111211121( StateChannel.2, StateChannel.3, StateChannel.4, lock.7,
+                    lock.8, lock.9
+   )
+   ]
+  -->
+   [ ]
+
+  /*
+  rule (modulo AC) p_0_111211121[color=#ffffff, process="0", issapicrule,
+                                 role='Process']:
+     [
+     State_111211121( StateChannel, StateChannel.1, StateChannel.2, lock,
+                      lock.1, lock.2
+     )
+     ]
+    -->
+     [ ]
+  */
+
+restriction single_session:
+  "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
+  */
+
+restriction locking_7:
+  "∀ p pp l x lp #t1 #t3.
+    ((Lock_7( p, l, x ) @ #t1) ∧ (Lock( pp, lp, x ) @ #t3)) ⇒
+    ((#t3 < #t1) ∨ (#t1 = #t3))"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ p pp l x lp #t1 #t3.
+    ((Lock_7( p, l, x ) @ #t1) ∧ (Lock( pp, lp, x ) @ #t3)) ⇒
+    ((#t3 < #t1) ∨ (#t1 = #t3))"
+  */
+
+restriction locking_8:
+  "∀ p pp l x lp #t1 #t3.
+    ((Lock_8( p, l, x ) @ #t1) ∧ (Lock( pp, lp, x ) @ #t3)) ⇒
+    ((#t3 < #t1) ∨ (#t1 = #t3))"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ p pp l x lp #t1 #t3.
+    ((Lock_8( p, l, x ) @ #t1) ∧ (Lock( pp, lp, x ) @ #t3)) ⇒
+    ((#t3 < #t1) ∨ (#t1 = #t3))"
+  */
+
+restriction locking_9:
+  "∀ p pp l x lp #t1 #t3.
+    ((Lock_9( p, l, x ) @ #t1) ∧ (Lock( pp, lp, x ) @ #t3)) ⇒
+    ((#t3 < #t1) ∨ (#t1 = #t3))"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ p pp l x lp #t1 #t3.
+    ((Lock_9( p, l, x ) @ #t1) ∧ (Lock( pp, lp, x ) @ #t3)) ⇒
+    ((#t3 < #t1) ∨ (#t1 = #t3))"
+  */
+
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.13.0
+Maude version 3.5.1
+Git revision: 5a753a172c7984e9403bc650a37a8223367bc1c5, branch: sapic-destructors
+Compiled at: 2026-09-25 19:30:59.558380567 UTC
+*/
+
+end
+/* Output
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/regression/trace/soundness-sapic-destructor-generated-binders.spthy
+
+  output:          examples/regression/trace/soundness-sapic-destructor-generated-binders.spthy.tmp
+  processing time: 0.52s
+  
+  state_success_reachable (exists-trace): verified (4 steps)
+  lock_success_reachable (exists-trace): verified (4 steps)
+  no_state_success (all-traces): falsified - found trace (4 steps)
+  no_lock_success (all-traces): falsified - found trace (4 steps)
+  state_failure_unreachable (all-traces): verified (3 steps)
+  lock_failure_unreachable (all-traces): verified (3 steps)
+
+==============================================================================
+*/

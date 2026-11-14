@@ -1,0 +1,14 @@
+{
+  "tests": [
+    {
+      "name": "ordinary-formula",
+      "args": [
+        "--quit-on-warning"
+      ],
+      "exit_code": 1,
+      "contains": [
+        "uses quantifiers with wrong sort"
+      ]
+    }
+  ]
+}

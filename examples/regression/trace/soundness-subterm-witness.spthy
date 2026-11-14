@@ -1,0 +1,39 @@
+theory SoundnessSubtermWitness
+begin
+
+builtins: hashing
+
+rule Gen:
+  [ Fr(~n) ] --[ Secret(~n) ]-> []
+
+rule Recv:
+  [ In(x) ] --[ Recv(x) ]-> []
+
+rule PublishHash:
+  [ Fr(~n) ] --[ Published(~n) ]-> [ Out(h(~n)) ]
+
+// The secret is never released. The residual n << x constraint does not
+// justify a witness; both searches must remain incomplete, not claim a trace.
+lemma hidden_subterm:
+  "All n x #i #j. Secret(n)@i & Recv(x)@j ==> not (n << x)"
+
+lemma hidden_subterm_exists: exists-trace
+  "Ex n x #i #j. Secret(n)@i & Recv(x)@j & n << x"
+
+// A split must not hide an unresolved subterm in a constructor argument.
+lemma hidden_nested_subterm: exists-trace
+  "Ex n x #i #j. Secret(n)@i & Recv(x)@j & n << h(x)"
+
+// A concrete public witness remains provable.
+lemma public_subterm: exists-trace
+  "Ex x #i. Recv(x)@i & x = h('a') & 'a' << x"
+
+// Knowing a containing term does not require knowing its proper subterm.
+lemma opaque_subterm: exists-trace
+  "Ex n x #i #j. Published(n)@i & Recv(x)@j & x = h(n) & n << x"
+
+// Negative residual constraints do not require a containing witness.
+lemma absent_subterm: exists-trace
+  "Ex n x #i #j. Secret(n)@i & Recv(x)@j & not (n << x)"
+
+end

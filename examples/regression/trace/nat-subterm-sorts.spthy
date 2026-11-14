@@ -1,0 +1,64 @@
+theory NatSubtermSorts
+begin
+
+builtins: natural-numbers, hashing
+
+rule Hash:
+  [ In(%n) ] --[ Hash(h('a'), %n) ]-> []
+
+rule Compare:
+  [ In(x), In(%n) ] --[ Compare(x, %n) ]-> []
+
+rule Restricted:
+  [ In(x), In(%n) ] --[ A(x), B(x, %n) ]-> []
+
+restriction no_nat:
+  "All %m #i. A(%m)@i ==> F"
+
+// A negative mixed-sort subterm must not be flipped to natural arithmetic.
+// Expected: falsified; the reachable hash is not a subterm of a natural.
+lemma hash_is_smaller:
+  "All x %n #i. Hash(x, %n)@i ==> x << %n"
+
+// Expected: verified.
+lemma hash_is_not_smaller:
+  "All x %n #i. Hash(x, %n)@i ==> not (x << %n)"
+
+lemma hash_event_exists:
+  exists-trace "Ex x %n #i. Hash(x, %n)@i"
+
+// Refining a positive mixed-sort subterm must preserve valid witnesses.
+lemma mixed_positive_exists:
+  exists-trace "Ex x %n #i. Compare(x, %n)@i & x << %n"
+
+lemma mixed_negative_exists:
+  exists-trace "Ex x %n #i. Compare(x, %n)@i & not (x << %n)"
+
+// A deferred negative subterm must still hold when x becomes a natural.
+lemma mixed_negative_equal_exists:
+  exists-trace
+  "Ex x %n #i. Compare(x, %n)@i & x = %n & not (x << %n)"
+
+lemma typed_successor_exists:
+  exists-trace "Ex #i. Compare(%1, %1 %+ %1)@i & %1 << %1 %+ %1"
+
+lemma typed_not_reflexive:
+  "All %n #i. Compare(%n, %n)@i ==> not (%n << %n)"
+
+// Keep the valid negative-flipping rule for two natural operands.
+lemma typed_total_order:
+  "All %m %n #i. Compare(%m, %n)@i
+    ==> (%m << %n | %n << %m | %m = %n)"
+
+// Positive x << %n must refine x to nat and activate no_nat.
+lemma restricted_subterm:
+  "All x %n #i. B(x, %n)@i ==> not (x << %n)"
+
+lemma restricted_equality:
+  "All x %n #i. B(x, %n)@i ==> not (x = %n)"
+
+// The restriction still permits non-natural messages.
+lemma restricted_non_nat_exists:
+  exists-trace "Ex %n #i. B('a', %n)@i"
+
+end

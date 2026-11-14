@@ -1,0 +1,25 @@
+theory SapicLookupDestructorProgress
+begin
+options: translation-progress
+functions: box/1, unbox/1 [destructor]
+equations: unbox(box(<x,y>)) = <x,y>
+
+#ifdef UNBOUND
+// Preserving the lookup binding must not exempt unrelated unbound variables.
+rule Unbound: [] --> [Out(unbound)]
+#endif
+
+// Compression joins the lookup with the silent start of the destructor let.
+// Its result is bound by the lookup restriction, even though the merged rule
+// has no premise binding v. The translation must retain that information.
+#ifdef NESTED
+process: insert 'cell','value'; lookup 'cell' as v in
+  let <a,b> = unbox(box(unbox(box(<v,v>)))) in event Seen(a,b)
+#else
+process: insert 'cell','value'; lookup 'cell' as v in
+  let <a,b> = unbox(box(<v,v>)) in event Seen(a,b)
+#endif
+
+lemma reachable: exists-trace "Ex #i. Seen('value','value')@i"
+lemma value_preserved: "All a b #i. Seen(a,b)@i ==> a = 'value' & b = 'value'"
+end

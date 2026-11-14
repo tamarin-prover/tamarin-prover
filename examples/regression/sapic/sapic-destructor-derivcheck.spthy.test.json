@@ -1,0 +1,11 @@
+{
+  "tests": [
+    {
+      "name": "generated-equation-match-supported",
+      "args": [
+        "--derivcheck-timeout=5",
+        "--quit-on-warning"
+      ]
+    }
+  ]
+}

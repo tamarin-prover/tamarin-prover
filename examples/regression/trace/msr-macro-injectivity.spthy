@@ -1,0 +1,25 @@
+theory MacroInjectivity
+begin
+
+macros: identity(x) = x, constant(x) = 'c', projection(x) = fst(<x, 'c'>)
+
+rule Init:
+  [Fr(~id), In(x)] --> [S(~id, x), C(~id, x), P(~id, x)]
+rule Identity:
+  [S(~id, x)] --[Identity(~id, x)]-> [S(~id, identity(x))]
+rule Constant:
+  [C(~id, x)] --[Constant(~id, x)]-> [C(~id, constant(x))]
+rule Projection:
+  [P(~id, x)] --[Projection(~id, x)]-> [P(~id, projection(x))]
+
+// Macro calls must not be mistaken for strictly increasing constructors.
+lemma identity_twice: exists-trace
+  "Ex id x #i #j. Identity(id,x)@i & Identity(id,x)@j & not (#i = #j)"
+lemma identity_once:
+  "All id x #i #j. Identity(id,x)@i & Identity(id,x)@j ==> #i = #j"
+lemma constant_twice: exists-trace
+  "Ex id #i #j. Constant(id,'c')@i & Constant(id,'c')@j & not (#i = #j)"
+lemma projection_twice: exists-trace
+  "Ex id x #i #j. Projection(id,x)@i & Projection(id,x)@j & not (#i = #j)"
+
+end

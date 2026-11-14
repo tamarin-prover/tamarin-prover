@@ -1,0 +1,28 @@
+{
+  "tests": [
+    {
+      "name": "ordinary",
+      "args": [
+        "--quit-on-warning"
+      ],
+      "checks": [
+        "roundtrip"
+      ]
+    },
+    {
+      "name": "progress",
+      "args": [
+        "--prove",
+        "--quit-on-warning",
+        "-DPROGRESS"
+      ],
+      "contains": [
+        "seen (exists-trace): verified",
+        "nested (exists-trace): verified",
+        "missing (exists-trace): verified",
+        "mismatch (exists-trace): verified",
+        "no_wrong (all-traces): verified"
+      ]
+    }
+  ]
+}

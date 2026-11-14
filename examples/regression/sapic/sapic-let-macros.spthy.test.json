@@ -1,0 +1,51 @@
+{
+  "tests": [
+    {
+      "name": "macro-evaluation",
+      "args": [
+        "--quit-on-warning",
+        "--derivcheck-timeout=5",
+        "--prove"
+      ],
+      "contains": [
+        "root (exists-trace): verified",
+        "nested (exists-trace): verified",
+        "pattern (exists-trace): verified",
+        "pattern_macro (exists-trace): verified",
+        "composed (exists-trace): verified",
+        "evaluation (exists-trace): verified",
+        "argument (exists-trace): verified",
+        "discarded (exists-trace): verified",
+        "typed (exists-trace): verified",
+        "destructor_failure (exists-trace): verified",
+        "undefined_failure (exists-trace): verified",
+        "values (all-traces): verified",
+        "no_wrong (all-traces): verified"
+      ]
+    },
+    {
+      "name": "macro-evaluation-progress",
+      "args": [
+        "--quit-on-warning",
+        "--derivcheck-timeout=5",
+        "--prove",
+        "-DPROGRESS"
+      ],
+      "contains": [
+        "root (exists-trace): verified",
+        "nested (exists-trace): verified",
+        "pattern (exists-trace): verified",
+        "pattern_macro (exists-trace): verified",
+        "composed (exists-trace): verified",
+        "evaluation (exists-trace): verified",
+        "argument (exists-trace): verified",
+        "discarded (exists-trace): verified",
+        "typed (exists-trace): verified",
+        "destructor_failure (exists-trace): verified",
+        "undefined_failure (exists-trace): verified",
+        "values (all-traces): verified",
+        "no_wrong (all-traces): verified"
+      ]
+    }
+  ]
+}

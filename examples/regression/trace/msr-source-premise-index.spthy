@@ -1,0 +1,40 @@
+theory SourcePremiseIndex
+begin
+
+rule Create: [Fr(~x)] --[Cr(~x)]-> [S(~x), !Permit(~x)]
+rule Twice: [S(x), S(x)] --[Twice(x)]-> []
+rule Three: [S(x), !Permit(x), S(x)] --[Three(x)]-> []
+rule CreateTwo: [Fr(~x)] --> [T(~x), T(~x)]
+rule ConsumeTwo: [T(x), T(x)] --[ConsumedTwo(x)]-> []
+
+tactic: prem1
+presort: S
+prio:
+  regex "▶₁"
+
+tactic: prem2
+presort: S
+prio:
+  regex "▶₂"
+
+// A source for premise one must not mark premise zero as solved.
+lemma impossible_second_first [heuristic={prem1}]:
+  "All x #i. Twice(x)@i ==> F"
+lemma impossible_default:
+  "All x #i. Twice(x)@i ==> F"
+lemma no_witness_second_first [heuristic={prem1}]: exists-trace
+  "Ex x #i. Twice(x)@i"
+lemma no_witness_default: exists-trace
+  "Ex x #i. Twice(x)@i"
+lemma impossible_third_first [heuristic={prem2}]:
+  "All x #i. Three(x)@i ==> F"
+lemma no_witness_third_first [heuristic={prem2}]: exists-trace
+  "Ex x #i. Three(x)@i"
+
+// Distinct linear tokens from one rule may supply the two premises.
+lemma witness_second_first [heuristic={prem1}]: exists-trace
+  "Ex x #i. ConsumedTwo(x)@i"
+lemma witness_default: exists-trace
+  "Ex x #i. ConsumedTwo(x)@i"
+
+end

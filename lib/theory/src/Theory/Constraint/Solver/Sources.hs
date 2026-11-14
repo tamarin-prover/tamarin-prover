@@ -55,6 +55,7 @@ import           Control.Parallel.Strategies
 import           Extension.Data.Label
 import           Extension.Prelude
 
+import qualified Theory.Constraint.System.StoredFormulas as Stored
 import           Theory.Constraint.Solver.Contradictions (contradictorySystem)
 import           Theory.Constraint.Solver.Goals
 import           Theory.Constraint.Solver.AnnotatedGoals
@@ -285,6 +286,11 @@ matchToGoal ctxt th0 goalTerm =
             subst:_ ->
                 let refine = do
                         modM sEdges (substNodePrem pPat (iPat, premIdxTerm))
+                        -- The source's solved premise goal must move with
+                        -- its edge, otherwise it can solve a different
+                        -- premise when the source system is conjoined.
+                        modM sGoals (M.mapKeysWith combineGoalStatus
+                            (substGoalPrem pPat (iPat, premIdxTerm)))
                         refineSubst subst
                 in Just $ snd $ refineSource ctxt refine (set cdGoal goalTerm th)
 
@@ -312,6 +318,12 @@ matchToGoal ctxt th0 goalTerm =
 
     substNodePrem from to = S.map
         (\ e@(Edge c p) -> if p == from then Edge c to else e)
+
+    substGoalPrem from to (PremiseG p fa)
+        | p == from = PremiseG to fa
+    substGoalPrem from to (ChainG c p)
+        | p == from = ChainG c to
+    substGoalPrem _ _ goal = goal
 
     doMatch match = runReader (solveMatchLNTerm match) (get pcMaudeHandle ctxt)
 
@@ -467,12 +479,12 @@ refineWithSourceAsms parameters assumptions ctxt cases0 =
   where
     modifySystems   = modify cdCases . fmap . second
     updateSystem se =
-        modify sFormulas (S.union (S.fromList assumptions)) $
+        modify sFormulas (Stored.union (Stored.fromList assumptions)) $
         set sSourceKind RefinedSource                       $ se
     removeFormulas =
         modify sGoals (M.filterWithKey isNoDisjGoal)
-      . set sFormulas S.empty
-      . set sSolvedFormulas S.empty
+      . set sFormulas Stored.empty
+      . set sSolvedFormulas Stored.empty
 
     isNoDisjGoal (DisjG _)  _ = False
     isNoDisjGoal _          _ = True
