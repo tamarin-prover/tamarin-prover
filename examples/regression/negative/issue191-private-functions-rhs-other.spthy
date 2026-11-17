@@ -1,0 +1,23 @@
+theory issue191NoOutput
+begin
+
+functions: f/2, s/0 [private],
+           g/1, k/0 [private],
+           h/1, i/2, l/0 [private]
+equations [convergent]: f(x,x) = s,
+           g(s) = k,
+           h(x) = i(x,l)
+
+// Should be false
+lemma secretS: "All #i. K(s) @ #i ==> F"
+
+// Should be false
+lemma secretK: "All #i. K(k) @ #i ==> F"
+
+// Should be false
+lemma secretIL: "All x #i. K(i(x,l)) @ #i ==> F"
+
+
+rule Leak: [ Fr(~n) ] --> [ Out(~n) ]
+
+end

@@ -9,9 +9,11 @@ rule OutK:
   --[  ]->
     [ Out( b ) ]
 
+// should be false
 lemma secretB:
    "All #i. K(b) @ #i ==> F"
 
+// should be false
 lemma secretP:
    "All #i. K(p(a,a)) @ #i ==> F"
 
