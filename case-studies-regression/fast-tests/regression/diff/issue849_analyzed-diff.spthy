@@ -1,0 +1,62 @@
+theory issue849
+
+begin
+
+// Function signature and definition of the equational theory E
+
+functions: c/0, f/2 [NDC-diff], fst/1, g/1, h/1, pair/2, snd/1
+equations:
+    f(h(g(x)), h(g(x))) = c,
+    fst(<x.1, x.2>) = x.1,
+    snd(<x.1, x.2>) = x.2
+
+rule (modulo E) out:
+   [ Fr( ~x ) ] --> [ Out( diff(~x, g(~x)) ) ]
+
+diffLemma Observational_equivalence:
+rule-equivalence
+  case Rule_Destrd_0_1_f_h
+  backward-search
+    case RHS
+    step( simplify )
+    step( solve( !KD( g(x) ) ▶₀ #i ) )
+      case out
+      step( solve( (#vl, 0) ~~> (#i, 0) ) )
+        case g
+        step( solve( !KU( h(g(~x)) ) @ #vk ) )
+          case c_h
+          step( solve( !KU( g(~x) ) @ #vk.1 ) )
+            case out
+            by ATTACK // trace found
+          qed
+        qed
+      qed
+    qed
+  qed
+qed
+
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.13.0
+Maude version 3.5.1
+Git revision: 0273c5b9b0c3844b2f3102c97fcc3f914370fa9c (with uncommited changes), branch: disallow-private-functions-RHS
+Compiled at: 2026-11-17 13:54:04.851616 UTC
+*/
+
+end
+/* Output
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/regression/diff/issue849.spthy
+
+  output:          examples/regression/diff/issue849.spthy.tmp
+  processing time: 0.05s
+  
+  DiffLemma:  Observational_equivalence : falsified - found trace (8 steps)
+
+==============================================================================
+*/
