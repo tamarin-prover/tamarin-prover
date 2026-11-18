@@ -195,6 +195,9 @@ next
   case Rule_Destrd_0_verify
   by sorry
 next
+  case Rule_Destrd_1_verify
+  by sorry
+next
   case Rule_Destrd_verify
   by sorry /* unannotated */
 next
@@ -396,8 +399,8 @@ qed
 Generated from:
 Tamarin version 1.13.0
 Maude version 3.5.1
-Git revision: 41bc81379b23681e7057314a5cf66a25c45e1986, branch: canonicalise-subst
-Compiled at: 2026-07-27 16:11:34.947223 UTC
+Git revision: e47a3d9e66375e4f1411173ccadd3df1df124247 (with uncommited changes), branch: fix-deconstruction-rules-constant-rhs
+Compiled at: 2026-11-18 10:40:02.45602 UTC
 */
 
 end
@@ -409,7 +412,7 @@ summary of summaries:
 analyzed: examples/ccs15/Attack_TPM_Envelope.spthy
 
   output:          examples/ccs15/Attack_TPM_Envelope.spthy.tmp
-  processing time: 0.09s
+  processing time: 0.11s
   
   RHS :  types (all-traces): analysis incomplete (1 steps)
   LHS :  types (all-traces): analysis incomplete (1 steps)
@@ -419,7 +422,7 @@ analyzed: examples/ccs15/Attack_TPM_Envelope.spthy
   LHS :  executable (exists-trace): analysis incomplete (1 steps)
   RHS :  Secret_and_Denied_exclusive (all-traces): analysis incomplete (1 steps)
   LHS :  Secret_and_Denied_exclusive (all-traces): analysis incomplete (1 steps)
-  DiffLemma:  Observational_equivalence : falsified - found trace (75 steps)
+  DiffLemma:  Observational_equivalence : falsified - found trace (76 steps)
 
 ==============================================================================
 */
