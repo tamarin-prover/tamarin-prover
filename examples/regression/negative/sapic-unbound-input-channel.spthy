@@ -1,0 +1,7 @@
+theory SapicUnboundInputChannel
+begin
+
+// The input's channel is evaluated before x is bound by the pattern.
+process: in(x,x); out(x)
+
+end

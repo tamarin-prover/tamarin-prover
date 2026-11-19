@@ -1,0 +1,46 @@
+theory SoundnessSapicProcessCallCapture
+begin
+/* #944: a macro's local binders must not capture its actual arguments. */
+let Typed(x) = in(y:bitstring); event Typed(x,y)
+let Untyped(x) = in(y); event Untyped(x,y)
+let Pattern(x) = in(<y:bitstring,z:bitstring>); event Pattern(x,y,z)
+let Match(x) = in(<y:bitstring,=x>); event Matched(x,y)
+let Fresh(x) = new y; event Fresh(x,y)
+let Bind(x) = let <y:bitstring,z:bitstring> = x in event Bound(x,y,z)
+let Read(x,s) = lookup s as y:bitstring in event Read(x,y) else event Missing(x)
+let ElseScope(x) = let <y:bitstring,z:bitstring> = 'not_pair' in event Wrong(x)
+  else event ElseValue(x)
+let Inner(x) = in(y:bitstring); event Nested(x,y)
+let Nested(x) = Inner(x)
+let Embedded(x) = [In(y:bitstring)] --[ Embedded(x,y) ]-> []
+let Channel(x) = in(x,y:bitstring); event Channel(x,y)
+let ReadSelf(x) = lookup x as y:bitstring in event ReadSelf(x,y)
+process:
+  (in(y); event TypedArgument(y); Typed(y)) | (in(y); Untyped(y)) |
+  (in(y); event PatternArgument(y); Pattern(<'tag',y>)) | (in(y); Match(y)) |
+  (in(y); Fresh(y)) | (in(y); Bind(y)) |
+  (new s; insert s,'b'; in(y); Read(y,s)) |
+  (new s; in(y); Read(y,s)) |
+  (in(y); ElseScope(y)) | (in(y); Nested(y)) |
+  (in(y); Embedded(y)) | (in(y); (Channel(y) | out(y,'honest'))) |
+  (new y; insert y,'b'; ReadSelf(y))
+lemma typed_distinct: exists-trace "Ex #i. Typed('a','b')@i"
+lemma untyped_distinct: exists-trace "Ex #i. Untyped('a','b')@i"
+lemma typed_equal: exists-trace "Ex #i. Typed('a','a')@i"
+lemma compound_argument: exists-trace "Ex #i. Pattern(<'tag','a'>,'b','c')@i"
+lemma match_argument: exists-trace "Ex #i. Matched('a','b')@i"
+lemma fresh_distinct: exists-trace "Ex y #i. Fresh('a',y)@i & not(y = 'a')"
+lemma let_argument: exists-trace "Ex #i. Bound(<'a','b'>,'a','b')@i"
+lemma lookup_argument: exists-trace "Ex #i. Read('a','b')@i"
+lemma lookup_else: exists-trace "Ex #i. Missing('a')@i"
+lemma let_else: exists-trace "Ex #i. ElseValue('a')@i"
+lemma nested_argument: exists-trace "Ex #i. Nested('a','b')@i"
+lemma embedded_argument: exists-trace "Ex #i. Embedded('a','b')@i"
+lemma input_channel: exists-trace "Ex #i. Channel('a','b')@i"
+lemma lookup_cell: exists-trace "Ex s #i. ReadSelf(s,'b')@i"
+lemma typed_argument_preserved:
+  "All x y #i. Typed(x,y)@i ==> Ex #j. TypedArgument(x)@j & j < i"
+lemma compound_argument_preserved:
+  "All x y z #i. Pattern(x,y,z)@i ==> Ex a #j.
+    PatternArgument(a)@j & x = <'tag',a> & j < i"
+end

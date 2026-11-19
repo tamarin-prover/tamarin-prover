@@ -1,0 +1,7 @@
+theory SapicInputAnnotationsConflictLeft
+begin
+
+// Input patterns must remain linear, regardless of where types are written.
+process: in(<x:beta,x:alpha>); out(x)
+
+end

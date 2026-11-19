@@ -1,0 +1,48 @@
+{
+  "tests": [
+    {
+      "name": "open-new",
+      "args": [
+        "--quit-on-warning"
+      ],
+      "exit_code": 1,
+      "contains": [
+        "Variable bound twice"
+      ]
+    },
+    {
+      "name": "open-input",
+      "args": [
+        "--quit-on-warning",
+        "-DINPUT"
+      ],
+      "exit_code": 1,
+      "contains": [
+        "Variable bound twice"
+      ]
+    },
+    {
+      "name": "closed-new",
+      "args": [
+        "--quit-on-warning",
+        "-DCLOSED_WRAPPER"
+      ],
+      "exit_code": 1,
+      "contains": [
+        "Variable bound twice"
+      ]
+    },
+    {
+      "name": "closed-input",
+      "args": [
+        "--quit-on-warning",
+        "-DCLOSED_WRAPPER",
+        "-DINPUT"
+      ],
+      "exit_code": 1,
+      "contains": [
+        "Variable bound twice"
+      ]
+    }
+  ]
+}

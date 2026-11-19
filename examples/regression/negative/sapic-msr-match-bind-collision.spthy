@@ -1,0 +1,7 @@
+theory SapicMsrMatchBindCollision
+begin
+
+// Different annotations must not disguise a match/bind collision.
+process: [In(<x:alpha,=x:beta>)] --> [Out(x)]
+
+end

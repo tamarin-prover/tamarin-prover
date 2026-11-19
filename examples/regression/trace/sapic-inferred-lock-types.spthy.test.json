@@ -1,0 +1,14 @@
+{
+  "tests": [
+    {
+      "name": "strict-proof",
+      "args": [
+        "--quit-on-warning",
+        "--prove"
+      ],
+      "matches": [
+        {"regex": "reaches_done \\(exists-trace\\): verified", "min": 1}
+      ]
+    }
+  ]
+}

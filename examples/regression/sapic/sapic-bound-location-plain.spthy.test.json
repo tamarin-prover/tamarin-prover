@@ -1,0 +1,10 @@
+{
+  "tests": [
+    {
+      "name": "translation",
+      "args": [
+        "--quit-on-warning"
+      ]
+    }
+  ]
+}

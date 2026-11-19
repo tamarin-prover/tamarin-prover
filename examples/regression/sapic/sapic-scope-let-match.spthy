@@ -1,0 +1,7 @@
+theory SapicScopeLetMatch
+begin
+
+// The match refers to the outer typed y; each branch binds its own x.
+process: in(y:alpha); let <x,=y> = <'ok',y> in out(<x,y>) else in(x); out(<x,y>)
+
+end

@@ -1,0 +1,75 @@
+{
+  "tests": [
+    {
+      "name": "open-wrapper",
+      "args": [
+        "--quit-on-warning",
+        "--prove"
+      ],
+      "matches": [
+        {
+          "regex": "reachable \\(exists-trace\\): verified",
+          "min": 1
+        },
+        {
+          "regex": "fresh_value \\(all-traces\\): verified",
+          "min": 1
+        }
+      ]
+    },
+    {
+      "name": "closed-wrapper",
+      "args": [
+        "--quit-on-warning",
+        "--prove",
+        "-DCLOSED_WRAPPER"
+      ],
+      "matches": [
+        {
+          "regex": "reachable \\(exists-trace\\): verified",
+          "min": 1
+        },
+        {
+          "regex": "fresh_value \\(all-traces\\): verified",
+          "min": 1
+        }
+      ]
+    },
+    {
+      "name": "direct",
+      "args": [
+        "--quit-on-warning",
+        "--prove",
+        "-DDIRECT"
+      ],
+      "matches": [
+        {
+          "regex": "reachable \\(exists-trace\\): verified",
+          "min": 1
+        },
+        {
+          "regex": "fresh_value \\(all-traces\\): verified",
+          "min": 1
+        }
+      ]
+    },
+    {
+      "name": "renamed-parameter",
+      "args": [
+        "--quit-on-warning",
+        "--prove",
+        "-DRENAMED_PARAMETER"
+      ],
+      "matches": [
+        {
+          "regex": "reachable \\(exists-trace\\): verified",
+          "min": 1
+        },
+        {
+          "regex": "fresh_value \\(all-traces\\): verified",
+          "min": 1
+        }
+      ]
+    }
+  ]
+}

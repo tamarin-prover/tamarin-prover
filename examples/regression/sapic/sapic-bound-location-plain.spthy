@@ -1,0 +1,10 @@
+theory SapicBoundLocationPlain
+begin
+
+builtins: locations-report
+predicates: Report(x,l) <=> T
+
+// Reserving location names must preserve references to an existing outer binder.
+process: new x; (event At(report('message')))@x
+
+end

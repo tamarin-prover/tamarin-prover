@@ -1,0 +1,7 @@
+theory SapicParameterReboundPattern
+begin
+// The input pattern would bind the parameter x again. With a constant
+// argument it used to become a match; with a variable argument, a rebinding.
+let P(x) = in(<x, y>); event E(x, y)
+process: P('b')
+end

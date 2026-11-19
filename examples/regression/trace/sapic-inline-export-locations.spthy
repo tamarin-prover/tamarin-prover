@@ -1,0 +1,23 @@
+theory SapicInlineExportLocations
+begin
+
+builtins: locations-report
+predicates: Report(x,l) <=> T
+
+// Inlining must retain the caller's location unless the body supplies one.
+let Pattern(pat_x) = in(pat_x); event Pattern(report(pat_x))
+let Open = event Caller(report(x))
+let Inner = (event Inner(report(x)))@'inner'
+
+process:
+  (Pattern('a'))@'outer' |
+  (new x; (Open)@x) |
+  (new x; (Inner)@'outer')
+
+lemma pattern_location: exists-trace "Ex #i. Pattern(rep('a','outer'))@i"
+lemma caller_location: exists-trace "Ex x #i. Caller(rep(x,x))@i"
+lemma inner_location: exists-trace "Ex x #i. Inner(rep(x,'inner'))@i"
+lemma inner_overrides_caller:
+  "All x l #i. Inner(rep(x,l))@i ==> l = 'inner'"
+
+end

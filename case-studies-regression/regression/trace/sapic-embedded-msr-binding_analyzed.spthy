@@ -1,0 +1,568 @@
+theory SapicEmbeddedMSRBinding
+
+begin
+
+// Function signature and definition of the equational theory E
+
+functions: fst/1, pair/2, snd/1
+equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
+
+heuristic: p
+
+rule (modulo E) init:
+   [ Fr( b ) ] --[ Secret( b ) ]-> [ S( b ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) public_values:
+   [ ] --> [ S( 'public' ), Arg( 'expected', 'value' ), Else( 'else' ) ]
+
+  /* has exactly the trivial AC variant */
+
+lemma binds_new_variable:
+  exists-trace "∃ x #i #j. (Secret( x ) @ #i) ∧ (Bound( x ) @ #j)"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ x #i #j. (Secret( x ) @ #i) ∧ (Bound( x ) @ #j)"
+*/
+simplify
+solve( State_1111111( x ) ▶₀ #j )
+  case newx_0_111111
+  solve( S( ~n ) ▶₁ #j )
+    case init
+    SOLVED // trace found
+  qed
+qed
+
+lemma matches_public_value:
+  exists-trace "∃ #i. Matched( 'public' ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #i. (Matched( 'public' ) @ #i)"
+*/
+simplify
+solve( State_1111211( 'public' ) ▶₀ #i )
+  case inx_0_111121
+  solve( S( 'public' ) ▶₁ #i )
+    case public_values
+    SOLVED // trace found
+  qed
+qed
+
+lemma does_not_rebind_input:
+  all-traces "∀ x #i. (Matched( x ) @ #i) ⇒ (x = 'public')"
+/*
+guarded formula characterizing all counter-examples:
+"∃ x #i. (Matched( x ) @ #i) ∧ ¬(x = 'public')"
+*/
+simplify
+solve( State_1111211( x ) ▶₀ #i )
+  case inx_0_111121
+  solve( S( x ) ▶₁ #i )
+    case init
+    by contradiction /* cyclic */
+  next
+    case public_values
+    by contradiction /* from formulas */
+  qed
+qed
+
+lemma matches_argument:
+  exists-trace "∃ #i. ArgumentMatch( 'ground', 'expected', 'value' ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #i. (ArgumentMatch( 'ground', 'expected', 'value' ) @ #i)"
+*/
+simplify
+solve( ArgumentMatch( 'ground', 'expected', 'value' ) @ #i )
+  case ArgexpectedyArgumentMatchgroundexpectedy_0_11121
+  solve( State_11121( ) ▶₀ #i )
+    case Argumentgroundexpected_0_1112
+    solve( Arg( 'expected', 'value' ) ▶₁ #i )
+      case public_values
+      SOLVED // trace found
+    qed
+  qed
+qed
+
+lemma does_not_rebind_argument:
+  all-traces "∀ x y #i. (ArgumentMatch( 'wrong', x, y ) @ #i) ⇒ (⊥)"
+/*
+guarded formula characterizing all counter-examples:
+"∃ x y #i. (ArgumentMatch( 'wrong', x, y ) @ #i)"
+*/
+simplify
+solve( ArgumentMatch( 'wrong', x, y ) @ #i )
+  case ArgwrongyArgumentMatchwrongwrongy_0_1121
+  solve( State_1121( ) ▶₀ #i )
+    case Argumentwrongwrong_0_112
+    by solve( Arg( 'wrong', y ) ▶₁ #i )
+  qed
+qed
+
+lemma preserves_caller_argument:
+  all-traces
+  "∀ x y #i.
+    (ArgumentMatch( 'caller', x, y ) @ #i) ⇒
+    (∃ #j. (Requested( x ) @ #j) ∧ (#j < #i))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ x y #i.
+  (ArgumentMatch( 'caller', x, y ) @ #i)
+ ∧
+  ∀ #j. (Requested( x ) @ #j) ⇒ ¬(#j < #i)"
+*/
+simplify
+solve( ArgumentMatch( 'caller', x, y ) @ #i )
+  case ArgxyArgumentMatchcallerxy_0_121111
+  solve( State_121111( x ) ▶₀ #i )
+    case Argumentcallerx_0_12111
+    by contradiction /* from formulas */
+  qed
+qed
+
+lemma binds_in_failure_branch:
+  exists-trace "∃ #i. ElseBound( 'else' ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #i. (ElseBound( 'else' ) @ #i)"
+*/
+simplify
+solve( State_212( ) ▶₀ #i )
+  case letyexpectedunusedwrong_2_21
+  solve( Else( 'else' ) ▶₁ #i )
+    case public_values
+    SOLVED // trace found
+  qed
+qed
+
+rule (modulo E) Init[color=#ffffff, process="|", issapicrule,
+                     role='Process']:
+   [ ] --[ Init( ) ]-> [ State_( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_0_[color=#ffffff, process="|", issapicrule,
+                     role='Process']:
+   [ State_( ) ] --> [ State_1( ), State_2( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_0_1[color=#ffffff, process="|", issapicrule,
+                      role='Process']:
+   [ State_1( ) ] --> [ State_11( ), State_12( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_0_11[color=#ffffff, process="|", issapicrule,
+                       role='Process']:
+   [ State_11( ) ] --> [ State_111( ), State_112( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_0_111[color=#ffffff, process="|", issapicrule,
+                        role='Process']:
+   [ State_111( ) ] --> [ State_1111( ), State_1112( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_0_1111[color=#ffffff, process="|", issapicrule,
+                         role='Process']:
+   [ State_1111( ) ] --> [ State_11111( ), State_11112( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Good_0_11111[color=#ffffff, process="Good();",
+                             issapicrule, role='Process']:
+   [ State_11111( ) ] --> [ State_111111( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) newx_0_111111[color=#4e8040, process="new x.1;",
+                              issapicrule, role='Good']:
+   [ State_111111( ), Fr( x.1 ) ] --> [ State_1111111( x.1 ) ]
+
+  /*
+  rule (modulo AC) newx_0_111111[color=#4e8040, process="new x.1;",
+                                 issapicrule, role='Good']:
+     [ State_111111( ), Fr( x ) ] --> [ State_1111111( x ) ]
+  */
+
+rule (modulo E) SyBoundy_0_1111111[color=#4e8040,
+                                   process=" [ S( y.1 ) ] --[ Bound( y.1 ) ]-> [ ];", issapicrule,
+                                   role='Good']:
+   [ State_1111111( x.1 ), S( y.1 ) ]
+  --[ Bound( y.1 ) ]->
+   [ State_11111111( x.1, y.1 ) ]
+
+  /*
+  rule (modulo AC) SyBoundy_0_1111111[color=#4e8040,
+                                      process=" [ S( y.1 ) ] --[ Bound( y.1 ) ]-> [ ];", issapicrule,
+                                      role='Good']:
+     [ State_1111111( x ), S( y ) ]
+    --[ Bound( y ) ]->
+     [ State_11111111( x, y ) ]
+  */
+
+rule (modulo E) outy_0_11111111[color=#4e8040, process="out(y.1);",
+                                issapicrule, role='Good']:
+   [ State_11111111( x.1, y.1 ) ]
+  -->
+   [ State_111111111( x.1, y.1 ), Out( y.1 ) ]
+
+  /*
+  rule (modulo AC) outy_0_11111111[color=#4e8040, process="out(y.1);",
+                                   issapicrule, role='Good']:
+     [ State_11111111( x, y ) ] --> [ State_111111111( x, y ), Out( y ) ]
+  */
+
+rule (modulo E) p_0_111111111[color=#4e8040, process="0", issapicrule,
+                              role='Good']:
+   [ State_111111111( x.1, y.1 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_111111111[color=#4e8040, process="0", issapicrule,
+                                 role='Good']:
+     [ State_111111111( x, y ) ] --> [ ]
+  */
+
+rule (modulo E) Bad_0_11112[color=#ffffff, process="Bad();", issapicrule,
+                            role='Process']:
+   [ State_11112( ) ] --> [ State_111121( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) inx_0_111121[color=#798040, process="in(x.2);",
+                             issapicrule, role='Bad']:
+   [ State_111121( ), In( x.2 ) ] --> [ State_1111211( x.2 ) ]
+
+  /*
+  rule (modulo AC) inx_0_111121[color=#798040, process="in(x.2);",
+                                issapicrule, role='Bad']:
+     [ State_111121( ), In( x ) ] --> [ State_1111211( x ) ]
+  */
+
+rule (modulo E) SxMatchedx_0_1111211[color=#798040,
+                                     process=" [ S( x.2 ) ] --[ Matched( x.2 ) ]-> [ ];", issapicrule,
+                                     role='Bad']:
+   [ State_1111211( x.2 ), S( x.2 ) ]
+  --[ Matched( x.2 ) ]->
+   [ State_11112111( x.2 ) ]
+
+  /*
+  rule (modulo AC) SxMatchedx_0_1111211[color=#798040,
+                                        process=" [ S( x.2 ) ] --[ Matched( x.2 ) ]-> [ ];", issapicrule,
+                                        role='Bad']:
+     [ State_1111211( x ), S( x ) ]
+    --[ Matched( x ) ]->
+     [ State_11112111( x ) ]
+  */
+
+rule (modulo E) outx_0_11112111[color=#798040, process="out(x.2);",
+                                issapicrule, role='Bad']:
+   [ State_11112111( x.2 ) ] --> [ State_111121111( x.2 ), Out( x.2 ) ]
+
+  /*
+  rule (modulo AC) outx_0_11112111[color=#798040, process="out(x.2);",
+                                   issapicrule, role='Bad']:
+     [ State_11112111( x ) ] --> [ State_111121111( x ), Out( x ) ]
+  */
+
+rule (modulo E) p_0_111121111[color=#798040, process="0", issapicrule,
+                              role='Bad']:
+   [ State_111121111( x.2 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_111121111[color=#798040, process="0", issapicrule,
+                                 role='Bad']:
+     [ State_111121111( x ) ] --> [ ]
+  */
+
+rule (modulo E) Argumentgroundexpected_0_1112[color=#ffffff,
+                                              process="Argument('ground', 'expected');", issapicrule,
+                                              role='Process']:
+   [ State_1112( ) ] --> [ State_11121( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) ArgexpectedyArgumentMatchgroundexpectedy_0_11121[color=#80404d,
+                                                                 process=" [ Arg( 'expected', y.2 ) ]
+--[ ArgumentMatch( 'ground', 'expected', y.2 ) ]->
+ [ ];",
+                                                                 issapicrule, role='Argument']:
+   [ State_11121( ), Arg( 'expected', y.2 ) ]
+  --[ ArgumentMatch( 'ground', 'expected', y.2 ) ]->
+   [ State_111211( y.2 ) ]
+
+  /*
+  rule (modulo AC) ArgexpectedyArgumentMatchgroundexpectedy_0_11121[color=#80404d,
+                                                                    process=" [ Arg( 'expected', y.2 ) ]
+--[ ArgumentMatch( 'ground', 'expected', y.2 ) ]->
+ [ ];",
+                                                                    issapicrule, role='Argument']:
+     [ State_11121( ), Arg( 'expected', y ) ]
+    --[ ArgumentMatch( 'ground', 'expected', y ) ]->
+     [ State_111211( y ) ]
+  */
+
+rule (modulo E) outy_0_111211[color=#80404d, process="out(y.2);",
+                              issapicrule, role='Argument']:
+   [ State_111211( y.2 ) ] --> [ State_1112111( y.2 ), Out( y.2 ) ]
+
+  /*
+  rule (modulo AC) outy_0_111211[color=#80404d, process="out(y.2);",
+                                 issapicrule, role='Argument']:
+     [ State_111211( y ) ] --> [ State_1112111( y ), Out( y ) ]
+  */
+
+rule (modulo E) p_0_1112111[color=#80404d, process="0", issapicrule,
+                            role='Argument']:
+   [ State_1112111( y.2 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_1112111[color=#80404d, process="0", issapicrule,
+                               role='Argument']:
+     [ State_1112111( y ) ] --> [ ]
+  */
+
+rule (modulo E) Argumentwrongwrong_0_112[color=#ffffff,
+                                         process="Argument('wrong', 'wrong');", issapicrule, role='Process']:
+   [ State_112( ) ] --> [ State_1121( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) ArgwrongyArgumentMatchwrongwrongy_0_1121[color=#80404d,
+                                                         process=" [ Arg( 'wrong', y.3 ) ]
+--[ ArgumentMatch( 'wrong', 'wrong', y.3 ) ]->
+ [ ];",
+                                                         issapicrule, role='Argument']:
+   [ State_1121( ), Arg( 'wrong', y.3 ) ]
+  --[ ArgumentMatch( 'wrong', 'wrong', y.3 ) ]->
+   [ State_11211( y.3 ) ]
+
+  /*
+  rule (modulo AC) ArgwrongyArgumentMatchwrongwrongy_0_1121[color=#80404d,
+                                                            process=" [ Arg( 'wrong', y.3 ) ]
+--[ ArgumentMatch( 'wrong', 'wrong', y.3 ) ]->
+ [ ];",
+                                                            issapicrule, role='Argument']:
+     [ State_1121( ), Arg( 'wrong', y ) ]
+    --[ ArgumentMatch( 'wrong', 'wrong', y ) ]->
+     [ State_11211( y ) ]
+  */
+
+rule (modulo E) outy_0_11211[color=#80404d, process="out(y.3);",
+                             issapicrule, role='Argument']:
+   [ State_11211( y.3 ) ] --> [ State_112111( y.3 ), Out( y.3 ) ]
+
+  /*
+  rule (modulo AC) outy_0_11211[color=#80404d, process="out(y.3);",
+                                issapicrule, role='Argument']:
+     [ State_11211( y ) ] --> [ State_112111( y ), Out( y ) ]
+  */
+
+rule (modulo E) p_0_112111[color=#80404d, process="0", issapicrule,
+                           role='Argument']:
+   [ State_112111( y.3 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_112111[color=#80404d, process="0", issapicrule,
+                              role='Argument']:
+     [ State_112111( y ) ] --> [ ]
+  */
+
+rule (modulo E) Caller_0_12[color=#ffffff, process="Caller();",
+                            issapicrule, role='Process']:
+   [ State_12( ) ] --> [ State_121( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) inx_0_121[color=#40805a, process="in(x.3);", issapicrule,
+                          role='Caller']:
+   [ State_121( ), In( x.3 ) ] --> [ State_1211( x.3 ) ]
+
+  /*
+  rule (modulo AC) inx_0_121[color=#40805a, process="in(x.3);",
+                             issapicrule, role='Caller']:
+     [ State_121( ), In( x ) ] --> [ State_1211( x ) ]
+  */
+
+rule (modulo E) eventRequestedx_0_1211[color=#40805a,
+                                       process="event Requested( x.3 );", issapicrule, role='Caller']:
+   [ State_1211( x.3 ) ] --[ Requested( x.3 ) ]-> [ State_12111( x.3 ) ]
+
+  /*
+  rule (modulo AC) eventRequestedx_0_1211[color=#40805a,
+                                          process="event Requested( x.3 );", issapicrule, role='Caller']:
+     [ State_1211( x ) ] --[ Requested( x ) ]-> [ State_12111( x ) ]
+  */
+
+rule (modulo E) Argumentcallerx_0_12111[color=#40805a,
+                                        process="Argument('caller', x.3);", issapicrule, role='Caller']:
+   [ State_12111( x.3 ) ] --> [ State_121111( x.3 ) ]
+
+  /*
+  rule (modulo AC) Argumentcallerx_0_12111[color=#40805a,
+                                           process="Argument('caller', x.3);", issapicrule, role='Caller']:
+     [ State_12111( x ) ] --> [ State_121111( x ) ]
+  */
+
+rule (modulo E) ArgxyArgumentMatchcallerxy_0_121111[color=#80404d,
+                                                    process=" [ Arg( x.3, y.4 ) ] --[ ArgumentMatch( 'caller', x.3, y.4 ) ]-> [ ];",
+                                                    issapicrule, role='Caller_Argument']:
+   [ State_121111( x.3 ), Arg( x.3, y.4 ) ]
+  --[ ArgumentMatch( 'caller', x.3, y.4 ) ]->
+   [ State_1211111( x.3, y.4 ) ]
+
+  /*
+  rule (modulo AC) ArgxyArgumentMatchcallerxy_0_121111[color=#80404d,
+                                                       process=" [ Arg( x.3, y.4 ) ] --[ ArgumentMatch( 'caller', x.3, y.4 ) ]-> [ ];",
+                                                       issapicrule, role='Caller_Argument']:
+     [ State_121111( x ), Arg( x, y ) ]
+    --[ ArgumentMatch( 'caller', x, y ) ]->
+     [ State_1211111( x, y ) ]
+  */
+
+rule (modulo E) outy_0_1211111[color=#80404d, process="out(y.4);",
+                               issapicrule, role='Caller_Argument']:
+   [ State_1211111( x.3, y.4 ) ]
+  -->
+   [ State_12111111( x.3, y.4 ), Out( y.4 ) ]
+
+  /*
+  rule (modulo AC) outy_0_1211111[color=#80404d, process="out(y.4);",
+                                  issapicrule, role='Caller_Argument']:
+     [ State_1211111( x, y ) ] --> [ State_12111111( x, y ), Out( y ) ]
+  */
+
+rule (modulo E) p_0_12111111[color=#80404d, process="0", issapicrule,
+                             role='Caller_Argument']:
+   [ State_12111111( x.3, y.4 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_12111111[color=#80404d, process="0", issapicrule,
+                                role='Caller_Argument']:
+     [ State_12111111( x, y ) ] --> [ ]
+  */
+
+rule (modulo E) Failure_0_2[color=#ffffff, process="Failure();",
+                            issapicrule, role='Process']:
+   [ State_2( ) ] --> [ State_21( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) letyexpectedunusedwrong_0_21[color=#408057,
+                                             process="let <y.5, 'expected'>=<'unused', 'wrong'>", issapicrule,
+                                             role='Failure']:
+   [ State_21( ) ] --> [ Let_211( <'unused', 'wrong'> ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) letyexpectedunusedwrong_1_21[color=#408057,
+                                             process="let <y.5, 'expected'>=<'unused', 'wrong'>", issapicrule,
+                                             role='Failure']:
+   [ Let_211( <y.5, 'expected'> ) ] --> [ State_211( y.5 ) ]
+
+  /*
+  rule (modulo AC) letyexpectedunusedwrong_1_21[color=#408057,
+                                                process="let <y.5, 'expected'>=<'unused', 'wrong'>",
+                                                issapicrule, role='Failure']:
+     [ Let_211( <y, 'expected'> ) ] --> [ State_211( y ) ]
+  */
+
+restriction Restr_letyexpectedunusedwrong_2_21_1:
+  "∀ #NOW.
+    (Restr_letyexpectedunusedwrong_2_21_1( ) @ #NOW) ⇒
+    (∀ y. (<y, 'expected'> = <'unused', 'wrong'>) ⇒ (⊥))"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ #NOW.
+    (Restr_letyexpectedunusedwrong_2_21_1( ) @ #NOW) ⇒
+    (∀ y. (<y, 'expected'> = <'unused', 'wrong'>) ⇒ (⊥))"
+  */
+
+rule (modulo E) letyexpectedunusedwrong_2_21[color=#408057,
+                                             process="let <y.5, 'expected'>=<'unused', 'wrong'>", issapicrule,
+                                             role='Failure']:
+   [ Let_211( <'unused', 'wrong'> ) ]
+  --[ Restr_letyexpectedunusedwrong_2_21_1( ) ]->
+   [ State_212( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_0_211[color=#408057, process="0", issapicrule,
+                        role='Failure']:
+   [ State_211( y.5 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_211[color=#408057, process="0", issapicrule,
+                           role='Failure']:
+     [ State_211( y ) ] --> [ ]
+  */
+
+rule (modulo E) ElseyElseBoundy_0_212[color=#408057,
+                                      process=" [ Else( y.6 ) ] --[ ElseBound( y.6 ) ]-> [ ];", issapicrule,
+                                      role='Failure']:
+   [ State_212( ), Else( y.6 ) ]
+  --[ ElseBound( y.6 ) ]->
+   [ State_2121( y.6 ) ]
+
+  /*
+  rule (modulo AC) ElseyElseBoundy_0_212[color=#408057,
+                                         process=" [ Else( y.6 ) ] --[ ElseBound( y.6 ) ]-> [ ];",
+                                         issapicrule, role='Failure']:
+     [ State_212( ), Else( y ) ] --[ ElseBound( y ) ]-> [ State_2121( y ) ]
+  */
+
+rule (modulo E) p_0_2121[color=#408057, process="0", issapicrule,
+                         role='Failure']:
+   [ State_2121( y.6 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_2121[color=#408057, process="0", issapicrule,
+                            role='Failure']:
+     [ State_2121( y ) ] --> [ ]
+  */
+
+restriction single_session:
+  "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
+  */
+
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.13.0
+Maude version 3.5.1
+Git revision: bf885ca9abf478867fbdbbf3ad80e4da85370e01 (with uncommited changes), branch: HEAD
+Compiled at: 2026-10-04 11:58:25.282416529 UTC
+*/
+
+end
+/* Output
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/regression/trace/sapic-embedded-msr-binding.spthy
+
+  output:          examples/regression/trace/sapic-embedded-msr-binding.spthy.tmp
+  processing time: 0.79s
+  
+  binds_new_variable (exists-trace): verified (4 steps)
+  matches_public_value (exists-trace): verified (4 steps)
+  does_not_rebind_input (all-traces): verified (5 steps)
+  matches_argument (exists-trace): verified (5 steps)
+  does_not_rebind_argument (all-traces): verified (4 steps)
+  preserves_caller_argument (all-traces): verified (4 steps)
+  binds_in_failure_branch (exists-trace): verified (4 steps)
+
+==============================================================================
+*/

@@ -1,0 +1,254 @@
+theory SoundnessSapicPatternExport
+
+begin
+
+// Function signature and definition of the equational theory E
+
+functions: fst/1, pair/2, snd/1
+equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
+
+heuristic: p
+
+lemma supplied_patterns:
+  all-traces "∀ x #i. (Seen( x ) @ #i) ⇒ ((x = <'a', 'b'>) ∨ (x = 'd'))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ x #i. (Seen( x ) @ #i) ∧ (¬(x = <'a', 'b'>)) ∧ (¬(x = 'd'))"
+*/
+simplify
+solve( Seen( x ) @ #i )
+  case eventSeenab_0_11111
+  by contradiction /* from formulas */
+next
+  case eventSeend_0_12111
+  by contradiction /* from formulas */
+qed
+
+lemma repeated_pattern:
+  all-traces "∀ x #i. (Twice( x ) @ #i) ⇒ (x = 'c')"
+/*
+guarded formula characterizing all counter-examples:
+"∃ x #i. (Twice( x ) @ #i) ∧ ¬(x = 'c')"
+*/
+simplify
+by contradiction /* from formulas */
+
+lemma pair_reachable:
+  exists-trace "∃ #i. Seen( <'a', 'b'> ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #i. (Seen( <'a', 'b'> ) @ #i)"
+*/
+simplify
+solve( Seen( <'a', 'b'> ) @ #i )
+  case eventSeenab_0_11111
+  solve( State_11111( ) ▶₀ #i )
+    case inab_0_1111
+    SOLVED // trace found
+  qed
+qed
+
+lemma nested_reachable:
+  exists-trace "∃ #i. Seen( 'd' ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #i. (Seen( 'd' ) @ #i)"
+*/
+simplify
+solve( Seen( 'd' ) @ #i )
+  case eventSeend_0_12111
+  solve( State_12111( ) ▶₀ #i )
+    case ind_0_1211
+    SOLVED // trace found
+  qed
+qed
+
+lemma repeated_reachable:
+  exists-trace "∃ #i. Twice( 'c' ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #i. (Twice( 'c' ) @ #i)"
+*/
+simplify
+solve( State_112111( ) ▶₀ #i )
+  case inc_0_11211
+  SOLVED // trace found
+qed
+
+lemma ordinary_parameter:
+  exists-trace "∃ #i. Value( 'e' ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #i. (Value( 'e' ) @ #i)"
+*/
+simplify
+solve( State_21( ) ▶₀ #i )
+  case Valuee_0_2
+  SOLVED // trace found
+qed
+
+rule (modulo E) Init[color=#ffffff, process="|", issapicrule,
+                     role='Process']:
+   [ ] --[ Init( ) ]-> [ State_( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_0_[color=#ffffff, process="|", issapicrule,
+                     role='Process']:
+   [ State_( ) ] --> [ State_1( ), State_2( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_0_1[color=#ffffff, process="|", issapicrule,
+                      role='Process']:
+   [ State_1( ) ] --> [ State_11( ), State_12( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_0_11[color=#ffffff, process="|", issapicrule,
+                       role='Process']:
+   [ State_11( ) ] --> [ State_111( ), State_112( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Pab_0_111[color=#ffffff, process="P(<'a', 'b'>);",
+                          issapicrule, role='Process']:
+   [ State_111( ) ] --> [ State_1111( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) inab_0_1111[color=#6c8040, process="in(<'a', 'b'>);",
+                            issapicrule, role='P']:
+   [ State_1111( ), In( <'a', 'b'> ) ] --> [ State_11111( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) eventSeenab_0_11111[color=#6c8040,
+                                    process="event Seen( <'a', 'b'> );", issapicrule, role='P']:
+   [ State_11111( ) ] --[ Seen( <'a', 'b'> ) ]-> [ State_111111( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_0_111111[color=#6c8040, process="0", issapicrule,
+                           role='P']:
+   [ State_111111( ) ] --> [ ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Twicec_0_112[color=#ffffff, process="Twice('c');",
+                             issapicrule, role='Process']:
+   [ State_112( ) ] --> [ State_1121( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) inc_0_1121[color=#804057, process="in('c');",
+                           issapicrule, role='Twice']:
+   [ State_1121( ), In( 'c' ) ] --> [ State_11211( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) inc_0_11211[color=#804057, process="in('c');",
+                            issapicrule, role='Twice']:
+   [ State_11211( ), In( 'c' ) ] --> [ State_112111( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) eventTwicec_0_112111[color=#804057,
+                                     process="event Twice( 'c' );", issapicrule, role='Twice']:
+   [ State_112111( ) ] --[ Twice( 'c' ) ]-> [ State_1121111( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_0_1121111[color=#804057, process="0", issapicrule,
+                            role='Twice']:
+   [ State_1121111( ) ] --> [ ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Nestedd_0_12[color=#ffffff, process="Nested('d');",
+                             issapicrule, role='Process']:
+   [ State_12( ) ] --> [ State_121( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Pd_0_121[color=#7b4080, process="P('d');", issapicrule,
+                         role='Nested']:
+   [ State_121( ) ] --> [ State_1211( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) ind_0_1211[color=#6c8040, process="in('d');",
+                           issapicrule, role='Nested_P']:
+   [ State_1211( ), In( 'd' ) ] --> [ State_12111( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) eventSeend_0_12111[color=#6c8040,
+                                   process="event Seen( 'd' );", issapicrule, role='Nested_P']:
+   [ State_12111( ) ] --[ Seen( 'd' ) ]-> [ State_121111( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_0_121111[color=#6c8040, process="0", issapicrule,
+                           role='Nested_P']:
+   [ State_121111( ) ] --> [ ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Valuee_0_2[color=#ffffff, process="Value('e');",
+                           issapicrule, role='Process']:
+   [ State_2( ) ] --> [ State_21( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) eventValuee_0_21[color=#408047,
+                                 process="event Value( 'e' );", issapicrule, role='Value']:
+   [ State_21( ) ] --[ Value( 'e' ) ]-> [ State_211( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_0_211[color=#408047, process="0", issapicrule,
+                        role='Value']:
+   [ State_211( ) ] --> [ ]
+
+  /* has exactly the trivial AC variant */
+
+restriction single_session:
+  "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
+  */
+
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.13.0
+Maude version 3.5.1
+Git revision: bf885ca9abf478867fbdbbf3ad80e4da85370e01 (with uncommited changes), branch: HEAD
+Compiled at: 2026-10-04 11:58:25.282416529 UTC
+*/
+
+end
+/* Output
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/regression/trace/soundness-sapic-pattern-export.spthy
+
+  output:          examples/regression/trace/soundness-sapic-pattern-export.spthy.tmp
+  processing time: 0.22s
+  
+  supplied_patterns (all-traces): verified (4 steps)
+  repeated_pattern (all-traces): verified (2 steps)
+  pair_reachable (exists-trace): verified (4 steps)
+  nested_reachable (exists-trace): verified (4 steps)
+  repeated_reachable (exists-trace): verified (3 steps)
+  ordinary_parameter (exists-trace): verified (3 steps)
+
+==============================================================================
+*/

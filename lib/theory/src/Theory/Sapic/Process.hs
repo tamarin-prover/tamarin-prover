@@ -35,8 +35,17 @@ module Theory.Sapic.Process (
     , mapTermsAction
     , mapTermsComb
     , applyM
+    , actionBinders
+    , actionBinderDeclarations
+    , combinatorBinderDeclarations
+    , combinatorBinders
+    , renameActionBinders
+    , renameCombinatorBinders
+    , applyProcessSubstAvoiding
+    , expandProcessCall
     , processAddAnnotation
     , varsProc
+    , varsProcWithAnnotations
     -- pretty printing
     , prettySapic'
     , prettySapicAction'
@@ -50,13 +59,16 @@ module Theory.Sapic.Process (
 
 import Data.Binary
 import Data.Data
-import Data.Set hiding (map, union)
-import qualified Data.Set as Set (map)
+import Data.Set hiding (map, union, (\\))
+import qualified Data.Set as Set
+import qualified Data.Map.Strict as Map
 import GHC.Generics (Generic)
 import Control.Parallel.Strategies
 import Term.Substitution
 import Theory.Text.Pretty
 import Data.List
+import Data.Maybe (isJust)
+import qualified Data.Foldable as F
 import Control.Monad.Catch
 import Theory.Sapic.Term
 import Theory.Sapic.Substitution
@@ -318,6 +330,8 @@ applyMatchVars' f = fromList . concatMap extractVars . toList
 
 instance Apply SapicSubst (SapicAction SapicLVar) where
     apply subst (ChIn mt t vs) = ChIn (apply subst mt) (apply subst t) (applyMatchVars subst vs)
+    apply subst (MSR l a r phi vs) = MSR (apply subst l) (apply subst a) (apply subst r)
+                                       (apply subst phi) (applyMatchVars subst vs)
     apply subst ac = mapTermsAction (apply subst) (apply subst) (apply subst) ac
 
 -- | Substitute for LVars, ignoring types
@@ -360,6 +374,16 @@ instance {-# OVERLAPPABLE #-} (Ord v, Apply s v, Apply s ann) => Apply s (Proces
 -- | Get all variables for a process
 varsProc :: (Ord v, Show v) => Process ann v -> Set v
 varsProc = foldMap Data.Set.singleton -- foldProcess fNull fAct fComb gAct gComb empty p
+
+-- | Variables to reserve when freshening a process. Locations can contain
+-- variables absent from its actions, and earlier expansions record generated
+-- binders in annotations. Back-substitutions only affect diagnostic names.
+varsProcWithAnnotations :: GoodAnnotation ann => LProcess ann -> Set SapicLVar
+varsProcWithAnnotations p = varsProc p `Set.union` pfoldMap annotationVars p
+  where
+    annotationVars node =
+      let ann = getProcessParsedAnnotation (processGetAnnotation node)
+      in fromList $ maybe [] freesSapicTerm (location ann) ++ generatedBinders ann
 
 -------------------------
 -- Applying substitutions ( with error messages )
@@ -408,20 +432,144 @@ instance ApplyM SapicSubst (SapicAction SapicLVar)
         where lvarName' (SapicLVar v _ ) = lvarName v
 
 
-instance (GoodAnnotation ann) => ApplyM SapicSubst (LProcess ann)
-    where
-    applyM _ (ProcessNull ann) = return $ ProcessNull ann
-    applyM subst (ProcessComb c ann pl pr) = do
-            c' <- applyM subst c
-            ann' <- applyM subst ann
-            pl' <- applyM subst pl
-            pr' <- applyM subst pr
-            return $ ProcessComb c' ann' pl' pr'
-    applyM subst (ProcessAction ac ann p) = do
-            ac' <- applyM subst ac
-            ann' <- applyM subst ann
-            p' <- applyM subst p
-            return $ ProcessAction ac' ann' p'
+-- | Binders introduced by an action scope over its continuation, not its
+-- channel expression. Pattern matching variables are references, not binders.
+-- Type annotations share one LVar namespace for scope and capture checks.
+actionBinders :: SapicAction SapicLVar -> [SapicLVar]
+actionBinders = uniqueBinderIdentities . actionBinderDeclarations
+
+-- | Combinator binders scope over the left (success) continuation only.
+-- The lookup key, let RHS, and right (failure) continuation are outside scope.
+combinatorBinders :: ProcessCombinator SapicLVar -> [SapicLVar]
+combinatorBinders = uniqueBinderIdentities . combinatorBinderDeclarations
+
+-- | Apply a variable renaming only within an action's binding region.
+-- The substitution maps only binder identities to fresh variables; matching
+-- variables are references and are therefore left alone.
+-- The caller carries the same renaming into the action continuation.
+renameActionBinders :: Subst Name LVar -> SapicAction SapicLVar -> SapicAction SapicLVar
+renameActionBinders ren (ChIn channel t matches) = ChIn channel (apply ren t) matches
+renameActionBinders ren ac = apply ren ac
+
+-- | Rename the local binding region of a combinator. Keys and right-hand
+-- sides are evaluated before the binding. The caller carries the renaming
+-- into the left continuation only, retaining its old environment on the right.
+renameCombinatorBinders :: Subst Name LVar -> ProcessCombinator SapicLVar -> ProcessCombinator SapicLVar
+renameCombinatorBinders ren (Lookup key v) = Lookup key (apply ren v)
+renameCombinatorBinders ren (Let t rhs matches) = Let (apply ren t) rhs matches
+renameCombinatorBinders _ comb = comb
+
+-- | Preserve every annotation variant until typing has merged its constraints.
+-- Scope consumers instead use the identity projections above.
+actionBinderDeclarations :: SapicAction SapicLVar -> [SapicLVar]
+actionBinderDeclarations (New v) = [v]
+actionBinderDeclarations (ChIn _ t matches) = patternDeclarations (freesSapicTerm t) matches
+actionBinderDeclarations (MSR ls _ _ _ matches) = patternDeclarations (concatMap freesSapicFact ls) matches
+actionBinderDeclarations _ = []
+
+combinatorBinderDeclarations :: ProcessCombinator SapicLVar -> [SapicLVar]
+combinatorBinderDeclarations (Lookup _ v) = [v]
+combinatorBinderDeclarations (Let t _ matches) = patternDeclarations (freesSapicTerm t) matches
+combinatorBinderDeclarations _ = []
+
+uniqueBinderIdentities :: [SapicLVar] -> [SapicLVar]
+uniqueBinderIdentities = unique Set.empty
+  where
+    unique _ [] = []
+    unique seen (v:vs)
+      | toLVar v `member` seen = unique seen vs
+      | otherwise = v : unique (Set.insert (toLVar v) seen) vs
+
+patternDeclarations :: [SapicLVar] -> Set SapicLVar -> [SapicLVar]
+patternDeclarations vars matches =
+  Data.List.filter (\v -> toLVar v `Set.notMember` identities) vars
+  where identities = Set.map toLVar matches
+
+-- | Apply a process substitution with a scoped alpha-renaming environment.
+-- Reserve the whole process once, including location metadata. A single fresh
+-- supply keeps later names distinct without repeatedly scanning each suffix.
+applyProcessSubstAvoiding :: (GoodAnnotation ann, MonadThrow m)
+                         => [LVar] -> SapicSubst -> LProcess ann -> m (LProcess ann)
+applyProcessSubstAvoiding = expandProcessCall Nothing
+
+-- | Expand a call: substitute the arguments for the parameters in the body.
+-- The reserved variables are those of the caller's scope. The body of a
+-- closed definition (one with a parameter list) is a scope of its own, so
+-- local binders that share identities with caller variables are renamed
+-- apart first. Pattern parameters are substituted directly instead, since
+-- they stand for the supplied pattern rather than a local binding.
+expandProcessCall :: (GoodAnnotation ann, MonadThrow m)
+                  => Maybe [SapicLVar] -> [LVar] -> SapicSubst -> LProcess ann -> m (LProcess ann)
+expandProcessCall parameters reserved original proc =
+    evalFreshTAvoiding (go (fromList reserved) Set.empty (substFromList [] :: Subst Name LVar) proc) avoidVars
+  where
+    -- Scope is indexed by LVar throughout SAPIC. Type annotations constrain
+    -- occurrences, but must never change which variable gets substituted.
+    images :: Map.Map LVar SapicTerm
+    images = Map.fromList [(toLVar v, apply original (varTerm v)) | v <- dom original]
+    procVars = Set.toList (varsProcWithAnnotations proc)
+    occurrences = procVars ++ dom original
+    subst :: SapicSubst
+    subst = substFromList [(v, t) | v <- occurrences, Just t <- [Map.lookup (toLVar v) images]]
+
+    incoming = fromList $ map toLVar $ varsRange subst
+    -- Substitutions omit identity mappings. Keep the explicit formals too,
+    -- so a nested call P(pat_x) cannot freshen P's own pat_x parameter away.
+    formals = fromList $ maybe [] (map toLVar) parameters
+    callerScope = fromList reserved
+    avoidVars = reserved ++ map toLVar
+      (dom subst ++ varsRange subst ++ procVars)
+    freshening used ann bound = do
+      let generated = fromList $ map toLVar $ generatedBinders $ getProcessParsedAnnotation ann
+          -- Reallocate binders that an argument would capture, binders of a
+          -- scope renamed apart from the caller, and generated binders that
+          -- collide with the caller. Other user rebinding in an open body is
+          -- preserved for validation.
+          -- Pattern parameters are replaced by the argument itself; renaming
+          -- them here would remove them from the substitution's domain.
+          captures = Data.List.filter (\v -> not (patternParameter v) &&
+                                 (v `member` incoming ||
+                                  (isJust parameters && v `member` callerScope) ||
+                                  (v `member` generated && v `member` used))) bound
+      fresh <- mapM (\v -> freshLVar (lvarName v) (lvarSort v)) captures
+      return $ substFromList $ zip captures (map varTerm fresh)
+    patternParameter v = (v `member` formals || Map.member v images) &&
+                         "pat_" `Data.List.isPrefixOf` lvarName v
+    -- A closed call owns its local binders even before a name collision.
+    -- Remember them through open wrappers, which may introduce a caller clash.
+    -- Do not mark a repeated local binder: it must still fail rebinding checks.
+    markGenerated local bound ren ann = applyAnn ren $ mapProcessParsedAnnotation (\parsed -> parsed
+      { generatedBinders = nub $ generatedBinders parsed ++ map (`SapicLVar` Nothing)
+          (dom ren ++ [v | isJust parameters, v <- bound, v `Set.notMember` local, not (patternParameter v)]) }) ann
+    go used local env p = case p of
+      ProcessNull ann -> ProcessNull <$> applyM subst (applyAnn env ann)
+      ProcessAction ac ann rest -> do
+        let ac0 = apply env ac
+            ann0 = applyAnn env ann
+            bound = map toLVar $ actionBinders ac0
+        ren <- freshening used ann0 bound
+        let ac1 = renameActionBinders ren ac0
+        ac' <- applyM subst ac1
+        ann' <- applyM subst (markGenerated local bound ren ann0)
+        rest' <- go (Set.union (fromList $ map toLVar $ F.toList ac') used)
+                    (Set.union (fromList $ map toLVar $ actionBinders ac') local) (ren `compose` env) rest
+        return $ ProcessAction ac' ann' rest'
+      ProcessComb comb ann left right -> do
+        let comb0 = apply env comb
+            ann0 = applyAnn env ann
+            bound = map toLVar $ combinatorBinders comb0
+        ren <- freshening used ann0 bound
+        let comb1 = renameCombinatorBinders ren comb0
+        comb' <- applyM subst comb1
+        ann' <- applyM subst (markGenerated local bound ren ann0)
+        left' <- go (Set.union (fromList $ map toLVar $ F.toList comb') used)
+                    (Set.union (fromList $ map toLVar $ combinatorBinders comb') local) (ren `compose` env) left
+        -- Let/lookup failure branches retain the incoming environment.
+        right' <- go used local env right
+        return $ ProcessComb comb' ann' left' right'
+
+instance (GoodAnnotation ann) => ApplyM SapicSubst (LProcess ann) where
+    applyM = applyProcessSubstAvoiding []
 
 -- | Add another element to the existing annotations, e.g., yet another identifier.
 processAddAnnotation :: Monoid ann => Process ann v -> ann -> Process ann v

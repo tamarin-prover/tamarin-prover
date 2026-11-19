@@ -1,0 +1,8 @@
+theory SapicMsrAnnotationsRight
+begin
+
+// The annotation must reach both pattern occurrences and the output.
+// Counting all three occurrences also checks propagation to untyped siblings.
+process: [In(<x,x:alpha>)] --> [Out(x)]
+
+end

@@ -1,0 +1,14 @@
+{
+  "tests": [
+    {
+      "name": "parameter-rebound",
+      "args": [
+        "--quit-on-warning"
+      ],
+      "exit_code": 1,
+      "contains": [
+        "is bound again in its body"
+      ]
+    }
+  ]
+}

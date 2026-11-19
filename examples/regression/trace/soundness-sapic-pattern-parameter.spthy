@@ -1,0 +1,17 @@
+theory SoundnessSapicPatternParameter
+begin
+
+// A pat_ parameter stands for the supplied input pattern. An unused caller
+// binder with the same name must not turn it into an unrestricted input.
+let P(pat_x) = in(pat_x); event Seen(pat_x)
+
+#ifdef NO_COLLISION
+process: new unused; P(<'a','b'>)
+#else
+process: new pat_x; P(<'a','b'>)
+#endif
+
+lemma supplied_pattern: "All x #i. Seen(x)@i ==> x = <'a','b'>"
+lemma reachable: exists-trace "Ex #i. Seen(<'a','b'>)@i"
+
+end

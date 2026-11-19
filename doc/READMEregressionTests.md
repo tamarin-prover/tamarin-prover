@@ -222,7 +222,9 @@ The runner first proves the source. Each requested check then
 compares its proof results with that same baseline:
 
 - `roundtrip`: print without proofs and prove the reloaded output; also replay
-  the saved original proof without `--prove`.
+  the saved original proof without `--prove`. Set `roundtrip_module` to
+  `spthy`, `spthytyped`, or `msr` to select the unproved export format. This
+  affects only printing; source and reloaded proofs still use normal proving.
 - `partial-evaluation`: prove the partially evaluated source; export without
   proofs and prove the reloaded output; replay the saved evaluated proof; and
   partially evaluate and prove the unproved export again.

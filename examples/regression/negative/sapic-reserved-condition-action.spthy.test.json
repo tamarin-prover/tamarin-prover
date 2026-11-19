@@ -1,0 +1,14 @@
+{
+  "tests": [
+    {
+      "name": "reserved-condition-action",
+      "args": [
+        "--prove"
+      ],
+      "exit_code": 1,
+      "contains": [
+        "The action name Restr_ifOkx_0_11_1 is reserved"
+      ]
+    }
+  ]
+}

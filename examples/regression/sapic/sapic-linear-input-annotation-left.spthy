@@ -1,0 +1,7 @@
+theory SapicLinearInputAnnotationLeft
+begin
+
+// A typed input binder remains valid beside a distinct untyped binder in either order.
+process: in(<x:alpha,y>); out(x)
+
+end

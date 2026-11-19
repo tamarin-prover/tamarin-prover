@@ -1,0 +1,27 @@
+theory SapicNestedClosedScope
+begin
+
+// C's fresh x belongs to C(), even when an open wrapper introduces the call
+// before an outer definition supplies a parameter with the same name.
+let C() = new x; event Seen(x)
+let O = C()
+let ClosedO() = C()
+
+#ifdef CLOSED_WRAPPER
+let W(x) = ClosedO()
+#endif
+#ifdef DIRECT
+let W(x) = C()
+#endif
+#ifdef RENAMED_PARAMETER
+let W(y) = O
+#endif
+#ifdef not (CLOSED_WRAPPER | DIRECT | RENAMED_PARAMETER)
+let W(x) = O
+#endif
+
+process: W('a')
+lemma reachable: exists-trace "Ex x #i. Seen(x)@i"
+lemma fresh_value: "All x #i. Seen(x)@i ==> not (x = 'a')"
+
+end

@@ -1,0 +1,15 @@
+{
+  "tests": [
+    {
+      "name": "silent-parameter-capture",
+      "args": [
+        "--prove",
+        "--quit-on-warning"
+      ],
+      "contains": [
+        "let_binder (exists-trace): verified",
+        "input_binder (exists-trace): verified"
+      ]
+    }
+  ]
+}

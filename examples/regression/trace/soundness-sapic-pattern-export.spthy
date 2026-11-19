@@ -1,0 +1,21 @@
+theory SoundnessSapicPatternExport
+begin
+
+// Typed export used to rename the input binder independently of its formal,
+// so reparsing P's export accepted any input instead of the supplied pattern.
+let P(pat_x) = in(pat_x); event Seen(pat_x)
+let Twice(pat_x) = in(pat_x); in(pat_x); event Twice(pat_x)
+let Nested(pat_x) = P(pat_x)
+let Value(x) = event Value(x)
+
+process: P(<'a','b'>) | Twice('c') | Nested('d') | Value('e')
+
+lemma supplied_patterns:
+  "All x #i. Seen(x)@i ==> x = <'a','b'> | x = 'd'"
+lemma repeated_pattern: "All x #i. Twice(x)@i ==> x = 'c'"
+lemma pair_reachable: exists-trace "Ex #i. Seen(<'a','b'>)@i"
+lemma nested_reachable: exists-trace "Ex #i. Seen('d')@i"
+lemma repeated_reachable: exists-trace "Ex #i. Twice('c')@i"
+lemma ordinary_parameter: exists-trace "Ex #i. Value('e')@i"
+
+end
