@@ -1,0 +1,21 @@
+theory SoundnessDiffConditionalRestriction
+begin
+
+rule Emit:
+  [ In(x) ] --[ A(x) ]-> [ Out(x) ]
+
+// Matching this restriction to a symbolic A(x) yields the specialization
+// x='a'. That specialization is forbidden, but it cannot reject all other
+// instances of the mirror, such as the A('b') trace below.
+restriction BanA:
+  "All #i. A('a')@i ==> F"
+
+lemma left_witness [left]: exists-trace
+  "Ex #i. A('b')@i"
+
+lemma right_witness [right]: exists-trace
+  "Ex #i. A('b')@i"
+
+diffLemma Observational_equivalence:
+
+end

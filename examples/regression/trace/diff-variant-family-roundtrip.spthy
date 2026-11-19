@@ -1,0 +1,52 @@
+theory DiffVariantFamilyRoundtrip
+begin
+builtins: symmetric-encryption
+
+rule Init: [] --> [ State('s') ]
+
+// This rule requires the attacker to know a name before it is generated.
+// Closing discards every variant, but printing and reopening must still work.
+rule Impossible: [ Fr(~n), In(~n) ] --[ Impossible(~n) ]-> []
+
+// Closing computes loop breakers on these compiled members. They must not be
+// compared against the original declarations' empty loop-breaker metadata.
+rule Loop: [ State(x) ] --[ Tick(x) ]-> [ State(x) ]
+left rule Loop: [ State(x) ] --[ Tick(x) ]-> [ State(x) ]
+  variants rule (modulo AC) Loop:
+    [ State(x) ] --[ Tick(x) ]-> [ State(x) ]
+right rule Loop: [ State(x) ] --[ Tick(x) ]-> [ State(x) ]
+  variants rule (modulo AC) Loop:
+    [ State(x) ] --[ Tick(x) ]-> [ State(x) ]
+
+// This complete family has only one member, but normalization gives that
+// member a different name and body. Printing it as the parent E-rule used to
+// produce side rules named Reduced___VARIANT_1 under parent Reduced, which
+// the parser then rejected on reload.
+rule Reduced: [] --[ Reduced() ]-> [ Out(sdec(senc('a','k'),'k')) ]
+left rule Reduced: [] --[ Reduced() ]-> [ Out(sdec(senc('a','k'),'k')) ]
+  variants rule (modulo AC) Reduced___VARIANT_1:
+    [] --[ Reduced(), DiffProtoReduced___VARIANT_1() ]-> [ Out('a') ]
+right rule Reduced: [] --[ Reduced() ]-> [ Out(sdec(senc('a','k'),'k')) ]
+  variants rule (modulo AC) Reduced___VARIANT_1:
+    [] --[ Reduced(), DiffProtoReduced___VARIANT_1() ]-> [ Out('a') ]
+
+// Repeated declarations can arise from includes. Keep this complete annotated
+// family once: duplicated numbered members make the exported text invalid.
+rule Reduced: [] --[ Reduced() ]-> [ Out(sdec(senc('a','k'),'k')) ]
+left rule Reduced: [] --[ Reduced() ]-> [ Out(sdec(senc('a','k'),'k')) ]
+  variants rule (modulo AC) Reduced___VARIANT_1:
+    [] --[ Reduced(), DiffProtoReduced___VARIANT_1() ]-> [ Out('a') ]
+right rule Reduced: [] --[ Reduced() ]-> [ Out(sdec(senc('a','k'),'k')) ]
+  variants rule (modulo AC) Reduced___VARIANT_1:
+    [] --[ Reduced(), DiffProtoReduced___VARIANT_1() ]-> [ Out('a') ]
+
+lemma loop_reachable: exists-trace "Ex #i. Tick('s')@i"
+lemma impossible_unreachable: "All n #i. Impossible(n)@i ==> F"
+lemma reduced_reachable: exists-trace "Ex #i. Reduced()@i"
+// This is a user action, despite resembling a generated label. Only the
+// parent-owned DiffProtoReduced label may be removed during reconstruction.
+lemma variant_action_reachable: exists-trace
+  "Ex #i. DiffProtoReduced___VARIANT_1()@i"
+
+diffLemma Observational_equivalence:
+end

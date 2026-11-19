@@ -65,7 +65,7 @@ diffCheckVariableDeducibility thy sig sources prover diffprover =
         freesAndPremsLHS = zip3 [0..] (freesInThyRules leftOpenRules) (map (map (fmap replacePrivate)) $ premsOfThyRules leftOpenRules)
         freeVars = freesInThyRules (leftOpenRules ++ rightOpenRules)
 
-        diffRules  = map (applyMacroInDiffProtoRule (diffTheoryMacros thy)) $ diffTheoryDiffRules thy
+        diffRules  = map (applyMacroInDiffProtoRule (diffTheoryMacros thy) . prepareDiffSideRules (L.get sigmMaudeHandle sig) (diffTheoryMacros thy)) $ diffTheoryDiffRules thy
         leftOpenRules  = map getLeftProtoRule  diffRules
         rightOpenRules = map getRightProtoRule diffRules
 

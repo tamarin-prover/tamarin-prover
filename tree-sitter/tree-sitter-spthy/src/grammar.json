@@ -3951,6 +3951,10 @@
         },
         {
           "type": "STRING",
+          "value": "diff_reuse"
+        },
+        {
+          "type": "STRING",
           "value": "use_induction"
         },
         {

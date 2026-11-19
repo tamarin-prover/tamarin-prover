@@ -1,0 +1,9 @@
+// Side annotations obey the same binding rules as ordinary actions.
+// The fresh variable in A must have a corresponding Fr premise.
+theory UnboundSideAction begin
+rule R: [] --> [Out('a')]
+left rule R: [] --[A(~x)]-> [Out('a')]
+right rule R: [] --[A(~x)]-> [Out('a')]
+lemma fresh_action [left]: exists-trace "Ex x #i. A(x)@i"
+diffLemma D:
+end

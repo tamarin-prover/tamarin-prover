@@ -1,0 +1,10 @@
+theory EmptyFamilyAdmission
+begin
+
+// The left family is empty; the right rule is executable but forbidden.
+// Neither side has an admitted execution, so no-mirror cases are not attacks.
+rule Emit: [Fr(~n), In(diff(~n,'known'))] --[Emitted(~n)]-> [Out(~n)]
+restriction Ban: "All x #i. Emitted(x)@i ==> F"
+lemma no_output: "All x #i. Emitted(x)@i ==> F"
+diffLemma Observational_equivalence:
+end

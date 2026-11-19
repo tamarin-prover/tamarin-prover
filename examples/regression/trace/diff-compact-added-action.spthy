@@ -1,0 +1,12 @@
+// The compact member keeps the parent name although unfolding changes it.
+// Its added reducible action must still be checked for normality coverage.
+theory CompactAddedAction begin
+builtins: symmetric-encryption
+rule R: [In(x),In(k)] --> [Out(sdec(senc('a','key'),'key'))]
+left rule R: [In(x),In(k)] --> [Out(sdec(senc('a','key'),'key'))]
+variants rule (modulo AC) R: [In(x),In(k)] --[Extra(sdec(x,k))]-> [Out('a')]
+right rule R: [In(x),In(k)] --> [Out(sdec(senc('a','key'),'key'))]
+// This was incorrectly verified when the uncovered action removed instances.
+lemma no_plain [left]: "All #i. Extra('plain')@i ==> F"
+diffLemma D:
+end

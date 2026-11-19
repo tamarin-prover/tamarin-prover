@@ -1,0 +1,19 @@
+{
+  "tests": [
+    {
+      "name": "generated-source-roundtrip",
+      "args": [
+        "--diff",
+        "--auto-sources",
+        "--bound=8",
+        "--quit-on-warning"
+      ],
+      "checks": [
+        "roundtrip"
+      ],
+      "contains": [
+        "AUTO_typing"
+      ]
+    }
+  ]
+}

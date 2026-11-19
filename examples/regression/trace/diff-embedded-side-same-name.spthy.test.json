@@ -1,0 +1,14 @@
+{
+  "tests": [
+    {
+      "name": "restriction-inheritance",
+      "args": [
+        "--diff",
+        "--quit-on-warning"
+      ],
+      "checks": [
+        "roundtrip"
+      ]
+    }
+  ]
+}

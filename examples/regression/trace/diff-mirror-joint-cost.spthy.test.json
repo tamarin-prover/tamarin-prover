@@ -1,0 +1,10 @@
+{
+  "tests": [
+    {
+      "name": "bounded-joint-evaluation",
+      "args": ["--diff", "--prove", "+RTS", "-N2", "-RTS"],
+      "timeout": 30,
+      "contains": ["Observational_equivalence : falsified"]
+    }
+  ]
+}

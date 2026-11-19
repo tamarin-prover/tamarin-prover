@@ -1,0 +1,12 @@
+theory DiffPartialEvaluationMultiple
+begin
+
+// Reachability analysis finds two instances of Use. They must not be
+// installed alongside the original family: diff mirroring needs the same
+// parent correspondence before and after --partial-evaluation.
+rule SeedA: [] --> [ State('a') ]
+rule SeedB: [] --> [ State('b') ]
+rule Use: [ State(x) ] --[ Used(x) ]-> [ Out(diff(x,x)) ]
+lemma both: exists-trace "Ex #i #j. Used('a')@i & Used('b')@j"
+diffLemma Observational_equivalence:
+end

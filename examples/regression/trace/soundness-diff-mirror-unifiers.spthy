@@ -1,0 +1,15 @@
+theory SoundnessDiffMirrorUnifiers
+begin
+builtins: multiset
+// Both assignments (a,b) and (b,a) solve the mirrored edge. Only the
+// second satisfies Choose, so composing the unifiers produces a false attack.
+rule Produce:
+ [] --> [ F('a' ++ 'b') ]
+rule Consume:
+ [ F(x ++ y) ] --[ Choice(x,y) ]-> [ Out('ok') ]
+restriction Choose [right]:
+ "All x y #i. Choice(x,y)@i ==> x = 'b'"
+lemma right_witness [right]: exists-trace
+ "Ex #i. Choice('b','a')@i"
+diffLemma Observational_equivalence:
+end

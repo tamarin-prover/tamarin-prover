@@ -1,0 +1,23 @@
+{
+  "tests": [
+    {
+      "name": "strict-precompute",
+      "args": [
+        "--diff",
+        "--precompute-only",
+        "--quit-on-warning"
+      ],
+      "timeout": 15
+    },
+    {
+      "name": "roundtrip",
+      "args": [
+        "--diff",
+        "--quit-on-warning"
+      ],
+      "checks": [
+        "roundtrip"
+      ]
+    }
+  ]
+}
