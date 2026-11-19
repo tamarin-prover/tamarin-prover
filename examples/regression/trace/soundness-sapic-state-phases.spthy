@@ -1,0 +1,30 @@
+theory SoundnessSapicStatePhases
+begin
+options: translation-state-optimisation
+
+// Each exclusive branch may initialize the cell once.
+let Branch = new s; in(choice);
+  if choice = 'left' then
+    (insert s,'left'; lock s; lookup s as v in event Branch('left',v))
+  else
+    (insert s,'right'; lock s; lookup s as v in event Branch('right',v))
+
+// Parallel users of an already initialized cell serialize through its lock.
+let Parallel = new s; insert s,'value';
+  ((lock s; lookup s as v in event Parallel('left',v); insert s,v; unlock s)
+  | (lock s; lookup s as v in event Parallel('right',v); insert s,v; unlock s))
+
+// A terminating reader leaves the lock held, in either translation.
+let StopLocked = new s; insert s,'value'; lock s;
+  lookup s as v in event Stopped(v)
+
+process: Branch | Parallel | StopLocked
+lemma left_branch: exists-trace "Ex #i. Branch('left','left')@i"
+lemma right_branch: exists-trace "Ex #i. Branch('right','right')@i"
+lemma branch_value: "All label v #i. Branch(label,v)@i ==> label = v"
+lemma parallel_completed: exists-trace
+  "Ex #i #j. Parallel('left','value')@i & Parallel('right','value')@j"
+lemma parallel_value: "All label v #i. Parallel(label,v)@i ==> v = 'value'"
+lemma stopped_reachable: exists-trace "Ex #i. Stopped('value')@i"
+lemma stopped_value: "All v #i. Stopped(v)@i ==> v = 'value'"
+end
