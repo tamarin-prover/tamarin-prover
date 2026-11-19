@@ -480,7 +480,9 @@ The available options are:
  * `translation-state-optimisation`: this enables the pure state
    translation described in the SAPIC+ paper. Both the original and
    the optimized version do not always yield the same benefit, hence
-   the optional switch.
+   the optional switch. Pure state optimisation is disabled when
+   `translation-progress` is enabled, as the two translations do not
+   necessarily preserve traces when combined.
  * `translation-compress-events`: by default, each event is translated
    in a singular rule. This may create a Tamarin slowdown when
    translating a sequence of events, but is due to the fact that in

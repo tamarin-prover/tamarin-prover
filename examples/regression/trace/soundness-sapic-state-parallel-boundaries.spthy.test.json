@@ -1,24 +1,37 @@
 {
   "tests": [
     {
-      "name": "shared-and-replicated-initialization",
+      "name": "parallel-initialization",
       "args": [
         "--prove"
       ],
       "matches": [
         {
           "regex": "\\bL_PureState\\(",
-          "max": 0,
-          "theory_only": true
-        },
-        {
-          "regex": "shared_reachable \\(exists-trace\\): verified",
-          "min": 1
-        },
-        {
-          "regex": "repeated_reachable \\(exists-trace\\): verified",
+          "theory_only": true,
           "min": 1
         }
+      ],
+      "contains": [
+        "shared_reachable (exists-trace): verified",
+        "repeated_reachable (exists-trace): verified"
+      ]
+    },
+    {
+      "name": "replicated-initialization",
+      "args": [
+        "--prove",
+        "-DREPEATED_ONLY"
+      ],
+      "matches": [
+        {
+          "regex": "\\bL_PureState\\(",
+          "max": 0,
+          "theory_only": true
+        }
+      ],
+      "contains": [
+        "repeated_reachable (exists-trace): verified"
       ]
     }
   ]
