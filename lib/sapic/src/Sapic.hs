@@ -59,7 +59,7 @@ translate th =
         $ propagateNames
         $ toAnProcess p
       -- Substitution can expose channel names in outputs and state accesses.
-      let an_proc_pre = checkOps' (._stateChannelOpt) annotatePureStates
+      let an_proc_pre = checkOps' pureStateOpt annotatePureStates
                       $ annotateSecretChannels substituted
       an_proc <- annotateLocks an_proc_pre
       -- compute initial rules
@@ -84,12 +84,15 @@ translate th =
       -- add heuristic, if not already defined by user
       let th3 = fromMaybe th2 (addHeuristic [SapicRanking] th2)
       -- for state optimisation: force special facts  to be injective
-      let th4 = checkOps' (._stateChannelOpt) (setforcedInjectiveFacts (S.fromList [pureStateFactTag, pureStateLockFactTag])) th3
+      let th4 = checkOps' pureStateOpt (setforcedInjectiveFacts (S.fromList [pureStateFactTag, pureStateLockFactTag])) th3
       let th5 = th4 { _thyIsSapic = True }
       return th5
     _   -> throw (MoreThanOneProcess :: SapicException AnnotatedProcess)
   where
     ops = th._thyOptions
+    -- Pure lookups omit the empty else branch. Under progress, blocking instead
+    -- of taking that branch need not preserve the allowed traces.
+    pureStateOpt o = o._stateChannelOpt && not o._transProgress
     checkOps l x
       | l ops = x
       | otherwise = return

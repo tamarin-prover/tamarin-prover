@@ -1,0 +1,21 @@
+theory SapicStateParallelFallbacks
+begin
+options: translation-state-optimisation
+
+// Relaxing the parallel boundary must not allow two initializers for one cell.
+// That would leave two pure-state facts where ordinary inserts overwrite.
+let Multiple = new s;
+  ((insert s,'a') | (insert s,'b') |
+   (lock s; lookup s as v in event Read(v); insert s,v; unlock s))
+
+// With a nontrivial else branch, blocking would lose its event.
+let Failure = new s;
+  ((insert s,'value') |
+   (lock s; lookup s as v in event Found(v); insert s,v; unlock s
+    else event Missing()))
+
+process: Multiple | Failure
+lemma a: exists-trace "Ex #i. Read('a')@i"
+lemma b: exists-trace "Ex #i. Read('b')@i"
+lemma missing: exists-trace "Ex #i. Missing()@i"
+end

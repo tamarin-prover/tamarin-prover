@@ -2,8 +2,8 @@ theory SoundnessSapicStateParallelBoundaries
 begin
 options: translation-state-optimisation
 functions: value/0
-// Initialization and access in distinct parallel branches still use the
-// ordinary translation. The read may precede initialization and take else 0.
+// Initialization may run in parallel with readers. Without progress, taking
+// the empty else branch adds no trace beyond leaving the reader blocked.
 let Shared = new s;
   ((insert s,value) |
    (lock s; lookup s as v in event Shared(v); insert s,v; unlock s))
@@ -12,7 +12,11 @@ let Shared = new s;
 let Repeated = new s;
   ((!(insert s,value; lock s; lookup s as v in
       event Repeated(v); insert s,v; unlock s)) | event Independent())
+#ifdef REPEATED_ONLY
+process: Repeated
+#else
 process: Shared | Repeated
 lemma shared_reachable: exists-trace "Ex #i. Shared(value)@i"
+#endif
 lemma repeated_reachable: exists-trace "Ex #i. Repeated(value)@i"
 end

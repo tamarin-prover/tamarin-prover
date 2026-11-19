@@ -1,0 +1,23 @@
+{
+  "tests": [
+    {
+      "name": "ordinary-parallel-cells",
+      "args": [
+        "--prove",
+        "--quit-on-warning"
+      ],
+      "contains": [
+        "a (exists-trace): verified",
+        "b (exists-trace): verified",
+        "missing (exists-trace): verified"
+      ],
+      "matches": [
+        {
+          "regex": "\\bL_PureState\\(",
+          "max": 0,
+          "theory_only": true
+        }
+      ]
+    }
+  ]
+}

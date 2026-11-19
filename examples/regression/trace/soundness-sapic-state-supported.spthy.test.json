@@ -12,6 +12,26 @@
           "theory_only": true
         }
       ]
+    },
+    {
+      "name": "progress-disables-pure-state",
+      "args": [
+        "-DPROGRESS",
+        "--prove",
+        "--quit-on-warning"
+      ],
+      "matches": [
+        {
+          "regex": "\\bL_PureState\\(",
+          "max": 0,
+          "theory_only": true
+        }
+      ],
+      "contains": [
+        "initial_value (all-traces): verified",
+        "updated_value (all-traces): verified",
+        "completed (exists-trace): verified"
+      ]
     }
   ]
 }
