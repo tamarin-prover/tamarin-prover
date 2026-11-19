@@ -1,0 +1,162 @@
+theory DiffEmbeddedSideRestrictionNames
+
+begin
+
+// Function signature and definition of the equational theory E
+
+functions: fst/1, pair/2, snd/1
+equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
+
+rule (modulo E) P:
+   [ ] --[ A( ) ]-> [ ]
+ left
+  rule (modulo E) P:
+     [ ] --[ A( ), Restr_P_LHS_1( ) ]-> [ ]
+ right
+  rule (modulo E) P:
+     [ ] --[ A( ) ]-> [ ]
+
+rule (modulo E) P_LHS:
+   [ ] --[ B( ), Restr_P_LHS_1_1( ) ]-> [ ]
+
+restriction Restr_P_LHS_1 [left]:
+  "∀ #NOW. (Restr_P_LHS_1( ) @ #NOW) ⇒ (⊤)"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ #NOW. (Restr_P_LHS_1( ) @ #NOW) ⇒ (⊤)"
+  */
+
+restriction Restr_P_LHS_1_1 [left]:
+  "∀ #NOW. (Restr_P_LHS_1_1( ) @ #NOW) ⇒ (⊤)"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ #NOW. (Restr_P_LHS_1_1( ) @ #NOW) ⇒ (⊤)"
+  */
+
+restriction Restr_P_LHS_1_1 [right]:
+  "∀ #NOW. (Restr_P_LHS_1_1( ) @ #NOW) ⇒ (⊤)"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ #NOW. (Restr_P_LHS_1_1( ) @ #NOW) ⇒ (⊤)"
+  */
+
+lemma both [right]:
+  exists-trace "∃ #i #j. (A( ) @ #i) ∧ (B( ) @ #j)"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #i #j. (A( ) @ #i) ∧ (B( ) @ #j)"
+*/
+simplify
+SOLVED // trace found
+
+lemma both [left]:
+  exists-trace "∃ #i #j. (A( ) @ #i) ∧ (B( ) @ #j)"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #i #j. (A( ) @ #i) ∧ (B( ) @ #j)"
+*/
+simplify
+SOLVED // trace found
+
+diffLemma Observational_equivalence:
+rule-equivalence
+  case Rule_Destrd_0_fst
+  backward-search
+    case LHS
+    step( simplify )
+    by step( solve( !KD( <x, x.1> ) ▶₀ #i ) )
+  next
+    case RHS
+    step( simplify )
+    by step( solve( !KD( <x, x.1> ) ▶₀ #i ) )
+  qed
+next
+  case Rule_Destrd_0_snd
+  backward-search
+    case LHS
+    step( simplify )
+    by step( solve( !KD( <x, x.1> ) ▶₀ #i ) )
+  next
+    case RHS
+    step( simplify )
+    by step( solve( !KD( <x, x.1> ) ▶₀ #i ) )
+  qed
+next
+  case Rule_Equality
+  backward-search
+    case LHS
+    step( simplify )
+    by step( solve( !KD( x ) ▶₁ #i ) )
+  next
+    case RHS
+    step( simplify )
+    by step( solve( !KD( x ) ▶₁ #i ) )
+  qed
+next
+  case Rule_P
+  backward-search
+    case LHS
+    step( simplify )
+    MIRRORED
+  next
+    case RHS
+    step( simplify )
+    MIRRORED
+  qed
+next
+  case Rule_P_LHS
+  backward-search
+    case LHS
+    step( simplify )
+    MIRRORED
+  next
+    case RHS
+    step( simplify )
+    MIRRORED
+  qed
+next
+  case Rule_Send
+  backward-search
+    case LHS
+    step( simplify )
+    MIRRORED
+  next
+    case RHS
+    step( simplify )
+    MIRRORED
+  qed
+qed
+
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.13.0
+Maude version 3.5.1
+Git revision: c004ebc9e75ff99675e46fdc3b3850d344a9e4ac (with uncommited changes), branch: diff-mirror-proofs
+Compiled at: 2026-10-07 19:04:34.939251655 UTC
+*/
+
+end
+/* Output
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/regression/trace/diff-embedded-side-restriction-names.spthy
+
+  output:          examples/regression/trace/diff-embedded-side-restriction-names.spthy.tmp
+  processing time: 0.17s
+  
+  RHS :  both (exists-trace): verified (2 steps)
+  LHS :  both (exists-trace): verified (2 steps)
+  DiffLemma:  Observational_equivalence : verified (31 steps)
+
+==============================================================================
+*/

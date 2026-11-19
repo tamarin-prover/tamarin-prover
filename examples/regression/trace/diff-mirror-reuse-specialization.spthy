@@ -1,0 +1,33 @@
+theory DiffMirrorReuseSpecialization
+begin
+
+builtins: multiset
+
+rule Produce:
+  [ ] --> [ F('a' ++ 'b') ]
+
+rule Consume:
+  [ F(x ++ y) ] --[ Choice(x,y,$p,$q) ]-> [ Out(<$p,$q>) ]
+
+// This deliberately false reusable assumption tests consistency with the
+// admitted conditional proof context, not unconditional equivalence. Its
+// guard becomes applicable only after intersecting the mirror failures.
+#ifdef not (ATTACK | RESTRICTION)
+lemma Original [left,diff_reuse]:
+  "All x y #i. Choice(x,y,'a','b') @ i ==> F"
+#endif
+
+// The same exclusion as a restriction must continue to establish coverage.
+#ifdef RESTRICTION
+restriction Original [left]:
+  "All x y #i. Choice(x,y,'a','b') @ i ==> F"
+#endif
+
+restriction Choices [right]:
+  "All x y p q #i. Choice(x,y,p,q) @ i ==>
+    (x='a' | not(q='b')) & (x='b' | not(p='a'))"
+
+// Without the exclusion, p='a', q='b' is a real attack on both mirrors.
+diffLemma D:
+
+end
