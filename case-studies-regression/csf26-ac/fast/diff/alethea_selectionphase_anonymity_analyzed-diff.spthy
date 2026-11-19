@@ -1629,6 +1629,95 @@ next
     qed
   qed
 next
+  case Rule_Destrd_1_verify
+  backward-search
+    case LHS
+    step( simplify )
+    step( solve( !KD( pk(x) ) ▶₀ #i ) )
+      case ChanOut_A
+      step( solve( (#vl, 0) ~~> (#i, 0) ) )
+        case d_0_fst
+        by step( contradiction /* impossible chain */ )
+      next
+        case d_0_snd
+        step( solve( Out_A( $A, x.2 ) ▶₀ #vr ) )
+          case S_7
+          by step( contradiction /* impossible chain */ )
+        next
+          case Setup_case_1
+          step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+            case d_0_adec
+            by step( contradiction /* impossible chain */ )
+          qed
+        next
+          case Setup_case_2
+          step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+            case d_0_adec
+            by step( contradiction /* impossible chain */ )
+          qed
+        next
+          case Setup_case_3
+          by step( contradiction /* impossible chain */ )
+        qed
+      qed
+    next
+      case publickeyinfrastructure
+      step( solve( (#vl, 0) ~~> (#i, 0) ) )
+        case d_1_verify
+        by step( contradiction /* impossible chain */ )
+      next
+        case pk
+        step( solve( !KU( sign(x, ~skX) ) @ #vk ) )
+          case c_sign
+          by step( solve( !KU( ~skX ) @ #vk.2 ) )
+        qed
+      qed
+    qed
+  next
+    case RHS
+    step( simplify )
+    step( solve( !KD( pk(x) ) ▶₀ #i ) )
+      case ChanOut_A
+      step( solve( (#vl, 0) ~~> (#i, 0) ) )
+        case d_0_fst
+        by step( contradiction /* impossible chain */ )
+      next
+        case d_0_snd
+        step( solve( Out_A( $A, x.2 ) ▶₀ #vr ) )
+          case S_7
+          by step( contradiction /* impossible chain */ )
+        next
+          case Setup_case_1
+          step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+            case d_0_adec
+            by step( contradiction /* impossible chain */ )
+          qed
+        next
+          case Setup_case_2
+          step( solve( (#vr.1, 0) ~~> (#i, 0) ) )
+            case d_0_adec
+            by step( contradiction /* impossible chain */ )
+          qed
+        next
+          case Setup_case_3
+          by step( contradiction /* impossible chain */ )
+        qed
+      qed
+    next
+      case publickeyinfrastructure
+      step( solve( (#vl, 0) ~~> (#i, 0) ) )
+        case d_1_verify
+        by step( contradiction /* impossible chain */ )
+      next
+        case pk
+        step( solve( !KU( sign(x, ~skX) ) @ #vk ) )
+          case c_sign
+          by step( solve( !KU( ~skX ) @ #vk.2 ) )
+        qed
+      qed
+    qed
+  qed
+next
   case Rule_Equality
   backward-search
     case LHS
@@ -2485,6 +2574,15 @@ next
     next
       case publickeyinfrastructure
       step( solve( (#vl, 0) ~~> (#i, 1) ) )
+        case d_1_verify
+        step( solve( (#vr.1, 0) ~~> (#i, 1) ) )
+          case true
+          step( solve( !KU( sign(x, ~skX) ) @ #vk.1 ) )
+            case c_sign
+            by step( solve( !KU( ~skX ) @ #vk.3 ) )
+          qed
+        qed
+      next
         case pk
         step( solve( !KU( pk(~skX) ) @ #vk ) )
           case c_pk
@@ -3323,6 +3421,15 @@ next
     next
       case publickeyinfrastructure
       step( solve( (#vl, 0) ~~> (#i, 1) ) )
+        case d_1_verify
+        step( solve( (#vr.1, 0) ~~> (#i, 1) ) )
+          case true
+          step( solve( !KU( sign(x, ~skX) ) @ #vk.1 ) )
+            case c_sign
+            by step( solve( !KU( ~skX ) @ #vk.3 ) )
+          qed
+        qed
+      next
         case pk
         step( solve( !KU( pk(~skX) ) @ #vk ) )
           case c_pk
@@ -3532,8 +3639,8 @@ qed
 Generated from:
 Tamarin version 1.13.0
 Maude version 3.5.1
-Git revision: d2ccaf31b4ff8aecbb7de84895b9825b299c1b13 (with uncommited changes), branch: msr-proof-correctness
-Compiled at: 2026-10-07 20:46:17.79718658 UTC
+Git revision: 0363d5d0b6112e845db308fb437c7140a758430b (with uncommited changes), branch: fix-deconstruction-rules-constant-rhs
+Compiled at: 2026-11-17 16:31:42.248184 UTC
 */
 
 end
@@ -3545,7 +3652,7 @@ summary of summaries:
 analyzed: examples/csf26-ac/fast/diff/alethea_selectionphase_anonymity.spthy
 
   output:          examples/csf26-ac/fast/diff/alethea_selectionphase_anonymity.spthy.tmp
-  processing time: 6.82s
+  processing time: 1.66s
   
   RHS :  functional (exists-trace): verified (20 steps)
   LHS :  functional (exists-trace): verified (20 steps)
@@ -3559,7 +3666,7 @@ analyzed: examples/csf26-ac/fast/diff/alethea_selectionphase_anonymity.spthy
   LHS :  agreementHwrtS (all-traces): verified (20 steps)
   RHS :  agreementDwrtS (all-traces): verified (6 steps)
   LHS :  agreementDwrtS (all-traces): verified (6 steps)
-  DiffLemma:  Observational_equivalence : verified (896 steps)
+  DiffLemma:  Observational_equivalence : verified (933 steps)
 
 ==============================================================================
 */
