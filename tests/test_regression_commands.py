@@ -319,7 +319,7 @@ class IntegrationTests(unittest.TestCase):
     def test_make_failure_reports_output_and_skips_comparison(self):
         failure = subprocess.CalledProcessError(2, ["make"],
                                                output=b"prover failed: example.spthy\n\xff")
-        with patch.object(sys, "argv", ["regressionTests.py", "-noi"]), \
+        with patch.object(sys, "argv", ["regressionTests.py", "-noi", "--tamarin", sys.executable]), \
                 patch.object(regressionTests, "runCommandTests", return_value=True), \
                 patch.object(subprocess, "check_output", side_effect=failure), \
                 patch.object(regressionTests, "compare") as compare, \
@@ -331,7 +331,7 @@ class IntegrationTests(unittest.TestCase):
         compare.assert_not_called()
 
     def test_no_make_does_not_rerun_commands(self):
-        with patch.object(sys, "argv", ["regressionTests.py", "-noi", "-nom"]), \
+        with patch.object(sys, "argv", ["regressionTests.py", "-noi", "-nom", "--tamarin", sys.executable]), \
                 patch.object(regressionTests, "runCommandTests") as run, \
                 patch.object(regressionTests, "compare", return_value=True), self.assertRaises(SystemExit) as stopped:
             regressionTests.main()
@@ -339,7 +339,8 @@ class IntegrationTests(unittest.TestCase):
         run.assert_not_called()
 
     def test_command_only_repeats_and_retains_failures(self):
-        argv = ["regressionTests.py", "-noi", "--command-tests-only", "selected.spthy.test.json", "-r", "3"]
+        argv = ["regressionTests.py", "-noi", "--command-tests-only", "selected.spthy.test.json", "-r", "3",
+                "--tamarin", sys.executable]
         for results, status in [([True, True, True], 0), ([False, True, True], 1)]:
             with self.subTest(results=results), patch.object(sys, "argv", argv), \
                     patch.object(regressionTests, "runCommandTests", side_effect=results) as run, \
