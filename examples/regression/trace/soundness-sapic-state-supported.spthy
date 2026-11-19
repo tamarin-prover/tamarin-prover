@@ -1,0 +1,12 @@
+theory SoundnessSapicStateSupported
+begin
+options: translation-state-optimisation
+// Deleting the other cell makes only that cell ordinary. The cell s keeps
+// the optimised translation, which must still cover all of its accesses.
+process: new s; insert s,'0'; new other; insert other,'x'; delete other;
+  lock s; lookup s as v in event Before(v); insert s,'1'; unlock s;
+  lock s; lookup s as w in event After(w); insert s,w; unlock s
+lemma initial_value: "All v #i. Before(v)@i ==> v = '0'"
+lemma updated_value: "All w #i. After(w)@i ==> w = '1'"
+lemma completed: exists-trace "Ex #i #j. Before('0')@i & After('1')@j & i < j"
+end

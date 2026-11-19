@@ -1,0 +1,17 @@
+{
+  "tests": [
+    {
+      "name": "pure-state-optimization",
+      "args": [
+        "--quit-on-warning"
+      ],
+      "matches": [
+        {
+          "regex": "\\bL_PureState\\(",
+          "min": 1,
+          "theory_only": true
+        }
+      ]
+    }
+  ]
+}
