@@ -7,6 +7,12 @@
       "contains": ["invalid --graph-simplification value '4'"]
     },
     {
+      "name": "graph-simplification-overflowing-level",
+      "args": ["--graph-simplification=18446744073709551616"],
+      "exit_code": 1,
+      "contains": ["invalid --graph-simplification value '18446744073709551616'"]
+    },
+    {
       "name": "graph-simplification-level-0-uncompressed",
       "args": ["--prove", "--graph-simplification=0", "--output-dot=/dev/stdout"],
       "contains": ["SL0-AS0-CL0-A1-C0-NF"]

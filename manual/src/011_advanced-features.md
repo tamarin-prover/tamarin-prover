@@ -950,12 +950,15 @@ in the interactive GUI and in the output of `--output-dot` and
    simple steps whose inputs and outputs are all connected are hidden, such as
    the `isend`, `irecv`, `coerce` and `Fr` rules, and the adversary's deduction
    of pairs, inverses, public names and numbers. Ordering (dashed) edges that
-   are already implied by the other edges are dropped.
+   are already implied by the other kinds of edges (fact edges and unsolved
+   chains) are dropped, whatever their origin.
 
  - **Level 2 (default)**: as level 1, and additionally drops ordering edges that
-   are implied by other ordering edges (transitive reduction). Ordering edges
-   that come from the lemma's formula or from adversary reasoning are always
-   kept, as they are often relevant for understanding the proof.
+   are implied by paths through other ordering edges (transitive reduction).
+   This reduction keeps ordering edges that come from the lemma's formula or
+   from adversary reasoning, as they are often relevant for understanding the
+   proof. Such edges are still dropped as in level 1, when the other kinds of
+   edges imply them.
 
  - **Level 3**: as level 2, but also drops implied ordering edges that come
    from the formula or from adversary reasoning.

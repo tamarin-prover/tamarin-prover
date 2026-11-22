@@ -54,8 +54,10 @@ levelNum SL2 = 2
 levelNum SL3 = 3
 
 -- | Inverse of 'levelNum'; 'Nothing' for numbers that are not a level.
--- Used to parse the level given in the GUI and on the command line.
-levelFromNum :: Int -> Maybe SimplificationLevel
+-- Used to parse the level given in the GUI and on the command line. It takes
+-- an 'Integer' because reading a large number as an 'Int' wraps around, e.g.,
+-- 2^64 would be read as 0.
+levelFromNum :: Integer -> Maybe SimplificationLevel
 levelFromNum 0 = Just SL0
 levelFromNum 1 = Just SL1
 levelFromNum 2 = Just SL2
