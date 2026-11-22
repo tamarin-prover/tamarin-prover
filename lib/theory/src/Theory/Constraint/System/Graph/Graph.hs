@@ -157,7 +157,7 @@ computeBasicGraphRepr se =
         ++ map LessEdge (S.toList $ get Sys.sLessAtoms se)
         ++ map UnsolvedChain (Sys.unsolvedChains se)
   in
-    GraphRepr [] nodes edges
+    GraphRepr [] nodes edges S.empty
 
 -- | Compute clusters, nodes & edges from a Graph instance according to the Graph's options.
 systemToGraph :: Sys.System -> GraphOptions -> Graph
@@ -166,10 +166,14 @@ systemToGraph se options =
       simplfiedSystem = simplifySystem (levelNum $ get goSimplificationLevel options) $
                           if get goCompress options then compressSystem se else se
       basicGraphRepr = computeBasicGraphRepr simplfiedSystem
-      -- Iterate on the basicGraphRepr depending on what options are set to get the final repr
+      -- At level 3, internal steps of adversary computations are hidden as well.
+      collapsedGraphRepr = if get goSimplificationLevel options == SL3
+                           then collapseAdversarySteps basicGraphRepr
+                           else basicGraphRepr
+      -- Iterate on the graph representation depending on what options are set to get the final repr
       repr = if get goClustering options
-             then addIntelligentClusterUsingSimilarNames basicGraphRepr
-             else addClusterByRole basicGraphRepr
+             then addIntelligentClusterUsingSimilarNames collapsedGraphRepr
+             else addClusterByRole collapsedGraphRepr
       abbrevs = computeAbbreviations repr defaultAbbreviationOptions
   in
     Graph se options repr abbrevs
