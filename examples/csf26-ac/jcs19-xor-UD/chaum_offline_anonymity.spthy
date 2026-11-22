@@ -9,7 +9,8 @@ equations:
     fst(<x.1, x.2>) = x.1,
     snd(<x.1, x.2>) = x.2,
     unblind(blind(m, r), r) = m,
-    unblind(sign(blind(m, r), k), r) = sign(m, k),
+    unblind(sign(blind(m, r), k), r) = sign(m, k)
+equations [convergent]:
     xorr(xorr(x, y), x) = y,
     xorr(x, x) = zeroo,
     xorr(x, zeroo) = x

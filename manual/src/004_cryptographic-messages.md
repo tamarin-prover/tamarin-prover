@@ -140,7 +140,11 @@ left-hand-side. These equations are thus preferred if they are sufficient to mod
 the required properties, as moreover they have the finite variant 
 property and are convergent. Tamarin issues a warning if the equational theory is 
 *not* subterm-convergent to remind users that one needs to guarantee convergence 
-and the finite variant property in this case.
+and the finite variant property in this case. Equations whose left-hand side
+contains an AC function are never considered subterm-convergent, as the
+criterion does not apply modulo AC: for instance, `f(x,x) = x` and
+`f(a(),b()) = c()` for `f/2 [AC]` lack the finite variant property, and
+`g(f(x,y)) = x` is not confluent.
 
 Note that associativity and commutativity need to be specified by annotating the 
 concerned functions (see above) rather than by writing the corresponding equations.

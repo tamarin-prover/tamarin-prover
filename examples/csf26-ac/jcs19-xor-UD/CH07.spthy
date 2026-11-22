@@ -20,7 +20,7 @@ theory CH07 begin
 
 builtins: hashing
 functions: rot/2, lh/1, rh/1, xorr/2[AC], zeroo/0
-equations: xorr(xorr(x,y),x) = y,
+equations [convergent]: xorr(xorr(x,y),x) = y,
 	   xorr(x,x) = zeroo,
 	   xorr(x,zeroo) = x
 

@@ -5,7 +5,7 @@ begin
 // Function signature and definition of the equational theory E
 
 functions: fst/1, h/1, pair/2, snd/1, zeroo/0, xorr/2 [AC,NDC]
-equations:
+equations [convergent]:
     fst(<x.1, x.2>) = x.1,
     snd(<x.1, x.2>) = x.2,
     (x xorr x) = zeroo,
@@ -457,8 +457,8 @@ qed
 Generated from:
 Tamarin version 1.13.0
 Maude version 3.5.1
-Git revision: 41bc81379b23681e7057314a5cf66a25c45e1986, branch: canonicalise-subst
-Compiled at: 2026-07-27 16:11:34.947223 UTC
+Git revision: 0e533bd4c36ab0cf935acf05c5ca157c304dc996 (with uncommited changes), branch: check-coherence-minimal
+Compiled at: 2026-11-22 15:37:32.095660631 UTC
 */
 
 end
@@ -470,7 +470,7 @@ summary of summaries:
 analyzed: examples/csf26-ac/fast/KCL07.spthy
 
   output:          examples/csf26-ac/fast/KCL07.spthy.tmp
-  processing time: 74.99s
+  processing time: 442.25s
   
   recentalive_tag (all-traces): verified (107 steps)
   executable (exists-trace): verified (16 steps)
