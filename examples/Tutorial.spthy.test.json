@@ -1,0 +1,15 @@
+{
+  "tests": [
+    {
+      "name": "graph-simplification-invalid-level",
+      "args": ["--graph-simplification=4"],
+      "exit_code": 1,
+      "contains": ["invalid --graph-simplification value '4'"]
+    },
+    {
+      "name": "graph-simplification-level-0-uncompressed",
+      "args": ["--prove", "--graph-simplification=0", "--output-dot=/dev/stdout"],
+      "contains": ["SL0-AS0-CL0-A1-C0-NF"]
+    }
+  ]
+}

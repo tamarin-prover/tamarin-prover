@@ -444,6 +444,10 @@ when we navigate through the proof steps (either by clicking at a certain proof
 step or using the `j` or `k` keys), the graph in the new window will change
 accordingly. This is especially useful when working with large proof graphs.
 
+How much of the constraint system is shown can be adjusted in the `Options`
+menu, which offers four graph simplification levels; see
+[Graph simplification levels](011_advanced-features.html#sec:graph-simplification).
+
 The proof graph is zoomable using the mouse wheel; if the font size of the node
 contents becomes too small while zooming out, Tamarin will automatically
 replacing them with the corresponding rule name and action fact. We can

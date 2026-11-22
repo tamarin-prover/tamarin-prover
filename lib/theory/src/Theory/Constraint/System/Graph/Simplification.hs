@@ -45,11 +45,10 @@ compressSystem se0 =
   where
     se = dropEntailedOrdConstraints se0
 
--- | Simplify the system up to the sent level, 
--- | for level 3, we will simplify the lesses of system by transitive reduction
--- | for level 2, we will apply the transitive reduction but keep the 
--- | formula constraint 
--- | for level 1, there's no transitive reduction applied
+-- | Simplify the system according to the given simplification level.
+-- Level 3: transitive reduction of all less atoms.
+-- Level 2: transitive reduction, but less atoms with reason Formula or Adversary are kept.
+-- Levels 0 and 1: no transitive reduction.
 simplifySystem :: Int -> System -> System
 simplifySystem i sys
     | i==2 = transitiveReduction sys False

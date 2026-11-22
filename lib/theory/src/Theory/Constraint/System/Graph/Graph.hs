@@ -12,6 +12,7 @@ module Theory.Constraint.System.Graph.Graph (
       systemToGraph
     , SimplificationLevel(..)
     , levelNum
+    , levelFromNum
     , GraphOptions(..)
     , goSimplificationLevel
     , goShowAutoSource
@@ -51,6 +52,15 @@ levelNum SL0 = 0
 levelNum SL1 = 1
 levelNum SL2 = 2
 levelNum SL3 = 3
+
+-- | Inverse of 'levelNum'; 'Nothing' for numbers that are not a level.
+-- Used to parse the level given in the GUI and on the command line.
+levelFromNum :: Int -> Maybe SimplificationLevel
+levelFromNum 0 = Just SL0
+levelFromNum 1 = Just SL1
+levelFromNum 2 = Just SL2
+levelFromNum 3 = Just SL3
+levelFromNum _ = Nothing
 
 -- | Options for the graph generation.
 data GraphOptions = GraphOptions
