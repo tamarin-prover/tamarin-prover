@@ -145,6 +145,19 @@ and the finite variant property in this case.
 Note that associativity and commutativity need to be specified by annotating the 
 concerned functions (see above) rather than by writing the corresponding equations.
 
+An equation whose left-hand side has an AC function at its root must also
+apply when that function has further arguments. Tamarin does not add this case
+itself. For example, with `merge/2 [AC]`, the equation `merge(red(), red()) = red()`
+additionally requires
+
+    merge(red(), merge(red(), r)) = merge(red(), r)
+
+Tamarin issues a warning naming the missing equation, since it may otherwise
+miss traces. Adding it only restores this property: the resulting equations
+must still be convergent and have the finite variant property, which you
+assert with `equations [convergent]:`. The built-in equation `x XOR x XOR y = y` plays this role for
+`x XOR x = zero`.
+
 Some built-in message theories such as `diffie-hellman`, `bilinear-pairing`, 
 and `natural-numbers` include special features or optimizations, and cannot be 
 equivalently defined using functions and equations. For other theories such as 

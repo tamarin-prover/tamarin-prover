@@ -1,0 +1,51 @@
+{
+  "tests": [
+    {
+      "name": "missing-extension",
+      "args": [
+        "-DBARE",
+        "--quit-on-warning"
+      ],
+      "exit_code": 1,
+      "contains": [
+        "AC Coherence Warning",
+        "extension: (r merge red merge red) = (r merge red)"
+      ]
+    },
+    {
+      "name": "missing-extension-diff",
+      "args": [
+        "-DBARE",
+        "--diff",
+        "--quit-on-warning"
+      ],
+      "exit_code": 1,
+      "contains": [
+        "AC Coherence Warning"
+      ]
+    },
+    {
+      "name": "extension-present",
+      "args": [
+        "-DEXTENDED",
+        "--prove",
+        "--quit-on-warning"
+      ],
+      "contains": [
+        "reachable (exists-trace): verified"
+      ]
+    },
+    {
+      "name": "wrong-extension",
+      "args": [
+        "-DWRONG", "--no-ndc",
+        "--quit-on-warning"
+      ],
+      "exit_code": 1,
+      "contains": [
+        "AC Coherence Warning",
+        "extension: (r merge red merge red) = (r merge red)"
+      ]
+    }
+  ]
+}

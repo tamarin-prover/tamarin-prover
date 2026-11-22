@@ -80,7 +80,7 @@ import           Control.Category
 import           Data.Char
 import           Data.Generics.Uniplate.Data (universeBi)
 import           Data.Label
-import           Data.List                   (intersperse,(\\), intercalate, isPrefixOf)
+import           Data.List                   (delete, intersperse,(\\), intercalate, isPrefixOf)
 import           Data.Maybe
 -- import           Data.Monoid                 (mappend, mempty)
 import qualified Data.Map.Strict             as M
@@ -106,7 +106,8 @@ import           TheoryObject                (diffThyOptions, prettyVarList, the
 import           Utils.Misc
 import           Term.Macro
 
-import Term.SubtermRule ( CtxtStRule, prettyCtxtStRule, filterNonSubtermCtxtRule)
+import Term.SubtermRule ( CtxtStRule(..), StRhs(..), prettyCtxtStRule, filterNonSubtermCtxtRule)
+import Term.Rewriting.Norm (norm')
 
 
 ------------------------------------------------------------------------------
@@ -1358,6 +1359,41 @@ checkDiffEquationsSubtermConvergence thy
           $-$ vcat (map prettyCtxtStRule nonSubtermEquations) $-$ text " \n For more information, please refer to the manual : https://tamarin-prover.com/manual/master/book/010_modeling-issues.html "
 
 
+-- | Maude computes complete variants only if every equation whose left-hand
+-- side has an AC operator at its root also applies when further factors are
+-- present. Rewriting does this implicitly, variant narrowing does not. We
+-- therefore check that @f(lhs, r)@, for a fresh @r@, is an instance modulo AC
+-- of the left-hand side of some equation, and that this equation rewrites it
+-- to a term with the same normal form as @f(rhs, r)@.
+acCoherenceReport :: SignatureWithMaude -> WfErrorReport
+acCoherenceReport sig
+  | null missing = []
+  | otherwise    = [(underlineTopic "AC Coherence Warning", doc)]
+  where
+    hnd   = get sigmMaudeHandle sig
+    msig  = mhMaudeSig hnd
+    rules = S.toList (rrulesForMaudeSig msig)
+    nf t  = norm' t `runReader` hnd
+    missing =
+      [ (rule, ext lhs, nf (ext rhs))
+      | rule@(CtxtStRule lhs (StRhs _ rhs)) <- S.toList (stRules msig)
+      , FApp (AC o) as <- [viewTerm lhs]
+      , let r     = varTerm (freshLVar "r" (sortOfLNTerm lhs) `evalFreshAvoiding` (lhs, rhs))
+            ext t = fAppAC o [t, r]
+            -- A variable argument that occurs only once can absorb the
+            -- remainder. Trying this first avoids enumerating the many
+            -- matchers of equations with several such variables.
+            absorbing = [ (rhs, substFromList [(v, ext (varTerm v))])
+                        | Lit (Var v) <- map viewTerm as, lvarSort v == LSortMsg
+                        , v `notElem` frees (delete (varTerm v) as) ]
+            matching  = [ (rhs', s) | RRule lhs' rhs' <- rules
+                        , s <- solveMatchLNTerm (ext lhs `matchWith` lhs') `runReader` hnd ]
+      , not (any (\(rhs', s) -> nf (applyVTerm s rhs') == nf (ext rhs)) (absorbing ++ matching))
+      ]
+    doc = text "The following equations rewrite at an AC operator, but do not apply when further arguments of that operator are present. Variant computation is then incomplete and Tamarin may miss traces. Add the given extension, or an equation with the same left-hand side and an equal right-hand side. This only restores coherence: the resulting equations must still be convergent and have the finite variant property, otherwise Tamarin may not terminate. Once you have checked this, mark them with 'equations [convergent]:'.\n"
+          $-$ vcat [ prettyCtxtStRule rule $-$ nest 2 (text "extension:" <-> prettyLNTerm l <-> operator_ "=" <-> prettyLNTerm rr)
+                   | (rule, l, rr) <- missing ]
+
 -- | Returns a list of errors, if there are any.
 checkWellformednessDiff :: OpenDiffTheory -> SignatureWithMaude
                     -> WfErrorReport
@@ -1377,6 +1413,7 @@ checkWellformednessDiff thy sig = -- trace ("checkWellformednessDiff: " ++ show 
     , multRestrictedReportDiff
     , natWellSortedReportDiff
     ] ++ (if not (isUserMarkedConvergentDiff thy) then checkDiffEquationsSubtermConvergence thy else [])
+      ++ acCoherenceReport sig
 
 -- | Returns a list of errors, if there are any. `incompleteMSR`, if true, indicates
 -- that the MSRs are incomplete (e.g., when we export to ProVerif) and that
@@ -1398,3 +1435,4 @@ checkWellformedness incompleteMSRs thy sig = concatMap ($ thy) (
     ++ -- additional checks
     [checkEquationsSubtermConvergence |  not (isUserMarkedConvergent thy) ]
     )
+    ++ acCoherenceReport sig
