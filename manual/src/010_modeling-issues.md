@@ -340,6 +340,8 @@ If you are sure that your equational theory is convergent and has the finite var
 
 	equations [convergent]: ...
 
+The annotation only applies to the equations listed after it. Equations in other `equations:` blocks are still checked.
+
 ### Message derivation errors
 
 It is good modelling practice to write our rules in such a way that they do not give participants any additional capabilities, and modify the equational theory for the express purpose of modifying capabilities. Using rules for this is ill-advised, as it is easy to unintentionally make a protocol not adhere to an underlying model or make the adversary weaker than intended. Because of this, Tamarin automatically checks if any rules may introduce such capabilities.

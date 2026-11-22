@@ -239,7 +239,7 @@ equations = do
     unless convergent $ symbol "equations" *> colon
     eqs <- commaSep1 equation
     modifyStateSig (\sig -> foldl (flip addCtxtStRule) sig eqs)
-    modifyState (\st -> st { sig = (sig st) { eqConvergent = convergent } })  -- Explicit state update
+    when convergent $ modifyStateSig (\sig -> sig { stRulesConvergent = foldr S.insert (stRulesConvergent sig) eqs })
     return ()
   where
     equation = do

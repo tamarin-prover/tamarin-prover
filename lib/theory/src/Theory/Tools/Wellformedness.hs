@@ -1310,27 +1310,15 @@ checkIfLemmasInDiffTheory thy
 -- Theory
 ------------------------------------------------------------------------------
 
--- | All equations of an OpenTranslatedTheory.
+-- | The equations of an OpenTranslatedTheory that are not marked as convergent.
 thyEquations :: OpenTranslatedTheory -> [CtxtStRule]
-thyEquations thy = S.toList $ stRules (sig thy)
+thyEquations thy = S.toList $ stRules (sig thy) S.\\ stRulesConvergent (sig thy)
   where
     sig = _sigMaudeInfo . _thySignature
 
--- | All equations of an OpenDiffTheory.
+-- | The equations of an OpenDiffTheory that are not marked as convergent.
 diffThyEquations :: OpenDiffTheory -> [CtxtStRule]
-diffThyEquations thy = S.toList $ stRules (sig thy)
-  where
-    sig = _sigMaudeInfo . _diffThySignature
-
--- | Check if equations are marked as user-defined convergent in an OpenTranslatedTheory.
-isUserMarkedConvergent :: OpenTranslatedTheory -> Bool
-isUserMarkedConvergent thy = eqConvergent (sig thy)
-  where
-    sig = _sigMaudeInfo . _thySignature
-
--- | Check if equations are marked as user-defined convergent in an OpenTranslatedTheory.
-isUserMarkedConvergentDiff :: OpenDiffTheory -> Bool
-isUserMarkedConvergentDiff thy = eqConvergent (sig thy)
+diffThyEquations thy = S.toList $ stRules (sig thy) S.\\ stRulesConvergent (sig thy)
   where
     sig = _sigMaudeInfo . _diffThySignature
 
@@ -1412,7 +1400,7 @@ checkWellformednessDiff thy sig = -- trace ("checkWellformednessDiff: " ++ show 
     , lemmaAttributeReportDiff
     , multRestrictedReportDiff
     , natWellSortedReportDiff
-    ] ++ (if not (isUserMarkedConvergentDiff thy) then checkDiffEquationsSubtermConvergence thy else [])
+    ] ++ checkDiffEquationsSubtermConvergence thy
       ++ acCoherenceReport sig
 
 -- | Returns a list of errors, if there are any. `incompleteMSR`, if true, indicates
@@ -1433,6 +1421,6 @@ checkWellformedness incompleteMSRs thy sig = concatMap ($ thy) (
     , natWellSortedReport
     ]
     ++ -- additional checks
-    [checkEquationsSubtermConvergence |  not (isUserMarkedConvergent thy) ]
+    [checkEquationsSubtermConvergence]
     )
     ++ acCoherenceReport sig
