@@ -238,7 +238,9 @@ export abstract class TamarinGraphNode {
         name: this.nodeName(),
         attributes: {
             id: this.nodeName(), // used as svg element's id
-            ...this.nodeAttributes()
+            ...this.nodeAttributes(),
+            // nodes that also stand for hidden adversary steps get a double border
+            ...(this.jgNode.jgnCollapsed ? { peripheries: 2 } : {})
         }
     })
 
@@ -391,10 +393,15 @@ export class TamarinGraphIntruderNode extends TamarinGraphRoundBoxNode {
         super(jgNode, ctx);
     }
 
-    // Matches mkNode CompactBoringNodes branch in Dot.hs:294-304:
+    // Matches mkNode CompactBoringNodes branch in Dot.hs:
+    //   collapsed    → "<nodeId> : <derived fact>"
     //   outgoingEdge → "<nodeId> : <shortName>"
     //   otherwise    → "<nodeId> : <shortName>[acts]"  (ruleLabelM form)
     label(): string {
+        const derived = this.derivedFact();
+        if (this.jgNode.jgnCollapsed && derived) {
+            return this.jgNode.jgnId + ' : ' + abbreviateAndFormatFact(this.nodeName(), derived, this.ctx);
+        }
         const shortName = shortIntrRuleName(this.jgNode.jgnLabel);
         const base = this.jgNode.jgnId + ' : ' + shortName;
         const hasOutgoing = this.ctx.nodesWithOutgoingEdges.has(this.jgNode.jgnId);
@@ -402,6 +409,16 @@ export class TamarinGraphIntruderNode extends TamarinGraphRoundBoxNode {
             return base;
         }
         return base + bracketedFactList(this.jgNode.jgnMetadata.jgnActs, this.nodeName(), this.ctx);
+    }
+
+    // The fact a collapsed node derives: the K(t) action of an isend, and
+    // otherwise its conclusion, e.g., !KU(t).
+    derivedFact(): JSONGraphNodeFact | undefined {
+        const metadata = this.jgNode.jgnMetadata;
+        if (!metadata) {
+            return undefined;
+        }
+        return this.jgNode.jgnType === "isISendRule" ? metadata.jgnActs.at(0) : metadata.jgnConcs.at(0);
     }
 }
 

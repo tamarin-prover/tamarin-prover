@@ -243,6 +243,7 @@ dotNodeCompact node manualNodeColor = do
   case get nNodeType node of
     SystemNode ru -> cacheState dsNodes v $ do
       let outgoingEdge = hasOutgoingEdge graph v
+          collapsed = v `S.member` get grCollapsed (get gRepr graph)
       let role = fromMaybe "Undefined" (getNodeRole node)
 
       let rInfoVal = get rInfo ru
@@ -260,8 +261,9 @@ dotNodeCompact node manualNodeColor = do
           attrs = [("fillcolor", nodeColor), ("style", "filled")
                   , ("fontcolor", if colorUsesWhiteFont color then "white" else "black")
                   , ("role", role)]
+                  ++ collapsedAttrs collapsed
 
-      ids <- mkNode v ru attrs outgoingEdge dotOptions
+      ids <- mkNode v ru attrs outgoingEdge collapsed dotOptions
       let prems = [ ((v, i), nid) | (Just (Left i),  nid) <- ids ]
           concs = [ ((v, i), nid) | (Just (Right i), nid) <- ids ]
       modM dsPrems $ M.union $ M.fromList prems
@@ -280,6 +282,10 @@ dotNodeCompact node manualNodeColor = do
     hasOutgoingEdge graph v =
       let repr = get gRepr graph
       in or [ v == v' | SystemEdge ((v', _), _) <- get grEdges repr ]
+         || or [ v == v' | CollapsedEdge ((v', _), _) _ <- get grEdges repr ]
+
+    -- Nodes that also stand for hidden adversary steps get a double border.
+    collapsedAttrs collapsed = [ ("peripheries", "2") | collapsed ]
     missingNode shape label = liftDot $ D.node $ [("label", render label),("shape",shape)]
     dotPremC prem = missingNode "invtrapezium" $ prettyNodePrem prem
     dotConcC conc = missingNode "trapezium" $ prettyNodeConc conc
@@ -292,18 +298,24 @@ dotNodeCompact node manualNodeColor = do
     mkSimpleNode lbl attrs =
         liftDot $ D.node $ [("label", lbl),("shape","ellipse")] ++ attrs
 
-    mkNode  :: NodeId -> RuleACInst -> [(String, String)] -> Bool -> DotOptions
+    mkNode  :: NodeId -> RuleACInst -> [(String, String)] -> Bool -> Bool -> DotOptions
       -> SeDot [(Maybe (Either PremIdx ConcIdx), D.NodeId)]
-    mkNode v ru attrs outgoingEdge dotOptions
+    mkNode v ru attrs outgoingEdge collapsed dotOptions
       -- single node, share node-id for all premises and conclusions
       | get doNodeStyle dotOptions == CompactBoringNodes &&
         (isIntruderRule ru || isFreshRule ru) = do
             ps <- psM
             as <- asM
             cs <- csM
-            let lbl | outgoingEdge = show v ++ " : " ++ showDotRuleCaseName ru
-                    | otherwise       = concatMap snd as
-            nid <- mkSimpleNode lbl []
+            -- A collapsed node is labelled with the fact it derives: the K(t)
+            -- action of an isend, and otherwise its conclusion, e.g., !KU(t).
+            let derivedFact = listToMaybe $ if isISendRule ru then get rActs ru else get rConcs ru
+            derived <- if collapsed then traverse renderLNFact derivedFact else pure Nothing
+            let lbl = case derived of
+                  Just d           -> show v ++ " : " ++ render d
+                  _ | outgoingEdge -> show v ++ " : " ++ showDotRuleCaseName ru
+                    | otherwise    -> concatMap snd as
+            nid <- mkSimpleNode lbl (collapsedAttrs collapsed)
             return [ (key, nid) | (key, _) <- ps ++ as ++ cs ]
       -- full record syntax
       | otherwise = do
@@ -388,18 +400,25 @@ dotEdge edge =
   case edge of
     SystemEdge (src, tgt) -> do
       (graph, _, _) <- ask
-      let check p = maybe False p (resolveNodePremFact tgt graph) ||
-                    maybe False p (resolveNodeConcFact src graph)
-          attrs | check isProtoFact =
-                    [("style","bold"),("weight","10.0")] ++
-                    (guard (check isPersistentFact) >> [("color","gray50")])
-                | check isKFact     = [("color","orangered2")]
-                | otherwise         = [("color","gray30")]
-      dotGenEdge attrs src tgt
+      let facts = catMaybes [resolveNodePremFact tgt graph, resolveNodeConcFact src graph]
+      dotGenEdge (factEdgeAttrs facts) src tgt
+    -- Drawn like the fact edge it replaces, but to the node as a whole.
+    CollapsedEdge (src, prem) tgt -> do
+      (graph, _, _) <- ask
+      let facts = catMaybes [resolveNodePremFact prem graph, resolveNodeConcFact src graph]
+      srcId <- getState dsConcs src ("Source node of edge not found: " ++ show src)
+      tgtId <- getState dsNodes tgt ("Target node of collapsed edge not found: " ++ show tgt)
+      liftDot $ D.edge srcId tgtId (factEdgeAttrs facts)
     UnsolvedChain (src, tgt) ->
       dotGenEdge [("style","dotted"),("color","green")] src tgt
     LessEdge _ -> error "LessEdges are handled by dotLessEdge"
   where
+    factEdgeAttrs facts
+      | any isProtoFact facts =
+          [("style","bold"),("weight","10.0")] ++
+          (guard (any isPersistentFact facts) >> [("color","gray50")])
+      | any isKFact facts     = [("color","orangered2")]
+      | otherwise             = [("color","gray30")]
     dotGenEdge style src tgt = do
       srcId <- getState dsConcs src ("Source node of edge not found: " ++ show src)
       tgtId <- getState dsPrems tgt ("Target node of edge not found: " ++ show tgt)

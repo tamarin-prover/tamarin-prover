@@ -16,6 +16,12 @@
       "name": "graph-simplification-level-0-uncompressed",
       "args": ["--prove", "--graph-simplification=0", "--output-dot=/dev/stdout"],
       "contains": ["SL0-AS0-CL0-A1-C0-NF"]
+    },
+    {
+      "name": "graph-simplification-level-3-collapse",
+      "args": ["--prove", "--graph-simplification=3", "--output-dot=/dev/stdout"],
+      "contains": [": K( AE1 )", ": K( h(~k) )"],
+      "matches": [{"regex": "peripheries=\"2\"", "min": 2}]
     }
   ]
 }

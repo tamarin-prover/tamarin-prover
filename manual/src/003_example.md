@@ -447,6 +447,8 @@ accordingly. This is especially useful when working with large proof graphs.
 How much of the constraint system is shown can be adjusted in the `Options`
 menu, which offers four graph simplification levels; see
 [Graph simplification levels](011_advanced-features.html#sec:graph-simplification).
+At the highest level, the internal steps of the adversary's computations are
+hidden, and the nodes that stand for them are drawn with a double outline.
 
 The proof graph is zoomable using the mouse wheel; if the font size of the node
 contents becomes too small while zooming out, Tamarin will automatically
