@@ -83,9 +83,26 @@ function getSimplificationFromCookie(): number {
   return s === -1 ? -1 : Number(document.cookie.charAt(s + k.length));
 }
 
+// The value of the cookie `name`, or null if it is not set.
+function getCookie(name: string): string | null {
+  for (const part of document.cookie.split(";")) {
+    const [key, ...value] = part.trim().split("=");
+    if (key === name) {
+      return decodeURIComponent(value.join("="));
+    }
+  }
+  return null;
+}
+
+// Abbreviations are on unless switched off in the Options menu, which sets
+// the cookie abbreviate=false (see abbreviationsEnabled in tamarin-prover-ui.js).
+function abbreviationsEnabled(): boolean {
+  return getCookie("abbreviate") !== "false";
+}
+
 function constructJsonSrcParamsFromCookie(): string {
   const param = new URLSearchParams();
-  if (document.cookie.indexOf("abbreviate=") === -1) {
+  if (!abbreviationsEnabled()) {
     param.append("unabbreviate", "");
   }
   if (document.cookie.indexOf("auto-sources=") === -1) {
@@ -162,7 +179,7 @@ export class DotGraphViz extends HTMLElement {
   connectedCallback() {
     this.isAbstractEnabled = document.cookie.indexOf('abstract') !== -1;
     this.jsonSrc = this.getAttribute("dotsrc");
-    this.isAbbreviationEnabled = document.cookie.indexOf("abbreviate") !== -1;
+    this.isAbbreviationEnabled = abbreviationsEnabled();
 
     if (!this.jsonSrc || !this.jsonSrc.trim().length) {
       console.error("[dot-graph-viz]: No dot graph source url provided.");
