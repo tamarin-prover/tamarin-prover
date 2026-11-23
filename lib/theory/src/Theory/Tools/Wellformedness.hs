@@ -1394,14 +1394,7 @@ checkWellformedness incompleteMSRs thy sig = concatMap ($ thy) (
     , lemmaAttributeReport
     , multRestrictedReport
     , natWellSortedReport
-    , progressStateReport
     ]
     ++ -- additional checks
     [checkEquationsSubtermConvergence |  not (isUserMarkedConvergent thy) ]
     )
-  where
-    progressStateReport t =
-      [ ("SAPIC translation options", text "translation-state-optimisation is disabled when translation-progress is enabled.")
-      | get thyIsSapic t
-      , get (stateChannelOpt . thyOptions) t
-      , get (transProgress . thyOptions) t ]

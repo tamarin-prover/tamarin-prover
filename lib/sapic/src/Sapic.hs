@@ -16,6 +16,7 @@ module Sapic
 import Control.Exception hiding (catch)
 import Control.Monad.Fresh
 import Control.Monad.Catch
+import Control.Monad.Writer.Strict (WriterT, tell)
 import Control.Monad.Trans.FastFresh ()
 import Data.List.NonEmpty qualified as NE
 import Data.Maybe
@@ -42,10 +43,11 @@ import Theory
 import TheoryObject (theoryMacros)
 import Theory.Sapic
 import Theory.Text.Parser
+import Theory.Text.Pretty (text)
+import Theory.Tools.Wellformedness (WfErrorReport)
 
 -- | Translates the process (singular) into a set of rules and adds them to the theory.
-translate :: (Monad m, MonadThrow m, MonadCatch m) =>
-             OpenTheory -> m OpenTheory
+translate :: MonadCatch m => OpenTheory -> WriterT WfErrorReport m OpenTheory
 translate th =
   case theoryProcesses th of
     []  -> if ops._transReliable then
@@ -58,8 +60,9 @@ translate th =
         $ checkOps' (._transReport) translateTermsReport
         $ propagateNames
         $ toAnProcess p
+      usePureStates <- pureStateOpt
       -- Substitution can expose channel names in outputs and state accesses.
-      let an_proc_pre = checkOps' pureStateOpt annotatePureStates
+      let an_proc_pre = (if usePureStates then annotatePureStates else id)
                       $ annotateSecretChannels substituted
       an_proc <- annotateLocks an_proc_pre
       -- compute initial rules
@@ -84,7 +87,9 @@ translate th =
       -- add heuristic, if not already defined by user
       let th3 = fromMaybe th2 (addHeuristic [SapicRanking] th2)
       -- for state optimisation: force special facts  to be injective
-      let th4 = checkOps' pureStateOpt (setforcedInjectiveFacts (S.fromList [pureStateFactTag, pureStateLockFactTag])) th3
+      let th4 = if usePureStates
+                then setforcedInjectiveFacts (S.fromList [pureStateFactTag, pureStateLockFactTag]) th3
+                else th3
       let th5 = th4 { _thyIsSapic = True }
       return th5
     _   -> throw (MoreThanOneProcess :: SapicException AnnotatedProcess)
@@ -92,7 +97,11 @@ translate th =
     ops = th._thyOptions
     -- Pure lookups omit the empty else branch. Under progress, blocking instead
     -- of taking that branch need not preserve the allowed traces.
-    pureStateOpt o = o._stateChannelOpt && not o._transProgress
+    pureStateOpt
+      | ops._stateChannelOpt && ops._transProgress = do
+          tell [("SAPIC translation options", text "translation-state-optimisation is disabled when translation-progress is enabled.")]
+          pure False
+      | otherwise = pure ops._stateChannelOpt
     checkOps l x
       | l ops = x
       | otherwise = return
