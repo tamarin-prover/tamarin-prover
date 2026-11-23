@@ -17,8 +17,7 @@
       "name": "progress-disables-pure-state",
       "args": [
         "-DPROGRESS",
-        "--prove",
-        "--quit-on-warning"
+        "--prove"
       ],
       "matches": [
         {
@@ -28,6 +27,7 @@
         }
       ],
       "contains": [
+        "translation-state-optimisation is disabled when translation-progress is enabled.",
         "initial_value (all-traces): verified",
         "updated_value (all-traces): verified",
         "completed (exists-trace): verified"
