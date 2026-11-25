@@ -19,6 +19,7 @@ import System.Console.CmdArgs.Explicit as CmdArgs
 import System.Exit (die)
 import System.FilePath
 import System.Timing (timedIO)
+import Text.Read (readMaybe)
 import Data.Bitraversable (Bitraversable(bitraverse))
 
 import Text.PrettyPrint.Class qualified as Pretty
@@ -80,6 +81,8 @@ batchMode = tamarinMode
       , flagOpt "spthy" ["output-module", "m"] (updateArg "outModule") moduleList moduleDescriptions
       , flagReq ["output-json","oj"] (updateArg "traceJSON") "FILE" "Serialize found traces as JSON to FILE."
       , flagReq ["output-dot","od"] (updateArg "traceDot") "FILE" "Serialize found traces as dot to FILE."
+      , flagReq ["graph-simplification"] (updateArg "graphSimplification") "LEVEL"
+          "Graph simplification level (0-3) for --output-dot and --output-json (default: 2)"
       ]
     moduleConstructors = enumFrom minBound :: [ModuleType]
     moduleList = intercalate "|" $ map show moduleConstructors
@@ -89,6 +92,7 @@ batchMode = tamarinMode
 run :: TamarinMode -> Arguments -> IO ()
 run thisMode as
   | null inFiles = helpAndExit thisMode (Just "no input files given")
+  | Left err <- graphSimplificationArg = die err
   | argExists "parseOnly" as = do
       res <- mapM (processThy "") inFiles
       let (docs, _) = unzip res
@@ -163,6 +167,17 @@ run thisMode as
     thyLoadOptions = case mkTheoryLoadOptions as of
       Left (ArgumentError e) -> error e
       Right opts             -> opts
+
+    -- | The level given by --graph-simplification, or the default level 2.
+    graphSimplificationArg :: Either String SimplificationLevel
+    graphSimplificationArg = case findArg "graphSimplification" as of
+      Nothing -> Right SL2
+      Just s  -> maybe (Left $ "invalid --graph-simplification value '" ++ s ++ "', expected 0, 1, 2 or 3")
+                       Right (readMaybe s >>= levelFromNum)
+
+    -- | Invalid values are rejected at the start of 'run', so this never fails.
+    graphSimplificationLevel :: SimplificationLevel
+    graphSimplificationLevel = either error id graphSimplificationArg
 
     -- output generation
     --------------------
@@ -336,11 +351,16 @@ run thisMode as
               [(label : labels, diffSystem) | (label, subProof) <- M.toList children
                                             , (labels, diffSystem) <- diffProofSystems subProof]
 
+        -- | As in the GUI, level 0 also disables compression and shows intruder rules in full.
         graphOptions :: GraphOptions
         graphOptions = defaultGraphOptions
+          { _goSimplificationLevel = graphSimplificationLevel
+          , _goCompress = graphSimplificationLevel /= SL0
+          }
 
         dotOptions :: DotOptions
         dotOptions = defaultDotOptions
+          { _doNodeStyle = if graphSimplificationLevel == SL0 then FullBoringNodes else CompactBoringNodes }
 
         -- | Make a label for an ordinary trace, preserving the established output format.
         traceOutputLabel :: String -> String -> ProofPath -> String

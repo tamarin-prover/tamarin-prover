@@ -1408,7 +1408,8 @@ getOptions = do
   simpl <- lookupGetParam "simplification"
   showAutosource <- isNothing <$> lookupGetParam "no-auto-sources"
   clustering <- lookupGetParam "clustering"
-  let simplificationLevel = fromMaybe SL2 (simpl >>= readMaybe . T.unpack)
+  -- The GUI sends the level as a number (0-3). Unknown values fall back to the default.
+  let simplificationLevel = fromMaybe SL2 (simpl >>= readMaybe . T.unpack >>= levelFromNum)
       graphOptions = defaultGraphOptions
         { _goSimplificationLevel = simplificationLevel
         , _goCompress = compress

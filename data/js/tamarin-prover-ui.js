@@ -411,7 +411,7 @@ var ui = {
      * both show this menu but do not share any other UI chrome.
      */
     loadOptionSettings: function() {
-	/* If no simplification level specified yet, default to 1 */
+	/* If no simplification level specified yet, default to 2 */
 	if ($.cookie("simplification") == null) {
 	    $.cookie("simplification", 2, { path: '/' });
 	}

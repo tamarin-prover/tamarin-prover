@@ -935,6 +935,49 @@ available, that graph as a separate entry in the same `"graphs"` list. These
 graphs can be viewed with `interactive` mode in the same way as dependency graphs
 from non-diff theories.
 
+Graph simplification levels {#sec:graph-simplification}
+---------------------------
+
+Constraint systems can be shown with different levels of simplification, both
+in the interactive GUI and in the output of `--output-dot` and
+`--output-json`. The levels are:
+
+ - **Level 0**: no simplification. All nodes and edges of the constraint system
+   are shown, and intruder rules are drawn in full like protocol rules. This is
+   useful for detailed inspection, but large graphs quickly become hard to read.
+
+ - **Level 1**: compression. Intruder rules are drawn as small ellipses, and
+   simple steps whose inputs and outputs are all connected are hidden, such as
+   the `isend`, `irecv`, `coerce` and `Fr` rules, and the adversary's deduction
+   of pairs, inverses, public names and numbers. Ordering (dashed) edges that
+   are already implied by the other kinds of edges (fact edges and unsolved
+   chains) are dropped, whatever their origin.
+
+ - **Level 2 (default)**: as level 1, and additionally drops ordering edges that
+   are implied by paths through other ordering edges (transitive reduction).
+   This reduction keeps ordering edges that come from the lemma's formula or
+   from adversary reasoning, as they are often relevant for understanding the
+   proof. Such edges are still dropped as in level 1, when the other kinds of
+   edges imply them.
+
+ - **Level 3**: as level 2, but also drops implied ordering edges that come
+   from the formula or from adversary reasoning.
+
+The transitive reduction of levels 2 and 3 is skipped when the ordering
+constraints are cyclic, which can happen in constraint systems that are about
+to be refuted.
+
+In the interactive GUI, the level is selected in the `Options` menu
+(`Graph simplification off`, `L1`, `L2` and `L3`).
+
+On the command line, the level for `--output-dot` and `--output-json` is set
+with `--graph-simplification`, which accepts the values 0 to 3 and defaults
+to 2:
+
+    tamarin-prover --prove --output-dot=traces.dot --graph-simplification=3 examples/Tutorial.spthy
+
+The level is part of the label of each output graph, e.g., `SL3` for level 3.
+
 Viewing exported JSON graphs in the interactive GUI {#sec:load-json}
 -------------------------------------------------------------------
 
