@@ -961,28 +961,11 @@ in the interactive GUI and in the output of `--output-dot` and
    edges imply them.
 
  - **Level 3**: as level 2, but also drops implied ordering edges that come
-   from the formula or from adversary reasoning. In addition, the internal
-   steps of the adversary's computations are hidden, as described below.
+   from the formula or from adversary reasoning.
 
 The transitive reduction of levels 2 and 3 is skipped when the ordering
 constraints are cyclic, which can happen in constraint systems that are about
 to be refuted.
-
-At level 3, an intruder rule instance is hidden if all of its results are used
-only by other intruder rule instances. Each edge into a hidden node is redrawn
-to the intruder rule instances that the hidden node leads to. These nodes now
-also stand for the hidden steps: they are drawn with a *double outline* and
-labelled with the knowledge they provide, i.e., `K( t )` for a message `t`
-that the adversary sends (an `isend`), and the conclusion `!KU( t )` or
-`!KD( t )` otherwise. A redrawn edge has the same style as the edge it
-replaces, but points to the node as a whole rather than to one of its
-premises. Hiding steps never removes protocol rule instances, and never
-changes which nodes are ordered before which others. Intruder steps that are
-part of an unsolved chain are not hidden.
-
-In JSON output, nodes that stand for hidden steps have the field
-`"jgnCollapsed": true`, and redrawn edges have `"jgeCollapsed": true` and a
-node instead of a premise as their target.
 
 In the interactive GUI, the level is selected in the `Options` menu
 (`Graph simplification off`, `L1`, `L2` and `L3`).

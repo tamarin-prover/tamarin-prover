@@ -13,13 +13,11 @@ module Theory.Constraint.System.Graph.GraphRepr (
     , grNodes
     , grClusters
     , grEdges
-    , grCollapsed
     , Node(..)
     , nNodeType
     , nNodeId
     , NodeType(..)
     , Edge(..)
-    , edgeEndpoints
     , Cluster(..)
     , cName
     , cNodes
@@ -33,7 +31,6 @@ module Theory.Constraint.System.Graph.GraphRepr (
     , addIntelligentClusterUsingSimilarNames
     , extractBaseName
     , getRuleNameByNode
-    , collapseAdversarySteps
   ) where
 
 import           Extension.Data.Label
@@ -43,7 +40,6 @@ import qualified Theory                   as Th
 import qualified Data.Map                 as Map
 
 import qualified Data.Set                 as S
-import qualified Data.DAG.Simple          as Dag
 
 import Data.Char (isDigit)
 import Data.List.Split (splitOn)
@@ -72,19 +68,7 @@ data Edge =
     SystemEdge (Sys.NodeConc, Sys.NodePrem)    -- ^ Edges that transport facts from premises to conclusions between rules.
   | LessEdge Th.LessAtom                       -- ^ Edges that represent a temporal-before relationship.
   | UnsolvedChain (Sys.NodeConc, Sys.NodePrem) -- ^ Edges that are part of an unsolved chain between premises and conclusions.
-  | CollapsedEdge (Sys.NodeConc, Sys.NodePrem) M.NodeId
-                                               -- ^ A fact edge into a hidden adversary step, redrawn to the node that
-                                               --   stands for that step (see 'collapseAdversarySteps'). It is drawn like
-                                               --   the original edge, but to the node as a whole, as that node has no
-                                               --   premise for the fact.
   deriving( Eq, Ord, Show )
-
--- | The source and target node of an edge.
-edgeEndpoints :: Edge -> (M.NodeId, M.NodeId)
-edgeEndpoints (SystemEdge ((src, _), (tgt, _)))    = (src, tgt)
-edgeEndpoints (LessEdge (Th.LessAtom src tgt _))   = (src, tgt)
-edgeEndpoints (UnsolvedChain ((src, _), (tgt, _))) = (src, tgt)
-edgeEndpoints (CollapsedEdge ((src, _), _) tgt)    = (src, tgt)
 
 -- | A cluster contains nodes, edges, and a name, which is the common prefix of the contained nodes.
 data Cluster = Cluster {
@@ -96,10 +80,9 @@ data Cluster = Cluster {
 
 -- | A graph consists of nodes, edges and clusters which are only one level deep to represent a collection of derivation rules with the same prefix.
 data GraphRepr = GraphRepr {
-    _grClusters  :: [Cluster]
-  , _grNodes     :: [Node]
-  , _grEdges     :: [Edge]
-  , _grCollapsed :: S.Set M.NodeId -- ^ Intruder nodes that also stand for hidden adversary steps (see 'collapseAdversarySteps').
+    _grClusters :: [Cluster]
+  , _grNodes    :: [Node]
+  , _grEdges    :: [Edge]
   }
   deriving ( Eq, Ord, Show )
 
@@ -120,8 +103,10 @@ toEdgeList repr =
 
     -- | For a given source node id and an edge, check if the edge belongs to the node and return the target node id.
     findEdgeTarget :: M.NodeId -> Edge -> Maybe M.NodeId
-    findEdgeTarget srcId edge = let (srcId', tgtId) = edgeEndpoints edge in
-      if srcId == srcId' then Just tgtId else Nothing
+    findEdgeTarget srcId (SystemEdge ((srcId', _), (tgtId, _)))    | srcId == srcId' = Just tgtId
+    findEdgeTarget srcId (LessEdge (Th.LessAtom srcId' tgtId _))   | srcId == srcId' = Just tgtId
+    findEdgeTarget srcId (UnsolvedChain ((srcId', _), (tgtId, _))) | srcId == srcId' = Just tgtId
+    findEdgeTarget _     _                                                           = Nothing
 
 
 ----------------------------------------------------
@@ -176,8 +161,10 @@ createCluster = Cluster
 filterEdgesForCluster :: [Node] -> [Edge] -> [Edge]
 filterEdgesForCluster nodes edges =
     let nodeIds = S.fromList (map (get nNodeId) nodes)
-    in filter (\edge -> let (srcNode, tgtNode) = edgeEndpoints edge in
-                         srcNode `S.member` nodeIds && tgtNode `S.member` nodeIds) edges
+    in filter (\edge -> case edge of
+                            SystemEdge ((srcNode, _), (tgtNode, _)) -> srcNode `S.member` nodeIds && tgtNode `S.member` nodeIds
+                            UnsolvedChain ((srcNode, _), (tgtNode, _)) -> srcNode `S.member` nodeIds && tgtNode `S.member` nodeIds
+                            LessEdge (Th.LessAtom srcNode tgtNode _) -> srcNode `S.member` nodeIds && tgtNode `S.member` nodeIds) edges
 
 -- Function to find the connected components within a cluster
 findConnectedComponents :: [Node] -> [Edge] -> [[Node]]
@@ -252,95 +239,3 @@ addIntelligentClusterUsingSimilarNames :: GraphRepr -> GraphRepr
 addIntelligentClusterUsingSimilarNames repr =
     let nodesBySimilarName = groupBySimilarName (get grNodes repr)
     in addCluster repr nodesBySimilarName "_Session_"
-
-
-----------------------------------------------------
--- Collapsing adversary computations (level 3)
-----------------------------------------------------
-
--- | Hide adversary steps whose results are only used by other adversary steps.
---
--- A node is hidden if it is an intruder rule instance with at least one
--- outgoing edge, all of which go to intruder rule instances. Such a node is an
--- internal step of a larger adversary computation. Endpoints of unsolved
--- chains, and nodes that share their id with an unsolved action or the last
--- atom, are never hidden.
---
--- An edge from a visible node into a hidden node is redrawn to every visible
--- node that the hidden node reaches through hidden nodes only. A fact edge
--- becomes a 'CollapsedEdge', as the visible node has no premise for the fact,
--- and an ordering edge stays an ordering edge. Redrawn edges that are implied
--- by an existing edge are dropped. The visible nodes that hidden nodes lead to
--- are recorded in 'grCollapsed'; they are always intruder rule instances.
---
--- Reachability between the remaining nodes is unchanged. In particular, all
--- protocol rule instances stay, and so do all their incoming and outgoing
--- connections. If the hidden nodes would contain a cycle, which can happen in
--- constraint systems that are about to be refuted, nothing is collapsed.
-collapseAdversarySteps :: GraphRepr -> GraphRepr
-collapseAdversarySteps repr
-  | S.null hidden || Dag.cyclic hiddenRel = repr
-  | otherwise =
-      set grCollapsed (get grCollapsed repr `S.union` S.unions (Map.elems exits)) $
-      set grEdges (keptEdges ++ redirected) $
-      set grNodes (filter ((`S.notMember` hidden) . get nNodeId) nodes) repr
-  where
-    nodes = get grNodes repr
-    edges = get grEdges repr
-
-    intruderIds = S.fromList [ nid | Node nid (SystemNode ru) <- nodes, Th.isIntruderRule ru ]
-    protectedIds = S.fromList $
-         [ nid | Node nid nodeType <- nodes, not (isSystemNodeType nodeType) ]
-      ++ concat [ [src, tgt] | UnsolvedChain ((src, _), (tgt, _)) <- edges ]
-    isSystemNodeType (SystemNode _) = True
-    isSystemNodeType _              = False
-
-    successors = Map.fromListWith (++) [ (src, [tgt]) | (src, tgt) <- map edgeEndpoints edges ]
-    successorsOf n = Map.findWithDefault [] n successors
-
-    hidden = S.filter isInternal (intruderIds `S.difference` protectedIds)
-    isInternal n = not (null (successorsOf n)) && all (`S.member` intruderIds) (successorsOf n)
-    hiddenRel = [ (n, m) | n <- S.toList hidden, m <- successorsOf n, m `S.member` hidden ]
-
-    -- The visible nodes reached from each hidden node through hidden nodes only.
-    -- The map refers to itself, which terminates because 'hiddenRel' is acyclic.
-    exits :: Map.Map M.NodeId (S.Set M.NodeId)
-    exits = Map.fromSet
-      (\n -> S.unions [ Map.findWithDefault (S.singleton m) m exits | m <- successorsOf n ])
-      hidden
-
-    keptEdges = filter (\e -> let (src, tgt) = edgeEndpoints e
-                              in src `S.notMember` hidden && tgt `S.notMember` hidden) edges
-
-    -- Edges from visible nodes into hidden nodes, redrawn to the corresponding
-    -- visible nodes. A conclusion is connected to a node at most once.
-    candidates = Map.elems $ Map.fromList
-      [ (drawnAs e', e')
-      | e <- edges
-      , let (src, tgt) = edgeEndpoints e
-      , src `S.notMember` hidden
-      , Just targets <- [Map.lookup tgt exits]
-      , target <- S.toList targets
-      , Just e' <- [redirect e target] ]
-
-    redirect (SystemEdge fact)                      target = Just (CollapsedEdge fact target)
-    redirect (CollapsedEdge fact _)                 target = Just (CollapsedEdge fact target)
-    redirect (LessEdge (Th.LessAtom src _ reason)) target = Just (LessEdge (Th.LessAtom src target reason))
-    redirect (UnsolvedChain _)                      _      = Nothing -- never happens: chain endpoints are not hidden
-
-    drawnAs (CollapsedEdge (conc, _) target) = Left (conc, target)
-    drawnAs e                                = Right e
-
-    -- An ordering edge is not needed if it already exists or if a fact edge
-    -- orders the same nodes, and a collapsed edge is not needed if the same
-    -- conclusion already feeds a premise of the node.
-    keptLessEdges = S.fromList [ e | e@(LessEdge _) <- keptEdges ]
-    orderedByFact = S.fromList [ edgeEndpoints e | e <- keptEdges ++ candidates, isFactEdge e ]
-    isFactEdge (LessEdge _) = False
-    isFactEdge _            = True
-    concFeedsNode = S.fromList [ (conc, tgt) | SystemEdge (conc, (tgt, _)) <- keptEdges ]
-
-    redirected = filter (not . implied) candidates
-    implied e@(LessEdge _)              = e `S.member` keptLessEdges || edgeEndpoints e `S.member` orderedByFact
-    implied (CollapsedEdge (conc, _) n) = (conc, n) `S.member` concFeedsNode
-    implied _                           = False

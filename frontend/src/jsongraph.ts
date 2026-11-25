@@ -30,9 +30,6 @@ export interface JSONGraphEdge {
     jgeRelation: JSONGraphEdgeRelation ;
     jgeTarget: string;
     jgeColor: string;
-    // Set by simplification level 3 for an edge that replaces hidden adversary
-    // steps. Its target is a node id rather than a premise.
-    jgeCollapsed?: boolean;
 }
 
 export type JSONGraphEdgeRelation =
@@ -68,9 +65,6 @@ export interface JSONGraphNode {
     jgnLabel: string;
     jgnMetadata?: JSONGraphNodeMetadata;
     jgnColor?: string;
-    // Set by simplification level 3 for an intruder node that also stands for
-    // hidden adversary steps.
-    jgnCollapsed?: boolean;
 }
 
 export interface JSONGraphNodeMetadata {

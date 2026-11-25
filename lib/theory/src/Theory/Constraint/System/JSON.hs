@@ -41,7 +41,6 @@ import           Data.Aeson.TH
 import           Data.Aeson.Encode.Pretty   -- to do pretty printing of JSON
 import           Data.Foldable
 import qualified Data.Map                   as M
-import qualified Data.Set                   as S
 import           Data.Maybe
 import qualified Data.ByteString            as B
 import qualified Data.ByteString.Lazy       as BL
@@ -106,7 +105,6 @@ data JSONGraphNode = JSONGraphNode
   , jgnLabel :: String
   , jgnMetadata :: Maybe JSONGraphNodeMetadata
   , jgnColor :: Maybe String
-  , jgnCollapsed :: Bool  -- ^ The node also stands for hidden adversary steps (level 3). Only output if True.
   } deriving (Show)
 
 -- | Representation of an edge of a JSON graph.
@@ -115,7 +113,6 @@ data JSONGraphEdge = JSONGraphEdge
   , jgeRelation :: String
   , jgeTarget :: String
   ,jgeColor ::  String
-  , jgeCollapsed :: Bool  -- ^ The edge replaces hidden adversary steps and targets a node, not a premise. Only output if True.
   } deriving (Show)
 
 -- | Representation of a cluster of a JSON graph.
@@ -160,15 +157,14 @@ instance FromJSON JSONGraphEdge where
       <*> o .: "jgeRelation"
       <*> o .: "jgeTarget"
       <*> o .:? "jgeColor" .!= ""
-      <*> o .:? "jgeCollapsed" .!= False
 
 instance ToJSON JSONGraphEdge where
-  toJSON (JSONGraphEdge source relation target color collapsed) = object $
+  toJSON (JSONGraphEdge source relation target color) = object
       [ "jgeSource" .= source
       , "jgeRelation" .= relation
       , "jgeTarget" .= target
       , "jgeColor" .= color
-      ] ++ [ "jgeCollapsed" .= True | collapsed ]
+      ]
 
 -- Cluster and abbreviation collections are optional.
 instance FromJSON JSONGraph where
@@ -201,16 +197,14 @@ instance FromJSON JSONGraphNode where
       <*> o .: "jgnLabel"
       <*> o .:? "jgnMetadata"
       <*> o .:? "jgnColor"
-      <*> o .:? "jgnCollapsed" .!= False
 
 instance ToJSON JSONGraphNode where
-  toJSON (JSONGraphNode jgnId' jgnType' jgnLabel' jgnMetadata' jgnColor' jgnCollapsed') = object $ catMaybes
+  toJSON (JSONGraphNode jgnId' jgnType' jgnLabel' jgnMetadata' jgnColor') = object $ catMaybes
       [ ("jgnId" .=) <$> pure jgnId'
       , ("jgnType" .=) <$> pure jgnType'
       , ("jgnLabel" .=) <$> pure jgnLabel'
       , ("jgnMetadata" .=) <$> jgnMetadata' 
       , ("jgnColor" .=) <$> jgnColor'
-      , if jgnCollapsed' then Just ("jgnCollapsed" .= True) else Nothing
       ]
 
 -- | Generation of JSON text from JSON graphs.
@@ -347,7 +341,6 @@ nodeToJSONGraphNodeMetadata pretty (n, ru) =
 graphNodeToJSONGraphNode :: Node -> NodeColorMap -> RJSON JSONGraphNode
 graphNodeToJSONGraphNode node nodeColorMap = do
   pretty <- getPretty
-  graph <- getGraph
   let nid = get nNodeId node
       nodeType = get nNodeType node
   case nodeType of
@@ -358,7 +351,6 @@ graphNodeToJSONGraphNode node nodeColorMap = do
                 , jgnLabel = getRuleName ru
                 , jgnMetadata = Just (nodeToJSONGraphNodeMetadata pretty (nid, ru))
                 , jgnColor = fmap rgbToHex (M.lookup (get rInfo ru) nodeColorMap)
-                , jgnCollapsed = nid `S.member` get grCollapsed (get gRepr graph)
                 }
     UnsolvedActionNode facts -> 
       return $ JSONGraphNode 
@@ -374,7 +366,6 @@ graphNodeToJSONGraphNode node nodeColorMap = do
                       , jgnConcs = [] 
                       }
                 , jgnColor = Nothing
-                , jgnCollapsed = False
                }    
                
     LastActionAtom -> 
@@ -384,7 +375,6 @@ graphNodeToJSONGraphNode node nodeColorMap = do
                 , jgnLabel = show nid
                 , jgnMetadata = Nothing 
                  , jgnColor = Nothing
-                , jgnCollapsed = False
                 }
     {-|
       Generate a JSONGraphNode for those nodes in sEdges that are not present in sNodes. 
@@ -413,7 +403,6 @@ graphNodeToJSONGraphNode node nodeColorMap = do
                   ]
               }
                , jgnColor = Nothing
-               , jgnCollapsed = False
         }
     MissingNode (Right prem) -> 
       return $ JSONGraphNode 
@@ -436,31 +425,33 @@ graphNodeToJSONGraphNode node nodeColorMap = do
               , jgnConcs = []
               }
                , jgnColor = Nothing
-               , jgnCollapsed = False
         }
 
 
--- | The facts at the ends of an edge. For a collapsed edge, these are the facts
--- of the edge it replaces.
-edgeFacts :: Edge -> Graph -> [LNFact]
-edgeFacts edge graph = case edge of
-    SystemEdge (src, tgt)       -> catMaybes [resolveNodePremFact tgt graph, resolveNodeConcFact src graph]
-    UnsolvedChain (src, tgt)    -> catMaybes [resolveNodePremFact tgt graph, resolveNodeConcFact src graph]
-    CollapsedEdge (src, tgt) _  -> catMaybes [resolveNodePremFact tgt graph, resolveNodeConcFact src graph]
-    LessEdge _                  -> []
-
--- | Determine the type of an edge from the facts at its ends.
-getRelationType :: [LNFact] -> String
-getRelationType facts
-  | any isKFact facts          = "KFact"
-  | any isPersistentFact facts = "PersistentFact"
-  | any isProtoFact facts      = "ProtoFact"
-  | otherwise                  = "default"
+-- | Determine the type of an edge.
+getRelationType :: NodeConc -> NodePrem -> Graph -> String
+getRelationType src tgt graph =
+  let check p = maybe False p (resolveNodePremFact tgt graph) ||
+                maybe False p (resolveNodeConcFact src graph)
+      relationType | check isKFact          = "KFact"
+                   | check isPersistentFact = "PersistentFact"
+                   | check isProtoFact      = "ProtoFact"
+                   | otherwise              = "default"
+  in
+    relationType
 
 -- | To determine the color of the edge based on Reason and Fact type.
 colorEdge :: Edge -> Graph -> String
 colorEdge edge graph = case edge of
-    UnsolvedChain _ -> "green"
+    SystemEdge (src, tgt) -- -> "gray30"
+     | check isKFact          -> "orangered2"
+      | check isPersistentFact -> "gray50"
+      | check isProtoFact      -> "black"
+      | otherwise              -> "gray30"
+      where 
+        check p = maybe False p (resolveNodePremFact tgt graph) ||
+                  maybe False p (resolveNodeConcFact src graph)
+    UnsolvedChain (src, tgt) -> "green"
     LessEdge atom -> toColor (get laReason atom)
        where
         toColor :: Reason -> String
@@ -470,36 +461,20 @@ colorEdge edge graph = case edge of
             Fresh          -> "blue3"
             InjectiveFacts -> "purple"
             NormalForm     -> "darkorange3"
-    _ | any isKFact facts          -> "orangered2"
-      | any isPersistentFact facts -> "gray50"
-      | any isProtoFact facts      -> "black"
-      | otherwise                  -> "gray30"
-  where
-    facts = edgeFacts edge graph
 
 -- | Generate JSONGraphEdge from an edge of a abstract graph. 
 -- Added a new type to handle the color of the edge.
 graphEdgeToJSONGraphEdge :: Edge -> RJSON JSONGraphEdge
-graphEdgeToJSONGraphEdge edge@(SystemEdge (src, tgt)) = do
+graphEdgeToJSONGraphEdge (SystemEdge (src, tgt)) = do
   graph <- getGraph
   return $ JSONGraphEdge { jgeSource = show sid ++ ":c" ++ show concIdx
                 , jgeTarget = show tid ++ ":p" ++ show premIdx
-                , jgeRelation = getRelationType (edgeFacts edge graph)
-                , jgeColor = colorEdge edge graph
-                , jgeCollapsed = False
+                , jgeRelation = getRelationType src tgt graph
+                , jgeColor = colorEdge (SystemEdge (src, tgt)) graph
                 }
                 where 
                   (sid, ConcIdx concIdx) = src
                   (tid, PremIdx premIdx) = tgt
-
-graphEdgeToJSONGraphEdge edge@(CollapsedEdge ((sid, ConcIdx concIdx), _) tid) = do
-  graph <- getGraph
-  return $ JSONGraphEdge { jgeSource = show sid ++ ":c" ++ show concIdx
-                , jgeTarget = show tid
-                , jgeRelation = getRelationType (edgeFacts edge graph)
-                , jgeColor = colorEdge edge graph
-                , jgeCollapsed = True
-                }
 
 graphEdgeToJSONGraphEdge (LessEdge (LessAtom src tgt reason)) = do
   graph <- getGraph
@@ -507,7 +482,6 @@ graphEdgeToJSONGraphEdge (LessEdge (LessAtom src tgt reason)) = do
                 , jgeRelation = "LessAtoms"
                 , jgeTarget = show tgt
                 , jgeColor = colorEdge (LessEdge (LessAtom src tgt reason)) graph
-                , jgeCollapsed = False
                 }
 graphEdgeToJSONGraphEdge (UnsolvedChain (src, tgt)) = do
   graph <- getGraph
@@ -515,7 +489,6 @@ graphEdgeToJSONGraphEdge (UnsolvedChain (src, tgt)) = do
                 , jgeTarget = show tid ++ ":p" ++ show premIdx
                 , jgeRelation = "unsolvedChain"
                 , jgeColor = colorEdge (UnsolvedChain (src, tgt)) graph
-                , jgeCollapsed = False
                 }
                 where 
                   (sid, ConcIdx concIdx) = src
