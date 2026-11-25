@@ -4498,14 +4498,25 @@ next
   qed
 qed
 
-/* All wellformedness checks were successful. */
+/*
+WARNING: the following wellformedness checks failed!
+
+Subterm Convergence Warning
+===========================
+
+  User-defined equations must be convergent and have the finite variant property. The following equations are not subterm convergent. If you are sure that the set of equations is nevertheless convergent and has the finite variant property, you can ignore this warning and continue 
+
+    unionUD((x add y)) = x
+   
+ For more information, please refer to the manual : https://tamarin-prover.com/manual/master/book/010_modeling-issues.html 
+*/
 
 /*
 Generated from:
 Tamarin version 1.13.0
 Maude version 3.5.1
-Git revision: c827ceb2418a7d5390dac6671f01a07f7f0ac087 (with uncommited changes), branch: HEAD
-Compiled at: 2026-09-15 17:34:25.020280498 UTC
+Git revision: 07cd93a96ec838a30baf8ebd7521c6d7651d8698 (with uncommited changes), branch: check-coherence
+Compiled at: 2026-11-25 11:27:59.462174074 UTC
 */
 
 end
@@ -4517,7 +4528,10 @@ summary of summaries:
 analyzed: examples/csf26-ac/fast/DHKEA_NAXOS_C_eCK_PFS_keyreg_partially_matching.spthy
 
   output:          examples/csf26-ac/fast/DHKEA_NAXOS_C_eCK_PFS_keyreg_partially_matching.spthy.tmp
-  processing time: 26.92s
+  processing time: 40.78s
+  
+  WARNING: 1 wellformedness check failed!
+           The analysis results might be wrong!
   
   execution_match_same_key_NAXOS (exists-trace): verified (13 steps)
   eCK_key_secrecy (all-traces): verified (806 steps)
