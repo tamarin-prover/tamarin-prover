@@ -6,7 +6,7 @@ begin
 
 builtins: multiset
 functions: fst/1, h/1, pair/2, snd/1, zeroo/0, xorr/2 [AC,NDC,NDC-diff]
-equations:
+equations [convergent]:
     fst(<x.1, x.2>) = x.1,
     snd(<x.1, x.2>) = x.2,
     (x xorr x) = zeroo,
@@ -111,8 +111,8 @@ qed
 Generated from:
 Tamarin version 1.13.0
 Maude version 3.5.1
-Git revision: 41bc81379b23681e7057314a5cf66a25c45e1986, branch: canonicalise-subst
-Compiled at: 2026-07-27 16:11:34.947223 UTC
+Git revision: 07cd93a96ec838a30baf8ebd7521c6d7651d8698 (with uncommited changes), branch: check-coherence
+Compiled at: 2026-11-25 11:27:59.462174074 UTC
 */
 
 end
@@ -124,7 +124,7 @@ summary of summaries:
 analyzed: examples/csf26-ac/fast/diff/KCL07-UK2.spthy
 
   output:          examples/csf26-ac/fast/diff/KCL07-UK2.spthy.tmp
-  processing time: 142.77s
+  processing time: 524.82s
   
   DiffLemma:  Observational_equivalence : falsified - found trace (15 steps)
 
