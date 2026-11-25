@@ -176,6 +176,13 @@ export type VizHtmlTextElement = VizHtmlStringElement
 
 abstract class DotNodeLabelBase {
     abstract dot(): string;
+
+    /**
+     * The port of each field of the record label, in the order of the fields
+     * (undefined for a field without a port). Graphviz lists the rectangles
+     * of the fields of a record node, its `rects` attribute, in this order.
+     */
+    abstract ports(): (string | undefined)[];
 }
 
 export class DotNodeLabelContainer extends DotNodeLabelBase {
@@ -188,6 +195,8 @@ export class DotNodeLabelContainer extends DotNodeLabelBase {
         const rows = this.children.map(c => c.dot()).filter(Boolean);
         return rows.length === 0 ? "" :  `{${rows.join("|")}}`
     };
+    // an empty container has no fields, just as dot() omits it
+    ports = () => this.children.flatMap(c => c.ports());
 }
 
 export class DotNodeLabelCell extends DotNodeLabelBase {
@@ -199,4 +208,5 @@ export class DotNodeLabelCell extends DotNodeLabelBase {
         this.text = text;
     }
     dot = () => `{${this.portName ? ("<" + this.portName + "> ") : ""}${escapeHtml(this.text)}}`;
+    ports = () => [this.portName];
 }
