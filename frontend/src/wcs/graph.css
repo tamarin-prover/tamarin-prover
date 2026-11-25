@@ -126,6 +126,7 @@ dot-graph-viz {
   --goal-stroke-dasharray: 5 2;
   --goal-hover-fill: rgba(230, 126, 0, 0.2);
   --goal-number-color: #b35f00;
+  /* keep the size in sync with GOAL_NUMBER_FONT_PX in graph.ts */
   --goal-number-font: bold 8px Arial, Helvetica, sans-serif;
 }
 

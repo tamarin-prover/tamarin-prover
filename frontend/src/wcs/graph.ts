@@ -22,6 +22,8 @@ const GOAL_CLASS = "graph-goal";
 const GOAL_NUMBER_CLASS = "graph-goal-number";
 // Distance of a goal's number from the bottom right corner of its frame
 const GOAL_NUMBER_INSET = 2;
+// Font size of a goal's number, as in --goal-number-font in graph.css
+const GOAL_NUMBER_FONT_PX = 8;
 
 interface ParsedJsonGraphCacheEntry {
   eTag: string;
@@ -383,6 +385,8 @@ export class DotGraphViz extends HTMLElement {
       this.svg = undefined;
       this.svgg = null;
       this.highlightConnections = { nodes: [], edges: [] };
+      // the context belongs to the previous graph until this render completes
+      this.ctx = undefined;
       this.minimizableObjects = {
         edges: {},
         nodes: {}
@@ -766,6 +770,9 @@ export class DotGraphViz extends HTMLElement {
       }
     }
 
+    // the nodes now drawn are other elements, so mark their goals as well
+    this.decorateGoals();
+
     // keep highlight state
     this.highlight();
   }
@@ -816,6 +823,12 @@ export class DotGraphViz extends HTMLElement {
     premise of an intruder rule drawn as an ellipse. A clicked goal node
     no longer highlights its connections. Goals at nodes that are not drawn,
     e.g., hidden adversary steps, are skipped.
+
+    Only the nodes drawn at the moment are marked. With abstract node
+    content enabled, handleAbstractionLevel swaps record nodes for their
+    minimized versions and back, and calls this again. A minimized node keeps
+    the outline of its record, so its goals are framed at the same cells,
+    but only by a strip along the top of the cell that fits the number.
   */
   decorateGoals = () => {
     if (!this.svgg || !this.ctx || !this.host) {
@@ -832,7 +845,12 @@ export class DotGraphViz extends HTMLElement {
       if (!location || !node || node.empty()) {
         continue;
       }
-      const cell = location.port !== undefined ? this.recordFieldRect(location.name, location.port) : null;
+      const field = location.port !== undefined ? this.recordFieldRect(location.name, location.port) : null;
+      // a minimized node shows no cell contents, so only a strip at the top
+      // of the cell, just high enough for the number, marks the goal there
+      const cell = field && node.classed("mini")
+        ? { ...field, height: Math.min(field.height, GOAL_NUMBER_FONT_PX + GOAL_NUMBER_INSET) }
+        : field;
       const marked = cell
         ? node.append("rect")
             .attr("x", cell.x).attr("y", cell.y)
