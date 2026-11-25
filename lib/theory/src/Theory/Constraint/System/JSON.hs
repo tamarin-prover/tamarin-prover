@@ -33,7 +33,8 @@ module Theory.Constraint.System.JSON (
     sequentsToJSONPretty,
     writeSequentAsJSONPrettyToFile,
     JSONGraph(..),
-    JSONGraphs(..)
+    JSONGraphs(..),
+    goalGraphTarget
   ) where
 import           Extension.Data.Label       as L (get)
 import           Data.Aeson
@@ -330,6 +331,15 @@ premFactId (n, PremIdx idx) = show n ++ ":p" ++ show idx
 -- | The JSON id of a conclusion: @<node id>:c<conclusion index>@.
 concFactId :: NodeConc -> String
 concFactId (n, ConcIdx idx) = show n ++ ":c" ++ show idx
+
+-- | The JSON id of the graph element that an open goal refers to, if any:
+-- the premise of a premise or chain goal, or the node of an action goal.
+-- The GUI uses it to let the user solve a goal by clicking on the graph.
+goalGraphTarget :: Goal -> Maybe String
+goalGraphTarget (PremiseG prem _) = Just (premFactId prem)
+goalGraphTarget (ChainG _ prem)   = Just (premFactId prem)
+goalGraphTarget (ActionG i _)     = Just (show i)
+goalGraphTarget _                 = Nothing
 
 -- | Generate JSONGraphNode from a node of an abstract graph. (metadata part)
 -- Facts and actions as are represented as metadata to keep close to the original JSON graph schema.
