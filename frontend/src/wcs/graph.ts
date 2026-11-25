@@ -286,7 +286,14 @@ export class DotGraphViz extends HTMLElement {
         legend.setAttribute("class", "lgd-item");
 
         const highlightNodes = () => {
-          this.highlightConnections = { nodes: Array.from(ctx.abbrevMap[index]?.values() ?? []).map(id => id.slice(4)), edges: [] };
+          // The abbreviation map holds node names, which are also the nodes'
+          // SVG element ids. Graph nodes are keyed differently (by Graphviz's
+          // _gvid, which also counts clusters), so look them up by element id.
+          const lookup = this.graph?.reverseLookup.nodes ?? {};
+          const nodes = Array.from(ctx.abbrevMap[index] ?? [])
+            .map(name => lookup[name])
+            .filter((id): id is string => id !== undefined);
+          this.highlightConnections = { nodes, edges: [] };
           this.highlight();
         }
 
