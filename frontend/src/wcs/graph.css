@@ -118,12 +118,15 @@ dot-graph-viz>svg{
 /* Open goals that the GUI lists as proof methods. Clicking one applies its
  * proof method (see decorateGoals in graph.ts). A goal is either a frame
  * (rect) over a cell of a record node, or a whole node whose own shape is
- * restyled. Change the look of all of them here. */
+ * restyled, and shows the number of its proof method at the bottom right.
+ * Change the look of all of them here. */
 dot-graph-viz {
   --goal-stroke: #e67e00;
   --goal-stroke-width: 2.5px;
   --goal-stroke-dasharray: 5 2;
   --goal-hover-fill: rgba(230, 126, 0, 0.2);
+  --goal-number-color: #b35f00;
+  --goal-number-font: bold 8px Arial, Helvetica, sans-serif;
 }
 
 dot-graph-viz rect.graph-goal,
@@ -139,7 +142,14 @@ dot-graph-viz rect.graph-goal {
   pointer-events: all;
 }
 
-dot-graph-viz .graph-goal {
+dot-graph-viz text.graph-goal-number {
+  fill: var(--goal-number-color);
+  font: var(--goal-number-font);
+  text-anchor: end;
+}
+
+dot-graph-viz .graph-goal,
+dot-graph-viz .graph-goal-number {
   cursor: pointer;
 }
 

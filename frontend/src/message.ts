@@ -9,13 +9,21 @@
  *
  *   graph                                    GUI page
  *     ── graph-goals-request ─────────────▶
- *     ◀──────────── graph-goals [ids] ─────    ids of the listed goals
+ *     ◀──────────── graph-goals [goals] ───    the listed goals
  *     ── graph-goal-clicked id ───────────▶    clicks that method's link
  */
 export type GraphGoalMessage =
     | { type: "graph-goals-request" }
-    | { type: "graph-goals", goals: string[] }
+    | { type: "graph-goals", goals: ListedGoal[] }
     | { type: "graph-goal-clicked", goal: string };
+
+/** A goal of a listed proof method */
+export interface ListedGoal {
+    /** the graph id of the goal, from `data-goal` */
+    id: string;
+    /** the number of its proof method in the list, starting at 1 */
+    method: number;
+}
 
 const GRAPH_GOAL_MESSAGE_TYPES: ReadonlySet<string> =
     new Set<GraphGoalMessage["type"]>(["graph-goals-request", "graph-goals", "graph-goal-clicked"]);

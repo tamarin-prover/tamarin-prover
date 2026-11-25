@@ -8,7 +8,7 @@ import './graph.css';
 import { JSONGraphs, prettyPrintTerm } from "../jsongraph";
 import { TamarinGraph, TamarinGraphBuildContext } from "../tmgraph";
 import { prettierJSONGraphNodeTerm } from "../prettier";
-import { postGraphGoalMessage, receiveGraphGoalMessage } from "../message";
+import { ListedGoal, postGraphGoalMessage, receiveGraphGoalMessage } from "../message";
 
 const ARROW_HEAD_WIDTH = 7;
 const ARROW_HEAD_HEIGHT = 10;
@@ -16,8 +16,12 @@ const ARROW_HEAD_HALF_WIDTH = ARROW_HEAD_WIDTH / 2;
 const MAX_FONT = 30;
 const ABSTRACT_VIEW_TRIGGER_FONT_PX = 5;
 const MAX_PARSED_JSON_GRAPH_CACHE_ENTRIES = 8;
-// Class of the elements that show a clickable goal; graph.css defines their look.
+// Classes of the elements that show a clickable goal and its proof method's
+// number; graph.css defines their look.
 const GOAL_CLASS = "graph-goal";
+const GOAL_NUMBER_CLASS = "graph-goal-number";
+// Distance of a goal's number from the bottom right corner of its frame
+const GOAL_NUMBER_INSET = 2;
 
 interface ParsedJsonGraphCacheEntry {
   eTag: string;
@@ -186,8 +190,8 @@ export class DotGraphViz extends HTMLElement {
   /** The GUI page that embeds this graph, see graphHostWindow */
   host: Window | null = null;
 
-  /** JSON ids of the open goals that the GUI lists as proof methods (see message.ts) */
-  goals: string[] = [];
+  /** The open goals that the GUI lists as proof methods (see message.ts) */
+  goals: ListedGoal[] = [];
 
 
   constructor() {
@@ -803,6 +807,8 @@ export class DotGraphViz extends HTMLElement {
   /*
     Mark the goals in this.goals and make them clickable. A clicked goal is
     sent to the GUI page, which applies its proof method (see message.ts).
+    The number of that method in the list is shown at the bottom right
+    corner of the mark.
 
     A goal at a cell of a record node, i.e., a premise, or an action goal
     whose node is drawn as a record, is marked by a frame over that cell.
@@ -817,11 +823,11 @@ export class DotGraphViz extends HTMLElement {
     }
     const graph = select(this.svgg);
     // goals arrive and the graph is rendered in either order, so undo a previous call
-    graph.selectAll(`rect.${GOAL_CLASS}`).remove();
+    graph.selectAll(`rect.${GOAL_CLASS}, text.${GOAL_NUMBER_CLASS}`).remove();
     graph.selectChildren(`g.${GOAL_CLASS}`).classed(GOAL_CLASS, false).on("click", this.handleNodeClick);
 
     for (const goal of this.goals) {
-      const location = this.ctx.findNodeLocation(goal);
+      const location = this.ctx.findNodeLocation(goal.id);
       const node = location ? graph.selectChild<SVGGElement>("#" + location.name) : null;
       if (!location || !node || node.empty()) {
         continue;
@@ -832,10 +838,17 @@ export class DotGraphViz extends HTMLElement {
             .attr("x", cell.x).attr("y", cell.y)
             .attr("width", cell.width).attr("height", cell.height)
         : node;
-      marked.classed(GOAL_CLASS, true).on("click", (event: MouseEvent) => {
+      const frame = cell ?? node.node()!.getBBox();
+      const number = node.append("text")
+        .attr("x", frame.x + frame.width - GOAL_NUMBER_INSET)
+        .attr("y", frame.y + frame.height - GOAL_NUMBER_INSET)
+        .text(goal.method);
+      const applyGoal = (event: MouseEvent) => {
         event.stopPropagation(); // do not highlight the node's connections
-        postGraphGoalMessage(this.host!, { type: "graph-goal-clicked", goal });
-      });
+        postGraphGoalMessage(this.host!, { type: "graph-goal-clicked", goal: goal.id });
+      };
+      marked.classed(GOAL_CLASS, true).on("click", applyGoal);
+      number.classed(GOAL_NUMBER_CLASS, true).on("click", applyGoal);
     }
   };
 

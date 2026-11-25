@@ -1,24 +1,26 @@
 import "./dynamicwrapper.css"
-import { postGraphGoalMessage, receiveGraphGoalMessage } from "../message";
+import { ListedGoal, postGraphGoalMessage, receiveGraphGoalMessage } from "../message";
 
 const SESSION_STORAGE_KEY_HASPOPPED = "DYN_GRP_HASPOPPED";
 
-/** Links of proof methods that solve a goal shown in the graph (see message.ts). */
-const GOAL_LINK_SELECTOR = "a.proof-method[data-goal]";
+/** The links of the listed proof methods, one per method, in the order of the list. */
+const PROOF_METHOD_LINK_SELECTOR = "div.methods a.proof-method";
 
 /**
- * The link of the first listed proof method for each goal id. The list is
- * ranked, so this is the highest-ranked method if several solve the same goal.
+ * The first listed proof method for each goal shown in the graph, i.e., for
+ * each `data-goal` id (see message.ts): its link, and its number in the list.
+ * The list is ranked, so this is the highest-ranked method if several solve
+ * the same goal.
  */
-function goalLinks(): Map<string, HTMLElement> {
-    const links = new Map<string, HTMLElement>();
-    for (const link of document.querySelectorAll<HTMLElement>(GOAL_LINK_SELECTOR)) {
-        const goal = link.dataset.goal!;
-        if (!links.has(goal)) {
-            links.set(goal, link);
+function listedGoals(): Map<string, { link: HTMLElement, goal: ListedGoal }> {
+    const goals = new Map<string, { link: HTMLElement, goal: ListedGoal }>();
+    document.querySelectorAll<HTMLElement>(PROOF_METHOD_LINK_SELECTOR).forEach((link, index) => {
+        const id = link.dataset.goal;
+        if (id !== undefined && !goals.has(id)) {
+            goals.set(id, { link, goal: { id, method: index + 1 } });
         }
-    }
-    return links;
+    });
+    return goals;
 }
 
 /**
@@ -108,11 +110,14 @@ export class DynamicGraphWrapper extends HTMLElement {
         const message = receiveGraphGoalMessage(event);
         switch (message?.type) {
             case "graph-goals-request":
-                postGraphGoalMessage(event.source, { type: "graph-goals", goals: [...goalLinks().keys()] });
+                postGraphGoalMessage(event.source, {
+                    type: "graph-goals",
+                    goals: [...listedGoals().values()].map(listed => listed.goal),
+                });
                 break;
             case "graph-goal-clicked":
                 // exactly as if the user clicked the proof method in the list
-                goalLinks().get(message.goal)?.click();
+                listedGoals().get(message.goal)?.link.click();
                 break;
         }
     };
