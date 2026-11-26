@@ -13,7 +13,13 @@ export default {
             formats: ['es']
         },
         rollupOptions: {
-            external: []
+            external: [],
+            output: {
+                // Modules imported by several entries go into shared chunks.
+                // Name them like the entries, so that they are copied to
+                // data/js and ignored by git along with them (see Makefile).
+                chunkFileNames: 'intdot-[name].es.js'
+            }
         }
     }
 }

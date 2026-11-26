@@ -16,9 +16,7 @@ default: build
 .PHONY: frontend
 frontend:
 	cd frontend && npm install && npm run build
-	cp frontend/dist/intdot-graph.es.js data/js/
-	cp frontend/dist/intdot-staticgraph.es.js data/js/
-	cp frontend/dist/intdot-dynamicgraph.es.js data/js/
+	cp frontend/dist/intdot-*.js data/js/
 	cp frontend/dist/intdot-style.css data/css/
 
 # Build Tamarin via stack, multi-threaded

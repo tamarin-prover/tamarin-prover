@@ -8,6 +8,7 @@ import './graph.css';
 import { JSONGraphs, prettyPrintTerm } from "../jsongraph";
 import { TamarinGraph, TamarinGraphBuildContext } from "../tmgraph";
 import { prettierJSONGraphNodeTerm } from "../prettier";
+import { ListedGoal, postGraphGoalMessage, receiveGraphGoalMessage } from "../message";
 
 const ARROW_HEAD_WIDTH = 7;
 const ARROW_HEAD_HEIGHT = 10;
@@ -15,6 +16,14 @@ const ARROW_HEAD_HALF_WIDTH = ARROW_HEAD_WIDTH / 2;
 const MAX_FONT = 30;
 const ABSTRACT_VIEW_TRIGGER_FONT_PX = 5;
 const MAX_PARSED_JSON_GRAPH_CACHE_ENTRIES = 8;
+// Classes of the elements that show a clickable goal and its proof method's
+// number; graph.css defines their look.
+const GOAL_CLASS = "graph-goal";
+const GOAL_NUMBER_CLASS = "graph-goal-number";
+// Distance of a goal's number from the bottom right corner of its frame
+const GOAL_NUMBER_INSET = 2;
+// Font size of a goal's number, as in --goal-number-font in graph.css
+const GOAL_NUMBER_FONT_PX = 8;
 
 interface ParsedJsonGraphCacheEntry {
   eTag: string;
@@ -94,6 +103,12 @@ function getCookie(name: string): string | null {
   return null;
 }
 
+// The window of the GUI page that embeds this graph: the parent of an iframe,
+// or the opener of a pop-out window. Null if the graph is shown on its own.
+function graphHostWindow(): Window | null {
+  return window.parent !== window ? window.parent : window.opener;
+}
+
 // Abbreviations are on unless switched off in the Options menu, which sets
 // the cookie abbreviate=false (see abbreviationsEnabled in tamarin-prover-ui.js).
 function abbreviationsEnabled(): boolean {
@@ -171,6 +186,15 @@ export class DotGraphViz extends HTMLElement {
   resizeObserver?: ResizeObserver;
   isAbbreviationEnabled = false;
 
+  /** Build context of the rendered graph, which locates facts and nodes by their JSON id */
+  ctx?: TamarinGraphBuildContext;
+
+  /** The GUI page that embeds this graph, see graphHostWindow */
+  host: Window | null = null;
+
+  /** The open goals that the GUI lists as proof methods (see message.ts) */
+  goals: ListedGoal[] = [];
+
 
   constructor() {
     super();
@@ -203,6 +227,12 @@ export class DotGraphViz extends HTMLElement {
 
     this.resizeObserver.observe(this);
 
+    this.host = graphHostWindow();
+    if (this.host) {
+      window.addEventListener("message", this.handleHostMessage);
+      postGraphGoalMessage(this.host, { type: "graph-goals-request" });
+    }
+
     this.fetchJsonSource(this.jsonSrc)
       .then((json) => {
         this.renderJson(json);
@@ -213,7 +243,16 @@ export class DotGraphViz extends HTMLElement {
 
   disconnectedCallback() {
     this.resizeObserver?.disconnect();
+    window.removeEventListener("message", this.handleHostMessage);
   }
+
+  handleHostMessage = (event: MessageEvent) => {
+    const message = receiveGraphGoalMessage(event);
+    if (event.source === this.host && message?.type === "graph-goals") {
+      this.goals = message.goals;
+      this.decorateGoals();
+    }
+  };
 
   // Render the graph using JSON string
   renderJson = (jsonGraphs: JSONGraphs) => {
@@ -234,6 +273,8 @@ export class DotGraphViz extends HTMLElement {
         if (this.isAbbreviationEnabled) {
           this.renderLegend(ctx);
         }
+        this.ctx = ctx;
+        this.decorateGoals();
       }).catch(err => {
         // Rendering very large graphs (long, deeply-nested terms) without
         // abbreviations can exceed the Graphviz WASM engine's memory, which
@@ -366,6 +407,8 @@ export class DotGraphViz extends HTMLElement {
       this.svg = undefined;
       this.svgg = null;
       this.highlightConnections = { nodes: [], edges: [] };
+      // the context belongs to the previous graph until this render completes
+      this.ctx = undefined;
       this.minimizableObjects = {
         edges: {},
         nodes: {}
@@ -749,6 +792,9 @@ export class DotGraphViz extends HTMLElement {
       }
     }
 
+    // the nodes now drawn are other elements, so mark their goals as well
+    this.decorateGoals();
+
     // keep highlight state
     this.highlight();
   }
@@ -786,6 +832,82 @@ export class DotGraphViz extends HTMLElement {
         .classed("active", true);
     }
   }
+
+  /*
+    Mark the goals in this.goals and make them clickable. A clicked goal is
+    sent to the GUI page, which applies its proof method (see message.ts).
+    The number of that method in the list is shown at the bottom right
+    corner of the mark.
+
+    A goal at a cell of a record node, i.e., a premise, or an action goal
+    whose node is drawn as a record, is marked by a frame over that cell.
+    Any other goal marks its whole node, e.g., an unsolved action, or a
+    premise of an intruder rule drawn as an ellipse. A clicked goal node
+    no longer highlights its connections. Goals at nodes that are not drawn,
+    e.g., hidden adversary steps, are skipped.
+
+    Only the nodes drawn at the moment are marked. With abstract node
+    content enabled, handleAbstractionLevel swaps record nodes for their
+    minimized versions and back, and calls this again. A minimized node keeps
+    the outline of its record, so its goals are framed at the same cells,
+    but only by a strip along the top of the cell that fits the number.
+  */
+  decorateGoals = () => {
+    if (!this.svgg || !this.ctx || !this.host) {
+      return;
+    }
+    const graph = select(this.svgg);
+    // goals arrive and the graph is rendered in either order, so undo a previous call
+    graph.selectAll(`rect.${GOAL_CLASS}, text.${GOAL_NUMBER_CLASS}`).remove();
+    graph.selectChildren(`g.${GOAL_CLASS}`).classed(GOAL_CLASS, false).on("click", this.handleNodeClick);
+
+    for (const goal of this.goals) {
+      const location = this.ctx.findNodeLocation(goal.id);
+      const node = location ? graph.selectChild<SVGGElement>("#" + location.name) : null;
+      if (!location || !node || node.empty()) {
+        continue;
+      }
+      const field = location.port !== undefined ? this.recordFieldRect(location.name, location.port) : null;
+      // a minimized node shows no cell contents, so only a strip at the top
+      // of the cell, just high enough for the number, marks the goal there
+      const cell = field && node.classed("mini")
+        ? { ...field, height: Math.min(field.height, GOAL_NUMBER_FONT_PX + GOAL_NUMBER_INSET) }
+        : field;
+      const marked = cell
+        ? node.append("rect")
+            .attr("x", cell.x).attr("y", cell.y)
+            .attr("width", cell.width).attr("height", cell.height)
+        : node;
+      const frame = cell ?? node.node()!.getBBox();
+      const number = node.append("text")
+        .attr("x", frame.x + frame.width - GOAL_NUMBER_INSET)
+        .attr("y", frame.y + frame.height - GOAL_NUMBER_INSET)
+        .text(goal.method);
+      const applyGoal = (event: MouseEvent) => {
+        event.stopPropagation(); // do not highlight the node's connections
+        postGraphGoalMessage(this.host!, { type: "graph-goal-clicked", goal: goal.id });
+      };
+      marked.classed(GOAL_CLASS, true).on("click", applyGoal);
+      number.classed(GOAL_NUMBER_CLASS, true).on("click", applyGoal);
+    }
+  };
+
+  /*
+    The rectangle, in SVG coordinates, of the field with `port` in the
+    record node `nodeName`, from the `rects` attribute that Graphviz
+    computes for record nodes.
+  */
+  recordFieldRect = (nodeName: string, port: string) => {
+    const field = this.ctx?.portField(port);
+    const rects = this.json?.objects.find(o => o.name === nodeName)?.rects;
+    const corners = field === undefined ? undefined : rects?.split(" ")[field]?.split(",").map(Number);
+    if (!corners || corners.length !== 4) {
+      return null;
+    }
+    const [x1, y1, x2, y2] = corners;
+    // Graphviz's y axis points up, SVG's points down
+    return { x: x1, y: -y2, width: x2 - x1, height: y2 - y1 };
+  };
 
   /*
     Clear the highlighted edges and nodes of the graph

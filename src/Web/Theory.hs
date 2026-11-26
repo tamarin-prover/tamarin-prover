@@ -71,6 +71,7 @@ import System.Process hiding (system)
 import Logic.Connectives
 import Theory hiding (lPlaintext)
 import Theory.Text.Pretty
+import Theory.Constraint.System.JSON (goalGraphTarget)
 import ClosedTheory (prettyClosedProtoRule)
 import TheoryObject (theoryMacros, prettyTactic, diffTheoryMacros, diffTheorySideRules, DiffLemma (..))
 
@@ -213,7 +214,18 @@ linkToPath :: HtmlDocument d
            -> [String]    -- ^ Additional class
            -> d           -- ^ Document that carries the link.
            -> d
-linkToPath renderUrl route cls = withTag "a" [("class", classes), ("href", linkPath)]
+linkToPath renderUrl route cls = linkToPathWith renderUrl route cls []
+
+-- | Create a link to a given theory path, with additional attributes.
+linkToPathWith :: HtmlDocument d
+               => RenderUrl          -- ^ Url rendering function.
+               -> Route WebUI        -- ^ Route that should be linked.
+               -> [String]           -- ^ Additional class
+               -> [(String, String)] -- ^ Additional attributes
+               -> d                  -- ^ Document that carries the link.
+               -> d
+linkToPathWith renderUrl route cls attrs =
+    withTag "a" ([("class", classes), ("href", linkPath)] ++ attrs)
   where
     classes = unwords $ "internal-link" : cls
     linkPath = T.unpack $ renderUrl route
@@ -523,6 +535,14 @@ noProofMethodsSnippet ctxt sys = withTag "h3" [] $ text $
       Just (Contradictory _)  -> "Constraint System is Contradictory"
       Nothing                -> "No applicable proof methods"
 
+-- | The @data-goal@ attribute of a proof method link: the id of the graph
+-- element that the method's goal refers to (see 'goalGraphTarget'). The
+-- interactive graph highlights these elements, and clicking one clicks the
+-- link (see @frontend/src/wcs/dynamicwrapper.ts@).
+graphGoalAttr :: ProofMethod -> [(String, String)]
+graphGoalAttr (SolveGoal goal) = [ ("data-goal", target) | Just target <- [goalGraphTarget goal] ]
+graphGoalAttr _                = []
+
 -- | A snippet that explains a sub-proof by displaying its proof state, the
 -- open-goals, and the new cases.
 subProofSnippet :: HtmlDocument d
@@ -605,9 +625,9 @@ subProofSnippet renderUrl renderImgUrl tidx ti lemma proofPath ctxt prf =
       ]
 
     prettyPM i (m, (_cases, expl)) =
-      linkToPath renderUrl
+      linkToPathWith renderUrl
         (TheoryPathMR tidx (TheoryMethod lemma proofPath i))
-        ["proof-method"] (prettyProofMethod m)
+        ["proof-method"] (graphGoalAttr m) (prettyProofMethod m)
       <-> (if null expl then emptyDoc else lineComment_ expl)
 
     nCases                  = show $ M.size $ children prf

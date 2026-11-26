@@ -12,7 +12,9 @@ export interface VizObject {
     _ldraw_?: VizObjectDraw[],
     name: string,
     shape: VizNodeShape,
-    label?: string
+    label?: string,
+    // record nodes: the rectangle "x1,y1,x2,y2" of each field, separated by spaces
+    rects?: string
 }
 
 export interface VizObjectDraw {

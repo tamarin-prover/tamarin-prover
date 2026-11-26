@@ -114,3 +114,48 @@ dot-graph-viz>svg{
   background-color: yellow;
   color: black;
 }
+
+/* Open goals that the GUI lists as proof methods. Clicking one applies its
+ * proof method (see decorateGoals in graph.ts). A goal is either a frame
+ * (rect) over a cell of a record node, or a whole node whose own shape is
+ * restyled, and shows the number of its proof method at the bottom right.
+ * Change the look of all of them here. */
+dot-graph-viz {
+  --goal-stroke: #e67e00;
+  --goal-stroke-width: 2.5px;
+  --goal-stroke-dasharray: 5 2;
+  --goal-hover-fill: rgba(230, 126, 0, 0.2);
+  --goal-number-color: #b35f00;
+  /* keep the size in sync with GOAL_NUMBER_FONT_PX in graph.ts */
+  --goal-number-font: bold 8px Arial, Helvetica, sans-serif;
+}
+
+dot-graph-viz rect.graph-goal,
+dot-graph-viz g.graph-goal > ellipse,
+dot-graph-viz g.graph-goal > polygon {
+  stroke: var(--goal-stroke);
+  stroke-width: var(--goal-stroke-width);
+  stroke-dasharray: var(--goal-stroke-dasharray);
+}
+
+dot-graph-viz rect.graph-goal {
+  fill: transparent;
+  pointer-events: all;
+}
+
+dot-graph-viz text.graph-goal-number {
+  fill: var(--goal-number-color);
+  font: var(--goal-number-font);
+  text-anchor: end;
+}
+
+dot-graph-viz .graph-goal,
+dot-graph-viz .graph-goal-number {
+  cursor: pointer;
+}
+
+dot-graph-viz rect.graph-goal:hover,
+dot-graph-viz g.graph-goal:hover > ellipse,
+dot-graph-viz g.graph-goal:hover > polygon {
+  fill: var(--goal-hover-fill);
+}

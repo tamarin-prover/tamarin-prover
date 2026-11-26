@@ -33,7 +33,8 @@ module Theory.Constraint.System.JSON (
     sequentsToJSONPretty,
     writeSequentAsJSONPrettyToFile,
     JSONGraph(..),
-    JSONGraphs(..)
+    JSONGraphs(..),
+    goalGraphTarget
   ) where
 import           Extension.Data.Label       as L (get)
 import           Data.Aeson
@@ -323,25 +324,34 @@ itemToJSONGraphNodeFact pretty id' f =
                                           True  -> pps $ prettyLNFact f
                                           False -> ""
                        }
-{-|
-   Generate JSON data structure for facts in premises and conclusion of rules.
-   Since facts are ordered in the premises and conclusions, the ordering number as well as a prefix
-   ("p" (premise) and "c" (conclusion)) are given to the function.
--}
-factToJSONGraphNodeFact :: Bool -> String -> NodeId -> (Int,LNFact) -> JSONGraphNodeFact
-factToJSONGraphNodeFact pretty prefix n (idx, f) =
-     itemToJSONGraphNodeFact pretty (show n ++ ":" ++ prefix ++ show idx) f
+-- | The JSON id of a premise: @<node id>:p<premise index>@.
+premFactId :: NodePrem -> String
+premFactId (n, PremIdx idx) = show n ++ ":p" ++ show idx
+
+-- | The JSON id of a conclusion: @<node id>:c<conclusion index>@.
+concFactId :: NodeConc -> String
+concFactId (n, ConcIdx idx) = show n ++ ":c" ++ show idx
+
+-- | The JSON id of the graph element that an open goal refers to, if any:
+-- the premise of a premise or chain goal, or the node of an action goal.
+-- The GUI uses it to let the user solve a goal by clicking on the graph.
+goalGraphTarget :: Goal -> Maybe String
+goalGraphTarget (PremiseG prem _) = Just (premFactId prem)
+goalGraphTarget (ChainG _ prem)   = Just (premFactId prem)
+goalGraphTarget (ActionG i _)     = Just (show i)
+goalGraphTarget _                 = Nothing
 
 -- | Generate JSONGraphNode from a node of an abstract graph. (metadata part)
 -- Facts and actions as are represented as metadata to keep close to the original JSON graph schema.
 nodeToJSONGraphNodeMetadata :: Bool -> (NodeId, RuleACInst) -> JSONGraphNodeMetadata
-nodeToJSONGraphNodeMetadata pretty (n, ru) = 
-    JSONGraphNodeMetadata { jgnPrems = map (factToJSONGraphNodeFact pretty "p" n) 
-                                       $ zip [0..] $ L.get rPrems ru
-                          , jgnActs  = map (itemToJSONGraphNodeFact pretty "action") $ L.get rActs ru 
-                          , jgnConcs = map (factToJSONGraphNodeFact pretty "c" n) 
-                                       $ zip [0..] $ L.get rConcs ru
+nodeToJSONGraphNodeMetadata pretty (n, ru) =
+    JSONGraphNodeMetadata { jgnPrems = indexedFacts (\i -> premFactId (n, PremIdx i)) rPrems
+                          , jgnActs  = map (itemToJSONGraphNodeFact pretty "action") $ L.get rActs ru
+                          , jgnConcs = indexedFacts (\i -> concFactId (n, ConcIdx i)) rConcs
                           }
+  where
+    indexedFacts factId facts =
+      zipWith (itemToJSONGraphNodeFact pretty . factId) [0..] (L.get facts ru)
 
 -- | Generate JSONGraphNode from a node of an abstract graph.
 graphNodeToJSONGraphNode :: Node -> NodeColorMap -> RJSON JSONGraphNode
@@ -403,7 +413,7 @@ graphNodeToJSONGraphNode node nodeColorMap = do
               , jgnActs  = []
               , jgnConcs = 
                   [ JSONGraphNodeFact 
-                      { jgnFactId    = show nid ++":c0"
+                      { jgnFactId    = concFactId (nid, ConcIdx 0)
                       , jgnFactTag   = ""
                       , jgnFactName  = ""
                       , jgnFactMult  = ""
@@ -424,7 +434,7 @@ graphNodeToJSONGraphNode node nodeColorMap = do
             Just JSONGraphNodeMetadata 
               { jgnPrems = 
                   [ JSONGraphNodeFact 
-                      { jgnFactId    = show nid ++":p0"
+                      { jgnFactId    = premFactId (nid, PremIdx 0)
                       , jgnFactTag   = ""
                       , jgnFactName  = ""
                       , jgnFactMult  = ""
@@ -482,19 +492,16 @@ colorEdge edge graph = case edge of
 graphEdgeToJSONGraphEdge :: Edge -> RJSON JSONGraphEdge
 graphEdgeToJSONGraphEdge edge@(SystemEdge (src, tgt)) = do
   graph <- getGraph
-  return $ JSONGraphEdge { jgeSource = show sid ++ ":c" ++ show concIdx
-                , jgeTarget = show tid ++ ":p" ++ show premIdx
+  return $ JSONGraphEdge { jgeSource = concFactId src
+                , jgeTarget = premFactId tgt
                 , jgeRelation = getRelationType (edgeFacts edge graph)
                 , jgeColor = colorEdge edge graph
                 , jgeCollapsed = False
                 }
-                where 
-                  (sid, ConcIdx concIdx) = src
-                  (tid, PremIdx premIdx) = tgt
 
-graphEdgeToJSONGraphEdge edge@(CollapsedEdge ((sid, ConcIdx concIdx), _) tid) = do
+graphEdgeToJSONGraphEdge edge@(CollapsedEdge (src, _) tid) = do
   graph <- getGraph
-  return $ JSONGraphEdge { jgeSource = show sid ++ ":c" ++ show concIdx
+  return $ JSONGraphEdge { jgeSource = concFactId src
                 , jgeTarget = show tid
                 , jgeRelation = getRelationType (edgeFacts edge graph)
                 , jgeColor = colorEdge edge graph
@@ -511,15 +518,12 @@ graphEdgeToJSONGraphEdge (LessEdge (LessAtom src tgt reason)) = do
                 }
 graphEdgeToJSONGraphEdge (UnsolvedChain (src, tgt)) = do
   graph <- getGraph
-  return $ JSONGraphEdge { jgeSource = show sid ++ ":c" ++ show concIdx
-                , jgeTarget = show tid ++ ":p" ++ show premIdx
+  return $ JSONGraphEdge { jgeSource = concFactId src
+                , jgeTarget = premFactId tgt
                 , jgeRelation = "unsolvedChain"
                 , jgeColor = colorEdge (UnsolvedChain (src, tgt)) graph
                 , jgeCollapsed = False
                 }
-                where 
-                  (sid, ConcIdx concIdx) = src
-                  (tid, PremIdx premIdx) = tgt
 
 -- | Generate JSONGraphCluster from a cluster of an abstract graph.
 graphClusterToJSONGraphCluster :: Cluster -> NodeColorMap -> RJSON JSONGraphCluster 

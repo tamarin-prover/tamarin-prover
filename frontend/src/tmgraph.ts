@@ -44,6 +44,9 @@ export class TamarinGraphBuildContext {
 
     abbrevMap: Record<number, Set<string>>; // abbreviation index -> list of node name
 
+    // port name -> index of its field in the record label of its node
+    portFieldMap: Map<string, number> = new Map();
+
     // Node IDs that appear as the source of at least one edge. Populated by
     // TamarinGraph before node construction so compact nodes can check it.
     nodesWithOutgoingEdges: Set<string> = new Set();
@@ -105,6 +108,23 @@ export class TamarinGraphBuildContext {
             console.warn(jgnId, " not found");
         }
         return n;
+    }
+
+    // Like nodeLocation, for ids that need not be drawn, e.g. at hidden nodes.
+    findNodeLocation(jgnId: string): NodeLocation | undefined {
+        return this.nodeLocationMap[jgnId];
+    }
+
+    recordPortFields(ports: (string | undefined)[]) {
+        ports.forEach((port, field) => {
+            if (port !== undefined) {
+                this.portFieldMap.set(port, field);
+            }
+        });
+    }
+
+    portField(port: string): number | undefined {
+        return this.portFieldMap.get(port);
     }
 
     recordAbbrev(abbrevIdx: number, nodeName: string) {
@@ -291,6 +311,7 @@ export class TamarinGraphRectBoxNode extends TamarinGraphNode {
                 this.middleRow(this.jgNode.jgnMetadata.jgnActs), // middle row (actions)
                 this.factsToTblRow(this.jgNode.jgnMetadata.jgnConcs) // bottom row (conclusions)
             ]);
+            this.ctx.recordPortFields(tbl.ports());
 
             return tbl.dot();
         }
