@@ -462,6 +462,41 @@ selects the next steps based on a heuristic. Here we have two constraints to
 resolve: `Client_1( S, k )` and `KU( k )`, both of which are premises for the
 rules in the unfinished current constraint system.
 
+Instead of looking up a constraint in the list of proof methods, we can also
+select it directly in the graph. Every open constraint that is shown in the
+graph and has a corresponding proof method in the list is marked with a dashed
+orange frame, and the number of that proof method is shown in the bottom right
+corner of the frame. For a premise of a rule instance, such as
+`Client_1( S, k )`, the frame surrounds the premise's cell in the rule's box;
+for an unsolved action or an adversary node, which are drawn as round boxes,
+the outline of the whole node is drawn in dashed orange instead. When hovering
+over a marked constraint, it is shaded, and clicking on it applies the
+corresponding proof method, exactly as if we had clicked on it in the list.
+Alternatively, pressing the number key shown next to the constraint (for the
+proof methods `1` to `9`) has the same effect. If several proof methods solve
+the same constraint, the graph shows the number of the first one, i.e., the
+one ranked highest by the heuristic. 
+
+Note that proof methods that do not refer to a
+single fact or node in the graph, such as `simplify` or case distinctions on
+formulas, can only be selected from the list. In practice, the proof methods that can be clicked in the graph are therefore a subset of those in the list.
+
+In our example, the premise `Client_1( S, k )` of the `Client_2` rule instance
+is marked with the number `1`, and the adversary's knowledge `!KU( h(k) )` is
+marked with the number `2`, matching the two proof methods listed above the
+graph:
+
+![FirstExample Lemma 1 Open Goals in the 
+Graph](../images/tamarin-tutorial-lemma-1-graph-goals.png
+ "FirstExample Lemma 1 Open Goals in the Graph"){width=80%}\
+
+When Tamarin
+abstracts the node contents while zooming out, a marked premise is reduced to a
+strip at the top of its cell that still shows the number, and constraints at
+nodes that are hidden by the graph simplification level are not marked. Graphs
+of finished proofs, completed traces, and attacks are not marked at all, since they have no
+remaining proof methods.
+
 Note that the proof methods in the GUI are sorted according to the same 
 heuristic as is used by the `autoprove` command. Any proof found by always 
 selecting the first proof method will be identical to the one constructed by 
