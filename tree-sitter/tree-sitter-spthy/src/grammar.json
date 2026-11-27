@@ -3880,8 +3880,13 @@
           "type": "CHOICE",
           "members": [
             {
-              "type": "SYMBOL",
-              "name": "diff_lemma_attrs"
+              "type": "ALIAS",
+              "content": {
+                "type": "SYMBOL",
+                "name": "lemma_attrs"
+              },
+              "named": true,
+              "value": "diff_lemma_attrs"
             },
             {
               "type": "BLANK"
@@ -3935,6 +3940,77 @@
               "type": "BLANK"
             }
           ]
+        }
+      ]
+    },
+    "lemma_attrs": {
+      "type": "SEQ",
+      "members": [
+        {
+          "type": "STRING",
+          "value": "["
+        },
+        {
+          "type": "CHOICE",
+          "members": [
+            {
+              "type": "STRING",
+              "value": "passive"
+            },
+            {
+              "type": "SYMBOL",
+              "name": "lemma_attr"
+            },
+            {
+              "type": "SYMBOL",
+              "name": "diff_lemma_attr"
+            }
+          ]
+        },
+        {
+          "type": "REPEAT",
+          "content": {
+            "type": "SEQ",
+            "members": [
+              {
+                "type": "STRING",
+                "value": ","
+              },
+              {
+                "type": "CHOICE",
+                "members": [
+                  {
+                    "type": "STRING",
+                    "value": "passive"
+                  },
+                  {
+                    "type": "SYMBOL",
+                    "name": "lemma_attr"
+                  },
+                  {
+                    "type": "SYMBOL",
+                    "name": "diff_lemma_attr"
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "type": "CHOICE",
+          "members": [
+            {
+              "type": "STRING",
+              "value": ","
+            },
+            {
+              "type": "BLANK"
+            }
+          ]
+        },
+        {
+          "type": "STRING",
+          "value": "]"
         }
       ]
     },

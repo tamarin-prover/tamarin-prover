@@ -900,23 +900,21 @@ module.exports = grammar({
           'lemma',
           optional($.modulo),
           field('lemma_identifier', $.ident),
-          optional($.diff_lemma_attrs),
+          // Preserve the existing attribute-list node for syntax tree consumers.
+          optional(alias($.lemma_attrs, $.diff_lemma_attrs)),
           ':',
           optional($.trace_quantifier),
           '"', field('formula', $._formula), '"',
           optional(field('proof_skeleton', $._proof_skeleton))
       ),
 
-      // lemma_attrs: $ => seq(
-      //     '[',
-      //     $.lemma_attr,
-      //     repeat(seq(
-      //         ',',
-      //         $.lemma_attr
-      //     )),
-      //     optional(','),
-      //     ']'
-      // ),
+      lemma_attrs: $ => seq(
+          '[',
+          choice('passive', $.lemma_attr, $.diff_lemma_attr),
+          repeat(seq(',', choice('passive', $.lemma_attr, $.diff_lemma_attr))),
+          optional(','),
+          ']'
+      ),
 
       lemma_attr: $ => choice(
           'sources',

@@ -1549,7 +1549,7 @@
     "fields": {},
     "children": {
       "multiple": true,
-      "required": true,
+      "required": false,
       "types": [
         {
           "type": "diff_lemma_attr",
@@ -7500,6 +7500,10 @@
   {
     "type": "param",
     "named": true
+  },
+  {
+    "type": "passive",
+    "named": false
   },
   {
     "type": "path",
