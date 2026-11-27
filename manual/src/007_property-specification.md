@@ -227,11 +227,10 @@ part. In general, the following applies when editing lemmas in the GUI:
   download the entire theory, or use "Append modified lemmas to file" from the
   Actions menu. This option will add new or modified lemmas at the end of your
   model file as a comment. You must then manually merge them into your model.
-- Whenever you delete or edit a lemma marked as `reuse`, all proofs after the
-  deleted or edited lemma will be invalidated. This is because Tamarin cannot be
-  certain anymore whether the proofs still hold. The proofs, though, will not be
-  discarded, and you can again verify them. Tamarin will let you know should it
-  encounter any issues.
+- Deleting or editing a `reuse` lemma invalidates the later proofs that can
+  use it. For a `[passive, reuse]` lemma, this affects only later passive
+  proofs. Choose **verify it** to replay a saved proof against the edited
+  theory. Downloading and reopening the theory preserves this choice.
 - You cannot add, modify, or delete sources lemmas. This is because sources
   lemmas influence Tamarin's precomputations. You must edit sources lemmas in
 your model file and use "Reload file" from the Actions menu to reload the theory
