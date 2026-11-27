@@ -1,0 +1,42 @@
+{
+  "tests": [
+    {
+      "name": "nested",
+      "args": [
+        "--derivcheck-timeout=5",
+        "--quit-on-warning",
+        "--prove"
+      ],
+      "contains": [
+        "seen (exists-trace): verified",
+        "no_failure (all-traces): verified"
+      ]
+    },
+    {
+      "name": "root",
+      "args": [
+        "--derivcheck-timeout=5",
+        "--quit-on-warning",
+        "--prove",
+        "-DROOT"
+      ],
+      "contains": [
+        "seen (exists-trace): verified",
+        "no_failure (all-traces): verified"
+      ]
+    },
+    {
+      "name": "nested-progress",
+      "args": [
+        "--derivcheck-timeout=5",
+        "--quit-on-warning",
+        "--prove",
+        "-DPROGRESS"
+      ],
+      "contains": [
+        "seen (exists-trace): verified",
+        "no_failure (all-traces): verified"
+      ]
+    }
+  ]
+}

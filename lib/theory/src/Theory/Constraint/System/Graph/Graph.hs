@@ -12,6 +12,7 @@ module Theory.Constraint.System.Graph.Graph (
       systemToGraph
     , SimplificationLevel(..)
     , levelNum
+    , levelFromNum
     , GraphOptions(..)
     , goSimplificationLevel
     , goShowAutoSource
@@ -51,6 +52,17 @@ levelNum SL0 = 0
 levelNum SL1 = 1
 levelNum SL2 = 2
 levelNum SL3 = 3
+
+-- | Inverse of 'levelNum'; 'Nothing' for numbers that are not a level.
+-- Used to parse the level given in the GUI and on the command line. It takes
+-- an 'Integer' because reading a large number as an 'Int' wraps around, e.g.,
+-- 2^64 would be read as 0.
+levelFromNum :: Integer -> Maybe SimplificationLevel
+levelFromNum 0 = Just SL0
+levelFromNum 1 = Just SL1
+levelFromNum 2 = Just SL2
+levelFromNum 3 = Just SL3
+levelFromNum _ = Nothing
 
 -- | Options for the graph generation.
 data GraphOptions = GraphOptions
@@ -147,7 +159,7 @@ computeBasicGraphRepr se =
         ++ map LessEdge (S.toList $ get Sys.sLessAtoms se)
         ++ map UnsolvedChain (Sys.unsolvedChains se)
   in
-    GraphRepr [] nodes edges
+    GraphRepr [] nodes edges S.empty
 
 -- | Compute clusters, nodes & edges from a Graph instance according to the Graph's options.
 systemToGraph :: Sys.System -> GraphOptions -> Graph
@@ -156,10 +168,14 @@ systemToGraph se options =
       simplfiedSystem = simplifySystem (levelNum $ get goSimplificationLevel options) $
                           if get goCompress options then compressSystem se else se
       basicGraphRepr = computeBasicGraphRepr simplfiedSystem
-      -- Iterate on the basicGraphRepr depending on what options are set to get the final repr
+      -- At level 3, internal steps of adversary computations are hidden as well.
+      collapsedGraphRepr = if get goSimplificationLevel options == SL3
+                           then collapseAdversarySteps basicGraphRepr
+                           else basicGraphRepr
+      -- Iterate on the graph representation depending on what options are set to get the final repr
       repr = if get goClustering options
-             then addIntelligentClusterUsingSimilarNames basicGraphRepr
-             else addClusterByRole basicGraphRepr
+             then addIntelligentClusterUsingSimilarNames collapsedGraphRepr
+             else addClusterByRole collapsedGraphRepr
       abbrevs = computeAbbreviations repr defaultAbbreviationOptions
   in
     Graph se options repr abbrevs

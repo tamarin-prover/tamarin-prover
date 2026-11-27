@@ -1,0 +1,29 @@
+theory SapicDestructorSortedPatterns
+begin
+builtins: natural-numbers
+#ifdef PROGRESS
+options: translation-progress
+#endif
+functions: d/1 [destructor], c/1
+#ifdef PUBLIC
+equations: d(c($x)) = $x
+#else
+equations: d(c(~x)) = ~x
+#endif
+// The failure test must keep the equation variable's sort. A fresh-only
+// equation must fail for public names, constructor terms and naturals; a
+// public-only equation must fail for fresh names as well.
+process: new n;
+ ( (let y=d(c(n)) in event Seen('fresh',y) else event Miss('fresh'))
+ | (let y=d(c('a')) in event Seen('public',y) else event Miss('public'))
+ | (let y=d(c(c('a'))) in event Seen('term',y) else event Miss('term'))
+ | (let y=d(c(%1)) in event Seen('nat',y) else event Miss('nat')) )
+lemma fresh_success: exists-trace "Ex y #i.Seen('fresh',y)@i"
+lemma fresh_failure: exists-trace "Ex #i.Miss('fresh')@i"
+lemma public_success: exists-trace "Ex y #i.Seen('public',y)@i"
+lemma public_failure: exists-trace "Ex #i.Miss('public')@i"
+lemma term_failure: exists-trace "Ex #i.Miss('term')@i"
+lemma nat_failure: exists-trace "Ex #i.Miss('nat')@i"
+lemma no_term_success: "All y #i.Seen('term',y)@i ==> F"
+lemma no_nat_success: "All y #i.Seen('nat',y)@i ==> F"
+end

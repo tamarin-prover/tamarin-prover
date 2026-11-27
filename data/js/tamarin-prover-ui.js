@@ -11,6 +11,15 @@
  * Theory state                                              *
  *-----------------------------------------------------------*/
 
+/**
+ * Abbreviations are on unless the user switched them off, which is stored
+ * as the cookie abbreviate=false. Cookies from older versions
+ * (abbreviate=true) also mean on.
+ */
+function abbreviationsEnabled() {
+    return $.cookie("abbreviate") !== "false";
+}
+
 var theory = {
     /**
      * Convert a relative path into an absolute one for the currently shown theory.
@@ -86,7 +95,7 @@ var server = {
                     { name: "uncompress", value: "" }
                 );
             }
-            if ($.cookie("abbreviate") == null) {
+            if (!abbreviationsEnabled()) {
                 params = params.concat(
                     { name: "unabbreviate", value: "" }
                 );
@@ -411,7 +420,7 @@ var ui = {
      * both show this menu but do not share any other UI chrome.
      */
     loadOptionSettings: function() {
-	/* If no simplification level specified yet, default to 1 */
+	/* If no simplification level specified yet, default to 2 */
 	if ($.cookie("simplification") == null) {
 	    $.cookie("simplification", 2, { path: '/' });
 	}
@@ -425,7 +434,7 @@ var ui = {
 	    }
 	}
 
-        if($.cookie("abbreviate")) {
+        if(abbreviationsEnabled()) {
             $("a#abbrv-toggle").addClass("active-option");
         } else {
             $("a#abbrv-toggle").addClass("disabled-option");
@@ -494,10 +503,10 @@ var ui = {
         var abbrv_toggle = $('a#abbrv-toggle');
         abbrv_toggle.click(function(ev) {
             ev.preventDefault();
-            if ($.cookie("abbreviate")) {
-                $.cookie("abbreviate", null, { path: '/' });
+            if (abbreviationsEnabled()) {
+                $.cookie("abbreviate", "false", { path: '/' });
             } else {
-                $.cookie("abbreviate", true, { path: '/' });
+                $.cookie("abbreviate", null, { path: '/' });
             }
             ui.refreshGraphView();
             mainDisplay.toggleOption(abbrv_toggle);
@@ -951,7 +960,7 @@ var mainDisplay = {
                 { name: "uncompress", value: "" }
             );
         }
-        if ($.cookie("abbreviate") == null) {
+        if (!abbreviationsEnabled()) {
             params = params.concat(
                 { name: "unabbreviate", value: "" }
             );

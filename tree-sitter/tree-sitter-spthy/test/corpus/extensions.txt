@@ -200,3 +200,25 @@ end
         (ERROR
           (ident)
           (ident))))))
+
+==================
+Unfinishable proof
+==================
+
+theory Unfinishable
+begin
+
+lemma unfinished: "T"
+by UNFINISHABLE
+
+end
+
+---
+
+(theory
+  theory_name: (ident)
+  (lemma
+    lemma_identifier: (ident)
+    formula: (atom)
+    proof_skeleton: (by_method
+      (proof_method))))

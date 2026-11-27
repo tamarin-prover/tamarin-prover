@@ -1,0 +1,192 @@
+theory MacroInjectivity
+
+begin
+
+// Function signature and definition of the equational theory E
+
+functions: fst/1, pair/2, snd/1
+equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
+
+/* looping facts with injective instances: C/2, P/2, S/2 */
+
+macros: identity( x ) =  x,
+        constant( x ) =  'c',
+        projection( x ) =  fst(<x, 'c'>)
+
+rule (modulo E) Init:
+   [ Fr( ~id ), In( x ) ] --> [ S( ~id, x ), C( ~id, x ), P( ~id, x ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Identity:
+   [ S( ~id, x ) ] --[ Identity( ~id, x ) ]-> [ S( ~id, identity(x) ) ]
+
+  // loop breaker: [0]
+  /*
+  rule (modulo AC) Identity:
+     [ S( ~id, x ) ] --[ Identity( ~id, x ) ]-> [ S( ~id, x ) ]
+    // loop breaker: [0]
+  */
+
+rule (modulo E) Constant:
+   [ C( ~id, x ) ] --[ Constant( ~id, x ) ]-> [ C( ~id, constant(x) ) ]
+
+  // loop breaker: [0]
+  /*
+  rule (modulo AC) Constant:
+     [ C( ~id, x ) ] --[ Constant( ~id, x ) ]-> [ C( ~id, 'c' ) ]
+    // loop breaker: [0]
+  */
+
+rule (modulo E) Projection:
+   [ P( ~id, x ) ] --[ Projection( ~id, x ) ]-> [ P( ~id, projection(x) ) ]
+
+  // loop breaker: [0]
+  /*
+  rule (modulo AC) Projection:
+     [ P( ~id, x ) ] --[ Projection( ~id, x ) ]-> [ P( ~id, x ) ]
+    // loop breaker: [0]
+  */
+
+lemma identity_twice:
+  exists-trace
+  "∃ id x #i #j.
+    ((Identity( id, x ) @ #i) ∧ (Identity( id, x ) @ #j)) ∧ (¬(#i = #j))"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ id x #i #j.
+  (Identity( id, x ) @ #i) ∧ (Identity( id, x ) @ #j) ∧ ¬(#i = #j)"
+*/
+simplify
+solve( (#i < #j)  ∥ (#j < #i) )
+  case case_1
+  solve( S( ~id, x ) ▶₀ #i )
+    case Identity
+    solve( S( ~id, x ) ▶₀ #j )
+      case Identity
+      solve( S( ~id, x ) ▶₀ #vr )
+        case Init
+        solve( S( ~id, x ) ▶₀ #vr.1 )
+          case Identity
+          solve( S( ~id, x ) ▶₀ #vr.3 )
+            case Init
+            SOLVED // trace found
+          qed
+        qed
+      qed
+    qed
+  qed
+qed
+
+lemma identity_once:
+  all-traces
+  "∀ id x #i #j.
+    ((Identity( id, x ) @ #i) ∧ (Identity( id, x ) @ #j)) ⇒ (#i = #j)"
+/*
+guarded formula characterizing all counter-examples:
+"∃ id x #i #j.
+  (Identity( id, x ) @ #i) ∧ (Identity( id, x ) @ #j) ∧ ¬(#i = #j)"
+*/
+simplify
+solve( (#i < #j)  ∥ (#j < #i) )
+  case case_1
+  solve( S( ~id, x ) ▶₀ #i )
+    case Identity
+    solve( S( ~id, x ) ▶₀ #j )
+      case Identity
+      solve( S( ~id, x ) ▶₀ #vr )
+        case Init
+        solve( S( ~id, x ) ▶₀ #vr.1 )
+          case Identity
+          solve( S( ~id, x ) ▶₀ #vr.3 )
+            case Init
+            SOLVED // trace found
+          qed
+        qed
+      qed
+    qed
+  qed
+qed
+
+lemma constant_twice:
+  exists-trace
+  "∃ id #i #j.
+    ((Constant( id, 'c' ) @ #i) ∧ (Constant( id, 'c' ) @ #j)) ∧ (¬(#i = #j))"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ id #i #j.
+  (Constant( id, 'c' ) @ #i) ∧ (Constant( id, 'c' ) @ #j) ∧ ¬(#i = #j)"
+*/
+simplify
+solve( (#i < #j)  ∥ (#j < #i) )
+  case case_1
+  solve( C( ~id, 'c' ) ▶₀ #i )
+    case Constant
+    solve( C( ~id, 'c' ) ▶₀ #j )
+      case Constant
+      solve( C( ~id, x ) ▶₀ #vr )
+        case Init
+        solve( C( ~id, x.1 ) ▶₀ #vr.1 )
+          case Constant
+          solve( C( ~id, x.1 ) ▶₀ #vr.3 )
+            case Init
+            SOLVED // trace found
+          qed
+        qed
+      qed
+    qed
+  qed
+qed
+
+lemma projection_twice:
+  exists-trace
+  "∃ id x #i #j.
+    ((Projection( id, x ) @ #i) ∧ (Projection( id, x ) @ #j)) ∧ (¬(#i = #j))"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ id x #i #j.
+  (Projection( id, x ) @ #i) ∧ (Projection( id, x ) @ #j) ∧ ¬(#i = #j)"
+*/
+simplify
+solve( (#i < #j)  ∥ (#j < #i) )
+  case case_1
+  solve( P( ~id, x ) ▶₀ #i )
+    case Init
+    solve( P( ~id, x ) ▶₀ #j )
+      case Projection
+      solve( P( ~id, x ) ▶₀ #vr.1 )
+        case Init
+        SOLVED // trace found
+      qed
+    qed
+  qed
+qed
+
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.13.0
+Maude version 3.5.1
+Git revision: 5df53af2911dfd01204a9142e8237672e5d05dae (with uncommited changes), branch: msr-proof-correctness
+Compiled at: 2026-09-25 19:18:42.692960904 UTC
+*/
+
+end
+/* Output
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/regression/trace/msr-macro-injectivity.spthy
+
+  output:          examples/regression/trace/msr-macro-injectivity.spthy.tmp
+  processing time: 0.24s
+  
+  identity_twice (exists-trace): verified (8 steps)
+  identity_once (all-traces): falsified - found trace (8 steps)
+  constant_twice (exists-trace): verified (8 steps)
+  projection_twice (exists-trace): verified (6 steps)
+
+==============================================================================
+*/

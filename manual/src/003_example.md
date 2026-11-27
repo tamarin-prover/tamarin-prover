@@ -444,6 +444,12 @@ when we navigate through the proof steps (either by clicking at a certain proof
 step or using the `j` or `k` keys), the graph in the new window will change
 accordingly. This is especially useful when working with large proof graphs.
 
+How much of the constraint system is shown can be adjusted in the `Options`
+menu, which offers four graph simplification levels; see
+[Graph simplification levels](011_advanced-features.html#sec:graph-simplification).
+At the highest level, the internal steps of the adversary's computations are
+hidden, and the nodes that stand for them are drawn with a double outline.
+
 The proof graph is zoomable using the mouse wheel; if the font size of the node
 contents becomes too small while zooming out, Tamarin will automatically
 replacing them with the corresponding rule name and action fact. We can
@@ -496,6 +502,7 @@ Finally, in intermediate proof steps, there can also be dotted green arrows, whi
 Note that by default Tamarin does not show all rules and arrows to simplify the graphs, but this can be adjusted using the Options button on the top right of the page.
 
 Another option is whether to render abbreviations in the graph as shown in the picture below.
+Abbreviations are enabled by default and can be switched off with the `Abbreviate terms` toggle in the `Options` menu.
 When abbreviations are enabled Tamarin will construct abbreviations for terms, list them in a legend at the bottom of the image and replace the original terms in the graph.
 A maximum on 10 abbreviations are generated and terms are prioritized based on their length and how often they appear in the graph.
 Note that abbreviations can appear in other abbreviations, as for example "PK1" appears in the expanded term of "AE1" below.

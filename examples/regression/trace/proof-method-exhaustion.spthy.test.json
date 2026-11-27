@@ -1,0 +1,123 @@
+{
+  "tests": [
+    {
+      "name": "exhausted-and-witness-verdicts",
+      "args": [
+        "--prove",
+        "--stop-on-trace=none",
+        "--quit-on-warning"
+      ],
+      "contains": [
+        "exhausted (all-traces): analysis cannot be finished",
+        "saved_exhausted (all-traces): analysis cannot be finished",
+        "sibling (exists-trace): verified",
+        "handwritten (exists-trace): verified"
+      ],
+      "matches": [
+        {
+          "regex": "case A_Private\\s+by UNFINISHABLE",
+          "theory_only": true,
+          "min": 1,
+          "max": 1
+        }
+      ]
+    },
+    {
+      "name": "witness-after-unfinishable-dfs",
+      "args": [
+        "--prove=sibling",
+        "--stop-on-trace=dfs",
+        "--quit-on-warning"
+      ],
+      "contains": [
+        "sibling (exists-trace): verified"
+      ]
+    },
+    {
+      "name": "witness-after-unfinishable-bfs",
+      "args": [
+        "--prove=sibling",
+        "--stop-on-trace=bfs",
+        "--quit-on-warning"
+      ],
+      "contains": [
+        "sibling (exists-trace): verified"
+      ]
+    },
+    {
+      "name": "witness-after-unfinishable-seqdfs",
+      "args": [
+        "--prove=sibling",
+        "--stop-on-trace=seqdfs",
+        "--quit-on-warning"
+      ],
+      "contains": [
+        "sibling (exists-trace): verified"
+      ]
+    },
+    {
+      "name": "saved-proof-roundtrip",
+      "args": [
+        "--quit-on-warning"
+      ],
+      "checks": [
+        "roundtrip"
+      ]
+    },
+    {
+      "name": "handwritten-sorry",
+      "args": [
+        "--quit-on-warning"
+      ],
+      "contains": [
+        "exhausted (all-traces): analysis incomplete",
+        "saved_exhausted (all-traces): analysis cannot be finished",
+        "handwritten (exists-trace): analysis incomplete"
+      ]
+    },
+    {
+      "name": "reject-unfinishable-when-a-method-applies",
+      "args": [
+        "-DINVALID",
+        "--quit-on-warning"
+      ],
+      "contains": [
+        "simplifiable (all-traces): analysis incomplete",
+        "inductive (exists-trace): analysis incomplete",
+        "open_goal (exists-trace): analysis incomplete"
+      ],
+      "matches": [
+        {
+          "regex": "invalid proof step encountered",
+          "min": 3,
+          "max": 3
+        }
+      ]
+    },
+    {
+      "name": "bound-remains-incomplete",
+      "args": [
+        "--prove=handwritten",
+        "--bound=0",
+        "--quit-on-warning"
+      ],
+      "contains": [
+        "handwritten (exists-trace): analysis incomplete"
+      ]
+    },
+    {
+      "name": "tactic-stop-remains-incomplete",
+      "args": [
+        "-DSTOP",
+        "--prove=handwritten",
+        "--heuristic={stop}",
+        "--oracle-only",
+        "--quit-on-warning"
+      ],
+      "contains": [
+        "Oracle ranked no proof methods",
+        "handwritten (exists-trace): analysis incomplete"
+      ]
+    }
+  ]
+}

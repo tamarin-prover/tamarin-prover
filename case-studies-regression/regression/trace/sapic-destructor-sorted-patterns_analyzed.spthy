@@ -1,0 +1,691 @@
+theory SapicDestructorSortedPatterns
+
+begin
+
+// Function signature and definition of the equational theory E
+
+builtins: natural-numbers
+functions: c/1, d/1 [destructor], fst/1, pair/2, snd/1
+equations: d(c(~x)) = ~x, fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
+
+heuristic: p
+
+lemma fresh_success:
+  exists-trace "∃ y #i. Seen( 'fresh', y ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ y #i. (Seen( 'fresh', y ) @ #i)"
+*/
+simplify
+solve( Seen( 'fresh', y ) @ #i )
+  case eventSeenfreshy_0_11111
+  solve( State_11111( n, y ) ▶₀ #i )
+    case letydcn_3_1111
+    SOLVED // trace found
+  qed
+qed
+
+lemma fresh_failure:
+  exists-trace "∃ #i. Miss( 'fresh' ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #i. (Miss( 'fresh' ) @ #i)"
+*/
+simplify
+solve( Miss( 'fresh' ) @ #i )
+  case eventMissfresh_0_11112
+  by solve( State_11112( n ) ▶₀ #i )
+qed
+
+lemma public_success:
+  exists-trace "∃ y #i. Seen( 'public', y ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ y #i. (Seen( 'public', y ) @ #i)"
+*/
+simplify
+solve( Seen( 'public', y ) @ #i )
+  case eventSeenpublicy_0_11121
+  by solve( State_11121( n, y ) ▶₀ #i )
+qed
+
+lemma public_failure:
+  exists-trace "∃ #i. Miss( 'public' ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #i. (Miss( 'public' ) @ #i)"
+*/
+simplify
+solve( Miss( 'public' ) @ #i )
+  case eventMisspublic_0_11122
+  solve( State_11122( n ) ▶₀ #i )
+    case letydca_2_1112
+    SOLVED // trace found
+  qed
+qed
+
+lemma term_failure:
+  exists-trace "∃ #i. Miss( 'term' ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #i. (Miss( 'term' ) @ #i)"
+*/
+simplify
+solve( Miss( 'term' ) @ #i )
+  case eventMissterm_0_1122
+  solve( State_1122( n ) ▶₀ #i )
+    case letydcca_2_112
+    SOLVED // trace found
+  qed
+qed
+
+lemma nat_failure:
+  exists-trace "∃ #i. Miss( 'nat' ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #i. (Miss( 'nat' ) @ #i)"
+*/
+simplify
+solve( Miss( 'nat' ) @ #i )
+  case eventMissnat_0_122
+  solve( State_122( n ) ▶₀ #i )
+    case letydc_2_12
+    SOLVED // trace found
+  qed
+qed
+
+lemma no_term_success:
+  all-traces "∀ y #i. (Seen( 'term', y ) @ #i) ⇒ (⊥)"
+/*
+guarded formula characterizing all counter-examples:
+"∃ y #i. (Seen( 'term', y ) @ #i)"
+*/
+simplify
+solve( Seen( 'term', y ) @ #i )
+  case eventSeentermy_0_1121
+  by solve( State_1121( n, y ) ▶₀ #i )
+qed
+
+lemma no_nat_success:
+  all-traces "∀ y #i. (Seen( 'nat', y ) @ #i) ⇒ (⊥)"
+/*
+guarded formula characterizing all counter-examples:
+"∃ y #i. (Seen( 'nat', y ) @ #i)"
+*/
+simplify
+solve( Seen( 'nat', y ) @ #i )
+  case eventSeennaty_0_121
+  by solve( State_121( n, y ) ▶₀ #i )
+qed
+
+rule (modulo E) Init[color=#ffffff, process="new n.1;", issapicrule,
+                     role='Process']:
+   [ ] --[ Init( ) ]-> [ State_( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) newn_0_[color=#ffffff, process="new n.1;", issapicrule,
+                        role='Process']:
+   [ State_( ), Fr( n.1 ) ] --> [ State_1( n.1 ) ]
+
+  /*
+  rule (modulo AC) newn_0_[color=#ffffff, process="new n.1;", issapicrule,
+                           role='Process']:
+     [ State_( ), Fr( n ) ] --> [ State_1( n ) ]
+  */
+
+rule (modulo E) p_0_1[color=#ffffff, process="|", issapicrule,
+                      role='Process']:
+   [ State_1( n.1 ) ] --> [ State_11( n.1 ), State_12( n.1 ) ]
+
+  /*
+  rule (modulo AC) p_0_1[color=#ffffff, process="|", issapicrule,
+                         role='Process']:
+     [ State_1( n ) ] --> [ State_11( n ), State_12( n ) ]
+  */
+
+rule (modulo E) p_0_11[color=#ffffff, process="|", issapicrule,
+                       role='Process']:
+   [ State_11( n.1 ) ] --> [ State_111( n.1 ), State_112( n.1 ) ]
+
+  /*
+  rule (modulo AC) p_0_11[color=#ffffff, process="|", issapicrule,
+                          role='Process']:
+     [ State_11( n ) ] --> [ State_111( n ), State_112( n ) ]
+  */
+
+rule (modulo E) p_0_111[color=#ffffff, process="|", issapicrule,
+                        role='Process']:
+   [ State_111( n.1 ) ] --> [ State_1111( n.1 ), State_1112( n.1 ) ]
+
+  /*
+  rule (modulo AC) p_0_111[color=#ffffff, process="|", issapicrule,
+                           role='Process']:
+     [ State_111( n ) ] --> [ State_1111( n ), State_1112( n ) ]
+  */
+
+rule (modulo E) letydcn_0_1111[color=#ffffff,
+                               process="let y.1=d(c(n.1))", issapicrule, role='Process']:
+   [ State_1111( n.1 ) ] --> [ Let_11111( c(n.1), n.1 ) ]
+
+  /*
+  rule (modulo AC) letydcn_0_1111[color=#ffffff,
+                                  process="let y.1=d(c(n.1))", issapicrule, role='Process']:
+     [ State_1111( n ) ] --> [ Let_11111( c(n), n ) ]
+  */
+
+rule (modulo E) letydcn_1_1111[color=#ffffff,
+                               process="let y.1=d(c(n.1))", no_derivcheck, issapicrule, role='Process']:
+   [ Let_11111( c(~x.5), n.1 ) ] --> [ Let_111101( ~x.5, n.1 ) ]
+
+  /*
+  rule (modulo AC) letydcn_1_1111[color=#ffffff,
+                                  process="let y.1=d(c(n.1))", no_derivcheck, issapicrule, role='Process']:
+     [ Let_11111( c(~x), n ) ] --> [ Let_111101( ~x, n ) ]
+  */
+
+restriction Restr_letydcn_2_1111_1:
+  "∀ x #NOW.
+    (Restr_letydcn_2_1111_1( x ) @ #NOW) ⇒ (∀ ~x.1. (c(~x.1) = x) ⇒ (⊥))"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ x #NOW.
+    (Restr_letydcn_2_1111_1( x ) @ #NOW) ⇒ (∀ ~x.1. (c(~x.1) = x) ⇒ (⊥))"
+  */
+
+rule (modulo E) letydcn_2_1111[color=#ffffff,
+                               process="let y.1=d(c(n.1))", issapicrule, role='Process']:
+   [ Let_11111( c(n.1), n.1 ) ]
+  --[ Restr_letydcn_2_1111_1( c(n.1) ) ]->
+   [ State_11112( n.1 ) ]
+
+  /*
+  rule (modulo AC) letydcn_2_1111[color=#ffffff,
+                                  process="let y.1=d(c(n.1))", issapicrule, role='Process']:
+     [ Let_11111( c(n), n ) ]
+    --[ Restr_letydcn_2_1111_1( c(n) ) ]->
+     [ State_11112( n ) ]
+  */
+
+rule (modulo E) letydcn_3_1111[color=#ffffff,
+                               process="let y.1=d(c(n.1))", issapicrule, role='Process']:
+   [ Let_111101( y.1, n.1 ) ] --> [ State_11111( n.1, y.1 ) ]
+
+  /*
+  rule (modulo AC) letydcn_3_1111[color=#ffffff,
+                                  process="let y.1=d(c(n.1))", issapicrule, role='Process']:
+     [ Let_111101( y, n ) ] --> [ State_11111( n, y ) ]
+  */
+
+restriction Restr_letydcn_4_1111_1:
+  "∀ x #NOW. (Restr_letydcn_4_1111_1( x ) @ #NOW) ⇒ (∀ y. (y = x) ⇒ (⊥))"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ x #NOW. (Restr_letydcn_4_1111_1( x ) @ #NOW) ⇒ (∀ y. (y = x) ⇒ (⊥))"
+  */
+
+rule (modulo E) letydcn_4_1111[color=#ffffff,
+                               process="let y.1=d(c(n.1))", issapicrule, role='Process']:
+   [ Let_111101( destructor.7, n.1 ) ]
+  --[ Restr_letydcn_4_1111_1( destructor.7 ) ]->
+   [ State_11112( n.1 ) ]
+
+  /*
+  rule (modulo AC) letydcn_4_1111[color=#ffffff,
+                                  process="let y.1=d(c(n.1))", issapicrule, role='Process']:
+     [ Let_111101( destructor, n ) ]
+    --[ Restr_letydcn_4_1111_1( destructor ) ]->
+     [ State_11112( n ) ]
+  */
+
+rule (modulo E) eventSeenfreshy_0_11111[color=#ffffff,
+                                        process="event Seen( 'fresh', y.1 );", issapicrule, role='Process']:
+   [ State_11111( n.1, y.1 ) ]
+  --[ Seen( 'fresh', y.1 ) ]->
+   [ State_111111( n.1, y.1 ) ]
+
+  /*
+  rule (modulo AC) eventSeenfreshy_0_11111[color=#ffffff,
+                                           process="event Seen( 'fresh', y.1 );", issapicrule,
+                                           role='Process']:
+     [ State_11111( n, y ) ]
+    --[ Seen( 'fresh', y ) ]->
+     [ State_111111( n, y ) ]
+  */
+
+rule (modulo E) p_0_111111[color=#ffffff, process="0", issapicrule,
+                           role='Process']:
+   [ State_111111( n.1, y.1 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_111111[color=#ffffff, process="0", issapicrule,
+                              role='Process']:
+     [ State_111111( n, y ) ] --> [ ]
+  */
+
+rule (modulo E) eventMissfresh_0_11112[color=#ffffff,
+                                       process="event Miss( 'fresh' );", issapicrule, role='Process']:
+   [ State_11112( n.1 ) ] --[ Miss( 'fresh' ) ]-> [ State_111121( n.1 ) ]
+
+  /*
+  rule (modulo AC) eventMissfresh_0_11112[color=#ffffff,
+                                          process="event Miss( 'fresh' );", issapicrule, role='Process']:
+     [ State_11112( n ) ] --[ Miss( 'fresh' ) ]-> [ State_111121( n ) ]
+  */
+
+rule (modulo E) p_0_111121[color=#ffffff, process="0", issapicrule,
+                           role='Process']:
+   [ State_111121( n.1 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_111121[color=#ffffff, process="0", issapicrule,
+                              role='Process']:
+     [ State_111121( n ) ] --> [ ]
+  */
+
+rule (modulo E) letydca_0_1112[color=#ffffff,
+                               process="let y.2=d(c('a'))", issapicrule, role='Process']:
+   [ State_1112( n.1 ) ] --> [ Let_11121( c('a'), n.1 ) ]
+
+  /*
+  rule (modulo AC) letydca_0_1112[color=#ffffff,
+                                  process="let y.2=d(c('a'))", issapicrule, role='Process']:
+     [ State_1112( n ) ] --> [ Let_11121( c('a'), n ) ]
+  */
+
+rule (modulo E) letydca_1_1112[color=#ffffff,
+                               process="let y.2=d(c('a'))", no_derivcheck, issapicrule, role='Process']:
+   [ Let_11121( c(~x.5), n.1 ) ] --> [ Let_111201( ~x.5, n.1 ) ]
+
+  /*
+  rule (modulo AC) letydca_1_1112[color=#ffffff,
+                                  process="let y.2=d(c('a'))", no_derivcheck, issapicrule, role='Process']:
+     [ Let_11121( c(~x), n ) ] --> [ Let_111201( ~x, n ) ]
+  */
+
+restriction Restr_letydca_2_1112_1:
+  "∀ #NOW.
+    (Restr_letydca_2_1112_1( ) @ #NOW) ⇒ (∀ ~x. (c(~x) = c('a')) ⇒ (⊥))"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ #NOW.
+    (Restr_letydca_2_1112_1( ) @ #NOW) ⇒ (∀ ~x. (c(~x) = c('a')) ⇒ (⊥))"
+  */
+
+rule (modulo E) letydca_2_1112[color=#ffffff,
+                               process="let y.2=d(c('a'))", issapicrule, role='Process']:
+   [ Let_11121( c('a'), n.1 ) ]
+  --[ Restr_letydca_2_1112_1( ) ]->
+   [ State_11122( n.1 ) ]
+
+  /*
+  rule (modulo AC) letydca_2_1112[color=#ffffff,
+                                  process="let y.2=d(c('a'))", issapicrule, role='Process']:
+     [ Let_11121( c('a'), n ) ]
+    --[ Restr_letydca_2_1112_1( ) ]->
+     [ State_11122( n ) ]
+  */
+
+rule (modulo E) letydca_3_1112[color=#ffffff,
+                               process="let y.2=d(c('a'))", issapicrule, role='Process']:
+   [ Let_111201( y.2, n.1 ) ] --> [ State_11121( n.1, y.2 ) ]
+
+  /*
+  rule (modulo AC) letydca_3_1112[color=#ffffff,
+                                  process="let y.2=d(c('a'))", issapicrule, role='Process']:
+     [ Let_111201( y, n ) ] --> [ State_11121( n, y ) ]
+  */
+
+restriction Restr_letydca_4_1112_1:
+  "∀ x #NOW. (Restr_letydca_4_1112_1( x ) @ #NOW) ⇒ (∀ y. (y = x) ⇒ (⊥))"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ x #NOW. (Restr_letydca_4_1112_1( x ) @ #NOW) ⇒ (∀ y. (y = x) ⇒ (⊥))"
+  */
+
+rule (modulo E) letydca_4_1112[color=#ffffff,
+                               process="let y.2=d(c('a'))", issapicrule, role='Process']:
+   [ Let_111201( destructor.8, n.1 ) ]
+  --[ Restr_letydca_4_1112_1( destructor.8 ) ]->
+   [ State_11122( n.1 ) ]
+
+  /*
+  rule (modulo AC) letydca_4_1112[color=#ffffff,
+                                  process="let y.2=d(c('a'))", issapicrule, role='Process']:
+     [ Let_111201( destructor, n ) ]
+    --[ Restr_letydca_4_1112_1( destructor ) ]->
+     [ State_11122( n ) ]
+  */
+
+rule (modulo E) eventSeenpublicy_0_11121[color=#ffffff,
+                                         process="event Seen( 'public', y.2 );", issapicrule, role='Process']:
+   [ State_11121( n.1, y.2 ) ]
+  --[ Seen( 'public', y.2 ) ]->
+   [ State_111211( n.1, y.2 ) ]
+
+  /*
+  rule (modulo AC) eventSeenpublicy_0_11121[color=#ffffff,
+                                            process="event Seen( 'public', y.2 );", issapicrule,
+                                            role='Process']:
+     [ State_11121( n, y ) ]
+    --[ Seen( 'public', y ) ]->
+     [ State_111211( n, y ) ]
+  */
+
+rule (modulo E) p_0_111211[color=#ffffff, process="0", issapicrule,
+                           role='Process']:
+   [ State_111211( n.1, y.2 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_111211[color=#ffffff, process="0", issapicrule,
+                              role='Process']:
+     [ State_111211( n, y ) ] --> [ ]
+  */
+
+rule (modulo E) eventMisspublic_0_11122[color=#ffffff,
+                                        process="event Miss( 'public' );", issapicrule, role='Process']:
+   [ State_11122( n.1 ) ] --[ Miss( 'public' ) ]-> [ State_111221( n.1 ) ]
+
+  /*
+  rule (modulo AC) eventMisspublic_0_11122[color=#ffffff,
+                                           process="event Miss( 'public' );", issapicrule, role='Process']:
+     [ State_11122( n ) ] --[ Miss( 'public' ) ]-> [ State_111221( n ) ]
+  */
+
+rule (modulo E) p_0_111221[color=#ffffff, process="0", issapicrule,
+                           role='Process']:
+   [ State_111221( n.1 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_111221[color=#ffffff, process="0", issapicrule,
+                              role='Process']:
+     [ State_111221( n ) ] --> [ ]
+  */
+
+rule (modulo E) letydcca_0_112[color=#ffffff,
+                               process="let y.3=d(c(c('a')))", issapicrule, role='Process']:
+   [ State_112( n.1 ) ] --> [ Let_1121( c(c('a')), n.1 ) ]
+
+  /*
+  rule (modulo AC) letydcca_0_112[color=#ffffff,
+                                  process="let y.3=d(c(c('a')))", issapicrule, role='Process']:
+     [ State_112( n ) ] --> [ Let_1121( c(c('a')), n ) ]
+  */
+
+rule (modulo E) letydcca_1_112[color=#ffffff,
+                               process="let y.3=d(c(c('a')))", no_derivcheck, issapicrule,
+                               role='Process']:
+   [ Let_1121( c(~x.5), n.1 ) ] --> [ Let_11201( ~x.5, n.1 ) ]
+
+  /*
+  rule (modulo AC) letydcca_1_112[color=#ffffff,
+                                  process="let y.3=d(c(c('a')))", no_derivcheck, issapicrule,
+                                  role='Process']:
+     [ Let_1121( c(~x), n ) ] --> [ Let_11201( ~x, n ) ]
+  */
+
+restriction Restr_letydcca_2_112_1:
+  "∀ #NOW.
+    (Restr_letydcca_2_112_1( ) @ #NOW) ⇒ (∀ ~x. (c(~x) = c(c('a'))) ⇒ (⊥))"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ #NOW.
+    (Restr_letydcca_2_112_1( ) @ #NOW) ⇒ (∀ ~x. (c(~x) = c(c('a'))) ⇒ (⊥))"
+  */
+
+rule (modulo E) letydcca_2_112[color=#ffffff,
+                               process="let y.3=d(c(c('a')))", issapicrule, role='Process']:
+   [ Let_1121( c(c('a')), n.1 ) ]
+  --[ Restr_letydcca_2_112_1( ) ]->
+   [ State_1122( n.1 ) ]
+
+  /*
+  rule (modulo AC) letydcca_2_112[color=#ffffff,
+                                  process="let y.3=d(c(c('a')))", issapicrule, role='Process']:
+     [ Let_1121( c(c('a')), n ) ]
+    --[ Restr_letydcca_2_112_1( ) ]->
+     [ State_1122( n ) ]
+  */
+
+rule (modulo E) letydcca_3_112[color=#ffffff,
+                               process="let y.3=d(c(c('a')))", issapicrule, role='Process']:
+   [ Let_11201( y.3, n.1 ) ] --> [ State_1121( n.1, y.3 ) ]
+
+  /*
+  rule (modulo AC) letydcca_3_112[color=#ffffff,
+                                  process="let y.3=d(c(c('a')))", issapicrule, role='Process']:
+     [ Let_11201( y, n ) ] --> [ State_1121( n, y ) ]
+  */
+
+restriction Restr_letydcca_4_112_1:
+  "∀ x #NOW. (Restr_letydcca_4_112_1( x ) @ #NOW) ⇒ (∀ y. (y = x) ⇒ (⊥))"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ x #NOW. (Restr_letydcca_4_112_1( x ) @ #NOW) ⇒ (∀ y. (y = x) ⇒ (⊥))"
+  */
+
+rule (modulo E) letydcca_4_112[color=#ffffff,
+                               process="let y.3=d(c(c('a')))", issapicrule, role='Process']:
+   [ Let_11201( destructor.9, n.1 ) ]
+  --[ Restr_letydcca_4_112_1( destructor.9 ) ]->
+   [ State_1122( n.1 ) ]
+
+  /*
+  rule (modulo AC) letydcca_4_112[color=#ffffff,
+                                  process="let y.3=d(c(c('a')))", issapicrule, role='Process']:
+     [ Let_11201( destructor, n ) ]
+    --[ Restr_letydcca_4_112_1( destructor ) ]->
+     [ State_1122( n ) ]
+  */
+
+rule (modulo E) eventSeentermy_0_1121[color=#ffffff,
+                                      process="event Seen( 'term', y.3 );", issapicrule, role='Process']:
+   [ State_1121( n.1, y.3 ) ]
+  --[ Seen( 'term', y.3 ) ]->
+   [ State_11211( n.1, y.3 ) ]
+
+  /*
+  rule (modulo AC) eventSeentermy_0_1121[color=#ffffff,
+                                         process="event Seen( 'term', y.3 );", issapicrule, role='Process']:
+     [ State_1121( n, y ) ] --[ Seen( 'term', y ) ]-> [ State_11211( n, y ) ]
+  */
+
+rule (modulo E) p_0_11211[color=#ffffff, process="0", issapicrule,
+                          role='Process']:
+   [ State_11211( n.1, y.3 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_11211[color=#ffffff, process="0", issapicrule,
+                             role='Process']:
+     [ State_11211( n, y ) ] --> [ ]
+  */
+
+rule (modulo E) eventMissterm_0_1122[color=#ffffff,
+                                     process="event Miss( 'term' );", issapicrule, role='Process']:
+   [ State_1122( n.1 ) ] --[ Miss( 'term' ) ]-> [ State_11221( n.1 ) ]
+
+  /*
+  rule (modulo AC) eventMissterm_0_1122[color=#ffffff,
+                                        process="event Miss( 'term' );", issapicrule, role='Process']:
+     [ State_1122( n ) ] --[ Miss( 'term' ) ]-> [ State_11221( n ) ]
+  */
+
+rule (modulo E) p_0_11221[color=#ffffff, process="0", issapicrule,
+                          role='Process']:
+   [ State_11221( n.1 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_11221[color=#ffffff, process="0", issapicrule,
+                             role='Process']:
+     [ State_11221( n ) ] --> [ ]
+  */
+
+rule (modulo E) letydc_0_12[color=#ffffff, process="let y.4=d(c(%1))",
+                            issapicrule, role='Process']:
+   [ State_12( n.1 ) ] --> [ Let_121( c(%1), n.1 ) ]
+
+  /*
+  rule (modulo AC) letydc_0_12[color=#ffffff, process="let y.4=d(c(%1))",
+                               issapicrule, role='Process']:
+     [ State_12( n ) ] --> [ Let_121( c(%1), n ) ]
+  */
+
+rule (modulo E) letydc_1_12[color=#ffffff, process="let y.4=d(c(%1))",
+                            no_derivcheck, issapicrule, role='Process']:
+   [ Let_121( c(~x.5), n.1 ) ] --> [ Let_1201( ~x.5, n.1 ) ]
+
+  /*
+  rule (modulo AC) letydc_1_12[color=#ffffff, process="let y.4=d(c(%1))",
+                               no_derivcheck, issapicrule, role='Process']:
+     [ Let_121( c(~x), n ) ] --> [ Let_1201( ~x, n ) ]
+  */
+
+restriction Restr_letydc_2_12_1:
+  "∀ #NOW. (Restr_letydc_2_12_1( ) @ #NOW) ⇒ (∀ ~x. (c(~x) = c(%1)) ⇒ (⊥))"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ #NOW. (Restr_letydc_2_12_1( ) @ #NOW) ⇒ (∀ ~x. (c(~x) = c(%1)) ⇒ (⊥))"
+  */
+
+rule (modulo E) letydc_2_12[color=#ffffff, process="let y.4=d(c(%1))",
+                            issapicrule, role='Process']:
+   [ Let_121( c(%1), n.1 ) ]
+  --[ Restr_letydc_2_12_1( ) ]->
+   [ State_122( n.1 ) ]
+
+  /*
+  rule (modulo AC) letydc_2_12[color=#ffffff, process="let y.4=d(c(%1))",
+                               issapicrule, role='Process']:
+     [ Let_121( c(%1), n ) ] --[ Restr_letydc_2_12_1( ) ]-> [ State_122( n ) ]
+  */
+
+rule (modulo E) letydc_3_12[color=#ffffff, process="let y.4=d(c(%1))",
+                            issapicrule, role='Process']:
+   [ Let_1201( y.4, n.1 ) ] --> [ State_121( n.1, y.4 ) ]
+
+  /*
+  rule (modulo AC) letydc_3_12[color=#ffffff, process="let y.4=d(c(%1))",
+                               issapicrule, role='Process']:
+     [ Let_1201( y, n ) ] --> [ State_121( n, y ) ]
+  */
+
+restriction Restr_letydc_4_12_1:
+  "∀ x #NOW. (Restr_letydc_4_12_1( x ) @ #NOW) ⇒ (∀ y. (y = x) ⇒ (⊥))"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ x #NOW. (Restr_letydc_4_12_1( x ) @ #NOW) ⇒ (∀ y. (y = x) ⇒ (⊥))"
+  */
+
+rule (modulo E) letydc_4_12[color=#ffffff, process="let y.4=d(c(%1))",
+                            issapicrule, role='Process']:
+   [ Let_1201( destructor.10, n.1 ) ]
+  --[ Restr_letydc_4_12_1( destructor.10 ) ]->
+   [ State_122( n.1 ) ]
+
+  /*
+  rule (modulo AC) letydc_4_12[color=#ffffff, process="let y.4=d(c(%1))",
+                               issapicrule, role='Process']:
+     [ Let_1201( destructor, n ) ]
+    --[ Restr_letydc_4_12_1( destructor ) ]->
+     [ State_122( n ) ]
+  */
+
+rule (modulo E) eventSeennaty_0_121[color=#ffffff,
+                                    process="event Seen( 'nat', y.4 );", issapicrule, role='Process']:
+   [ State_121( n.1, y.4 ) ]
+  --[ Seen( 'nat', y.4 ) ]->
+   [ State_1211( n.1, y.4 ) ]
+
+  /*
+  rule (modulo AC) eventSeennaty_0_121[color=#ffffff,
+                                       process="event Seen( 'nat', y.4 );", issapicrule, role='Process']:
+     [ State_121( n, y ) ] --[ Seen( 'nat', y ) ]-> [ State_1211( n, y ) ]
+  */
+
+rule (modulo E) p_0_1211[color=#ffffff, process="0", issapicrule,
+                         role='Process']:
+   [ State_1211( n.1, y.4 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_1211[color=#ffffff, process="0", issapicrule,
+                            role='Process']:
+     [ State_1211( n, y ) ] --> [ ]
+  */
+
+rule (modulo E) eventMissnat_0_122[color=#ffffff,
+                                   process="event Miss( 'nat' );", issapicrule, role='Process']:
+   [ State_122( n.1 ) ] --[ Miss( 'nat' ) ]-> [ State_1221( n.1 ) ]
+
+  /*
+  rule (modulo AC) eventMissnat_0_122[color=#ffffff,
+                                      process="event Miss( 'nat' );", issapicrule, role='Process']:
+     [ State_122( n ) ] --[ Miss( 'nat' ) ]-> [ State_1221( n ) ]
+  */
+
+rule (modulo E) p_0_1221[color=#ffffff, process="0", issapicrule,
+                         role='Process']:
+   [ State_1221( n.1 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_1221[color=#ffffff, process="0", issapicrule,
+                            role='Process']:
+     [ State_1221( n ) ] --> [ ]
+  */
+
+restriction single_session:
+  "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
+  */
+
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.13.0
+Maude version 3.5.1
+Git revision: b115eb99ed6690c32c24fd75f2272e5c9547e0f4 (with uncommited changes), branch: sapic-destructors
+Compiled at: 2026-10-07 18:50:03.534557327 UTC
+*/
+
+end
+/* Output
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/regression/trace/sapic-destructor-sorted-patterns.spthy
+
+  output:          examples/regression/trace/sapic-destructor-sorted-patterns.spthy.tmp
+  processing time: 0.50s
+  
+  fresh_success (exists-trace): verified (4 steps)
+  fresh_failure (exists-trace): falsified - no trace found (3 steps)
+  public_success (exists-trace): falsified - no trace found (3 steps)
+  public_failure (exists-trace): verified (4 steps)
+  term_failure (exists-trace): verified (4 steps)
+  nat_failure (exists-trace): verified (4 steps)
+  no_term_success (all-traces): verified (3 steps)
+  no_nat_success (all-traces): verified (3 steps)
+
+==============================================================================
+*/

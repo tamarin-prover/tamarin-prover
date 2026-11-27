@@ -1,0 +1,9 @@
+theory SapicDestructorUserPattern
+begin
+functions: box/1, h/1, open/1 [destructor]
+equations: open(box(h(x))) = h(x)
+
+// The generated equation match is exempt, but this user pattern asks to
+// recover y from an opaque h(y). Its derivation check must still reject it.
+process: in(t); let h(y) = open(t) in event Seen(y)
+end

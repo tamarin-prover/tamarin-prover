@@ -1,0 +1,37 @@
+{
+  "tests": [
+    {
+      "name": "root",
+      "args": [
+        "--prove"
+      ],
+      "exit_code": 1,
+      "contains": [
+        "SAPIC destructor equation results must not contain destructor calls."
+      ]
+    },
+    {
+      "name": "strict",
+      "args": [
+        "--prove",
+        "--quit-on-warning"
+      ],
+      "exit_code": 1,
+      "contains": [
+        "SAPIC destructor equation results must not contain destructor calls."
+      ]
+    },
+    {
+      "name": "nested",
+      "args": [
+        "--prove",
+        "--quit-on-warning",
+        "-DNESTED"
+      ],
+      "exit_code": 1,
+      "contains": [
+        "SAPIC destructor equation results must not contain destructor calls."
+      ]
+    }
+  ]
+}

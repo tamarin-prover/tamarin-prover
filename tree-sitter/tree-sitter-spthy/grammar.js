@@ -1040,7 +1040,8 @@ module.exports = grammar({
           'induction',
           'rule-equivalence',
           'backward-search',
-          'ATTACK'
+          'ATTACK',
+          'UNFINISHABLE'
       ),
 
       step: $ => seq(

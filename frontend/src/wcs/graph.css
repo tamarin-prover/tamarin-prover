@@ -23,6 +23,16 @@ dot-graph-viz text.abbrev:hover {
   fill: blue;
 }
 
+/* The graph page wraps <dot-graph-viz> in a `.graph-page` div (see
+ * `intdotLayout` in Web/Types.hs). That wrapper must fill the viewport,
+ * otherwise the `height: 100%` below resolves against an auto-height
+ * parent, the SVG falls back to its intrinsic aspect ratio, and wide graphs
+ * leave an unused white band at the bottom of the iframe / pop-out window. */
+.graph-page {
+  width: 100%;
+  height: 100%;
+}
+
 dot-graph-viz {
   width: 100%;
   height: 100%;

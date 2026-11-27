@@ -1,0 +1,7 @@
+theory SoundnessSapicStateAlias
+begin
+options: translation-state-optimisation
+process: new s; insert s,'0'; out(s); in(t); lock t; lookup t as v in event B(v); insert t,v; unlock t
+lemma alias_read: exists-trace "Ex #i. B('0')@i"
+lemma stored_value: "All v #i. B(v)@i ==> v = '0'"
+end

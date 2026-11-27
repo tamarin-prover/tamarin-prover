@@ -1,0 +1,94 @@
+theory SoundnessSapicNestedDestructors
+begin
+
+functions: d/1 [destructor], c1/1, c2/1
+equations: d(c1(x)) = x, d(c2(x)) = x
+
+// Even an unused result must evaluate its destructors. Previously this let
+// was substituted away, making Success reachable and Failure unreachable.
+let Unused =
+  let x = <d('bad'),'tag'> in event Success('unused')
+  else event Failure('unused')
+
+// The outer destructor can match c1(x), but its argument must evaluate first.
+let NestedFailure =
+  let x = d(c1(d('bad'))) in event Success('nested')
+  else event Failure('nested')
+
+// Failure of either sibling must enter the original else continuation.
+let LeftFailure =
+  let x = <d('bad'),d(c2('b'))> in event Success('left')
+  else event Failure('left')
+let RightFailure =
+  let x = <d(c1('a')),d('bad')> in event Success('right')
+  else event Failure('right')
+
+// Both equations must remain available at every nested call.
+let Siblings =
+  let x = <d(c1('a')),d(c2('b'))> in event Result('siblings',x)
+  else event UnexpectedFailure()
+let NestedSuccess =
+  // Four levels require pruning dead intermediate results between stages.
+  let x = d(c1(d(c2(d(c1(d(c2('good')))))))) in event Result('nested',x)
+  else event UnexpectedFailure()
+
+// Pattern matching happens after evaluation, and can itself fail.
+let PatternSuccess =
+  let <'tag',x> = d(c2(<'tag','good'>)) in event Result('pattern',x)
+  else event UnexpectedFailure()
+let PatternFailure =
+  let <'tag',x> = d(c1(<'other','good'>)) in event Success('pattern')
+  else event Failure('pattern')
+
+// A matched variable can become a constructor pattern after substitution.
+let MatchedSuccess =
+  let expected = <'tag','good'> in
+  let =expected = d(c1(<'tag','good'>)) in event Result('matched',expected)
+  else event UnexpectedFailure()
+let MatchedFailure =
+  let expected = <'tag','good'> in
+  let =expected = d(c2(<'other','good'>)) in event Success('matched')
+  else event Failure('matched')
+
+// Generated intermediate binders must avoid variables already in the process.
+let Scope =
+  new destructor;
+  let <'tag',x> = <'tag',d(c2(destructor))> in
+    event ScopeResult(destructor,x)
+  else event UnexpectedFailure()
+
+process: Unused | NestedFailure | LeftFailure | RightFailure | Siblings
+         | NestedSuccess | PatternSuccess | PatternFailure
+         | MatchedSuccess | MatchedFailure | Scope
+
+lemma unused_fails: exists-trace "Ex #i. Failure('unused')@i"
+lemma nested_fails: exists-trace "Ex #i. Failure('nested')@i"
+lemma left_fails: exists-trace "Ex #i. Failure('left')@i"
+lemma right_fails: exists-trace "Ex #i. Failure('right')@i"
+lemma pattern_fails: exists-trace "Ex #i. Failure('pattern')@i"
+lemma matched_fails: exists-trace "Ex #i. Failure('matched')@i"
+
+lemma no_failed_success: "All label #i. Success(label)@i ==> F"
+lemma no_unexpected_failure: "All #i. UnexpectedFailure()@i ==> F"
+
+lemma siblings_succeed: exists-trace
+  "Ex #i. Result('siblings',<'a','b'>)@i"
+lemma nested_succeeds: exists-trace
+  "Ex #i. Result('nested','good')@i"
+lemma pattern_succeeds: exists-trace
+  "Ex #i. Result('pattern','good')@i"
+lemma matched_succeeds: exists-trace
+  "Ex #i. Result('matched',<'tag','good'>)@i"
+lemma siblings_result:
+  "All x #i. Result('siblings',x)@i ==> x = <'a','b'>"
+lemma nested_result:
+  "All x #i. Result('nested',x)@i ==> x = 'good'"
+lemma pattern_result:
+  "All x #i. Result('pattern',x)@i ==> x = 'good'"
+lemma matched_result:
+  "All x #i. Result('matched',x)@i ==> x = <'tag','good'>"
+
+lemma scope_reachable: exists-trace "Ex s #i. ScopeResult(s,s)@i"
+lemma scope_preserved: "All s x #i. ScopeResult(s,x)@i ==> s = x"
+
+end

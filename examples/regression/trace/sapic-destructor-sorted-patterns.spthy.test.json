@@ -1,0 +1,85 @@
+{
+  "tests": [
+    {
+      "name": "fresh",
+      "args": [
+        "--prove",
+        "--quit-on-warning"
+      ],
+      "contains": [
+        "fresh_success (exists-trace): verified",
+        "fresh_failure (exists-trace): falsified",
+        "public_success (exists-trace): falsified",
+        "public_failure (exists-trace): verified",
+        "term_failure (exists-trace): verified",
+        "nat_failure (exists-trace): verified",
+        "no_term_success (all-traces): verified",
+        "no_nat_success (all-traces): verified"
+      ]
+    },
+    {
+      "name": "fresh-progress",
+      "args": [
+        "--prove",
+        "--quit-on-warning",
+        "-DPROGRESS"
+      ],
+      "contains": [
+        "fresh_success (exists-trace): verified",
+        "fresh_failure (exists-trace): falsified",
+        "public_success (exists-trace): falsified",
+        "public_failure (exists-trace): verified",
+        "term_failure (exists-trace): verified",
+        "nat_failure (exists-trace): verified",
+        "no_term_success (all-traces): verified",
+        "no_nat_success (all-traces): verified"
+      ]
+    },
+    {
+      "name": "public",
+      "args": [
+        "--prove",
+        "--quit-on-warning",
+        "-DPUBLIC"
+      ],
+      "contains": [
+        "fresh_success (exists-trace): falsified",
+        "fresh_failure (exists-trace): verified",
+        "public_success (exists-trace): verified",
+        "public_failure (exists-trace): falsified",
+        "term_failure (exists-trace): verified",
+        "nat_failure (exists-trace): verified",
+        "no_term_success (all-traces): verified",
+        "no_nat_success (all-traces): verified"
+      ]
+    },
+    {
+      "name": "public-progress",
+      "args": [
+        "--prove",
+        "--quit-on-warning",
+        "-DPUBLIC",
+        "-DPROGRESS"
+      ],
+      "contains": [
+        "fresh_success (exists-trace): falsified",
+        "fresh_failure (exists-trace): verified",
+        "public_success (exists-trace): verified",
+        "public_failure (exists-trace): falsified",
+        "term_failure (exists-trace): verified",
+        "nat_failure (exists-trace): verified",
+        "no_term_success (all-traces): verified",
+        "no_nat_success (all-traces): verified"
+      ]
+    },
+    {
+      "name": "roundtrip",
+      "args": [
+        "--quit-on-warning"
+      ],
+      "checks": [
+        "roundtrip"
+      ]
+    }
+  ]
+}

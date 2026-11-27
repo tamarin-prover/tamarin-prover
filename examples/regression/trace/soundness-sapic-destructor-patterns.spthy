@@ -1,0 +1,48 @@
+theory SoundnessSapicDestructorPatterns
+begin
+// Output and auxiliary repetitions constrain the complete source pattern.
+functions: guard/0, d/3 [destructor], c/1, alt/1, overlap/2 [destructor], absent/1 [destructor], unused/1 [destructor]
+equations:
+  d(c(x),<guard(),y,y>,x) = x,
+  d(alt(x),<guard(),y,y>,x) = x,
+  overlap(c(x),y) = x,
+  overlap(c(x),guard()) = x,
+  unused(c(x)) = c(x)
+
+let First = let <'tag',x:bitstring> = d(c(<'tag','ok'>),<guard(),'a','a'>,<'tag','ok'>) in event Result('First',x) else event Failure('First')
+let Second = let <'tag',x:bitstring> = d(alt(<'tag','ok'>),<guard(),'a','a'>,<'tag','ok'>) in event Result('Second',x) else event Failure('Second')
+let Constant = let <'tag',x:bitstring> = d(c(<'tag','ok'>),<'wrong','a','a'>,<'tag','ok'>) in event Result('Constant',x) else event Failure('Constant')
+let Auxiliary = let <'tag',x:bitstring> = d(c(<'tag','ok'>),<guard(),'a','b'>,<'tag','ok'>) in event Result('Auxiliary',x) else event Failure('Auxiliary')
+let Output = let <'tag',x:bitstring> = d(c(<'tag','ok'>),<guard(),'a','a'>,<'tag','other'>) in event Result('Output',x) else event Failure('Output')
+let Pattern = let <'tag',x:bitstring> = d(c(<'wrong','ok'>),<guard(),'a','a'>,<'wrong','ok'>) in event Result('Pattern',x) else event Failure('Pattern')
+let Overlap = let <'tag',x:bitstring> = overlap(c(<'tag','ok'>),guard()) in event Result('Overlap',x) else event Failure('Overlap')
+let Absent = let <'tag',x:bitstring> = absent(<'tag','ok'>) in event Result('Absent',x) else event Failure('Absent')
+let Nested = let <'tag',x:bitstring> = overlap(c(absent('bad')),guard()) in event Result('Nested',x) else event Failure('Nested')
+let Bound = new x; let <'tag',=x> = overlap(c(<'tag',x>),guard()) in event Bound(x) else event Failure('Bound')
+let BoundFail = new x; let <'tag',=x> = overlap(c(<'tag','other'>),guard()) in event WrongBound() else event Failure('BoundFail')
+process: First | Second | Constant | Auxiliary | Output | Pattern | Overlap | Absent | Nested | Bound | BoundFail
+
+lemma first_reachable: exists-trace "Ex #i. Result('First','ok')@i"
+lemma first_no_failure: "All #i. Failure('First')@i ==> F"
+lemma second_reachable: exists-trace "Ex #i. Result('Second','ok')@i"
+lemma second_no_failure: "All #i. Failure('Second')@i ==> F"
+lemma constant_reachable: exists-trace "Ex #i. Failure('Constant')@i"
+lemma constant_no_result: "All x #i. Result('Constant',x)@i ==> F"
+lemma auxiliary_reachable: exists-trace "Ex #i. Failure('Auxiliary')@i"
+lemma auxiliary_no_result: "All x #i. Result('Auxiliary',x)@i ==> F"
+lemma output_reachable: exists-trace "Ex #i. Failure('Output')@i"
+lemma output_no_result: "All x #i. Result('Output',x)@i ==> F"
+lemma pattern_reachable: exists-trace "Ex #i. Failure('Pattern')@i"
+lemma pattern_no_result: "All x #i. Result('Pattern',x)@i ==> F"
+lemma overlap_reachable: exists-trace "Ex #i. Result('Overlap','ok')@i"
+lemma overlap_no_failure: "All #i. Failure('Overlap')@i ==> F"
+lemma absent_reachable: exists-trace "Ex #i. Failure('Absent')@i"
+lemma absent_no_result: "All x #i. Result('Absent',x)@i ==> F"
+lemma nested_reachable: exists-trace "Ex #i. Failure('Nested')@i"
+lemma nested_no_result: "All x #i. Result('Nested',x)@i ==> F"
+lemma correct_results: "All label x #i. Result(label,x)@i ==> x = 'ok'"
+lemma bound_reachable: exists-trace "Ex x #i. Bound(x)@i"
+lemma bound_no_failure: "All #i. Failure('Bound')@i ==> F"
+lemma bound_failure_reachable: exists-trace "Ex #i. Failure('BoundFail')@i"
+lemma bound_no_success: "All #i. WrongBound()@i ==> F"
+end

@@ -1,0 +1,22 @@
+theory SoundnessSapicNestedDestructorProgress
+begin
+options: translation-progress
+functions: c/1, d/1 [destructor]
+equations: d(c(x)) = x
+let Failure = in(x); event Started('failure');
+  let y = <d(x),d('bad')> in event Wrong()
+  else event Finished('failure')
+let Success = in(x); event Started('success');
+  let y = <d(c(x)),d(c('b'))> in event Result(x,y)
+  else event Wrong()
+let Omitted = in(x); event Omitted(x);
+  let y = <d(x),d('bad')> in event Wrong()
+process: Failure | Success | Omitted
+lemma failure_reachable: exists-trace "Ex #i. Started('failure')@i"
+lemma failure_progress: "All #i. Started('failure')@i ==> Ex #j. Finished('failure')@j & i < j"
+lemma success_reachable: exists-trace "Ex #i. Started('success')@i"
+lemma success_progress: "All #i. Started('success')@i ==> Ex x y #j. Result(x,y)@j & i < j"
+lemma result_preserved: "All x y #i. Result(x,y)@i ==> y = <x,'b'>"
+lemma omitted_reachable: exists-trace "Ex #i. Omitted(c('a'))@i"
+lemma no_wrong: "All #i. Wrong()@i ==> F"
+end

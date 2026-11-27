@@ -1,0 +1,1328 @@
+theory SoundnessSapicDestructorNonvariableResult
+
+begin
+
+// Function signature and definition of the equational theory E
+
+functions: box/1, boxed/1, check/1 [destructor], fst/1 [destructor],
+           okay/0, open/1 [destructor], pair/2, snd/1 [destructor], valid/1
+equations:
+    check(boxed(x)) = x,
+    check(valid(x)) = okay,
+    fst(<x.1, x.2>) = x.1,
+    open(box(<x, y>)) = <x, y>,
+    snd(<x.1, x.2>) = x.2
+
+heuristic: p
+
+lemma valid_succeeds:
+  exists-trace "∃ #i. Success( okay ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #i. (Success( okay ) @ #i)"
+*/
+simplify
+solve( State_1111111( s, okay ) ▶₀ #i )
+  case letycheckvalids_4_111111
+  SOLVED // trace found
+qed
+
+lemma unboxed:
+  exists-trace "∃ y #i. Unboxed( y ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ y #i. (Unboxed( y ) @ #i)"
+*/
+simplify
+solve( State_1111121( s, y ) ▶₀ #i )
+  case letycheckboxeds_4_111112
+  SOLVED // trace found
+qed
+
+lemma rejected:
+  exists-trace "∃ #i. Rejected( ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #i. (Rejected( ) @ #i)"
+*/
+simplify
+solve( State_111122( s ) ▶₀ #i )
+  case letychecks_3_11112
+  SOLVED // trace found
+qed
+
+lemma opened:
+  exists-trace "∃ b #i. Opened( b ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ b #i. (Opened( b ) @ #i)"
+*/
+simplify
+solve( State_11121( b, s ) ▶₀ #i )
+  case letkbopenboxks_3_1112
+  SOLVED // trace found
+qed
+
+lemma pattern_failed:
+  exists-trace "∃ #i. PatternFailed( ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #i. (PatternFailed( ) @ #i)"
+*/
+simplify
+solve( State_1122( s ) ▶₀ #i )
+  case letzbopenboxks_4_112
+  SOLVED // trace found
+qed
+
+lemma nested:
+  exists-trace "∃ #i. Nested( okay ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #i. (Nested( okay ) @ #i)"
+*/
+simplify
+solve( State_121( s, okay ) ▶₀ #i )
+  case letychecksndopenboxkvalids_12_12
+  SOLVED // trace found
+qed
+
+lemma no_failure:
+  all-traces "∀ #i. (Failure( ) @ #i) ⇒ (⊥)"
+/*
+guarded formula characterizing all counter-examples:
+"∃ #i. (Failure( ) @ #i)"
+*/
+simplify
+solve( Failure( ) @ #i )
+  case eventFailure_0_1111112
+  by solve( State_1111112( s ) ▶₀ #i )
+next
+  case eventFailure_0_1111122
+  by solve( State_1111122( s ) ▶₀ #i )
+next
+  case eventFailure_0_11122
+  by solve( State_11122( s ) ▶₀ #i )
+next
+  case eventFailure_0_122
+  by solve( State_122( s ) ▶₀ #i )
+qed
+
+lemma no_wrong:
+  all-traces "∀ y #i. (Wrong( y ) @ #i) ⇒ (⊥)"
+/*
+guarded formula characterizing all counter-examples:
+"∃ y #i. (Wrong( y ) @ #i)"
+*/
+simplify
+solve( Wrong( y ) @ #i )
+  case eventWrongb_0_1121
+  by solve( State_1121( s, y ) ▶₀ #i )
+next
+  case eventWrongy_0_111121
+  by solve( State_111121( s, y ) ▶₀ #i )
+qed
+
+lemma success_okay:
+  all-traces "∀ y #i. (Success( y ) @ #i) ⇒ (y = okay)"
+/*
+guarded formula characterizing all counter-examples:
+"∃ y #i. (Success( y ) @ #i) ∧ ¬(y = okay)"
+*/
+simplify
+solve( State_1111111( s, y ) ▶₀ #i )
+  case letycheckvalids_4_111111
+  by contradiction /* from formulas */
+qed
+
+rule (modulo E) Init[color=#ffffff, process="new s.1;", issapicrule,
+                     role='Process']:
+   [ ] --[ Init( ) ]-> [ State_( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) news_0_[color=#ffffff, process="new s.1;", issapicrule,
+                        role='Process']:
+   [ State_( ), Fr( s.1 ) ] --> [ State_1( s.1 ) ]
+
+  /*
+  rule (modulo AC) news_0_[color=#ffffff, process="new s.1;", issapicrule,
+                           role='Process']:
+     [ State_( ), Fr( s ) ] --> [ State_1( s ) ]
+  */
+
+rule (modulo E) p_0_1[color=#ffffff, process="|", issapicrule,
+                      role='Process']:
+   [ State_1( s.1 ) ] --> [ State_11( s.1 ), State_12( s.1 ) ]
+
+  /*
+  rule (modulo AC) p_0_1[color=#ffffff, process="|", issapicrule,
+                         role='Process']:
+     [ State_1( s ) ] --> [ State_11( s ), State_12( s ) ]
+  */
+
+rule (modulo E) p_0_11[color=#ffffff, process="|", issapicrule,
+                       role='Process']:
+   [ State_11( s.1 ) ] --> [ State_111( s.1 ), State_112( s.1 ) ]
+
+  /*
+  rule (modulo AC) p_0_11[color=#ffffff, process="|", issapicrule,
+                          role='Process']:
+     [ State_11( s ) ] --> [ State_111( s ), State_112( s ) ]
+  */
+
+rule (modulo E) p_0_111[color=#ffffff, process="|", issapicrule,
+                        role='Process']:
+   [ State_111( s.1 ) ] --> [ State_1111( s.1 ), State_1112( s.1 ) ]
+
+  /*
+  rule (modulo AC) p_0_111[color=#ffffff, process="|", issapicrule,
+                           role='Process']:
+     [ State_111( s ) ] --> [ State_1111( s ), State_1112( s ) ]
+  */
+
+rule (modulo E) p_0_1111[color=#ffffff, process="|", issapicrule,
+                         role='Process']:
+   [ State_1111( s.1 ) ] --> [ State_11111( s.1 ), State_11112( s.1 ) ]
+
+  /*
+  rule (modulo AC) p_0_1111[color=#ffffff, process="|", issapicrule,
+                            role='Process']:
+     [ State_1111( s ) ] --> [ State_11111( s ), State_11112( s ) ]
+  */
+
+rule (modulo E) p_0_11111[color=#ffffff, process="|", issapicrule,
+                          role='Process']:
+   [ State_11111( s.1 ) ] --> [ State_111111( s.1 ), State_111112( s.1 ) ]
+
+  /*
+  rule (modulo AC) p_0_11111[color=#ffffff, process="|", issapicrule,
+                             role='Process']:
+     [ State_11111( s ) ] --> [ State_111111( s ), State_111112( s ) ]
+  */
+
+rule (modulo E) letycheckvalids_0_111111[color=#ffffff,
+                                         process="let y.1=check(valid(s.1))", issapicrule, role='Process']:
+   [ State_111111( s.1 ) ] --> [ Let_1111111( valid(s.1), s.1 ) ]
+
+  /*
+  rule (modulo AC) letycheckvalids_0_111111[color=#ffffff,
+                                            process="let y.1=check(valid(s.1))", issapicrule, role='Process']:
+     [ State_111111( s ) ] --> [ Let_1111111( valid(s), s ) ]
+  */
+
+rule (modulo E) letycheckvalids_1_111111[color=#ffffff,
+                                         process="let y.1=check(valid(s.1))", no_derivcheck, issapicrule,
+                                         role='Process']:
+   [ Let_1111111( boxed(x.5), s.1 ) ] --> [ Let_11111101( x.5, s.1 ) ]
+
+  /*
+  rule (modulo AC) letycheckvalids_1_111111[color=#ffffff,
+                                            process="let y.1=check(valid(s.1))", no_derivcheck, issapicrule,
+                                            role='Process']:
+     [ Let_1111111( boxed(x), s ) ] --> [ Let_11111101( x, s ) ]
+  */
+
+rule (modulo E) letycheckvalids_2_111111[color=#ffffff,
+                                         process="let y.1=check(valid(s.1))", no_derivcheck, issapicrule,
+                                         role='Process']:
+   [ Let_1111111( valid(x.5), s.1 ) ] --> [ Let_11111101( okay, s.1 ) ]
+
+  /*
+  rule (modulo AC) letycheckvalids_2_111111[color=#ffffff,
+                                            process="let y.1=check(valid(s.1))", no_derivcheck, issapicrule,
+                                            role='Process']:
+     [ Let_1111111( valid(x), s ) ] --> [ Let_11111101( okay, s ) ]
+  */
+
+restriction Restr_letycheckvalids_3_111111_1:
+  "∀ x #NOW.
+    (Restr_letycheckvalids_3_111111_1( x ) @ #NOW) ⇒
+    (∀ x.1. (boxed(x.1) = x) ⇒ (⊥))"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ x #NOW.
+    (Restr_letycheckvalids_3_111111_1( x ) @ #NOW) ⇒
+    (∀ x.1. (boxed(x.1) = x) ⇒ (⊥))"
+  */
+
+restriction Restr_letycheckvalids_3_111111_2:
+  "∀ x #NOW.
+    (Restr_letycheckvalids_3_111111_2( x ) @ #NOW) ⇒
+    (∀ x.1. (valid(x.1) = x) ⇒ (⊥))"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ x #NOW.
+    (Restr_letycheckvalids_3_111111_2( x ) @ #NOW) ⇒
+    (∀ x.1. (valid(x.1) = x) ⇒ (⊥))"
+  */
+
+rule (modulo E) letycheckvalids_3_111111[color=#ffffff,
+                                         process="let y.1=check(valid(s.1))", issapicrule, role='Process']:
+   [ Let_1111111( valid(s.1), s.1 ) ]
+  --[
+  Restr_letycheckvalids_3_111111_1( valid(s.1) ),
+  Restr_letycheckvalids_3_111111_2( valid(s.1) )
+  ]->
+   [ State_1111112( s.1 ) ]
+
+  /*
+  rule (modulo AC) letycheckvalids_3_111111[color=#ffffff,
+                                            process="let y.1=check(valid(s.1))", issapicrule, role='Process']:
+     [ Let_1111111( valid(s), s ) ]
+    --[
+    Restr_letycheckvalids_3_111111_1( valid(s) ),
+    Restr_letycheckvalids_3_111111_2( valid(s) )
+    ]->
+     [ State_1111112( s ) ]
+  */
+
+rule (modulo E) letycheckvalids_4_111111[color=#ffffff,
+                                         process="let y.1=check(valid(s.1))", issapicrule, role='Process']:
+   [ Let_11111101( y.1, s.1 ) ] --> [ State_1111111( s.1, y.1 ) ]
+
+  /*
+  rule (modulo AC) letycheckvalids_4_111111[color=#ffffff,
+                                            process="let y.1=check(valid(s.1))", issapicrule, role='Process']:
+     [ Let_11111101( y, s ) ] --> [ State_1111111( s, y ) ]
+  */
+
+restriction Restr_letycheckvalids_5_111111_1:
+  "∀ x #NOW.
+    (Restr_letycheckvalids_5_111111_1( x ) @ #NOW) ⇒ (∀ y. (y = x) ⇒ (⊥))"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ x #NOW.
+    (Restr_letycheckvalids_5_111111_1( x ) @ #NOW) ⇒ (∀ y. (y = x) ⇒ (⊥))"
+  */
+
+rule (modulo E) letycheckvalids_5_111111[color=#ffffff,
+                                         process="let y.1=check(valid(s.1))", issapicrule, role='Process']:
+   [ Let_11111101( destructor.7, s.1 ) ]
+  --[ Restr_letycheckvalids_5_111111_1( destructor.7 ) ]->
+   [ State_1111112( s.1 ) ]
+
+  /*
+  rule (modulo AC) letycheckvalids_5_111111[color=#ffffff,
+                                            process="let y.1=check(valid(s.1))", issapicrule, role='Process']:
+     [ Let_11111101( destructor, s ) ]
+    --[ Restr_letycheckvalids_5_111111_1( destructor ) ]->
+     [ State_1111112( s ) ]
+  */
+
+rule (modulo E) eventSuccessy_0_1111111[color=#ffffff,
+                                        process="event Success( y.1 );", issapicrule, role='Process']:
+   [ State_1111111( s.1, y.1 ) ]
+  --[ Success( y.1 ) ]->
+   [ State_11111111( s.1, y.1 ) ]
+
+  /*
+  rule (modulo AC) eventSuccessy_0_1111111[color=#ffffff,
+                                           process="event Success( y.1 );", issapicrule, role='Process']:
+     [ State_1111111( s, y ) ] --[ Success( y ) ]-> [ State_11111111( s, y ) ]
+  */
+
+rule (modulo E) p_0_11111111[color=#ffffff, process="0", issapicrule,
+                             role='Process']:
+   [ State_11111111( s.1, y.1 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_11111111[color=#ffffff, process="0", issapicrule,
+                                role='Process']:
+     [ State_11111111( s, y ) ] --> [ ]
+  */
+
+rule (modulo E) eventFailure_0_1111112[color=#ffffff,
+                                       process="event Failure( );", issapicrule, role='Process']:
+   [ State_1111112( s.1 ) ] --[ Failure( ) ]-> [ State_11111121( s.1 ) ]
+
+  /*
+  rule (modulo AC) eventFailure_0_1111112[color=#ffffff,
+                                          process="event Failure( );", issapicrule, role='Process']:
+     [ State_1111112( s ) ] --[ Failure( ) ]-> [ State_11111121( s ) ]
+  */
+
+rule (modulo E) p_0_11111121[color=#ffffff, process="0", issapicrule,
+                             role='Process']:
+   [ State_11111121( s.1 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_11111121[color=#ffffff, process="0", issapicrule,
+                                role='Process']:
+     [ State_11111121( s ) ] --> [ ]
+  */
+
+rule (modulo E) letycheckboxeds_0_111112[color=#ffffff,
+                                         process="let y.2=check(boxed(s.1))", issapicrule, role='Process']:
+   [ State_111112( s.1 ) ] --> [ Let_1111121( boxed(s.1), s.1 ) ]
+
+  /*
+  rule (modulo AC) letycheckboxeds_0_111112[color=#ffffff,
+                                            process="let y.2=check(boxed(s.1))", issapicrule, role='Process']:
+     [ State_111112( s ) ] --> [ Let_1111121( boxed(s), s ) ]
+  */
+
+rule (modulo E) letycheckboxeds_1_111112[color=#ffffff,
+                                         process="let y.2=check(boxed(s.1))", no_derivcheck, issapicrule,
+                                         role='Process']:
+   [ Let_1111121( boxed(x.5), s.1 ) ] --> [ Let_11111201( x.5, s.1 ) ]
+
+  /*
+  rule (modulo AC) letycheckboxeds_1_111112[color=#ffffff,
+                                            process="let y.2=check(boxed(s.1))", no_derivcheck, issapicrule,
+                                            role='Process']:
+     [ Let_1111121( boxed(x), s ) ] --> [ Let_11111201( x, s ) ]
+  */
+
+rule (modulo E) letycheckboxeds_2_111112[color=#ffffff,
+                                         process="let y.2=check(boxed(s.1))", no_derivcheck, issapicrule,
+                                         role='Process']:
+   [ Let_1111121( valid(x.5), s.1 ) ] --> [ Let_11111201( okay, s.1 ) ]
+
+  /*
+  rule (modulo AC) letycheckboxeds_2_111112[color=#ffffff,
+                                            process="let y.2=check(boxed(s.1))", no_derivcheck, issapicrule,
+                                            role='Process']:
+     [ Let_1111121( valid(x), s ) ] --> [ Let_11111201( okay, s ) ]
+  */
+
+restriction Restr_letycheckboxeds_3_111112_1:
+  "∀ x #NOW.
+    (Restr_letycheckboxeds_3_111112_1( x ) @ #NOW) ⇒
+    (∀ x.1. (boxed(x.1) = x) ⇒ (⊥))"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ x #NOW.
+    (Restr_letycheckboxeds_3_111112_1( x ) @ #NOW) ⇒
+    (∀ x.1. (boxed(x.1) = x) ⇒ (⊥))"
+  */
+
+restriction Restr_letycheckboxeds_3_111112_2:
+  "∀ x #NOW.
+    (Restr_letycheckboxeds_3_111112_2( x ) @ #NOW) ⇒
+    (∀ x.1. (valid(x.1) = x) ⇒ (⊥))"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ x #NOW.
+    (Restr_letycheckboxeds_3_111112_2( x ) @ #NOW) ⇒
+    (∀ x.1. (valid(x.1) = x) ⇒ (⊥))"
+  */
+
+rule (modulo E) letycheckboxeds_3_111112[color=#ffffff,
+                                         process="let y.2=check(boxed(s.1))", issapicrule, role='Process']:
+   [ Let_1111121( boxed(s.1), s.1 ) ]
+  --[
+  Restr_letycheckboxeds_3_111112_1( boxed(s.1) ),
+  Restr_letycheckboxeds_3_111112_2( boxed(s.1) )
+  ]->
+   [ State_1111122( s.1 ) ]
+
+  /*
+  rule (modulo AC) letycheckboxeds_3_111112[color=#ffffff,
+                                            process="let y.2=check(boxed(s.1))", issapicrule, role='Process']:
+     [ Let_1111121( boxed(s), s ) ]
+    --[
+    Restr_letycheckboxeds_3_111112_1( boxed(s) ),
+    Restr_letycheckboxeds_3_111112_2( boxed(s) )
+    ]->
+     [ State_1111122( s ) ]
+  */
+
+rule (modulo E) letycheckboxeds_4_111112[color=#ffffff,
+                                         process="let y.2=check(boxed(s.1))", issapicrule, role='Process']:
+   [ Let_11111201( y.2, s.1 ) ] --> [ State_1111121( s.1, y.2 ) ]
+
+  /*
+  rule (modulo AC) letycheckboxeds_4_111112[color=#ffffff,
+                                            process="let y.2=check(boxed(s.1))", issapicrule, role='Process']:
+     [ Let_11111201( y, s ) ] --> [ State_1111121( s, y ) ]
+  */
+
+restriction Restr_letycheckboxeds_5_111112_1:
+  "∀ x #NOW.
+    (Restr_letycheckboxeds_5_111112_1( x ) @ #NOW) ⇒ (∀ y. (y = x) ⇒ (⊥))"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ x #NOW.
+    (Restr_letycheckboxeds_5_111112_1( x ) @ #NOW) ⇒ (∀ y. (y = x) ⇒ (⊥))"
+  */
+
+rule (modulo E) letycheckboxeds_5_111112[color=#ffffff,
+                                         process="let y.2=check(boxed(s.1))", issapicrule, role='Process']:
+   [ Let_11111201( destructor.8, s.1 ) ]
+  --[ Restr_letycheckboxeds_5_111112_1( destructor.8 ) ]->
+   [ State_1111122( s.1 ) ]
+
+  /*
+  rule (modulo AC) letycheckboxeds_5_111112[color=#ffffff,
+                                            process="let y.2=check(boxed(s.1))", issapicrule, role='Process']:
+     [ Let_11111201( destructor, s ) ]
+    --[ Restr_letycheckboxeds_5_111112_1( destructor ) ]->
+     [ State_1111122( s ) ]
+  */
+
+rule (modulo E) eventUnboxedy_0_1111121[color=#ffffff,
+                                        process="event Unboxed( y.2 );", issapicrule, role='Process']:
+   [ State_1111121( s.1, y.2 ) ]
+  --[ Unboxed( y.2 ) ]->
+   [ State_11111211( s.1, y.2 ) ]
+
+  /*
+  rule (modulo AC) eventUnboxedy_0_1111121[color=#ffffff,
+                                           process="event Unboxed( y.2 );", issapicrule, role='Process']:
+     [ State_1111121( s, y ) ] --[ Unboxed( y ) ]-> [ State_11111211( s, y ) ]
+  */
+
+rule (modulo E) p_0_11111211[color=#ffffff, process="0", issapicrule,
+                             role='Process']:
+   [ State_11111211( s.1, y.2 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_11111211[color=#ffffff, process="0", issapicrule,
+                                role='Process']:
+     [ State_11111211( s, y ) ] --> [ ]
+  */
+
+rule (modulo E) eventFailure_0_1111122[color=#ffffff,
+                                       process="event Failure( );", issapicrule, role='Process']:
+   [ State_1111122( s.1 ) ] --[ Failure( ) ]-> [ State_11111221( s.1 ) ]
+
+  /*
+  rule (modulo AC) eventFailure_0_1111122[color=#ffffff,
+                                          process="event Failure( );", issapicrule, role='Process']:
+     [ State_1111122( s ) ] --[ Failure( ) ]-> [ State_11111221( s ) ]
+  */
+
+rule (modulo E) p_0_11111221[color=#ffffff, process="0", issapicrule,
+                             role='Process']:
+   [ State_11111221( s.1 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_11111221[color=#ffffff, process="0", issapicrule,
+                                role='Process']:
+     [ State_11111221( s ) ] --> [ ]
+  */
+
+rule (modulo E) letychecks_0_11112[color=#ffffff,
+                                   process="let y.3=check(s.1)", issapicrule, role='Process']:
+   [ State_11112( s.1 ) ] --> [ Let_111121( s.1, s.1 ) ]
+
+  /*
+  rule (modulo AC) letychecks_0_11112[color=#ffffff,
+                                      process="let y.3=check(s.1)", issapicrule, role='Process']:
+     [ State_11112( s ) ] --> [ Let_111121( s, s ) ]
+  */
+
+rule (modulo E) letychecks_1_11112[color=#ffffff,
+                                   process="let y.3=check(s.1)", no_derivcheck, issapicrule,
+                                   role='Process']:
+   [ Let_111121( boxed(x.5), s.1 ) ] --> [ Let_1111201( x.5, s.1 ) ]
+
+  /*
+  rule (modulo AC) letychecks_1_11112[color=#ffffff,
+                                      process="let y.3=check(s.1)", no_derivcheck, issapicrule,
+                                      role='Process']:
+     [ Let_111121( boxed(x), s ) ] --> [ Let_1111201( x, s ) ]
+  */
+
+rule (modulo E) letychecks_2_11112[color=#ffffff,
+                                   process="let y.3=check(s.1)", no_derivcheck, issapicrule,
+                                   role='Process']:
+   [ Let_111121( valid(x.5), s.1 ) ] --> [ Let_1111201( okay, s.1 ) ]
+
+  /*
+  rule (modulo AC) letychecks_2_11112[color=#ffffff,
+                                      process="let y.3=check(s.1)", no_derivcheck, issapicrule,
+                                      role='Process']:
+     [ Let_111121( valid(x), s ) ] --> [ Let_1111201( okay, s ) ]
+  */
+
+restriction Restr_letychecks_3_11112_1:
+  "∀ x #NOW.
+    (Restr_letychecks_3_11112_1( x ) @ #NOW) ⇒
+    (∀ x.1. (boxed(x.1) = x) ⇒ (⊥))"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ x #NOW.
+    (Restr_letychecks_3_11112_1( x ) @ #NOW) ⇒
+    (∀ x.1. (boxed(x.1) = x) ⇒ (⊥))"
+  */
+
+restriction Restr_letychecks_3_11112_2:
+  "∀ x #NOW.
+    (Restr_letychecks_3_11112_2( x ) @ #NOW) ⇒
+    (∀ x.1. (valid(x.1) = x) ⇒ (⊥))"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ x #NOW.
+    (Restr_letychecks_3_11112_2( x ) @ #NOW) ⇒
+    (∀ x.1. (valid(x.1) = x) ⇒ (⊥))"
+  */
+
+rule (modulo E) letychecks_3_11112[color=#ffffff,
+                                   process="let y.3=check(s.1)", issapicrule, role='Process']:
+   [ Let_111121( s.1, s.1 ) ]
+  --[ Restr_letychecks_3_11112_1( s.1 ), Restr_letychecks_3_11112_2( s.1 )
+  ]->
+   [ State_111122( s.1 ) ]
+
+  /*
+  rule (modulo AC) letychecks_3_11112[color=#ffffff,
+                                      process="let y.3=check(s.1)", issapicrule, role='Process']:
+     [ Let_111121( s, s ) ]
+    --[ Restr_letychecks_3_11112_1( s ), Restr_letychecks_3_11112_2( s ) ]->
+     [ State_111122( s ) ]
+  */
+
+rule (modulo E) letychecks_4_11112[color=#ffffff,
+                                   process="let y.3=check(s.1)", issapicrule, role='Process']:
+   [ Let_1111201( y.3, s.1 ) ] --> [ State_111121( s.1, y.3 ) ]
+
+  /*
+  rule (modulo AC) letychecks_4_11112[color=#ffffff,
+                                      process="let y.3=check(s.1)", issapicrule, role='Process']:
+     [ Let_1111201( y, s ) ] --> [ State_111121( s, y ) ]
+  */
+
+restriction Restr_letychecks_5_11112_1:
+  "∀ x #NOW.
+    (Restr_letychecks_5_11112_1( x ) @ #NOW) ⇒ (∀ y. (y = x) ⇒ (⊥))"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ x #NOW.
+    (Restr_letychecks_5_11112_1( x ) @ #NOW) ⇒ (∀ y. (y = x) ⇒ (⊥))"
+  */
+
+rule (modulo E) letychecks_5_11112[color=#ffffff,
+                                   process="let y.3=check(s.1)", issapicrule, role='Process']:
+   [ Let_1111201( destructor.9, s.1 ) ]
+  --[ Restr_letychecks_5_11112_1( destructor.9 ) ]->
+   [ State_111122( s.1 ) ]
+
+  /*
+  rule (modulo AC) letychecks_5_11112[color=#ffffff,
+                                      process="let y.3=check(s.1)", issapicrule, role='Process']:
+     [ Let_1111201( destructor, s ) ]
+    --[ Restr_letychecks_5_11112_1( destructor ) ]->
+     [ State_111122( s ) ]
+  */
+
+rule (modulo E) eventWrongy_0_111121[color=#ffffff,
+                                     process="event Wrong( y.3 );", issapicrule, role='Process']:
+   [ State_111121( s.1, y.3 ) ]
+  --[ Wrong( y.3 ) ]->
+   [ State_1111211( s.1, y.3 ) ]
+
+  /*
+  rule (modulo AC) eventWrongy_0_111121[color=#ffffff,
+                                        process="event Wrong( y.3 );", issapicrule, role='Process']:
+     [ State_111121( s, y ) ] --[ Wrong( y ) ]-> [ State_1111211( s, y ) ]
+  */
+
+rule (modulo E) p_0_1111211[color=#ffffff, process="0", issapicrule,
+                            role='Process']:
+   [ State_1111211( s.1, y.3 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_1111211[color=#ffffff, process="0", issapicrule,
+                               role='Process']:
+     [ State_1111211( s, y ) ] --> [ ]
+  */
+
+rule (modulo E) eventRejected_0_111122[color=#ffffff,
+                                       process="event Rejected( );", issapicrule, role='Process']:
+   [ State_111122( s.1 ) ] --[ Rejected( ) ]-> [ State_1111221( s.1 ) ]
+
+  /*
+  rule (modulo AC) eventRejected_0_111122[color=#ffffff,
+                                          process="event Rejected( );", issapicrule, role='Process']:
+     [ State_111122( s ) ] --[ Rejected( ) ]-> [ State_1111221( s ) ]
+  */
+
+rule (modulo E) p_0_1111221[color=#ffffff, process="0", issapicrule,
+                            role='Process']:
+   [ State_1111221( s.1 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_1111221[color=#ffffff, process="0", issapicrule,
+                               role='Process']:
+     [ State_1111221( s ) ] --> [ ]
+  */
+
+rule (modulo E) letkbopenboxks_0_1112[color=#ffffff,
+                                      process="let <'k', b.1>=open(box(<'k', s.1>))", issapicrule,
+                                      role='Process']:
+   [ State_1112( s.1 ) ] --> [ Let_11121( box(<'k', s.1>), s.1 ) ]
+
+  /*
+  rule (modulo AC) letkbopenboxks_0_1112[color=#ffffff,
+                                         process="let <'k', b.1>=open(box(<'k', s.1>))", issapicrule,
+                                         role='Process']:
+     [ State_1112( s ) ] --> [ Let_11121( box(<'k', s>), s ) ]
+  */
+
+rule (modulo E) letkbopenboxks_1_1112[color=#ffffff,
+                                      process="let <'k', b.1>=open(box(<'k', s.1>))", no_derivcheck,
+                                      issapicrule, role='Process']:
+   [ Let_11121( box(<x.5, y.5>), s.1 ) ]
+  -->
+   [ Let_111201( <x.5, y.5>, s.1 ) ]
+
+  /*
+  rule (modulo AC) letkbopenboxks_1_1112[color=#ffffff,
+                                         process="let <'k', b.1>=open(box(<'k', s.1>))", no_derivcheck,
+                                         issapicrule, role='Process']:
+     [ Let_11121( box(<x, y>), s ) ] --> [ Let_111201( <x, y>, s ) ]
+  */
+
+restriction Restr_letkbopenboxks_2_1112_1:
+  "∀ x #NOW.
+    (Restr_letkbopenboxks_2_1112_1( x ) @ #NOW) ⇒
+    (∀ x.1 y. (box(<x.1, y>) = x) ⇒ (⊥))"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ x #NOW.
+    (Restr_letkbopenboxks_2_1112_1( x ) @ #NOW) ⇒
+    (∀ x.1 y. (box(<x.1, y>) = x) ⇒ (⊥))"
+  */
+
+rule (modulo E) letkbopenboxks_2_1112[color=#ffffff,
+                                      process="let <'k', b.1>=open(box(<'k', s.1>))", issapicrule,
+                                      role='Process']:
+   [ Let_11121( box(<'k', s.1>), s.1 ) ]
+  --[ Restr_letkbopenboxks_2_1112_1( box(<'k', s.1>) ) ]->
+   [ State_11122( s.1 ) ]
+
+  /*
+  rule (modulo AC) letkbopenboxks_2_1112[color=#ffffff,
+                                         process="let <'k', b.1>=open(box(<'k', s.1>))", issapicrule,
+                                         role='Process']:
+     [ Let_11121( box(<'k', s>), s ) ]
+    --[ Restr_letkbopenboxks_2_1112_1( box(<'k', s>) ) ]->
+     [ State_11122( s ) ]
+  */
+
+rule (modulo E) letkbopenboxks_3_1112[color=#ffffff,
+                                      process="let <'k', b.1>=open(box(<'k', s.1>))", issapicrule,
+                                      role='Process']:
+   [ Let_111201( <'k', b.1>, s.1 ) ] --> [ State_11121( b.1, s.1 ) ]
+
+  /*
+  rule (modulo AC) letkbopenboxks_3_1112[color=#ffffff,
+                                         process="let <'k', b.1>=open(box(<'k', s.1>))", issapicrule,
+                                         role='Process']:
+     [ Let_111201( <'k', b>, s ) ] --> [ State_11121( b, s ) ]
+  */
+
+restriction Restr_letkbopenboxks_4_1112_1:
+  "∀ x #NOW.
+    (Restr_letkbopenboxks_4_1112_1( x ) @ #NOW) ⇒
+    (∀ b. (<'k', b> = x) ⇒ (⊥))"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ x #NOW.
+    (Restr_letkbopenboxks_4_1112_1( x ) @ #NOW) ⇒
+    (∀ b. (<'k', b> = x) ⇒ (⊥))"
+  */
+
+rule (modulo E) letkbopenboxks_4_1112[color=#ffffff,
+                                      process="let <'k', b.1>=open(box(<'k', s.1>))", issapicrule,
+                                      role='Process']:
+   [ Let_111201( destructor.10, s.1 ) ]
+  --[ Restr_letkbopenboxks_4_1112_1( destructor.10 ) ]->
+   [ State_11122( s.1 ) ]
+
+  /*
+  rule (modulo AC) letkbopenboxks_4_1112[color=#ffffff,
+                                         process="let <'k', b.1>=open(box(<'k', s.1>))", issapicrule,
+                                         role='Process']:
+     [ Let_111201( destructor, s ) ]
+    --[ Restr_letkbopenboxks_4_1112_1( destructor ) ]->
+     [ State_11122( s ) ]
+  */
+
+rule (modulo E) eventOpenedb_0_11121[color=#ffffff,
+                                     process="event Opened( b.1 );", issapicrule, role='Process']:
+   [ State_11121( b.1, s.1 ) ]
+  --[ Opened( b.1 ) ]->
+   [ State_111211( b.1, s.1 ) ]
+
+  /*
+  rule (modulo AC) eventOpenedb_0_11121[color=#ffffff,
+                                        process="event Opened( b.1 );", issapicrule, role='Process']:
+     [ State_11121( b, s ) ] --[ Opened( b ) ]-> [ State_111211( b, s ) ]
+  */
+
+rule (modulo E) p_0_111211[color=#ffffff, process="0", issapicrule,
+                           role='Process']:
+   [ State_111211( b.1, s.1 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_111211[color=#ffffff, process="0", issapicrule,
+                              role='Process']:
+     [ State_111211( b, s ) ] --> [ ]
+  */
+
+rule (modulo E) eventFailure_0_11122[color=#ffffff,
+                                     process="event Failure( );", issapicrule, role='Process']:
+   [ State_11122( s.1 ) ] --[ Failure( ) ]-> [ State_111221( s.1 ) ]
+
+  /*
+  rule (modulo AC) eventFailure_0_11122[color=#ffffff,
+                                        process="event Failure( );", issapicrule, role='Process']:
+     [ State_11122( s ) ] --[ Failure( ) ]-> [ State_111221( s ) ]
+  */
+
+rule (modulo E) p_0_111221[color=#ffffff, process="0", issapicrule,
+                           role='Process']:
+   [ State_111221( s.1 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_111221[color=#ffffff, process="0", issapicrule,
+                              role='Process']:
+     [ State_111221( s ) ] --> [ ]
+  */
+
+rule (modulo E) letzbopenboxks_0_112[color=#ffffff,
+                                     process="let <'z', b.2>=open(box(<'k', s.1>))", issapicrule,
+                                     role='Process']:
+   [ State_112( s.1 ) ] --> [ Let_1121( box(<'k', s.1>), s.1 ) ]
+
+  /*
+  rule (modulo AC) letzbopenboxks_0_112[color=#ffffff,
+                                        process="let <'z', b.2>=open(box(<'k', s.1>))", issapicrule,
+                                        role='Process']:
+     [ State_112( s ) ] --> [ Let_1121( box(<'k', s>), s ) ]
+  */
+
+rule (modulo E) letzbopenboxks_1_112[color=#ffffff,
+                                     process="let <'z', b.2>=open(box(<'k', s.1>))", no_derivcheck,
+                                     issapicrule, role='Process']:
+   [ Let_1121( box(<x.5, y.5>), s.1 ) ] --> [ Let_11201( <x.5, y.5>, s.1 ) ]
+
+  /*
+  rule (modulo AC) letzbopenboxks_1_112[color=#ffffff,
+                                        process="let <'z', b.2>=open(box(<'k', s.1>))", no_derivcheck,
+                                        issapicrule, role='Process']:
+     [ Let_1121( box(<x, y>), s ) ] --> [ Let_11201( <x, y>, s ) ]
+  */
+
+restriction Restr_letzbopenboxks_2_112_1:
+  "∀ x #NOW.
+    (Restr_letzbopenboxks_2_112_1( x ) @ #NOW) ⇒
+    (∀ x.1 y. (box(<x.1, y>) = x) ⇒ (⊥))"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ x #NOW.
+    (Restr_letzbopenboxks_2_112_1( x ) @ #NOW) ⇒
+    (∀ x.1 y. (box(<x.1, y>) = x) ⇒ (⊥))"
+  */
+
+rule (modulo E) letzbopenboxks_2_112[color=#ffffff,
+                                     process="let <'z', b.2>=open(box(<'k', s.1>))", issapicrule,
+                                     role='Process']:
+   [ Let_1121( box(<'k', s.1>), s.1 ) ]
+  --[ Restr_letzbopenboxks_2_112_1( box(<'k', s.1>) ) ]->
+   [ State_1122( s.1 ) ]
+
+  /*
+  rule (modulo AC) letzbopenboxks_2_112[color=#ffffff,
+                                        process="let <'z', b.2>=open(box(<'k', s.1>))", issapicrule,
+                                        role='Process']:
+     [ Let_1121( box(<'k', s>), s ) ]
+    --[ Restr_letzbopenboxks_2_112_1( box(<'k', s>) ) ]->
+     [ State_1122( s ) ]
+  */
+
+rule (modulo E) letzbopenboxks_3_112[color=#ffffff,
+                                     process="let <'z', b.2>=open(box(<'k', s.1>))", issapicrule,
+                                     role='Process']:
+   [ Let_11201( <'z', b.2>, s.1 ) ] --> [ State_1121( s.1, b.2 ) ]
+
+  /*
+  rule (modulo AC) letzbopenboxks_3_112[color=#ffffff,
+                                        process="let <'z', b.2>=open(box(<'k', s.1>))", issapicrule,
+                                        role='Process']:
+     [ Let_11201( <'z', b>, s ) ] --> [ State_1121( s, b ) ]
+  */
+
+restriction Restr_letzbopenboxks_4_112_1:
+  "∀ x #NOW.
+    (Restr_letzbopenboxks_4_112_1( x ) @ #NOW) ⇒ (∀ b. (<'z', b> = x) ⇒ (⊥))"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ x #NOW.
+    (Restr_letzbopenboxks_4_112_1( x ) @ #NOW) ⇒ (∀ b. (<'z', b> = x) ⇒ (⊥))"
+  */
+
+rule (modulo E) letzbopenboxks_4_112[color=#ffffff,
+                                     process="let <'z', b.2>=open(box(<'k', s.1>))", issapicrule,
+                                     role='Process']:
+   [ Let_11201( destructor.11, s.1 ) ]
+  --[ Restr_letzbopenboxks_4_112_1( destructor.11 ) ]->
+   [ State_1122( s.1 ) ]
+
+  /*
+  rule (modulo AC) letzbopenboxks_4_112[color=#ffffff,
+                                        process="let <'z', b.2>=open(box(<'k', s.1>))", issapicrule,
+                                        role='Process']:
+     [ Let_11201( destructor, s ) ]
+    --[ Restr_letzbopenboxks_4_112_1( destructor ) ]->
+     [ State_1122( s ) ]
+  */
+
+rule (modulo E) eventWrongb_0_1121[color=#ffffff,
+                                   process="event Wrong( b.2 );", issapicrule, role='Process']:
+   [ State_1121( s.1, b.2 ) ]
+  --[ Wrong( b.2 ) ]->
+   [ State_11211( s.1, b.2 ) ]
+
+  /*
+  rule (modulo AC) eventWrongb_0_1121[color=#ffffff,
+                                      process="event Wrong( b.2 );", issapicrule, role='Process']:
+     [ State_1121( s, b ) ] --[ Wrong( b ) ]-> [ State_11211( s, b ) ]
+  */
+
+rule (modulo E) p_0_11211[color=#ffffff, process="0", issapicrule,
+                          role='Process']:
+   [ State_11211( s.1, b.2 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_11211[color=#ffffff, process="0", issapicrule,
+                             role='Process']:
+     [ State_11211( s, b ) ] --> [ ]
+  */
+
+rule (modulo E) eventPatternFailed_0_1122[color=#ffffff,
+                                          process="event PatternFailed( );", issapicrule, role='Process']:
+   [ State_1122( s.1 ) ] --[ PatternFailed( ) ]-> [ State_11221( s.1 ) ]
+
+  /*
+  rule (modulo AC) eventPatternFailed_0_1122[color=#ffffff,
+                                             process="event PatternFailed( );", issapicrule, role='Process']:
+     [ State_1122( s ) ] --[ PatternFailed( ) ]-> [ State_11221( s ) ]
+  */
+
+rule (modulo E) p_0_11221[color=#ffffff, process="0", issapicrule,
+                          role='Process']:
+   [ State_11221( s.1 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_11221[color=#ffffff, process="0", issapicrule,
+                             role='Process']:
+     [ State_11221( s ) ] --> [ ]
+  */
+
+rule (modulo E) letychecksndopenboxkvalids_0_12[color=#ffffff,
+                                                process="let y.4=check(snd(open(box(<'k', valid(s.1)>))))",
+                                                issapicrule, role='Process']:
+   [ State_12( s.1 ) ] --> [ Let_121( box(<'k', valid(s.1)>), s.1 ) ]
+
+  /*
+  rule (modulo AC) letychecksndopenboxkvalids_0_12[color=#ffffff,
+                                                   process="let y.4=check(snd(open(box(<'k', valid(s.1)>))))",
+                                                   issapicrule, role='Process']:
+     [ State_12( s ) ] --> [ Let_121( box(<'k', valid(s)>), s ) ]
+  */
+
+rule (modulo E) letychecksndopenboxkvalids_1_12[color=#ffffff,
+                                                process="let y.4=check(snd(open(box(<'k', valid(s.1)>))))",
+                                                no_derivcheck, issapicrule, role='Process']:
+   [ Let_121( box(<x.5, y.5>), s.1 ) ] --> [ Let_1201( <x.5, y.5>, s.1 ) ]
+
+  /*
+  rule (modulo AC) letychecksndopenboxkvalids_1_12[color=#ffffff,
+                                                   process="let y.4=check(snd(open(box(<'k', valid(s.1)>))))",
+                                                   no_derivcheck, issapicrule, role='Process']:
+     [ Let_121( box(<x, y>), s ) ] --> [ Let_1201( <x, y>, s ) ]
+  */
+
+restriction Restr_letychecksndopenboxkvalids_2_12_1:
+  "∀ x #NOW.
+    (Restr_letychecksndopenboxkvalids_2_12_1( x ) @ #NOW) ⇒
+    (∀ x.1 y. (box(<x.1, y>) = x) ⇒ (⊥))"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ x #NOW.
+    (Restr_letychecksndopenboxkvalids_2_12_1( x ) @ #NOW) ⇒
+    (∀ x.1 y. (box(<x.1, y>) = x) ⇒ (⊥))"
+  */
+
+rule (modulo E) letychecksndopenboxkvalids_2_12[color=#ffffff,
+                                                process="let y.4=check(snd(open(box(<'k', valid(s.1)>))))",
+                                                issapicrule, role='Process']:
+   [ Let_121( box(<'k', valid(s.1)>), s.1 ) ]
+  --[ Restr_letychecksndopenboxkvalids_2_12_1( box(<'k', valid(s.1)>) ) ]->
+   [ State_122( s.1 ) ]
+
+  /*
+  rule (modulo AC) letychecksndopenboxkvalids_2_12[color=#ffffff,
+                                                   process="let y.4=check(snd(open(box(<'k', valid(s.1)>))))",
+                                                   issapicrule, role='Process']:
+     [ Let_121( box(<'k', valid(s)>), s ) ]
+    --[ Restr_letychecksndopenboxkvalids_2_12_1( box(<'k', valid(s)>) ) ]->
+     [ State_122( s ) ]
+  */
+
+rule (modulo E) letychecksndopenboxkvalids_3_12[color=#ffffff,
+                                                process="let y.4=check(snd(open(box(<'k', valid(s.1)>))))",
+                                                issapicrule, role='Process']:
+   [ Let_1201( destructor.12, s.1 ) ]
+  -->
+   [ Let_1202( destructor.12, s.1, destructor.12 ) ]
+
+  /*
+  rule (modulo AC) letychecksndopenboxkvalids_3_12[color=#ffffff,
+                                                   process="let y.4=check(snd(open(box(<'k', valid(s.1)>))))",
+                                                   issapicrule, role='Process']:
+     [ Let_1201( destructor, s ) ]
+    -->
+     [ Let_1202( destructor, s, destructor ) ]
+  */
+
+restriction Restr_letychecksndopenboxkvalids_4_12_1:
+  "∀ x #NOW.
+    (Restr_letychecksndopenboxkvalids_4_12_1( x ) @ #NOW) ⇒
+    (∀ destructor. (destructor = x) ⇒ (⊥))"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ x #NOW.
+    (Restr_letychecksndopenboxkvalids_4_12_1( x ) @ #NOW) ⇒
+    (∀ destructor. (destructor = x) ⇒ (⊥))"
+  */
+
+rule (modulo E) letychecksndopenboxkvalids_4_12[color=#ffffff,
+                                                process="let y.4=check(snd(open(box(<'k', valid(s.1)>))))",
+                                                issapicrule, role='Process']:
+   [ Let_1201( destructor.14, s.1 ) ]
+  --[ Restr_letychecksndopenboxkvalids_4_12_1( destructor.14 ) ]->
+   [ State_122( s.1 ) ]
+
+  /*
+  rule (modulo AC) letychecksndopenboxkvalids_4_12[color=#ffffff,
+                                                   process="let y.4=check(snd(open(box(<'k', valid(s.1)>))))",
+                                                   issapicrule, role='Process']:
+     [ Let_1201( destructor, s ) ]
+    --[ Restr_letychecksndopenboxkvalids_4_12_1( destructor ) ]->
+     [ State_122( s ) ]
+  */
+
+rule (modulo E) letychecksndopenboxkvalids_5_12[color=#ffffff,
+                                                process="let y.4=check(snd(open(box(<'k', valid(s.1)>))))",
+                                                no_derivcheck, issapicrule, role='Process']:
+   [ Let_1202( <x.5, x.6>, s.1, destructor.12 ) ]
+  -->
+   [ Let_1203( x.6, s.1 ) ]
+
+  /*
+  rule (modulo AC) letychecksndopenboxkvalids_5_12[color=#ffffff,
+                                                   process="let y.4=check(snd(open(box(<'k', valid(s.1)>))))",
+                                                   no_derivcheck, issapicrule, role='Process']:
+     [ Let_1202( <x, x.1>, s, destructor ) ] --> [ Let_1203( x.1, s ) ]
+  */
+
+restriction Restr_letychecksndopenboxkvalids_6_12_1:
+  "∀ x #NOW.
+    (Restr_letychecksndopenboxkvalids_6_12_1( x ) @ #NOW) ⇒
+    (∀ x.1 x.2. (<x.1, x.2> = x) ⇒ (⊥))"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ x #NOW.
+    (Restr_letychecksndopenboxkvalids_6_12_1( x ) @ #NOW) ⇒
+    (∀ x.1 x.2. (<x.1, x.2> = x) ⇒ (⊥))"
+  */
+
+rule (modulo E) letychecksndopenboxkvalids_6_12[color=#ffffff,
+                                                process="let y.4=check(snd(open(box(<'k', valid(s.1)>))))",
+                                                issapicrule, role='Process']:
+   [ Let_1202( destructor.12, s.1, destructor.12 ) ]
+  --[ Restr_letychecksndopenboxkvalids_6_12_1( destructor.12 ) ]->
+   [ State_122( s.1 ) ]
+
+  /*
+  rule (modulo AC) letychecksndopenboxkvalids_6_12[color=#ffffff,
+                                                   process="let y.4=check(snd(open(box(<'k', valid(s.1)>))))",
+                                                   issapicrule, role='Process']:
+     [ Let_1202( destructor, s, destructor ) ]
+    --[ Restr_letychecksndopenboxkvalids_6_12_1( destructor ) ]->
+     [ State_122( s ) ]
+  */
+
+rule (modulo E) letychecksndopenboxkvalids_7_12[color=#ffffff,
+                                                process="let y.4=check(snd(open(box(<'k', valid(s.1)>))))",
+                                                issapicrule, role='Process']:
+   [ Let_1203( destructor.13, s.1 ) ]
+  -->
+   [ Let_1204( destructor.13, s.1, destructor.13 ) ]
+
+  /*
+  rule (modulo AC) letychecksndopenboxkvalids_7_12[color=#ffffff,
+                                                   process="let y.4=check(snd(open(box(<'k', valid(s.1)>))))",
+                                                   issapicrule, role='Process']:
+     [ Let_1203( destructor, s ) ]
+    -->
+     [ Let_1204( destructor, s, destructor ) ]
+  */
+
+restriction Restr_letychecksndopenboxkvalids_8_12_1:
+  "∀ x #NOW.
+    (Restr_letychecksndopenboxkvalids_8_12_1( x ) @ #NOW) ⇒
+    (∀ destructor. (destructor = x) ⇒ (⊥))"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ x #NOW.
+    (Restr_letychecksndopenboxkvalids_8_12_1( x ) @ #NOW) ⇒
+    (∀ destructor. (destructor = x) ⇒ (⊥))"
+  */
+
+rule (modulo E) letychecksndopenboxkvalids_8_12[color=#ffffff,
+                                                process="let y.4=check(snd(open(box(<'k', valid(s.1)>))))",
+                                                issapicrule, role='Process']:
+   [ Let_1203( destructor.15, s.1 ) ]
+  --[ Restr_letychecksndopenboxkvalids_8_12_1( destructor.15 ) ]->
+   [ State_122( s.1 ) ]
+
+  /*
+  rule (modulo AC) letychecksndopenboxkvalids_8_12[color=#ffffff,
+                                                   process="let y.4=check(snd(open(box(<'k', valid(s.1)>))))",
+                                                   issapicrule, role='Process']:
+     [ Let_1203( destructor, s ) ]
+    --[ Restr_letychecksndopenboxkvalids_8_12_1( destructor ) ]->
+     [ State_122( s ) ]
+  */
+
+rule (modulo E) letychecksndopenboxkvalids_9_12[color=#ffffff,
+                                                process="let y.4=check(snd(open(box(<'k', valid(s.1)>))))",
+                                                no_derivcheck, issapicrule, role='Process']:
+   [ Let_1204( boxed(x.5), s.1, destructor.13 ) ]
+  -->
+   [ Let_1205( x.5, s.1 ) ]
+
+  /*
+  rule (modulo AC) letychecksndopenboxkvalids_9_12[color=#ffffff,
+                                                   process="let y.4=check(snd(open(box(<'k', valid(s.1)>))))",
+                                                   no_derivcheck, issapicrule, role='Process']:
+     [ Let_1204( boxed(x), s, destructor ) ] --> [ Let_1205( x, s ) ]
+  */
+
+rule (modulo E) letychecksndopenboxkvalids_10_12[color=#ffffff,
+                                                 process="let y.4=check(snd(open(box(<'k', valid(s.1)>))))",
+                                                 no_derivcheck, issapicrule, role='Process']:
+   [ Let_1204( valid(x.5), s.1, destructor.13 ) ]
+  -->
+   [ Let_1205( okay, s.1 ) ]
+
+  /*
+  rule (modulo AC) letychecksndopenboxkvalids_10_12[color=#ffffff,
+                                                    process="let y.4=check(snd(open(box(<'k', valid(s.1)>))))",
+                                                    no_derivcheck, issapicrule, role='Process']:
+     [ Let_1204( valid(x), s, destructor ) ] --> [ Let_1205( okay, s ) ]
+  */
+
+restriction Restr_letychecksndopenboxkvalids_11_12_1:
+  "∀ x #NOW.
+    (Restr_letychecksndopenboxkvalids_11_12_1( x ) @ #NOW) ⇒
+    (∀ x.1. (boxed(x.1) = x) ⇒ (⊥))"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ x #NOW.
+    (Restr_letychecksndopenboxkvalids_11_12_1( x ) @ #NOW) ⇒
+    (∀ x.1. (boxed(x.1) = x) ⇒ (⊥))"
+  */
+
+restriction Restr_letychecksndopenboxkvalids_11_12_2:
+  "∀ x #NOW.
+    (Restr_letychecksndopenboxkvalids_11_12_2( x ) @ #NOW) ⇒
+    (∀ x.1. (valid(x.1) = x) ⇒ (⊥))"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ x #NOW.
+    (Restr_letychecksndopenboxkvalids_11_12_2( x ) @ #NOW) ⇒
+    (∀ x.1. (valid(x.1) = x) ⇒ (⊥))"
+  */
+
+rule (modulo E) letychecksndopenboxkvalids_11_12[color=#ffffff,
+                                                 process="let y.4=check(snd(open(box(<'k', valid(s.1)>))))",
+                                                 issapicrule, role='Process']:
+   [ Let_1204( destructor.13, s.1, destructor.13 ) ]
+  --[
+  Restr_letychecksndopenboxkvalids_11_12_1( destructor.13 ),
+  Restr_letychecksndopenboxkvalids_11_12_2( destructor.13 )
+  ]->
+   [ State_122( s.1 ) ]
+
+  /*
+  rule (modulo AC) letychecksndopenboxkvalids_11_12[color=#ffffff,
+                                                    process="let y.4=check(snd(open(box(<'k', valid(s.1)>))))",
+                                                    issapicrule, role='Process']:
+     [ Let_1204( destructor, s, destructor ) ]
+    --[
+    Restr_letychecksndopenboxkvalids_11_12_1( destructor ),
+    Restr_letychecksndopenboxkvalids_11_12_2( destructor )
+    ]->
+     [ State_122( s ) ]
+  */
+
+rule (modulo E) letychecksndopenboxkvalids_12_12[color=#ffffff,
+                                                 process="let y.4=check(snd(open(box(<'k', valid(s.1)>))))",
+                                                 issapicrule, role='Process']:
+   [ Let_1205( y.4, s.1 ) ] --> [ State_121( s.1, y.4 ) ]
+
+  /*
+  rule (modulo AC) letychecksndopenboxkvalids_12_12[color=#ffffff,
+                                                    process="let y.4=check(snd(open(box(<'k', valid(s.1)>))))",
+                                                    issapicrule, role='Process']:
+     [ Let_1205( y, s ) ] --> [ State_121( s, y ) ]
+  */
+
+restriction Restr_letychecksndopenboxkvalids_13_12_1:
+  "∀ x #NOW.
+    (Restr_letychecksndopenboxkvalids_13_12_1( x ) @ #NOW) ⇒
+    (∀ y. (y = x) ⇒ (⊥))"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ x #NOW.
+    (Restr_letychecksndopenboxkvalids_13_12_1( x ) @ #NOW) ⇒
+    (∀ y. (y = x) ⇒ (⊥))"
+  */
+
+rule (modulo E) letychecksndopenboxkvalids_13_12[color=#ffffff,
+                                                 process="let y.4=check(snd(open(box(<'k', valid(s.1)>))))",
+                                                 issapicrule, role='Process']:
+   [ Let_1205( destructor.16, s.1 ) ]
+  --[ Restr_letychecksndopenboxkvalids_13_12_1( destructor.16 ) ]->
+   [ State_122( s.1 ) ]
+
+  /*
+  rule (modulo AC) letychecksndopenboxkvalids_13_12[color=#ffffff,
+                                                    process="let y.4=check(snd(open(box(<'k', valid(s.1)>))))",
+                                                    issapicrule, role='Process']:
+     [ Let_1205( destructor, s ) ]
+    --[ Restr_letychecksndopenboxkvalids_13_12_1( destructor ) ]->
+     [ State_122( s ) ]
+  */
+
+rule (modulo E) eventNestedy_0_121[color=#ffffff,
+                                   process="event Nested( y.4 );", issapicrule, role='Process']:
+   [ State_121( s.1, y.4 ) ]
+  --[ Nested( y.4 ) ]->
+   [ State_1211( s.1, y.4 ) ]
+
+  /*
+  rule (modulo AC) eventNestedy_0_121[color=#ffffff,
+                                      process="event Nested( y.4 );", issapicrule, role='Process']:
+     [ State_121( s, y ) ] --[ Nested( y ) ]-> [ State_1211( s, y ) ]
+  */
+
+rule (modulo E) p_0_1211[color=#ffffff, process="0", issapicrule,
+                         role='Process']:
+   [ State_1211( s.1, y.4 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_1211[color=#ffffff, process="0", issapicrule,
+                            role='Process']:
+     [ State_1211( s, y ) ] --> [ ]
+  */
+
+rule (modulo E) eventFailure_0_122[color=#ffffff,
+                                   process="event Failure( );", issapicrule, role='Process']:
+   [ State_122( s.1 ) ] --[ Failure( ) ]-> [ State_1221( s.1 ) ]
+
+  /*
+  rule (modulo AC) eventFailure_0_122[color=#ffffff,
+                                      process="event Failure( );", issapicrule, role='Process']:
+     [ State_122( s ) ] --[ Failure( ) ]-> [ State_1221( s ) ]
+  */
+
+rule (modulo E) p_0_1221[color=#ffffff, process="0", issapicrule,
+                         role='Process']:
+   [ State_1221( s.1 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_1221[color=#ffffff, process="0", issapicrule,
+                            role='Process']:
+     [ State_1221( s ) ] --> [ ]
+  */
+
+restriction single_session:
+  "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
+  */
+
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.13.0
+Maude version 3.5.1
+Git revision: 5a753a172c7984e9403bc650a37a8223367bc1c5, branch: sapic-destructors
+Compiled at: 2026-09-25 19:30:59.558380567 UTC
+*/
+
+end
+/* Output
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/regression/trace/soundness-sapic-destructor-nonvariable-result.spthy
+
+  output:          examples/regression/trace/soundness-sapic-destructor-nonvariable-result.spthy.tmp
+  processing time: 1.36s
+  
+  valid_succeeds (exists-trace): verified (3 steps)
+  unboxed (exists-trace): verified (3 steps)
+  rejected (exists-trace): verified (3 steps)
+  opened (exists-trace): verified (3 steps)
+  pattern_failed (exists-trace): verified (3 steps)
+  nested (exists-trace): verified (3 steps)
+  no_failure (all-traces): verified (6 steps)
+  no_wrong (all-traces): verified (4 steps)
+  success_okay (all-traces): verified (3 steps)
+
+==============================================================================
+*/

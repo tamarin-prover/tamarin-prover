@@ -594,89 +594,49 @@ guarded formula characterizing all counter-examples:
     (∀ #r. (Reveal( A ) @ #r) ⇒ ⊥) ∧
     (∀ #r. (Reveal( B ) @ #r) ⇒ ⊥)))"
 */
-induction
-  case non_empty_trace
-  solve( (∃ A B t #i.
-           (Commit_S_A( A, B, t ) @ #i)
-          ∧
-           (∀ #j.
-             (Running_A( A, B, t ) @ #j)
-            ⇒
-             ((¬(#j < #i)) ∨
-              (∃ A2 B2 #i2. (Commit_S_A( A2, B2, t ) @ #i2) ∧ ¬(#i2 = #i)))) ∧
-           (∀ #r. (Reveal( A ) @ #r) ⇒ ⊥) ∧
-           (∀ #r. (Reveal( B ) @ #r) ⇒ ⊥))  ∥
-         (∃ A B t #i.
-           (Commit_S_B( A, B, t ) @ #i)
-          ∧
-           (∀ #j.
-             (Running_B( A, B, t ) @ #j)
-            ⇒
-             ((¬(#j < #i)) ∨
-              (∃ A2 B2 #i2. (Commit_S_B( A2, B2, t ) @ #i2) ∧ ¬(#i2 = #i)))) ∧
-           (∀ #r. (Reveal( A ) @ #r) ⇒ ⊥) ∧
-           (∀ #r. (Reveal( B ) @ #r) ⇒ ⊥)) )
-    case case_1
-    solve( (last(#i))  ∥
-           (∃ #j.
-             (Running_A( A, B, <m, na> ) @ #j)
-            ∧
-             (¬(last(#j))) ∧
-             (#j < #i) ∧
-             (∀ A2 B2 #i2.
-               (Commit_S_A( A2, B2, <m, na> ) @ #i2) ⇒ ((last(#i2)) ∨ (#i2 = #i))))  ∥
-           (∃ #r. (Reveal( A ) @ #r) ∧ ¬(last(#r)))  ∥
-           (∃ #r. (Reveal( B ) @ #r) ∧ ¬(last(#r))) )
-      case case_1
-      solve( !LongtermKey( ~kas, A ) ▶₁ #i )
-        case Init
-        solve( !LongtermKey( ~kbs, B ) ▶₂ #i )
-          case Init
-          solve( !KU( senc(<'1', na, m, $X, $X.1>, ~kas) ) @ #vk.7 )
-            case A_1
-            solve( (∃ #j.
-                     (Running_A( A2, B2, <~m, ~na> ) @ #j)
-                    ∧
-                     (¬(last(#j))) ∧
-                     (#j < #i2) ∧
-                     (∀ A2.1 B2.1 #i2.1.
-                       (Commit_S_A( A2.1, B2.1, <~m, ~na> ) @ #i2.1)
-                      ⇒
-                       ((last(#i2.1)) ∨ (#i2.1 = #i2))))  ∥
-                   (∃ #r. (Reveal( A2 ) @ #r) ∧ ¬(last(#r)))  ∥
-                   (∃ #r. (Reveal( B2 ) @ #r) ∧ ¬(last(#r))) )
-              case case_1
-              solve( (∃ #j.
-                       (Running_B( $X, $X.1, <~m, nb.1> ) @ #j)
-                      ∧
-                       (¬(last(#j))) ∧
-                       (#j < #i2) ∧
-                       (∀ A2 B2 #i2.1.
-                         (Commit_S_B( A2, B2, <~m, nb.1> ) @ #i2.1)
-                        ⇒
-                         ((last(#i2.1)) ∨ (#i2.1 = #i2))))  ∥
-                     (∃ #r. (Reveal( $X ) @ #r) ∧ ¬(last(#r)))  ∥
-                     (∃ #r. (Reveal( $X.1 ) @ #r) ∧ ¬(last(#r))) )
-                case case_1
-                solve( !LongtermKey( ~kas.1, $X ) ▶₁ #i2 )
-                  case Init
-                  solve( !LongtermKey( ~kbs.1, $X.1 ) ▶₂ #i2 )
-                    case Init
-                    solve( !LongtermKey( ~kbs.2, $X.1 ) ▶₁ #j )
-                      case Init
-                      solve( !KU( senc(<'2', nb, ~m, $X, $X.1>, ~kbs) ) @ #vk.14 )
-                        case B_1
-                        solve( !KU( senc(<'1', ~na, ~m, $X, $X.1>, ~kas.1) ) @ #vk.19 )
-                          case A_1
-                          solve( !KU( senc(<'2', ~nb.1, ~m, $X, $X.1>, ~kbs.1) ) @ #vk.19 )
-                            case B_1
-                            solve( !KU( ~m ) @ #vk.9 )
-                              case A_1_case_1
-                              SOLVED // trace found
-                            qed
-                          qed
-                        qed
-                      qed
+simplify
+solve( (∃ A B t #i.
+         (Commit_S_A( A, B, t ) @ #i)
+        ∧
+         (∀ #j.
+           (Running_A( A, B, t ) @ #j)
+          ⇒
+           ((¬(#j < #i)) ∨
+            (∃ A2 B2 #i2. (Commit_S_A( A2, B2, t ) @ #i2) ∧ ¬(#i2 = #i)))) ∧
+         (∀ #r. (Reveal( A ) @ #r) ⇒ ⊥) ∧
+         (∀ #r. (Reveal( B ) @ #r) ⇒ ⊥))  ∥
+       (∃ A B t #i.
+         (Commit_S_B( A, B, t ) @ #i)
+        ∧
+         (∀ #j.
+           (Running_B( A, B, t ) @ #j)
+          ⇒
+           ((¬(#j < #i)) ∨
+            (∃ A2 B2 #i2. (Commit_S_B( A2, B2, t ) @ #i2) ∧ ¬(#i2 = #i)))) ∧
+         (∀ #r. (Reveal( A ) @ #r) ⇒ ⊥) ∧
+         (∀ #r. (Reveal( B ) @ #r) ⇒ ⊥)) )
+  case case_1
+  solve( !LongtermKey( ~kas, A ) ▶₁ #i )
+    case Init
+    solve( !LongtermKey( ~kbs, B ) ▶₂ #i )
+      case Init
+      solve( !KU( senc(<'1', na, m, $X, $X.1>, ~kas) ) @ #vk.7 )
+        case A_1
+        solve( (#i2 < #i)  ∥ (#i < #i2) )
+          case case_1
+          solve( !LongtermKey( ~kas.1, A2 ) ▶₁ #i2 )
+            case Init
+            solve( !LongtermKey( ~kbs.1, B2 ) ▶₂ #i2 )
+              case Init
+              solve( !KU( senc(<'2', nb, ~m, $X, $X.1>, ~kbs) ) @ #vk.9 )
+                case B_1
+                solve( !KU( senc(<'1', ~na, ~m, $X.2, $X.3>, ~kas.1) ) @ #vk.18 )
+                  case A_1
+                  solve( !KU( senc(<'2', nb.1, ~m, $X, $X.1>, ~kbs.1) ) @ #vk.16 )
+                    case B_1
+                    solve( !KU( ~m ) @ #vk.9 )
+                      case A_1_case_1
+                      SOLVED // trace found
                     qed
                   qed
                 qed
@@ -716,139 +676,61 @@ guarded formula characterizing all counter-examples:
     (∀ #r. (Reveal( A ) @ #r) ⇒ ⊥) ∧
     (∀ #r. (Reveal( B ) @ #r) ⇒ ⊥)))"
 */
-induction
-  case empty_trace
-  by contradiction /* from formulas */
-next
-  case non_empty_trace
-  solve( (∃ A B t #i.
-           (Commit_S_A( A, B, t ) @ #i)
-          ∧
-           (∀ #j. (Running_A( A, B, t ) @ #j) ⇒ ¬(#j < #i)) ∧
-           (∀ #r. (Reveal( A ) @ #r) ⇒ ⊥) ∧
-           (∀ #r. (Reveal( B ) @ #r) ⇒ ⊥))  ∥
-         (∃ A B t #i.
-           (Commit_S_B( A, B, t ) @ #i)
-          ∧
-           (∀ #j. (Running_B( A, B, t ) @ #j) ⇒ ¬(#j < #i)) ∧
-           (∀ #r. (Reveal( A ) @ #r) ⇒ ⊥) ∧
-           (∀ #r. (Reveal( B ) @ #r) ⇒ ⊥)) )
-    case case_1
-    solve( (last(#i))  ∥
-           (∃ #j. (Running_A( A, B, <m, na> ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #i))  ∥
-           (∃ #r. (Reveal( A ) @ #r) ∧ ¬(last(#r)))  ∥
-           (∃ #r. (Reveal( B ) @ #r) ∧ ¬(last(#r))) )
-      case case_1
-      solve( !LongtermKey( ~kas, A ) ▶₁ #i )
-        case Init
-        solve( !LongtermKey( ~kbs, B ) ▶₂ #i )
-          case Init
-          solve( !KU( senc(<'1', na, m, $X, $X.1>, ~kas) ) @ #vk.7 )
-            case A_1
-            by contradiction /* from formulas */
-          next
-            case c_senc
-            solve( !KU( ~kas ) @ #vk.12 )
-              case Reveal_Longterm_Key
-              by contradiction /* from formulas */
-            qed
-          qed
+simplify
+solve( (∃ A B t #i.
+         (Commit_S_A( A, B, t ) @ #i)
+        ∧
+         (∀ #j. (Running_A( A, B, t ) @ #j) ⇒ ¬(#j < #i)) ∧
+         (∀ #r. (Reveal( A ) @ #r) ⇒ ⊥) ∧
+         (∀ #r. (Reveal( B ) @ #r) ⇒ ⊥))  ∥
+       (∃ A B t #i.
+         (Commit_S_B( A, B, t ) @ #i)
+        ∧
+         (∀ #j. (Running_B( A, B, t ) @ #j) ⇒ ¬(#j < #i)) ∧
+         (∀ #r. (Reveal( A ) @ #r) ⇒ ⊥) ∧
+         (∀ #r. (Reveal( B ) @ #r) ⇒ ⊥)) )
+  case case_1
+  solve( !LongtermKey( ~kas, A ) ▶₁ #i )
+    case Init
+    solve( !LongtermKey( ~kbs, B ) ▶₂ #i )
+      case Init
+      solve( !KU( senc(<'1', na, m, $X, $X.1>, ~kas) ) @ #vk.7 )
+        case A_1
+        by contradiction /* from formulas */
+      next
+        case c_senc
+        solve( !KU( ~kas ) @ #vk.12 )
+          case Reveal_Longterm_Key
+          by contradiction /* from formulas */
         qed
       qed
-    next
-      case case_2
-      by contradiction /* from formulas */
-    next
-      case case_3
-      by contradiction /* from formulas */
-    next
-      case case_4
-      by contradiction /* from formulas */
     qed
-  next
-    case case_2
-    solve( (last(#i))  ∥
-           (∃ #j. (Running_A( A, B, <m, na> ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #i))  ∥
-           (∃ #r. (Reveal( A ) @ #r) ∧ ¬(last(#r)))  ∥
-           (∃ #r. (Reveal( B ) @ #r) ∧ ¬(last(#r))) )
-      case case_1
-      solve( !LongtermKey( ~kas, A ) ▶₁ #i )
-        case Init
-        solve( !LongtermKey( ~kbs, B ) ▶₂ #i )
-          case Init
-          solve( !KU( senc(<'1', na, m, $X, $X.1>, ~kas) ) @ #vk.7 )
-            case A_1
-            solve( !KU( senc(<'2', nb, ~m, $X, $X.1>, ~kbs) ) @ #vk.8 )
-              case B_1
-              by contradiction /* from formulas */
-            next
-              case c_senc
-              solve( !KU( ~kbs ) @ #vk.12 )
-                case Reveal_Longterm_Key
-                by contradiction /* from formulas */
-              qed
-            qed
-          next
-            case c_senc
-            solve( !KU( ~kas ) @ #vk.12 )
-              case Reveal_Longterm_Key
-              by contradiction /* from formulas */
-            qed
-          qed
-        qed
-      qed
-    next
-      case case_2
-      solve( (last(#i))  ∥
-             (∃ #j.
-               (Running_B( $A, $B, <~m, nb> ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #i))  ∥
-             (∃ #r. (Reveal( $A ) @ #r) ∧ ¬(last(#r)))  ∥
-             (∃ #r. (Reveal( $B ) @ #r) ∧ ¬(last(#r))) )
-        case case_1
-        solve( !LongtermKey( ~kas, $A ) ▶₁ #i )
-          case Init
-          solve( !LongtermKey( ~kbs, $B ) ▶₂ #i )
-            case Init
-            solve( !LongtermKey( ~kas.1, $A ) ▶₂ #j )
-              case Init
-              solve( !KU( senc(<'1', ~na, ~m, $A, $B>, ~kas) ) @ #vk.7 )
-                case A_1
-                solve( !KU( senc(<'2', nb, ~m, $A, $B>, ~kbs) ) @ #vk.8 )
-                  case B_1
-                  by contradiction /* from formulas */
-                next
-                  case c_senc
-                  solve( !KU( ~kbs ) @ #vk.12 )
-                    case Reveal_Longterm_Key
-                    by contradiction /* from formulas */
-                  qed
-                qed
-              next
-                case c_senc
-                solve( !KU( ~kas ) @ #vk.12 )
-                  case Reveal_Longterm_Key
-                  by contradiction /* from formulas */
-                qed
-              qed
-            qed
+  qed
+next
+  case case_2
+  solve( !LongtermKey( ~kas, A ) ▶₁ #i )
+    case Init
+    solve( !LongtermKey( ~kbs, B ) ▶₂ #i )
+      case Init
+      solve( !KU( senc(<'1', na, m, $X, $X.1>, ~kas) ) @ #vk.7 )
+        case A_1
+        solve( !KU( senc(<'2', nb, ~m, $X, $X.1>, ~kbs) ) @ #vk.8 )
+          case B_1
+          by contradiction /* from formulas */
+        next
+          case c_senc
+          solve( !KU( ~kbs ) @ #vk.12 )
+            case Reveal_Longterm_Key
+            by contradiction /* from formulas */
           qed
         qed
       next
-        case case_2
-        by contradiction /* from formulas */
-      next
-        case case_3
-        by contradiction /* from formulas */
-      next
-        case case_4
-        by contradiction /* from formulas */
+        case c_senc
+        solve( !KU( ~kas ) @ #vk.12 )
+          case Reveal_Longterm_Key
+          by contradiction /* from formulas */
+        qed
       qed
-    next
-      case case_3
-      by contradiction /* from formulas */
-    next
-      case case_4
-      by contradiction /* from formulas */
     qed
   qed
 qed
@@ -3359,8 +3241,8 @@ qed
 Generated from:
 Tamarin version 1.13.0
 Maude version 3.5.1
-Git revision: 41bc81379b23681e7057314a5cf66a25c45e1986, branch: canonicalise-subst
-Compiled at: 2026-07-27 16:11:34.947223 UTC
+Git revision: 24d08b7ae378ddcef5287c20d4731bbd8b732ce7, branch: HEAD
+Compiled at: 2026-11-09 13:34:50.141740183 UTC
 */
 
 end
@@ -3372,15 +3254,15 @@ summary of summaries:
 analyzed: examples/features/auto-sources/spore/Otway-Rees.spthy
 
   output:          examples/features/auto-sources/spore/Otway-Rees.spthy.tmp
-  processing time: 2.14s
+  processing time: 9.69s
   
   Secrecy (all-traces): verified (40 steps)
   injectiveagreement_B (all-traces): verified (50 steps)
   agreement_B (all-traces): verified (16 steps)
   injectiveagreement_A (all-traces): verified (16 steps)
   agreement_A (all-traces): verified (10 steps)
-  injectiveagreement_S (all-traces): falsified - found trace (16 steps)
-  agreement_S (all-traces): verified (39 steps)
+  injectiveagreement_S (all-traces): falsified - found trace (13 steps)
+  agreement_S (all-traces): verified (17 steps)
   executability (exists-trace): verified (15 steps)
   AUTO_typing (all-traces): verified (474 steps)
 

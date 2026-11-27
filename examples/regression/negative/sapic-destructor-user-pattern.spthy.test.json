@@ -1,0 +1,15 @@
+{
+  "tests": [
+    {
+      "name": "user-pattern-still-checked",
+      "args": [
+        "--derivcheck-timeout=5",
+        "--quit-on-warning"
+      ],
+      "exit_code": 1,
+      "contains": [
+        "Message Derivation Checks"
+      ]
+    }
+  ]
+}

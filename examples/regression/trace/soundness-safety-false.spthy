@@ -1,0 +1,18 @@
+theory SoundnessSafetyFalse
+begin
+
+rule Emit:
+  [] --[ A() ]-> []
+
+// A safety restriction without an outer universal guard is stored as an
+// assumption. It must still be inserted into every proof constraint system.
+restriction Impossible:
+  "F"
+
+lemma impossible: exists-trace
+  "Ex #i. A()@i"
+
+lemma vacuous:
+  "All #i. A()@i ==> F"
+
+end

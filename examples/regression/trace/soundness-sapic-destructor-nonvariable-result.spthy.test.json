@@ -1,0 +1,11 @@
+{
+  "tests": [
+    {
+      "name": "nonvariable-results-supported",
+      "args": [
+        "--derivcheck-timeout=5",
+        "--quit-on-warning"
+      ]
+    }
+  ]
+}

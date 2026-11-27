@@ -1,0 +1,19 @@
+theory SapicDestructorNullary
+begin
+#ifdef PROGRESS
+options: translation-progress
+#endif
+functions: d/0 [destructor], absent/0 [destructor], ok/0, c/1
+equations: d()=ok()
+// Empty argument lists must not introduce a DH unit into this signature.
+process:
+ ( (let y=d() in event Seen(y) else event Wrong())
+ | (let y=c(d()) in event Nested(y) else event Wrong())
+ | (let y=absent() in event Wrong() else event Missing())
+ | (let 'a'=d() in event Wrong() else event Mismatch()) )
+lemma seen: exists-trace "Ex #i.Seen(ok())@i"
+lemma nested: exists-trace "Ex #i.Nested(c(ok()))@i"
+lemma missing: exists-trace "Ex #i.Missing()@i"
+lemma mismatch: exists-trace "Ex #i.Mismatch()@i"
+lemma no_wrong: "All #i.Wrong()@i ==> F"
+end

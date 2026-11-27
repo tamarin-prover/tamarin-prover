@@ -1,0 +1,20 @@
+theory SapicDestructorAuxiliary
+begin
+#ifdef PROGRESS
+options: translation-progress
+#endif
+functions: box/2, d/1 [destructor]
+equations: d(box(x,y)) = x
+
+// The process obtains x through d, but never learns the opaque auxiliary y.
+// Generated equation matching must not require y to be recoverable. The
+// separate user-pattern check remains covered by sapic-destructor-user-pattern.
+#ifdef ROOT
+process: let z = d(box('ok','hidden')) in event Seen(z) else event Failed()
+#else
+process: let z = <d(box('ok','hidden')),'tag'> in event Seen(z) else event Failed()
+#endif
+
+lemma seen: exists-trace "Ex z #i. Seen(z)@i"
+lemma no_failure: "All #i. Failed()@i ==> F"
+end

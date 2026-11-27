@@ -25,15 +25,9 @@ solve( State_111( ~prog_, ~prog_111 ) ▶₀ #t )
   case p_1_11
   solve( State_( ~prog_ ) ▶₀ #t.2 )
     case Init
-    solve( State_( ~prog_ ) ▶₀ #t.3 )
-      case Init
-      solve( State_111( ~prog_.1, ~prog_111 ) ▶₀ #t.3 )
-        case p_1_11
-        solve( State_( ~prog_ ) ▶₀ #t.3 )
-          case Init
-          SOLVED // trace found
-        qed
-      qed
+    solve( State_111( ~prog_.1, ~prog_111 ) ▶₀ #t.3 )
+      case p_1_11
+      SOLVED // trace found
     qed
   qed
 qed
@@ -49,15 +43,9 @@ solve( State_1211( ~prog_, ~prog_1211 ) ▶₀ #t )
   case p_1_121
   solve( State_( ~prog_ ) ▶₀ #t.2 )
     case Init
-    solve( State_( ~prog_ ) ▶₀ #t.3 )
-      case Init
-      solve( State_1211( ~prog_.1, ~prog_1211 ) ▶₀ #t.3 )
-        case p_1_121
-        solve( State_( ~prog_ ) ▶₀ #t.3 )
-          case Init
-          SOLVED // trace found
-        qed
-      qed
+    solve( State_1211( ~prog_.1, ~prog_1211 ) ▶₀ #t.3 )
+      case p_1_121
+      SOLVED // trace found
     qed
   qed
 qed
@@ -73,15 +61,9 @@ solve( State_1221( ~prog_, ~prog_1221 ) ▶₀ #t )
   case p_1_122
   solve( State_( ~prog_ ) ▶₀ #t.2 )
     case Init
-    solve( State_( ~prog_ ) ▶₀ #t.3 )
-      case Init
-      solve( State_1221( ~prog_.1, ~prog_1221 ) ▶₀ #t.3 )
-        case p_1_122
-        solve( State_( ~prog_ ) ▶₀ #t.3 )
-          case Init
-          SOLVED // trace found
-        qed
-      qed
+    solve( State_1221( ~prog_.1, ~prog_1221 ) ▶₀ #t.3 )
+      case p_1_122
+      SOLVED // trace found
     qed
   qed
 qed
@@ -258,8 +240,8 @@ restriction progressInit:
 Generated from:
 Tamarin version 1.13.0
 Maude version 3.5.1
-Git revision: 41bc81379b23681e7057314a5cf66a25c45e1986, branch: canonicalise-subst
-Compiled at: 2026-07-27 16:11:34.947223 UTC
+Git revision: c827ceb2418a7d5390dac6671f01a07f7f0ac087 (with uncommited changes), branch: HEAD
+Compiled at: 2026-09-15 17:34:25.020280498 UTC
 */
 
 end
@@ -271,11 +253,11 @@ summary of summaries:
 analyzed: examples/sapic/fast/basic/ndc-nested-2.spthy
 
   output:          examples/sapic/fast/basic/ndc-nested-2.spthy.tmp
-  processing time: 0.03s
+  processing time: 0.06s
   
-  A_possible (exists-trace): verified (7 steps)
-  B_possible (exists-trace): verified (7 steps)
-  C_possible (exists-trace): verified (7 steps)
+  A_possible (exists-trace): verified (5 steps)
+  B_possible (exists-trace): verified (5 steps)
+  C_possible (exists-trace): verified (5 steps)
   no_progress (exists-trace): verified (3 steps)
 
 ==============================================================================

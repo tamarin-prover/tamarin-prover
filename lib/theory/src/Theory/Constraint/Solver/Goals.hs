@@ -40,6 +40,7 @@ import           Control.Monad.State                     (gets)
 
 import           Extension.Data.Label                    as L
 
+import qualified Theory.Constraint.System.StoredFormulas as Stored
 import           Theory.Constraint.Solver.AnnotatedGoals
 import           Theory.Constraint.Solver.Contradictions (substCreatesNonNormalTerms)
 import           Theory.Constraint.Solver.Reduction
@@ -119,7 +120,7 @@ openGoals ctxt sys = do
   where
     existingDeps = rawLessRel sys
     hasKUGuards  =
-        any ((KUFact `elem`) . guardFactTags) $ S.toList $ get sFormulas sys
+        any ((KUFact `elem`) . guardFactTags) $ Stored.toList $ get sFormulas sys
 
     checkTermLits :: (LSort -> Bool) -> LNTerm -> Bool
     checkTermLits p =
@@ -417,12 +418,20 @@ solveSubterm st = do
       case split of
         TrueD -> return ()
         SubtermD st1 -> modM sSubtermStore (addSubterm st1)
-        NatSubtermD st1@(s,t) -> if length splitList == 1
-                                    then do
-                                      newVar <- freshLVar "newVar" LSortNat
-                                      let sPlus = s ++: varTerm newVar
-                                      insertFormula $ closeGuarded Ex [newVar] [EqE sPlus t] gtrue
-                                    else modM sSubtermStore (addSubterm st1)
+        NatSubtermD (s,t) -> do
+          newVar <- freshLVar "newVar" LSortNat
+          if isMsgVar s
+            then do
+              -- A subterm of a natural is itself a natural. Refine the
+              -- message variable before placing it below NatPlus, so
+              -- nat-sorted restrictions also apply.
+              smallVar <- freshLVar "small" LSortNat
+              let small = varTerm smallVar
+              insertFormula $ closeGuarded Ex [smallVar, newVar]
+                [EqE s small, EqE (small ++: varTerm newVar) t] gtrue
+            else do
+              let sPlus = s ++: varTerm newVar
+              insertFormula $ closeGuarded Ex [newVar] [EqE sPlus t] gtrue
         EqualD (l, r) -> insertFormula $ GAto $ EqE (lTermToBTerm l) (lTermToBTerm r)
         ACNewVarD ((smallPlus, big), newVar) -> insertFormula $ closeGuarded Ex [newVar] [EqE smallPlus big] gtrue
         

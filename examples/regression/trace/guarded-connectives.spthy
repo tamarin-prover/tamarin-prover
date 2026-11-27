@@ -1,0 +1,37 @@
+/*
+ * Substitution makes the alternatives identical. Collapsing the disjunction
+ * must preserve its obligations and must not repeatedly create witnesses
+ * while the solver merges duplicate Start nodes.
+ */
+theory GuardedConnectives
+begin
+
+rule Start:
+  [ Fr(~x) ] --[ A(~x, ~x) ]-> [ Pending(~x) ]
+
+rule Finish:
+  [ Pending(x) ] --[ B(x), C('public') ]-> []
+
+restriction repeated_obligation:
+  "All x y #i. A(x,y)@i ==>
+    ((Ex #j. B(x)@j & i < j) | (Ex #j. B(y)@j & i < j))"
+
+lemma collapsed_disjunction_reachable:
+  exists-trace
+  "Ex x y #i. A(x,y)@i &
+    ((Ex #j. B(x)@j & i < j) | (Ex #j. B(y)@j & i < j))"
+
+lemma collapsed_disjunction_wrong_action:
+  exists-trace
+  "Ex x y #i. A(x,y)@i &
+    ((Ex #j. C(x)@j & i < j) | (Ex #j. C(y)@j & i < j))"
+
+lemma collapsed_disjunction_wrong_order:
+  exists-trace
+  "Ex x y #i. A(x,y)@i &
+    ((Ex #j. B(x)@j & j < i) | (Ex #j. B(y)@j & j < i))"
+
+lemma restriction_applies:
+  "All x y #i. A(x,y)@i ==> Ex #j. B(x)@j & i < j"
+
+end

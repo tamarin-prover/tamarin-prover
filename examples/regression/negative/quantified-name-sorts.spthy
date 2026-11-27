@@ -1,0 +1,7 @@
+theory QuantifiedNameSorts
+begin
+rule A: [] --[A('a')]-> []
+// Only equality-pattern exclusions gained support for name-sorted binders.
+// Ordinary quantified formulas retain their existing validation boundary.
+lemma unsupported: "All ~x #i.A(~x)@i ==> F"
+end

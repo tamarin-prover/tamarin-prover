@@ -1,0 +1,457 @@
+theory SapicDestructorNullary
+
+begin
+
+// Function signature and definition of the equational theory E
+
+functions: absent/0 [destructor], c/1, d/0 [destructor], fst/1, ok/0,
+           pair/2, snd/1
+equations: d = ok, fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
+
+heuristic: p
+
+lemma seen:
+  exists-trace "∃ #i. Seen( ok ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #i. (Seen( ok ) @ #i)"
+*/
+simplify
+solve( State_1111( ok ) ▶₀ #i )
+  case letyd_3_111
+  SOLVED // trace found
+qed
+
+lemma nested:
+  exists-trace "∃ #i. Nested( c(ok) ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #i. (Nested( c(ok) ) @ #i)"
+*/
+simplify
+solve( State_1121( c(ok) ) ▶₀ #i )
+  case letycd_5_112
+  SOLVED // trace found
+qed
+
+lemma missing:
+  exists-trace "∃ #i. Missing( ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #i. (Missing( ) @ #i)"
+*/
+simplify
+solve( State_12( ) ▶₀ #i )
+  case p_0_1
+  SOLVED // trace found
+qed
+
+lemma mismatch:
+  exists-trace "∃ #i. Mismatch( ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #i. (Mismatch( ) @ #i)"
+*/
+simplify
+solve( State_22( ) ▶₀ #i )
+  case letad_4_2
+  SOLVED // trace found
+qed
+
+lemma no_wrong:
+  all-traces "∀ #i. (Wrong( ) @ #i) ⇒ (⊥)"
+/*
+guarded formula characterizing all counter-examples:
+"∃ #i. (Wrong( ) @ #i)"
+*/
+simplify
+solve( Wrong( ) @ #i )
+  case eventWrong_0_1112
+  by solve( State_1112( ) ▶₀ #i )
+next
+  case eventWrong_0_1122
+  by solve( State_1122( ) ▶₀ #i )
+next
+  case eventWrong_0_21
+  by solve( State_21( ) ▶₀ #i )
+qed
+
+rule (modulo E) Init[color=#ffffff, process="|", issapicrule,
+                     role='Process']:
+   [ ] --[ Init( ) ]-> [ State_( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_0_[color=#ffffff, process="|", issapicrule,
+                     role='Process']:
+   [ State_( ) ] --> [ State_1( ), State_2( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_0_1[color=#ffffff, process="|", issapicrule,
+                      role='Process']:
+   [ State_1( ) ] --> [ State_11( ), State_12( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_0_11[color=#ffffff, process="|", issapicrule,
+                       role='Process']:
+   [ State_11( ) ] --> [ State_111( ), State_112( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) letyd_0_111[color=#ffffff, process="let y.1=d",
+                            issapicrule, role='Process']:
+   [ State_111( ) ] --> [ Let_1111( 'unit' ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) letyd_1_111[color=#ffffff, process="let y.1=d",
+                            no_derivcheck, issapicrule, role='Process']:
+   [ Let_1111( 'unit' ) ] --> [ Let_11101( ok ) ]
+
+  /* has exactly the trivial AC variant */
+
+restriction Restr_letyd_2_111_1:
+  "∀ #NOW. (Restr_letyd_2_111_1( ) @ #NOW) ⇒ (('unit' = 'unit') ⇒ (⊥))"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ #NOW. (Restr_letyd_2_111_1( ) @ #NOW) ⇒ (('unit' = 'unit') ⇒ (⊥))"
+  */
+
+rule (modulo E) letyd_2_111[color=#ffffff, process="let y.1=d",
+                            no_derivcheck, issapicrule, role='Process']:
+   [ Let_1111( 'unit' ) ] --[ Restr_letyd_2_111_1( ) ]-> [ State_1112( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) letyd_3_111[color=#ffffff, process="let y.1=d",
+                            issapicrule, role='Process']:
+   [ Let_11101( y.1 ) ] --> [ State_1111( y.1 ) ]
+
+  /*
+  rule (modulo AC) letyd_3_111[color=#ffffff, process="let y.1=d",
+                               issapicrule, role='Process']:
+     [ Let_11101( y ) ] --> [ State_1111( y ) ]
+  */
+
+restriction Restr_letyd_4_111_1:
+  "∀ x #NOW. (Restr_letyd_4_111_1( x ) @ #NOW) ⇒ (∀ y. (y = x) ⇒ (⊥))"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ x #NOW. (Restr_letyd_4_111_1( x ) @ #NOW) ⇒ (∀ y. (y = x) ⇒ (⊥))"
+  */
+
+rule (modulo E) letyd_4_111[color=#ffffff, process="let y.1=d",
+                            issapicrule, role='Process']:
+   [ Let_11101( destructor.6 ) ]
+  --[ Restr_letyd_4_111_1( destructor.6 ) ]->
+   [ State_1112( ) ]
+
+  /*
+  rule (modulo AC) letyd_4_111[color=#ffffff, process="let y.1=d",
+                               issapicrule, role='Process']:
+     [ Let_11101( destructor ) ]
+    --[ Restr_letyd_4_111_1( destructor ) ]->
+     [ State_1112( ) ]
+  */
+
+rule (modulo E) eventSeeny_0_1111[color=#ffffff,
+                                  process="event Seen( y.1 );", issapicrule, role='Process']:
+   [ State_1111( y.1 ) ] --[ Seen( y.1 ) ]-> [ State_11111( y.1 ) ]
+
+  /*
+  rule (modulo AC) eventSeeny_0_1111[color=#ffffff,
+                                     process="event Seen( y.1 );", issapicrule, role='Process']:
+     [ State_1111( y ) ] --[ Seen( y ) ]-> [ State_11111( y ) ]
+  */
+
+rule (modulo E) p_0_11111[color=#ffffff, process="0", issapicrule,
+                          role='Process']:
+   [ State_11111( y.1 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_11111[color=#ffffff, process="0", issapicrule,
+                             role='Process']:
+     [ State_11111( y ) ] --> [ ]
+  */
+
+rule (modulo E) eventWrong_0_1112[color=#ffffff,
+                                  process="event Wrong( );", issapicrule, role='Process']:
+   [ State_1112( ) ] --[ Wrong( ) ]-> [ State_11121( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_0_11121[color=#ffffff, process="0", issapicrule,
+                          role='Process']:
+   [ State_11121( ) ] --> [ ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) letycd_0_112[color=#ffffff, process="let y.2=c(d)",
+                             issapicrule, role='Process']:
+   [ State_112( ) ] --> [ Let_1121( 'unit' ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) letycd_1_112[color=#ffffff, process="let y.2=c(d)",
+                             no_derivcheck, issapicrule, role='Process']:
+   [ Let_1121( 'unit' ) ] --> [ Let_11201( ok ) ]
+
+  /* has exactly the trivial AC variant */
+
+restriction Restr_letycd_2_112_1:
+  "∀ #NOW. (Restr_letycd_2_112_1( ) @ #NOW) ⇒ (('unit' = 'unit') ⇒ (⊥))"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ #NOW. (Restr_letycd_2_112_1( ) @ #NOW) ⇒ (('unit' = 'unit') ⇒ (⊥))"
+  */
+
+rule (modulo E) letycd_2_112[color=#ffffff, process="let y.2=c(d)",
+                             no_derivcheck, issapicrule, role='Process']:
+   [ Let_1121( 'unit' ) ] --[ Restr_letycd_2_112_1( ) ]-> [ State_1122( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) letycd_3_112[color=#ffffff, process="let y.2=c(d)",
+                             issapicrule, role='Process']:
+   [ Let_11201( destructor.7 ) ]
+  -->
+   [ Let_11202( c(destructor.7), destructor.7 ) ]
+
+  /*
+  rule (modulo AC) letycd_3_112[color=#ffffff, process="let y.2=c(d)",
+                                issapicrule, role='Process']:
+     [ Let_11201( destructor ) ]
+    -->
+     [ Let_11202( c(destructor), destructor ) ]
+  */
+
+restriction Restr_letycd_4_112_1:
+  "∀ x #NOW.
+    (Restr_letycd_4_112_1( x ) @ #NOW) ⇒
+    (∀ destructor. (destructor = x) ⇒ (⊥))"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ x #NOW.
+    (Restr_letycd_4_112_1( x ) @ #NOW) ⇒
+    (∀ destructor. (destructor = x) ⇒ (⊥))"
+  */
+
+rule (modulo E) letycd_4_112[color=#ffffff, process="let y.2=c(d)",
+                             issapicrule, role='Process']:
+   [ Let_11201( destructor.8 ) ]
+  --[ Restr_letycd_4_112_1( destructor.8 ) ]->
+   [ State_1122( ) ]
+
+  /*
+  rule (modulo AC) letycd_4_112[color=#ffffff, process="let y.2=c(d)",
+                                issapicrule, role='Process']:
+     [ Let_11201( destructor ) ]
+    --[ Restr_letycd_4_112_1( destructor ) ]->
+     [ State_1122( ) ]
+  */
+
+rule (modulo E) letycd_5_112[color=#ffffff, process="let y.2=c(d)",
+                             issapicrule, role='Process']:
+   [ Let_11202( y.2, destructor.7 ) ] --> [ State_1121( y.2 ) ]
+
+  /*
+  rule (modulo AC) letycd_5_112[color=#ffffff, process="let y.2=c(d)",
+                                issapicrule, role='Process']:
+     [ Let_11202( y, destructor ) ] --> [ State_1121( y ) ]
+  */
+
+restriction Restr_letycd_6_112_1:
+  "∀ x #NOW. (Restr_letycd_6_112_1( x ) @ #NOW) ⇒ (∀ y. (y = x) ⇒ (⊥))"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ x #NOW. (Restr_letycd_6_112_1( x ) @ #NOW) ⇒ (∀ y. (y = x) ⇒ (⊥))"
+  */
+
+rule (modulo E) letycd_6_112[color=#ffffff, process="let y.2=c(d)",
+                             issapicrule, role='Process']:
+   [ Let_11202( c(destructor.7), destructor.7 ) ]
+  --[ Restr_letycd_6_112_1( c(destructor.7) ) ]->
+   [ State_1122( ) ]
+
+  /*
+  rule (modulo AC) letycd_6_112[color=#ffffff, process="let y.2=c(d)",
+                                issapicrule, role='Process']:
+     [ Let_11202( c(destructor), destructor ) ]
+    --[ Restr_letycd_6_112_1( c(destructor) ) ]->
+     [ State_1122( ) ]
+  */
+
+rule (modulo E) eventNestedy_0_1121[color=#ffffff,
+                                    process="event Nested( y.2 );", issapicrule, role='Process']:
+   [ State_1121( y.2 ) ] --[ Nested( y.2 ) ]-> [ State_11211( y.2 ) ]
+
+  /*
+  rule (modulo AC) eventNestedy_0_1121[color=#ffffff,
+                                       process="event Nested( y.2 );", issapicrule, role='Process']:
+     [ State_1121( y ) ] --[ Nested( y ) ]-> [ State_11211( y ) ]
+  */
+
+rule (modulo E) p_0_11211[color=#ffffff, process="0", issapicrule,
+                          role='Process']:
+   [ State_11211( y.2 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_11211[color=#ffffff, process="0", issapicrule,
+                             role='Process']:
+     [ State_11211( y ) ] --> [ ]
+  */
+
+rule (modulo E) eventWrong_0_1122[color=#ffffff,
+                                  process="event Wrong( );", issapicrule, role='Process']:
+   [ State_1122( ) ] --[ Wrong( ) ]-> [ State_11221( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_0_11221[color=#ffffff, process="0", issapicrule,
+                          role='Process']:
+   [ State_11221( ) ] --> [ ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) eventMissing_0_12[color=#ffffff,
+                                  process="event Missing( );", issapicrule, role='Process']:
+   [ State_12( ) ] --[ Missing( ) ]-> [ State_121( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_0_121[color=#ffffff, process="0", issapicrule,
+                        role='Process']:
+   [ State_121( ) ] --> [ ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) letad_0_2[color=#ffffff, process="let 'a'=d",
+                          issapicrule, role='Process']:
+   [ State_2( ) ] --> [ Let_21( 'unit' ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) letad_1_2[color=#ffffff, process="let 'a'=d",
+                          no_derivcheck, issapicrule, role='Process']:
+   [ Let_21( 'unit' ) ] --> [ Let_201( ok ) ]
+
+  /* has exactly the trivial AC variant */
+
+restriction Restr_letad_2_2_1:
+  "∀ #NOW. (Restr_letad_2_2_1( ) @ #NOW) ⇒ (('unit' = 'unit') ⇒ (⊥))"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ #NOW. (Restr_letad_2_2_1( ) @ #NOW) ⇒ (('unit' = 'unit') ⇒ (⊥))"
+  */
+
+rule (modulo E) letad_2_2[color=#ffffff, process="let 'a'=d",
+                          no_derivcheck, issapicrule, role='Process']:
+   [ Let_21( 'unit' ) ] --[ Restr_letad_2_2_1( ) ]-> [ State_22( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) letad_3_2[color=#ffffff, process="let 'a'=d",
+                          issapicrule, role='Process']:
+   [ Let_201( 'a' ) ] --> [ State_21( ) ]
+
+  /* has exactly the trivial AC variant */
+
+restriction Restr_letad_4_2_1:
+  "∀ x #NOW. (Restr_letad_4_2_1( x ) @ #NOW) ⇒ (('a' = x) ⇒ (⊥))"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ x #NOW. (Restr_letad_4_2_1( x ) @ #NOW) ⇒ (('a' = x) ⇒ (⊥))"
+  */
+
+rule (modulo E) letad_4_2[color=#ffffff, process="let 'a'=d",
+                          issapicrule, role='Process']:
+   [ Let_201( destructor.9 ) ]
+  --[ Restr_letad_4_2_1( destructor.9 ) ]->
+   [ State_22( ) ]
+
+  /*
+  rule (modulo AC) letad_4_2[color=#ffffff, process="let 'a'=d",
+                             issapicrule, role='Process']:
+     [ Let_201( destructor ) ]
+    --[ Restr_letad_4_2_1( destructor ) ]->
+     [ State_22( ) ]
+  */
+
+rule (modulo E) eventWrong_0_21[color=#ffffff, process="event Wrong( );",
+                                issapicrule, role='Process']:
+   [ State_21( ) ] --[ Wrong( ) ]-> [ State_211( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_0_211[color=#ffffff, process="0", issapicrule,
+                        role='Process']:
+   [ State_211( ) ] --> [ ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) eventMismatch_0_22[color=#ffffff,
+                                   process="event Mismatch( );", issapicrule, role='Process']:
+   [ State_22( ) ] --[ Mismatch( ) ]-> [ State_221( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_0_221[color=#ffffff, process="0", issapicrule,
+                        role='Process']:
+   [ State_221( ) ] --> [ ]
+
+  /* has exactly the trivial AC variant */
+
+restriction single_session:
+  "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
+  */
+
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.13.0
+Maude version 3.5.1
+Git revision: b115eb99ed6690c32c24fd75f2272e5c9547e0f4 (with uncommited changes), branch: sapic-destructors
+Compiled at: 2026-10-07 18:50:03.534557327 UTC
+*/
+
+end
+/* Output
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/regression/trace/sapic-destructor-nullary.spthy
+
+  output:          examples/regression/trace/sapic-destructor-nullary.spthy.tmp
+  processing time: 0.35s
+  
+  seen (exists-trace): verified (3 steps)
+  nested (exists-trace): verified (3 steps)
+  missing (exists-trace): verified (3 steps)
+  mismatch (exists-trace): verified (3 steps)
+  no_wrong (all-traces): verified (5 steps)
+
+==============================================================================
+*/

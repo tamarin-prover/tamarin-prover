@@ -68,7 +68,12 @@ closeTheoryWithMaude sig thy0 autoSources showSaturation =
     h          = L.get thyHeuristic thy0
     t          = L.get thyTactic thy0
     forcedInjFacts = L.get forcedInjectiveFacts $ L.get thyOptions thy0
-    cache its = closeRuleCache parameters restrictions (typAsms its) forcedInjFacts sig (rules its) (L.get thyCache thy0) (L.get (verboseOption . thyOptions) thy0) False (L.get thyIsSapic thy0)
+    cache its = closeRuleCache parameters restrictions (typAsms its) forcedInjFacts sig (cacheRules its) (L.get thyCache thy0) (L.get (verboseOption . thyOptions) thy0) False (L.get thyIsSapic thy0)
+    -- Injectivity and monotonicity must describe the expanded rules used by
+    -- the solver. Keep the original E-rules in the theory items for display.
+    cacheRules its = case theoryMacros thy0 of
+      []     -> rules its
+      macros -> L.modify cprRuleE (applyMacroInRule macros) <$> rules its
     checkProofM = checkAndExtendProver (sorryProver Nothing)
 
     -- Maude / Signature handle

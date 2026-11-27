@@ -1,0 +1,92 @@
+theory ProofMethodExhaustion
+
+begin
+
+// Function signature and definition of the equational theory E
+
+functions: fst/1, hidden/0 [private,constructor], pair/2, snd/1
+equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
+
+rule (modulo E) A_Private:
+   [ In( x ) ] --[ Seen( hidden, x ) ]-> [ ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) B_Public:
+   [ In( x ) ] --[ Seen( 'public', x ) ]-> [ ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) A:
+   [ ] --[ A( ) ]-> [ ]
+
+  /* has exactly the trivial AC variant */
+
+lemma exhausted:
+  all-traces "∃ x. (x = 'a') ∧ (x = 'b')"
+/*
+guarded formula characterizing all counter-examples:
+"∀ x. (x = 'a') ∧ (x = 'b') ⇒ ⊥"
+*/
+by UNFINISHABLE
+
+lemma saved_exhausted:
+  all-traces "∃ x. (x = 'a') ∧ (x = 'b')"
+/*
+guarded formula characterizing all counter-examples:
+"∀ x. (x = 'a') ∧ (x = 'b') ⇒ ⊥"
+*/
+by UNFINISHABLE
+
+lemma sibling:
+  exists-trace "∃ x y #i. (Seen( x, y ) @ #i) ∧ (x ⊏ y)"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ x y #i. (Seen( x, y ) @ #i) ∧ x ⊏ y"
+*/
+simplify
+solve( Seen( x, y ) @ #i )
+  case B_Public
+  SOLVED // trace found
+qed
+
+lemma handwritten:
+  exists-trace "∃ x y #i. Seen( x, y ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ x y #i. (Seen( x, y ) @ #i)"
+*/
+simplify
+solve( Seen( x, y ) @ #i )
+  case A_Private
+  SOLVED // trace found
+qed
+
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.13.0
+Maude version 3.5.1
+Git revision: 89f08bcf72d7b238a86590956b988754d07ca6b0 (with uncommited changes), branch: msr-proof-correctness
+Compiled at: 2026-10-30 18:59:48.916688594 UTC
+*/
+
+end
+/* Output
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/regression/trace/proof-method-exhaustion.spthy
+
+  output:          examples/regression/trace/proof-method-exhaustion.spthy.tmp
+  processing time: 0.10s
+  
+  exhausted (all-traces): analysis cannot be finished (1 steps)
+  saved_exhausted (all-traces): analysis cannot be finished (1 steps)
+  sibling (exists-trace): verified (3 steps)
+  handwritten (exists-trace): verified (3 steps)
+
+==============================================================================
+*/

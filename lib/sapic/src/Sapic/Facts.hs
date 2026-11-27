@@ -122,6 +122,7 @@ data AnnotatedRule ann = AnnotatedRule
     acts :: [TransAction],
     concs :: [TransFact],
     restr :: [SyntacticLNFormula],
+    matchesDestructorEquation :: Bool, -- internal matching, exempt from derivation checks
     index :: Int -- Index to distinguish multiple rules originating from the same process
   }
 
@@ -394,7 +395,7 @@ toRule AnnotatedRule {..} =
     attr = RuleAttributes
         { ruleColor = Just $ colorForProcessName $ getTopLevelName process
         , ruleProcess = Just $ toProcess process
-        , ignoreDerivChecks = isLookup process
+        , ignoreDerivChecks = isLookup process || matchesDestructorEquation
         , isSAPiCRule = True
         , role = Just $ roleFromProcessNameList $ getProcessNames $ processGetAnnotation process
         }

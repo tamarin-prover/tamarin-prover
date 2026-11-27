@@ -438,9 +438,9 @@ rule (modulo E) incypher_0_111111111111111[color=#408073,
      ]
   */
 
-rule (modulo E) letipinputsdeccyphersharedk_0_1111111111111111[color=#ffffff,
+rule (modulo E) letipinputsdeccyphersharedk_0_1111111111111111[color=#408073,
                                                                process="let <ip.1, 'input'>=sdec(cypher.1, shared_k.1)",
-                                                               issapicrule, role='Process']:
+                                                               issapicrule, role='R']:
    [
    State_1111111111111111( lock, cypher.1, init.1, old_i.1, pkV.1,
                            shared_k.1, storeP.1
@@ -454,9 +454,9 @@ rule (modulo E) letipinputsdeccyphersharedk_0_1111111111111111[color=#ffffff,
    ]
 
   /*
-  rule (modulo AC) letipinputsdeccyphersharedk_0_1111111111111111[color=#ffffff,
+  rule (modulo AC) letipinputsdeccyphersharedk_0_1111111111111111[color=#408073,
                                                                   process="let <ip.1, 'input'>=sdec(cypher.1, shared_k.1)",
-                                                                  issapicrule, role='Process']:
+                                                                  issapicrule, role='R']:
      [
      State_1111111111111111( lock, cypher, init, old_i, pkV, shared_k, storeP
      )
@@ -481,9 +481,9 @@ rule (modulo E) letipinputsdeccyphersharedk_0_1111111111111111[color=#ffffff,
        z     = x.10
   */
 
-rule (modulo E) letipinputsdeccyphersharedk_1_1111111111111111[color=#ffffff,
+rule (modulo E) letipinputsdeccyphersharedk_1_1111111111111111[color=#408073,
                                                                process="let <ip.1, 'input'>=sdec(cypher.1, shared_k.1)",
-                                                               issapicrule, role='Process']:
+                                                               issapicrule, role='R']:
    [
    Let_11111111111111111( <ip.1, 'input'>, lock, cypher.1, init.1, old_i.1,
                           pkV.1, shared_k.1, storeP.1
@@ -497,9 +497,9 @@ rule (modulo E) letipinputsdeccyphersharedk_1_1111111111111111[color=#ffffff,
    ]
 
   /*
-  rule (modulo AC) letipinputsdeccyphersharedk_1_1111111111111111[color=#ffffff,
+  rule (modulo AC) letipinputsdeccyphersharedk_1_1111111111111111[color=#408073,
                                                                   process="let <ip.1, 'input'>=sdec(cypher.1, shared_k.1)",
-                                                                  issapicrule, role='Process']:
+                                                                  issapicrule, role='R']:
      [
      Let_11111111111111111( <ip, 'input'>, lock, cypher, init, old_i, pkV,
                             shared_k, storeP
@@ -1195,9 +1195,9 @@ rule (modulo E) incypher_0_1211111111111111111[color=#804840,
      ]
   */
 
-rule (modulo E) letproutputsdeccypheradeccypherskV_0_12111111111111111111[color=#ffffff,
+rule (modulo E) letproutputsdeccypheradeccypherskV_0_12111111111111111111[color=#804840,
                                                                           process="let <pr.1, 'output'>=sdec(cypher2.1, adec(cypher.2, skV.1))",
-                                                                          issapicrule, role='Process']:
+                                                                          issapicrule, role='V']:
    [
    State_12111111111111111111( cypher2.1, init.1, lock.1, skV.1, storeV.1,
                                cypher.2, ip.2, old_i.2, signed.2
@@ -1212,9 +1212,9 @@ rule (modulo E) letproutputsdeccypheradeccypherskV_0_12111111111111111111[color=
    ]
 
   /*
-  rule (modulo AC) letproutputsdeccypheradeccypherskV_0_12111111111111111111[color=#ffffff,
+  rule (modulo AC) letproutputsdeccypheradeccypherskV_0_12111111111111111111[color=#804840,
                                                                              process="let <pr.1, 'output'>=sdec(cypher2.1, adec(cypher.2, skV.1))",
-                                                                             issapicrule, role='Process']:
+                                                                             issapicrule, role='V']:
      [
      State_12111111111111111111( cypher2, init, lock, skV, storeV, cypher, ip,
                                  old_i, signed
@@ -1256,9 +1256,9 @@ rule (modulo E) letproutputsdeccypheradeccypherskV_0_12111111111111111111[color=
        z     = x.13
   */
 
-rule (modulo E) letproutputsdeccypheradeccypherskV_1_12111111111111111111[color=#ffffff,
+rule (modulo E) letproutputsdeccypheradeccypherskV_1_12111111111111111111[color=#804840,
                                                                           process="let <pr.1, 'output'>=sdec(cypher2.1, adec(cypher.2, skV.1))",
-                                                                          issapicrule, role='Process']:
+                                                                          issapicrule, role='V']:
    [
    Let_121111111111111111111( <pr.1, 'output'>, cypher2.1, init.1, lock.1,
                               skV.1, storeV.1, cypher.2, ip.2, old_i.2, signed.2
@@ -1272,9 +1272,9 @@ rule (modulo E) letproutputsdeccypheradeccypherskV_1_12111111111111111111[color=
    ]
 
   /*
-  rule (modulo AC) letproutputsdeccypheradeccypherskV_1_12111111111111111111[color=#ffffff,
+  rule (modulo AC) letproutputsdeccypheradeccypherskV_1_12111111111111111111[color=#804840,
                                                                              process="let <pr.1, 'output'>=sdec(cypher2.1, adec(cypher.2, skV.1))",
-                                                                             issapicrule, role='Process']:
+                                                                             issapicrule, role='V']:
      [
      Let_121111111111111111111( <pr, 'output'>, cypher2, init, lock, skV,
                                 storeV, cypher, ip, old_i, signed
@@ -1666,8 +1666,8 @@ restriction locking_1:
 Generated from:
 Tamarin version 1.13.0
 Maude version 3.5.1
-Git revision: c1fe108d23200a746bf6e1a82287edd921c94d4b, branch: fix-locations-report
-Compiled at: 2026-08-22 12:00:01.491656761 UTC
+Git revision: 5a753a172c7984e9403bc650a37a8223367bc1c5, branch: sapic-destructors
+Compiled at: 2026-09-25 19:30:59.558380567 UTC
 */
 
 end
@@ -1679,7 +1679,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-locations/SOC.spthy
 
   output:          examples/sapic/fast/feature-locations/SOC.spthy.tmp
-  processing time: 6.47s
+  processing time: 40.32s
   
   secrecy (all-traces): verified (5 steps)
   Reach (exists-trace): verified (6 steps)

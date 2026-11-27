@@ -1,0 +1,87 @@
+theory SubtermWitnessPublic
+begin
+
+builtins: hashing, dest-pairing
+functions: p/1 [private], absent/1 [destructor]
+
+rule Recv:     [ In(x) ]         --[ Recv(x) ]->         [ ]
+rule RecvPub:  [ In(x), In($a) ] --[ RecvPub(x, $a) ]->  [ ]
+rule RecvTwo:  [ In(x), In(y) ]  --[ RecvTwo(x, y) ]->   [ ]
+rule Tagged:   [ In(x) ]         --[ Tagged(x) ]->       [ ]
+rule Excluded: [ In(x) ]         --[ Excluded(x) ]->     [ ]
+rule Shaped:   [ In(x) ]         --[ Shaped(x) ]->       [ ]
+
+// A residual s << x, with x a message variable that nothing else
+// constrains, is witnessed by x = <s, c> for a fresh public name c when the
+// adversary can build s from public names.
+lemma public_constant: exists-trace
+  "Ex x #i. Recv(x)@i & 'c' << x"
+
+lemma public_constant_never:
+  "All x #i. Recv(x)@i ==> not ('c' << x)"
+
+lemma public_variable: exists-trace
+  "Ex x a #i. RecvPub(x, a)@i & a << x"
+
+lemma message_variable: exists-trace
+  "Ex x y #i. RecvTwo(x, y)@i & y << x"
+
+lemma public_constructor: exists-trace
+  "Ex x #i. Recv(x)@i & h('c') << x"
+
+// Several residuals for one variable share a single containing witness.
+lemma shared_container: exists-trace
+  "Ex x #i. Recv(x)@i & 'c' << x & 'd' << x"
+
+lemma independent_containers: exists-trace
+  "Ex x y #i. RecvTwo(x, y)@i & 'c' << x & 'd' << y"
+
+// This would need dependent witnesses. The completion check deliberately
+// leaves it incomplete instead of treating x as an independent public name.
+lemma dependent_containers: exists-trace
+  "Ex x y #i. RecvTwo(x, y)@i & 'c' << x & x << y"
+
+// The residual stays unresolved when the adversary cannot build s ...
+lemma private_symbol: exists-trace
+  "Ex x #i. Recv(x)@i & p('c') << x"
+
+// A public destructor without equations is irreducible, but the adversary
+// has no rule for constructing it. It must not qualify as a public witness.
+lemma destructor_symbol: exists-trace
+  "Ex x #i. Recv(x)@i & absent('c') << x"
+
+lemma destructor_containing_message: exists-trace
+  "Ex #i. Recv(<absent('c'), 'd'>)@i"
+
+// ... when a disequality mentions x (this lemma and the next one are true,
+// but the witness is not attempted) ...
+restriction tagged:
+  "All x #i. Tagged(x)@i ==> not (Ex y. x = <'c', y>)"
+
+lemma disequality: exists-trace
+  "Ex x #i. Tagged(x)@i & 'c' << x"
+
+// ... when a negative subterm constraint mentions x ...
+restriction excluded:
+  "All x #i. Excluded(x)@i ==> not ('c' << x)"
+
+lemma negative_constraint: exists-trace
+  "Ex x #i. Excluded(x)@i & 'd' << x"
+
+// ... and when a guard can match the action once x is instantiated. Every
+// constructible message with 'c' as a proper subterm has pair or hash on top,
+// so this lemma is false. dest-pairing makes fst/snd destructors rather than
+// constructors; they cannot create additional containing messages.
+restriction shaped_pair: "All a b #i. Shaped(<a, b>)@i ==> F"
+restriction shaped_hash: "All a #i. Shaped(h(a))@i ==> F"
+
+lemma guard_shape: exists-trace
+  "Ex x #i. Shaped(x)@i & 'c' << x"
+
+// Building the witness logs KU actions, so a KU guard also prevents it.
+// With this restriction, public_constant is false.
+#ifdef KUGUARD
+restriction no_c: "All #i. KU('c')@i ==> F"
+#endif
+
+end

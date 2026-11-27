@@ -215,24 +215,18 @@ next
                              ~aik)
                    ) @ #vk.2 )
               case PCR_CertKey
-              solve( PCR_Write( h(<'pcr0', ~n>) ) @ #j.1 )
-                case Alice1
-                solve( PCR( h(<h(<'pcr0', ~n>), 'obtain'>) ) ▶₀ #i )
-                  case CreateLockedKey
-                  by contradiction /* from formulas */
-                next
-                  case PCR_Extend
-                  by contradiction /* from formulas */
-                next
-                  case PCR_Quote
-                  by contradiction /* from formulas */
-                next
-                  case PCR_Unbind
-                  by contradiction /* from formulas */
-                qed
+              solve( PCR( h(<h(<'pcr0', ~n>), 'obtain'>) ) ▶₀ #i )
+                case CreateLockedKey
+                by contradiction /* from formulas */
               next
                 case PCR_Extend
-                by solve( !KU( ~n ) @ #vk.3 )
+                by contradiction /* from formulas */
+              next
+                case PCR_Quote
+                by contradiction /* from formulas */
+              next
+                case PCR_Unbind
+                by contradiction /* from formulas */
               qed
             next
               case c_sign
@@ -265,13 +259,7 @@ next
                              ~aik)
                    ) @ #vk.3 )
               case PCR_CertKey
-              solve( PCR_Write( h(<'pcr0', ~n>) ) @ #j.1 )
-                case Alice1
-                by solve( !KU( ~n ) @ #vk.3 )
-              next
-                case PCR_Extend
-                by solve( !KU( ~n ) @ #vk.3 )
-              qed
+              by solve( !KU( ~n ) @ #vk.3 )
             next
               case c_sign
               by solve( !KU( ~aik ) @ #vk.5 )
@@ -1510,383 +1498,369 @@ solve( Alice1( n ) ▶₀ #i )
                                                    ~aik)
                                          ) @ #vk.8 )
                                     case PCR_CertKey
-                                    solve( PCR_Write( h(<'pcr0', ~n>) ) @ #j.3 )
+                                    solve( PCR( h(<'pcr0', ~n>) ) ▶₀ #vr.3 )
                                       case Alice1
-                                      solve( PCR( h(<'pcr0', ~n>) ) ▶₀ #vr.3 )
+                                      solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.1 )
                                         case Alice1
-                                        solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.1 )
-                                          case Alice1
-                                          solve( PCR( h(<'pcr0', ~n>) ) ▶₁ #j.1 )
+                                        solve( PCR( h(<'pcr0', ~n>) ) ▶₁ #j.1 )
+                                          case CreateLockedKey
+                                          solve( PCR( h(<h(<'pcr0', ~n>), 'deny'>) ) ▶₀ #vr.5 )
                                             case CreateLockedKey
-                                            solve( PCR( h(<h(<'pcr0', ~n>), 'deny'>) ) ▶₀ #vr.5 )
-                                              case CreateLockedKey
-                                              solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
-                                                case PCR_Extend
-                                                by solve( !KU( ~n ) @ #vk.9 )
-                                              qed
-                                            next
+                                            solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
                                               case PCR_Extend
-                                              solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
-                                                case PCR_Extend
-                                                by solve( !KU( ~n ) @ #vk.8 )
-                                              qed
-                                            next
-                                              case PCR_Quote
-                                              solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
-                                                case PCR_Extend
-                                                by solve( !KU( ~n ) @ #vk.8 )
-                                              qed
-                                            next
-                                              case PCR_Unbind
-                                              solve( !KU( aenc(m, pk(~sk.3)) ) @ #vk.8 )
-                                                case Alice2
-                                                solve( !KU( sign(<'certkey', 
-                                                                  h(<h(<'pcr0', ~n.1>), 'obtain'>), pk(~sk.2)
-                                                                 >,
-                                                                 ~aik)
-                                                       ) @ #vk.9 )
-                                                  case c_sign
-                                                  by solve( !KU( ~aik ) @ #vk.11 )
-                                                qed
-                                              next
-                                                case c_aenc
-                                                solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
-                                                  case PCR_Extend
-                                                  by solve( !KU( ~n ) @ #vk.11 )
-                                                qed
-                                              qed
+                                              by solve( !KU( ~n ) @ #vk.9 )
                                             qed
                                           next
                                             case PCR_Extend
-                                            by solve( !KU( ~n ) @ #vk.7 )
+                                            solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
+                                              case PCR_Extend
+                                              by solve( !KU( ~n ) @ #vk.8 )
+                                            qed
                                           next
                                             case PCR_Quote
-                                            solve( PCR( h(<h(<'pcr0', ~n>), 'deny'>) ) ▶₀ #vr.5 )
-                                              case CreateLockedKey
-                                              solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
-                                                case PCR_Extend
-                                                by solve( !KU( ~n ) @ #vk.8 )
-                                              qed
-                                            next
+                                            solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
                                               case PCR_Extend
-                                              solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
-                                                case PCR_Extend
-                                                by solve( !KU( ~n ) @ #vk.7 )
-                                              qed
-                                            next
-                                              case PCR_Quote
-                                              solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
-                                                case PCR_Extend
-                                                by solve( !KU( ~n ) @ #vk.7 )
-                                              qed
-                                            next
-                                              case PCR_Unbind
-                                              solve( !KU( aenc(m, pk(~sk.2)) ) @ #vk.7 )
-                                                case Alice2
-                                                solve( !KU( sign(<'certkey', 
-                                                                  h(<h(<'pcr0', ~n.1>), 'obtain'>), pk(~sk.2)
-                                                                 >,
-                                                                 ~aik)
-                                                       ) @ #vk.8 )
-                                                  case c_sign
-                                                  by solve( !KU( ~aik ) @ #vk.10 )
-                                                qed
-                                              next
-                                                case c_aenc
-                                                solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
-                                                  case PCR_Extend
-                                                  by solve( !KU( ~n ) @ #vk.10 )
-                                                qed
-                                              qed
+                                              by solve( !KU( ~n ) @ #vk.8 )
                                             qed
                                           next
                                             case PCR_Unbind
-                                            by solve( !KU( ~n ) @ #vk.8 )
+                                            solve( !KU( aenc(m, pk(~sk.3)) ) @ #vk.8 )
+                                              case Alice2
+                                              solve( !KU( sign(<'certkey', h(<h(<'pcr0', ~n.1>), 'obtain'>), 
+                                                                pk(~sk.2)>,
+                                                               ~aik)
+                                                     ) @ #vk.9 )
+                                                case c_sign
+                                                by solve( !KU( ~aik ) @ #vk.11 )
+                                              qed
+                                            next
+                                              case c_aenc
+                                              solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
+                                                case PCR_Extend
+                                                by solve( !KU( ~n ) @ #vk.11 )
+                                              qed
+                                            qed
                                           qed
                                         next
                                           case PCR_Extend
                                           by solve( !KU( ~n ) @ #vk.7 )
-                                        qed
-                                      next
-                                        case CreateLockedKey
-                                        solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.1 )
-                                          case Alice1
-                                          solve( PCR( h(<'pcr0', ~n>) ) ▶₁ #j.1 )
-                                            case Alice1
-                                            solve( PCR( h(<h(<'pcr0', ~n>), 'deny'>) ) ▶₀ #vr.5 )
-                                              case CreateLockedKey
-                                              solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
-                                                case PCR_Extend
-                                                by solve( !KU( ~n ) @ #vk.9 )
-                                              qed
-                                            next
+                                        next
+                                          case PCR_Quote
+                                          solve( PCR( h(<h(<'pcr0', ~n>), 'deny'>) ) ▶₀ #vr.5 )
+                                            case CreateLockedKey
+                                            solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
                                               case PCR_Extend
-                                              solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
-                                                case PCR_Extend
-                                                by solve( !KU( ~n ) @ #vk.8 )
-                                              qed
-                                            next
-                                              case PCR_Quote
-                                              solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
-                                                case PCR_Extend
-                                                by solve( !KU( ~n ) @ #vk.8 )
-                                              qed
-                                            next
-                                              case PCR_Unbind
-                                              solve( !KU( aenc(m, pk(~sk.3)) ) @ #vk.8 )
-                                                case Alice2
-                                                solve( !KU( sign(<'certkey', 
-                                                                  h(<h(<'pcr0', ~n.1>), 'obtain'>), pk(~sk.2)
-                                                                 >,
-                                                                 ~aik)
-                                                       ) @ #vk.9 )
-                                                  case c_sign
-                                                  by solve( !KU( ~aik ) @ #vk.11 )
-                                                qed
-                                              next
-                                                case c_aenc
-                                                solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
-                                                  case PCR_Extend
-                                                  by solve( !KU( ~n ) @ #vk.11 )
-                                                qed
-                                              qed
+                                              by solve( !KU( ~n ) @ #vk.8 )
                                             qed
                                           next
-                                            case CreateLockedKey
-                                            solve( PCR( h(<h(<'pcr0', ~n>), 'deny'>) ) ▶₀ #vr.5 )
-                                              case CreateLockedKey
+                                            case PCR_Extend
+                                            solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
+                                              case PCR_Extend
+                                              by solve( !KU( ~n ) @ #vk.7 )
+                                            qed
+                                          next
+                                            case PCR_Quote
+                                            solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
+                                              case PCR_Extend
+                                              by solve( !KU( ~n ) @ #vk.7 )
+                                            qed
+                                          next
+                                            case PCR_Unbind
+                                            solve( !KU( aenc(m, pk(~sk.2)) ) @ #vk.7 )
+                                              case Alice2
+                                              solve( !KU( sign(<'certkey', h(<h(<'pcr0', ~n.1>), 'obtain'>), 
+                                                                pk(~sk.2)>,
+                                                               ~aik)
+                                                     ) @ #vk.8 )
+                                                case c_sign
+                                                by solve( !KU( ~aik ) @ #vk.10 )
+                                              qed
+                                            next
+                                              case c_aenc
                                               solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
                                                 case PCR_Extend
                                                 by solve( !KU( ~n ) @ #vk.10 )
                                               qed
-                                            next
-                                              case PCR_Extend
-                                              solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
-                                                case PCR_Extend
-                                                by solve( !KU( ~n ) @ #vk.9 )
-                                              qed
-                                            next
-                                              case PCR_Quote
-                                              solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
-                                                case PCR_Extend
-                                                by solve( !KU( ~n ) @ #vk.9 )
-                                              qed
-                                            next
-                                              case PCR_Unbind
-                                              solve( !KU( aenc(m, pk(~sk.4)) ) @ #vk.9 )
-                                                case Alice2
-                                                solve( !KU( sign(<'certkey', 
-                                                                  h(<h(<'pcr0', ~n.1>), 'obtain'>), pk(~sk.3)
-                                                                 >,
-                                                                 ~aik)
-                                                       ) @ #vk.10 )
-                                                  case c_sign
-                                                  by solve( !KU( ~aik ) @ #vk.12 )
-                                                qed
-                                              next
-                                                case c_aenc
-                                                solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
-                                                  case PCR_Extend
-                                                  by solve( !KU( ~n ) @ #vk.12 )
-                                                qed
-                                              qed
                                             qed
-                                          next
-                                            case PCR_Extend
-                                            by solve( !KU( ~n ) @ #vk.8 )
-                                          next
-                                            case PCR_Quote
-                                            solve( PCR( h(<h(<'pcr0', ~n>), 'deny'>) ) ▶₀ #vr.5 )
-                                              case CreateLockedKey
-                                              solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
-                                                case PCR_Extend
-                                                by solve( !KU( ~n ) @ #vk.9 )
-                                              qed
-                                            next
-                                              case PCR_Extend
-                                              solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
-                                                case PCR_Extend
-                                                by solve( !KU( ~n ) @ #vk.8 )
-                                              qed
-                                            next
-                                              case PCR_Quote
-                                              solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
-                                                case PCR_Extend
-                                                by solve( !KU( ~n ) @ #vk.8 )
-                                              qed
-                                            next
-                                              case PCR_Unbind
-                                              solve( !KU( aenc(m, pk(~sk.3)) ) @ #vk.8 )
-                                                case Alice2
-                                                solve( !KU( sign(<'certkey', 
-                                                                  h(<h(<'pcr0', ~n.1>), 'obtain'>), pk(~sk.2)
-                                                                 >,
-                                                                 ~aik)
-                                                       ) @ #vk.9 )
-                                                  case c_sign
-                                                  by solve( !KU( ~aik ) @ #vk.11 )
-                                                qed
-                                              next
-                                                case c_aenc
-                                                solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
-                                                  case PCR_Extend
-                                                  by solve( !KU( ~n ) @ #vk.11 )
-                                                qed
-                                              qed
-                                            qed
-                                          next
-                                            case PCR_Unbind
-                                            by solve( !KU( ~n ) @ #vk.9 )
                                           qed
                                         next
-                                          case PCR_Extend
+                                          case PCR_Unbind
                                           by solve( !KU( ~n ) @ #vk.8 )
                                         qed
                                       next
                                         case PCR_Extend
                                         by solve( !KU( ~n ) @ #vk.7 )
-                                      next
-                                        case PCR_Quote
-                                        solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.1 )
+                                      qed
+                                    next
+                                      case CreateLockedKey
+                                      solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.1 )
+                                        case Alice1
+                                        solve( PCR( h(<'pcr0', ~n>) ) ▶₁ #j.1 )
                                           case Alice1
-                                          solve( PCR( h(<'pcr0', ~n>) ) ▶₁ #j.1 )
-                                            case Alice1
-                                            solve( PCR( h(<h(<'pcr0', ~n>), 'deny'>) ) ▶₀ #vr.5 )
-                                              case CreateLockedKey
-                                              solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
-                                                case PCR_Extend
-                                                by solve( !KU( ~n ) @ #vk.8 )
-                                              qed
-                                            next
-                                              case PCR_Extend
-                                              solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
-                                                case PCR_Extend
-                                                by solve( !KU( ~n ) @ #vk.7 )
-                                              qed
-                                            next
-                                              case PCR_Quote
-                                              solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
-                                                case PCR_Extend
-                                                by solve( !KU( ~n ) @ #vk.7 )
-                                              qed
-                                            next
-                                              case PCR_Unbind
-                                              solve( !KU( aenc(m, pk(~sk.2)) ) @ #vk.7 )
-                                                case Alice2
-                                                solve( !KU( sign(<'certkey', 
-                                                                  h(<h(<'pcr0', ~n.1>), 'obtain'>), pk(~sk.2)
-                                                                 >,
-                                                                 ~aik)
-                                                       ) @ #vk.8 )
-                                                  case c_sign
-                                                  by solve( !KU( ~aik ) @ #vk.10 )
-                                                qed
-                                              next
-                                                case c_aenc
-                                                solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
-                                                  case PCR_Extend
-                                                  by solve( !KU( ~n ) @ #vk.10 )
-                                                qed
-                                              qed
-                                            qed
-                                          next
+                                          solve( PCR( h(<h(<'pcr0', ~n>), 'deny'>) ) ▶₀ #vr.5 )
                                             case CreateLockedKey
-                                            solve( PCR( h(<h(<'pcr0', ~n>), 'deny'>) ) ▶₀ #vr.5 )
-                                              case CreateLockedKey
-                                              solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
-                                                case PCR_Extend
-                                                by solve( !KU( ~n ) @ #vk.9 )
-                                              qed
-                                            next
+                                            solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
                                               case PCR_Extend
-                                              solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
-                                                case PCR_Extend
-                                                by solve( !KU( ~n ) @ #vk.8 )
-                                              qed
-                                            next
-                                              case PCR_Quote
-                                              solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
-                                                case PCR_Extend
-                                                by solve( !KU( ~n ) @ #vk.8 )
-                                              qed
-                                            next
-                                              case PCR_Unbind
-                                              solve( !KU( aenc(m, pk(~sk.3)) ) @ #vk.8 )
-                                                case Alice2
-                                                solve( !KU( sign(<'certkey', 
-                                                                  h(<h(<'pcr0', ~n.1>), 'obtain'>), pk(~sk.2)
-                                                                 >,
-                                                                 ~aik)
-                                                       ) @ #vk.9 )
-                                                  case c_sign
-                                                  by solve( !KU( ~aik ) @ #vk.11 )
-                                                qed
-                                              next
-                                                case c_aenc
-                                                solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
-                                                  case PCR_Extend
-                                                  by solve( !KU( ~n ) @ #vk.11 )
-                                                qed
-                                              qed
+                                              by solve( !KU( ~n ) @ #vk.9 )
                                             qed
                                           next
                                             case PCR_Extend
-                                            by solve( !KU( ~n ) @ #vk.7 )
+                                            solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
+                                              case PCR_Extend
+                                              by solve( !KU( ~n ) @ #vk.8 )
+                                            qed
                                           next
                                             case PCR_Quote
-                                            solve( PCR( h(<h(<'pcr0', ~n>), 'deny'>) ) ▶₀ #vr.5 )
-                                              case CreateLockedKey
-                                              solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
-                                                case PCR_Extend
-                                                by solve( !KU( ~n ) @ #vk.8 )
-                                              qed
-                                            next
+                                            solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
                                               case PCR_Extend
-                                              solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
-                                                case PCR_Extend
-                                                by solve( !KU( ~n ) @ #vk.7 )
-                                              qed
-                                            next
-                                              case PCR_Quote
-                                              solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
-                                                case PCR_Extend
-                                                by solve( !KU( ~n ) @ #vk.7 )
-                                              qed
-                                            next
-                                              case PCR_Unbind
-                                              solve( !KU( aenc(m, pk(~sk.2)) ) @ #vk.7 )
-                                                case Alice2
-                                                solve( !KU( sign(<'certkey', 
-                                                                  h(<h(<'pcr0', ~n.1>), 'obtain'>), pk(~sk.2)
-                                                                 >,
-                                                                 ~aik)
-                                                       ) @ #vk.8 )
-                                                  case c_sign
-                                                  by solve( !KU( ~aik ) @ #vk.10 )
-                                                qed
-                                              next
-                                                case c_aenc
-                                                solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
-                                                  case PCR_Extend
-                                                  by solve( !KU( ~n ) @ #vk.10 )
-                                                qed
-                                              qed
+                                              by solve( !KU( ~n ) @ #vk.8 )
                                             qed
                                           next
                                             case PCR_Unbind
-                                            by solve( !KU( ~n ) @ #vk.8 )
+                                            solve( !KU( aenc(m, pk(~sk.3)) ) @ #vk.8 )
+                                              case Alice2
+                                              solve( !KU( sign(<'certkey', h(<h(<'pcr0', ~n.1>), 'obtain'>), 
+                                                                pk(~sk.2)>,
+                                                               ~aik)
+                                                     ) @ #vk.9 )
+                                                case c_sign
+                                                by solve( !KU( ~aik ) @ #vk.11 )
+                                              qed
+                                            next
+                                              case c_aenc
+                                              solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
+                                                case PCR_Extend
+                                                by solve( !KU( ~n ) @ #vk.11 )
+                                              qed
+                                            qed
+                                          qed
+                                        next
+                                          case CreateLockedKey
+                                          solve( PCR( h(<h(<'pcr0', ~n>), 'deny'>) ) ▶₀ #vr.5 )
+                                            case CreateLockedKey
+                                            solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
+                                              case PCR_Extend
+                                              by solve( !KU( ~n ) @ #vk.10 )
+                                            qed
+                                          next
+                                            case PCR_Extend
+                                            solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
+                                              case PCR_Extend
+                                              by solve( !KU( ~n ) @ #vk.9 )
+                                            qed
+                                          next
+                                            case PCR_Quote
+                                            solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
+                                              case PCR_Extend
+                                              by solve( !KU( ~n ) @ #vk.9 )
+                                            qed
+                                          next
+                                            case PCR_Unbind
+                                            solve( !KU( aenc(m, pk(~sk.4)) ) @ #vk.9 )
+                                              case Alice2
+                                              solve( !KU( sign(<'certkey', h(<h(<'pcr0', ~n.1>), 'obtain'>), 
+                                                                pk(~sk.3)>,
+                                                               ~aik)
+                                                     ) @ #vk.10 )
+                                                case c_sign
+                                                by solve( !KU( ~aik ) @ #vk.12 )
+                                              qed
+                                            next
+                                              case c_aenc
+                                              solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
+                                                case PCR_Extend
+                                                by solve( !KU( ~n ) @ #vk.12 )
+                                              qed
+                                            qed
                                           qed
                                         next
                                           case PCR_Extend
-                                          by solve( !KU( ~n ) @ #vk.7 )
+                                          by solve( !KU( ~n ) @ #vk.8 )
+                                        next
+                                          case PCR_Quote
+                                          solve( PCR( h(<h(<'pcr0', ~n>), 'deny'>) ) ▶₀ #vr.5 )
+                                            case CreateLockedKey
+                                            solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
+                                              case PCR_Extend
+                                              by solve( !KU( ~n ) @ #vk.9 )
+                                            qed
+                                          next
+                                            case PCR_Extend
+                                            solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
+                                              case PCR_Extend
+                                              by solve( !KU( ~n ) @ #vk.8 )
+                                            qed
+                                          next
+                                            case PCR_Quote
+                                            solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
+                                              case PCR_Extend
+                                              by solve( !KU( ~n ) @ #vk.8 )
+                                            qed
+                                          next
+                                            case PCR_Unbind
+                                            solve( !KU( aenc(m, pk(~sk.3)) ) @ #vk.8 )
+                                              case Alice2
+                                              solve( !KU( sign(<'certkey', h(<h(<'pcr0', ~n.1>), 'obtain'>), 
+                                                                pk(~sk.2)>,
+                                                               ~aik)
+                                                     ) @ #vk.9 )
+                                                case c_sign
+                                                by solve( !KU( ~aik ) @ #vk.11 )
+                                              qed
+                                            next
+                                              case c_aenc
+                                              solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
+                                                case PCR_Extend
+                                                by solve( !KU( ~n ) @ #vk.11 )
+                                              qed
+                                            qed
+                                          qed
+                                        next
+                                          case PCR_Unbind
+                                          by solve( !KU( ~n ) @ #vk.9 )
                                         qed
                                       next
-                                        case PCR_Unbind
+                                        case PCR_Extend
                                         by solve( !KU( ~n ) @ #vk.8 )
                                       qed
                                     next
                                       case PCR_Extend
                                       by solve( !KU( ~n ) @ #vk.7 )
+                                    next
+                                      case PCR_Quote
+                                      solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.1 )
+                                        case Alice1
+                                        solve( PCR( h(<'pcr0', ~n>) ) ▶₁ #j.1 )
+                                          case Alice1
+                                          solve( PCR( h(<h(<'pcr0', ~n>), 'deny'>) ) ▶₀ #vr.5 )
+                                            case CreateLockedKey
+                                            solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
+                                              case PCR_Extend
+                                              by solve( !KU( ~n ) @ #vk.8 )
+                                            qed
+                                          next
+                                            case PCR_Extend
+                                            solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
+                                              case PCR_Extend
+                                              by solve( !KU( ~n ) @ #vk.7 )
+                                            qed
+                                          next
+                                            case PCR_Quote
+                                            solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
+                                              case PCR_Extend
+                                              by solve( !KU( ~n ) @ #vk.7 )
+                                            qed
+                                          next
+                                            case PCR_Unbind
+                                            solve( !KU( aenc(m, pk(~sk.2)) ) @ #vk.7 )
+                                              case Alice2
+                                              solve( !KU( sign(<'certkey', h(<h(<'pcr0', ~n.1>), 'obtain'>), 
+                                                                pk(~sk.2)>,
+                                                               ~aik)
+                                                     ) @ #vk.8 )
+                                                case c_sign
+                                                by solve( !KU( ~aik ) @ #vk.10 )
+                                              qed
+                                            next
+                                              case c_aenc
+                                              solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
+                                                case PCR_Extend
+                                                by solve( !KU( ~n ) @ #vk.10 )
+                                              qed
+                                            qed
+                                          qed
+                                        next
+                                          case CreateLockedKey
+                                          solve( PCR( h(<h(<'pcr0', ~n>), 'deny'>) ) ▶₀ #vr.5 )
+                                            case CreateLockedKey
+                                            solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
+                                              case PCR_Extend
+                                              by solve( !KU( ~n ) @ #vk.9 )
+                                            qed
+                                          next
+                                            case PCR_Extend
+                                            solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
+                                              case PCR_Extend
+                                              by solve( !KU( ~n ) @ #vk.8 )
+                                            qed
+                                          next
+                                            case PCR_Quote
+                                            solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
+                                              case PCR_Extend
+                                              by solve( !KU( ~n ) @ #vk.8 )
+                                            qed
+                                          next
+                                            case PCR_Unbind
+                                            solve( !KU( aenc(m, pk(~sk.3)) ) @ #vk.8 )
+                                              case Alice2
+                                              solve( !KU( sign(<'certkey', h(<h(<'pcr0', ~n.1>), 'obtain'>), 
+                                                                pk(~sk.2)>,
+                                                               ~aik)
+                                                     ) @ #vk.9 )
+                                                case c_sign
+                                                by solve( !KU( ~aik ) @ #vk.11 )
+                                              qed
+                                            next
+                                              case c_aenc
+                                              solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
+                                                case PCR_Extend
+                                                by solve( !KU( ~n ) @ #vk.11 )
+                                              qed
+                                            qed
+                                          qed
+                                        next
+                                          case PCR_Extend
+                                          by solve( !KU( ~n ) @ #vk.7 )
+                                        next
+                                          case PCR_Quote
+                                          solve( PCR( h(<h(<'pcr0', ~n>), 'deny'>) ) ▶₀ #vr.5 )
+                                            case CreateLockedKey
+                                            solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
+                                              case PCR_Extend
+                                              by solve( !KU( ~n ) @ #vk.8 )
+                                            qed
+                                          next
+                                            case PCR_Extend
+                                            solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
+                                              case PCR_Extend
+                                              by solve( !KU( ~n ) @ #vk.7 )
+                                            qed
+                                          next
+                                            case PCR_Quote
+                                            solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
+                                              case PCR_Extend
+                                              by solve( !KU( ~n ) @ #vk.7 )
+                                            qed
+                                          next
+                                            case PCR_Unbind
+                                            solve( !KU( aenc(m, pk(~sk.2)) ) @ #vk.7 )
+                                              case Alice2
+                                              solve( !KU( sign(<'certkey', h(<h(<'pcr0', ~n.1>), 'obtain'>), 
+                                                                pk(~sk.2)>,
+                                                               ~aik)
+                                                     ) @ #vk.8 )
+                                                case c_sign
+                                                by solve( !KU( ~aik ) @ #vk.10 )
+                                              qed
+                                            next
+                                              case c_aenc
+                                              solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
+                                                case PCR_Extend
+                                                by solve( !KU( ~n ) @ #vk.10 )
+                                              qed
+                                            qed
+                                          qed
+                                        next
+                                          case PCR_Unbind
+                                          by solve( !KU( ~n ) @ #vk.8 )
+                                        qed
+                                      next
+                                        case PCR_Extend
+                                        by solve( !KU( ~n ) @ #vk.7 )
+                                      qed
+                                    next
+                                      case PCR_Unbind
+                                      by solve( !KU( ~n ) @ #vk.8 )
                                     qed
                                   next
                                     case c_sign
@@ -3409,387 +3383,381 @@ solve( Alice1( n ) ▶₀ #i )
                                                  ~aik)
                                        ) @ #vk.7 )
                                   case PCR_CertKey
-                                  solve( PCR_Write( h(<'pcr0', ~n>) ) @ #j.3 )
+                                  solve( PCR( h(<'pcr0', ~n>) ) ▶₀ #vr.3 )
                                     case Alice1
-                                    solve( PCR( h(<'pcr0', ~n>) ) ▶₀ #vr.3 )
+                                    solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.1 )
                                       case Alice1
-                                      solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.1 )
-                                        case Alice1
-                                        solve( PCR( h(<'pcr0', ~n>) ) ▶₁ #j.1 )
+                                      solve( PCR( h(<'pcr0', ~n>) ) ▶₁ #j.1 )
+                                        case CreateLockedKey
+                                        solve( PCR( h(<h(<'pcr0', ~n>), 'deny'>) ) ▶₀ #vr.5 )
                                           case CreateLockedKey
-                                          solve( PCR( h(<h(<'pcr0', ~n>), 'deny'>) ) ▶₀ #vr.5 )
-                                            case CreateLockedKey
-                                            solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
-                                              case PCR_Extend
-                                              by solve( !KU( ~n ) @ #vk.8 )
-                                            qed
-                                          next
+                                          solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
                                             case PCR_Extend
-                                            solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
-                                              case PCR_Extend
-                                              by solve( !KU( ~n ) @ #vk.7 )
-                                            qed
-                                          next
-                                            case PCR_Quote
-                                            solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
-                                              case PCR_Extend
-                                              by solve( !KU( ~n ) @ #vk.7 )
-                                            qed
-                                          next
-                                            case PCR_Unbind
-                                            solve( !KU( aenc(m, pk(~sk.2)) ) @ #vk.7 )
-                                              case Alice2
-                                              solve( !KU( sign(<'certkey', h(<h(<'pcr0', ~n.1>), 'obtain'>), 
-                                                                pk(~sk.1)>,
-                                                               ~aik)
-                                                     ) @ #vk.8 )
-                                                case c_sign
-                                                by solve( !KU( ~aik ) @ #vk.10 )
-                                              qed
-                                            next
-                                              case c_aenc
-                                              solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
-                                                case PCR_Extend
-                                                by solve( !KU( ~n ) @ #vk.10 )
-                                              qed
-                                            qed
+                                            by solve( !KU( ~n ) @ #vk.8 )
                                           qed
                                         next
                                           case PCR_Extend
-                                          by solve( !KU( ~n ) @ #vk.6 )
+                                          solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
+                                            case PCR_Extend
+                                            by solve( !KU( ~n ) @ #vk.7 )
+                                          qed
                                         next
                                           case PCR_Quote
-                                          solve( PCR( h(<h(<'pcr0', ~n>), 'deny'>) ) ▶₀ #vr.5 )
-                                            case CreateLockedKey
-                                            solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
-                                              case PCR_Extend
-                                              by solve( !KU( ~n ) @ #vk.7 )
-                                            qed
-                                          next
+                                          solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
                                             case PCR_Extend
-                                            solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
-                                              case PCR_Extend
-                                              by solve( !KU( ~n ) @ #vk.6 )
-                                            qed
-                                          next
-                                            case PCR_Quote
-                                            solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
-                                              case PCR_Extend
-                                              by solve( !KU( ~n ) @ #vk.6 )
-                                            qed
-                                          next
-                                            case PCR_Unbind
-                                            solve( !KU( aenc(m, pk(~sk.1)) ) @ #vk.6 )
-                                              case Alice2
-                                              solve( !KU( sign(<'certkey', h(<h(<'pcr0', ~n.1>), 'obtain'>), 
-                                                                pk(~sk.1)>,
-                                                               ~aik)
-                                                     ) @ #vk.7 )
-                                                case c_sign
-                                                by solve( !KU( ~aik ) @ #vk.9 )
-                                              qed
-                                            next
-                                              case c_aenc
-                                              solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
-                                                case PCR_Extend
-                                                by solve( !KU( ~n ) @ #vk.9 )
-                                              qed
-                                            qed
+                                            by solve( !KU( ~n ) @ #vk.7 )
                                           qed
                                         next
                                           case PCR_Unbind
-                                          solve( PCR_Write( 'pcr0' ) @ #j.3 )
-                                            case PCR_Init
-                                            by solve( !KU( ~n ) @ #vk.7 )
+                                          solve( !KU( aenc(m, pk(~sk.2)) ) @ #vk.7 )
+                                            case Alice2
+                                            solve( !KU( sign(<'certkey', h(<h(<'pcr0', ~n.1>), 'obtain'>), 
+                                                              pk(~sk.1)>,
+                                                             ~aik)
+                                                   ) @ #vk.8 )
+                                              case c_sign
+                                              by solve( !KU( ~aik ) @ #vk.10 )
+                                            qed
+                                          next
+                                            case c_aenc
+                                            solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
+                                              case PCR_Extend
+                                              by solve( !KU( ~n ) @ #vk.10 )
+                                            qed
                                           qed
                                         qed
                                       next
                                         case PCR_Extend
                                         by solve( !KU( ~n ) @ #vk.6 )
-                                      qed
-                                    next
-                                      case CreateLockedKey
-                                      solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.1 )
-                                        case Alice1
-                                        solve( PCR( h(<'pcr0', ~n>) ) ▶₁ #j.1 )
-                                          case Alice1
-                                          solve( PCR( h(<h(<'pcr0', ~n>), 'deny'>) ) ▶₀ #vr.5 )
-                                            case CreateLockedKey
-                                            solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
-                                              case PCR_Extend
-                                              by solve( !KU( ~n ) @ #vk.8 )
-                                            qed
-                                          next
+                                      next
+                                        case PCR_Quote
+                                        solve( PCR( h(<h(<'pcr0', ~n>), 'deny'>) ) ▶₀ #vr.5 )
+                                          case CreateLockedKey
+                                          solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
                                             case PCR_Extend
-                                            solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
-                                              case PCR_Extend
-                                              by solve( !KU( ~n ) @ #vk.7 )
-                                            qed
-                                          next
-                                            case PCR_Quote
-                                            solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
-                                              case PCR_Extend
-                                              by solve( !KU( ~n ) @ #vk.7 )
-                                            qed
-                                          next
-                                            case PCR_Unbind
-                                            solve( !KU( aenc(m, pk(~sk.2)) ) @ #vk.7 )
-                                              case Alice2
-                                              solve( !KU( sign(<'certkey', h(<h(<'pcr0', ~n.1>), 'obtain'>), 
-                                                                pk(~sk.1)>,
-                                                               ~aik)
-                                                     ) @ #vk.8 )
-                                                case c_sign
-                                                by solve( !KU( ~aik ) @ #vk.10 )
-                                              qed
-                                            next
-                                              case c_aenc
-                                              solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
-                                                case PCR_Extend
-                                                by solve( !KU( ~n ) @ #vk.10 )
-                                              qed
-                                            qed
+                                            by solve( !KU( ~n ) @ #vk.7 )
                                           qed
                                         next
-                                          case CreateLockedKey
-                                          solve( PCR( h(<h(<'pcr0', ~n>), 'deny'>) ) ▶₀ #vr.5 )
-                                            case CreateLockedKey
+                                          case PCR_Extend
+                                          solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
+                                            case PCR_Extend
+                                            by solve( !KU( ~n ) @ #vk.6 )
+                                          qed
+                                        next
+                                          case PCR_Quote
+                                          solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
+                                            case PCR_Extend
+                                            by solve( !KU( ~n ) @ #vk.6 )
+                                          qed
+                                        next
+                                          case PCR_Unbind
+                                          solve( !KU( aenc(m, pk(~sk.1)) ) @ #vk.6 )
+                                            case Alice2
+                                            solve( !KU( sign(<'certkey', h(<h(<'pcr0', ~n.1>), 'obtain'>), 
+                                                              pk(~sk.1)>,
+                                                             ~aik)
+                                                   ) @ #vk.7 )
+                                              case c_sign
+                                              by solve( !KU( ~aik ) @ #vk.9 )
+                                            qed
+                                          next
+                                            case c_aenc
                                             solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
                                               case PCR_Extend
                                               by solve( !KU( ~n ) @ #vk.9 )
                                             qed
-                                          next
+                                          qed
+                                        qed
+                                      next
+                                        case PCR_Unbind
+                                        solve( PCR_Write( 'pcr0' ) @ #j.3 )
+                                          case PCR_Init
+                                          by solve( !KU( ~n ) @ #vk.7 )
+                                        qed
+                                      qed
+                                    next
+                                      case PCR_Extend
+                                      by solve( !KU( ~n ) @ #vk.6 )
+                                    qed
+                                  next
+                                    case CreateLockedKey
+                                    solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.1 )
+                                      case Alice1
+                                      solve( PCR( h(<'pcr0', ~n>) ) ▶₁ #j.1 )
+                                        case Alice1
+                                        solve( PCR( h(<h(<'pcr0', ~n>), 'deny'>) ) ▶₀ #vr.5 )
+                                          case CreateLockedKey
+                                          solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
                                             case PCR_Extend
-                                            solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
-                                              case PCR_Extend
-                                              by solve( !KU( ~n ) @ #vk.8 )
-                                            qed
-                                          next
-                                            case PCR_Quote
-                                            solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
-                                              case PCR_Extend
-                                              by solve( !KU( ~n ) @ #vk.8 )
-                                            qed
-                                          next
-                                            case PCR_Unbind
-                                            solve( !KU( aenc(m, pk(~sk.3)) ) @ #vk.8 )
-                                              case Alice2
-                                              solve( !KU( sign(<'certkey', h(<h(<'pcr0', ~n.1>), 'obtain'>), 
-                                                                pk(~sk.2)>,
-                                                               ~aik)
-                                                     ) @ #vk.9 )
-                                                case c_sign
-                                                by solve( !KU( ~aik ) @ #vk.11 )
-                                              qed
-                                            next
-                                              case c_aenc
-                                              solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
-                                                case PCR_Extend
-                                                by solve( !KU( ~n ) @ #vk.11 )
-                                              qed
-                                            qed
+                                            by solve( !KU( ~n ) @ #vk.8 )
                                           qed
                                         next
                                           case PCR_Extend
-                                          by solve( !KU( ~n ) @ #vk.7 )
+                                          solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
+                                            case PCR_Extend
+                                            by solve( !KU( ~n ) @ #vk.7 )
+                                          qed
                                         next
                                           case PCR_Quote
-                                          solve( PCR( h(<h(<'pcr0', ~n>), 'deny'>) ) ▶₀ #vr.5 )
-                                            case CreateLockedKey
-                                            solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
-                                              case PCR_Extend
-                                              by solve( !KU( ~n ) @ #vk.8 )
-                                            qed
-                                          next
+                                          solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
                                             case PCR_Extend
-                                            solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
-                                              case PCR_Extend
-                                              by solve( !KU( ~n ) @ #vk.7 )
-                                            qed
-                                          next
-                                            case PCR_Quote
-                                            solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
-                                              case PCR_Extend
-                                              by solve( !KU( ~n ) @ #vk.7 )
-                                            qed
-                                          next
-                                            case PCR_Unbind
-                                            solve( !KU( aenc(m, pk(~sk.2)) ) @ #vk.7 )
-                                              case Alice2
-                                              solve( !KU( sign(<'certkey', h(<h(<'pcr0', ~n.1>), 'obtain'>), 
-                                                                pk(~sk.1)>,
-                                                               ~aik)
-                                                     ) @ #vk.8 )
-                                                case c_sign
-                                                by solve( !KU( ~aik ) @ #vk.10 )
-                                              qed
-                                            next
-                                              case c_aenc
-                                              solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
-                                                case PCR_Extend
-                                                by solve( !KU( ~n ) @ #vk.10 )
-                                              qed
-                                            qed
+                                            by solve( !KU( ~n ) @ #vk.7 )
                                           qed
                                         next
                                           case PCR_Unbind
-                                          solve( PCR_Write( 'pcr0' ) @ #j.3 )
-                                            case PCR_Init
+                                          solve( !KU( aenc(m, pk(~sk.2)) ) @ #vk.7 )
+                                            case Alice2
+                                            solve( !KU( sign(<'certkey', h(<h(<'pcr0', ~n.1>), 'obtain'>), 
+                                                              pk(~sk.1)>,
+                                                             ~aik)
+                                                   ) @ #vk.8 )
+                                              case c_sign
+                                              by solve( !KU( ~aik ) @ #vk.10 )
+                                            qed
+                                          next
+                                            case c_aenc
+                                            solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
+                                              case PCR_Extend
+                                              by solve( !KU( ~n ) @ #vk.10 )
+                                            qed
+                                          qed
+                                        qed
+                                      next
+                                        case CreateLockedKey
+                                        solve( PCR( h(<h(<'pcr0', ~n>), 'deny'>) ) ▶₀ #vr.5 )
+                                          case CreateLockedKey
+                                          solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
+                                            case PCR_Extend
+                                            by solve( !KU( ~n ) @ #vk.9 )
+                                          qed
+                                        next
+                                          case PCR_Extend
+                                          solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
+                                            case PCR_Extend
                                             by solve( !KU( ~n ) @ #vk.8 )
+                                          qed
+                                        next
+                                          case PCR_Quote
+                                          solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
+                                            case PCR_Extend
+                                            by solve( !KU( ~n ) @ #vk.8 )
+                                          qed
+                                        next
+                                          case PCR_Unbind
+                                          solve( !KU( aenc(m, pk(~sk.3)) ) @ #vk.8 )
+                                            case Alice2
+                                            solve( !KU( sign(<'certkey', h(<h(<'pcr0', ~n.1>), 'obtain'>), 
+                                                              pk(~sk.2)>,
+                                                             ~aik)
+                                                   ) @ #vk.9 )
+                                              case c_sign
+                                              by solve( !KU( ~aik ) @ #vk.11 )
+                                            qed
+                                          next
+                                            case c_aenc
+                                            solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
+                                              case PCR_Extend
+                                              by solve( !KU( ~n ) @ #vk.11 )
+                                            qed
                                           qed
                                         qed
                                       next
                                         case PCR_Extend
                                         by solve( !KU( ~n ) @ #vk.7 )
-                                      qed
-                                    next
-                                      case PCR_Extend
-                                      by solve( !KU( ~n ) @ #vk.6 )
-                                    next
-                                      case PCR_Quote
-                                      solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.1 )
-                                        case Alice1
-                                        solve( PCR( h(<'pcr0', ~n>) ) ▶₁ #j.1 )
-                                          case Alice1
-                                          solve( PCR( h(<h(<'pcr0', ~n>), 'deny'>) ) ▶₀ #vr.5 )
-                                            case CreateLockedKey
-                                            solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
-                                              case PCR_Extend
-                                              by solve( !KU( ~n ) @ #vk.7 )
-                                            qed
-                                          next
-                                            case PCR_Extend
-                                            solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
-                                              case PCR_Extend
-                                              by solve( !KU( ~n ) @ #vk.6 )
-                                            qed
-                                          next
-                                            case PCR_Quote
-                                            solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
-                                              case PCR_Extend
-                                              by solve( !KU( ~n ) @ #vk.6 )
-                                            qed
-                                          next
-                                            case PCR_Unbind
-                                            solve( !KU( aenc(m, pk(~sk.1)) ) @ #vk.6 )
-                                              case Alice2
-                                              solve( !KU( sign(<'certkey', h(<h(<'pcr0', ~n.1>), 'obtain'>), 
-                                                                pk(~sk.1)>,
-                                                               ~aik)
-                                                     ) @ #vk.7 )
-                                                case c_sign
-                                                by solve( !KU( ~aik ) @ #vk.9 )
-                                              qed
-                                            next
-                                              case c_aenc
-                                              solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
-                                                case PCR_Extend
-                                                by solve( !KU( ~n ) @ #vk.9 )
-                                              qed
-                                            qed
-                                          qed
-                                        next
+                                      next
+                                        case PCR_Quote
+                                        solve( PCR( h(<h(<'pcr0', ~n>), 'deny'>) ) ▶₀ #vr.5 )
                                           case CreateLockedKey
-                                          solve( PCR( h(<h(<'pcr0', ~n>), 'deny'>) ) ▶₀ #vr.5 )
-                                            case CreateLockedKey
-                                            solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
-                                              case PCR_Extend
-                                              by solve( !KU( ~n ) @ #vk.8 )
-                                            qed
-                                          next
+                                          solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
                                             case PCR_Extend
-                                            solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
-                                              case PCR_Extend
-                                              by solve( !KU( ~n ) @ #vk.7 )
-                                            qed
-                                          next
-                                            case PCR_Quote
-                                            solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
-                                              case PCR_Extend
-                                              by solve( !KU( ~n ) @ #vk.7 )
-                                            qed
-                                          next
-                                            case PCR_Unbind
-                                            solve( !KU( aenc(m, pk(~sk.2)) ) @ #vk.7 )
-                                              case Alice2
-                                              solve( !KU( sign(<'certkey', h(<h(<'pcr0', ~n.1>), 'obtain'>), 
-                                                                pk(~sk.1)>,
-                                                               ~aik)
-                                                     ) @ #vk.8 )
-                                                case c_sign
-                                                by solve( !KU( ~aik ) @ #vk.10 )
-                                              qed
-                                            next
-                                              case c_aenc
-                                              solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
-                                                case PCR_Extend
-                                                by solve( !KU( ~n ) @ #vk.10 )
-                                              qed
-                                            qed
+                                            by solve( !KU( ~n ) @ #vk.8 )
                                           qed
                                         next
                                           case PCR_Extend
-                                          by solve( !KU( ~n ) @ #vk.6 )
+                                          solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
+                                            case PCR_Extend
+                                            by solve( !KU( ~n ) @ #vk.7 )
+                                          qed
                                         next
                                           case PCR_Quote
-                                          solve( PCR( h(<h(<'pcr0', ~n>), 'deny'>) ) ▶₀ #vr.5 )
-                                            case CreateLockedKey
-                                            solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
-                                              case PCR_Extend
-                                              by solve( !KU( ~n ) @ #vk.7 )
-                                            qed
-                                          next
+                                          solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
                                             case PCR_Extend
-                                            solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
-                                              case PCR_Extend
-                                              by solve( !KU( ~n ) @ #vk.6 )
-                                            qed
-                                          next
-                                            case PCR_Quote
-                                            solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
-                                              case PCR_Extend
-                                              by solve( !KU( ~n ) @ #vk.6 )
-                                            qed
-                                          next
-                                            case PCR_Unbind
-                                            solve( !KU( aenc(m, pk(~sk.1)) ) @ #vk.6 )
-                                              case Alice2
-                                              solve( !KU( sign(<'certkey', h(<h(<'pcr0', ~n.1>), 'obtain'>), 
-                                                                pk(~sk.1)>,
-                                                               ~aik)
-                                                     ) @ #vk.7 )
-                                                case c_sign
-                                                by solve( !KU( ~aik ) @ #vk.9 )
-                                              qed
-                                            next
-                                              case c_aenc
-                                              solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
-                                                case PCR_Extend
-                                                by solve( !KU( ~n ) @ #vk.9 )
-                                              qed
-                                            qed
+                                            by solve( !KU( ~n ) @ #vk.7 )
                                           qed
                                         next
                                           case PCR_Unbind
-                                          solve( PCR_Write( 'pcr0' ) @ #j.3 )
-                                            case PCR_Init
+                                          solve( !KU( aenc(m, pk(~sk.2)) ) @ #vk.7 )
+                                            case Alice2
+                                            solve( !KU( sign(<'certkey', h(<h(<'pcr0', ~n.1>), 'obtain'>), 
+                                                              pk(~sk.1)>,
+                                                             ~aik)
+                                                   ) @ #vk.8 )
+                                              case c_sign
+                                              by solve( !KU( ~aik ) @ #vk.10 )
+                                            qed
+                                          next
+                                            case c_aenc
+                                            solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
+                                              case PCR_Extend
+                                              by solve( !KU( ~n ) @ #vk.10 )
+                                            qed
+                                          qed
+                                        qed
+                                      next
+                                        case PCR_Unbind
+                                        solve( PCR_Write( 'pcr0' ) @ #j.3 )
+                                          case PCR_Init
+                                          by solve( !KU( ~n ) @ #vk.8 )
+                                        qed
+                                      qed
+                                    next
+                                      case PCR_Extend
+                                      by solve( !KU( ~n ) @ #vk.7 )
+                                    qed
+                                  next
+                                    case PCR_Extend
+                                    by solve( !KU( ~n ) @ #vk.6 )
+                                  next
+                                    case PCR_Quote
+                                    solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.1 )
+                                      case Alice1
+                                      solve( PCR( h(<'pcr0', ~n>) ) ▶₁ #j.1 )
+                                        case Alice1
+                                        solve( PCR( h(<h(<'pcr0', ~n>), 'deny'>) ) ▶₀ #vr.5 )
+                                          case CreateLockedKey
+                                          solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
+                                            case PCR_Extend
                                             by solve( !KU( ~n ) @ #vk.7 )
+                                          qed
+                                        next
+                                          case PCR_Extend
+                                          solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
+                                            case PCR_Extend
+                                            by solve( !KU( ~n ) @ #vk.6 )
+                                          qed
+                                        next
+                                          case PCR_Quote
+                                          solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
+                                            case PCR_Extend
+                                            by solve( !KU( ~n ) @ #vk.6 )
+                                          qed
+                                        next
+                                          case PCR_Unbind
+                                          solve( !KU( aenc(m, pk(~sk.1)) ) @ #vk.6 )
+                                            case Alice2
+                                            solve( !KU( sign(<'certkey', h(<h(<'pcr0', ~n.1>), 'obtain'>), 
+                                                              pk(~sk.1)>,
+                                                             ~aik)
+                                                   ) @ #vk.7 )
+                                              case c_sign
+                                              by solve( !KU( ~aik ) @ #vk.9 )
+                                            qed
+                                          next
+                                            case c_aenc
+                                            solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
+                                              case PCR_Extend
+                                              by solve( !KU( ~n ) @ #vk.9 )
+                                            qed
+                                          qed
+                                        qed
+                                      next
+                                        case CreateLockedKey
+                                        solve( PCR( h(<h(<'pcr0', ~n>), 'deny'>) ) ▶₀ #vr.5 )
+                                          case CreateLockedKey
+                                          solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
+                                            case PCR_Extend
+                                            by solve( !KU( ~n ) @ #vk.8 )
+                                          qed
+                                        next
+                                          case PCR_Extend
+                                          solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
+                                            case PCR_Extend
+                                            by solve( !KU( ~n ) @ #vk.7 )
+                                          qed
+                                        next
+                                          case PCR_Quote
+                                          solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
+                                            case PCR_Extend
+                                            by solve( !KU( ~n ) @ #vk.7 )
+                                          qed
+                                        next
+                                          case PCR_Unbind
+                                          solve( !KU( aenc(m, pk(~sk.2)) ) @ #vk.7 )
+                                            case Alice2
+                                            solve( !KU( sign(<'certkey', h(<h(<'pcr0', ~n.1>), 'obtain'>), 
+                                                              pk(~sk.1)>,
+                                                             ~aik)
+                                                   ) @ #vk.8 )
+                                              case c_sign
+                                              by solve( !KU( ~aik ) @ #vk.10 )
+                                            qed
+                                          next
+                                            case c_aenc
+                                            solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
+                                              case PCR_Extend
+                                              by solve( !KU( ~n ) @ #vk.10 )
+                                            qed
                                           qed
                                         qed
                                       next
                                         case PCR_Extend
                                         by solve( !KU( ~n ) @ #vk.6 )
+                                      next
+                                        case PCR_Quote
+                                        solve( PCR( h(<h(<'pcr0', ~n>), 'deny'>) ) ▶₀ #vr.5 )
+                                          case CreateLockedKey
+                                          solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
+                                            case PCR_Extend
+                                            by solve( !KU( ~n ) @ #vk.7 )
+                                          qed
+                                        next
+                                          case PCR_Extend
+                                          solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
+                                            case PCR_Extend
+                                            by solve( !KU( ~n ) @ #vk.6 )
+                                          qed
+                                        next
+                                          case PCR_Quote
+                                          solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
+                                            case PCR_Extend
+                                            by solve( !KU( ~n ) @ #vk.6 )
+                                          qed
+                                        next
+                                          case PCR_Unbind
+                                          solve( !KU( aenc(m, pk(~sk.1)) ) @ #vk.6 )
+                                            case Alice2
+                                            solve( !KU( sign(<'certkey', h(<h(<'pcr0', ~n.1>), 'obtain'>), 
+                                                              pk(~sk.1)>,
+                                                             ~aik)
+                                                   ) @ #vk.7 )
+                                              case c_sign
+                                              by solve( !KU( ~aik ) @ #vk.9 )
+                                            qed
+                                          next
+                                            case c_aenc
+                                            solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
+                                              case PCR_Extend
+                                              by solve( !KU( ~n ) @ #vk.9 )
+                                            qed
+                                          qed
+                                        qed
+                                      next
+                                        case PCR_Unbind
+                                        solve( PCR_Write( 'pcr0' ) @ #j.3 )
+                                          case PCR_Init
+                                          by solve( !KU( ~n ) @ #vk.7 )
+                                        qed
                                       qed
                                     next
-                                      case PCR_Unbind
-                                      solve( PCR_Write( 'pcr0' ) @ #j.3 )
-                                        case PCR_Init
-                                        by solve( !KU( ~n ) @ #vk.7 )
-                                      qed
+                                      case PCR_Extend
+                                      by solve( !KU( ~n ) @ #vk.6 )
                                     qed
                                   next
-                                    case PCR_Extend
-                                    by solve( !KU( ~n ) @ #vk.6 )
+                                    case PCR_Unbind
+                                    solve( PCR_Write( 'pcr0' ) @ #j.3 )
+                                      case PCR_Init
+                                      by solve( !KU( ~n ) @ #vk.7 )
+                                    qed
                                   qed
                                 next
                                   case c_sign
@@ -5289,383 +5257,369 @@ solve( Alice1( n ) ▶₀ #i )
                                                    ~aik)
                                          ) @ #vk.7 )
                                     case PCR_CertKey
-                                    solve( PCR_Write( h(<'pcr0', ~n>) ) @ #j.3 )
+                                    solve( PCR( h(<'pcr0', ~n>) ) ▶₀ #vr.3 )
                                       case Alice1
-                                      solve( PCR( h(<'pcr0', ~n>) ) ▶₀ #vr.3 )
+                                      solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.1 )
                                         case Alice1
-                                        solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.1 )
-                                          case Alice1
-                                          solve( PCR( h(<'pcr0', ~n>) ) ▶₁ #j.1 )
+                                        solve( PCR( h(<'pcr0', ~n>) ) ▶₁ #j.1 )
+                                          case CreateLockedKey
+                                          solve( PCR( h(<h(<'pcr0', ~n>), 'deny'>) ) ▶₀ #vr.5 )
                                             case CreateLockedKey
-                                            solve( PCR( h(<h(<'pcr0', ~n>), 'deny'>) ) ▶₀ #vr.5 )
-                                              case CreateLockedKey
-                                              solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
-                                                case PCR_Extend
-                                                by solve( !KU( ~n ) @ #vk.8 )
-                                              qed
-                                            next
+                                            solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
                                               case PCR_Extend
-                                              solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
-                                                case PCR_Extend
-                                                by solve( !KU( ~n ) @ #vk.7 )
-                                              qed
-                                            next
-                                              case PCR_Quote
-                                              solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
-                                                case PCR_Extend
-                                                by solve( !KU( ~n ) @ #vk.7 )
-                                              qed
-                                            next
-                                              case PCR_Unbind
-                                              solve( !KU( aenc(m, pk(~sk.2)) ) @ #vk.7 )
-                                                case Alice2
-                                                solve( !KU( sign(<'certkey', 
-                                                                  h(<h(<'pcr0', ~n.1>), 'obtain'>), pk(~sk.1)
-                                                                 >,
-                                                                 ~aik)
-                                                       ) @ #vk.8 )
-                                                  case c_sign
-                                                  by solve( !KU( ~aik ) @ #vk.10 )
-                                                qed
-                                              next
-                                                case c_aenc
-                                                solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
-                                                  case PCR_Extend
-                                                  by solve( !KU( ~n ) @ #vk.10 )
-                                                qed
-                                              qed
+                                              by solve( !KU( ~n ) @ #vk.8 )
                                             qed
                                           next
                                             case PCR_Extend
-                                            by solve( !KU( ~n ) @ #vk.6 )
+                                            solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
+                                              case PCR_Extend
+                                              by solve( !KU( ~n ) @ #vk.7 )
+                                            qed
                                           next
                                             case PCR_Quote
-                                            solve( PCR( h(<h(<'pcr0', ~n>), 'deny'>) ) ▶₀ #vr.5 )
-                                              case CreateLockedKey
-                                              solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
-                                                case PCR_Extend
-                                                by solve( !KU( ~n ) @ #vk.7 )
-                                              qed
-                                            next
+                                            solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
                                               case PCR_Extend
-                                              solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
-                                                case PCR_Extend
-                                                by solve( !KU( ~n ) @ #vk.6 )
-                                              qed
-                                            next
-                                              case PCR_Quote
-                                              solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
-                                                case PCR_Extend
-                                                by solve( !KU( ~n ) @ #vk.6 )
-                                              qed
-                                            next
-                                              case PCR_Unbind
-                                              solve( !KU( aenc(m, pk(~sk.1)) ) @ #vk.6 )
-                                                case Alice2
-                                                solve( !KU( sign(<'certkey', 
-                                                                  h(<h(<'pcr0', ~n.1>), 'obtain'>), pk(~sk.1)
-                                                                 >,
-                                                                 ~aik)
-                                                       ) @ #vk.7 )
-                                                  case c_sign
-                                                  by solve( !KU( ~aik ) @ #vk.9 )
-                                                qed
-                                              next
-                                                case c_aenc
-                                                solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
-                                                  case PCR_Extend
-                                                  by solve( !KU( ~n ) @ #vk.9 )
-                                                qed
-                                              qed
+                                              by solve( !KU( ~n ) @ #vk.7 )
                                             qed
                                           next
                                             case PCR_Unbind
-                                            by solve( !KU( ~n ) @ #vk.7 )
+                                            solve( !KU( aenc(m, pk(~sk.2)) ) @ #vk.7 )
+                                              case Alice2
+                                              solve( !KU( sign(<'certkey', h(<h(<'pcr0', ~n.1>), 'obtain'>), 
+                                                                pk(~sk.1)>,
+                                                               ~aik)
+                                                     ) @ #vk.8 )
+                                                case c_sign
+                                                by solve( !KU( ~aik ) @ #vk.10 )
+                                              qed
+                                            next
+                                              case c_aenc
+                                              solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
+                                                case PCR_Extend
+                                                by solve( !KU( ~n ) @ #vk.10 )
+                                              qed
+                                            qed
                                           qed
                                         next
                                           case PCR_Extend
                                           by solve( !KU( ~n ) @ #vk.6 )
-                                        qed
-                                      next
-                                        case CreateLockedKey
-                                        solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.1 )
-                                          case Alice1
-                                          solve( PCR( h(<'pcr0', ~n>) ) ▶₁ #j.1 )
-                                            case Alice1
-                                            solve( PCR( h(<h(<'pcr0', ~n>), 'deny'>) ) ▶₀ #vr.5 )
-                                              case CreateLockedKey
-                                              solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
-                                                case PCR_Extend
-                                                by solve( !KU( ~n ) @ #vk.8 )
-                                              qed
-                                            next
+                                        next
+                                          case PCR_Quote
+                                          solve( PCR( h(<h(<'pcr0', ~n>), 'deny'>) ) ▶₀ #vr.5 )
+                                            case CreateLockedKey
+                                            solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
                                               case PCR_Extend
-                                              solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
-                                                case PCR_Extend
-                                                by solve( !KU( ~n ) @ #vk.7 )
-                                              qed
-                                            next
-                                              case PCR_Quote
-                                              solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
-                                                case PCR_Extend
-                                                by solve( !KU( ~n ) @ #vk.7 )
-                                              qed
-                                            next
-                                              case PCR_Unbind
-                                              solve( !KU( aenc(m, pk(~sk.2)) ) @ #vk.7 )
-                                                case Alice2
-                                                solve( !KU( sign(<'certkey', 
-                                                                  h(<h(<'pcr0', ~n.1>), 'obtain'>), pk(~sk.1)
-                                                                 >,
-                                                                 ~aik)
-                                                       ) @ #vk.8 )
-                                                  case c_sign
-                                                  by solve( !KU( ~aik ) @ #vk.10 )
-                                                qed
-                                              next
-                                                case c_aenc
-                                                solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
-                                                  case PCR_Extend
-                                                  by solve( !KU( ~n ) @ #vk.10 )
-                                                qed
-                                              qed
+                                              by solve( !KU( ~n ) @ #vk.7 )
                                             qed
                                           next
-                                            case CreateLockedKey
-                                            solve( PCR( h(<h(<'pcr0', ~n>), 'deny'>) ) ▶₀ #vr.5 )
-                                              case CreateLockedKey
+                                            case PCR_Extend
+                                            solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
+                                              case PCR_Extend
+                                              by solve( !KU( ~n ) @ #vk.6 )
+                                            qed
+                                          next
+                                            case PCR_Quote
+                                            solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
+                                              case PCR_Extend
+                                              by solve( !KU( ~n ) @ #vk.6 )
+                                            qed
+                                          next
+                                            case PCR_Unbind
+                                            solve( !KU( aenc(m, pk(~sk.1)) ) @ #vk.6 )
+                                              case Alice2
+                                              solve( !KU( sign(<'certkey', h(<h(<'pcr0', ~n.1>), 'obtain'>), 
+                                                                pk(~sk.1)>,
+                                                               ~aik)
+                                                     ) @ #vk.7 )
+                                                case c_sign
+                                                by solve( !KU( ~aik ) @ #vk.9 )
+                                              qed
+                                            next
+                                              case c_aenc
                                               solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
                                                 case PCR_Extend
                                                 by solve( !KU( ~n ) @ #vk.9 )
                                               qed
-                                            next
-                                              case PCR_Extend
-                                              solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
-                                                case PCR_Extend
-                                                by solve( !KU( ~n ) @ #vk.8 )
-                                              qed
-                                            next
-                                              case PCR_Quote
-                                              solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
-                                                case PCR_Extend
-                                                by solve( !KU( ~n ) @ #vk.8 )
-                                              qed
-                                            next
-                                              case PCR_Unbind
-                                              solve( !KU( aenc(m, pk(~sk.3)) ) @ #vk.8 )
-                                                case Alice2
-                                                solve( !KU( sign(<'certkey', 
-                                                                  h(<h(<'pcr0', ~n.1>), 'obtain'>), pk(~sk.1)
-                                                                 >,
-                                                                 ~aik)
-                                                       ) @ #vk.9 )
-                                                  case c_sign
-                                                  by solve( !KU( ~aik ) @ #vk.11 )
-                                                qed
-                                              next
-                                                case c_aenc
-                                                solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
-                                                  case PCR_Extend
-                                                  by solve( !KU( ~n ) @ #vk.11 )
-                                                qed
-                                              qed
                                             qed
-                                          next
-                                            case PCR_Extend
-                                            by solve( !KU( ~n ) @ #vk.7 )
-                                          next
-                                            case PCR_Quote
-                                            solve( PCR( h(<h(<'pcr0', ~n>), 'deny'>) ) ▶₀ #vr.5 )
-                                              case CreateLockedKey
-                                              solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
-                                                case PCR_Extend
-                                                by solve( !KU( ~n ) @ #vk.8 )
-                                              qed
-                                            next
-                                              case PCR_Extend
-                                              solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
-                                                case PCR_Extend
-                                                by solve( !KU( ~n ) @ #vk.7 )
-                                              qed
-                                            next
-                                              case PCR_Quote
-                                              solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
-                                                case PCR_Extend
-                                                by solve( !KU( ~n ) @ #vk.7 )
-                                              qed
-                                            next
-                                              case PCR_Unbind
-                                              solve( !KU( aenc(m, pk(~sk.2)) ) @ #vk.7 )
-                                                case Alice2
-                                                solve( !KU( sign(<'certkey', 
-                                                                  h(<h(<'pcr0', ~n.1>), 'obtain'>), pk(~sk.1)
-                                                                 >,
-                                                                 ~aik)
-                                                       ) @ #vk.8 )
-                                                  case c_sign
-                                                  by solve( !KU( ~aik ) @ #vk.10 )
-                                                qed
-                                              next
-                                                case c_aenc
-                                                solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
-                                                  case PCR_Extend
-                                                  by solve( !KU( ~n ) @ #vk.10 )
-                                                qed
-                                              qed
-                                            qed
-                                          next
-                                            case PCR_Unbind
-                                            by solve( !KU( ~n ) @ #vk.8 )
                                           qed
                                         next
-                                          case PCR_Extend
+                                          case PCR_Unbind
                                           by solve( !KU( ~n ) @ #vk.7 )
                                         qed
                                       next
                                         case PCR_Extend
                                         by solve( !KU( ~n ) @ #vk.6 )
-                                      next
-                                        case PCR_Quote
-                                        solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.1 )
+                                      qed
+                                    next
+                                      case CreateLockedKey
+                                      solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.1 )
+                                        case Alice1
+                                        solve( PCR( h(<'pcr0', ~n>) ) ▶₁ #j.1 )
                                           case Alice1
-                                          solve( PCR( h(<'pcr0', ~n>) ) ▶₁ #j.1 )
-                                            case Alice1
-                                            solve( PCR( h(<h(<'pcr0', ~n>), 'deny'>) ) ▶₀ #vr.5 )
-                                              case CreateLockedKey
-                                              solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
-                                                case PCR_Extend
-                                                by solve( !KU( ~n ) @ #vk.7 )
-                                              qed
-                                            next
-                                              case PCR_Extend
-                                              solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
-                                                case PCR_Extend
-                                                by solve( !KU( ~n ) @ #vk.6 )
-                                              qed
-                                            next
-                                              case PCR_Quote
-                                              solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
-                                                case PCR_Extend
-                                                by solve( !KU( ~n ) @ #vk.6 )
-                                              qed
-                                            next
-                                              case PCR_Unbind
-                                              solve( !KU( aenc(m, pk(~sk.1)) ) @ #vk.6 )
-                                                case Alice2
-                                                solve( !KU( sign(<'certkey', 
-                                                                  h(<h(<'pcr0', ~n.1>), 'obtain'>), pk(~sk.1)
-                                                                 >,
-                                                                 ~aik)
-                                                       ) @ #vk.7 )
-                                                  case c_sign
-                                                  by solve( !KU( ~aik ) @ #vk.9 )
-                                                qed
-                                              next
-                                                case c_aenc
-                                                solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
-                                                  case PCR_Extend
-                                                  by solve( !KU( ~n ) @ #vk.9 )
-                                                qed
-                                              qed
-                                            qed
-                                          next
+                                          solve( PCR( h(<h(<'pcr0', ~n>), 'deny'>) ) ▶₀ #vr.5 )
                                             case CreateLockedKey
-                                            solve( PCR( h(<h(<'pcr0', ~n>), 'deny'>) ) ▶₀ #vr.5 )
-                                              case CreateLockedKey
-                                              solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
-                                                case PCR_Extend
-                                                by solve( !KU( ~n ) @ #vk.8 )
-                                              qed
-                                            next
+                                            solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
                                               case PCR_Extend
-                                              solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
-                                                case PCR_Extend
-                                                by solve( !KU( ~n ) @ #vk.7 )
-                                              qed
-                                            next
-                                              case PCR_Quote
-                                              solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
-                                                case PCR_Extend
-                                                by solve( !KU( ~n ) @ #vk.7 )
-                                              qed
-                                            next
-                                              case PCR_Unbind
-                                              solve( !KU( aenc(m, pk(~sk.2)) ) @ #vk.7 )
-                                                case Alice2
-                                                solve( !KU( sign(<'certkey', 
-                                                                  h(<h(<'pcr0', ~n.1>), 'obtain'>), pk(~sk.1)
-                                                                 >,
-                                                                 ~aik)
-                                                       ) @ #vk.8 )
-                                                  case c_sign
-                                                  by solve( !KU( ~aik ) @ #vk.10 )
-                                                qed
-                                              next
-                                                case c_aenc
-                                                solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
-                                                  case PCR_Extend
-                                                  by solve( !KU( ~n ) @ #vk.10 )
-                                                qed
-                                              qed
+                                              by solve( !KU( ~n ) @ #vk.8 )
                                             qed
                                           next
                                             case PCR_Extend
-                                            by solve( !KU( ~n ) @ #vk.6 )
+                                            solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
+                                              case PCR_Extend
+                                              by solve( !KU( ~n ) @ #vk.7 )
+                                            qed
                                           next
                                             case PCR_Quote
-                                            solve( PCR( h(<h(<'pcr0', ~n>), 'deny'>) ) ▶₀ #vr.5 )
-                                              case CreateLockedKey
-                                              solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
-                                                case PCR_Extend
-                                                by solve( !KU( ~n ) @ #vk.7 )
-                                              qed
-                                            next
+                                            solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
                                               case PCR_Extend
-                                              solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
-                                                case PCR_Extend
-                                                by solve( !KU( ~n ) @ #vk.6 )
-                                              qed
-                                            next
-                                              case PCR_Quote
-                                              solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
-                                                case PCR_Extend
-                                                by solve( !KU( ~n ) @ #vk.6 )
-                                              qed
-                                            next
-                                              case PCR_Unbind
-                                              solve( !KU( aenc(m, pk(~sk.1)) ) @ #vk.6 )
-                                                case Alice2
-                                                solve( !KU( sign(<'certkey', 
-                                                                  h(<h(<'pcr0', ~n.1>), 'obtain'>), pk(~sk.1)
-                                                                 >,
-                                                                 ~aik)
-                                                       ) @ #vk.7 )
-                                                  case c_sign
-                                                  by solve( !KU( ~aik ) @ #vk.9 )
-                                                qed
-                                              next
-                                                case c_aenc
-                                                solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
-                                                  case PCR_Extend
-                                                  by solve( !KU( ~n ) @ #vk.9 )
-                                                qed
-                                              qed
+                                              by solve( !KU( ~n ) @ #vk.7 )
                                             qed
                                           next
                                             case PCR_Unbind
-                                            by solve( !KU( ~n ) @ #vk.7 )
+                                            solve( !KU( aenc(m, pk(~sk.2)) ) @ #vk.7 )
+                                              case Alice2
+                                              solve( !KU( sign(<'certkey', h(<h(<'pcr0', ~n.1>), 'obtain'>), 
+                                                                pk(~sk.1)>,
+                                                               ~aik)
+                                                     ) @ #vk.8 )
+                                                case c_sign
+                                                by solve( !KU( ~aik ) @ #vk.10 )
+                                              qed
+                                            next
+                                              case c_aenc
+                                              solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
+                                                case PCR_Extend
+                                                by solve( !KU( ~n ) @ #vk.10 )
+                                              qed
+                                            qed
+                                          qed
+                                        next
+                                          case CreateLockedKey
+                                          solve( PCR( h(<h(<'pcr0', ~n>), 'deny'>) ) ▶₀ #vr.5 )
+                                            case CreateLockedKey
+                                            solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
+                                              case PCR_Extend
+                                              by solve( !KU( ~n ) @ #vk.9 )
+                                            qed
+                                          next
+                                            case PCR_Extend
+                                            solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
+                                              case PCR_Extend
+                                              by solve( !KU( ~n ) @ #vk.8 )
+                                            qed
+                                          next
+                                            case PCR_Quote
+                                            solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
+                                              case PCR_Extend
+                                              by solve( !KU( ~n ) @ #vk.8 )
+                                            qed
+                                          next
+                                            case PCR_Unbind
+                                            solve( !KU( aenc(m, pk(~sk.3)) ) @ #vk.8 )
+                                              case Alice2
+                                              solve( !KU( sign(<'certkey', h(<h(<'pcr0', ~n.1>), 'obtain'>), 
+                                                                pk(~sk.1)>,
+                                                               ~aik)
+                                                     ) @ #vk.9 )
+                                                case c_sign
+                                                by solve( !KU( ~aik ) @ #vk.11 )
+                                              qed
+                                            next
+                                              case c_aenc
+                                              solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
+                                                case PCR_Extend
+                                                by solve( !KU( ~n ) @ #vk.11 )
+                                              qed
+                                            qed
                                           qed
                                         next
                                           case PCR_Extend
-                                          by solve( !KU( ~n ) @ #vk.6 )
+                                          by solve( !KU( ~n ) @ #vk.7 )
+                                        next
+                                          case PCR_Quote
+                                          solve( PCR( h(<h(<'pcr0', ~n>), 'deny'>) ) ▶₀ #vr.5 )
+                                            case CreateLockedKey
+                                            solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
+                                              case PCR_Extend
+                                              by solve( !KU( ~n ) @ #vk.8 )
+                                            qed
+                                          next
+                                            case PCR_Extend
+                                            solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
+                                              case PCR_Extend
+                                              by solve( !KU( ~n ) @ #vk.7 )
+                                            qed
+                                          next
+                                            case PCR_Quote
+                                            solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
+                                              case PCR_Extend
+                                              by solve( !KU( ~n ) @ #vk.7 )
+                                            qed
+                                          next
+                                            case PCR_Unbind
+                                            solve( !KU( aenc(m, pk(~sk.2)) ) @ #vk.7 )
+                                              case Alice2
+                                              solve( !KU( sign(<'certkey', h(<h(<'pcr0', ~n.1>), 'obtain'>), 
+                                                                pk(~sk.1)>,
+                                                               ~aik)
+                                                     ) @ #vk.8 )
+                                                case c_sign
+                                                by solve( !KU( ~aik ) @ #vk.10 )
+                                              qed
+                                            next
+                                              case c_aenc
+                                              solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
+                                                case PCR_Extend
+                                                by solve( !KU( ~n ) @ #vk.10 )
+                                              qed
+                                            qed
+                                          qed
+                                        next
+                                          case PCR_Unbind
+                                          by solve( !KU( ~n ) @ #vk.8 )
                                         qed
                                       next
-                                        case PCR_Unbind
+                                        case PCR_Extend
                                         by solve( !KU( ~n ) @ #vk.7 )
                                       qed
                                     next
                                       case PCR_Extend
                                       by solve( !KU( ~n ) @ #vk.6 )
+                                    next
+                                      case PCR_Quote
+                                      solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.1 )
+                                        case Alice1
+                                        solve( PCR( h(<'pcr0', ~n>) ) ▶₁ #j.1 )
+                                          case Alice1
+                                          solve( PCR( h(<h(<'pcr0', ~n>), 'deny'>) ) ▶₀ #vr.5 )
+                                            case CreateLockedKey
+                                            solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
+                                              case PCR_Extend
+                                              by solve( !KU( ~n ) @ #vk.7 )
+                                            qed
+                                          next
+                                            case PCR_Extend
+                                            solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
+                                              case PCR_Extend
+                                              by solve( !KU( ~n ) @ #vk.6 )
+                                            qed
+                                          next
+                                            case PCR_Quote
+                                            solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
+                                              case PCR_Extend
+                                              by solve( !KU( ~n ) @ #vk.6 )
+                                            qed
+                                          next
+                                            case PCR_Unbind
+                                            solve( !KU( aenc(m, pk(~sk.1)) ) @ #vk.6 )
+                                              case Alice2
+                                              solve( !KU( sign(<'certkey', h(<h(<'pcr0', ~n.1>), 'obtain'>), 
+                                                                pk(~sk.1)>,
+                                                               ~aik)
+                                                     ) @ #vk.7 )
+                                                case c_sign
+                                                by solve( !KU( ~aik ) @ #vk.9 )
+                                              qed
+                                            next
+                                              case c_aenc
+                                              solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
+                                                case PCR_Extend
+                                                by solve( !KU( ~n ) @ #vk.9 )
+                                              qed
+                                            qed
+                                          qed
+                                        next
+                                          case CreateLockedKey
+                                          solve( PCR( h(<h(<'pcr0', ~n>), 'deny'>) ) ▶₀ #vr.5 )
+                                            case CreateLockedKey
+                                            solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
+                                              case PCR_Extend
+                                              by solve( !KU( ~n ) @ #vk.8 )
+                                            qed
+                                          next
+                                            case PCR_Extend
+                                            solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
+                                              case PCR_Extend
+                                              by solve( !KU( ~n ) @ #vk.7 )
+                                            qed
+                                          next
+                                            case PCR_Quote
+                                            solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
+                                              case PCR_Extend
+                                              by solve( !KU( ~n ) @ #vk.7 )
+                                            qed
+                                          next
+                                            case PCR_Unbind
+                                            solve( !KU( aenc(m, pk(~sk.2)) ) @ #vk.7 )
+                                              case Alice2
+                                              solve( !KU( sign(<'certkey', h(<h(<'pcr0', ~n.1>), 'obtain'>), 
+                                                                pk(~sk.1)>,
+                                                               ~aik)
+                                                     ) @ #vk.8 )
+                                                case c_sign
+                                                by solve( !KU( ~aik ) @ #vk.10 )
+                                              qed
+                                            next
+                                              case c_aenc
+                                              solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
+                                                case PCR_Extend
+                                                by solve( !KU( ~n ) @ #vk.10 )
+                                              qed
+                                            qed
+                                          qed
+                                        next
+                                          case PCR_Extend
+                                          by solve( !KU( ~n ) @ #vk.6 )
+                                        next
+                                          case PCR_Quote
+                                          solve( PCR( h(<h(<'pcr0', ~n>), 'deny'>) ) ▶₀ #vr.5 )
+                                            case CreateLockedKey
+                                            solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
+                                              case PCR_Extend
+                                              by solve( !KU( ~n ) @ #vk.7 )
+                                            qed
+                                          next
+                                            case PCR_Extend
+                                            solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
+                                              case PCR_Extend
+                                              by solve( !KU( ~n ) @ #vk.6 )
+                                            qed
+                                          next
+                                            case PCR_Quote
+                                            solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
+                                              case PCR_Extend
+                                              by solve( !KU( ~n ) @ #vk.6 )
+                                            qed
+                                          next
+                                            case PCR_Unbind
+                                            solve( !KU( aenc(m, pk(~sk.1)) ) @ #vk.6 )
+                                              case Alice2
+                                              solve( !KU( sign(<'certkey', h(<h(<'pcr0', ~n.1>), 'obtain'>), 
+                                                                pk(~sk.1)>,
+                                                               ~aik)
+                                                     ) @ #vk.7 )
+                                                case c_sign
+                                                by solve( !KU( ~aik ) @ #vk.9 )
+                                              qed
+                                            next
+                                              case c_aenc
+                                              solve( PCR_Write( h(<'pcr0', ~n>) ) ▶₀ #j.2 )
+                                                case PCR_Extend
+                                                by solve( !KU( ~n ) @ #vk.9 )
+                                              qed
+                                            qed
+                                          qed
+                                        next
+                                          case PCR_Unbind
+                                          by solve( !KU( ~n ) @ #vk.7 )
+                                        qed
+                                      next
+                                        case PCR_Extend
+                                        by solve( !KU( ~n ) @ #vk.6 )
+                                      qed
+                                    next
+                                      case PCR_Unbind
+                                      by solve( !KU( ~n ) @ #vk.7 )
                                     qed
                                   next
                                     case c_sign
@@ -6134,8 +6088,8 @@ qed
 Generated from:
 Tamarin version 1.13.0
 Maude version 3.5.1
-Git revision: 41bc81379b23681e7057314a5cf66a25c45e1986, branch: canonicalise-subst
-Compiled at: 2026-07-27 16:11:34.947223 UTC
+Git revision: c827ceb2418a7d5390dac6671f01a07f7f0ac087 (with uncommited changes), branch: HEAD
+Compiled at: 2026-09-15 17:34:25.020280498 UTC
 */
 
 end
@@ -6147,11 +6101,11 @@ summary of summaries:
 analyzed: examples/related_work/TPM_DKRS_CSF11/Envelope.spthy
 
   output:          examples/related_work/TPM_DKRS_CSF11/Envelope.spthy.tmp
-  processing time: 4.77s
+  processing time: 6.77s
   
   types (all-traces): verified (12 steps)
-  PCR_Write_charn (all-traces): verified (59 steps)
-  Secret_and_Denied_exclusive (all-traces): verified (1799 steps)
+  PCR_Write_charn (all-traces): verified (55 steps)
+  Secret_and_Denied_exclusive (all-traces): verified (1793 steps)
 
 ==============================================================================
 */

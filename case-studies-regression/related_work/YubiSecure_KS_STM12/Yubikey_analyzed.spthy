@@ -208,15 +208,12 @@ next
         case BuyANewYubikey
         solve( Server( ~pid, ~sid, otc2 ) ▶₀ #t2 )
           case BuyANewYubikey
-          by contradiction /* cyclic */
+          by sorry /* unannotated */
         next
           case Server_ReceiveOTP_NewSession_case_1
           solve( ((#vr.1 < #t1) ∧
                   (∃ #t3. (IsSmaller( S(myzero), tc1 ) @ #t3) ∧ ¬(last(#t3))))  ∥
                  (#t1 < #vr.1)  ∥ (#vr.1 = #t1) )
-            case case_1
-            by contradiction /* cyclic */
-          next
             case case_2
             solve( !SharedKey( ~pid, k ) ▶₂ #t1 )
               case BuyANewYubikey
@@ -267,9 +264,6 @@ next
           solve( ((#vr.1 < #t1) ∧
                   (∃ #t3. (IsSmaller( S(otc), tc1 ) @ #t3) ∧ ¬(last(#t3))))  ∥
                  (#t1 < #vr.1)  ∥ (#vr.1 = #t1) )
-            case case_1
-            by contradiction /* cyclic */
-          next
             case case_2
             solve( !SharedKey( ~pid, k ) ▶₂ #t1 )
               case BuyANewYubikey
@@ -356,9 +350,6 @@ next
           solve( ((#vr.1 < #t1) ∧
                   (∃ #t3. (IsSmaller( S(myzero), tc1 ) @ #t3) ∧ ¬(last(#t3))))  ∥
                  (#t1 < #vr.1)  ∥ (#vr.1 = #t1) )
-            case case_1
-            by contradiction /* cyclic */
-          next
             case case_2
             solve( !SharedKey( ~pid, k ) ▶₂ #t1 )
               case BuyANewYubikey
@@ -409,9 +400,6 @@ next
           solve( ((#vr.1 < #t1) ∧
                   (∃ #t3. (IsSmaller( S(y), tc1 ) @ #t3) ∧ ¬(last(#t3))))  ∥
                  (#t1 < #vr.1)  ∥ (#vr.1 = #t1) )
-            case case_1
-            by contradiction /* cyclic */
-          next
             case case_2
             solve( !SharedKey( ~pid, k ) ▶₂ #t1 )
               case BuyANewYubikey
@@ -498,7 +486,7 @@ next
         case Server_ReceiveOTP_NewSession_case_1
         solve( Server( ~pid, sid, otc2 ) ▶₀ #t2 )
           case BuyANewYubikey
-          by contradiction /* cyclic */
+          by sorry /* unannotated */
         next
           case Server_ReceiveOTP_NewSession_case_1
           simplify
@@ -508,9 +496,6 @@ next
           solve( ((#vr.4 < #t1) ∧
                   (∃ #t3. (IsSmaller( S(otc), tc1 ) @ #t3) ∧ ¬(last(#t3))))  ∥
                  (#t1 < #vr.4)  ∥ (#vr.4 = #t1) )
-            case case_1
-            by contradiction /* non-injective facts (#vr.4,#t1,#t2) */
-          next
             case case_2
             solve( !SharedKey( ~pid, k ) ▶₂ #t1 )
               case BuyANewYubikey
@@ -570,9 +555,6 @@ next
           solve( ((#vr.4 < #t1) ∧
                   (∃ #t3. (IsSmaller( S(myzero), tc1 ) @ #t3) ∧ ¬(last(#t3))))  ∥
                  (#t1 < #vr.4)  ∥ (#vr.4 = #t1) )
-            case case_1
-            by contradiction /* non-injective facts (#vr.4,#t1,#t2) */
-          next
             case case_2
             by contradiction /* from formulas */
           next
@@ -584,9 +566,6 @@ next
           solve( ((#vr.4 < #t1) ∧
                   (∃ #t3. (IsSmaller( S(y), tc1 ) @ #t3) ∧ ¬(last(#t3))))  ∥
                  (#t1 < #vr.4)  ∥ (#vr.4 = #t1) )
-            case case_1
-            by contradiction /* non-injective facts (#vr.4,#t1,#t2) */
-          next
             case case_2
             solve( !SharedKey( ~pid, k ) ▶₂ #t1 )
               case BuyANewYubikey
@@ -646,7 +625,7 @@ next
         case Server_ReceiveOTP_NewSession_case_2
         solve( Server( ~pid, sid, otc2 ) ▶₀ #t2 )
           case BuyANewYubikey
-          by contradiction /* cyclic */
+          by sorry /* unannotated */
         next
           case Server_ReceiveOTP_NewSession_case_1
           simplify
@@ -692,9 +671,6 @@ next
           solve( ((#vr.4 < #t1) ∧
                   (∃ #t3. (IsSmaller( S(otc.1), tc1 ) @ #t3) ∧ ¬(last(#t3))))  ∥
                  (#t1 < #vr.4)  ∥ (#vr.4 = #t1) )
-            case case_1
-            by contradiction /* non-injective facts (#vr.4,#t1,#t2) */
-          next
             case case_2
             solve( !SharedKey( ~pid, k ) ▶₂ #t1 )
               case BuyANewYubikey
@@ -766,9 +742,6 @@ next
           solve( ((#vr.4 < #t1) ∧
                   (∃ #t3. (IsSmaller( S(myzero), tc1 ) @ #t3) ∧ ¬(last(#t3))))  ∥
                  (#t1 < #vr.4)  ∥ (#vr.4 = #t1) )
-            case case_1
-            by contradiction /* non-injective facts (#vr.4,#t1,#t2) */
-          next
             case case_2
             solve( !SharedKey( ~pid, k ) ▶₂ #t1 )
               case BuyANewYubikey
@@ -828,9 +801,6 @@ next
           solve( ((#vr.4 < #t1) ∧
                   (∃ #t3. (IsSmaller( S(y), tc1 ) @ #t3) ∧ ¬(last(#t3))))  ∥
                  (#t1 < #vr.4)  ∥ (#vr.4 = #t1) )
-            case case_1
-            by contradiction /* non-injective facts (#vr.4,#t1,#t2) */
-          next
             case case_2
             solve( !SharedKey( ~pid, k ) ▶₂ #t1 )
               case BuyANewYubikey
@@ -902,7 +872,7 @@ next
         case Server_ReceiveOTP_NewSession_case_3
         solve( Server( ~pid, sid, otc2 ) ▶₀ #t2 )
           case BuyANewYubikey
-          by contradiction /* cyclic */
+          by sorry /* unannotated */
         next
           case Server_ReceiveOTP_NewSession_case_1
           simplify
@@ -912,9 +882,6 @@ next
           solve( ((#vr.4 < #t1) ∧
                   (∃ #t3. (IsSmaller( S(otc), tc1 ) @ #t3) ∧ ¬(last(#t3))))  ∥
                  (#t1 < #vr.4)  ∥ (#vr.4 = #t1) )
-            case case_1
-            by contradiction /* non-injective facts (#vr.4,#t1,#t2) */
-          next
             case case_2
             solve( !SharedKey( ~pid, k ) ▶₂ #t1 )
               case BuyANewYubikey
@@ -974,9 +941,6 @@ next
           solve( ((#vr.4 < #t1) ∧
                   (∃ #t3. (IsSmaller( S(myzero), tc1 ) @ #t3) ∧ ¬(last(#t3))))  ∥
                  (#t1 < #vr.4)  ∥ (#vr.4 = #t1) )
-            case case_1
-            by contradiction /* non-injective facts (#vr.4,#t1,#t2) */
-          next
             case case_2
             by contradiction /* from formulas */
           next
@@ -988,9 +952,6 @@ next
           solve( ((#vr.4 < #t1) ∧
                   (∃ #t3. (IsSmaller( S(y), tc1 ) @ #t3) ∧ ¬(last(#t3))))  ∥
                  (#t1 < #vr.4)  ∥ (#vr.4 = #t1) )
-            case case_1
-            by contradiction /* non-injective facts (#vr.4,#t1,#t2) */
-          next
             case case_2
             solve( !SharedKey( ~pid, k ) ▶₂ #t1 )
               case BuyANewYubikey
@@ -1050,7 +1011,7 @@ next
         case Server_ReceiveOTP_NewSession_case_4
         solve( Server( ~pid, sid, otc2 ) ▶₀ #t2 )
           case BuyANewYubikey
-          by contradiction /* cyclic */
+          by sorry /* unannotated */
         next
           case Server_ReceiveOTP_NewSession_case_1
           simplify
@@ -1096,9 +1057,6 @@ next
           solve( ((#vr.4 < #t1) ∧
                   (∃ #t3. (IsSmaller( S(otc), tc1 ) @ #t3) ∧ ¬(last(#t3))))  ∥
                  (#t1 < #vr.4)  ∥ (#vr.4 = #t1) )
-            case case_1
-            by contradiction /* non-injective facts (#vr.4,#t1,#t2) */
-          next
             case case_2
             solve( !SharedKey( ~pid, k ) ▶₂ #t1 )
               case BuyANewYubikey
@@ -1170,9 +1128,6 @@ next
           solve( ((#vr.4 < #t1) ∧
                   (∃ #t3. (IsSmaller( S(myzero), tc1 ) @ #t3) ∧ ¬(last(#t3))))  ∥
                  (#t1 < #vr.4)  ∥ (#vr.4 = #t1) )
-            case case_1
-            by contradiction /* non-injective facts (#vr.4,#t1,#t2) */
-          next
             case case_2
             solve( !SharedKey( ~pid, k ) ▶₂ #t1 )
               case BuyANewYubikey
@@ -1232,9 +1187,6 @@ next
           solve( ((#vr.4 < #t1) ∧
                   (∃ #t3. (IsSmaller( S(y.1), tc1 ) @ #t3) ∧ ¬(last(#t3))))  ∥
                  (#t1 < #vr.4)  ∥ (#vr.4 = #t1) )
-            case case_1
-            by contradiction /* non-injective facts (#vr.4,#t1,#t2) */
-          next
             case case_2
             solve( !SharedKey( ~pid, k ) ▶₂ #t1 )
               case BuyANewYubikey
@@ -3759,8 +3711,8 @@ qed
 Generated from:
 Tamarin version 1.13.0
 Maude version 3.5.1
-Git revision: 41bc81379b23681e7057314a5cf66a25c45e1986, branch: canonicalise-subst
-Compiled at: 2026-07-27 16:11:34.947223 UTC
+Git revision: 5df53af2911dfd01204a9142e8237672e5d05dae (with uncommited changes), branch: msr-proof-correctness
+Compiled at: 2026-09-25 19:18:42.692960904 UTC
 */
 
 end
@@ -3772,10 +3724,10 @@ summary of summaries:
 analyzed: examples/related_work/YubiSecure_KS_STM12/Yubikey.spthy
 
   output:          examples/related_work/YubiSecure_KS_STM12/Yubikey.spthy.tmp
-  processing time: 2.65s
+  processing time: 13.91s
   
   Login_reachable (exists-trace): verified (12 steps)
-  slightly_weaker_invariant (all-traces): verified (1135 steps)
+  slightly_weaker_invariant (all-traces): verified (1119 steps)
   no_replay (all-traces): verified (4 steps)
   injective_correspondance (all-traces): verified (23 steps)
   Login_invalidates_smaller_counters (all-traces): verified (4 steps)

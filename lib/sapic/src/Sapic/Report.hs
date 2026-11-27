@@ -33,7 +33,7 @@ reportInit anP (initrules,initTx) = return (reportrule : initrules, initTx)
                     []
                     [Out $ fAppNoEq repSym [varTerm x, varTerm loc]]
                     [Ato protFact]
-                    0
+                    False 0
         var s = LVar s LSortMsg 0
         x = var "x"
         loc = var "loc"

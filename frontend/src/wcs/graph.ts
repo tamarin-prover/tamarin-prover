@@ -83,9 +83,26 @@ function getSimplificationFromCookie(): number {
   return s === -1 ? -1 : Number(document.cookie.charAt(s + k.length));
 }
 
+// The value of the cookie `name`, or null if it is not set.
+function getCookie(name: string): string | null {
+  for (const part of document.cookie.split(";")) {
+    const [key, ...value] = part.trim().split("=");
+    if (key === name) {
+      return decodeURIComponent(value.join("="));
+    }
+  }
+  return null;
+}
+
+// Abbreviations are on unless switched off in the Options menu, which sets
+// the cookie abbreviate=false (see abbreviationsEnabled in tamarin-prover-ui.js).
+function abbreviationsEnabled(): boolean {
+  return getCookie("abbreviate") !== "false";
+}
+
 function constructJsonSrcParamsFromCookie(): string {
   const param = new URLSearchParams();
-  if (document.cookie.indexOf("abbreviate=") === -1) {
+  if (!abbreviationsEnabled()) {
     param.append("unabbreviate", "");
   }
   if (document.cookie.indexOf("auto-sources=") === -1) {
@@ -162,7 +179,7 @@ export class DotGraphViz extends HTMLElement {
   connectedCallback() {
     this.isAbstractEnabled = document.cookie.indexOf('abstract') !== -1;
     this.jsonSrc = this.getAttribute("dotsrc");
-    this.isAbbreviationEnabled = document.cookie.indexOf("abbreviate") !== -1;
+    this.isAbbreviationEnabled = abbreviationsEnabled();
 
     if (!this.jsonSrc || !this.jsonSrc.trim().length) {
       console.error("[dot-graph-viz]: No dot graph source url provided.");
@@ -206,7 +223,14 @@ export class DotGraphViz extends HTMLElement {
       const simplificationValue = getSimplificationFromCookie();
 
       const tgraph = new TamarinGraph(jsonGraph, ctx, simplificationValue === -1 ? 2 : simplificationValue);
-      this.render(tgraph.dot()).then(() => {
+      this.render(tgraph.dot(), tgraph.hasClusters()).catch(err => {
+        // Graphviz's dot layout is known to fail on some graphs with clusters,
+        // either outright (e.g., "trouble in init_rank") or by dropping edges
+        // ("lost ... edge"). Retry without the cluster boxes.
+        if (!tgraph.hasClusters()) throw err;
+        console.warn("[dot-graph-viz]: Rendering with clusters failed, retrying without\n", err);
+        return this.render(tgraph.dot(false));
+      }).then(() => {
         if (this.isAbbreviationEnabled) {
           this.renderLegend(ctx);
         }
@@ -262,7 +286,14 @@ export class DotGraphViz extends HTMLElement {
         legend.setAttribute("class", "lgd-item");
 
         const highlightNodes = () => {
-          this.highlightConnections = { nodes: Array.from(ctx.abbrevMap[index]?.values() ?? []).map(id => id.slice(4)), edges: [] };
+          // The abbreviation map holds node names, which are also the nodes'
+          // SVG element ids. Graph nodes are keyed differently (by Graphviz's
+          // _gvid, which also counts clusters), so look them up by element id.
+          const lookup = this.graph?.reverseLookup.nodes ?? {};
+          const nodes = Array.from(ctx.abbrevMap[index] ?? [])
+            .map(name => lookup[name])
+            .filter((id): id is string => id !== undefined);
+          this.highlightConnections = { nodes, edges: [] };
           this.highlight();
         }
 
@@ -316,12 +347,20 @@ export class DotGraphViz extends HTMLElement {
   /** Render the graph as SVG given dot graph definition
    * 
    * @param dotString The dot graph definition (usually saved as a `*.dot` file and start with "digraph" in our case)
+   * @param failOnLayoutErrors Reject if Graphviz reports errors, even if it still produced a (possibly incomplete) layout
    */
-  render = (dotString: string | DotGraph) => new Promise<void>((resolve, reject) => {
+  render = (dotString: string | DotGraph, failOnLayoutErrors: boolean = false) => new Promise<void>((resolve, reject) => {
     if (this.checkJsonSrcParamChangeInterval !== undefined) {
       clearInterval(this.checkJsonSrcParamChangeInterval);
     }
     instance().then(viz => {
+      // Lay out the graph first, so that a failure leaves the current graph in place.
+      const layout = viz.render(dotString, { format: "json" });
+      const layoutErrors = layout.errors.filter(e => e.level === "error");
+      if (layout.status !== "success" || (failOnLayoutErrors && layoutErrors.length > 0)) {
+        throw new Error("Graphviz layout failed: " + layout.errors.map(e => e.message.trim()).join("; "));
+      }
+
       /* Resetting all the components */
       this.innerHTML = "";
       this.svg = undefined;
@@ -333,7 +372,7 @@ export class DotGraphViz extends HTMLElement {
       };
 
       this.svg = viz.renderSVGElement(dotString);
-      this.json = viz.renderJSON(dotString) as VizGraph;
+      this.json = JSON.parse(layout.output) as VizGraph;
       this.graph = new DiGraph(this.json, this.svg);
 
       // attach SVG to DOM

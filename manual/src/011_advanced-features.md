@@ -770,6 +770,16 @@ In the following picture one can see the subterm with the reducible operator `fs
 ![Subterms](../images/YellowSubterms.png "Subterms"){width=100%}\
 
 
+A positive subterm constraint with an unresolved message variable on its right,
+such as `n << x`, can also leave a branch incomplete. Even if the adversary may
+choose `x`, the solver must establish that a derivable choice contains `n`.
+For example, if a fresh `n` is never sent, receiving an arbitrary `x` does not
+establish a trace satisfying `n << x`. Such a branch is not a witness and is
+reported as incomplete. Further constraints that determine `x` can still allow
+the subterm constraint to be solved normally. The solver can also finish an
+unconstrained message variable when a public containing witness can be built
+without violating other constraints or triggering additional restriction guards.
+
 #### Subterm Store
 
 Subterms are solved by recursively deconstructing the right side which basically boils down to replacing
@@ -924,6 +934,66 @@ the output contains the primary attack graph and, when a mirror graph is
 available, that graph as a separate entry in the same `"graphs"` list. These
 graphs can be viewed with `interactive` mode in the same way as dependency graphs
 from non-diff theories.
+
+Graph simplification levels {#sec:graph-simplification}
+---------------------------
+
+Constraint systems can be shown with different levels of simplification, both
+in the interactive GUI and in the output of `--output-dot` and
+`--output-json`. The levels are:
+
+ - **Level 0**: no simplification. All nodes and edges of the constraint system
+   are shown, and intruder rules are drawn in full like protocol rules. This is
+   useful for detailed inspection, but large graphs quickly become hard to read.
+
+ - **Level 1**: compression. Intruder rules are drawn as small ellipses, and
+   simple steps whose inputs and outputs are all connected are hidden, such as
+   the `isend`, `irecv`, `coerce` and `Fr` rules, and the adversary's deduction
+   of pairs, inverses, public names and numbers. Ordering (dashed) edges that
+   are already implied by the other kinds of edges (fact edges and unsolved
+   chains) are dropped, whatever their origin.
+
+ - **Level 2 (default)**: as level 1, and additionally drops ordering edges that
+   are implied by paths through other ordering edges (transitive reduction).
+   This reduction keeps ordering edges that come from the lemma's formula or
+   from adversary reasoning, as they are often relevant for understanding the
+   proof. Such edges are still dropped as in level 1, when the other kinds of
+   edges imply them.
+
+ - **Level 3**: as level 2, but also drops implied ordering edges that come
+   from the formula or from adversary reasoning. In addition, the internal
+   steps of the adversary's computations are hidden, as described below.
+
+The transitive reduction of levels 2 and 3 is skipped when the ordering
+constraints are cyclic, which can happen in constraint systems that are about
+to be refuted.
+
+At level 3, an intruder rule instance is hidden if all of its results are used
+only by other intruder rule instances. Each edge into a hidden node is redrawn
+to the intruder rule instances that the hidden node leads to. These nodes now
+also stand for the hidden steps: they are drawn with a *double outline* and
+labelled with the knowledge they provide, i.e., `K( t )` for a message `t`
+that the adversary sends (an `isend`), and the conclusion `!KU( t )` or
+`!KD( t )` otherwise. A redrawn edge has the same style as the edge it
+replaces, but points to the node as a whole rather than to one of its
+premises. Hiding steps never removes protocol rule instances, and never
+changes which nodes are ordered before which others. Intruder steps that are
+part of an unsolved chain are not hidden.
+
+In JSON output, nodes that stand for hidden steps have the field
+`"jgnCollapsed": true`, and redrawn edges have `"jgeCollapsed": true` and a
+node instead of a premise as their target.
+
+In the interactive GUI, the level is selected in the `Options` menu
+(`Graph simplification off`, `L1`, `L2` and `L3`).
+
+On the command line, the level for `--output-dot` and `--output-json` is set
+with `--graph-simplification`, which accepts the values 0 to 3 and defaults
+to 2:
+
+    tamarin-prover --prove --output-dot=traces.dot --graph-simplification=3 examples/Tutorial.spthy
+
+The level is part of the label of each output graph, e.g., `SL3` for level 3.
 
 Viewing exported JSON graphs in the interactive GUI {#sec:load-json}
 -------------------------------------------------------------------
