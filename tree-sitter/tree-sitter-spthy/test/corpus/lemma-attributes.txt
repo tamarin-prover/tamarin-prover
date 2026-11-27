@@ -1,0 +1,61 @@
+==================================================
+Trace and diff lemmas share the attribute list
+==================================================
+
+theory T begin
+lemma L [left,reuse,heuristic=s]: "T"
+diffLemma D [right,heuristic=s]:
+end
+
+---
+
+(theory
+  theory_name: (ident)
+  (lemma
+    lemma_identifier: (ident)
+    (lemma_attrs
+      (diff_lemma_attr)
+      (lemma_attr)
+      (lemma_attr
+        heuristic: (heuristic
+          (builtin_ranking))))
+    formula: (atom))
+  (diff_lemma
+    lemma_identifier: (ident)
+    (lemma_attrs
+      (diff_lemma_attr)
+      (lemma_attr
+        heuristic: (heuristic
+          (builtin_ranking))))))
+
+==================================================
+Lemma assignments allow whitespace and comments
+==================================================
+
+theory T begin
+lemma L [heuristic /* comment */ = osopo{Custom}, hide_lemma = Other, output = [spthy,msr]]: "T"
+end
+
+---
+
+(theory
+  theory_name: (ident)
+  (lemma
+    lemma_identifier: (ident)
+    (lemma_attrs
+      (lemma_attr
+        (multi_comment)
+        heuristic: (heuristic
+          (oracle_ranking)
+          (builtin_ranking)
+          (oracle_ranking)
+          (builtin_ranking)
+          (oracle_ranking)
+          (tactic_reference
+            name: (tactic_name))))
+      (lemma_attr
+        (ident))
+      (lemma_attr
+        (language)
+        (language)))
+    formula: (atom)))

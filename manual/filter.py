@@ -70,18 +70,21 @@ def filterslice(l,filename):
 
 def includefilerules(filename,rules):
     """
-    Return an array representing a slice of the lines of a file. If no lower
-    and upper are given, return the entire file.  Indices start from zero.
+    Include named grammar rules, failing if a selector has gone stale.
     """
-    fp = open(filename,'r')
     res = []
+    found = set()
     indent = max([len(x) for x in rules]) + 4 + len(" ::= ") # default indent in ebnf file is 4
-    for l in fp:
-        for rulename in rules:
-            if (" " + rulename + "  ::=") in l: # all rules are in a single line
+    with open(filename, 'r') as fp:
+        for l in fp:
+            for rulename in rules:
+                if (" " + rulename + "  ::=") in l: # all rules are in a single line
+                    found.add(rulename)
                     head, *tail = l.split("| ")
                     res += [head ] + ["\n" + " "*indent + "| " + x for x in tail]
-    fp.close()
+    missing = set(rules) - found
+    if missing:
+        raise ValueError(f"{filename}: unknown grammar rules: {', '.join(sorted(missing))}")
     return res
 
 def filtergrammar(l,filename):
@@ -151,5 +154,4 @@ def main():
 
 if __name__ == '__main__':
     main()
-
 
