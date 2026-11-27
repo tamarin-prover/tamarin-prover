@@ -1,0 +1,26 @@
+{
+  "tests": [
+    {
+      "name": "declaration-types",
+      "args": ["--output-module=spthytyped", "--quit-on-warning"],
+      "matches": [{"regex": "f\\s*\\(a\\)", "min": 1, "theory_only": true}]
+    },
+    {
+      "name": "unused-declaration-types",
+      "args": ["--output-module=spthytyped", "--quit-on-warning", "-DUNUSED"],
+      "matches": [{"regex": "f\\s*\\(a\\)", "min": 1, "theory_only": true}]
+    },
+    {
+      "name": "conflicting-declaration-types",
+      "args": ["--output-module=spthytyped", "--quit-on-warning", "-DCONFLICT"],
+      "exit_code": 1,
+      "contains": ["Typing error: expected term "]
+    },
+    {
+      "name": "unused-conflicting-declaration-types",
+      "args": ["--output-module=spthytyped", "--quit-on-warning", "-DCONFLICT", "-DUNUSED"],
+      "exit_code": 1,
+      "contains": ["Typing error: expected term "]
+    }
+  ]
+}

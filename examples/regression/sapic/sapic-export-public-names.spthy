@@ -1,0 +1,24 @@
+theory SapicExportPublicNames
+begin
+builtins: dest-pairing
+
+// Declarations, matching patterns and ordinary outputs must name the same
+// public constants. Dots, underscores and literal escapes must stay distinct;
+// quoted one/zero/g are names, not the similarly named built-in constants.
+// The binder must also remain distinct from the escaped public name 'a_2'.
+let P =
+  in(va_5f); in('a_2'); out(va_5f);
+  in('a'); out('a');
+  in('a.b'); out('a.b');
+  in('a_b'); out('a_b');
+  in('a_2e_b'); out('a_2e_b');
+  in('one'); out('one');
+  in('zero'); out('zero');
+  in('g'); out('g')
+
+#ifdef PROCESS
+process: P
+#else
+equivLemma: P P
+#endif
+end

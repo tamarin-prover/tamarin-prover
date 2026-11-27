@@ -1,0 +1,6 @@
+theory SapicTypedBindingReuse
+begin
+/* Input-validation regression: --quit-on-warning must reject the repeated
+   binding even though only the inner occurrence has a type annotation. */
+process: in(y); in(y:bitstring); event A(y)
+end

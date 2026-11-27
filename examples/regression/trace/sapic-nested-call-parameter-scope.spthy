@@ -1,0 +1,30 @@
+theory SapicNestedCallParameterScope
+begin
+
+// A callee with a parameter list is expanded in its own scope. Its local
+// binders are renamed apart from every variable of the caller, including the
+// parameters of an enclosing definition. Otherwise calling P('d') would
+// substitute 'd' for R's local binder x, removing the traces below.
+let RLet(a) = let <x,y> = <'k','m'> in event ELet(a,x)
+let RIn(a) = in(<x,y>); event EIn(a,x)
+let RSingle(a) = in(x); event ESingle(a,x)
+let P(x) = event F(x); (RLet('c') | RIn('c') | RSingle('c'))
+
+// A callee binder that shares its name with a caller binder is not bound twice.
+let Q(a) = in(y); event G(a,y)
+
+process: P('d') | (in(y); event H(y); Q('c'))
+
+lemma let_binder:
+  exists-trace "Ex #i. ELet('c','k') @ i"
+
+lemma input_binder:
+  exists-trace "Ex #i. EIn('c','other') @ i"
+
+lemma single_input_binder:
+  exists-trace "Ex #i. ESingle('c','other') @ i"
+
+lemma caller_binder:
+  exists-trace "Ex y #i. G('c',y) @ i"
+
+end

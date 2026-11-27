@@ -1,0 +1,24 @@
+theory SapicReservedStateAssumption
+begin
+// State optimisation forces these tags to be injective even when the process
+// has no state operations. Accepting the user rules would then discard the
+// reachable ordered trace and verify impossible. Both tags must be reserved.
+#ifdef NO_OPT
+#else
+options: translation-state-optimisation
+#endif
+#ifdef LOCKED
+rule Make: [Fr(~k)] --> [L_CellLocked(~k,'a'), L_CellLocked(~k,'b')]
+rule First: [L_CellLocked(k,'a')] --[First(k)]-> []
+rule Second: [L_CellLocked(k,'b')] --[Second(k)]-> []
+#else
+rule Make: [Fr(~k)] --> [L_PureState(~k,'a'), L_PureState(~k,'b')]
+rule First: [L_PureState(k,'a')] --[First(k)]-> []
+rule Second: [L_PureState(k,'b')] --[Second(k)]-> []
+#endif
+process: event Unrelated()
+lemma ordered: exists-trace
+  "Ex k #i #j. First(k)@i & Second(k)@j & #i < #j"
+lemma impossible:
+  "All k #i #j. First(k)@i & Second(k)@j & #i < #j ==> F"
+end

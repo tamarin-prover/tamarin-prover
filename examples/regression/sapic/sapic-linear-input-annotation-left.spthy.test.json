@@ -1,0 +1,18 @@
+{
+  "tests": [
+    {
+      "name": "typed-pattern",
+      "args": [
+        "--output-module=spthytyped",
+        "--quit-on-warning"
+      ],
+      "matches": [
+        {
+          "regex": "x\\.[0-9]+:alpha",
+          "min": 2,
+          "max": 2
+        }
+      ]
+    }
+  ]
+}

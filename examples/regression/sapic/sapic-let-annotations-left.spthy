@@ -1,0 +1,8 @@
+theory SapicLetAnnotationsLeft
+begin
+
+// The annotation must reach both pattern occurrences and the output.
+// Counting all three occurrences also checks propagation to untyped siblings.
+process: in(y); let <x:alpha,x> = y in out(x)
+
+end

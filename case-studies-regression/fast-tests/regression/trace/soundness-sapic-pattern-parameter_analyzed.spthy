@@ -1,0 +1,125 @@
+theory SoundnessSapicPatternParameter
+
+begin
+
+// Function signature and definition of the equational theory E
+
+functions: fst/1, pair/2, snd/1
+equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
+
+heuristic: p
+
+lemma supplied_pattern:
+  all-traces "∀ x #i. (Seen( x ) @ #i) ⇒ (x = <'a', 'b'>)"
+/*
+guarded formula characterizing all counter-examples:
+"∃ x #i. (Seen( x ) @ #i) ∧ ¬(x = <'a', 'b'>)"
+*/
+simplify
+by contradiction /* from formulas */
+
+lemma reachable:
+  exists-trace "∃ #i. Seen( <'a', 'b'> ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #i. (Seen( <'a', 'b'> ) @ #i)"
+*/
+simplify
+solve( State_111( pat_x ) ▶₀ #i )
+  case inab_0_11
+  SOLVED // trace found
+qed
+
+rule (modulo E) Init[color=#ffffff, process="new pat_x.1;", issapicrule,
+                     role='Process']:
+   [ ] --[ Init( ) ]-> [ State_( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) newpatx_0_[color=#ffffff, process="new pat_x.1;",
+                           issapicrule, role='Process']:
+   [ State_( ), Fr( pat_x.1 ) ] --> [ State_1( pat_x.1 ) ]
+
+  /*
+  rule (modulo AC) newpatx_0_[color=#ffffff, process="new pat_x.1;",
+                              issapicrule, role='Process']:
+     [ State_( ), Fr( pat_x ) ] --> [ State_1( pat_x ) ]
+  */
+
+rule (modulo E) Pab_0_1[color=#ffffff, process="P(<'a', 'b'>);",
+                        issapicrule, role='Process']:
+   [ State_1( pat_x.1 ) ] --> [ State_11( pat_x.1 ) ]
+
+  /*
+  rule (modulo AC) Pab_0_1[color=#ffffff, process="P(<'a', 'b'>);",
+                           issapicrule, role='Process']:
+     [ State_1( pat_x ) ] --> [ State_11( pat_x ) ]
+  */
+
+rule (modulo E) inab_0_11[color=#6c8040, process="in(<'a', 'b'>);",
+                          issapicrule, role='P']:
+   [ State_11( pat_x.1 ), In( <'a', 'b'> ) ] --> [ State_111( pat_x.1 ) ]
+
+  /*
+  rule (modulo AC) inab_0_11[color=#6c8040, process="in(<'a', 'b'>);",
+                             issapicrule, role='P']:
+     [ State_11( pat_x ), In( <'a', 'b'> ) ] --> [ State_111( pat_x ) ]
+  */
+
+rule (modulo E) eventSeenab_0_111[color=#6c8040,
+                                  process="event Seen( <'a', 'b'> );", issapicrule, role='P']:
+   [ State_111( pat_x.1 ) ]
+  --[ Seen( <'a', 'b'> ) ]->
+   [ State_1111( pat_x.1 ) ]
+
+  /*
+  rule (modulo AC) eventSeenab_0_111[color=#6c8040,
+                                     process="event Seen( <'a', 'b'> );", issapicrule, role='P']:
+     [ State_111( pat_x ) ] --[ Seen( <'a', 'b'> ) ]-> [ State_1111( pat_x ) ]
+  */
+
+rule (modulo E) p_0_1111[color=#6c8040, process="0", issapicrule,
+                         role='P']:
+   [ State_1111( pat_x.1 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_1111[color=#6c8040, process="0", issapicrule,
+                            role='P']:
+     [ State_1111( pat_x ) ] --> [ ]
+  */
+
+restriction single_session:
+  "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
+  */
+
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.13.0
+Maude version 3.5.1
+Git revision: bf885ca9abf478867fbdbbf3ad80e4da85370e01 (with uncommited changes), branch: HEAD
+Compiled at: 2026-10-04 11:58:25.282416529 UTC
+*/
+
+end
+/* Output
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/regression/trace/soundness-sapic-pattern-parameter.spthy
+
+  output:          examples/regression/trace/soundness-sapic-pattern-parameter.spthy.tmp
+  processing time: 0.12s
+  
+  supplied_pattern (all-traces): verified (2 steps)
+  reachable (exists-trace): verified (3 steps)
+
+==============================================================================
+*/
