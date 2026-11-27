@@ -4595,6 +4595,10 @@
         },
         {
           "type": "STRING",
+          "value": "INVALIDATED"
+        },
+        {
+          "type": "STRING",
           "value": "UNFINISHABLE"
         }
       ]

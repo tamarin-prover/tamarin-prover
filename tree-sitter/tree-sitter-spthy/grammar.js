@@ -1039,6 +1039,7 @@ module.exports = grammar({
           'rule-equivalence',
           'backward-search',
           'ATTACK',
+          'INVALIDATED',
           'UNFINISHABLE'
       ),
 
