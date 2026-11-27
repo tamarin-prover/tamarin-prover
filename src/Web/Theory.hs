@@ -89,14 +89,7 @@ applyMethodAtPath :: ClosedTheory -> String -> ProofPath
                   -> Maybe ClosedTheory
 applyMethodAtPath thy lemmaName proofPath prover i = do
     lemma <- lookupLemma lemmaName thy
-    subProof <- lemma._lProof `atPath` proofPath
-    let ctxt  = getProofContext lemma thy
-        sys   = psInfo (root subProof)
-        heuristic = selectHeuristic prover ctxt
-        ranking = useHeuristic heuristic (length proofPath)
-        tactic = selectTactic prover ctxt
-    methods <- map fst . rankProofMethods ranking tactic ctxt <$> sys
-    method <- if length methods >= i then Just (methods !! (i-1)) else Nothing
+    method <- nthProofMethodAtPath (getProofContext lemma thy) lemma proofPath prover i
     applyProverAtPath thy lemmaName proofPath (oneStepProver method)
 
 applyMethodAtPathDiff :: ClosedDiffTheory -> Side -> String -> ProofPath
@@ -105,21 +98,24 @@ applyMethodAtPathDiff :: ClosedDiffTheory -> Side -> String -> ProofPath
                       -> Maybe ClosedDiffTheory
 applyMethodAtPathDiff thy s lemmaName proofPath prover i = do
     lemma <- lookupLemmaDiff s lemmaName thy
+    method <- nthProofMethodAtPath (getProofContextDiff s lemma thy) lemma proofPath prover i
+    applyProverAtPathDiff thy s lemmaName proofPath (oneStepProver method)
+
+-- | The @i@-th (1-based) proof method offered at @proofPath@ in the lemma's
+-- proof. Shared by trace lemmas and the per-side lemmas of diff theories so
+-- that both apply a GUI-selected method in exactly the same way: the new
+-- children are labelled by 'oneStepProver', which only marks a child as
+-- finished (e.g. UNFINISHABLE) after checking it.
+nthProofMethodAtPath :: ProofContext -> Lemma IncrementalProof -> ProofPath
+                     -> AutoProver -> Int -> Maybe ProofMethod
+nthProofMethodAtPath ctxt lemma proofPath prover i = do
     subProof <- lemma._lProof `atPath` proofPath
-    let ctxt  = getProofContextDiff s lemma thy
-        sys   = psInfo (root subProof)
-        heuristic = selectHeuristic prover ctxt
-        ranking = useHeuristic heuristic (length proofPath)
-        tactic = selectTactic prover ctxt
-    methods <- map fst . rankProofMethods ranking tactic ctxt <$> sys
-    method <- if length methods >= i then Just (methods !! (i-1)) else Nothing
-    applyProverAtPathDiff thy s lemmaName proofPath
-      (oneStepProver method                                       `mappend`
-       replaceSorryProver (oneStepProver Simplify)                `mappend`
-       replaceSorryProver contradictionProver                     `mappend`
-       replaceSorryProver (oneStepProver (Finished Unfinishable)) `mappend`
-       replaceSorryProver (oneStepProver (Finished Solved))
-      )
+    sys <- psInfo (root subProof)
+    let ranking = useHeuristic (selectHeuristic prover ctxt) (length proofPath)
+        tactic  = selectTactic prover ctxt
+        methods = map fst $ rankProofMethods ranking tactic ctxt sys
+    guard (i >= 1)
+    listToMaybe (drop (i-1) methods)
 
 applyDiffMethodAtPath :: ClosedDiffTheory -> String -> ProofPath
                       -> AutoProver             -- ^ How to extract/order the proof methods.
