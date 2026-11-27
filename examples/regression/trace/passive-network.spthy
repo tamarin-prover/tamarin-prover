@@ -52,6 +52,9 @@ lemma passive_no_injection [passive]: exists-trace
 
 lemma active_injection: exists-trace
   "Ex n #r. Received(n)@r & not (Ex #s. Sent(n)@s & #s < #r)"
+// This proof was generated before adding any passive lemmas.
+simplify
+SOLVED
 
 lemma passive_no_replay [passive]:
   "All n #r #t. Received(n)@r & Received(n)@t ==> #r = #t"
@@ -82,5 +85,11 @@ lemma L3_passive [passive]:
 
 lemma L3:
   "not (Ex secret #s #r. EncryptedSecret(secret)@s & Received(secret)@r & #s < #r)"
+// The original active proof must also replay with its named source case.
+simplify
+solve( !KU( ~secret ) @ #vk.2 )
+  case SendEncryptedSecret
+  SOLVED
+qed
 
 end

@@ -26,6 +26,14 @@
       ]
     },
     {
+      "name": "replay-original-active-proofs",
+      "args": ["--quit-on-warning"],
+      "contains": [
+        "active_injection (exists-trace): verified (2 steps)",
+        "L3 (all-traces): falsified - found trace (3 steps)"
+      ]
+    },
+    {
       "name": "proverif-omits-passive-properties",
       "args": [
         "-m=proverif",
