@@ -15,8 +15,10 @@
         "passive_no_injection (exists-trace): falsified - no trace found",
         "active_injection (exists-trace): verified",
         "passive_no_replay (all-traces): verified",
+        "L1 (all-traces): falsified - found trace",
         "active_replay (exists-trace): verified",
         "each_input_needs_a_packet (all-traces): verified",
+        "L2 (all-traces): falsified - found trace",
         "two_outputs_allow_two_inputs (exists-trace): verified",
         "active_two_inputs (exists-trace): verified"
       ]

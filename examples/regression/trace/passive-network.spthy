@@ -50,10 +50,18 @@ lemma active_injection: exists-trace
 lemma passive_no_replay [passive]:
   "All n #r #t. Received(n)@r & Received(n)@t ==> #r = #t"
 
+// An active attacker can deliver the same packet in two separate steps.
+lemma L1:
+  "All n #r #t. Received(n)@r & Received(n)@t ==> #r = #t"
+
 lemma active_replay: exists-trace
   "Ex n #s #r #t. Sent(n)@s & Received(n)@r & Received(n)@t & #r < #t"
 
 lemma each_input_needs_a_packet [passive]:
+  "not (Ex n #r. Twice(n)@r)"
+
+// An active attacker can also supply the same packet to both inputs of one step.
+lemma L2:
   "not (Ex n #r. Twice(n)@r)"
 
 lemma two_outputs_allow_two_inputs [passive]: exists-trace
