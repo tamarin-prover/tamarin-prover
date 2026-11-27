@@ -1,0 +1,37 @@
+{
+  "tests": [
+    {
+      "name": "mixed-network-proofs",
+      "args": [
+        "--prove",
+        "--quit-on-warning"
+      ],
+      "contains": [
+        "passive_origin (all-traces): verified",
+        "honest_exchange (exists-trace): verified",
+        "eavesdrop (exists-trace): verified",
+        "retained_variant_action (exists-trace): verified",
+        "knowledge_before_receive (all-traces): verified",
+        "passive_no_injection (exists-trace): falsified - no trace found",
+        "active_injection (exists-trace): verified",
+        "passive_no_replay (all-traces): verified",
+        "active_replay (exists-trace): verified",
+        "each_input_needs_a_packet (all-traces): verified",
+        "two_outputs_allow_two_inputs (exists-trace): verified",
+        "active_two_inputs (exists-trace): verified"
+      ]
+    },
+    {
+      "name": "proverif-omits-passive-properties",
+      "args": [
+        "-m=proverif",
+        "--lemma=honest_exchange"
+      ],
+      "contains": [
+        "PV-AXIOM-OMITTED",
+        "PV-GOAL-OMITTED",
+        "passive network semantics"
+      ]
+    }
+  ]
+}

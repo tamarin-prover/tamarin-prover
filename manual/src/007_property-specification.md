@@ -582,6 +582,36 @@ added annotations "Annotation1" and "Annotation2", this looks like so:
 lemma Name [Annotation1,Annotation2]:
 ```
 
+### `passive`
+
+Use `[passive]` on an ordinary trace lemma to restrict public network deliveries
+to earlier protocol outputs. Each `In(m)` consumes one delivery of a matching
+`Out(m)`, modulo the theory's equations. Sending the same message twice makes
+two deliveries possible. Delivery order is unconstrained, and a finite trace
+may end with messages still pending. To bind delivery to a particular peer,
+include its identity in the message or model the channel explicitly.
+
+The adversary can still eavesdrop, compute with the messages it learns, and
+witness its knowledge with `K(m)`. Explicit protocol rules such as key reveals
+remain available. For example, with a rule that emits `Sent(n)` and
+`Out(<'packet',n>)`, and a receiver that consumes `In(<'packet',n>)` and
+emits `Received(n)`, one can write
+
+```
+lemma origin [passive, reuse]:
+  "All n #r. Received(n)@r ==> Ex #s. Sent(n)@s & #s < #r"
+
+lemma eavesdrop [passive]: exists-trace
+  "Ex n #s #k. Sent(n)@s & K(n)@k & #s < #k"
+```
+
+Unannotated lemmas in the same theory use the ordinary active adversary.
+The prover shares one rule set and one source cache across these lemmas.
+An annotated `all-traces` lemma checks its claim on every passive trace.
+An annotated `exists-trace` lemma requires a passive witness. The condition
+also applies when a `[passive, reuse]` or `[passive, sources]` lemma is used
+elsewhere. This annotation is supported in Tamarin's trace mode.
+
 ### `sources`
 
 To declare a lemma as a source lemma, we use the annotation `sources`:
