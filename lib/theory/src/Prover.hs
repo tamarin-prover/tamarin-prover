@@ -426,12 +426,18 @@ openTheory  (Theory n f h t sig c items opts sapic) = openTranslatedTheory(
       (mergeOpenProtoRules $ map (restoreFormula . mapTheoryItem openProtoRule incrementalToSkeletonProof) items)
       opts sapic)
   where
-    -- Closing installs the passive guard after macro expansion. Reclosing must
-    -- start with the same source formula as loading the exported theory.
-    restoreFormula (LemmaItem l) | isPassiveLemma l =
+    -- Reclose from the same formula that is exported, before macro expansion
+    -- and before adding the passive-network guard.
+    restoreFormula (LemmaItem l) =
       LemmaItem l { _lFormula = fromMaybe (_lFormula l) (_lOriginalFormula l)
                   , _lOriginalFormula = Nothing }
     restoreFormula item = item
+
+-- | Rebuild caches and replay saved proofs from the edited source items.
+-- Any auto-generated sources lemma is already present in those items.
+recloseTheory :: ClosedTheory -> ClosedTheory
+recloseTheory thy =
+    closeTheoryWithMaude (_thySignature thy) (removeTranslationItems (openTheory thy)) False False
 
 -- | Open a theory by dropping the closed world assumption and values whose
 -- soundness depends on it.

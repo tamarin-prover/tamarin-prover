@@ -77,7 +77,7 @@ import Theory
   , removeLemmaDiff
   , removeDiffLemma
   , getLemmaPreItems
-  , openTheory, removeTranslationItems, closeTheoryWithMaude
+  , openTheory, recloseTheory
   , sorryProver
   , runAutoProver
   , sorryDiffProver
@@ -204,7 +204,7 @@ editProof idx name = withTheory idx $ \ti ->
 reclosePassiveEdit :: ClosedTheory -> ClosedTheory -> ClosedTheory
 reclosePassiveEdit old new
   | any isPassiveLemma (theoryLemmas old) || any isPassiveLemma (theoryLemmas new) =
-      closeTheoryWithMaude (_thySignature new) (removeTranslationItems (openTheory new)) False False
+      recloseTheory new
   | otherwise = new
 
 -- | Deletes a Lemma from a theory, used for Theory editing

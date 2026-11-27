@@ -198,6 +198,7 @@ module Theory (
   , ClosedRuleCache(..) -- FIXME: this is only exported for the Binary instances
   , closeTheory
   , closeTheoryWithMaude
+  , recloseTheory
   , closeDiffTheory
   , closeDiffTheoryWithMaude
   , openTheory

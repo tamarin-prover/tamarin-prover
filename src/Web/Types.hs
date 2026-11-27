@@ -242,8 +242,7 @@ instance Bin.Binary EitherTheoryInfo where
       ti <- Bin.get
       let thy = ti.theory{_thyCache = TraceRuleCaches ti.theory._thyCache Nothing}
           restored
-            | any isPassiveLemma (theoryLemmas thy) =
-                closeTheoryWithMaude thy._thySignature (removeTranslationItems (openTheory thy)) False False
+            | any isPassiveLemma (theoryLemmas thy) = recloseTheory thy
             | otherwise = thy
       pure $ Trace ti{theory = restored}
     1 -> Diff <$> Bin.get
