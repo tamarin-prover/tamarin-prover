@@ -10,7 +10,7 @@
  * option. This file may not be copied, modified, or distributed
  * except according to those terms.
  */
-/* Palette and typography follow https://tamarin-prover.com/. */
+/* Palette, typography and the top bar follow https://tamarin-prover.com/. */
 @font-face {
     font-family: Figtree;
     font-style: normal;
@@ -29,12 +29,15 @@
     --paper: #fbfbfb;
     --ink: #535353;
     --green: #547c38;
+    --green-bright: #6abe30;
     --green-dark: #385b23;
     --green-pale: #eaf1e7;
+    --heading: #45503d;
     --ochre: #b87b1d;
+    --ochre-pale: #faf0df;
     --brown: #7d5546;
     --line: #d9e1d4;
-    --header-height: 3.5rem;
+    --header-height: 2.5rem;
     --sidebar-width: 19rem;
 }
 * { box-sizing: border-box; }
@@ -59,6 +62,8 @@ a:hover { color: var(--brown); }
     transform: translateY(-200%);
 }
 .skip-link:focus { transform: none; }
+
+/* Top bar, matching the website's navigation. */
 .site-header {
     position: fixed;
     inset: 0 0 auto;
@@ -66,26 +71,30 @@ a:hover { color: var(--brown); }
     display: flex;
     align-items: stretch;
     height: var(--header-height);
-    padding: 0 1.25rem;
+    padding-left: 1rem;
     background: var(--green);
-    box-shadow: 0 2px 10px #0002;
+    box-shadow: 0 0 10px #00000080;
     color: var(--paper);
+    font-size: 16px;
+    line-height: 1;
 }
 .site-header a {
     display: inline-flex;
     align-items: center;
-    gap: .65rem;
-    padding: 0 1rem;
+    gap: .5rem;
+    padding: 0 14px;
     color: inherit;
     text-decoration: none;
+    white-space: nowrap;
 }
-.site-header a:hover { background: #45503d; }
-.site-header :focus-visible { outline-color: white; outline-offset: -4px; }
-.brand { font-weight: 700; white-space: nowrap; }
-.manual-home { background: #45503d; }
+.site-nav { display: flex; }
+.site-nav .active { background: var(--green-bright); color: #232323; }
+.site-header a:hover, .site-header a:focus-visible { background: var(--ink); color: var(--paper); }
+.site-header :focus-visible { outline: 2px solid var(--paper); outline-offset: -4px; }
 #toggle-nav {
     display: none;
-    margin: .45rem 0 .45rem auto;
+    align-self: center;
+    margin: 0 .5rem 0 auto;
     padding: .3rem .65rem;
     border: 1px solid #ffffff80;
     border-radius: 3px;
@@ -94,45 +103,76 @@ a:hover { color: var(--brown); }
     font: inherit;
     cursor: pointer;
 }
+#toggle-nav:hover { background: var(--ink); }
+
+/* Chapter sidebar. */
 #toc {
     position: fixed;
     top: var(--header-height);
     bottom: 0;
     left: 0;
     width: var(--sidebar-width);
-    padding: 1.75rem 1rem;
+    padding: 1.5rem 1rem 2rem;
     overflow-y: auto;
     overscroll-behavior: contain;
     border-right: 1px solid var(--line);
     background: #f3f6f0;
     font-size: .875rem;
+    line-height: 1.4;
 }
-.toc-title { margin: 0 .65rem; color: #45503d; font-size: 1.125rem; font-weight: 700; }
-.toc-caption { margin: .2rem .65rem 1.4rem; font-size: .8rem; }
-.chapter { margin: 0; padding: 0; list-style: none; }
-.chapter li { margin: .15rem 0; }
-.chapter a {
+.toc-title { margin: 0 .65rem; font-size: 1.0625rem; font-weight: 700; }
+.toc-title a { color: var(--heading); text-decoration: none; }
+.toc-title a:hover { color: var(--green-dark); text-decoration: underline; }
+.toc-links { margin: .3rem .65rem 1.25rem; }
+.chapter, .chapter ul, .site-links { margin: 0; padding: 0; list-style: none; }
+.chapter > li { margin: .1rem 0; }
+.chapter > li > a {
     display: flex;
     align-items: baseline;
     gap: .6rem;
-    padding: .55rem .65rem;
+    padding: .5rem .65rem;
     border-left: 3px solid transparent;
     color: var(--ink);
     text-decoration: none;
-    line-height: 1.4;
 }
-.chapter b { min-width: 1.3rem; font-weight: 500; font-variant-numeric: tabular-nums; }
-.chapter a:hover { background: var(--green-pale); color: var(--green-dark); }
-.chapter a[aria-current="page"] {
+.chapter b { flex: none; min-width: 1.3rem; font-weight: 500; font-variant-numeric: tabular-nums; }
+.chapter > li > a:hover { background: var(--green-pale); color: var(--green-dark); }
+.chapter > li > a[aria-current="page"] {
     border-left-color: var(--green);
     background: var(--green-pale);
     color: var(--green-dark);
     font-weight: 700;
 }
-#page-wrapper { margin-left: var(--sidebar-width); padding: calc(var(--header-height) + 2.75rem) 3rem 3rem; }
-#page { max-width: 52rem; margin: 0 auto; overflow-wrap: anywhere; }
+/* Sections of the current chapter. The chapter title itself is the link above. */
+.page-toc > ul > li > a { display: none; }
+.page-toc li { margin: 0; }
+.page-toc ul ul { margin: .3rem 0 .6rem 2.1rem; border-left: 1px solid var(--line); }
+.page-toc ul ul a {
+    display: block;
+    margin-left: -1px;
+    padding: .3rem .65rem;
+    border-left: 2px solid transparent;
+    color: var(--ink);
+    font-size: .8125rem;
+    text-decoration: none;
+}
+.page-toc ul ul a:hover { background: var(--green-pale); color: var(--green-dark); }
+.page-toc ul ul a.active { border-left-color: var(--green); color: var(--green-dark); font-weight: 600; }
+/* Website links, shown in the chapter menu when the top bar has no room for them. */
+.site-links { display: none; }
+
+/* Content. */
+#page-wrapper { margin-left: var(--sidebar-width); padding: calc(var(--header-height) + 2.5rem) 3rem 3rem; }
+#page { max-width: 44rem; margin: 0 auto; overflow-wrap: anywhere; }
 #page:focus { outline: none; }
-h1, h2, h3, h4, h5, h6 { color: #45503d; line-height: 1.25; font-weight: 650; }
+.version-banner {
+    margin: 0 0 2rem;
+    padding: .75rem 1rem;
+    border-left: 3px solid var(--ochre);
+    background: var(--ochre-pale);
+    font-size: .9375rem;
+}
+h1, h2, h3, h4, h5, h6 { color: var(--heading); line-height: 1.25; font-weight: 650; }
 h1 { margin: 0 0 1.75rem; font-size: clamp(1.8rem, 3vw, 2.5rem); letter-spacing: -.025em; }
 h1::before {
     content: "";
@@ -145,6 +185,8 @@ h1::before {
 h2 { margin: 2.75rem 0 1rem; padding-bottom: .5rem; border-bottom: 1px solid var(--line); font-size: 1.65rem; }
 h3 { margin: 2rem 0 .8rem; font-size: 1.3rem; }
 h4, h5, h6 { margin: 1.5rem 0 .65rem; font-size: 1.1rem; }
+.heading-anchor { margin-left: .35em; color: var(--green); font-weight: 400; text-decoration: none; opacity: 0; }
+:is(h2, h3, h4):hover > .heading-anchor, .heading-anchor:focus-visible { opacity: 1; }
 p { margin: 0 0 1.1rem; }
 ul, ol { margin: 0 0 1.1rem; padding-left: 1.6rem; }
 ul { list-style-type: square; }
@@ -174,6 +216,30 @@ pre {
     tab-size: 4;
 }
 pre code { color: inherit; font-size: inherit; }
+/* Copy buttons are added to code blocks by book.js. */
+.code-block { position: relative; margin: 1.5rem 0; }
+.code-block > pre { margin: 0; }
+.copy-code {
+    position: absolute;
+    top: .45rem;
+    right: .45rem;
+    padding: .15rem .55rem;
+    border: 1px solid var(--line);
+    border-radius: 3px;
+    background: var(--paper);
+    color: var(--ink);
+    font: 500 .75rem/1.5 Figtree, Arial, sans-serif;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity .15s;
+}
+.code-block:hover .copy-code, .copy-code:focus-visible, .copy-code.copied { opacity: 1; }
+.copy-code:hover { border-color: var(--green); color: var(--green-dark); }
+/* Without hover the button is always shown, so keep it clear of the code. */
+@media (hover: none) {
+    .copy-code { opacity: 1; }
+    .code-block > pre { padding-top: 2.4rem; }
+}
 blockquote {
     margin: 1.5rem 0;
     padding: 1rem 1.25rem;
@@ -184,10 +250,8 @@ blockquote > :last-child { margin-bottom: 0; }
 hr { margin: 2rem 0; border: 0; border-top: 1px solid var(--line); }
 table { display: block; max-width: 100%; overflow-x: auto; border-collapse: collapse; margin: 1.5rem 0; font-size: .95rem; }
 th, td { padding: .65rem .8rem; border: 1px solid var(--line); vertical-align: top; }
-th { background: var(--green-pale); color: #45503d; text-align: left; }
+th { background: var(--green-pale); color: var(--heading); text-align: left; }
 tr:nth-child(even) { background: #f3f6f0; }
-#keyword-table-marker + table thead { display: none; }
-#keyword-table-marker + table td { border: none; }
 .csl-entry { margin-bottom: 1rem; }
 .footnotes { margin-top: 3rem; font-size: .9rem; }
 .chapter-pagination { display: flex; justify-content: space-between; gap: 1.5rem; margin-top: 3rem; padding-top: 1.5rem; border-top: 1px solid var(--line); }
@@ -195,10 +259,9 @@ tr:nth-child(even) { background: #f3f6f0; }
 .chapter-pagination a:hover { text-decoration: underline; }
 .chapter-pagination a[rel="next"] { margin-left: auto; text-align: right; }
 .pagination-label { display: block; font-size: .75rem; text-transform: uppercase; letter-spacing: .08em; color: var(--ink); }
+
 @media screen and (max-width: 1023px) {
-    :root { --header-height: 3.5rem; }
-    .site-header { padding: 0 .5rem; }
-    .site-header a { padding: 0 .65rem; }
+    .site-header { padding-left: .5rem; }
     #toggle-nav { display: inline-flex; align-items: center; gap: .5rem; }
     /* Without JavaScript the chapter list remains visible above the content. */
     #toc { position: static; width: auto; margin-top: var(--header-height); border-right: 0; border-bottom: 1px solid var(--line); }
@@ -214,18 +277,21 @@ tr:nth-child(even) { background: #f3f6f0; }
     #page-wrapper { margin-left: 0; padding: 2rem 1.5rem; }
     .nav-ready #page-wrapper { padding-top: calc(var(--header-height) + 2rem); }
 }
+@media screen and (max-width: 760px) {
+    .site-nav { display: none; }
+    .site-links { display: flex; flex-wrap: wrap; margin-top: 1.25rem; padding-top: 1rem; border-top: 1px solid var(--line); }
+    .site-links a { display: block; padding: .5rem .65rem; color: var(--ink); text-decoration: none; }
+    .site-links a:hover { background: var(--green-pale); color: var(--green-dark); }
+}
 @media (max-width: 420px) {
     body { font-size: 16px; }
-    .brand { font-size: .875rem; }
-    .brand img { width: 24px; }
-    .site-header a { gap: .4rem; padding: 0 .4rem; }
-    #toggle-nav { font-size: .8rem; }
+    .site-header a { padding: 0 .5rem; }
     #page-wrapper { padding-left: 1rem; padding-right: 1rem; }
     .chapter-pagination { gap: 1rem; font-size: .9rem; }
 }
 @media print {
     body { background: white; color: black; font-size: 11pt; }
-    .site-header, #toc, .skip-link, .chapter-pagination { display: none; }
+    .site-header, #toc, .skip-link, .chapter-pagination, .version-banner, .copy-code, .heading-anchor { display: none; }
     #page-wrapper { margin: 0; padding: 0; }
     #page { max-width: none; }
     h1, h2, h3, h4 { break-after: avoid; color: black; }
