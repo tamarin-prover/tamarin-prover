@@ -423,8 +423,15 @@ openTheory :: ClosedTheory -> OpenTheory
 openTheory  (Theory n f h t sig c items opts sapic) = openTranslatedTheory(
     Theory n f h t (toSignaturePure sig) (openRuleCache c)
     -- We merge duplicate rules if they were split into variants
-      (mergeOpenProtoRules $ map (mapTheoryItem openProtoRule incrementalToSkeletonProof) items)
+      (mergeOpenProtoRules $ map (restoreFormula . mapTheoryItem openProtoRule incrementalToSkeletonProof) items)
       opts sapic)
+  where
+    -- Closing installs the passive guard after macro expansion. Reclosing must
+    -- start with the same source formula as loading the exported theory.
+    restoreFormula (LemmaItem l) | isPassiveLemma l =
+      LemmaItem l { _lFormula = fromMaybe (_lFormula l) (_lOriginalFormula l)
+                  , _lOriginalFormula = Nothing }
+    restoreFormula item = item
 
 -- | Open a theory by dropping the closed world assumption and values whose
 -- soundness depends on it.

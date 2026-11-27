@@ -36,6 +36,7 @@ import           Items.RuleItem
 
 import           ClosedTheory
 import           TheoryObject
+import           PassiveNetwork
 import           OpenTheory
 import           Theory.Model
 import           Theory.Proof
@@ -68,7 +69,15 @@ closeTheoryWithMaude sig thy0 autoSources showSaturation =
     h          = L.get thyHeuristic thy0
     t          = L.get thyTactic thy0
     forcedInjFacts = L.get forcedInjectiveFacts $ L.get thyOptions thy0
-    cache its = closeRuleCache parameters restrictions (typAsms its) forcedInjFacts sig (cacheRules its) (L.get thyCache thy0) (L.get (verboseOption . thyOptions) thy0) False (L.get thyIsSapic thy0)
+    namespace = passiveNamespace thy0
+    cache its = makeCache (typAsms (const True) its) $ case namespace of
+      Nothing -> its
+      Just prefix ->
+        let instrument (RuleItem r) = map RuleItem (passiveRules prefix r)
+            instrument item = [item]
+            (withBreakers, _, _) = runReader (addSolvingLoopBreakers (concatMap instrument its)) hnd
+        in withBreakers
+    makeCache asms its = closeRuleCache parameters restrictions asms forcedInjFacts sig (cacheRules its) (L.get thyCache thy0) (L.get (verboseOption . thyOptions) thy0) False (L.get thyIsSapic thy0)
     -- Injectivity and monotonicity must describe the expanded rules used by
     -- the solver. Keep the original E-rules in the theory items for display.
     cacheRules its = case theoryMacros thy0 of
@@ -88,7 +97,7 @@ closeTheoryWithMaude sig thy0 autoSources showSaturation =
     closeTheoryItem = foldTheoryItem
        (RuleItem . closeProtoRule hnd (theoryMacros thy0))
        (RestrictionItem . applyMacroInRestriction (theoryMacros thy0))
-       (LemmaItem . fmap skeletonToIncrementalProof . applyMacroInLemma (theoryMacros thy0))
+       (LemmaItem . guardPassiveLemma namespace . fmap skeletonToIncrementalProof . applyMacroInLemma (theoryMacros thy0))
        TextItem
        ConfigBlockItem
        PredicateItem
@@ -145,15 +154,17 @@ closeTheoryWithMaude sig thy0 autoSources showSaturation =
       (\name -> M.findWithDefault name name originalNames) ru
     restoreName item = item
 
-    cachePre = cache itemsForAutoSources
+    -- Auto-sources annotates the original rule families. Both receive branches
+    -- inherit these actions. Only unconditional sources apply in this preliminary cache.
+    cachePre = makeCache (typAsms (not . isPassiveLemma) itemsForAutoSources) itemsForAutoSources
     items' = map restoreName $ addAutoSourcesLemma hnd lemmaName cachePre itemsForAutoSources
 
     -- extract source restrictions and lemmas
     restrictions = do RestrictionItem rstr <- items
                       return $ formulaToGuarded_ $ L.get rstrFormula rstr
-    typAsms its  = do LemmaItem lem <- its
-                      guard (isSourceLemma lem)
-                      return $ formulaToGuarded_ $ L.get lFormula lem
+    typAsms include its =
+      [ formulaToGuarded_ (_lFormula lem)
+      | LemmaItem lem <- its, isSourceLemma lem, include lem ]
 
     -- extract protocol rules
     rules :: [TheoryItem ClosedProtoRule IncrementalProof s] -> [ClosedProtoRule]
