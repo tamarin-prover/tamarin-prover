@@ -421,7 +421,7 @@ compiledRuleAC (Rule eInfo prems concs acts newVars) =
 -- soundness depends on it.
 openTheory :: ClosedTheory -> OpenTheory
 openTheory  (Theory n f h t sig c items opts sapic) = openTranslatedTheory(
-    Theory n f h t (toSignaturePure sig) (openRuleCache c)
+    Theory n f h t (toSignaturePure sig) (openRuleCache (activeRuleCache c))
     -- We merge duplicate rules if they were split into variants
       (mergeOpenProtoRules $ map (restoreFormula . mapTheoryItem openProtoRule incrementalToSkeletonProof) items)
       opts sapic)
@@ -475,7 +475,7 @@ modifyLemmaProof prover name thy =
 
     change preItems (LemmaItem lem) = do
          let ctxt = getProofContext lem thy
-             sys  = mkSystem ctxt (theoryRestrictions thy) preItems $ L.get lFormula lem
+             sys  = mkSystem ctxt (theoryRestrictions thy) preItems lem
          lem' <- modA lProof (runProver prover ctxt 0 sys) lem
          return $ LemmaItem lem'
     change _ _ = error "LemmaProof: change: impossible"

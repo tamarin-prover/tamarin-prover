@@ -76,6 +76,8 @@ import Yesod.Core
 import Yesod.Static
 
 import Theory
+import Rule (TraceRuleCaches(..))
+import Lemma (isPassiveLemma)
 import Theory.Constraint.System.JSON (JSONGraphs)
 import Theory.Tools.Wellformedness (WfErrorReport)
 import Main.TheoryLoader
@@ -223,27 +225,30 @@ compareDTI (TheoryInfo _ i1 t1 p1 a1 o1 _ _) (TheoryInfo _ i2 t2 p2 a2 o2 _ _) =
 data EitherTheoryInfo
   = Trace TheoryInfo
   | Diff DiffTheoryInfo
-  deriving (Generic, Bin.Binary)
+  deriving (Generic)
 
--- instance Bin.Binary TheoryInfo
--- instance Bin.Binary DiffTheoryInfo
--- instance Bin.Binary EitherTheoryInfo
-
-{- instance Bin.Binary EitherTheoryInfo where
-       put (Trace i) = do Bin.put (0 :: Bin.Word8)
-                            Bin.put i
-       put (Diff i)    = do Bin.put (1 :: Bin.Word8)
-       Bin.put i -}
-{-       get = do t <- get :: Bin.Get Bin.Word8
-                case t of
-                           0 -> do i <- Bin.get
-                                   pure (Trace i)
-                           1 -> do i <- Bin.get
-                           pure (Diff i) -}
-{-       get = do tag <- Bin.getWord8
-                case tag of
-                    0 -> liftM Trace get
-                    1 -> liftM Diff get -}
+-- Preserve the stored representation of active-only and diff proof states.
+-- Older mixed states (tag 0) contain one instrumented cache. Reclose their
+-- original rules and replay their saved proofs in the appropriate context.
+instance Bin.Binary EitherTheoryInfo where
+  put (Trace ti) = case ti.theory._thyCache of
+    TraceRuleCaches active Nothing -> do
+      Bin.putWord8 0
+      Bin.put ti{theory = ti.theory{_thyCache = active}}
+    TraceRuleCaches _ (Just _) -> Bin.putWord8 2 >> Bin.put ti
+  put (Diff ti) = Bin.putWord8 1 >> Bin.put ti
+  get = Bin.getWord8 >>= \case
+    0 -> do
+      ti <- Bin.get
+      let thy = ti.theory{_thyCache = TraceRuleCaches ti.theory._thyCache Nothing}
+          restored
+            | any isPassiveLemma (theoryLemmas thy) =
+                closeTheoryWithMaude thy._thySignature (removeTranslationItems (openTheory thy)) False False
+            | otherwise = thy
+      pure $ Trace ti{theory = restored}
+    1 -> Diff <$> Bin.get
+    2 -> Trace <$> Bin.get
+    _ -> fail "Unknown theory proof-state format"
 
 -- Direct access functionf for Either Theory Type
 getEitherTheoryName :: EitherTheoryInfo -> String

@@ -10,6 +10,7 @@ module Lemma (
   , toSystemTraceQuantifier
   , isSourceLemma
   , isPassiveLemma
+  , appliesToNetworkOf
   , isLeftLemma
   , isRightLemma
   , module Items.LemmaItem
@@ -68,6 +69,10 @@ isSourceLemma lem =
 -- | Whether the lemma quantifies over passive network traces.
 isPassiveLemma :: ProtoLemma f p -> Bool
 isPassiveLemma = elem PassiveLemma . _lAttributes
+
+-- | An active-network assumption also holds on the subset of passive traces.
+appliesToNetworkOf :: Lemma p -> Lemma q -> Bool
+assumption `appliesToNetworkOf` target = not (isPassiveLemma assumption) || isPassiveLemma target
 
 -- | True iff the lemma is a LHS lemma.
 isLeftLemma :: ProtoLemma f p -> Bool

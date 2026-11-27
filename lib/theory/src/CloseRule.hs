@@ -70,13 +70,13 @@ closeTheoryWithMaude sig thy0 autoSources showSaturation =
     t          = L.get thyTactic thy0
     forcedInjFacts = L.get forcedInjectiveFacts $ L.get thyOptions thy0
     namespace = passiveNamespace thy0
-    cache its = makeCache (typAsms (const True) its) $ case namespace of
-      Nothing -> its
-      Just prefix ->
-        let instrument (RuleItem r) = map RuleItem (passiveRules prefix r)
-            instrument item = [item]
-            (withBreakers, _, _) = runReader (addSolvingLoopBreakers (concatMap instrument its)) hnd
-        in withBreakers
+    activeCache its = makeCache (typAsms (not . isPassiveLemma) its) its
+    cache its = TraceRuleCaches (activeCache its) (instrumentedCache its <$> namespace)
+    instrumentedCache its prefix =
+      let instrument (RuleItem r) = map RuleItem (passiveRules prefix r)
+          instrument item = [item]
+          (withBreakers, _, _) = runReader (addSolvingLoopBreakers (concatMap instrument its)) hnd
+      in makeCache (typAsms (const True) its) withBreakers
     makeCache asms its = closeRuleCache parameters restrictions asms forcedInjFacts sig (cacheRules its) (L.get thyCache thy0) (L.get (verboseOption . thyOptions) thy0) False (L.get thyIsSapic thy0)
     -- Injectivity and monotonicity must describe the expanded rules used by
     -- the solver. Keep the original E-rules in the theory items for display.
@@ -156,7 +156,7 @@ closeTheoryWithMaude sig thy0 autoSources showSaturation =
 
     -- Auto-sources annotates the original rule families. Both receive branches
     -- inherit these actions. Only unconditional sources apply in this preliminary cache.
-    cachePre = makeCache (typAsms (not . isPassiveLemma) itemsForAutoSources) itemsForAutoSources
+    cachePre = activeCache itemsForAutoSources
     items' = map restoreName $ addAutoSourcesLemma hnd lemmaName cachePre itemsForAutoSources
 
     -- extract source restrictions and lemmas
@@ -209,28 +209,30 @@ proveTheory selector prover thy =
       | otherwise    = lem
       where
         ctxt    = getProofContext lem thy
-        sys     = mkSystem ctxt (theoryRestrictions thy) preItems $ L.get lFormula lem
+        sys     = mkSystem ctxt (theoryRestrictions thy) preItems lem
         add prf = fromMaybe prf $ runProver prover ctxt 0 sys prf
 
 
 -- | Construct a constraint system for verifying the given formula.
 mkSystem :: ProofContext -> [Restriction] -> [TheoryItem r p s]
-         -> LNFormula -> System
-mkSystem ctxt restrictions previousItems =
+         -> Lemma a -> System
+mkSystem ctxt restrictions previousItems target =
     -- Note that it is OK to add reusable lemmas directly to the system, as
     -- they do not change the considered set of traces. This is the key
     -- difference between lemmas and restrictions.
-    addLemmasLocal
-  . formulaToSystem (map (formulaToGuarded_ . L.get rstrFormula) restrictions)
+    addLemmasLocal $ formulaToSystem (map (formulaToGuarded_ . L.get rstrFormula) restrictions)
                     (L.get pcSourceKind ctxt)
-                    (L.get pcTraceQuantifier ctxt) False
+                    (L.get pcTraceQuantifier ctxt) False (L.get lFormula target)
   where
     addLemmasLocal sys =
         insertLemmas (gatherReusableLemmas $ L.get sSourceKind sys) sys
 
     gatherReusableLemmas kind = do
         LemmaItem lem <- previousItems
-        guard $    lemmaSourceKind lem <= kind
+        -- The guard on a passive theorem mentions an event that cannot occur
+        -- in the active cache. Importing it there would assume its conclusion.
+        guard $    lem `appliesToNetworkOf` target
+                && lemmaSourceKind lem <= kind
                 && ReuseLemma `elem` L.get lAttributes lem
                 && AllTraces == L.get lTraceQuantifier lem
                 && L.get lName lem `notElem` L.get pcHiddenLemmas ctxt

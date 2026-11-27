@@ -44,7 +44,7 @@ import Pretty
 --        closed rule set of the theory.
 --     3. Maude is running under the given handle.
 type ClosedTheory =
-    Theory SignatureWithMaude ClosedRuleCache ClosedProtoRule IncrementalProof ()
+    Theory SignatureWithMaude TraceRuleCaches ClosedProtoRule IncrementalProof ()
 
 -- | Closed Diff theories can be proven. Invariants:
 --     1. Lemma names are unique
@@ -74,7 +74,7 @@ getEitherLemmas = diffTheoryLemmas
 
 -- | The variants of the intruder rules.
 getIntrVariants :: ClosedTheory -> [IntrRuleAC]
-getIntrVariants = intruderRules . L.get (crcRules . thyCache)
+getIntrVariants = intruderRules . getClassifiedRules
 
 -- | The variants of the intruder rules.
 getIntrVariantsDiff :: Side -> ClosedDiffTheory -> [IntrRuleAC]
@@ -97,10 +97,10 @@ getProtoRuleEsDiff s = S.toList . S.fromList . map ((L.get oprRuleE) . openProto
 getProofContext :: Lemma a -> ClosedTheory -> ProofContext
 getProofContext l thy = ProofContext
     ( L.get thySignature                       thy)
-    ( L.get (crcRules . thyCache)              thy)
-    ( L.get (crcInjectiveFactInsts . thyCache) thy)
+    rules
+    (L.get crcInjectiveFactInsts cache)
     kind
-    ( L.get (cases . thyCache)                 thy)
+    (L.get cases cache)
     inductionHint
     specifiedHeuristic
     specifiedTactic
@@ -109,10 +109,15 @@ getProofContext l thy = ProofContext
     ([ h | HideLemma h <- L.get lAttributes l])
     ( L.get (verboseOption . thyOptions)         thy)
     False
-    (all isSubtermRule  $ filter isDestrRule $ intruderRules $ L.get (crcRules . thyCache) thy)
-    (any isConstantRule $ filter isDestrRule $ intruderRules $ L.get (crcRules . thyCache) thy)
+    (all isSubtermRule  $ filter isDestrRule $ intruderRules rules)
+    (any isConstantRule $ filter isDestrRule $ intruderRules rules)
     (L.get thyIsSapic thy)
   where
+    caches = L.get thyCache thy
+    cache
+      | isPassiveLemma l = fromJustNote "passive lemma has no passive rule cache" (passiveRuleCache caches)
+      | otherwise        = activeRuleCache caches
+    rules = L.get crcRules cache
     kind    = lemmaSourceKind l
     cases   = case kind of RawSource     -> crcRawSources
                            RefinedSource -> crcRefinedSources
@@ -268,7 +273,7 @@ getDiffProofContext l thy = DiffProofContext (proofContext LHS) (proofContext RH
 
 -- | The facts with injective instances in this theory
 getInjectiveFactInsts :: ClosedTheory -> S.Set (FactTag, [[MonotonicBehaviour]])
-getInjectiveFactInsts = L.get (crcInjectiveFactInsts . thyCache)
+getInjectiveFactInsts = L.get crcInjectiveFactInsts . activeRuleCache . L.get thyCache
 
 -- | The facts with injective instances in this theory
 getDiffInjectiveFactInsts :: Side -> Bool -> ClosedDiffTheory -> S.Set (FactTag, [[MonotonicBehaviour]])
@@ -280,7 +285,7 @@ getDiffInjectiveFactInsts s isdiff = case (s, isdiff) of
 
 -- | The classified set of rules modulo AC in this theory.
 getClassifiedRules :: ClosedTheory -> ClassifiedRules
-getClassifiedRules = L.get (crcRules . thyCache)
+getClassifiedRules = L.get crcRules . activeRuleCache . L.get thyCache
 
 -- | The classified set of rules modulo AC in this theory.
 getDiffClassifiedRules :: Side -> Bool -> ClosedDiffTheory -> ClassifiedRules
@@ -292,8 +297,8 @@ getDiffClassifiedRules s isdiff = case (s, isdiff) of
 
 -- | The precomputed case distinctions.
 getSource :: SourceKind -> ClosedTheory -> [Source]
-getSource RawSource     = L.get (crcRawSources . thyCache)
-getSource RefinedSource = L.get (crcRefinedSources .   thyCache)
+getSource RawSource     = L.get crcRawSources . activeRuleCache . L.get thyCache
+getSource RefinedSource = L.get crcRefinedSources . activeRuleCache . L.get thyCache
 
 -- | The precomputed case distinctions.
 getDiffSource :: Side -> Bool -> SourceKind -> ClosedDiffTheory -> [Source]
@@ -400,7 +405,7 @@ prettyClosedTheory thy = if containsManualRuleVariants mergedRules
   where
     items = L.get thyItems thy
     mergedRules = mergeOpenProtoRules $ map (mapTheoryItem openProtoRule id) items
-    thy' :: Theory SignatureWithMaude ClosedRuleCache OpenProtoRule IncrementalProof ()
+    thy' :: Theory SignatureWithMaude TraceRuleCaches OpenProtoRule IncrementalProof ()
     thy' = Theory {_thyName=(L.get thyName thy)
             ,_thyInFile=(L.get thyInFile thy)
             ,_thyHeuristic=(L.get thyHeuristic thy)
@@ -411,7 +416,7 @@ prettyClosedTheory thy = if containsManualRuleVariants mergedRules
             ,_thyOptions =(L.get thyOptions thy)
             ,_thyIsSapic = (L.get thyIsSapic thy)}
     ppInjectiveFactInsts crc =
-        case S.toList $ L.get crcInjectiveFactInsts crc of
+        case S.toList $ L.get crcInjectiveFactInsts (activeRuleCache crc) of
             []   -> emptyDoc
             tags -> multiComment $ sep
                       [ text "looping facts with injective instances:"

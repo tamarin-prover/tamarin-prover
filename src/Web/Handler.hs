@@ -199,10 +199,10 @@ editProof idx name = withTheory idx $ \ti -> do
     maybe (pure (Left "Lemma not found")) (editLemmaProof ti) (lookupLemma name ti.theory)
 
     where
-        editLemmaProof ti (Lemma n m pt tq f ofm a olp) = do
-            let ctxt     = getProofContext (Lemma n m pt tq f ofm a lp) ti.theory
+        editLemmaProof ti lem@(Lemma n _ _ _ _ _ _ olp) = do
+            let ctxt     = getProofContext lem ti.theory
                 preItems = getLemmaPreItems n ti.theory
-                gsys     = mkSystem ctxt (theoryRestrictions ti.theory) preItems f
+                gsys     = mkSystem ctxt (theoryRestrictions ti.theory) preItems lem
                 lp       = newProof olp ctxt gsys
                 editf (Lemma n' pt' m' tq' f' ofm' a' lp') = if n'== n then Lemma n' pt' m' tq' f' ofm' a' lp else Lemma n' pt' m' tq' f' ofm' a' lp'
                 maybe_nthy =  modifyLemma editf ti.theory
@@ -220,7 +220,7 @@ editProof idx name = withTheory idx $ \ti -> do
                 _ -> fromMaybe olp $ runProver (checkAndExtendProver (sorryProver Nothing)) ctxt 0 gsys olp
 
 
--- The shared rule cache and proof case names depend on passive instrumentation.
+-- Passive rule names and the passive cache depend on the edited theory.
 -- Reopen the source items and replay proofs whenever an edit can change them.
 reclosePassiveEdit :: ClosedTheory -> ClosedTheory -> ClosedTheory
 reclosePassiveEdit old new
@@ -235,9 +235,9 @@ deleteLemma idx name = withTheory idx $ \ti -> do
     let maybeLemma = lookupLemma name ti.theory
     case maybeLemma of
         Nothing -> pure $ Left "Lemma not found"
-        Just (Lemma _ _ _ _ _ _ oa _) ->
+        Just removed@(Lemma _ _ _ _ _ _ oa _) ->
             if | SourceLemma `elem` oa -> pure $ Left "Can't edit or remove source lemmas for now"
-               | ReuseLemma `elem` oa -> reuseCase ti
+               | ReuseLemma `elem` oa -> reuseCase ti removed
                | otherwise -> normalCase ti
 
     where
@@ -246,17 +246,17 @@ deleteLemma idx name = withTheory idx $ \ti -> do
                 Nothing -> pure $ Left "Lemma editing failed"
                 Just nthy -> Right <$> replaceTheory (Just ti) Nothing (reclosePassiveEdit ti.theory nthy) ("modified" ++ show idx) idx
 
-        reuseCase ti =
-            case modifyLemma (lemmaFunc ti) ti.theory of
+        reuseCase ti removed =
+            case modifyLemma (lemmaFunc ti removed) ti.theory of
                 Nothing -> pure $ Left "Lemma editing failed"
                 Just nthy -> do
                     nidx <- replaceTheory (Just ti) Nothing nthy ("modified" ++ show idx) idx
                     withTheory nidx $ \ti' -> normalCase ti'
 
-        lemmaFunc ti (Lemma n pt m tq f ofm a lp) =
+        lemmaFunc ti removed target@(Lemma n pt m tq f ofm a lp) =
             let currIdx = fromMaybe (-1) (lookupLemmaIndex name ti.theory)
                 lIdx = fromMaybe 0 (lookupLemmaIndex n ti.theory)
-            in if lIdx > currIdx
+            in if lIdx > currIdx && removed `appliesToNetworkOf` target
                 then case lp of
                     LNode (ProofStep (Sorry Nothing) _) _ -> Lemma n pt m tq f ofm a lp
                     LNode (ProofStep Invalidated _) _ -> Lemma n pt m tq f ofm a lp
@@ -267,17 +267,19 @@ deleteLemma idx name = withTheory idx $ \ti -> do
 -- the new lemma is marked as modified to keep track of what whould be appended to the original file
 -- when "Append modified lemmas to file" is clicked
 addLemma :: Int -> Maybe Int -> Lemma ProofSkeleton -> Handler (Either String TheoryIdx)
-addLemma idx maybelemmaIndex (Lemma n pt _ tq f ofm a lp) = withTheory idx $ \ti -> do
-    let ctxt = getProofContext (Lemma n pt True tq f ofm a lp) ti.theory
-        preI = getLemmaPreItems n ti.theory
-        gsys = mkSystem ctxt (theoryRestrictions ti.theory) preI f
-    case formulaToGuarded f of
+addLemma idx maybelemmaIndex lem = withTheory idx $ \ti -> do
+    let -- Reclosing installs the guard and initializes the passive proof, even
+        -- when this is the first passive lemma added to an active theory.
+        proof | isPassiveLemma lem = unproven Nothing
+              | otherwise = unproven $ Just $ mkSystem (getProofContext lem ti.theory)
+                    (theoryRestrictions ti.theory) (getLemmaPreItems (_lName lem) ti.theory) lem
+    case formulaToGuarded (_lFormula lem) of
         Left d -> pure $ Left $ render d
         Right _ ->
             case maybelemmaIndex of
                 Nothing -> pure $ Left "Lemma not found"
                 Just lemmaIndex -> do
-                    let newThy = addLemmaAtIndex (Lemma n pt True tq f ofm a $ unproven (Just gsys)) lemmaIndex ti.theory
+                    let newThy = addLemmaAtIndex lem{_lModified = True, _lProof = proof} lemmaIndex ti.theory
                     case newThy of
                          Nothing -> pure $ Left "lemma editing failed"
                          (Just nthy) -> Right <$> replaceTheory (Just ti) Nothing (reclosePassiveEdit ti.theory nthy) ("modified" ++ show idx) idx
