@@ -12,6 +12,26 @@
           "theory_only": true
         }
       ]
+    },
+    {
+      "name": "progress-disables-pure-state",
+      "args": [
+        "-DPROGRESS",
+        "--prove"
+      ],
+      "matches": [
+        {
+          "regex": "\\bL_PureState\\(",
+          "max": 0,
+          "theory_only": true
+        }
+      ],
+      "contains": [
+        "translation-state-optimisation is disabled when translation-progress is enabled.",
+        "initial_value (all-traces): verified",
+        "updated_value (all-traces): verified",
+        "completed (exists-trace): verified"
+      ]
     }
   ]
 }

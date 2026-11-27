@@ -116,41 +116,39 @@ newStates p (v:declarables) declared stateMap = do
 
 
 
--- A pure cell is initialized once per fresh state identifier, before replicating
--- or splitting its accesses between parallel branches, then accessed through
--- locked read/write sections. Replication above the fresh declaration creates
--- distinct cells and is allowed. Outside this fragment the ordinary translation
--- retains overwrite, deletion, and lookup-failure semantics through restrictions.
-data CellPhase = InitializerAllowed | InitializerForbidden | Ready | Locked
+-- A pure cell is initialized at most once per fresh state identifier and accessed
+-- through locked read/write sections. Initialization may run in parallel with
+-- readers: without progress, taking their empty else branch adds no trace beyond
+-- leaving them blocked. Replication above the fresh declaration creates distinct
+-- cells and is allowed; replication of the initializer is not.
+data CellPhase = InitializerAllowed | InitializerForbidden | Locked
   deriving (Eq)
 
 isPureState :: LProcess (ProcessAnnotation LVar) -> SapicTerm -> Bool
-isPureState p target = check InitializerAllowed p
+isPureState p target = maybe False (<= 1) (check InitializerAllowed p)
   where
+    -- Count possible initializations: parallel branches add, exclusive branches
+    -- take the maximum. This allows a separate initializer without permitting
+    -- two parallel initializers to create two linear facts for the same cell.
+    check :: CellPhase -> LProcess (ProcessAnnotation LVar) -> Maybe Int
     check phase proc = case proc of
       ProcessAction (Insert t _) _ rest
-        | t == target, phase == InitializerAllowed -> check Ready rest
+        | t == target, phase == InitializerAllowed -> (1 +) <$> check InitializerForbidden rest
       ProcessAction (Lock t) _ (ProcessComb (Lookup t' _) _ body (ProcessNull _))
-        | t == target, t' == target, phase == Ready -> check Locked body
+        | t == target, t' == target, phase /= Locked -> check Locked body
       ProcessAction (Insert t _) _ (ProcessAction (Unlock t') _ rest)
-        | t == target, t' == target, phase == Locked -> check Ready rest
-      _ | stateIdentifier proc == Just target -> False
-      -- Initialization cannot be replicated or separated from users in another
-      -- parallel branch. An unrelated branch does not affect an isolated cell.
-      -- A fresh cell inside replication is checked at its declaration.
-      ProcessAction Rep _ rest -> phase /= Locked && check (withoutInit phase) rest
+        | t == target, t' == target, phase == Locked -> check InitializerForbidden rest
+      _ | stateIdentifier proc == Just target -> Nothing
+      ProcessAction Rep _ rest
+        | phase /= Locked -> check InitializerForbidden rest
+        | otherwise -> Nothing
       ProcessComb Parallel _ left right
-        | phase == InitializerAllowed, not (usesTarget left && usesTarget right) ->
-            check phase left && check phase right
-        | otherwise ->
-            phase /= Locked && check (withoutInit phase) left && check (withoutInit phase) right
+        | phase /= Locked -> (+) <$> check phase left <*> check phase right
+        | otherwise -> Nothing
       ProcessAction _ _ rest -> check phase rest
-      ProcessComb _ _ left right -> check phase left && check phase right
+      ProcessComb _ _ left right -> max <$> check phase left <*> check phase right
       -- Terminating while holding the cell also leaves the original lock held.
-      ProcessNull _ -> True
-    withoutInit InitializerAllowed = InitializerForbidden
-    withoutInit phase = phase
-    usesTarget proc = processContains proc ((== Just target) . stateIdentifier)
+      ProcessNull _ -> Just 0
 
 annotatePureStates :: LProcess (ProcessAnnotation LVar)  -> LProcess (ProcessAnnotation LVar)
 annotatePureStates p

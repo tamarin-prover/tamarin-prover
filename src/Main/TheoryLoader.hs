@@ -39,6 +39,7 @@ import Control.Monad.Catch (MonadCatch)
 import Control.Monad.Except
 import Control.Monad.IO.Class (MonadIO(liftIO))
 import Control.Monad.Reader
+import Control.Monad.Writer.Strict (WriterT, runWriterT)
 
 import Data.Bifunctor (Bifunctor (bimap), first)
 import Data.Bitraversable (Bitraversable (bitraverse))
@@ -475,7 +476,7 @@ loadTheory thyOpts input inFile = do
 
 -- | Preprocess an open theory based on the specified output module so that
 -- well-formedness can be checked (but do not translate yet)
-processOpenTheory :: (MonadCatch m) => TheoryLoadOptions -> OpenTheory -> m OpenTheory
+processOpenTheory :: (MonadCatch m) => TheoryLoadOptions -> OpenTheory -> WriterT WfErrorReport m OpenTheory
 processOpenTheory thyOpts = case thyOpts.outputModule of
   Nothing -> Sapic.typeTheory >=> Sapic.translate >=> Acc.translate
   Just ModuleSpthy -> pure
@@ -503,8 +504,8 @@ translateTheory ::
 translateTheory thyOpts thy = do
   traceM ("[Theory " ++ theoryName thy ++ "] Theory translated")
   let report = either (\t -> Sapic.checkWellformedness t ++ Acc.checkWellformedness t) (const []) thy
-  transThy <- withTheory (processOpenTheory thyOpts) thy
-  pure (report, transThy)
+  (transThy, translationWarnings) <- runWriterT (withTheory (processOpenTheory thyOpts) thy)
+  pure (report ++ translationWarnings, transThy)
   where
     withTheory f = bitraverse f pure
     theoryName = either (._thyName) (._diffThyName)
