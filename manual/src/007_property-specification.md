@@ -604,13 +604,24 @@ lemma eavesdrop [passive]: exists-trace
   "Ex n #s #k. Sent(n)@s & K(n)@k & #s < #k"
 ```
 
-Unannotated lemmas in the same theory use the ordinary active adversary.
-They use the original rules and precomputed sources, so adding a separate
-passive lemma preserves their proof scripts. Passive lemmas share a second
-cache for the instrumented rules. `--precompute-only` shows both caches in a mixed theory.
+For a fixed set of MSR rules, unannotated lemmas use the original rules and
+precomputed sources. Adding a passive lemma therefore preserves active proof
+scripts over those rules. Passive lemmas share a second cache for the
+instrumented rules. `--precompute-only` shows both caches in a mixed theory.
 An annotated `all-traces` lemma checks its claim on every passive trace.
 An annotated `exists-trace` lemma requires a passive witness. Only passive proofs can use a
 `[passive, reuse]` or `[passive, sources]` lemma as an assumption. This annotation is supported in Tamarin's trace mode.
+
+**SAPIC processes.** The annotation applies to the `In` and `Out` facts in
+the translated MSR rules. For example, `out(m)` produces `Out(m)`, so the
+passive adversary can eavesdrop on that output. For an explicit channel such
+as `out('c',m)`, SAPIC models honest delivery with an internal message fact.
+Its rule for public observation requires `In('c')`, which under `[passive]`
+needs an earlier `Out('c')`. A sender and receiver can therefore communicate
+on the public channel `'c'` while a passive lemma finds no witness for
+`K(m)`. Such a result describes the translated rules and cannot establish
+secrecy against an observer of that named channel. Use `out(m)` and `in(x)`
+when modeling the public network described above.
 
 ### `sources`
 
