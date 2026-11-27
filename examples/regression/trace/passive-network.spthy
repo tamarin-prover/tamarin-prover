@@ -1,9 +1,15 @@
 theory PassiveNetwork begin
 
+builtins: symmetric-encryption
+
 // The action name also checks that generated names cannot capture user facts.
 rule Send:
   [ Fr(~n) ] --[ Sent(~n), TamarinPassive_UnrestrictedReceive() ]->
   [ Out(<'packet', ~n>) ]
+
+// The symmetric key is a public constant, so either attacker can decrypt.
+rule SendEncryptedSecret:
+  [ Fr(~secret) ] --[ EncryptedSecret(~secret) ]-> [ Out(senc(~secret, 'known_key')) ]
 
 rule Receive:
   [ In(<'packet', n>) ] --[ Received(n) ]-> []
@@ -69,5 +75,12 @@ lemma two_outputs_allow_two_inputs [passive]: exists-trace
 
 lemma active_two_inputs: exists-trace
   "Ex n #r. Twice(n)@r"
+
+// Only the active attacker can send <'packet', secret> after decryption.
+lemma L3_passive [passive]:
+  "not (Ex secret #s #r. EncryptedSecret(secret)@s & Received(secret)@r & #s < #r)"
+
+lemma L3:
+  "not (Ex secret #s #r. EncryptedSecret(secret)@s & Received(secret)@r & #s < #r)"
 
 end

@@ -20,7 +20,9 @@
         "each_input_needs_a_packet (all-traces): verified",
         "L2 (all-traces): falsified - found trace",
         "two_outputs_allow_two_inputs (exists-trace): verified",
-        "active_two_inputs (exists-trace): verified"
+        "active_two_inputs (exists-trace): verified",
+        "L3_passive (all-traces): verified",
+        "L3 (all-traces): falsified - found trace"
       ]
     },
     {
