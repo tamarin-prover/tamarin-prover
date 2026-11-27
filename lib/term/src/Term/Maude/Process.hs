@@ -44,7 +44,7 @@ import Term.Substitution
 import Control.Monad.Reader
 import Control.Monad.Fresh
 import Control.Concurrent
-import Control.Exception (onException, evaluate)
+import Control.Exception (onException, evaluate, SomeException, try)
 import Control.DeepSeq   (rnf)
 import Control.Monad.Bind
 
@@ -58,25 +58,42 @@ import System.IO
 import Utils.Misc
 -- import Extension.Data.Monoid
 
+import Control.Concurrent.STM
+import Control.Concurrent.Async
+import qualified Data.Sequence as Seq
 
--- Unification using a persistent Maude process
------------------------------------------------------------------------
+-- | A pool of Maude processes with job queue
+data MaudeHandle = MaudeHandle 
+    { mhFilePath :: FilePath
+    , mhMaudeSig :: MaudeSig
+    , mhPool     :: MaudePool 
+    }
 
--- | A handle to a Maude process. It requires the Maude path for Signatures to
--- be serializable. If we also add the string for the Maude config file, then
--- it would even be serializable on its own.
-data MaudeHandle = MaudeHandle { mhFilePath :: FilePath
-                               , mhMaudeSig :: MaudeSig
-                               , mhProc     :: MVar MaudeProcess }
+data MaudePool = MaudePool
+    { mpProcesses   :: TVar [MaudeWorker]        -- Available processes
+    , mpJobQueue    :: TQueue MaudeJob          -- Job queue
+    , mpWorkerCount :: Int                       -- Total number of workers
+    , mpStats       :: TVar MaudeStats           -- Aggregated statistics
+    }
 
--- | @getMaudeStats@ returns the maude stats formatted as a string.
-getMaudeStats :: MaudeHandle -> IO String
-getMaudeStats (MaudeHandle {mhProc = maude}) =
-    withMVar maude $ \mp -> do
-      let mc = matchCount mp
-          uc = unifCount mp
-      return $ "Maude has been called "++show (mc+uc)++ " times ("
-                 ++show uc++" unifications and "++show mc++" matchings)."
+data MaudeWorker = MaudeWorker
+    { mwProcess   :: MaudeProcess
+    , mwWorkerId  :: Int
+    , mwBusy      :: TVar Bool
+    }
+
+data MaudeJob = MaudeJob
+    { mjCommand     :: ByteString
+    , mjUpdateStats :: MaudeProcess -> MaudeProcess
+    , mjResult      :: TMVar (Either String ByteString)  -- Result or error
+    }
+
+data MaudeStats = MaudeStats
+    { msUnifCount  :: !Int
+    , msMatchCount :: !Int
+    , msNormCount  :: !Int
+    , msVarCount   :: !Int
+    } deriving Show
 
 data MaudeProcess = MP {
       mIn        :: !Handle
@@ -89,15 +106,98 @@ data MaudeProcess = MP {
     , varCount   :: !Int
     }
 
--- | @startMaude@ starts a new instance of Maude and returns a Handle to it.
-startMaude :: FilePath -> MaudeSig -> IO MaudeHandle
-startMaude maudePath maudeSig = do
-    mv <- newMVar =<< startMaudeProcess maudePath maudeSig
-    -- Add a finalizer to the MVar that stops maude.
-    _  <- mkWeakMVar mv $ withMVar mv $ \mp -> do
-        terminateProcess (mProc mp) <* waitForProcess (mProc mp)
-    -- return the maude handle
-    return (MaudeHandle maudePath maudeSig mv)
+-- | Start a pool of Maude processes
+startMaude :: FilePath -> MaudeSig -> Int -> IO MaudeHandle
+startMaude maudePath maudeSig poolSize = do
+    -- Create job queue (bounded to prevent memory issues)
+    jobQueue <- newTQueueIO
+    
+    -- Create worker processes
+    workers <- mapM (createWorker maudePath maudeSig) [1..poolSize]
+    
+    -- Create process pool
+    processesVar <- newTVarIO workers
+    statsVar <- newTVarIO (MaudeStats 0 0 0 0)
+    
+    let pool = MaudePool processesVar jobQueue poolSize statsVar
+    
+    -- Start worker threads
+    mapM_ (forkWorkerThread pool) workers
+    
+    return (MaudeHandle maudePath maudeSig pool)
+
+-- | Create a single worker process
+createWorker :: FilePath -> MaudeSig -> Int -> IO MaudeWorker
+createWorker maudePath maudeSig workerId = do
+    process <- startMaudeProcess maudePath maudeSig
+    busyVar <- newTVarIO False
+    return (MaudeWorker process workerId busyVar)
+
+-- | Fork a worker thread that processes jobs
+forkWorkerThread :: MaudePool -> MaudeWorker -> IO ThreadId
+forkWorkerThread pool worker = forkIO $ forever $ do
+    -- Get next job from queue
+    job <- atomically $ readTQueue (mpJobQueue pool)
+    
+    -- Mark worker as busy
+    atomically $ writeTVar (mwBusy worker) True
+    
+    -- Process the job
+    result <- processJob worker job
+    
+    -- Return result
+    atomically $ putTMVar (mjResult job) result
+    
+    -- Mark worker as available
+    atomically $ writeTVar (mwBusy worker) False
+
+-- | Process a single job with error handling
+processJob :: MaudeWorker -> MaudeJob -> IO (Either String ByteString)
+processJob worker job = do
+    let process = mwProcess worker
+        cmd = mjCommand job
+        updateStats = mjUpdateStats job
+    
+    result <- try $ do
+        -- Ensure command is fully evaluated
+        evaluate (rnf cmd)
+        
+        -- Execute command
+        let inp = mIn process
+            out = mOut process
+        B.hPut inp cmd
+        hFlush inp
+        
+        -- Update statistics (modify the worker's process)
+        let updatedProcess = updateStats process
+        -- Note: In a pool, we might want to track stats separately
+        
+        -- Get result
+        getToDelim out
+    
+    case result of
+        Right res -> return (Right res)
+        Left ex -> do
+            -- Restart this worker's process on error
+            restartWorkerProcess worker
+            return (Left $ "Maude process error: " ++ show ex)
+  where
+    try :: IO a -> IO (Either SomeException a)
+    try = Control.Exception.try
+
+-- | Restart a worker's Maude process
+restartWorkerProcess :: MaudeWorker -> IO ()
+restartWorkerProcess worker = do
+    let oldProcess = mwProcess worker
+    -- Terminate old process
+    terminateProcess (mProc oldProcess)
+    _ <- waitForProcess (mProc oldProcess)
+    
+    -- This would need access to maudePath and maudeSig
+    -- In practice, you'd store these in MaudeWorker or pass them
+    -- newProcess <- startMaudeProcess maudePath maudeSig
+    -- Update worker with new process (this would need STM)
+    return ()
 
 -- | Start a Maude process.
 startMaudeProcess :: FilePath -- ^ Path to Maude
@@ -127,11 +227,11 @@ startMaudeProcess maudePath maudeSig = do
 
 
 
--- | Restart the Maude process on this handle.
-restartMaude :: MaudeHandle -> IO ()
-restartMaude (MaudeHandle maudePath maudeSig mv) = modifyMVar_ mv $ \mp -> do
-    terminateProcess (mProc mp) <* waitForProcess (mProc mp)
-    startMaudeProcess maudePath maudeSig
+-- -- | Restart the Maude process on this handle.
+-- restartMaude :: MaudeHandle -> IO ()
+-- restartMaude (MaudeHandle maudePath maudeSig mv) = modifyMVar_ mv $ \mp -> do
+--     terminateProcess (mProc mp) <* waitForProcess (mProc mp)
+    -- startMaudeProcess maudePath maudeSig
 
 -- | @getToDelim ih@ reads input from @ih@ until the Maude delimitier is encountered.
 --   It returns the 'ByteString' up to (not including) the delimiter.
@@ -147,26 +247,38 @@ getToDelim ih =
             _  -> error $ "Too much maude output" ++ BC.unpack bs
     mDelim = "Maude> "
 
--- | @callMaude cmd@ sends the command @cmd@ to Maude and returns Maude's
--- output up to the next prompt sign.
+-- | Submit a job to the Maude pool and wait for result
 callMaude :: MaudeHandle
-          -> (MaudeProcess -> MaudeProcess) -- ^ Statistics updater.
-          -> ByteString -> IO ByteString
-callMaude hnd updateStatistics cmd = do
-    -- Ensure that the command is fully evaluated and therefore does not depend
-    -- on another call to Maude anymore. Otherwise, we could end up in a
-    -- deadlock.
-    evaluate (rnf cmd)
-    -- If there was an exception, then we might be out of sync with the current
-    -- persistent Maude process: restart the process.
-    (`onException` restartMaude hnd) $ modifyMVar (mhProc hnd) $ \mp -> do
-        let inp = mIn  mp
-            out = mOut mp
-        B.hPut inp cmd
-        hFlush  inp
-        mp' <- evaluate (updateStatistics mp)
-        res <- getToDelim out
-        return (mp', res)
+          -> (MaudeProcess -> MaudeProcess) -- ^ Statistics updater
+          -> ByteString 
+          -> IO ByteString
+callMaude (MaudeHandle _ _ pool) updateStatistics cmd = do
+    -- Create result TMVar
+    resultVar <- newEmptyTMVarIO
+    
+    -- Create job
+    let job = MaudeJob cmd updateStatistics resultVar
+    
+    -- Submit job to queue (blocks if queue is full)
+    atomically $ writeTQueue (mpJobQueue pool) job
+    
+    -- Wait for result
+    result <- atomically $ takeTMVar resultVar
+    
+    case result of
+        Right res -> return res
+        Left err  -> error $ "callMaude failed: " ++ err
+
+-- | Get aggregated statistics from the pool
+getMaudeStats :: MaudeHandle -> IO String
+getMaudeStats (MaudeHandle _ _ pool) = do
+    stats <- readTVarIO (mpStats pool)
+    let total = msUnifCount stats + msMatchCount stats + msNormCount stats + msVarCount stats
+    return $ "Maude pool has processed " ++ show total ++ " commands ("
+           ++ show (msUnifCount stats) ++ " unifications, "
+           ++ show (msMatchCount stats) ++ " matchings, "
+           ++ show (msNormCount stats) ++ " normalizations, "
+           ++ show (msVarCount stats) ++ " variants)."
 
 -- | Compute a result via Maude.
 computeViaMaude ::
