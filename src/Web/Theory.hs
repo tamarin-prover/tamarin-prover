@@ -71,6 +71,7 @@ import System.Process hiding (system)
 import Logic.Connectives
 import Theory hiding (lPlaintext)
 import Theory.Text.Pretty
+import Lemma (isPassiveLemma)
 import ClosedTheory (prettyClosedProtoRule)
 import TheoryObject (theoryMacros, prettyTactic, diffTheoryMacros, diffTheorySideRules, DiffLemma (..))
 
@@ -309,7 +310,7 @@ lemmaIndex renderUrl tidx l =
         (kwLemma <-> prettyLemmaName l <> colon)
         $-$
         nest 2 ( sep [ prettyTraceQuantifier l._lTraceQuantifier
-                     , doubleQuotes $ prettyLNFormula l._lFormula
+                     , doubleQuotes $ prettyLNFormula displayedFormula
                      ] )
 
         $-$
@@ -326,6 +327,9 @@ lemmaIndex renderUrl tidx l =
     $-$
     (linkToPath renderUrl lemmaAdd ["add"] $ text "add lemma")
   where
+    displayedFormula
+      | isPassiveLemma l = fromMaybe (_lFormula l) (_lOriginalFormula l)
+      | otherwise = _lFormula l
 
     lemmaEdit = TheoryPathMR tidx $ TheoryEdit l._lName
     lemmaDelete = TheoryPathMR tidx $ TheoryDelete l._lName

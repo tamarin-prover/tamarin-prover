@@ -37,6 +37,7 @@ import Data.Set qualified as Set
 import Export.ProVerif.Formula
 import Export.ProVerif.Instrumentation
 import Export.Types (translationInvariantFail)
+import Lemma (isPassiveLemma)
 import Sapic.Typing
 import Theory
 import Theory.Tools.Wellformedness (formulaFacts)
@@ -106,9 +107,13 @@ planOutcome name plans = fromMaybe PropertyExcluded (lookup name plans)
 
 prepareProperty :: String -> TypingEnvironment -> PropertyRole prepared -> PropertyOutcome prepared
 prepareProperty completionEvent typeEnvironment = \case
+  QueryProperty lemma | isPassiveLemma lemma -> passiveOmitted
+  AxiomProperty lemma | isPassiveLemma lemma -> passiveOmitted
   QueryProperty lemma -> prepareQueryProperty completionEvent typeEnvironment lemma
   AxiomProperty lemma -> prepareAxiomProperty completionEvent typeEnvironment lemma
   RestrictionProperty restriction -> prepareRestrictionProperty typeEnvironment restriction
+  where
+    passiveOmitted = PropertyOmitted "passive network semantics are only supported by Tamarin trace proofs"
 
 -- | Translate a lemma formula for ProVerif output.
 -- This function translates ONLY lemmas in the "classical way" with timepoints.

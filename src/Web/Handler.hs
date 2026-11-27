@@ -76,7 +76,7 @@ import Theory
   , removeLemmaDiff
   , removeDiffLemma
   , getLemmaPreItems
-  , openTheory
+  , openTheory, removeTranslationItems, closeTheoryWithMaude
   , sorryProver
   , runAutoProver
   , sorryDiffProver
@@ -220,6 +220,14 @@ editProof idx name = withTheory idx $ \ti -> do
                 _ -> fromMaybe olp $ runProver (checkAndExtendProver (sorryProver Nothing)) ctxt 0 gsys olp
 
 
+-- The shared rule cache and proof case names depend on passive instrumentation.
+-- Reopen the source items and replay proofs whenever an edit can change them.
+reclosePassiveEdit :: ClosedTheory -> ClosedTheory -> ClosedTheory
+reclosePassiveEdit old new
+  | any isPassiveLemma (theoryLemmas old) || any isPassiveLemma (theoryLemmas new) =
+      closeTheoryWithMaude (_thySignature new) (removeTranslationItems (openTheory new)) False False
+  | otherwise = new
+
 -- | Deletes a Lemma from a theory, used for Theory editing
 -- when deleting a reuse lemma it marks subsequent proofs as invalidated
 deleteLemma :: Int -> String -> Handler (Either String TheoryIdx)
@@ -236,7 +244,7 @@ deleteLemma idx name = withTheory idx $ \ti -> do
         normalCase ti =
             case removeLemma name ti.theory of
                 Nothing -> pure $ Left "Lemma editing failed"
-                Just nthy -> Right <$> replaceTheory (Just ti) Nothing nthy ("modified" ++ show idx) idx
+                Just nthy -> Right <$> replaceTheory (Just ti) Nothing (reclosePassiveEdit ti.theory nthy) ("modified" ++ show idx) idx
 
         reuseCase ti =
             case modifyLemma (lemmaFunc ti) ti.theory of
@@ -272,7 +280,7 @@ addLemma idx maybelemmaIndex (Lemma n pt _ tq f ofm a lp) = withTheory idx $ \ti
                     let newThy = addLemmaAtIndex (Lemma n pt True tq f ofm a $ unproven (Just gsys)) lemmaIndex ti.theory
                     case newThy of
                          Nothing -> pure $ Left "lemma editing failed"
-                         (Just nthy) -> Right <$> replaceTheory (Just ti) Nothing nthy ("modified" ++ show idx) idx
+                         (Just nthy) -> Right <$> replaceTheory (Just ti) Nothing (reclosePassiveEdit ti.theory nthy) ("modified" ++ show idx) idx
 
 -- | Deletes, adds or modifies a lemma depending on the path
 editLemma :: Int -> TheoryPath -> Lemma ProofSkeleton -> Handler (Either String TheoryIdx)
