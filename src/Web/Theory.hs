@@ -72,7 +72,7 @@ import Logic.Connectives
 import Theory hiding (lPlaintext)
 import Theory.Text.Pretty
 import Lemma (isPassiveLemma)
-import ClosedTheory (prettyClosedProtoRule)
+import ClosedTheory (prettyClosedProtoRule, prettySourceSummary)
 import TheoryObject (theoryMacros, prettyTactic, diffTheoryMacros, diffTheorySideRules, DiffLemma (..))
 
 import Web.Settings
@@ -392,7 +392,7 @@ theoryIndex renderUrl tidx thy = foldr1 ($-$)
     , text ""
     , reqCasesLink "Raw sources" RawSource
     , text ""
-    , reqCasesLink "Refined sources " RefinedSource
+    , reqCasesLink "Refined sources" RefinedSource
     , text ""
     , linkToPath renderUrl (TheoryPathMR tidx $ TheoryAdd "<first>") ["add"] $ text "add lemma"
     , text ""
@@ -406,24 +406,20 @@ theoryIndex renderUrl tidx thy = foldr1 ($-$)
     lemmas         = map lemmaIndex' (getLemmas thy)
     rules          = getClassifiedRules thy
     rulesInfo      = parens $ int $ length rules._crProtocol
-    casesInfo kind =
-        parens $ nCases <> comma <-> text chainInfo
-      where
-        cases   = getSource kind thy
-        nChains = sum $ map (sum . unsolvedChainConstraints) cases
-        nCases  = int (length cases) <-> text "cases"
-        chainInfo | nChains == 0 = "deconstructions complete"
-                  | otherwise    = show nChains ++ " partial deconstructions left"
+    casesInfo kind = parens $ prettySourceSummary (getSource kind thy)
+    cacheLabel name
+      | any isPassiveLemma (getLemmas thy) = name ++ " (active network)"
+      | otherwise = name
 
     bold                = withTag "strong" [] . text
     overview n info p   = linkToPath renderUrl (TheoryPathMR tidx p) [] (bold n <-> info)
     messageLink         = overview "Message theory" (text "") TheoryMessage
-    ruleLink            = overview ruleLinkMsg rulesInfo TheoryRules
+    ruleLink            = overview (cacheLabel ruleLinkMsg) rulesInfo TheoryRules
     ruleLinkMsg         = "Multiset rewriting rules" ++
                           if null (theoryRestrictions thy) then "" else " and restrictions"
     tacticLink          = overview "Tactic(s)" (text "") TheoryTactic
 
-    reqCasesLink name k = overview name (casesInfo k) (TheorySource k 0 0)
+    reqCasesLink name k = overview (cacheLabel name) (casesInfo k) (TheorySource k 0 0)
 
 -- | Render the theory index.
 diffTheoryIndex :: HtmlDocument d => RenderUrl -> TheoryIdx -> ClosedDiffTheory -> d
@@ -488,14 +484,7 @@ diffTheoryIndex renderUrl tidx thy = foldr1 ($-$)
     diffLemmas         = map diffLemmaIndex' (getDiffLemmas thy)
     rules s isdiff     = getDiffClassifiedRules s isdiff thy
     rulesInfo s isdiff = parens $ int $ length (rules s isdiff)._crProtocol
-    casesInfo s kind isdiff =
-        parens $ nCases <> comma <-> text chainInfo
-      where
-        cases   = getDiffSource s isdiff kind thy
-        nChains = sum $ map (sum . unsolvedChainConstraints) cases
-        nCases  = int (length cases) <-> text "cases"
-        chainInfo | nChains == 0 = "deconstructions complete"
-                  | otherwise    = show nChains ++ " partial deconstructions left"
+    casesInfo s kind isdiff = parens $ prettySourceSummary (getDiffSource s isdiff kind thy)
 
     bold                 = withTag "strong" [] . text
     overview n info p    = linkToPath renderUrl (TheoryPathDiffMR tidx p) [] (bold n <-> info)

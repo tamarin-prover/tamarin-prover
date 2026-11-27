@@ -554,31 +554,29 @@ checkProofStatuses thy =  map (foldProof proofStepStatus . L.get lProof) $ theor
 checkDiffProofStatuses :: ClosedDiffTheory -> [ProofStatus]
 checkDiffProofStatuses thy = map (foldProof proofStepStatus . L.get lProof . snd) $ diffTheoryLemmas thy
 
--- | Render the results of the precomputations, for --precompute-only
-prettyPrecomputation ::  Document d => ClosedTheory -> d
-prettyPrecomputation thy = foldr1 ($-$)
-    [ 
-      ruleLink
-    , reqCasesLink "Raw sources:" RawSource
-    , reqCasesLink "Refined sources:" RefinedSource
-    ]
+-- | Summarize the sources actually used by a proof context.
+prettySourceSummary :: Document d => [Source] -> d
+prettySourceSummary cases = int (length cases) <-> text "cases," <-> text chainInfo
   where
-    rules          = getClassifiedRules thy
-    rulesInfo      = text $ show $ length $ L.get crProtocol rules
-    casesInfo kind = nCases <> comma <-> text chainInfo
-      where
-        cases   = getSource kind thy
-        nChains = sum $ map (sum . unsolvedChainConstraints) cases
-        nCases  = text $ show (length cases) ++ " " ++ "cases"
-        chainInfo | nChains == 0 = "deconstructions complete"
-                  | otherwise    = show nChains ++ " partial deconstructions left"
+    nChains = sum $ map (sum . unsolvedChainConstraints) cases
+    chainInfo | nChains == 0 = "deconstructions complete"
+              | otherwise    = show nChains ++ " partial deconstructions left"
 
-    overview n p   = n <-> p
-    ruleLinkMsg         = text $ "Multiset rewriting rules" ++
-                          (if null(theoryRestrictions thy) then "" else " and restrictions") ++ ":"
-    ruleLink            = overview ruleLinkMsg rulesInfo
-    reqCasesLink name k = overview (text name) (casesInfo k)
-
+-- | Render the results of the precomputations, for --precompute-only.
+prettyPrecomputation :: Document d => ClosedTheory -> d
+prettyPrecomputation thy = case passiveRuleCache caches of
+    Nothing      -> summary (activeRuleCache caches)
+    Just passive -> vcat [ text "Active network", summary (activeRuleCache caches)
+                         , text "Passive network", summary passive ]
+  where
+    caches = _thyCache thy
+    ruleLabel = if null (theoryRestrictions thy) then "Multiset rewriting rules:"
+                else "Multiset rewriting rules and restrictions:"
+    summary cache = vcat
+      [ text ruleLabel <-> int (length (L.get (crProtocol . crcRules) cache))
+      , text "Raw sources:" <-> prettySourceSummary (L.get crcRawSources cache)
+      , text "Refined sources:" <-> prettySourceSummary (L.get crcRefinedSources cache)
+      ]
 
 -- | Render the results of the precomputations, for --precompute-only (diff mode)
 prettyDiffPrecomputation :: Document d => ClosedDiffTheory -> d
@@ -600,13 +598,7 @@ prettyDiffPrecomputation thy = foldr1 ($-$)
   where
     rules s isdiff     = getDiffClassifiedRules s isdiff thy
     rulesInfo s isdiff = text $ show $ length $ L.get crProtocol (rules s isdiff)
-    casesInfo s kind isdiff = nCases <> comma <-> text chainInfo
-      where
-        cases   = getDiffSource s isdiff kind thy
-        nChains = sum $ map (sum . unsolvedChainConstraints) cases
-        nCases  = text $ show (length cases) ++ " " ++ "cases"
-        chainInfo | nChains == 0 = "deconstructions complete"
-                  | otherwise    = show nChains ++ " partial deconstructions left"
+    casesInfo s kind isdiff = prettySourceSummary (getDiffSource s isdiff kind thy)
 
     overview n p   = n <-> p
     ruleLink s isdiff    = overview (ruleLinkMsg s isdiff) (rulesInfo s isdiff)

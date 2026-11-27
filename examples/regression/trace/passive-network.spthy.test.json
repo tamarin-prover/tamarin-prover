@@ -34,6 +34,14 @@
       ]
     },
     {
+      "name": "precompute-both-networks",
+      "args": ["--precompute-only"],
+      "contains": [
+        "Active network\nMultiset rewriting rules: 10\nRaw sources: 5 cases",
+        "Passive network\nMultiset rewriting rules: 15\nRaw sources: 6 cases"
+      ]
+    },
+    {
       "name": "proverif-omits-passive-properties",
       "args": [
         "-m=proverif",

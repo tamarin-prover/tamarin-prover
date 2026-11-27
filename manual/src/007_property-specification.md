@@ -607,7 +607,7 @@ lemma eavesdrop [passive]: exists-trace
 Unannotated lemmas in the same theory use the ordinary active adversary.
 They use the original rules and precomputed sources, so adding a separate
 passive lemma preserves their proof scripts. Passive lemmas share a second
-cache for the instrumented rules.
+cache for the instrumented rules. `--precompute-only` shows both caches in a mixed theory.
 An annotated `all-traces` lemma checks its claim on every passive trace.
 An annotated `exists-trace` lemma requires a passive witness. Only passive proofs can use a
 `[passive, reuse]` or `[passive, sources]` lemma as an assumption. This annotation is supported in Tamarin's trace mode.
