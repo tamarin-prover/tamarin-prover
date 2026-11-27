@@ -1,0 +1,14 @@
+theory InvalidatedProof begin
+
+lemma earlier: exists-trace "T"
+simplify
+SOLVED
+
+// Editing a reuse lemma in the GUI saves the previous proof under INVALIDATED.
+// Reclosing a mixed theory must keep it available for explicit verification.
+lemma saved [passive]: exists-trace "T"
+INVALIDATED
+simplify
+SOLVED
+
+end

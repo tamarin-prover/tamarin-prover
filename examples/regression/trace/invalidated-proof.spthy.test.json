@@ -1,0 +1,12 @@
+{
+  "tests": [
+    {
+      "name": "retain-invalidated-proof",
+      "args": ["--quit-on-warning"],
+      "contains": [
+        "earlier (exists-trace): verified (2 steps)",
+        "saved (exists-trace): proof has been invalidated (3 steps)"
+      ]
+    }
+  ]
+}

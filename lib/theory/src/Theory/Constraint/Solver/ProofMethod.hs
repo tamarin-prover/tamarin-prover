@@ -260,6 +260,7 @@ checkAndExecProofMethod ctxt method sys = do
       SolveGoal goal -> guard (goal `M.member` L.get sGoals sys)
       Simplify -> Just ()
       Sorry _ -> Just ()
+      Invalidated -> Nothing
     execProofMethod ctxt method sys
   where
     equalReason :: Result -> Result -> Bool

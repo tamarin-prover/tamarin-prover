@@ -73,6 +73,7 @@ import Theory
   , lookupLemmaIndex
   , addLemmaAtIndex
   , modifyLemma
+  , modifyLemmaProof
   , removeLemmaDiff
   , removeDiffLemma
   , getLemmaPreItems
@@ -96,18 +97,16 @@ import Theory
   , getProofContext
   , formulaToGuarded
   , toSignaturePure
-  , checkAndExtendProver
   , theoryRestrictions
-  , Prover (runProver), unproven
+  , Prover, unproven
   )
 
 import Theory.Proof
   ( AutoProver(..)
   , SolutionExtractor(..)
   , DiffProver
-  , LTree(..)
-  , ProofStep(..)
-  , ProofMethod(..)
+  , invalidateProof
+  , recheckInvalidatedProof
   )
 
 import Web.Hamlet
@@ -193,32 +192,12 @@ getLemmaPlaintext nr path = do
     pure $ maybe "Enter your new Lemma" ((._lPlaintext)) lemmaItem
 
 
--- | modifies the proof of a lemma after editing (eg in the case of reuse lemmas)
+-- | Verify a saved proof against the edited theory.
 editProof :: Int -> String -> Handler (Either String TheoryIdx)
-editProof idx name = withTheory idx $ \ti -> do
-    maybe (pure (Left "Lemma not found")) (editLemmaProof ti) (lookupLemma name ti.theory)
-
-    where
-        editLemmaProof ti lem@(Lemma n _ _ _ _ _ _ olp) = do
-            let ctxt     = getProofContext lem ti.theory
-                preItems = getLemmaPreItems n ti.theory
-                gsys     = mkSystem ctxt (theoryRestrictions ti.theory) preItems lem
-                lp       = newProof olp ctxt gsys
-                editf (Lemma n' pt' m' tq' f' ofm' a' lp') = if n'== n then Lemma n' pt' m' tq' f' ofm' a' lp else Lemma n' pt' m' tq' f' ofm' a' lp'
-                maybe_nthy =  modifyLemma editf ti.theory
-            case maybe_nthy of
-                Nothing -> pure $ Left "Lemma editing failed"
-                Just nthy -> do
-                    nidx <- replaceTheory (Just ti) Nothing nthy ("modified" ++ show idx) idx
-                    pure $ Right nidx
-
-        newProof olp ctxt gsys =
-            case olp of
-                (LNode (ProofStep Invalidated _) s ) ->
-                    let old_lp = fromMaybe olp (M.lookup "" s )
-                    in fromMaybe old_lp $ runProver (checkAndExtendProver (sorryProver Nothing)) ctxt 0 gsys old_lp
-                _ -> fromMaybe olp $ runProver (checkAndExtendProver (sorryProver Nothing)) ctxt 0 gsys olp
-
+editProof idx name = withTheory idx $ \ti ->
+    case modifyLemmaProof recheckInvalidatedProof name ti.theory of
+        Nothing -> pure $ Left "Lemma not found"
+        Just thy -> Right <$> replaceTheory (Just ti) Nothing thy ("modified" ++ show idx) idx
 
 -- Passive rule names and the passive cache depend on the edited theory.
 -- Reopen the source items and replay proofs whenever an edit can change them.
@@ -253,15 +232,12 @@ deleteLemma idx name = withTheory idx $ \ti -> do
                     nidx <- replaceTheory (Just ti) Nothing nthy ("modified" ++ show idx) idx
                     withTheory nidx $ \ti' -> normalCase ti'
 
-        lemmaFunc ti removed target@(Lemma n pt m tq f ofm a lp) =
+        lemmaFunc ti removed target =
             let currIdx = fromMaybe (-1) (lookupLemmaIndex name ti.theory)
-                lIdx = fromMaybe 0 (lookupLemmaIndex n ti.theory)
+                lIdx = fromMaybe 0 (lookupLemmaIndex (_lName target) ti.theory)
             in if lIdx > currIdx && removed `appliesToNetworkOf` target
-                then case lp of
-                    LNode (ProofStep (Sorry Nothing) _) _ -> Lemma n pt m tq f ofm a lp
-                    LNode (ProofStep Invalidated _) _ -> Lemma n pt m tq f ofm a lp
-                    LNode (ProofStep _ info) _ -> Lemma n pt m tq f ofm a (LNode (ProofStep Invalidated info) (M.singleton "" lp))
-                else Lemma n pt m tq f ofm a lp
+                then fmap invalidateProof target
+                else target
 
 -- | Adds a new Lemma in a theory at an index, used for theory editing
 -- the new lemma is marked as modified to keep track of what whould be appended to the original file
