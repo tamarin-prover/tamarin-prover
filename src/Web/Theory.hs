@@ -1076,7 +1076,7 @@ htmlThyPath renderUrl renderImgUrl info path lPlaintext = case path of
                <br>
                \ &zwnj;
               <li>
-               Modifying a reuse lemma will invalidate all subsequent proofs.
+               Modifying a reuse lemma invalidates subsequent proofs that can use it.
                <br>
                \ &zwnj;
               <li>
@@ -1110,7 +1110,7 @@ htmlThyPath renderUrl renderImgUrl info path lPlaintext = case path of
            <br>
            \ &zwnj;
           <li>
-           Deleting a reuse lemma will invalidate all subsequent proofs.
+           Deleting a reuse lemma invalidates subsequent proofs that can use it.
            <br>
            \ &zwnj;
           <li>
