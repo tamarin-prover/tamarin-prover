@@ -46,26 +46,25 @@ data CtxtStRule = CtxtStRule LNTerm StRhs
     deriving (Show,Ord,Eq, Generic, NFData, Binary)
 
 -- | Convert a rewrite rule to a context subterm rewrite rule if possible.
-rRuleToCtxtStRule :: RRule LNTerm -> Maybe CtxtStRule
+rRuleToCtxtStRule :: RRule LNTerm -> Either String CtxtStRule
 rRuleToCtxtStRule (lhs `RRule` rhs)
-  | Lit _ <- viewTerm lhs = Nothing  -- e.g. "x = c" is not a valid rewrite rule
-  | frees rhs == []       = Just $ CtxtStRule lhs (StRhs (constantPositions lhs) rhs)
-  | otherwise       = do
-                         sbtms <- findAllSubterms lhs rhs
-                         case sbtms of
-                            []:_     -> Nothing  -- proper subterm required
-                            []       -> Nothing
-                            pos      -> Just $ CtxtStRule lhs (StRhs pos rhs)
+  | Lit _ <- viewTerm lhs = Left "Left hand side must not be a literal"  -- e.g. "x = c" is not a valid rewrite rule
+  | containsPrivate rhs   = Left "Private function symbols are disallowed on the right hand side"  -- private function symbols are disallowed on the right hand side
+  | null (frees rhs)      = Right $ CtxtStRule lhs (StRhs (constantPositions lhs) rhs)
+  | otherwise       = case findAllSubterms lhs rhs of
+                        Nothing       -> Left "Variables on the right hand side must also occur on the left hand side"
+                        Just ([]:_)   -> Left "Proper subterm required"  -- proper subterm required
+                        Just []       -> Left "No subterms found"
+                        Just pos      -> Right $ CtxtStRule lhs (StRhs pos rhs)
   where
     subterms :: [LNTerm] -> [LNTerm] -> Int -> [Position]
     subterms []     _    _ = []
-    subterms (t:ts) done i = (concat $ map 
-        (\(x, y) -> (map (x:) (findSubterm y t))) terms) 
-            ++ subterms ts (done++[t]) (i+1)  
-      where 
-        terms = (zip [i..] ts) ++ (zip [0..] done)
-    
-    constantPositions (viewTerm -> FApp _ args) 
+    subterms (t:ts) done i = concatMap (\(x, y) -> map (x:) (findSubterm y t)) terms
+            ++ subterms ts (done++[t]) (i+1)
+      where
+        terms = zip [i..] ts ++ zip [0..] done
+
+    constantPositions (viewTerm -> FApp _ args)
         | containsPrivate lhs = positions lhs
         | otherwise           = case subterms args [] 1 of
                                      []  -> positions lhs
@@ -74,7 +73,7 @@ rRuleToCtxtStRule (lhs `RRule` rhs)
 -- | Finds all occurrences of a subterm in a term.
 findSubterm :: LNTerm -> LNTerm -> [Position]
 findSubterm lst r = findSubtermPrime lst r []
-  where 
+  where
       findSubtermPrime :: LNTerm -> LNTerm -> Position -> [Position]
       findSubtermPrime lst r rpos | lst == r            = [reverse rpos]
       findSubtermPrime (viewTerm -> FApp _ args) r rpos =
@@ -86,13 +85,13 @@ findSubterm lst r = findSubtermPrime lst r []
 -- Returns Nothing if some variable in r does never appear in l.
 findAllSubterms :: LNTerm -> LNTerm -> Maybe [Position]
 findAllSubterms l r@(viewTerm -> FApp _ args)
-    | fSt == [] = do
+    | null fSt = do
         stms <- mapM (\rst -> findAllSubterms l rst) args
         return $ concat stms
     | otherwise = Just $ fSt
         where fSt = findSubterm l r
 findAllSubterms l r@(viewTerm -> Lit (Var _))
-    | fSt == [] = Nothing
+    | null fSt  = Nothing
     | otherwise = Just fSt
         where fSt = findSubterm l r
 -- There should not be constants on the right hand side (enforced by the parser).

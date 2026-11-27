@@ -1,0 +1,37 @@
+theory Test191
+begin
+
+functions: s/0 [private], k/0 [private], m/1,
+           h/1, i/2, j/0 [private], l/0 [private], o/1, g/1
+equations [convergent]: h(x) = i(x,l),
+           g(o(x)) = i(x,l),
+           m(k) = s
+
+rule OutK:
+    [  ]
+  --[  ]->
+    [ Out( k ) ]
+
+// Should be false
+lemma secretK:
+   "All #i. K(k) @ #i ==> F"
+
+// Should be false
+lemma secretS:
+   "All #i. K(s) @ #i ==> F"
+
+// Should be false
+lemma secretIL:
+   "All x #i. K(i(x,l)) @ #i ==> F"
+
+rule OutJ:
+    [  ]
+  --[  ]->
+    [ Out( o(j) ) ]
+
+// Should be false
+lemma secretIJL:
+   "All #i. K(i(j,l)) @ #i ==> F"
+
+end
+
