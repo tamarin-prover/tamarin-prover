@@ -1,0 +1,24 @@
+theory DiffDisequalityAttack
+begin
+
+/* The right side only admits Consume when both halves of the multiset are
+   equal. For adversary inputs 'a' and 'b', neither split of 'a' ++ 'b'
+   passes, so the left trace has no mirror and the equivalence is false.
+   Every mirror fails only under the disequality u != v, which no single
+   substitution expresses; the attack is certified on the instance with
+   distinct fresh public names. */
+
+builtins: multiset
+
+rule Produce:
+  [ In(u), In(v) ] --> [ F(u ++ v) ]
+
+rule Consume:
+  [ F(x ++ y) ] --[ Choice(x, y) ]-> [ Out(x) ]
+
+restriction Same [right]:
+  "All a b #i. Choice(a, b)@i ==> a = b"
+
+diffLemma Observational_equivalence:
+
+end

@@ -1,0 +1,29 @@
+theory SoundnessDiffMultisessionRestriction
+begin
+
+rule Init:
+  [ Fr(~k) ] --> [ First(~k), Second(~k) ]
+
+rule EmitFirst:
+  [ First(k) ] --[ EmitFor(k) ]-> [ Out('ok') ]
+
+rule EmitSecond:
+  [ Second(k) ] --[ EmitFor(k) ]-> [ Out('ok') ]
+
+// The left side can emit twice from one fresh setup. The right-side
+// restriction permits only one emission per tag, so the right side outputs
+// 'ok' at most once per setup. A diff proof that checks one emission
+// dependency graph at a time cannot establish this two-branch condition.
+restriction OneEmission [right]:
+  "All k #i #j. EmitFor(k)@i & EmitFor(k)@j ==> #i=#j"
+
+lemma left_two [left]: exists-trace
+  "Ex k #i #j. EmitFor(k)@i & EmitFor(k)@j & not(#i=#j)"
+
+// This repeats the restriction as an enforcement smoke test.
+lemma right_at_most_one [right]:
+  "All k #i #j. EmitFor(k)@i & EmitFor(k)@j ==> #i=#j"
+
+diffLemma Observational_equivalence:
+
+end

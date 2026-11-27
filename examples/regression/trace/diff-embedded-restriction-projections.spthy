@@ -1,0 +1,44 @@
+theory DiffEmbeddedRestrictionProjections
+begin
+
+macros: identity(x) = x, choice() = diff('a','b')
+
+// Both restrictions must survive expansion, including the let and macros.
+// The ground diff term constrains the left side to a and the right side to b.
+rule Choose:
+  let selected = choice() in
+  [In(<x,y>)] --[Chosen(x,y), _restrict(identity(x) = selected), _restrict(y = 'tag')]-> []
+// Explicit side E-rules inherit the parent's generated restriction actions.
+left rule Choose:
+  [In(<x,y>)] --[Chosen(x,y)]-> []
+right rule Choose:
+  [In(<x,y>)] --[Chosen(x,y)]-> []
+
+// An annotation on an explicit side rule only constrains that side.
+rule Local:
+  [In(x)] --[Local(x)]-> []
+left rule Local:
+  [In(x)] --[Local(x), _restrict(x = 'a')]-> []
+right rule Local:
+  [In(x)] --[Local(x), _restrict(x = 'b')]-> []
+
+// Projection must not change the generated action's arity when a variable
+// disappears from one side of a diff term. This is tautological on the left.
+rule Mixed:
+  [In(x)] --[Mixed(x), _restrict(diff(x,'a') = x)]-> []
+
+lemma left_choice [left]: "All x y #i. Chosen(x,y)@i ==> x = 'a' & y = 'tag'"
+lemma right_choice [right]: "All x y #i. Chosen(x,y)@i ==> x = 'b' & y = 'tag'"
+lemma left_reachable [left]: exists-trace "Ex #i. Chosen('a','tag')@i"
+lemma right_reachable [right]: exists-trace "Ex #i. Chosen('b','tag')@i"
+
+lemma left_local [left]: "All x #i. Local(x)@i ==> x = 'a'"
+lemma right_local [right]: "All x #i. Local(x)@i ==> x = 'b'"
+lemma left_local_reachable [left]: exists-trace "Ex #i. Local('a')@i"
+lemma right_local_reachable [right]: exists-trace "Ex #i. Local('b')@i"
+
+lemma left_mixed [left]: exists-trace "Ex #i. Mixed('b')@i"
+lemma right_mixed [right]: "All x #i. Mixed(x)@i ==> x = 'a'"
+lemma right_mixed_reachable [right]: exists-trace "Ex #i. Mixed('a')@i"
+
+end

@@ -1,0 +1,27 @@
+theory DiffAlternativeConditionalRestrictions
+begin
+
+builtins: multiset
+
+rule Produce:
+  [ ] --> [ F('a' ++ 'b') ]
+
+rule Consume:
+  [ F(x ++ y) ] --[ Choice(x,y,$p) ]-> [ Out($p) ]
+
+restriction AvoidChosen [right]:
+  "All x y p #i. Choice(x,y,p) @ i ==> not(x=p)"
+
+// For every public p there is a permitted mirror: choose x='b' when p='a',
+// and x='a' otherwise. The two alternatives fail at p='a' and p='b'
+// respectively; their separate failures do not establish an attack.
+// Combining their failure conditions must establish equivalence.
+lemma left_possible [left]:
+  exists-trace "Ex x y p #i. Choice(x,y,p) @ i"
+
+lemma right_possible [right]:
+  exists-trace "Ex x y p #i. Choice(x,y,p) @ i"
+
+diffLemma Observational_equivalence:
+
+end

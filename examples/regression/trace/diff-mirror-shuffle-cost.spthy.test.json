@@ -1,0 +1,10 @@
+{
+  "tests": [
+    {
+      "name": "distinct-mirror-actions",
+      "args": ["--diff", "--prove", "+RTS", "-N2", "-RTS"],
+      "timeout": 60,
+      "contains": ["Observational_equivalence : falsified"]
+    }
+  ]
+}

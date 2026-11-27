@@ -1,0 +1,21 @@
+theory SoundnessDiffSourceSide
+begin
+
+rule Init:
+  [] --[ A(diff('a','b')) ]-> [ State(diff('a','b')) ]
+
+rule Finish:
+  [ State(x) ] --[ B(x) ]-> []
+
+// A source lemma is valid only on its declared side. Reusing this left-side
+// equality in the right source cache would incorrectly eliminate B('b').
+lemma left_source [left,sources]:
+  "All x #i. A(x)@i ==> x = 'a'"
+
+lemma right_counterexample [right]:
+  "All #i. B('b')@i ==> F"
+
+lemma right_witness [right]: exists-trace
+  "Ex #i. B('b')@i"
+
+end

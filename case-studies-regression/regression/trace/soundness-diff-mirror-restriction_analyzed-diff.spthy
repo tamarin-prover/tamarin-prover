@@ -1,0 +1,85 @@
+theory SoundnessDiffMirrorRestriction
+
+begin
+
+// Function signature and definition of the equational theory E
+
+functions: fst/1, pair/2, snd/1
+equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
+
+rule (modulo E) Emit:
+   [ ] --[ A( diff('a', 'b') ) ]-> [ Out( 'hello' ) ]
+
+restriction BanRight [right]:
+  "∀ #i. (A( 'b' ) @ #i) ⇒ (⊥)"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ #i. (A( 'b' ) @ #i) ⇒ (⊥)"
+  */
+
+restriction BanRight [left]:
+  "∀ #i. (A( 'b' ) @ #i) ⇒ (⊥)"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ #i. (A( 'b' ) @ #i) ⇒ (⊥)"
+  */
+
+lemma left_witness [left]:
+  exists-trace "∃ #i. A( 'a' ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #i. (A( 'a' ) @ #i)"
+*/
+simplify
+SOLVED // trace found
+
+lemma right_blocked [right]:
+  exists-trace "∃ #i. A( 'b' ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #i. (A( 'b' ) @ #i)"
+*/
+simplify
+by contradiction /* from formulas */
+
+diffLemma Observational_equivalence:
+rule-equivalence
+  case Rule_Emit
+  backward-search
+    case LHS
+    step( simplify )
+    by ATTACK // trace found
+  qed
+qed
+
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.13.0
+Maude version 3.5.1
+Git revision: 4a4676de54da4a5081e344b98760d9d4e0f35d46 (with uncommited changes), branch: diff-mirror-proofs
+Compiled at: 2026-09-25 20:02:43.632305942 UTC
+*/
+
+end
+/* Output
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/regression/trace/soundness-diff-mirror-restriction.spthy
+
+  output:          examples/regression/trace/soundness-diff-mirror-restriction.spthy.tmp
+  processing time: 0.08s
+  
+  LHS :  left_witness (exists-trace): verified (2 steps)
+  RHS :  right_blocked (exists-trace): falsified - no trace found (2 steps)
+  DiffLemma:  Observational_equivalence : falsified - found trace (4 steps)
+
+==============================================================================
+*/
