@@ -1,0 +1,23 @@
+theory DiffExplicitSideRules
+begin
+builtins: diffie-hellman
+
+// An explicit side rule replaces the parent's projection on its side. This
+// left rule emits A('b') where the parent emits A('a'), so the proof would
+// not be about the declared diff rule. Develop only warned, then falsified
+// left_a.
+rule Emit: [] --[ A('a') ]-> [ Out('a') ]
+left rule Emit: [] --[ A('b') ]-> [ Out('a') ]
+right rule Emit: [] --[ A('a') ]-> [ Out('a') ]
+
+// Actions added by a side rule get the parent's product check: x*y is read
+// modulo AC only, so x = 'a' and y = inv('a') do not give the unit, and
+// develop silently verified the false unit_never.
+rule Product: [ In(x), In(y) ] --> []
+left rule Product: [ In(x), In(y) ] --[ Product(x*y) ]-> []
+right rule Product: [ In(x), In(y) ] --> []
+
+lemma left_a [left]: exists-trace "Ex #i. A('a')@i"
+lemma unit_never [left]: "All #i. Product(1)@i ==> F"
+
+end

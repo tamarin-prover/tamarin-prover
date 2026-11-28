@@ -1,0 +1,9 @@
+theory EmbeddedSideSameName begin
+// Same-name control for parent restriction inheritance into explicit sides.
+rule Emit: [In(x)] --[Emitted(x), _restrict(x = 'a')]-> []
+left rule Emit: [In(x)] --[Emitted(x)]-> []
+right rule Emit: [In(x)] --[Emitted(x)]-> []
+lemma only_a [left]: "All x #i. Emitted(x)@i ==> x = 'a'"
+lemma a_exists [left]: exists-trace "Ex #i. Emitted('a')@i"
+lemma b_exists [left]: exists-trace "Ex #i. Emitted('b')@i"
+end

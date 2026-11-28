@@ -83,7 +83,7 @@ import Theory
   , runAutoDiffProver
   , prettyClosedTheory
   , prettyOpenTheory
-  , openDiffTheory
+  , exportDiffTheory
   , prettyClosedDiffTheory
   , prettyOpenDiffTheory
   , getLemmas
@@ -1739,7 +1739,7 @@ getDeleteStepDiffR idx path = do
 getSaveTheoryR :: TheoryIdx -> Handler RepJson
 getSaveTheoryR idx = withEitherTheory idx $ \case
   Trace ti -> handler ti (prettyOpenTheory . openTheory)
-  Diff ti  -> handler ti (prettyOpenDiffTheory . openDiffTheory)
+  Diff ti  -> handler ti (prettyOpenDiffTheory . exportDiffTheory)
   where
     handler ti prettyOpenTheoryF =
       case ti.origin of

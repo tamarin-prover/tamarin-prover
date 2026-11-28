@@ -1,0 +1,10 @@
+theory EmptyLeftFamily begin
+
+// The left fresh-input contradiction compiles to an empty family. The right
+// can reveal a fresh value; it must still get a rule-equivalence case.
+rule Emit: [Fr(~n), In(diff(~n,'known'))] --[Emitted(~n)]-> [Out(~n)]
+
+lemma output [right]: exists-trace "Ex x #i. Emitted(x)@i"
+lemma no_output [left]: "All x #i. Emitted(x)@i ==> F"
+diffLemma Observational_equivalence:
+end

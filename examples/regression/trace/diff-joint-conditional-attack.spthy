@@ -1,0 +1,26 @@
+theory DiffJointConditionalAttack
+begin
+
+builtins: multiset
+
+rule Produce:
+  [ ] --> [ F('a' ++ 'b') ]
+
+rule Consume:
+  [ F(x ++ y) ] --[ Choice(x,y,$p,$q) ]-> [ Out(<$p,$q>) ]
+
+restriction Choices [right]:
+  "All x y p q #i. Choice(x,y,p,q) @ i ==>
+    (x='a' | not(q='b')) & (x='b' | not(p='a'))"
+
+// The alternatives fail under different conditions, but they overlap:
+// p='a' and q='b' is admitted on the left and defeats both right mirrors.
+lemma left_attack_assignment [left]:
+  exists-trace "Ex x y #i. Choice(x,y,'a','b') @ i"
+
+lemma right_attack_assignment [right]:
+  exists-trace "Ex x y #i. Choice(x,y,'a','b') @ i"
+
+diffLemma Observational_equivalence:
+
+end

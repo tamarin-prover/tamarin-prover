@@ -1,0 +1,15 @@
+{
+  "tests": [
+    {
+      "name": "partial-evaluation-roundtrip",
+      "args": [
+        "--diff",
+        "--quit-on-warning"
+      ],
+      "checks": [
+        "roundtrip",
+        "partial-evaluation"
+      ]
+    }
+  ]
+}

@@ -203,6 +203,7 @@ module Theory (
   , openTheory
   , openTranslatedTheory
   , openDiffTheory
+  , exportDiffTheory
 
   , applyNDCcheck
   , prettyNDCcheck

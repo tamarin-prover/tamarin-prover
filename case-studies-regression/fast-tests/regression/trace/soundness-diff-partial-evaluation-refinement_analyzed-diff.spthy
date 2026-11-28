@@ -1,0 +1,361 @@
+theory SoundnessDiffPartialEvaluationRefinement
+
+begin
+
+// Function signature and definition of the equational theory E
+
+functions: fst/1, pair/2, snd/1
+equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
+
+rule (modulo E) SeedA:
+   [ ] --> [ State( 'a' ) ]
+
+rule (modulo E) SeedB:
+   [ ] --> [ State( 'b' ) ]
+
+rule (modulo E) Use:
+   [ State( x ) ] --[ Used( x ) ]-> [ Out( x ) ]
+ left
+  rule (modulo E) Use:
+     [ State( x ) ] --[ Used( x ) ]-> [ Out( x ) ]
+   variants
+    rule (modulo AC) Use:
+       [ State( x ) ] --[ Used( x ), Annotated( x ) ]-> [ Out( x ) ]
+ right
+  rule (modulo E) Use:
+     [ State( x ) ] --[ Used( x ) ]-> [ Out( x ) ]
+   variants
+    rule (modulo AC) Use:
+       [ State( x ) ] --[ Used( x ), Annotated( x ) ]-> [ Out( x ) ]
+
+lemma both [right]:
+  exists-trace "∃ #i #j. (Used( 'a' ) @ #i) ∧ (Used( 'b' ) @ #j)"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #i #j. (Used( 'a' ) @ #i) ∧ (Used( 'b' ) @ #j)"
+*/
+simplify
+solve( State( 'a' ) ▶₀ #i )
+  case SeedA
+  solve( State( 'b' ) ▶₀ #j )
+    case SeedB
+    SOLVED // trace found
+  qed
+qed
+
+lemma both [left]:
+  exists-trace "∃ #i #j. (Used( 'a' ) @ #i) ∧ (Used( 'b' ) @ #j)"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #i #j. (Used( 'a' ) @ #i) ∧ (Used( 'b' ) @ #j)"
+*/
+simplify
+solve( State( 'a' ) ▶₀ #i )
+  case SeedA
+  solve( State( 'b' ) ▶₀ #j )
+    case SeedB
+    SOLVED // trace found
+  qed
+qed
+
+lemma annotations [right]:
+  exists-trace "∃ #i #j. (Annotated( 'a' ) @ #i) ∧ (Annotated( 'b' ) @ #j)"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #i #j. (Annotated( 'a' ) @ #i) ∧ (Annotated( 'b' ) @ #j)"
+*/
+simplify
+solve( State( 'a' ) ▶₀ #i )
+  case SeedA
+  solve( State( 'b' ) ▶₀ #j )
+    case SeedB
+    SOLVED // trace found
+  qed
+qed
+
+lemma annotations [left]:
+  exists-trace "∃ #i #j. (Annotated( 'a' ) @ #i) ∧ (Annotated( 'b' ) @ #j)"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #i #j. (Annotated( 'a' ) @ #i) ∧ (Annotated( 'b' ) @ #j)"
+*/
+simplify
+solve( State( 'a' ) ▶₀ #i )
+  case SeedA
+  solve( State( 'b' ) ▶₀ #j )
+    case SeedB
+    SOLVED // trace found
+  qed
+qed
+
+diffLemma Observational_equivalence:
+rule-equivalence
+  case Rule_Destrd_0_fst
+  backward-search
+    case LHS
+    step( simplify )
+    step( solve( !KD( <x, x.1> ) ▶₀ #i ) )
+      case Use
+      step( solve( State( t ) ▶₀ #vr ) )
+        case SeedA
+        by step( contradiction /* impossible chain */ )
+      next
+        case SeedB
+        by step( contradiction /* impossible chain */ )
+      qed
+    qed
+  next
+    case RHS
+    step( simplify )
+    step( solve( !KD( <x, x.1> ) ▶₀ #i ) )
+      case Use
+      step( solve( State( t ) ▶₀ #vr ) )
+        case SeedA
+        by step( contradiction /* impossible chain */ )
+      next
+        case SeedB
+        by step( contradiction /* impossible chain */ )
+      qed
+    qed
+  qed
+next
+  case Rule_Destrd_0_snd
+  backward-search
+    case LHS
+    step( simplify )
+    step( solve( !KD( <x, x.1> ) ▶₀ #i ) )
+      case Use
+      step( solve( State( t ) ▶₀ #vr ) )
+        case SeedA
+        by step( contradiction /* impossible chain */ )
+      next
+        case SeedB
+        by step( contradiction /* impossible chain */ )
+      qed
+    qed
+  next
+    case RHS
+    step( simplify )
+    step( solve( !KD( <x, x.1> ) ▶₀ #i ) )
+      case Use
+      step( solve( State( t ) ▶₀ #vr ) )
+        case SeedA
+        by step( contradiction /* impossible chain */ )
+      next
+        case SeedB
+        by step( contradiction /* impossible chain */ )
+      qed
+    qed
+  qed
+next
+  case Rule_Equality
+  backward-search
+    case LHS
+    step( simplify )
+    step( solve( !KD( x ) ▶₁ #i ) )
+      case Use
+      step( solve( State( t ) ▶₀ #vr ) )
+        case SeedA
+        step( solve( (#vl, 0) ~~> (#i, 1) ) )
+          case Const_pub_a
+          step( solve( !KU( 'a' ) @ #vk ) )
+            case coerce
+            step( solve( !KD( 'a' ) ▶₀ #vk ) )
+              case Use
+              step( solve( State( t ) ▶₀ #vr.2 ) )
+                case SeedA
+                by step( contradiction /* impossible chain */ )
+              next
+                case SeedB
+                by step( contradiction /* impossible chain */ )
+              qed
+            qed
+          next
+            case pub
+            MIRRORED
+          qed
+        qed
+      next
+        case SeedB
+        step( solve( (#vl, 0) ~~> (#i, 1) ) )
+          case Const_pub_b
+          step( solve( !KU( 'b' ) @ #vk ) )
+            case coerce
+            step( solve( !KD( 'b' ) ▶₀ #vk ) )
+              case Use
+              step( solve( State( t ) ▶₀ #vr.2 ) )
+                case SeedA
+                by step( contradiction /* impossible chain */ )
+              next
+                case SeedB
+                by step( contradiction /* impossible chain */ )
+              qed
+            qed
+          next
+            case pub
+            MIRRORED
+          qed
+        qed
+      qed
+    qed
+  next
+    case RHS
+    step( simplify )
+    step( solve( !KD( x ) ▶₁ #i ) )
+      case Use
+      step( solve( State( t ) ▶₀ #vr ) )
+        case SeedA
+        step( solve( (#vl, 0) ~~> (#i, 1) ) )
+          case Const_pub_a
+          step( solve( !KU( 'a' ) @ #vk ) )
+            case coerce
+            step( solve( !KD( 'a' ) ▶₀ #vk ) )
+              case Use
+              step( solve( State( t ) ▶₀ #vr.2 ) )
+                case SeedA
+                by step( contradiction /* impossible chain */ )
+              next
+                case SeedB
+                by step( contradiction /* impossible chain */ )
+              qed
+            qed
+          next
+            case pub
+            MIRRORED
+          qed
+        qed
+      next
+        case SeedB
+        step( solve( (#vl, 0) ~~> (#i, 1) ) )
+          case Const_pub_b
+          step( solve( !KU( 'b' ) @ #vk ) )
+            case coerce
+            step( solve( !KD( 'b' ) ▶₀ #vk ) )
+              case Use
+              step( solve( State( t ) ▶₀ #vr.2 ) )
+                case SeedA
+                by step( contradiction /* impossible chain */ )
+              next
+                case SeedB
+                by step( contradiction /* impossible chain */ )
+              qed
+            qed
+          next
+            case pub
+            MIRRORED
+          qed
+        qed
+      qed
+    qed
+  qed
+next
+  case Rule_SeedA
+  backward-search
+    case LHS
+    step( simplify )
+    MIRRORED
+  next
+    case RHS
+    step( simplify )
+    MIRRORED
+  qed
+next
+  case Rule_SeedB
+  backward-search
+    case LHS
+    step( simplify )
+    MIRRORED
+  next
+    case RHS
+    step( simplify )
+    MIRRORED
+  qed
+next
+  case Rule_Send
+  backward-search
+    case LHS
+    step( simplify )
+    MIRRORED
+  next
+    case RHS
+    step( simplify )
+    MIRRORED
+  qed
+next
+  case Rule_Use
+  backward-search
+    case LHS
+    step( simplify )
+    MIRRORED
+  next
+    case RHS
+    step( simplify )
+    MIRRORED
+  qed
+qed
+
+text{*Diff partial evaluation is diagnostic only: it uses E-rules, whose equation variants may expose further behaviour. Refined rules are not installed.
+
+ the abstract state after partial evaluation contains 5 left facts:
+
+1. State( 'a' )
+
+2. State( 'b' )
+
+3. Fr( ~z )
+
+4. Out( z )
+
+5. In( z )
+
+This abstract state results in 4 left refined multiset rewriting rules.
+Note that the original number of multiset rewriting rules was 3.
+
+
+
+ the abstract state after partial evaluation contains 5 right facts:
+
+1. State( 'a' )
+
+2. State( 'b' )
+
+3. Fr( ~z )
+
+4. Out( z )
+
+5. In( z )
+
+This abstract state results in 4 right refined multiset rewriting rules.
+Note that the original number of multiset rewriting rules was 3.
+
+*}
+
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.13.0
+Maude version 3.5.1
+Git revision: 7e9aae089915fe0110a29fc5483bd9d0c0f3344c (with uncommited changes), branch: diff-rule-families
+Compiled at: 2026-10-07 19:31:20.946448454 UTC
+*/
+
+end
+/* Output
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/regression/trace/soundness-diff-partial-evaluation-refinement.spthy
+
+  output:          examples/regression/trace/soundness-diff-partial-evaluation-refinement.spthy.tmp
+  processing time: 0.17s
+  
+  RHS :  both (exists-trace): verified (4 steps)
+  LHS :  both (exists-trace): verified (4 steps)
+  RHS :  annotations (exists-trace): verified (4 steps)
+  LHS :  annotations (exists-trace): verified (4 steps)
+  DiffLemma:  Observational_equivalence : verified (78 steps)
+
+==============================================================================
+*/

@@ -1,0 +1,509 @@
+theory DiffExplicitVariantExport
+
+begin
+
+// Function signature and definition of the equational theory E
+
+functions: fst/1, pair/2, sdec/2, senc/2, snd/1
+equations:
+    fst(<x.1, x.2>) = x.1,
+    sdec(senc(x.1, x.2), x.2) = x.1,
+    snd(<x.1, x.2>) = x.2
+
+rule (modulo E) Key:
+   [ Fr( ~k ) ] --> [ !Key( ~k ) ]
+
+rule (modulo E) Secret:
+   [ Fr( ~m ), !Key( ~k ) ] --[ Secret( ~m ) ]-> [ Out( senc(~m, ~k) ) ]
+
+rule (modulo E) Dec:
+   [ In( x ), !Key( k ) ] --> [ Out( sdec(x, k) ) ]
+ left
+  rule (modulo E) Dec:
+     [ In( x ), !Key( k ) ] --> [ Out( sdec(x, k) ) ]
+   variants
+    rule (modulo AC) Dec___VARIANT_2:
+       [ In( senc(z.2, k.1) ), !Key( k.1 ) ]
+      --[ Decrypted( z.2 ) ]->
+       [ Out( z.2 ) ]
+    ,
+    rule (modulo AC) Dec___VARIANT_1:
+       [ In( x.2 ), !Key( k.1 ) ]
+      --[ Unreduced( sdec(x.2, k.1) ) ]->
+       [ Out( sdec(x.2, k.1) ) ]
+ right
+  rule (modulo E) Dec:
+     [ In( x ), !Key( k ) ] --> [ Out( sdec(x, k) ) ]
+   variants
+    rule (modulo AC) Dec___VARIANT_2:
+       [ In( senc(z.2, k.1) ), !Key( k.1 ) ]
+      --[ Decrypted( z.2 ) ]->
+       [ Out( z.2 ) ]
+    ,
+    rule (modulo AC) Dec___VARIANT_1:
+       [ In( x.2 ), !Key( k.1 ) ]
+      --[ Unreduced( sdec(x.2, k.1) ) ]->
+       [ Out( sdec(x.2, k.1) ) ]
+
+lemma unreduced_secret [right]:
+  exists-trace "∃ m #i #j. (Secret( m ) @ #i) ∧ (Unreduced( m ) @ #j)"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ m #i #j. (Secret( m ) @ #i) ∧ (Unreduced( m ) @ #j)"
+*/
+by simplify
+
+lemma unreduced_secret [left]:
+  exists-trace "∃ m #i #j. (Secret( m ) @ #i) ∧ (Unreduced( m ) @ #j)"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ m #i #j. (Secret( m ) @ #i) ∧ (Unreduced( m ) @ #j)"
+*/
+by simplify
+
+lemma decrypted_reachable [right]:
+  exists-trace "∃ m #i. Decrypted( m ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ m #i. (Decrypted( m ) @ #i)"
+*/
+simplify
+solve( !Key( k ) ▶₁ #i )
+  case Key
+  solve( !KU( senc(m, ~k) ) @ #vk )
+    case Secret
+    SOLVED // trace found
+  qed
+qed
+
+lemma decrypted_reachable [left]:
+  exists-trace "∃ m #i. Decrypted( m ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ m #i. (Decrypted( m ) @ #i)"
+*/
+simplify
+solve( !Key( k ) ▶₁ #i )
+  case Key
+  solve( !KU( senc(m, ~k) ) @ #vk )
+    case Secret
+    SOLVED // trace found
+  qed
+qed
+
+lemma unreduced_reachable [right]:
+  exists-trace "∃ m #i. Unreduced( m ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ m #i. (Unreduced( m ) @ #i)"
+*/
+simplify
+solve( !Key( k ) ▶₁ #i )
+  case Key
+  SOLVED // trace found
+qed
+
+lemma unreduced_reachable [left]:
+  exists-trace "∃ m #i. Unreduced( m ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ m #i. (Unreduced( m ) @ #i)"
+*/
+simplify
+solve( !Key( k ) ▶₁ #i )
+  case Key
+  SOLVED // trace found
+qed
+
+diffLemma Observational_equivalence:
+rule-equivalence
+  case Rule_Dec
+  backward-search
+    case LHS
+    step( simplify )
+    step( solve( DiffProtoDec( ) @ #i ) )
+      case Dec_case_1
+      step( solve( !Key( k ) ▶₁ #i ) )
+        case Key
+        step( solve( !KU( senc(z, ~k) ) @ #vk ) )
+          case Dec
+          by sorry // bound 6 hit
+        next
+          case Secret
+          by sorry // bound 6 hit
+        next
+          case c_senc
+          by sorry // bound 6 hit
+        qed
+      qed
+    next
+      case Dec_case_2
+      step( solve( !Key( k ) ▶₁ #i ) )
+        case Key
+        MIRRORED
+      qed
+    qed
+  next
+    case RHS
+    step( simplify )
+    step( solve( DiffProtoDec( ) @ #i ) )
+      case Dec_case_1
+      step( solve( !Key( k ) ▶₁ #i ) )
+        case Key
+        step( solve( !KU( senc(z, ~k) ) @ #vk ) )
+          case Dec
+          by sorry // bound 6 hit
+        next
+          case Secret
+          by sorry // bound 6 hit
+        next
+          case c_senc
+          by sorry // bound 6 hit
+        qed
+      qed
+    next
+      case Dec_case_2
+      step( solve( !Key( k ) ▶₁ #i ) )
+        case Key
+        MIRRORED
+      qed
+    qed
+  qed
+next
+  case Rule_Destrd_0_fst
+  backward-search
+    case LHS
+    step( simplify )
+    step( solve( !KD( <x, x.1> ) ▶₀ #i ) )
+      case Dec_case_1
+      step( solve( !Key( k ) ▶₁ #vr ) )
+        case Key
+        step( solve( !KU( senc(t, ~k) ) @ #vk ) )
+          case Dec
+          by sorry // bound 6 hit
+        next
+          case Secret
+          by sorry // bound 6 hit
+        next
+          case c_senc
+          by sorry // bound 6 hit
+        qed
+      qed
+    next
+      case Dec_case_2
+      by step( solve( (#vl, 0) ~~> (#i, 0) ) )
+    next
+      case Secret
+      by step( contradiction /* impossible chain */ )
+    qed
+  next
+    case RHS
+    step( simplify )
+    step( solve( !KD( <x, x.1> ) ▶₀ #i ) )
+      case Dec_case_1
+      step( solve( !Key( k ) ▶₁ #vr ) )
+        case Key
+        step( solve( !KU( senc(t, ~k) ) @ #vk ) )
+          case Dec
+          by sorry // bound 6 hit
+        next
+          case Secret
+          by sorry // bound 6 hit
+        next
+          case c_senc
+          by sorry // bound 6 hit
+        qed
+      qed
+    next
+      case Dec_case_2
+      by step( solve( (#vl, 0) ~~> (#i, 0) ) )
+    next
+      case Secret
+      by step( contradiction /* impossible chain */ )
+    qed
+  qed
+next
+  case Rule_Destrd_0_sdec
+  backward-search
+    case LHS
+    step( simplify )
+    step( solve( !KD( senc(x, x.1) ) ▶₀ #i ) )
+      case Dec_case_1
+      step( solve( !Key( k ) ▶₁ #vr ) )
+        case Key
+        step( solve( !KU( senc(t, ~k) ) @ #vk.1 ) )
+          case Dec
+          by sorry // bound 6 hit
+        next
+          case Secret
+          by sorry // bound 6 hit
+        next
+          case c_senc
+          by sorry // bound 6 hit
+        qed
+      qed
+    next
+      case Dec_case_2
+      by step( solve( (#vl, 0) ~~> (#i, 0) ) )
+    next
+      case Secret
+      step( solve( (#vl, 0) ~~> (#i, 0) ) )
+        case d_0_sdec
+        by step( contradiction /* impossible chain */ )
+      next
+        case senc
+        step( solve( !Key( ~k ) ▶₁ #vr ) )
+          case Key
+          by sorry // bound 6 hit
+        qed
+      qed
+    qed
+  next
+    case RHS
+    step( simplify )
+    step( solve( !KD( senc(x, x.1) ) ▶₀ #i ) )
+      case Dec_case_1
+      step( solve( !Key( k ) ▶₁ #vr ) )
+        case Key
+        step( solve( !KU( senc(t, ~k) ) @ #vk.1 ) )
+          case Dec
+          by sorry // bound 6 hit
+        next
+          case Secret
+          by sorry // bound 6 hit
+        next
+          case c_senc
+          by sorry // bound 6 hit
+        qed
+      qed
+    next
+      case Dec_case_2
+      by step( solve( (#vl, 0) ~~> (#i, 0) ) )
+    next
+      case Secret
+      step( solve( (#vl, 0) ~~> (#i, 0) ) )
+        case d_0_sdec
+        by step( contradiction /* impossible chain */ )
+      next
+        case senc
+        step( solve( !Key( ~k ) ▶₁ #vr ) )
+          case Key
+          by sorry // bound 6 hit
+        qed
+      qed
+    qed
+  qed
+next
+  case Rule_Destrd_0_snd
+  backward-search
+    case LHS
+    step( simplify )
+    step( solve( !KD( <x, x.1> ) ▶₀ #i ) )
+      case Dec_case_1
+      step( solve( !Key( k ) ▶₁ #vr ) )
+        case Key
+        step( solve( !KU( senc(t, ~k) ) @ #vk ) )
+          case Dec
+          by sorry // bound 6 hit
+        next
+          case Secret
+          by sorry // bound 6 hit
+        next
+          case c_senc
+          by sorry // bound 6 hit
+        qed
+      qed
+    next
+      case Dec_case_2
+      by step( solve( (#vl, 0) ~~> (#i, 0) ) )
+    next
+      case Secret
+      by step( contradiction /* impossible chain */ )
+    qed
+  next
+    case RHS
+    step( simplify )
+    step( solve( !KD( <x, x.1> ) ▶₀ #i ) )
+      case Dec_case_1
+      step( solve( !Key( k ) ▶₁ #vr ) )
+        case Key
+        step( solve( !KU( senc(t, ~k) ) @ #vk ) )
+          case Dec
+          by sorry // bound 6 hit
+        next
+          case Secret
+          by sorry // bound 6 hit
+        next
+          case c_senc
+          by sorry // bound 6 hit
+        qed
+      qed
+    next
+      case Dec_case_2
+      by step( solve( (#vl, 0) ~~> (#i, 0) ) )
+    next
+      case Secret
+      by step( contradiction /* impossible chain */ )
+    qed
+  qed
+next
+  case Rule_Equality
+  backward-search
+    case LHS
+    step( simplify )
+    step( solve( !KD( x ) ▶₁ #i ) )
+      case Dec_case_1
+      step( solve( !Key( k ) ▶₁ #vr ) )
+        case Key
+        step( solve( !KU( senc(t, ~k) ) @ #vk.1 ) )
+          case Dec
+          by sorry // bound 6 hit
+        next
+          case Secret
+          by sorry // bound 6 hit
+        next
+          case c_senc
+          by sorry // bound 6 hit
+        qed
+      qed
+    next
+      case Dec_case_2
+      step( solve( (#vl, 0) ~~> (#i, 1) ) )
+        case sdec
+        step( solve( !Key( k ) ▶₁ #vr ) )
+          case Key
+          by sorry // bound 6 hit
+        qed
+      qed
+    next
+      case Secret
+      step( solve( (#vl, 0) ~~> (#i, 1) ) )
+        case d_0_sdec
+        step( solve( (#vr.1, 0) ~~> (#i, 1) ) )
+          case Var_fresh_m
+          by sorry // bound 6 hit
+        qed
+      next
+        case senc
+        step( solve( !Key( ~k ) ▶₁ #vr ) )
+          case Key
+          by sorry // bound 6 hit
+        qed
+      qed
+    qed
+  next
+    case RHS
+    step( simplify )
+    step( solve( !KD( x ) ▶₁ #i ) )
+      case Dec_case_1
+      step( solve( !Key( k ) ▶₁ #vr ) )
+        case Key
+        step( solve( !KU( senc(t, ~k) ) @ #vk.1 ) )
+          case Dec
+          by sorry // bound 6 hit
+        next
+          case Secret
+          by sorry // bound 6 hit
+        next
+          case c_senc
+          by sorry // bound 6 hit
+        qed
+      qed
+    next
+      case Dec_case_2
+      step( solve( (#vl, 0) ~~> (#i, 1) ) )
+        case sdec
+        step( solve( !Key( k ) ▶₁ #vr ) )
+          case Key
+          by sorry // bound 6 hit
+        qed
+      qed
+    next
+      case Secret
+      step( solve( (#vl, 0) ~~> (#i, 1) ) )
+        case d_0_sdec
+        step( solve( (#vr.1, 0) ~~> (#i, 1) ) )
+          case Var_fresh_m
+          by sorry // bound 6 hit
+        qed
+      next
+        case senc
+        step( solve( !Key( ~k ) ▶₁ #vr ) )
+          case Key
+          by sorry // bound 6 hit
+        qed
+      qed
+    qed
+  qed
+next
+  case Rule_Key
+  backward-search
+    case LHS
+    step( simplify )
+    MIRRORED
+  next
+    case RHS
+    step( simplify )
+    MIRRORED
+  qed
+next
+  case Rule_Secret
+  backward-search
+    case LHS
+    step( simplify )
+    step( solve( !Key( ~k ) ▶₁ #i ) )
+      case Key
+      MIRRORED
+    qed
+  next
+    case RHS
+    step( simplify )
+    step( solve( !Key( ~k ) ▶₁ #i ) )
+      case Key
+      MIRRORED
+    qed
+  qed
+next
+  case Rule_Send
+  backward-search
+    case LHS
+    step( simplify )
+    MIRRORED
+  next
+    case RHS
+    step( simplify )
+    MIRRORED
+  qed
+qed
+
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.13.0
+Maude version 3.5.1
+Git revision: c4572aa2bab99bb68de09813420a8c2172b99182 (with uncommited changes), branch: diff-rule-families
+Compiled at: 2026-09-25 20:20:40.787603735 UTC
+*/
+
+end
+/* Output
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/regression/trace/diff-explicit-variant-export.spthy
+
+  output:          examples/regression/trace/diff-explicit-variant-export.spthy.tmp
+  processing time: 0.27s
+  
+  RHS :  unreduced_secret (exists-trace): falsified - no trace found (1 steps)
+  LHS :  unreduced_secret (exists-trace): falsified - no trace found (1 steps)
+  RHS :  decrypted_reachable (exists-trace): verified (4 steps)
+  LHS :  decrypted_reachable (exists-trace): verified (4 steps)
+  RHS :  unreduced_reachable (exists-trace): verified (3 steps)
+  LHS :  unreduced_reachable (exists-trace): verified (3 steps)
+  DiffLemma:  Observational_equivalence : analysis incomplete (131 steps)
+
+==============================================================================
+*/

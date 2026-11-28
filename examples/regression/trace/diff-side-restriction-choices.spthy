@@ -1,0 +1,54 @@
+theory DiffSideRestrictionChoices
+begin
+
+// Side-only public choices belong to their own restriction, not to the
+// positional choices fixed when constructing the opposite rule instance.
+// These local obligations currently leave equivalence incomplete; they must
+// neither crash mirroring nor turn a satisfiable choice into a false attack.
+#ifdef not (REVERSE | SHARED | CONTROL | BLOCKED | ERASED)
+rule P: [] --[Made('ok')]-> [Out('ok')]
+left rule P: [] --[Made('ok'), _restrict($a='left')]-> [Out('ok')]
+right rule P: [] --[Made('ok')]-> [Out('ok')]
+#endif
+#ifdef REVERSE
+rule P: [] --[Made('ok')]-> [Out('ok')]
+left rule P: [] --[Made('ok')]-> [Out('ok')]
+right rule P: [] --[Made('ok'), _restrict($a='right')]-> [Out('ok')]
+#endif
+#ifdef SHARED
+// The local names sort before z and differ in number on the two sides.
+// They must not displace the parent's shared choice or be paired together.
+rule P:
+  [] --[Made($z), _restrict($z='ok')]-> [Out($z)]
+left rule P:
+  [] --[Made($z), _restrict($a='left')]-> [Out($z)]
+right rule P:
+  [] --[Made($z), _restrict($b='right' & $c='other')]-> [Out($z)]
+#endif
+
+#ifdef CONTROL
+// Parent choices still have a positional correspondence, including choices
+// introduced by its own embedded restrictions.
+rule P: [] --[Made($z), _restrict($z='ok')]-> [Out($z)]
+left rule P: [] --[Made($z)]-> [Out($z)]
+right rule P: [] --[Made($z)]-> [Out($z)]
+#endif
+#ifdef BLOCKED
+// Contradictory side restrictions must still prevent the rule from firing.
+rule P: [] --[Made('ok')]-> [Out('ok')]
+left rule P: [] --[Made('ok'), _restrict($a='left' & $a='right')]-> [Out('ok')]
+right rule P: [] --[Made('ok')]-> [Out('ok')]
+#endif
+
+#ifdef ERASED
+// Although p occurs in the source parent, macro expansion removes it. The
+// two side-local choices named p must therefore remain independent.
+macros: erase(x)='ok'
+rule P: [] --[Made(erase($p))]-> [Out(erase($p))]
+left rule P: [] --[Made('ok'), _restrict($p='left')]-> [Out('ok')]
+right rule P: [] --[Made('ok'), _restrict($p='right')]-> [Out('ok')]
+#endif
+
+lemma reachable: exists-trace "Ex #i. Made('ok')@i"
+diffLemma D:
+end

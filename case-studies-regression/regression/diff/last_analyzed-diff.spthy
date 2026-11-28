@@ -13,14 +13,34 @@ rule (modulo E) R:
 restriction IllegalR1 [right]:
   "∀ #i. (P( ) @ #i) ⇒ (last(#i))"
 
+  /*
+  expanded formula:
+  "∀ #i. (P( ) @ #i) ⇒ (last(#i))"
+  */
+
 restriction IllegalR1 [left]:
   "∀ #i. (P( ) @ #i) ⇒ (last(#i))"
+
+  /*
+  expanded formula:
+  "∀ #i. (P( ) @ #i) ⇒ (last(#i))"
+  */
 
 restriction IllegalR2 [right]:
   "∀ #i. (P( ) @ #i) ⇒ (¬(last(#i)))"
 
+  /*
+  expanded formula:
+  "∀ #i. (P( ) @ #i) ⇒ (¬(last(#i)))"
+  */
+
 restriction IllegalR2 [left]:
   "∀ #i. (P( ) @ #i) ⇒ (¬(last(#i)))"
+
+  /*
+  expanded formula:
+  "∀ #i. (P( ) @ #i) ⇒ (¬(last(#i)))"
+  */
 
 lemma IllegalL [left]:
   all-traces "∀ #i. (P( ) @ #i) ⇒ (last(#i))"
@@ -79,22 +99,250 @@ next
   backward-search
     case LHS
     step( simplify )
-    by step( contradiction /* cyclic */ )
+    MIRRORED
   next
     case RHS
     step( simplify )
-    by step( contradiction /* cyclic */ )
+    MIRRORED
   qed
 next
   case Rule_Send
   backward-search
     case LHS
     step( simplify )
-    MIRRORED
+    step( solve( !KU( x ) @ #vk ) )
+      case c_fst
+      step( solve( !KU( fst(x) ) @ #vk ) )
+        case c_fst
+        step( solve( !KU( x ) @ #vk.1 ) )
+          case c_fst
+          by sorry // bound 6 hit
+        next
+          case c_pair
+          by sorry // bound 6 hit
+        next
+          case c_snd
+          by sorry // bound 6 hit
+        next
+          case coerce
+          by sorry // bound 6 hit
+        next
+          case fresh
+          by sorry // bound 6 hit
+        next
+          case pub
+          by sorry // bound 6 hit
+        qed
+      qed
+    next
+      case c_pair
+      step( solve( !KU( x ) @ #vk.1 ) )
+        case c_fst
+        step( solve( !KU( fst(x) ) @ #vk.1 ) )
+          case c_fst
+          by sorry // bound 6 hit
+        qed
+      next
+        case c_pair
+        step( solve( !KU( x.2 ) @ #vk.2 ) )
+          case c_fst
+          by sorry // bound 6 hit
+        next
+          case c_pair
+          by sorry // bound 6 hit
+        next
+          case c_snd
+          by sorry // bound 6 hit
+        next
+          case coerce
+          by sorry // bound 6 hit
+        next
+          case fresh
+          by sorry // bound 6 hit
+        next
+          case pub
+          by sorry // bound 6 hit
+        qed
+      next
+        case c_snd
+        step( solve( !KU( snd(x) ) @ #vk.1 ) )
+          case c_snd
+          by sorry // bound 6 hit
+        qed
+      next
+        case coerce
+        by step( solve( !KD( x ) ▶₀ #vk.1 ) )
+      next
+        case fresh
+        step( solve( !KU( ~x ) @ #vk.1 ) )
+          case fresh
+          by sorry // bound 6 hit
+        qed
+      next
+        case pub
+        step( solve( !KU( $x ) @ #vk.1 ) )
+          case pub
+          by sorry // bound 6 hit
+        qed
+      qed
+    next
+      case c_snd
+      step( solve( !KU( snd(x) ) @ #vk ) )
+        case c_snd
+        step( solve( !KU( x ) @ #vk.1 ) )
+          case c_fst
+          by sorry // bound 6 hit
+        next
+          case c_pair
+          by sorry // bound 6 hit
+        next
+          case c_snd
+          by sorry // bound 6 hit
+        next
+          case coerce
+          by sorry // bound 6 hit
+        next
+          case fresh
+          by sorry // bound 6 hit
+        next
+          case pub
+          by sorry // bound 6 hit
+        qed
+      qed
+    next
+      case coerce
+      by step( solve( !KD( x ) ▶₀ #vk ) )
+    next
+      case fresh
+      step( solve( !KU( ~x ) @ #vk ) )
+        case fresh
+        MIRRORED
+      qed
+    next
+      case pub
+      step( solve( !KU( $x ) @ #vk ) )
+        case pub
+        MIRRORED
+      qed
+    qed
   next
     case RHS
     step( simplify )
-    MIRRORED
+    step( solve( !KU( x ) @ #vk ) )
+      case c_fst
+      step( solve( !KU( fst(x) ) @ #vk ) )
+        case c_fst
+        step( solve( !KU( x ) @ #vk.1 ) )
+          case c_fst
+          by sorry // bound 6 hit
+        next
+          case c_pair
+          by sorry // bound 6 hit
+        next
+          case c_snd
+          by sorry // bound 6 hit
+        next
+          case coerce
+          by sorry // bound 6 hit
+        next
+          case fresh
+          by sorry // bound 6 hit
+        next
+          case pub
+          by sorry // bound 6 hit
+        qed
+      qed
+    next
+      case c_pair
+      step( solve( !KU( x ) @ #vk.1 ) )
+        case c_fst
+        step( solve( !KU( fst(x) ) @ #vk.1 ) )
+          case c_fst
+          by sorry // bound 6 hit
+        qed
+      next
+        case c_pair
+        step( solve( !KU( x.2 ) @ #vk.2 ) )
+          case c_fst
+          by sorry // bound 6 hit
+        next
+          case c_pair
+          by sorry // bound 6 hit
+        next
+          case c_snd
+          by sorry // bound 6 hit
+        next
+          case coerce
+          by sorry // bound 6 hit
+        next
+          case fresh
+          by sorry // bound 6 hit
+        next
+          case pub
+          by sorry // bound 6 hit
+        qed
+      next
+        case c_snd
+        step( solve( !KU( snd(x) ) @ #vk.1 ) )
+          case c_snd
+          by sorry // bound 6 hit
+        qed
+      next
+        case coerce
+        by step( solve( !KD( x ) ▶₀ #vk.1 ) )
+      next
+        case fresh
+        step( solve( !KU( ~x ) @ #vk.1 ) )
+          case fresh
+          by sorry // bound 6 hit
+        qed
+      next
+        case pub
+        step( solve( !KU( $x ) @ #vk.1 ) )
+          case pub
+          by sorry // bound 6 hit
+        qed
+      qed
+    next
+      case c_snd
+      step( solve( !KU( snd(x) ) @ #vk ) )
+        case c_snd
+        step( solve( !KU( x ) @ #vk.1 ) )
+          case c_fst
+          by sorry // bound 6 hit
+        next
+          case c_pair
+          by sorry // bound 6 hit
+        next
+          case c_snd
+          by sorry // bound 6 hit
+        next
+          case coerce
+          by sorry // bound 6 hit
+        next
+          case fresh
+          by sorry // bound 6 hit
+        next
+          case pub
+          by sorry // bound 6 hit
+        qed
+      qed
+    next
+      case coerce
+      by step( solve( !KD( x ) ▶₀ #vk ) )
+    next
+      case fresh
+      step( solve( !KU( ~x ) @ #vk ) )
+        case fresh
+        MIRRORED
+      qed
+    next
+      case pub
+      step( solve( !KU( $x ) @ #vk ) )
+        case pub
+        MIRRORED
+      qed
+    qed
   qed
 qed
 
@@ -121,8 +369,8 @@ Last atom usage
 Generated from:
 Tamarin version 1.13.0
 Maude version 3.5.1
-Git revision: 24d08b7ae378ddcef5287c20d4731bbd8b732ce7, branch: HEAD
-Compiled at: 2026-11-09 13:34:50.141740183 UTC
+Git revision: 89172d70abc0dc9dcbbd8b14d98b421ec16bc95d, branch: diff-mirror-proofs
+Compiled at: 2026-11-12 14:14:36.927104493 UTC
 */
 
 end
@@ -134,14 +382,14 @@ summary of summaries:
 analyzed: examples/regression/diff/last.spthy
 
   output:          examples/regression/diff/last.spthy.tmp
-  processing time: 0.16s
+  processing time: 0.40s
   
   WARNING: 6 wellformedness check failed!
            The analysis results might be wrong!
   
   LHS :  IllegalL (all-traces): verified (2 steps)
   RHS :  IllegalL (all-traces): verified (2 steps)
-  DiffLemma:  Observational_equivalence : verified (26 steps)
+  DiffLemma:  Observational_equivalence : analysis incomplete (102 steps)
 
 ==============================================================================
 */
