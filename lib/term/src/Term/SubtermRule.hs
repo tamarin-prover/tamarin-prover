@@ -49,27 +49,13 @@ data CtxtStRule = CtxtStRule LNTerm StRhs
 rRuleToCtxtStRule :: RRule LNTerm -> Maybe CtxtStRule
 rRuleToCtxtStRule (lhs `RRule` rhs)
   | Lit _ <- viewTerm lhs = Nothing  -- e.g. "x = c" is not a valid rewrite rule
-  | frees rhs == []       = Just $ CtxtStRule lhs (StRhs (constantPositions lhs) rhs)
-  | otherwise       = do
-                         sbtms <- findAllSubterms lhs rhs
-                         case sbtms of
-                            []:_     -> Nothing  -- proper subterm required
-                            []       -> Nothing
-                            pos      -> Just $ CtxtStRule lhs (StRhs pos rhs)
-  where
-    subterms :: [LNTerm] -> [LNTerm] -> Int -> [Position]
-    subterms []     _    _ = []
-    subterms (t:ts) done i = (concat $ map 
-        (\(x, y) -> (map (x:) (findSubterm y t))) terms) 
-            ++ subterms ts (done++[t]) (i+1)  
-      where 
-        terms = (zip [i..] ts) ++ (zip [0..] done)
-    
-    constantPositions (viewTerm -> FApp _ args) 
-        | containsPrivate lhs = positions lhs
-        | otherwise           = case subterms args [] 1 of
-                                     []  -> positions lhs
-                                     pos -> pos
+  | null (frees rhs)      = Just $ CtxtStRule lhs (StRhs (positionsNonVar lhs) rhs)
+  | otherwise             = do
+                              sbtms <- findAllSubterms lhs rhs
+                              case sbtms of
+                                []:_     -> Nothing  -- proper subterm required
+                                []       -> Nothing
+                                pos      -> Just $ CtxtStRule lhs (StRhs pos rhs)
 
 -- | Finds all occurrences of a subterm in a term.
 findSubterm :: LNTerm -> LNTerm -> [Position]

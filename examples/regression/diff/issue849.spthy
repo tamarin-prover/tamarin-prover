@@ -1,0 +1,14 @@
+// should find an attack due to the equation f(h(g(x)), h(g(x))) = c(): on the RHS, the attack can construct f(h(g(x)), h(g(x))) which equals c()
+theory issue849
+
+begin
+
+functions: c/0, f/2, h/1, g/1
+equations:
+    f(h(g(x)), h(g(x))) = c()
+
+rule (modulo E) out:
+   [ Fr( ~x ) ] --> [ Out( diff(~x, g(~x)) ) ]
+
+
+end
