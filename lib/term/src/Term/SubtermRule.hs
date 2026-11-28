@@ -109,8 +109,19 @@ filterNonSubtermCtxtRule = filter (not . isSubtermConvergentCtxtRule)
 -- | Checks if RHS is a subterm of LHS in a specific rule.
 isSubtermConvergentCtxtRule :: CtxtStRule -> Bool
 isSubtermConvergentCtxtRule (CtxtStRule lhs (StRhs _ rhs))
+  -- Modulo AC, the subterm criterion guarantees neither convergence nor the
+  -- finite variant property, e.g., for @f(x,x) = x@, @f(a,b) = c@, or
+  -- @g(f(x,y)) = x@ with an AC symbol @f@.
+  | hasAC lhs      = False
   | isConstant rhs = True
   | otherwise      = not (null (findSubterm lhs rhs))
+
+-- Checks if an AC symbol occurs in the LNTerm
+hasAC :: LNTerm -> Bool
+hasAC (viewTerm -> FApp o as) = isACSym o || any hasAC as
+  where isACSym (AC _) = True
+        isACSym _      = False
+hasAC _                       = False
 
 -- Checks if LNTerm is constant 
 isConstant :: LNTerm -> Bool

@@ -1,0 +1,25 @@
+theory ACCoherence begin
+
+/* An equation at an AC operator must also apply inside a larger product.
+   Without the extension, Maude's variants miss x = merge(red(),blue()). */
+
+functions: merge/2 [AC], red/0, blue/0
+
+#ifdef BARE
+equations: merge(red(),red()) = red()
+#endif
+#ifdef EXTENDED
+equations [convergent]: merge(red(),red()) = red(),
+                        merge(red(),merge(red(),r)) = merge(red(),r)
+#endif
+#ifdef WRONG
+equations [convergent]: merge(red(),red()) = red(),
+                        merge(red(),merge(red(),r)) = merge(blue(),r)
+#endif
+
+rule Src: [ ] --> [ Box(merge(red(),blue())) ]
+rule Use: [ Box(x) ] --[ Seen(merge(red(),x),merge(red(),blue())) ]-> [ ]
+
+lemma reachable: exists-trace "Ex y #i. Seen(y,y) @ i"
+
+end

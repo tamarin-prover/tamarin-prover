@@ -3526,14 +3526,25 @@ next
   qed
 qed
 
-/* All wellformedness checks were successful. */
+/*
+WARNING: the following wellformedness checks failed!
+
+Subterm Convergence Warning
+===========================
+
+  User-defined equations must be convergent and have the finite variant property. The following equations are not subterm convergent. If you are sure that the set of equations is nevertheless convergent and has the finite variant property, you can ignore this warning and continue 
+
+    unionUD((x add y)) = x
+   
+ For more information, please refer to the manual : https://tamarin-prover.com/manual/master/book/010_modeling-issues.html 
+*/
 
 /*
 Generated from:
 Tamarin version 1.13.0
 Maude version 3.5.1
-Git revision: d2ccaf31b4ff8aecbb7de84895b9825b299c1b13 (with uncommited changes), branch: msr-proof-correctness
-Compiled at: 2026-10-07 20:46:17.79718658 UTC
+Git revision: 07cd93a96ec838a30baf8ebd7521c6d7651d8698 (with uncommited changes), branch: check-coherence
+Compiled at: 2026-11-25 11:27:59.462174074 UTC
 */
 
 end
@@ -3545,7 +3556,10 @@ summary of summaries:
 analyzed: examples/csf26-ac/fast/diff/alethea_selectionphase_anonymity.spthy
 
   output:          examples/csf26-ac/fast/diff/alethea_selectionphase_anonymity.spthy.tmp
-  processing time: 6.82s
+  processing time: 6.18s
+  
+  WARNING: 1 wellformedness check failed!
+           The analysis results might be wrong!
   
   RHS :  functional (exists-trace): verified (20 steps)
   LHS :  functional (exists-trace): verified (20 steps)

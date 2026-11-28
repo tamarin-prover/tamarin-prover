@@ -6,7 +6,7 @@ begin
 
 functions: adec/2, aenc/2, fst/1, pair/2, pk/1, snd/1, zeroo/0,
            xorr/2 [AC,NDC]
-equations:
+equations [convergent]:
     adec(aenc(x.1, pk(x.2)), x.2) = x.1,
     fst(<x.1, x.2>) = x.1,
     snd(<x.1, x.2>) = x.2,
@@ -333,8 +333,8 @@ qed
 Generated from:
 Tamarin version 1.13.0
 Maude version 3.5.1
-Git revision: 41bc81379b23681e7057314a5cf66a25c45e1986, branch: canonicalise-subst
-Compiled at: 2026-07-27 16:11:34.947223 UTC
+Git revision: 0e533bd4c36ab0cf935acf05c5ca157c304dc996 (with uncommited changes), branch: check-coherence-minimal
+Compiled at: 2026-11-22 15:37:32.095660631 UTC
 */
 
 end
@@ -346,7 +346,7 @@ summary of summaries:
 analyzed: examples/csf26-ac/fast/NSLPK3xor.spthy
 
   output:          examples/csf26-ac/fast/NSLPK3xor.spthy.tmp
-  processing time: 79.99s
+  processing time: 476.42s
   
   types (all-traces): falsified - found trace (12 steps)
   nonce_secrecy (all-traces): falsified - found trace (11 steps)

@@ -4,7 +4,7 @@ theory OTYT06_UK2 begin
 
 builtins: multiset
 functions: fst/1, h/1, pair/2, snd/1, xorr/2 [AC], zeroo/0
-equations:
+equations [convergent]:
     fst(<x.1, x.2>) = x.1,
     snd(<x.1, x.2>) = x.2,
     xorr(xorr(x, y), x) = y,

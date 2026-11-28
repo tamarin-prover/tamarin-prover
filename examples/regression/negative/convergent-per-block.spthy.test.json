@@ -1,0 +1,40 @@
+{
+  "tests": [
+    {
+      "name": "marked-only",
+      "args": [
+        "-DMARKED_LAST",
+        "--quit-on-warning"
+      ],
+      "contains": [
+        "All wellformedness checks were successful."
+      ]
+    },
+    {
+      "name": "unmarked-block-before",
+      "args": [
+        "-DUNMARKED",
+        "-DMARKED_LAST",
+        "--quit-on-warning"
+      ],
+      "exit_code": 1,
+      "contains": [
+        "Subterm Convergence Warning",
+        "h(x) = k(x)"
+      ]
+    },
+    {
+      "name": "unmarked-block-after",
+      "args": [
+        "-DUNMARKED",
+        "-DMARKED_FIRST",
+        "--quit-on-warning"
+      ],
+      "exit_code": 1,
+      "contains": [
+        "Subterm Convergence Warning",
+        "h(x) = k(x)"
+      ]
+    }
+  ]
+}

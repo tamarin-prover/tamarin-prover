@@ -11,7 +11,8 @@ equations:
     fst(<x.1, x.2>) = x.1,
     snd(<x.1, x.2>) = x.2,
     unblind(blind(m, r), r) = m,
-    unblind(sign(blind(m, r), k), r) = sign(m, k),
+    unblind(sign(blind(m, r), k), r) = sign(m, k)
+equations [convergent]:
     (x xorr x) = zeroo,
     (x xorr x xorr y) = y,
     (x xorr zeroo) = x
@@ -1286,8 +1287,8 @@ Subterm Convergence Warning
 Generated from:
 Tamarin version 1.13.0
 Maude version 3.5.1
-Git revision: 41bc81379b23681e7057314a5cf66a25c45e1986, branch: canonicalise-subst
-Compiled at: 2026-07-27 16:11:34.947223 UTC
+Git revision: 0e533bd4c36ab0cf935acf05c5ca157c304dc996 (with uncommited changes), branch: check-coherence-minimal
+Compiled at: 2026-11-22 15:37:32.095660631 UTC
 */
 
 end
@@ -1299,7 +1300,7 @@ summary of summaries:
 analyzed: examples/csf26-ac/fast/chaum_offline_anonymity.spthy
 
   output:          examples/csf26-ac/fast/chaum_offline_anonymity.spthy.tmp
-  processing time: 85.92s
+  processing time: 487.93s
   
   WARNING: 1 wellformedness check failed!
            The analysis results might be wrong!

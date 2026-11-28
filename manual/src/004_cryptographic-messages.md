@@ -140,10 +140,27 @@ left-hand-side. These equations are thus preferred if they are sufficient to mod
 the required properties, as moreover they have the finite variant 
 property and are convergent. Tamarin issues a warning if the equational theory is 
 *not* subterm-convergent to remind users that one needs to guarantee convergence 
-and the finite variant property in this case.
+and the finite variant property in this case. Equations whose left-hand side
+contains an AC function are never considered subterm-convergent, as the
+criterion does not apply modulo AC: for instance, `f(x,x) = x` and
+`f(a(),b()) = c()` for `f/2 [AC]` lack the finite variant property, and
+`g(f(x,y)) = x` is not confluent.
 
 Note that associativity and commutativity need to be specified by annotating the 
 concerned functions (see above) rather than by writing the corresponding equations.
+
+An equation whose left-hand side has an AC function at its root must also
+apply when that function has further arguments. Tamarin does not add this case
+itself. For example, with `merge/2 [AC]`, the equation `merge(red(), red()) = red()`
+additionally requires
+
+    merge(red(), merge(red(), r)) = merge(red(), r)
+
+Tamarin issues a warning naming the missing equation, since it may otherwise
+miss traces. Adding it only restores this property: the resulting equations
+must still be convergent and have the finite variant property, which you
+assert with `equations [convergent]:`. The built-in equation `x XOR x XOR y = y` plays this role for
+`x XOR x = zero`.
 
 Some built-in message theories such as `diffie-hellman`, `bilinear-pairing`, 
 and `natural-numbers` include special features or optimizations, and cannot be 
