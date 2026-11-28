@@ -612,7 +612,7 @@ opLOr = symbol_ "|" <|> symbol_ "∨"
 
 -- | The logical not operator @not@ or @¬@.
 opLNot :: Parser  ()
-opLNot = symbol_ "¬" <|> symbol_ "not"
+opLNot = symbol_ "¬" <|> reserved "not"
 
 -- | A logical false, @F@ or @⊥@.
 opLFalse :: Parser  ()
