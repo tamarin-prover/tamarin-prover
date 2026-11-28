@@ -119,7 +119,8 @@ rules:
   restriction_attr  ::=  '[' ('left' | 'right') ']'
   case_test  ::=  'test' (ident: test_identifier) ':' '"' (_formula: formula) '"'
   _lemma  ::=  lemma | diff_lemma | accountability_lemma | equiv_lemma | diff_equiv_lemma
-  lemma  ::=  'lemma' modulo? (ident: lemma_identifier) diff_lemma_attrs? ':' trace_quantifier? '"' (_formula: formula) '"' (_proof_skeleton: proof_skeleton)?
+  lemma  ::=  'lemma' modulo? (ident: lemma_identifier) (lemma_attrs -> diff_lemma_attrs)? ':' trace_quantifier? '"' (_formula: formula) '"' (_proof_skeleton: proof_skeleton)?
+  lemma_attrs  ::=  '[' ('passive' | lemma_attr | diff_lemma_attr) (',' ('passive' | lemma_attr | diff_lemma_attr))* ','? ']'
   lemma_attr  ::=  'sources' | 'reuse' | 'use_induction' | ('output=' '[' language (',' language)* ']') | ('hide_lemma=' ident) | ('heuristic=' (_proof_method_ranking+: proof_method_ranking))
   language  ::=  'spthy' | 'spthytyped' | 'msr' | 'proverif' | 'deepsec'
   diff_lemma  ::=  'diffLemma' modulo? (ident: lemma_identifier) diff_lemma_attrs? ':' (_proof_skeleton: proof_skeleton)?
@@ -137,7 +138,7 @@ rules:
   cases  ::=  case ('next' case)* 'qed'
   case  ::=  'case' (ident: case_identifier) (_proof_skeleton: proof_skeleton)
   _proof_methods  ::=  >(proof_method | step+)
-  proof_method  ::=  'sorry' | 'simplify' | ('solve' '(' constraint ')') | 'contradiction' | 'induction' | 'rule-equivalence' | 'backward-search' | 'ATTACK'
+  proof_method  ::=  'sorry' | 'simplify' | ('solve' '(' constraint ')') | 'contradiction' | 'induction' | 'rule-equivalence' | 'backward-search' | 'ATTACK' | 'INVALIDATED' | 'UNFINISHABLE'
   step  ::=  'step' '(' proof_method ')'
   constraint  ::=  premise_constraint | action_constraint | chain_constraint | disjunction_split_constraint | eq_split_constraint
   premise_constraint  ::=  _fact '▶' natural_subscript temporal_var

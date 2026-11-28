@@ -46,6 +46,7 @@ module Theory.Proof (
   , sorry
   , unproven
   , unprovenLookAhead
+  , invalidateProof
   , diffSorry
   , diffUnproven
 
@@ -73,6 +74,7 @@ module Theory.Proof (
   , focus
   , focusDiff
   , checkAndExtendProver
+  , recheckInvalidatedProof
   , checkAndExtendDiffProver
   , checkProof
   , replaceSorryProver
@@ -256,6 +258,13 @@ diffSorry reason ann = LNode (DiffProofStep (DiffSorry reason) ann) M.empty
 -- | A proof denoting an unproven part of the proof.
 unproven :: a -> Proof a
 unproven = sorry Nothing
+
+-- | Keep a proof for explicit rechecking after a reuse lemma changes.
+invalidateProof :: Proof a -> Proof a
+invalidateProof prf@(LNode step _) = case psMethod step of
+    Sorry Nothing -> prf
+    Invalidated   -> prf
+    _             -> LNode (step { psMethod = Invalidated }) (M.singleton "" prf)
 
 -- | A proof denoting an unproven part of the proof.
 unprovenLookAhead :: ProofContext -> System -> IncrementalProof
@@ -455,18 +464,22 @@ checkProof :: ProofContext
 checkProof ctxt prover =
     go
   where
-    go d sys prf@(LNode (ProofStep method info) cs) = case (method, checkAndExecProofMethod ctxt method sys) of
-      (Sorry reason, _         ) -> sorryNode reason cs
-      (_           , Just cases) -> node method $ checkChildren cases
-      (_           , Nothing   ) -> sorryNode (Just "invalid proof step encountered")
-                                      (M.singleton "" prf)
+    go d sys prf@(LNode (ProofStep method info) cs) = case method of
+      Sorry _     -> withUncheckedChildren method cs
+      -- Reclosing refreshes the root system. The saved steps remain unchecked
+      -- until the user asks to verify them against the edited theory.
+      Invalidated -> withUncheckedChildren method cs
+      _ -> case checkAndExecProofMethod ctxt method sys of
+        Just cases -> node method $ checkChildren cases
+        Nothing    -> withUncheckedChildren (Sorry (Just "invalid proof step encountered"))
+                           (M.singleton "" prf)
       where
         unhandledCase = mapProofInfo (Nothing,) . prover d
         checkChildren cases = mergeMapsWith unhandledCase noSystemPrf (go (d + 1)) cases cs
 
-        node m                 = LNode (ProofStep m (Just info, Just sys))
-        sorryNode reason cases = node (Sorry reason) (M.map noSystemPrf cases)
-        noSystemPrf            = mapProofInfo (\i -> (Just i, Nothing))
+        node m = LNode (ProofStep m (Just info, Just sys))
+        withUncheckedChildren m = node m . M.map noSystemPrf
+        noSystemPrf = mapProofInfo (\i -> (Just i, Nothing))
 
 -- | @checkDiffProof rules se prf@ replays the proof @prf@ against the start
 -- sequent @se@. A failure to apply a proof method is denoted by a resulting
@@ -630,6 +643,17 @@ checkAndExtendProver prover0 = Prover $ \ctxt d se prf ->
     unhandledCase   = sorry (Just "unhandled case") Nothing
     prover ctxt d se =
         fromMaybe unhandledCase $ runProver prover0 ctxt d se unhandledCase
+
+-- | Replay the proof saved by 'invalidateProof' in the current system.
+recheckInvalidatedProof :: Prover
+recheckInvalidatedProof = Prover $ \ctxt d sys prf ->
+    let saved = case prf of
+          LNode (ProofStep Invalidated info) cs ->
+              -- A hand-written "by INVALIDATED" has no saved proof to replay.
+              let missing = LNode (ProofStep (Sorry (Just "no saved proof to verify")) info) cs
+              in M.findWithDefault missing "" cs
+          _ -> prf
+    in runProver (checkAndExtendProver (sorryProver Nothing)) ctxt d sys saved
 
 -- | Check the proof and handle new cases using the given prover.
 checkAndExtendDiffProver :: DiffProver -> DiffProver

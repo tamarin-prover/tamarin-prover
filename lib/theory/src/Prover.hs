@@ -421,10 +421,23 @@ compiledRuleAC (Rule eInfo prems concs acts newVars) =
 -- soundness depends on it.
 openTheory :: ClosedTheory -> OpenTheory
 openTheory  (Theory n f h t sig c items opts sapic) = openTranslatedTheory(
-    Theory n f h t (toSignaturePure sig) (openRuleCache c)
+    Theory n f h t (toSignaturePure sig) (openRuleCache (activeRuleCache c))
     -- We merge duplicate rules if they were split into variants
-      (mergeOpenProtoRules $ map (mapTheoryItem openProtoRule incrementalToSkeletonProof) items)
+      (mergeOpenProtoRules $ map (restoreFormula . mapTheoryItem openProtoRule incrementalToSkeletonProof) items)
       opts sapic)
+  where
+    -- Reclose from the same formula that is exported, before macro expansion
+    -- and before adding the passive-network guard.
+    restoreFormula (LemmaItem l) =
+      LemmaItem l { _lFormula = fromMaybe (_lFormula l) (_lOriginalFormula l)
+                  , _lOriginalFormula = Nothing }
+    restoreFormula item = item
+
+-- | Rebuild caches and replay saved proofs from the edited source items.
+-- Any auto-generated sources lemma is already present in those items.
+recloseTheory :: ClosedTheory -> ClosedTheory
+recloseTheory thy =
+    closeTheoryWithMaude (_thySignature thy) (removeTranslationItems (openTheory thy)) False False
 
 -- | Open a theory by dropping the closed world assumption and values whose
 -- soundness depends on it.
@@ -468,7 +481,7 @@ modifyLemmaProof prover name thy =
 
     change preItems (LemmaItem lem) = do
          let ctxt = getProofContext lem thy
-             sys  = mkSystem ctxt (theoryRestrictions thy) preItems $ L.get lFormula lem
+             sys  = mkSystem ctxt (theoryRestrictions thy) preItems lem
          lem' <- modA lProof (runProver prover ctxt 0 sys) lem
          return $ LemmaItem lem'
     change _ _ = error "LemmaProof: change: impossible"

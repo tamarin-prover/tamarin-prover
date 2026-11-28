@@ -83,6 +83,7 @@ jobs:
           tamarin-prover test
           ./misc/test-export-property-instrumentation.sh
           python3 -m unittest discover -s tests -p test_regression_commands.py
+          python3 tests/test_interactive_lemma_edits.py
           python3 regressionTests.py -v 6 -noi
 
       - name: Store case studies as artifact

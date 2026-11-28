@@ -69,6 +69,14 @@ data ClosedRuleCache = ClosedRuleCache
        }
        deriving( Eq, Ord, Show, Generic, NFData, Binary )
 
+-- Both caches are shared across lemmas. The passive cache is built on demand
+-- from the same closed rule variants as the ordinary cache.
+data TraceRuleCaches = TraceRuleCaches
+       { activeRuleCache  :: ClosedRuleCache
+       , passiveRuleCache :: Maybe ClosedRuleCache
+       }
+       deriving( Eq, Ord, Show, Generic, NFData, Binary )
+
 $(mkLabels [''OpenProtoRule, ''DiffProtoRule, ''ClosedProtoRule, ''ClosedRuleCache])
 
 instance HasRuleName OpenProtoRule where

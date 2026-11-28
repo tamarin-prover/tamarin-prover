@@ -227,11 +227,11 @@ part. In general, the following applies when editing lemmas in the GUI:
   download the entire theory, or use "Append modified lemmas to file" from the
   Actions menu. This option will add new or modified lemmas at the end of your
   model file as a comment. You must then manually merge them into your model.
-- Whenever you delete or edit a lemma marked as `reuse`, all proofs after the
-  deleted or edited lemma will be invalidated. This is because Tamarin cannot be
-  certain anymore whether the proofs still hold. The proofs, though, will not be
-  discarded, and you can again verify them. Tamarin will let you know should it
-  encounter any issues.
+- If you edit or delete a lemma marked `reuse`, Tamarin invalidates the
+  proofs of later lemmas that could use it. If the lemma is also marked
+  `passive`, this affects only later passive proofs. You can click "verify it"
+  to check the saved proof steps against the edited theory, even after
+  downloading and reopening it.
 - You cannot add, modify, or delete sources lemmas. This is because sources
   lemmas influence Tamarin's precomputations. You must edit sources lemmas in
 your model file and use "Reload file" from the Actions menu to reload the theory
@@ -581,6 +581,52 @@ added annotations "Annotation1" and "Annotation2", this looks like so:
 ```
 lemma Name [Annotation1,Annotation2]:
 ```
+
+### `passive`
+
+In trace mode, we can mark a lemma `passive` to consider only traces in
+which each input `In(m)` matches an earlier output `Out(m)`, modulo the
+equations of the theory. Each output can supply one input, so receiving
+the same message twice requires two outputs. Messages can arrive in any
+order, and a trace may end before all messages have arrived. If the
+intended recipient matters, you can include its identity in the message
+or model the channel explicitly.
+
+The passive adversary can still eavesdrop and use what it learns, for
+example to decrypt a message if it knows the key. Protocol rules that
+reveal keys apply as usual. Suppose a sender outputs `<'packet',n>` and
+records the action `Sent(n)`. A receiver accepts a packet of this form
+and records `Received(n)`. We can then write the following two lemmas.
+
+```
+lemma origin [passive, reuse]:
+  "All n #r. Received(n)@r ==> Ex #s. Sent(n)@s & #s < #r"
+
+lemma eavesdrop [passive]: exists-trace
+  "Ex n #s #k. Sent(n)@s & K(n)@k & #s < #k"
+```
+
+The first lemma says that in every passive trace, any packet the receiver
+accepts was sent earlier. The second asks whether there is a passive trace
+in which the adversary learns `n` after the packet was sent.
+
+If you combine `passive` with `reuse` or `sources`, Tamarin uses the lemma
+as an assumption only in passive proofs. For a given set of protocol
+rules, lemmas without `passive` use the original rules and precomputed
+sources, so their existing proof scripts still apply. Tamarin precomputes
+a second set of rules and sources for the passive lemmas. You can inspect
+both sets with `--precompute-only`.
+
+For a SAPIC process, `passive` applies to the `In` and `Out` facts in the
+translated rules. To model the public network described above, use
+`out(m)` and `in(x)`. For example, `out(m)` produces `Out(m)`, which the
+adversary can observe. If you write `out('c',m)` to send on a named public
+channel, SAPIC uses an internal fact to deliver the message. The rule
+that lets the adversary observe it requires `In('c')`, which in a passive
+trace needs an earlier `Out('c')`. The sender and receiver can therefore
+communicate on `'c'` even when a passive lemma finds no trace with `K(m)`.
+In this case a secrecy proof does not rule out eavesdropping on the named
+channel.
 
 ### `sources`
 

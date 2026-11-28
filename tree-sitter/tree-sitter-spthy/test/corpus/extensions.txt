@@ -222,3 +222,22 @@ end
     formula: (atom)
     proof_skeleton: (by_method
       (proof_method))))
+
+==================
+Passive trace lemma
+==================
+
+theory Passive
+begin
+lemma receipt [reuse, passive]: exists-trace "T"
+end
+
+---
+
+(theory
+  theory_name: (ident)
+  (lemma
+    lemma_identifier: (ident)
+    (diff_lemma_attrs (lemma_attr))
+    (trace_quantifier)
+    formula: (atom)))

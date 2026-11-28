@@ -75,11 +75,11 @@ removeCommentBlock  [] = []
 
 
 -- | parse a ProtoLemma
-protoLemma :: Parser f -> Maybe FilePath -> Parser (ProtoLemma f ProofSkeleton)
-protoLemma parseFormula workDir = try $ do
+protoLemma :: (Maybe FilePath -> Parser LemmaAttribute) -> Parser f -> Maybe FilePath -> Parser (ProtoLemma f ProofSkeleton)
+protoLemma attribute parseFormula workDir = try $ do
   start <- getInput
   name <- symbol "lemma" *> optional moduloE *> identifier
-  attr <- option [] $ list (lemmaAttribute False workDir)
+  attr <- option [] $ list (attribute workDir)
   quan <- colon *> option AllTraces traceQuantifier
   formula <- doubleQuoted parseFormula
   pskelet <- startProofSkeleton <|> pure (unproven ())
@@ -90,11 +90,13 @@ protoLemma parseFormula workDir = try $ do
 
 -- | Parse a lemma.
 lemma :: Maybe FilePath -> Parser (SyntacticLemma ProofSkeleton)
-lemma = protoLemma $ standardFormula msgvar nodevar
+lemma = protoLemma attribute (standardFormula msgvar nodevar)
+  where
+    attribute dir = (reserved "passive" $> PassiveLemma) <|> lemmaAttribute False dir
 
 -- | Parse a lemma w/o syntactic sugar
 plainLemma :: Maybe FilePath -> Parser (Lemma ProofSkeleton)
-plainLemma = protoLemma plainFormula
+plainLemma = protoLemma (lemmaAttribute False) plainFormula
 
 -- | parse a lemma with a given signature
 lemmaWithMsig :: MaudeSig -> Maybe FilePath -> Parser (Lemma ProofSkeleton)

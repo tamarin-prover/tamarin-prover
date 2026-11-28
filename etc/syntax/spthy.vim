@@ -87,7 +87,7 @@ syn match spthyTransfer         "!"
 
 syn region spthyLiteral          start="'" end="'"
 
-syn keyword spthyAnnot          contained use_induction sources reuse hide_lemma left right
+syn keyword spthyAnnot          contained use_induction sources reuse passive hide_lemma left right
 syn region spthyAnnotLemma      matchgroup=spthyDecl start="\<lemma\>" skip="(\s\+\w\+\s*\[|\])" end=":" matchgroup=NONE contains=spthyAnnot
 
 syn match spthyLogicOp          "==>"

@@ -36,6 +36,7 @@ data LemmaAttribute =
        | LemmaHeuristic [GoalRanking ProofContext]
        | LemmaTactic String
        | LemmaModule [ModuleType]
+       | PassiveLemma
 --        | BothLemma
        deriving( Eq, Ord, Show, Generic, NFData, Binary )
 

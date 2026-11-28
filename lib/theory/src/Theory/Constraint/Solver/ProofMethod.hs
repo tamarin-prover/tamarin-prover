@@ -260,6 +260,7 @@ checkAndExecProofMethod ctxt method sys = do
       SolveGoal goal -> guard (goal `M.member` L.get sGoals sys)
       Simplify -> Just ()
       Sorry _ -> Just ()
+      Invalidated -> Nothing
     execProofMethod ctxt method sys
   where
     equalReason :: Result -> Result -> Bool
@@ -1308,7 +1309,7 @@ smartDiffRanking ctxt sys =
 -- | Pretty-print a proof method.
 prettyProofMethod :: HighlightDocument d => ProofMethod -> d
 prettyProofMethod method = case method of
-    Invalidated -> lineComment_ "proof may have been invalidated by editing a reuse lemma above. You should "
+    Invalidated -> keyword_ "INVALIDATED"
     Finished Solved -> keyword_ "SOLVED" <-> lineComment_ "trace found"
     Induction  -> keyword_ "induction"
     Finished Unfinishable -> keyword_ "UNFINISHABLE"

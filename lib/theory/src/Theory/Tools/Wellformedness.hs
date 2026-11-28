@@ -966,21 +966,6 @@ factReportsDiff thy = concat
                  ", "++show mul++") ")) $-$
                  text "but no rule has such an action."
 
--- | Gather all facts referenced in a formula.
-formulaFacts :: Formula s c v -> [Fact (VTerm c (BVar v))]
-formulaFacts =
-    foldFormula atomFacts
-      (const mempty)
-      id
-      (const mappend) (const $ const id)
-  where
-    atomFacts (Action _ fa)   = [fa]
-    atomFacts (Syntactic _)   = mempty --the 'facts' in a predicate atom are not real facts
-    atomFacts (EqE _ _)       = mempty
-    atomFacts (Subterm _ _)   = mempty
-    atomFacts (Less _ _)      = mempty
-    atomFacts (Last _)        = mempty
-
 atomTerms :: ProtoAtom s t -> [t]
 atomTerms (Action i fa)        = i : factTerms fa
 atomTerms (Syntactic _)       = []

@@ -69,14 +69,14 @@ where
 import Theory
   ( Theory(..), DiffTheory(..), ClosedTheory, ClosedDiffTheory, Side
   , ClosedTheory, ClosedDiffTheory, Side, Signature(..)
-  , removeLemma
+  , TheoryItem(..)
   , lookupLemmaIndex
   , addLemmaAtIndex
   , modifyLemma
+  , modifyLemmaProof
   , removeLemmaDiff
   , removeDiffLemma
-  , getLemmaPreItems
-  , openTheory
+  , openTheory, recloseTheory
   , sorryProver
   , runAutoProver
   , sorryDiffProver
@@ -96,18 +96,16 @@ import Theory
   , getProofContext
   , formulaToGuarded
   , toSignaturePure
-  , checkAndExtendProver
   , theoryRestrictions
-  , Prover (runProver), unproven
+  , Prover, unproven
   )
 
 import Theory.Proof
   ( AutoProver(..)
   , SolutionExtractor(..)
   , DiffProver
-  , LTree(..)
-  , ProofStep(..)
-  , ProofMethod(..)
+  , invalidateProof
+  , recheckInvalidatedProof
   )
 
 import Web.Hamlet
@@ -193,114 +191,79 @@ getLemmaPlaintext nr path = do
     pure $ maybe "Enter your new Lemma" ((._lPlaintext)) lemmaItem
 
 
--- | modifies the proof of a lemma after editing (eg in the case of reuse lemmas)
+-- | Verify a saved proof against the edited theory.
 editProof :: Int -> String -> Handler (Either String TheoryIdx)
-editProof idx name = withTheory idx $ \ti -> do
-    maybe (pure (Left "Lemma not found")) (editLemmaProof ti) (lookupLemma name ti.theory)
+editProof idx name = updateLemmas idx $
+    maybe (Left "Lemma not found") Right . modifyLemmaProof recheckInvalidatedProof name
 
-    where
-        editLemmaProof ti (Lemma n m pt tq f ofm a olp) = do
-            let ctxt     = getProofContext (Lemma n m pt tq f ofm a lp) ti.theory
-                preItems = getLemmaPreItems n ti.theory
-                gsys     = mkSystem ctxt (theoryRestrictions ti.theory) preItems f
-                lp       = newProof olp ctxt gsys
-                editf (Lemma n' pt' m' tq' f' ofm' a' lp') = if n'== n then Lemma n' pt' m' tq' f' ofm' a' lp else Lemma n' pt' m' tq' f' ofm' a' lp'
-                maybe_nthy =  modifyLemma editf ti.theory
-            case maybe_nthy of
-                Nothing -> pure $ Left "Lemma editing failed"
-                Just nthy -> do
-                    nidx <- replaceTheory (Just ti) Nothing nthy ("modified" ++ show idx) idx
-                    pure $ Right nidx
+-- Passive rule names and the passive cache depend on the edited theory.
+-- Reopen the source items and replay proofs whenever an edit can change them.
+reclosePassiveEdit :: ClosedTheory -> ClosedTheory -> ClosedTheory
+reclosePassiveEdit old new
+  | any isPassiveLemma (theoryLemmas old) || any isPassiveLemma (theoryLemmas new) =
+      recloseTheory new
+  | otherwise = new
 
-        newProof olp ctxt gsys =
-            case olp of
-                (LNode (ProofStep Invalidated _) s ) ->
-                    let old_lp = fromMaybe olp (M.lookup "" s )
-                    in fromMaybe old_lp $ runProver (checkAndExtendProver (sorryProver Nothing)) ctxt 0 gsys old_lp
-                _ -> fromMaybe olp $ runProver (checkAndExtendProver (sorryProver Nothing)) ctxt 0 gsys olp
+-- | Remove a lemma and mark only the subsequent proofs that could use it.
+-- Return its position so a replacement can be inserted before the same items.
+removeEditableLemma :: String -> ClosedTheory -> Either String (Int, ClosedTheory)
+removeEditableLemma name thy = case break matches (_thyItems thy) of
+    (before, LemmaItem removed : after)
+      | SourceLemma `elem` _lAttributes removed -> Left "Can't edit or remove source lemmas for now"
+      | otherwise ->
+          let remaining | ReuseLemma `elem` _lAttributes removed = map (invalidate removed) after
+                        | otherwise = after
+          in Right (length before, thy { _thyItems = before ++ remaining })
+    _ -> Left "Lemma not found"
+  where
+    matches (LemmaItem l) = _lName l == name
+    matches _             = False
+    invalidate removed (LemmaItem target) | removed `appliesToNetworkOf` target =
+        LemmaItem (fmap invalidateProof target)
+    invalidate _ item = item
 
+deleteEditedLemma :: String -> ClosedTheory -> Either String ClosedTheory
+deleteEditedLemma name thy = reclosePassiveEdit thy . snd <$> removeEditableLemma name thy
 
--- | Deletes a Lemma from a theory, used for Theory editing
--- when deleting a reuse lemma it marks subsequent proofs as invalidated
-deleteLemma :: Int -> String -> Handler (Either String TheoryIdx)
-deleteLemma idx name = withTheory idx $ \ti -> do
-    let maybeLemma = lookupLemma name ti.theory
-    case maybeLemma of
-        Nothing -> pure $ Left "Lemma not found"
-        Just (Lemma _ _ _ _ _ _ oa _) ->
-            if | SourceLemma `elem` oa -> pure $ Left "Can't edit or remove source lemmas for now"
-               | ReuseLemma `elem` oa -> reuseCase ti
-               | otherwise -> normalCase ti
+-- | Validate the whole edit before replacing the stored theory. In particular,
+-- a rejected rename must preserve the original lemma and its dependent proofs.
+updateLemmas :: Int -> (ClosedTheory -> Either String ClosedTheory) -> Handler (Either String TheoryIdx)
+updateLemmas idx change = do
+    yesod <- getYesod
+    liftIO $ modifyMVar yesod.theoryVar $ \theories ->
+        case M.lookup idx theories of
+            Just (Trace ti) -> case change ti.theory of
+                Left err  -> pure (theories, Left err)
+                Right thy -> do
+                    now <- getZonedTime
+                    let edited = Trace ti{theory = thy, time = now, parent = Just idx, primary = False}
+                    storeTheory yesod edited idx
+                    pure (M.insert idx edited theories, Right idx)
+            _ -> pure (theories, Left "Theory not found")
 
-    where
-        normalCase ti =
-            case removeLemma name ti.theory of
-                Nothing -> pure $ Left "Lemma editing failed"
-                Just nthy -> Right <$> replaceTheory (Just ti) Nothing nthy ("modified" ++ show idx) idx
-
-        reuseCase ti =
-            case modifyLemma (lemmaFunc ti) ti.theory of
-                Nothing -> pure $ Left "Lemma editing failed"
-                Just nthy -> do
-                    nidx <- replaceTheory (Just ti) Nothing nthy ("modified" ++ show idx) idx
-                    withTheory nidx $ \ti' -> normalCase ti'
-
-        lemmaFunc ti (Lemma n pt m tq f ofm a lp) =
-            let currIdx = fromMaybe (-1) (lookupLemmaIndex name ti.theory)
-                lIdx = fromMaybe 0 (lookupLemmaIndex n ti.theory)
-            in if lIdx > currIdx
-                then case lp of
-                    LNode (ProofStep (Sorry Nothing) _) _ -> Lemma n pt m tq f ofm a lp
-                    LNode (ProofStep Invalidated _) _ -> Lemma n pt m tq f ofm a lp
-                    LNode (ProofStep _ info) _ -> Lemma n pt m tq f ofm a (LNode (ProofStep Invalidated info) (M.singleton "" lp))
-                else Lemma n pt m tq f ofm a lp
-
--- | Adds a new Lemma in a theory at an index, used for theory editing
--- the new lemma is marked as modified to keep track of what whould be appended to the original file
--- when "Append modified lemmas to file" is clicked
-addLemma :: Int -> Maybe Int -> Lemma ProofSkeleton -> Handler (Either String TheoryIdx)
-addLemma idx maybelemmaIndex (Lemma n pt _ tq f ofm a lp) = withTheory idx $ \ti -> do
-    let ctxt = getProofContext (Lemma n pt True tq f ofm a lp) ti.theory
-        preI = getLemmaPreItems n ti.theory
-        gsys = mkSystem ctxt (theoryRestrictions ti.theory) preI f
-    case formulaToGuarded f of
-        Left d -> pure $ Left $ render d
-        Right _ ->
-            case maybelemmaIndex of
-                Nothing -> pure $ Left "Lemma not found"
-                Just lemmaIndex -> do
-                    let newThy = addLemmaAtIndex (Lemma n pt True tq f ofm a $ unproven (Just gsys)) lemmaIndex ti.theory
-                    case newThy of
-                         Nothing -> pure $ Left "lemma editing failed"
-                         (Just nthy) -> Right <$> replaceTheory (Just ti) Nothing nthy ("modified" ++ show idx) idx
-
--- | Deletes, adds or modifies a lemma depending on the path
 editLemma :: Int -> TheoryPath -> Lemma ProofSkeleton -> Handler (Either String TheoryIdx)
-editLemma idx (TheoryEdit lemmaName) (Lemma n pt m tq f ofm a lp) = do
-    maybelemmaIndex <- withTheory idx $ \ti -> do
-                           pure $ (\x -> x - 1) <$> lookupLemmaIndex lemmaName ti.theory
-    case formulaToGuarded f of
-        Left d -> pure $ Left $ render d
-        Right _ -> do
-            idx' <- deleteLemma idx lemmaName
-            case idx' of
-                Left e -> pure $ Left e
-                Right i -> Web.Handler.addLemma i maybelemmaIndex (Lemma n pt m tq f ofm a lp)
+editLemma idx path lem = updateLemmas idx $ \original -> do
+    when (SourceLemma `elem` _lAttributes lem) $ Left "Can't add source lemmas for now"
+    either (Left . render) (const $ Right ()) (formulaToGuarded (_lFormula lem))
+    (position, thy) <- case path of
+        TheoryEdit name     -> removeEditableLemma name original
+        TheoryAdd "<first>" -> Right (length (takeWhile beforeFirstLemma (_thyItems original)), original)
+        TheoryAdd name      -> case lookupLemmaIndex name original of
+            Just i  -> Right (i, original)
+            Nothing -> Left "Lemma not found"
+        _ -> Left "Expected a lemma to add or edit"
 
-
-editLemma idx (TheoryAdd lemmaName) (Lemma n pt m tq f ofm a lp)  = do
-    maybelemmaIndex <- withTheory idx $ \ti -> do
-                            pure $ case lemmaName of
-                                "<first>" -> do
-                                            let (Lemma n' _ _ _ _ _ _ _ ) = head $ theoryLemmas ti.theory
-                                            (\x -> x - 1) <$> lookupLemmaIndex n' ti.theory
-                                _ -> lookupLemmaIndex lemmaName ti.theory
-
-    if SourceLemma `elem` a
-        then pure $ Left "Can't add source lemmas for now"
-        else Web.Handler.addLemma idx maybelemmaIndex (Lemma n pt m tq f ofm a lp)
-
-editLemma _ _ _ = pure $ Left "called editLemma with weird input"
+    -- A passive lemma gets its guarded formula and proof system when we reclose.
+    let proof | isPassiveLemma lem = unproven Nothing
+              | otherwise = unproven $ Just $ mkSystem (getProofContext lem thy)
+                    (theoryRestrictions thy) (take position (_thyItems thy)) lem
+        newLemma = lem { _lModified = True, _lProof = proof }
+    case addLemmaAtIndex newLemma position thy of
+        Nothing     -> Left "A lemma with this name already exists"
+        Just edited -> Right $ reclosePassiveEdit original edited
+  where
+    beforeFirstLemma (LemmaItem _) = False
+    beforeFirstLemma _             = True
 
 
 -- | Store a theory, return index.
@@ -856,7 +819,7 @@ getTheoryVerifyR idx _ = do getTheoryPathMR idx TheoryHelp
 -- Theory delete doesn't require parsing the lemma, and is thus handled separatly
 postTheoryEditR :: TheoryIdx -> TheoryPath -> Handler Html
 postTheoryEditR idx (TheoryDelete l) = do
-    idx' <- deleteLemma idx l
+    idx' <- updateLemmas idx (deleteEditedLemma l)
     case idx' of
         Right i -> redirect (InteractiveOverviewR i TheoryHelp)
         Left  e -> do setMessage $ toHtml e
@@ -1691,8 +1654,8 @@ getDeleteStepR idx path = do
   pure $ RepJson $ toContent jsonValue
   where
     go (TheoryLemma lemma) ti = modifyTheory ti
-      (pure . removeLemma lemma)
-      (const path)
+      (pure . either (const Nothing) Just . deleteEditedLemma lemma)
+      (const TheoryHelp)
       (JsonAlert "Sorry, but removing the selected lemma failed!")
 
     go (TheoryProof lemma proofPath) ti = modifyTheory ti

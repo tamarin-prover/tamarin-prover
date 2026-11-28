@@ -1,0 +1,57 @@
+{
+  "tests": [
+    {
+      "name": "mixed-network-proofs",
+      "args": [
+        "--prove",
+        "--quit-on-warning"
+      ],
+      "contains": [
+        "passive_origin (all-traces): verified",
+        "honest_exchange (exists-trace): verified",
+        "eavesdrop (exists-trace): verified",
+        "retained_variant_action (exists-trace): verified",
+        "knowledge_before_receive (all-traces): verified",
+        "passive_no_injection (exists-trace): falsified - no trace found",
+        "active_injection (exists-trace): verified",
+        "passive_no_replay (all-traces): verified",
+        "L1 (all-traces): falsified - found trace",
+        "active_replay (exists-trace): verified",
+        "each_input_needs_a_packet (all-traces): verified",
+        "L2 (all-traces): falsified - found trace",
+        "two_outputs_allow_two_inputs (exists-trace): verified",
+        "active_two_inputs (exists-trace): verified",
+        "L3_passive (all-traces): verified",
+        "L3 (all-traces): falsified - found trace"
+      ]
+    },
+    {
+      "name": "replay-original-active-proofs",
+      "args": ["--quit-on-warning"],
+      "contains": [
+        "active_injection (exists-trace): verified (2 steps)",
+        "L3 (all-traces): falsified - found trace (3 steps)"
+      ]
+    },
+    {
+      "name": "precompute-both-networks",
+      "args": ["--precompute-only"],
+      "contains": [
+        "Active network\nMultiset rewriting rules: 10\nRaw sources: 5 cases",
+        "Passive network\nMultiset rewriting rules: 15\nRaw sources: 6 cases"
+      ]
+    },
+    {
+      "name": "proverif-omits-passive-properties",
+      "args": [
+        "-m=proverif",
+        "--lemma=honest_exchange"
+      ],
+      "contains": [
+        "PV-AXIOM-OMITTED",
+        "PV-GOAL-OMITTED",
+        "passive network semantics"
+      ]
+    }
+  ]
+}

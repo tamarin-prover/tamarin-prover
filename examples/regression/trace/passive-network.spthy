@@ -1,0 +1,95 @@
+theory PassiveNetwork begin
+
+builtins: symmetric-encryption
+
+// The action name also checks that generated names cannot capture user facts.
+rule Send:
+  [ Fr(~n) ] --[ Sent(~n), TamarinPassive_UnrestrictedReceive() ]->
+  [ Out(<'packet', ~n>) ]
+
+// The symmetric key is a public constant, so either attacker can decrypt.
+rule SendEncryptedSecret:
+  [ Fr(~secret) ] --[ EncryptedSecret(~secret) ]-> [ Out(senc(~secret, 'known_key')) ]
+
+rule Receive:
+  [ In(<'packet', n>) ] --[ Received(n) ]-> []
+variants rule (modulo AC) Receive___VARIANT_1:
+  [ In(<'packet', m>) ] --[ Received(m), Member(m) ]-> []
+
+rule ReceiveTwice:
+  [ In(<'packet', n>), In(<'packet', n>) ] --[ Twice(n) ]-> []
+
+rule SendTwo:
+  [ Fr(~n) ] --> [ Out(<'copy', ~n>), Out(<'copy', ~n>) ]
+
+rule ReceiveBoth:
+  [ In(<'copy', n>), In(<'copy', n>) ] --[ Both(n) ]-> []
+
+// A rule can receive and send in the same step.
+rule Reply:
+  [ In(<'packet', n>) ] --[ Replied(n) ]-> [ Out(<'reply', n>) ]
+
+rule Finish:
+  [ In(<'reply', n>) ] --[ Finished(n) ]-> []
+
+lemma passive_origin [passive, sources, reuse]:
+  "All n #r. Received(n)@r ==> Ex #s. Sent(n)@s & #s < #r"
+
+lemma honest_exchange [passive]: exists-trace
+  "Ex n #s #r #f. Sent(n)@s & Replied(n)@r & Finished(n)@f & #s < #r & #r < #f"
+
+lemma eavesdrop [passive]: exists-trace
+  "Ex n #s #k. Sent(n)@s & K(n)@k & #s < #k"
+
+lemma retained_variant_action [passive]: exists-trace
+  "Ex n #r. Member(n)@r"
+
+lemma knowledge_before_receive [passive]:
+  "All n #r. Received(n)@r ==> Ex #k. K(<'packet',n>)@k & #k < #r"
+
+lemma passive_no_injection [passive]: exists-trace
+  "Ex n #r. Received(n)@r & not (Ex #s. Sent(n)@s & #s < #r)"
+
+lemma active_injection: exists-trace
+  "Ex n #r. Received(n)@r & not (Ex #s. Sent(n)@s & #s < #r)"
+// This proof was generated before adding any passive lemmas.
+simplify
+SOLVED
+
+lemma passive_no_replay [passive]:
+  "All n #r #t. Received(n)@r & Received(n)@t ==> #r = #t"
+
+// An active attacker can deliver the same packet in two separate steps.
+lemma L1:
+  "All n #r #t. Received(n)@r & Received(n)@t ==> #r = #t"
+
+lemma active_replay: exists-trace
+  "Ex n #s #r #t. Sent(n)@s & Received(n)@r & Received(n)@t & #r < #t"
+
+lemma each_input_needs_a_packet [passive]:
+  "not (Ex n #r. Twice(n)@r)"
+
+// An active attacker can also supply the same packet to both inputs of one step.
+lemma L2:
+  "not (Ex n #r. Twice(n)@r)"
+
+lemma two_outputs_allow_two_inputs [passive]: exists-trace
+  "Ex n #r. Both(n)@r"
+
+lemma active_two_inputs: exists-trace
+  "Ex n #r. Twice(n)@r"
+
+// Only the active attacker can send <'packet', secret> after decryption.
+lemma L3_passive [passive]:
+  "not (Ex secret #s #r. EncryptedSecret(secret)@s & Received(secret)@r & #s < #r)"
+
+lemma L3:
+  "not (Ex secret #s #r. EncryptedSecret(secret)@s & Received(secret)@r & #s < #r)"
+// The original active proof must also replay with its named source case.
+simplify
+solve( !KU( ~secret ) @ #vk.2 )
+  case SendEncryptedSecret
+  SOLVED
+qed
+
+end

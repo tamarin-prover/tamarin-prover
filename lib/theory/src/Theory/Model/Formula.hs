@@ -60,6 +60,7 @@ module Theory.Model.Formula (
   -- ** General Transformations
   , mapAtoms
   , foldFormula
+  , formulaFacts
   , traverseFormulaAtom
   , applyMacroInFormula
 
@@ -94,6 +95,7 @@ import           Control.DeepSeq
 import           Control.Monad.Fresh
 import qualified Control.Monad.Trans.PreciseFresh as Precise
 
+import           Theory.Model.Fact (Fact)
 import           Theory.Model.Atom
 
 import           Text.PrettyPrint.Highlight
@@ -548,6 +550,21 @@ prettySyntacticLNFormula fm =
 ------------------------------------------------------------------------------
 -- Generate Formula
 ------------------------------------------------------------------------------
+
+-- | Gather all facts referenced in a formula.
+formulaFacts :: Formula s c v -> [Fact (VTerm c (BVar v))]
+formulaFacts =
+    foldFormula atomFacts
+      (const mempty)
+      id
+      (const mappend) (const $ const id)
+  where
+    atomFacts (Action _ fa)   = [fa]
+    atomFacts (Syntactic _)   = mempty --the 'facts' in a predicate atom are not real facts
+    atomFacts (EqE _ _)       = mempty
+    atomFacts (Subterm _ _)   = mempty
+    atomFacts (Less _ _)      = mempty
+    atomFacts (Last _)        = mempty
 
 -- Exists-quantifies every non-time LVar of a formula
 existFormula ::  LNFormula -> LNFormula
